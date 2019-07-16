@@ -186,6 +186,14 @@ namespace openXDA.Configuration
         public double MaxFileDuration { get; set; }
 
         /// <summary>
+        /// Gets or sets the maximum file size, in MB,
+        /// of the files processed by openXDA.
+        /// </summary>
+        [Setting]
+        [DefaultValue(20.0D)]
+        public double MaxFileSize { get; set; }
+
+        /// <summary>
         /// Gets or sets the maximum number of hours prior to the current system time
         /// before the file creation time indicates that the data should not be processed.
         /// </summary>

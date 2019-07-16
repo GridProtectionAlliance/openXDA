@@ -1222,6 +1222,7 @@ namespace openXDA
             {
                 string connectionString = LoadSystemSettings();
                 SystemSettings systemSettings = new SystemSettings(connectionString);
+                ValidateFileSize(filePath, systemSettings);
                 ValidateFileCreationTime(filePath, systemSettings);
 
                 using (AdoDataConnection connection = CreateDbConnection(systemSettings))
@@ -1918,6 +1919,30 @@ namespace openXDA
                 string message = $"Failed to create data operation of type {operation.TypeName}: {ex.Message}";
                 throw new TypeLoadException(message, ex);
             }
+        }
+
+        // Determines whether the file creation time exceeds a user-defined threshold.
+        private static void ValidateFileSize(string filePath, SystemSettings systemSettings)
+        {
+            double maxFileSizeMB = systemSettings.MaxFileSize;
+
+            // Determine whether file size validation is disabled
+            if (maxFileSizeMB <= 0.0D)
+                return;
+
+            // This method may be called if the file was deleted,
+            // in which case it should be impossible to get the
+            // size of the file
+            if (!File.Exists(filePath))
+                return;
+
+            // Determine the number of hours that have passed since the file was created
+            FileInfo fileInfo = new FileInfo(filePath);
+            double fileSizeMB = fileInfo.Length / 1024.0D / 1024.0D;
+
+            // Determine whether the number of hours exceeds the maximum threshold
+            if (fileSizeMB > maxFileSizeMB)
+                throw new FileSkippedException($"Skipped file \"{filePath}\" because file size '{fileSizeMB} MB' is too large.");
         }
 
         // Determines whether the file creation time exceeds a user-defined threshold.
