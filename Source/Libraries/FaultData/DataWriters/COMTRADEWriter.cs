@@ -626,7 +626,8 @@ namespace FaultData.DataWriters
                     faultType == FaultType.ABG,
                     faultType == FaultType.BCG,
                     faultType == FaultType.CAG,
-                    faultType == FaultType.ABC
+                    faultType == FaultType.ABC,
+                    faultType == FaultType.ABCG
                 };
 
                 // Populate the data points for this segment with the proper values based on fault type
@@ -764,7 +765,8 @@ namespace FaultData.DataWriters
                 FaultType.ABG,
                 FaultType.BCG,
                 FaultType.CAG,
-                FaultType.ABC
+                FaultType.ABC,
+                FaultType.ABCG
             };
         }
 

@@ -127,6 +127,11 @@ namespace FaultAlgorithms
         ABC = 10,
 
         /// <summary>
+        /// Three-phase with ground fault type.
+        /// </summary>
+        ABCG = 11,
+
+        /// <summary>
         /// No fault.
         /// </summary>
         None = 0

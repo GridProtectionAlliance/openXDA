@@ -857,6 +857,7 @@ namespace FaultData.DataResources
             DataSeries iaRMS = viCycleDataGroup.IA.RMS;
             DataSeries ibRMS = viCycleDataGroup.IB.RMS;
             DataSeries icRMS = viCycleDataGroup.IC.RMS;
+            DataSeries irRMS = viCycleDataGroup.IR.RMS;
 
             double iaPre = iaRMS[0].Value;
             double ibPre = ibRMS[0].Value;
@@ -865,6 +866,7 @@ namespace FaultData.DataResources
             double ia;
             double ib;
             double ic;
+            double ir;
 
             int numPhases;
             FaultType faultType;
@@ -876,13 +878,14 @@ namespace FaultData.DataResources
                     ia = iaRMS[i].Value;
                     ib = ibRMS[i].Value;
                     ic = icRMS[i].Value;
+                    ir = irRMS[i].Value;
 
                     numPhases = GetNumPhases(4.0D, ia, ib, ic);
 
                     if (numPhases == 3)
                         numPhases = GetNumPhases(1.5, ia - iaPre, ib - ibPre, ic - icPre);
 
-                    faultType = GetFaultType(numPhases, ia, ib, ic);
+                    faultType = GetFaultType(numPhases, ia, ib, ic, ir);
 
                     if ((object)currentSegment == null)
                     {
@@ -927,21 +930,25 @@ namespace FaultData.DataResources
             return 3;
         }
 
-        private FaultType GetFaultType(int numPhases, double ia, double ib, double ic)
+        private FaultType GetFaultType(int numPhases, double ia, double ib, double ic, double ir)
         {
+            bool grounded =
+                ir > FaultLocationSettings.PrefaultTriggerAdjustment &&
+                ir > 0.1 * (ia + ib + ic);
+
             if (numPhases == 3)
-                return FaultType.ABC;
+                return grounded ? FaultType.ABCG : FaultType.ABC;
 
             if (numPhases == 2)
             {
                 if (ic < ia && ic < ib)
-                    return FaultType.AB;
+                    return grounded ? FaultType.ABG : FaultType.AB;
 
                 if (ia < ib && ia < ic)
-                    return FaultType.BC;
+                    return grounded ? FaultType.BCG : FaultType.BC;
 
                 if (ib < ia && ib < ic)
-                    return FaultType.CA;
+                    return grounded ? FaultType.CAG : FaultType.CA;
             }
 
             if (numPhases == 1)
@@ -1366,7 +1373,7 @@ namespace FaultData.DataResources
 
             viFaultType = faultType;
 
-            if (viFaultType == FaultType.ABC)
+            if (viFaultType == FaultType.ABC || viFaultType == FaultType.ABCG)
             {
                 anError = viCycleDataGroup.IA.Error[cycle].Value;
                 bnError = viCycleDataGroup.IB.Error[cycle].Value;
@@ -1432,7 +1439,7 @@ namespace FaultData.DataResources
 
             viFaultType = faultType;
 
-            if (viFaultType == FaultType.ABC)
+            if (viFaultType == FaultType.ABC || viFaultType == FaultType.ABCG)
             {
                 anError = viCycleDataGroup.IA.Error[cycle].Value;
                 bnError = viCycleDataGroup.IB.Error[cycle].Value;

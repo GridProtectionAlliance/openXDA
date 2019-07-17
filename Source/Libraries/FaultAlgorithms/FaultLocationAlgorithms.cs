@@ -358,6 +358,7 @@ namespace FaultAlgorithms
                     return cycle.CN.V.Complex - cycle.AN.V.Complex;
 
                 case FaultType.ABC:
+                case FaultType.ABCG:
                     if (cycle.AN.I.Error < cycle.BN.I.Error && cycle.AN.I.Error < cycle.CN.I.Error)
                         return cycle.AN.V.Complex;
 
@@ -403,6 +404,7 @@ namespace FaultAlgorithms
                     return cycle.CN.I.Complex - cycle.AN.I.Complex;
 
                 case FaultType.ABC:
+                case FaultType.ABCG:
                     if (cycle.AN.I.Error < cycle.BN.I.Error && cycle.AN.I.Error < cycle.CN.I.Error)
                         return cycle.AN.I.Complex;
 
@@ -423,7 +425,7 @@ namespace FaultAlgorithms
 
             sequenceComponents = CycleData.CalculateSequenceComponents(cycle.AN.V, cycle.BN.V, cycle.CN.V);
 
-            if (faultType == FaultType.ABC)
+            if (faultType == FaultType.ABC || faultType == FaultType.ABCG)
                 return sequenceComponents[1];
 
             return sequenceComponents[2];
@@ -436,7 +438,7 @@ namespace FaultAlgorithms
 
             sequenceComponents = CycleData.CalculateSequenceComponents(cycle.AN.I, cycle.BN.I, cycle.CN.I);
 
-            if (faultType == FaultType.ABC)
+            if (faultType == FaultType.ABC || faultType == FaultType.ABCG)
                 return sequenceComponents[1];
 
             return sequenceComponents[2];
@@ -459,6 +461,7 @@ namespace FaultAlgorithms
                 case FaultType.BCG:
                 case FaultType.CAG:
                 case FaultType.ABC:
+                case FaultType.ABCG:
                     return faultDataSet.Z1;
 
                 default:
