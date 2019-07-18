@@ -121,7 +121,7 @@ namespace openXDA.Reports
 	                    MaximoBreaker.ContinuousAmpRating,
 						BreakerOperation.APhaseBreakerTiming,
 						BreakerOperation.BPhaseBreakerTiming, 
-						BreakerOperation.CPhaseBreakerTiming
+						BreakerOperation.CPhaseBreakerTiming,
                         EventStat.IAMax,
 						EventStat.IBMax,
 						EventStat.ICMax
