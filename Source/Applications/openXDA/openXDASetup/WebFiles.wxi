@@ -91,6 +91,9 @@
   <Component Id="wwwroot_Config_EmailTemplateHandler_ashx_cs">
     <File Id="wwwroot_Config_EmailTemplateHandler.ashx.cs" Name="EmailTemplateHandler.ashx.cs" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailTemplateHandler.ashx.cs" />
   </Component>
+  <Component Id="wwwroot_Config_EmailTemplatesUsers_cshtml">
+    <File Id="wwwroot_Config_EmailTemplatesUsers.cshtml" Name="EmailTemplatesUsers.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailTemplatesUsers.cshtml" />
+  </Component>
   <Component Id="wwwroot_Config_EmailTypes_cshtml">
     <File Id="wwwroot_Config_EmailTypes.cshtml" Name="EmailTypes.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailTypes.cshtml" />
   </Component>
@@ -159,6 +162,9 @@
   </Component>
   <Component Id="wwwroot_Config_Users_cshtml">
     <File Id="wwwroot_Config_Users.cshtml" Name="Users.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Users.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Config_UsersEmailTemplates_cshtml">
+    <File Id="wwwroot_Config_UsersEmailTemplates.cshtml" Name="UsersEmailTemplates.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\UsersEmailTemplates.cshtml" />
   </Component>
   <Component Id="wwwroot_Config_XSLTemplate_cshtml">
     <File Id="wwwroot_Config_XSLTemplate.cshtml" Name="XSLTemplate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\XSLTemplate.cshtml" />
