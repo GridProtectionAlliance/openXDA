@@ -155,6 +155,9 @@ namespace openXDA.Reports
 	            MaximoBreaker.ContinuousAmpRating as [Continuous Amp Rating (A)]
             FROM
 	            MaximoBreaker 
+            WHERE
+	            BreakerNum = {0} 
+
                 ";
 
         private const string testInfoQuery = @"
