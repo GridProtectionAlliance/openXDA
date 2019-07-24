@@ -2292,6 +2292,15 @@ ALTER TABLE FileGroupLocalToRemote WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
 REFERENCES FileGroup(ID)
 GO
 
+CREATE TABLE RelayAlertSetting
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    LineID INT NOT NULL REFERENCES Line(ID),
+	TripTime INT NULL,
+	PickupTime INT NULL,
+	TripCoilCondition FLOAT NULL,
+)
+GO
 
 -- ------------ --
 -- PQ Dashboard --
@@ -2906,6 +2915,29 @@ GO
 
 
 ----- VIEWS -----
+----- This Is not Done Yet -----
+CREATE VIEW RelayAlert
+AS
+SELECT
+    Relay.EventID AS EventID,
+	Relay.ID AS ID,
+	Line.ID AS LineID,
+	Relay.PickupTime AS PT,
+	Relay.TripTime AS TT,
+	Relay.TripCoilCondition AS TCC,
+	RAS.PickupTime AS PTAlert,
+	RAS.TripTime AS TTAlert,
+	RAS.TripCoilCondition AS TCCAlert
+FROM
+    (
+	RelayPerformance Relay LEFT OUTER JOIN
+    Channel ON Relay.ChannelID = Channel.ID LEFT OUTER JOIN
+	Line ON Channel.LineID = Line.ID
+	) INNER JOIN
+	RelayAlertSetting RAS ON RAS.LineID = Line.ID
+
+GO
+
 
 CREATE VIEW MeterDetail
 AS
@@ -2949,10 +2981,16 @@ SELECT
     LineImpedance.X0,
     LineImpedance.R1,
     LineImpedance.X1,
-    LineImpedance.ID AS LineImpedanceID
+    LineImpedance.ID AS LineImpedanceID,
+	RelayAlertSetting.TripTime,
+	RelayAlertSetting.PickupTime,
+	RelayAlertSetting.TripCoilCondition,
+	RelayAlertSetting.ID AS RelayAlertSettingID
 FROM
     Line LEFT OUTER JOIN
-    LineImpedance ON Line.ID = LineImpedance.LineID
+    LineImpedance ON Line.ID = LineImpedance.LineID 
+	LEFT OUTER JOIN
+	RelayAlertSetting ON Line.ID = RelayAlertSetting.LineID
 GO
 
 CREATE VIEW MeterLineDetail
@@ -3520,7 +3558,13 @@ SELECT
     IAN.Mapping AS [IAN Channel],
     IBN.Mapping AS [IBN Channel],
     ICN.Mapping AS [ICN Channel],
-    IR.Mapping AS [IR Channel]
+    IR.Mapping AS [IR Channel],
+	FORMAT(RP.Imax1, '0.000') AS [Lmax 1],
+	FORMAT(RP.Imax2, '0.000') AS [Lmax 2],
+	FORMAT(RP.TripInitiate,'HH:mm:ss.fff') AS [Trip Initiation],
+	RP.TripTime AS [Trip Time (microsec)],
+	RP.PickupTime AS [Pickup Time (microsec)],
+	FORMAT(RP.TripCoilCondition, '0.000') AS [Trip Coil Condition (Aps)]
 FROM
     Event JOIN
     MeterLine ON
@@ -3583,7 +3627,15 @@ FROM
         IR.MeasurementType = 'Current' AND
         IR.Phase = 'RES' AND
         IR.MeasurementCharacteristic = 'Instantaneous' AND
-        IR.SeriesType IN ('Values', 'Instantaneous') CROSS JOIN
+        IR.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+	RelayPerformance RP ON
+		Event.ID = RP.EventID AND
+		RP.ChannelID IN 
+		(
+			SELECT ID fROM ChannelDetail RPD WHERE 
+				Event.MeterID = RPD.MeterID AND
+				Event.LineID = RPD.LineID
+		) CROSS JOIN
     (
         SELECT COALESCE(CONVERT(FLOAT,
         (

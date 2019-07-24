@@ -109,6 +109,7 @@
     <Compile Include="System\DataOperation.cs" />
     <Compile Include="Alarms\DataQualityRangeLimit.cs" />
     <Compile Include="TransmissionElements\BreakerOperationType.cs" />
+    <Compile Include="TransmissionElements\RelayAlertSetting.cs" />
     <Compile Include="Trending\DailyTrendingSummary.cs" />
     <Compile Include="Alarms\DefaultAlarmRangeLimit.cs" />
     <Compile Include="Events\Disturbances\Disturbance.cs" />

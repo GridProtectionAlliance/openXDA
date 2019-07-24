@@ -348,11 +348,19 @@ namespace DeviceDefinitionsMigrator
 
                         // Get a lookup table for the channels monitoring this line
                         channelLookup = lookupTables.GetChannelLookup(meter, line, connection);
+                        List<String> channelAdded = new List<String>();
                         outputChannelIndex = 0;
 
                         foreach (XElement channelElement in lineElement.Elements("channels").Elements())
                         {
                             channelKey = channelElement.Name.LocalName;
+
+                            // Don't allow same key twice
+                            if (channelAdded.Contains(channelKey))
+                            {
+                                Console.WriteLine("Channel {0} already exists in xml file, skipping duplicate", channelKey);
+                                continue;
+                            }
 
                             // Attempt to find an existing channel corresponding to this element
                             if (channelLookup.TryGetValue(channelKey, out tuple))
@@ -368,6 +376,7 @@ namespace DeviceDefinitionsMigrator
                                 outputChannel = new OutputChannel();
 
                                 channelLookup.Add(channelKey, Tuple.Create(series, outputChannel));
+                                channelAdded.Add(channelKey);
                             }
 
                             // Load updates to channel configuration into the database
@@ -377,7 +386,7 @@ namespace DeviceDefinitionsMigrator
                             outputChannel.ChannelKey = channelKey;
                             outputChannel.LoadOrder = outputChannelIndex;
                             outputChannels.Add(Tuple.Create(series, outputChannel));
-
+                            
                             outputChannelIndex++;
                         }
 

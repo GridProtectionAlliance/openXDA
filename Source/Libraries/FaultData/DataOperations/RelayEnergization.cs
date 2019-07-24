@@ -75,6 +75,10 @@ namespace FaultData.DataOperations
                         {
                             break;
                         }
+                        if (!meterDataSet.DataSeries[i][minIndex].LargerThan(0.0001))
+                        { 
+                            break;
+                        }
                         minIndex--;
                     }
                     tripInitiate = meterDataSet.DataSeries[i][minIndex + 1].Time;
@@ -155,8 +159,8 @@ namespace FaultData.DataOperations
                             Imax1 = Imax1,
                             Imax2 = Imax2,
                             TripInitiate = tripInitiate,
-                            TripTime = (int)((latchOff - tripInitiate).TotalMilliseconds * 1000),
-                            PickupTime = (int)((fingerOpen - tripInitiate).TotalMilliseconds * 1000),
+                            PickupTime = (int)((latchOff - tripInitiate).TotalMilliseconds * 1000),
+                            TripTime = (int)((fingerOpen - tripInitiate).TotalMilliseconds * 1000),
                             TripCoilCondition = tripCoilCondition
                         });
                     }
