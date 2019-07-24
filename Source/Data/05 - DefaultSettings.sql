@@ -226,15 +226,6 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('XDATimeZone', 'UTC', 'UTC')
 GO
 
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsOverviewToday', 0)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsOverviewYesterday', 0)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsMeterActivity', 1)
-GO
-
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
 
@@ -260,12 +251,6 @@ INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsCompleten
 GO
 
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsCorrectness', 1)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsModbusData', 0)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsHistorianData', 0)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Fault', 1)
