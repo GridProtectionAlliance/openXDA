@@ -1433,7 +1433,7 @@ namespace openXDA.Hubs
 
         public IEnumerable<Meter> GetMetersForSelect()
         {
-            return DataContext.Table<Meter>().QueryRecords("Name", new RecordRestriction("ID IN (SELECT MeterID FROM UserMeter WHERE UserName = {0})", GetCurrentUserSID()));
+            return DataContext.Table<Meter>().QueryRecords("Name");
         }
 
         public IEnumerable<MeasurementCharacteristic> GetCharacteristicsForSelect()
@@ -3109,7 +3109,7 @@ namespace openXDA.Hubs
 
         public IEnumerable<Line> GetLinesForSelect()
         {
-            return DataContext.Table<Line>().QueryRecords(restriction: new RecordRestriction( "ID IN (SELECT LineID FROM MeterLine WHERE MeterID IN (SELECT MeterID FROM UserMeter WHERE UserName = {0}))", GetCurrentUserSID()));
+            return DataContext.Table<Line>().QueryRecords();
         }
 
 
