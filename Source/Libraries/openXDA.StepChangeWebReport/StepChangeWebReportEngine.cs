@@ -72,7 +72,7 @@ namespace openXDA.StepChangeWebReport
         private bool IsProcessing => RunningCount > 0;
 
         [Category]
-        [SettingName("StepChangeWebReport")]
+        [SettingName(StepChangeWebReportSettings.CategoryName)]
         public StepChangeWebReportSettings StepChangeWebReportSettings
         {
             get

@@ -28,6 +28,15 @@ namespace openXDA.Model
 {
     public class PQReportsSettings
     {
+        #region [ Members ]
+
+        // Constants
+        public const string CategoryName = "PQReports";
+
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
         /// Indicates whether operation is enabled.
         /// </summary>
@@ -101,5 +110,7 @@ namespace openXDA.Model
         [Setting]
         [DefaultValue(8.0D)]
         public double VoltageTHDHighLimit { get; set; }
+
+        #endregion
     }
 }

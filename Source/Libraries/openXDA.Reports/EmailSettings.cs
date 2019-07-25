@@ -32,12 +32,8 @@ namespace openXDA.Reports
     {
         #region [ Members ]
 
-        // Fields
-        private string m_smtpServer;
-        private string m_fromAddress;
-        private string m_username;
-        private SecureString m_password;
-        private bool m_enableSSL;
+        // Constants
+        public const string CategoryName = "Email";
 
         #endregion
 
@@ -49,51 +45,21 @@ namespace openXDA.Reports
         /// </summary>
         [Setting]
         [DefaultValue("")]
-        public string SMTPServer
-        {
-            get
-            {
-                return m_smtpServer;
-            }
-            set
-            {
-                m_smtpServer = value;
-            }
-        }
+        public string SMTPServer { get; set; }
 
         /// <summary>
         /// Gets or sets the email address used when sending automated email notifications.
         /// </summary>
         [Setting]
         [DefaultValue("openXDA@gridprotectionalliance.org")]
-        public string FromAddress
-        {
-            get
-            {
-                return m_fromAddress;
-            }
-            set
-            {
-                m_fromAddress = value;
-            }
-        }
+        public string FromAddress { get; set; }
 
         /// <summary>
         /// Gets or sets the username used to authenticate to the SMTP server.
         /// </summary>
         [Setting]
         [DefaultValue("")]
-        public string Username
-        {
-            get
-            {
-                return m_username;
-            }
-            set
-            {
-                m_username = value;
-            }
-        }
+        public string Username { get; set; }
 
         /// <summary>
         /// Gets or sets the password used to authenticate to the SMTP server.
@@ -104,11 +70,11 @@ namespace openXDA.Reports
         {
             get
             {
-                return m_password.ToUnsecureString();
+                return SecurePassword.ToUnsecureString();
             }
             set
             {
-                m_password = value.ToSecureString();
+                SecurePassword = value.ToSecureString();
             }
         }
 
@@ -118,28 +84,12 @@ namespace openXDA.Reports
         /// </summary>
         [Setting]
         [DefaultValue(false)]
-        public bool EnableSSL
-        {
-            get
-            {
-                return m_enableSSL;
-            }
-            set
-            {
-                m_enableSSL = value;
-            }
-        }
+        public bool EnableSSL { get; set; }
 
         /// <summary>
         /// Gets the password as a <see cref="SecureString"/>.
         /// </summary>
-        public SecureString SecurePassword
-        {
-            get
-            {
-                return m_password;
-            }
-        }
+        public SecureString SecurePassword { get; private set; }
 
         #endregion
     }

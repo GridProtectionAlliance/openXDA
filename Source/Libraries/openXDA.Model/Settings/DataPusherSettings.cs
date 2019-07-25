@@ -30,12 +30,11 @@ namespace openXDA.Model
     {
         #region [ Members ]
 
-        // Fields
-        private bool m_enable;
-        private bool m_onlyValidFaults;
-        private int m_timeWindow;
+        // Constants
+        public const string CategoryName = "DataPusher";
 
         #endregion
+
         #region [ Properties ]
 
 
@@ -44,34 +43,14 @@ namespace openXDA.Model
         /// </summary>
         [Setting]
         [DefaultValue(true)]
-        public bool OnlyValidFaults
-        {
-            get
-            {
-                return m_onlyValidFaults;
-            }
-            set
-            {
-                m_onlyValidFaults = value;
-            }
-        }
+        public bool OnlyValidFaults { get; set; }
 
         /// <summary>
         /// Indicates whether operation is enabled.
         /// </summary>
         [Setting]
         [DefaultValue(false)]
-        public bool Enabled
-        {
-            get
-            {
-                return m_enable;
-            }
-            set
-            {
-                m_enable = value;
-            }
-        }
+        public bool Enabled { get; set; }
 
 
         /// <summary>
@@ -79,20 +58,8 @@ namespace openXDA.Model
         /// </summary>
         [Setting]
         [DefaultValue(72)]
-        public int TimeWindow
-        {
-            get
-            {
-                return m_timeWindow;
-            }
-            set
-            {
-                m_timeWindow = value;
-            }
-        }
+        public int TimeWindow { get; set; }
 
         #endregion
-
-
     }
 }

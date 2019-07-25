@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.ComponentModel;
 using System.Configuration;
 
@@ -31,13 +30,8 @@ namespace FaultData.Configuration
     {
         #region [ Members ]
 
-        // Fields
-        private bool m_applyDCOffsetLogic;
-        private double m_dcOffsetWindowSize;
-        private double m_lateBreakerThreshold;
-        private double m_minCyclesBeforeOpen;
-        private double m_minWaitBeforeReclose;
-        private double m_openBreakerThreshold;
+        // Constants
+        public const string CategoryName = "Breakers";
 
         #endregion
 
@@ -50,17 +44,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(false)]
-        public bool ApplyDCOffsetLogic
-        {
-            get
-            {
-                return m_applyDCOffsetLogic;
-            }
-            set
-            {
-                m_applyDCOffsetLogic = value;
-            }
-        }
+        public bool ApplyDCOffsetLogic { get; set; }
 
         /// <summary>
         /// Gets or sets the size of the window, in cycles,
@@ -68,17 +52,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(9.0D / 8.0D)]
-        public double DCOffsetWindowSize
-        {
-            get
-            {
-                return m_dcOffsetWindowSize;
-            }
-            set
-            {
-                m_dcOffsetWindowSize = value;
-            }
-        }
+        public double DCOffsetWindowSize { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum number of cycles that a breaker
@@ -86,17 +60,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(0.0D)]
-        public double LateBreakerThreshold
-        {
-            get
-            {
-                return m_lateBreakerThreshold;
-            }
-            set
-            {
-                m_lateBreakerThreshold = value;
-            }
-        }
+        public double LateBreakerThreshold { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum number of cycles that the breaker is expected
@@ -108,17 +72,7 @@ namespace FaultData.Configuration
         /// </remarks>
         [Setting]
         [DefaultValue(0.0D)]
-        public double MinCyclesBeforeOpen
-        {
-            get
-            {
-                return m_minCyclesBeforeOpen;
-            }
-            set
-            {
-                m_minCyclesBeforeOpen = value;
-            }
-        }
+        public double MinCyclesBeforeOpen { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum amount of time, in cycles, the system must wait
@@ -126,17 +80,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(15.0D)]
-        public double MinWaitBeforeReclose
-        {
-            get
-            {
-                return m_minWaitBeforeReclose;
-            }
-            set
-            {
-                m_minWaitBeforeReclose = value;
-            }
-        }
+        public double MinWaitBeforeReclose { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum RMS current, in amps,
@@ -144,17 +88,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(20.0D)]
-        public double OpenBreakerThreshold
-        {
-            get
-            {
-                return m_openBreakerThreshold;
-            }
-            set
-            {
-                m_openBreakerThreshold = value;
-            }
-        }
+        public double OpenBreakerThreshold { get; set; }
 
         #endregion
     }

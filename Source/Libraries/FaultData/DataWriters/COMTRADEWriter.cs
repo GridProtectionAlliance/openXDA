@@ -179,7 +179,7 @@ namespace FaultData.DataWriters
         }
 
         [Category]
-        [SettingName("FaultLocation")]
+        [SettingName(FaultLocationSettings.CategoryName)]
         public FaultLocationSettings FaultLocationSettings
         {
             get

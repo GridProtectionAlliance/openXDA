@@ -431,7 +431,7 @@ namespace FaultData.DataOperations
         }
 
         [Category]
-        [SettingName("Breakers")]
+        [SettingName(BreakerSettings.CategoryName)]
         public BreakerSettings BreakerSettings
         {
             get

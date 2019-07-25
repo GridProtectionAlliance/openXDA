@@ -23,10 +23,8 @@
 
 using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
-using GSF.Collections;
 
 namespace FaultData.DataResources
 {

@@ -29,6 +29,15 @@ namespace openXDA.Model
 {
     public class BreakerReportsSettings
     {
+        #region [ Members ]
+
+        // Constants
+        public const string CategoryName = "BreakerReports";
+
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
         /// Indicates whether operation is enabled.
         /// </summary>
@@ -47,9 +56,9 @@ namespace openXDA.Model
         /// Comma separated list of emails to send breaker reports to.
         /// </summary>
         [Setting]
-        [DefaultValue("")]  
+        [DefaultValue("")]
         public string EmailList { get; set; }
 
-
+        #endregion
     }
 }

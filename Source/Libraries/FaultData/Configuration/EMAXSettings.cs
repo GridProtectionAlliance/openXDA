@@ -30,10 +30,8 @@ namespace FaultData.Configuration
     {
         #region [ Members ]
 
-        // Fields
-        private bool m_applyTimestampCorrection;
-        private bool m_applyValueCorrection;
-        private string m_comtradeExportDirectory;
+        // Constants
+        public const string CategoryName = "EMAX";
 
         #endregion
 
@@ -45,17 +43,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(true)]
-        public bool ApplyTimestampCorrection
-        {
-            get
-            {
-                return m_applyTimestampCorrection;
-            }
-            set
-            {
-                m_applyTimestampCorrection = value;
-            }
-        }
+        public bool ApplyTimestampCorrection { get; set; }
 
         /// <summary>
         /// Gets or sets the value that indicates whether value
@@ -63,17 +51,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(true)]
-        public bool ApplyValueCorrection
-        {
-            get
-            {
-                return m_applyValueCorrection;
-            }
-            set
-            {
-                m_applyValueCorrection = value;
-            }
-        }
+        public bool ApplyValueCorrection { get; set; }
 
         /// <summary>
         /// Gets or sets the path to the directory where COMTRADE
@@ -81,17 +59,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue("")]
-        public string COMTRADEExportDirectory
-        {
-            get
-            {
-                return m_comtradeExportDirectory;
-            }
-            set
-            {
-                m_comtradeExportDirectory = value;
-            }
-        }
+        public string COMTRADEExportDirectory { get; set; }
 
         #endregion
     }

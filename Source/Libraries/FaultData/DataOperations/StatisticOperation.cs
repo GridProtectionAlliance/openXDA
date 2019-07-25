@@ -253,8 +253,5 @@ namespace FaultData.DataOperations
 
             return (-1 * vca * ia + vbc * ib).Real / 1E6;
         }
-
-
     }
-
 }

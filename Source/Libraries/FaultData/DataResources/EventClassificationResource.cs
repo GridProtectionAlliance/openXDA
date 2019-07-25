@@ -41,6 +41,7 @@ namespace FaultData.DataResources
     {
         Fault,
         RecloseIntoFault,
+        BreakerTrip,
         Interruption,
         Sag,
         Swell,
@@ -138,7 +139,7 @@ namespace FaultData.DataResources
         }
 
         [Category]
-        [SettingName("FaultLocation")]
+        [SettingName(FaultLocationSettings.CategoryName)]
         public FaultLocationSettings FaultLocationSettings
         {
             get
@@ -204,6 +205,11 @@ namespace FaultData.DataResources
                         return EventClassification.RecloseIntoFault;
                 }
             }
+
+            BreakerOpenResource breakerOpenResource = meterDataSet.GetResource<BreakerOpenResource>();
+
+            if (breakerOpenResource.TripLookup.TryGetValue(dataGroup, out List<BreakerOpenResource.Trip> trips))
+                return EventClassification.BreakerTrip;
 
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();

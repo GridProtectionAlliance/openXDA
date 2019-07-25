@@ -68,7 +68,7 @@ namespace PQMark.DataAggregator
         public bool Running => m_running;
 
         [Category]
-        [SettingName("PQMarkAggregation")]
+        [SettingName(PQMarkAggregationSettings.CategoryName)]
         public PQMarkAggregationSettings PQMarkAggregationSettings => m_pqMarkAggregationSettings;
 
         #endregion

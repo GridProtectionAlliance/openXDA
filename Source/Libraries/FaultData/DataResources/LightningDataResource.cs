@@ -41,6 +41,8 @@ namespace FaultData.DataResources
 
     public class LightningDataSettings
     {
+        public const string CategoryName = "Lightning";
+
         [Setting]
         [DefaultValue("")]
         public string DataProviderAssembly { get; set; }
@@ -69,7 +71,7 @@ namespace FaultData.DataResources
         }
 
         [Category]
-        [SettingName("Lightning")]
+        [SettingName(LightningDataSettings.CategoryName)]
         public LightningDataSettings LightningDataSettings { get; }
 
         public Dictionary<DataGroup, List<ILightningStrike>> LightningStrikeLookup { get; }

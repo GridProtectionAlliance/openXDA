@@ -30,6 +30,15 @@ namespace FaultData.Configuration
 {
     public class EmailSettings
     {
+        #region [ Members ]
+
+        // Constants
+        public const string CategoryName = "Email";
+
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
         /// Gets or sets the address used by the administrator of the email system.
         /// </summary>
@@ -89,5 +98,7 @@ namespace FaultData.Configuration
         /// Gets the password as a <see cref="SecureString"/>.
         /// </summary>
         public SecureString SecurePassword { get; private set; }
+
+        #endregion
     }
 }

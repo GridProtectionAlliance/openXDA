@@ -74,7 +74,7 @@ namespace FaultData.DataReaders
         /// Settings to configure native EMAX file format integration.
         /// </summary>
         [Category]
-        [SettingName("EMAX")]
+        [SettingName(EMAXSettings.CategoryName)]
         public EMAXSettings EMAXSettings
         {
             get

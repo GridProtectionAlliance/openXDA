@@ -60,7 +60,7 @@ namespace FaultData.DataOperations
         #region [ Properties ]
 
         [Category]
-        [SettingName("Historian")]
+        [SettingName(HistorianSettings.CategoryName)]
         public HistorianSettings HistorianSettings
         {
             get

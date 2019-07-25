@@ -39,6 +39,8 @@ namespace openXDA.ArcGIS
 {
     public class LightningDataProviderSettings
     {
+        public const string CategoryName = "Lightning";
+
         private const string ServiceKey = "Service";
         private const string URLKey = "Service";
         private const string LightningMapServerPattern = @"\[(?<" + ServiceKey + @">[^]]+)\]\((?<" + URLKey + @">[^)]+)\)";
@@ -63,11 +65,11 @@ namespace openXDA.ArcGIS
             LightningDataSettings = new LightningDataProviderSettings();
 
         [Setting]
-        [SettingName("XDATimeZone")]
+        [SettingName(nameof(XDATimeZone))]
         public string XDATimeZoneID { get; set; }
 
         [Category]
-        [SettingName("Lightning")]
+        [SettingName(LightningDataProviderSettings.CategoryName)]
         public LightningDataProviderSettings LightningDataSettings { get; }
 
         private TimeZoneInfo XDATimeZone =>

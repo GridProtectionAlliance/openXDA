@@ -67,7 +67,7 @@ namespace FaultData.DataReaders
         #region [ Properties ]
 
         [Category]
-        [SettingName("COMTRADE")]
+        [SettingName(COMTRADESettings.CategoryName)]
         public COMTRADESettings Settings { get; }
 
         /// <summary>

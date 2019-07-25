@@ -49,8 +49,9 @@ namespace FaultData.DataOperations
         #endregion
 
         #region [ Properties ]
+
         [Category]
-        [SettingName("DataPusher")]
+        [SettingName(DataPusherSettings.CategoryName)]
         public DataPusherSettings DataPusherSettings
         {
             get
@@ -58,6 +59,7 @@ namespace FaultData.DataOperations
                 return m_dataPusherSettings;
             }
         }
+
         #endregion
 
         #region [ Methods ]
@@ -122,6 +124,5 @@ namespace FaultData.DataOperations
         private static readonly ILog Log = LogManager.GetLogger(typeof(TrendingDataSummaryOperation));
 
         #endregion        
-
     }
 }

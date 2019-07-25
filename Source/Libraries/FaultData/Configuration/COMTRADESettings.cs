@@ -30,6 +30,15 @@ namespace FaultData.Configuration
 {
     public class COMTRADESettings
     {
+        #region [ Members ]
+
+        // Constants
+        public const string CategoryName = "COMTRADE";
+
+        #endregion
+
+        #region [ Properties ]
+
         public TimeSpan MinWaitTime { get; set; }
 
         [Setting]
@@ -49,5 +58,7 @@ namespace FaultData.Configuration
             get => MinWaitTime.TotalSeconds;
             set => MinWaitTime = TimeSpan.FromSeconds(value);
         }
+
+        #endregion
     }
 }

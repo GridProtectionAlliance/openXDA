@@ -28,6 +28,15 @@ namespace openXDA.Model
 {
     public class PQTrendingWebReportSettings
     {
+        #region [ Members ]
+
+        // Constants
+        public const string CategoryName = "PQTrendingWebReport";
+
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
         /// Indicates whether operation is enabled.
         /// </summary>
@@ -48,5 +57,7 @@ namespace openXDA.Model
         [Setting]
         [DefaultValue(false)]  // Runs on second day of month to ensure all data is in
         public bool Verbose { get; set; }
+
+        #endregion
     }
 }

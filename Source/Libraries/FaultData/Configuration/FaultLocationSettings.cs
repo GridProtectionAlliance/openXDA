@@ -34,6 +34,15 @@ namespace FaultData.Configuration
 
     public class FaultLocationSettings
     {
+        #region [ Members ]
+
+        // Constants
+        public const string CategoryName = "FaultLocation";
+
+        #endregion
+
+        #region [ Properties ]
+
         [Setting]
         [DefaultValue(5.0D)]
         public double PrefaultTrigger { get; set; }
@@ -69,5 +78,7 @@ namespace FaultData.Configuration
         [Setting]
         [DefaultValue(true)]
         public bool UseDefaultFaultDetectionLogic { get; set; }
+
+        #endregion
     }
 }

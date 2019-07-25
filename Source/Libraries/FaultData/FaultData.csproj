@@ -120,6 +120,7 @@
     <Compile Include="DataReaders\IGridPQDIFReader.cs" />
     <Compile Include="DataReaders\PQViewDIFReader.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />
+    <Compile Include="DataResources\BreakerOpenResource.cs" />
     <Compile Include="DataResources\GTC\BreakerRestrikeResource.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\EventClassificationResource.cs" />
@@ -133,6 +134,7 @@
     <Compile Include="DataResources\InterruptionDataResource.cs" />
     <Compile Include="DataResources\LightningDataResource.cs" />
     <Compile Include="DataResources\SagDataResource.cs" />
+    <Compile Include="DataResources\SCADADataResource.cs" />
     <Compile Include="DataResources\SwellDataResource.cs" />
     <Compile Include="DataResources\SystemEventResource.cs" />
     <Compile Include="DataResources\SnapshotDataResource.cs" />

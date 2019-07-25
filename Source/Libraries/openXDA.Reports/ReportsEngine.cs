@@ -32,7 +32,6 @@ using System.Net.Mail;
 using System.Text;
 using GSF;
 using GSF.Configuration;
-using GSF.Data;
 using GSF.Scheduling;
 using GSF.Web.Model;
 using log4net;
@@ -70,15 +69,15 @@ namespace openXDA.Reports
         public bool Running { get; private set; }
 
         [Category]
-        [SettingName("PQReports")]
+        [SettingName(PQReportsSettings.CategoryName)]
         public PQReportsSettings PQReportsSettings { get; }
 
         [Category]
-        [SettingName("BreakerReports")]
+        [SettingName(BreakerReportsSettings.CategoryName)]
         public BreakerReportsSettings BreakerReportsSettings { get; }
 
         [Category]
-        [SettingName("Email")]
+        [SettingName(EmailSettings.CategoryName)]
         public EmailSettings EmailSettings { get; }
 
         #endregion

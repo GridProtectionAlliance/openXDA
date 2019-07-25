@@ -74,7 +74,7 @@ namespace FaultData.DataWriters
                 : "UTC";
 
         private string EmailConnectionString =>
-            Settings.TryGetValue("Email", out string emailConnectionString)
+            Settings.TryGetValue(EmailSettings.CategoryName, out string emailConnectionString)
                 ? emailConnectionString
                 : string.Empty;
 

@@ -224,123 +224,43 @@ namespace FaultData.DataResources
             #endregion
         }
 
-        // Fields
-        private double m_systemFrequency;
-        private double m_maxVoltage;
-        private double m_maxCurrent;
-        private string m_xdaTimeZoneID;
-        private FaultLocationSettings m_faultLocationSettings;
-        private BreakerSettings m_breakerSettings;
-        private EDNASettings m_ednaSettings;
-
-        private Dictionary<DataGroup, FaultGroup> m_faultLookup;
-
         #endregion
 
         #region [ Constructors ]
 
         public FaultDataResource()
         {
-            m_faultLocationSettings = new FaultLocationSettings();
-            m_breakerSettings = new BreakerSettings();
-            m_ednaSettings = new EDNASettings();
-            m_faultLookup = new Dictionary<DataGroup, FaultGroup>();
+            FaultLocationSettings = new FaultLocationSettings();
+            BreakerSettings = new BreakerSettings();
+            FaultLookup = new Dictionary<DataGroup, FaultGroup>();
         }
 
         #endregion
 
         #region [ Properties ]
 
-        public Dictionary<DataGroup, FaultGroup> FaultLookup
-        {
-            get
-            {
-                return m_faultLookup;
-            }
-        }
+        public Dictionary<DataGroup, FaultGroup> FaultLookup { get; }
 
         [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
+        public double SystemFrequency { get; set; }
 
         [Setting]
-        public double MaxVoltage
-        {
-            get
-            {
-                return m_maxVoltage;
-            }
-            set
-            {
-                m_maxVoltage = value;
-            }
-        }
+        public double MaxVoltage { get; set; }
 
         [Setting]
-        public double MaxCurrent
-        {
-            get
-            {
-                return m_maxCurrent;
-            }
-            set
-            {
-                m_maxCurrent = value;
-            }
-        }
+        public double MaxCurrent { get; set; }
 
         [Setting]
-        [SettingName("XDATimeZone")]
-        public string XDATimeZoneID
-        {
-            get
-            {
-                return m_xdaTimeZoneID;
-            }
-            set
-            {
-                m_xdaTimeZoneID = value;
-            }
-        }
+        [SettingName(nameof(XDATimeZone))]
+        public string XDATimeZoneID { get; set; }
 
         [Category]
-        [SettingName("FaultLocation")]
-        public FaultLocationSettings FaultLocationSettings
-        {
-            get
-            {
-                return m_faultLocationSettings;
-            }
-        }
+        [SettingName(FaultLocationSettings.CategoryName)]
+        public FaultLocationSettings FaultLocationSettings { get; }
 
         [Category]
-        [SettingName("Breakers")]
-        public BreakerSettings BreakerSettings
-        {
-            get
-            {
-                return m_breakerSettings;
-            }
-        }
-
-        [Category]
-        [SettingName("EDNA")]
-        public EDNASettings EDNASettings
-        {
-            get
-            {
-                return m_ednaSettings;
-            }
-        }
+        [SettingName(BreakerSettings.CategoryName)]
+        public BreakerSettings BreakerSettings { get; }
 
         private TimeZoneInfo XDATimeZone
         {
@@ -349,6 +269,8 @@ namespace FaultData.DataResources
                 return TimeZoneInfo.FindSystemTimeZoneById(XDATimeZoneID);
             }
         }
+
+        private Func<Line, DateTime, bool> AskSCADAIfBreakerOpened { get; set; }
 
         #endregion
 
@@ -365,6 +287,9 @@ namespace FaultData.DataResources
                 TableOperations<openXDA.Model.FaultLocationAlgorithm> faultLocationAlgorithmTable = new TableOperations<openXDA.Model.FaultLocationAlgorithm>(connection);
                 faultLocationAlgorithms = GetFaultLocationAlgorithms(faultLocationAlgorithmTable);
             }
+
+            SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
+            AskSCADAIfBreakerOpened = scadaDataResource.DidBreakerOpen;
 
             Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
 
@@ -466,7 +391,7 @@ namespace FaultData.DataResources
                 stopwatch.Restart();
 
                 FaultCurveGenerator faultCurveGenerator = new FaultCurveGenerator();
-                faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, m_systemFrequency);
+                faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, SystemFrequency);
                 faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
                 faultCurveGenerator.Faults = faults;
                 faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
@@ -487,7 +412,7 @@ namespace FaultData.DataResources
 
                 // Create a fault group and add it to the lookup table
                 bool faultValidationLogicResult = CheckFaultValidationLogic(faults);
-                m_faultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
+                FaultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
             }
         }
 
@@ -523,7 +448,7 @@ namespace FaultData.DataResources
             {
                 if ((object)expressionText == null)
                 {
-                    if (m_faultLocationSettings.WarnMissingDetectionLogic)
+                    if (FaultLocationSettings.WarnMissingDetectionLogic)
                         throw new Exception($"Expression text is not defined for line '{dataGroup.Line.AssetKey}'.");
 
                     return null;
@@ -603,9 +528,9 @@ namespace FaultData.DataResources
             Fault currentFault = null;
 
             bool[] faultApparent = rms.DataPoints
-                .Select(dataPoint => dataPoint.Value - m_faultLocationSettings.PrefaultTriggerAdjustment)
+                .Select(dataPoint => dataPoint.Value - FaultLocationSettings.PrefaultTriggerAdjustment)
                 .Select(value => value / rms[0].Value)
-                .Select(ratio => ratio > m_faultLocationSettings.PrefaultTrigger)
+                .Select(ratio => ratio > FaultLocationSettings.PrefaultTrigger)
                 .ToArray();
 
             for (int i = 0; i < rms.DataPoints.Count; i++)
@@ -692,14 +617,14 @@ namespace FaultData.DataResources
             };
 
             // Determine if any of the RMS voltages are unreasonably high
-            if (voltages.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxVoltage)))
+            if (voltages.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > MaxVoltage)))
             {
                 Log.Debug("Data unreasonable: voltage > maxVoltage");
                 return false;
             }
 
             // Determine if any of the RMS currents are unreasonably low
-            if (currents.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxCurrent)))
+            if (currents.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > MaxCurrent)))
             {
                 Log.Debug("Data unreasonable: current > maxCurrent");
                 return false;
@@ -710,7 +635,7 @@ namespace FaultData.DataResources
 
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, SystemFrequency);
             int startIndex = cycleIndex;
             int endIndex = cycleIndex + samplesPerCycle - 1;
             int prefaultIndex = Math.Max(0, startIndex - samplesPerCycle);
@@ -781,7 +706,7 @@ namespace FaultData.DataResources
 
         private int FindFaultClearing(DataSeries waveForm, int cycleIndex)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, SystemFrequency);
             int startIndex = cycleIndex - 1;
             int endIndex = startIndex + samplesPerCycle - 1;
             int postfaultIndex = Math.Min(endIndex + samplesPerCycle, waveForm.DataPoints.Count - 1);
@@ -1008,7 +933,7 @@ namespace FaultData.DataResources
 
         private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = dataGroup[0][fault.StartSample].Time;
             DateTime endTime = dataGroup[0][fault.EndSample].Time;
@@ -1024,13 +949,13 @@ namespace FaultData.DataResources
             fault.Duration = endTime - startTime;
             fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
             fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
-            fault.IsSuppressed = double.IsNaN(postfaultPeak) || postfaultPeak > m_breakerSettings.OpenBreakerThreshold || !AskSCADAIfBreakerOpened(dataGroup.Line, fault);
+            fault.IsSuppressed = double.IsNaN(postfaultPeak) || postfaultPeak > BreakerSettings.OpenBreakerThreshold || !AskSCADAIfBreakerOpened(dataGroup.Line, fault.ClearingTime);
 
             fault.IsReclose =
                 !double.IsNaN(prefaultPeak) &&
                 !double.IsNaN(postfaultPeak) &&
-                prefaultPeak <= m_breakerSettings.OpenBreakerThreshold &&
-                postfaultPeak <= m_breakerSettings.OpenBreakerThreshold;
+                prefaultPeak <= BreakerSettings.OpenBreakerThreshold &&
+                postfaultPeak <= BreakerSettings.OpenBreakerThreshold;
 
             if (fault.Segments.Any())
             {
@@ -1099,103 +1024,17 @@ namespace FaultData.DataResources
             }
         }
 
-        private bool AskSCADAIfBreakerOpened(Line line, Fault fault)
-        {
-            string pointQuery = m_ednaSettings.PointQuery;
-            List<string> points;
-
-            using (AdoDataConnection connection = line.ConnectionFactory())
-            using (DataTable pointTable = connection.RetrieveData(pointQuery, line.ID))
-            {
-                points = pointTable
-                    .Select()
-                    .Select(row => row.ConvertField<string>("Point"))
-                    .ToList();
-            }
-
-            // If there are no SCADA points configured,
-            // trust the analysis results
-            if (!points.Any())
-                return true;
-
-            DateTime utcClearingTime = TimeZoneInfo.ConvertTimeToUtc(fault.ClearingTime, XDATimeZone);
-            DateTime localClearingTime = utcClearingTime.ToLocalTime();
-
-            TimeSpan queryTolerance = m_ednaSettings.QueryToleranceSpan;
-            DateTime startTime = localClearingTime - queryTolerance;
-            DateTime endTime = localClearingTime + queryTolerance;
-
-            double breakerOpenValue = m_ednaSettings.BreakerOpenValue;
-
-            foreach (string point in points)
-            {
-                var previousPoint = new
-                {
-                    Value = default(double),
-                    Time = default(DateTime),
-                    Status = default(string),
-                    Valid = false
-                };
-
-                int[] expectedResults =
-                {
-                    (int)eDNAHistoryReturnStatus.END_OF_HISTORY,
-                    (int)eDNAHistoryReturnStatus.NO_HISTORY_FOR_TIME
-                };
-
-                int result = History.DnaGetHistRaw(point, startTime, endTime, out uint key);
-
-                while (result == 0)
-                {
-                    result = History.DnaGetNextHist(key, out double value, out DateTime time, out string status);
-
-                    if (result == 0)
-                    {
-                        // Verify that the data point represents a change
-                        // from closed to open within the queried time range
-                        bool trip =
-                            previousPoint.Valid &&
-                            previousPoint.Value != breakerOpenValue &&
-                            value == breakerOpenValue &&
-                            time >= startTime &&
-                            time <= endTime;
-
-                        if (trip)
-                            return true;
-
-                        previousPoint = new
-                        {
-                            Value = value,
-                            Time = time,
-                            Status = status,
-                            Valid = true
-                        };
-                    }
-                }
-
-                // Assume that unexpected return status indicates an error
-                // and therefore the analysis results should be trusted
-                if (!expectedResults.Contains(result))
-                {
-                    Log.Debug($"Unexpected eDNA return code: {result}");
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         private bool IsValid(double faultDistance, DataGroup dataGroup)
         {
             double lineLength = dataGroup.Line.Length;
-            double maxDistance = m_faultLocationSettings.MaxFaultDistanceMultiplier * lineLength;
-            double minDistance = m_faultLocationSettings.MinFaultDistanceMultiplier * lineLength;
+            double maxDistance = FaultLocationSettings.MaxFaultDistanceMultiplier * lineLength;
+            double minDistance = FaultLocationSettings.MinFaultDistanceMultiplier * lineLength;
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 
         private double GetPrefaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
             int start = fault.StartSample - samplesPerCycle;
             int end = fault.StartSample;
 
@@ -1208,7 +1047,7 @@ namespace FaultData.DataResources
 
         private double GetPostfaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
             int start = fault.EndSample + 1;
             int end = fault.EndSample + samplesPerCycle;
 
@@ -1221,7 +1060,7 @@ namespace FaultData.DataResources
 
         private double GetPrefaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
             int start = fault.StartSample - 5 * samplesPerCycle;
             int end = fault.StartSample - samplesPerCycle - 1;
 
@@ -1234,7 +1073,7 @@ namespace FaultData.DataResources
 
         private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
             int start = fault.EndSample + samplesPerCycle + 1;
             int end = fault.EndSample + 5 * samplesPerCycle;
 
@@ -1320,7 +1159,7 @@ namespace FaultData.DataResources
                         // For single-phase faults, we can simply shift the
                         // calculation cycle by a few samples to account for
                         // minor errors in the clearing time logic
-                        return lastValidSegment.EndSample - m_faultLocationSettings.FaultClearingAdjustmentSamples;
+                        return lastValidSegment.EndSample - FaultLocationSettings.FaultClearingAdjustmentSamples;
 
                     default:
                         // For multi-phase faults, the various phases will clear at different times.
@@ -1349,7 +1188,7 @@ namespace FaultData.DataResources
             // If the selected cycle falls outside the valid range,
             // fall back on the single-phase adjustment from the very end of the fault
             if (selectedCycle < minCycle || selectedCycle > maxCycle)
-                selectedCycle = maxCycle - m_faultLocationSettings.FaultClearingAdjustmentSamples;
+                selectedCycle = maxCycle - FaultLocationSettings.FaultClearingAdjustmentSamples;
 
             // If even the single-phase adjustment is invalid,
             // just pick the last valid cycle

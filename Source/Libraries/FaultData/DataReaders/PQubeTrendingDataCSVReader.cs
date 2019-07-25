@@ -75,6 +75,7 @@ namespace FaultData.DataReaders
         }
 
         private Dictionary<string, int> Channels { get; set; }
+
         #endregion
 
         #region [ Methods ]

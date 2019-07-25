@@ -21,29 +21,18 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Xml.Linq;
 using GSF.Data;
-using GSF.Data.Model;
-using GSF.Threading;
 using GSF.Web.Model;
 using GSF.Xml;
 using log4net;
 using openXDA.Model;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Mail;
-using System.Net.Mime;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace openXDA.Reports
 {
@@ -71,10 +60,12 @@ namespace openXDA.Reports
         #endregion
 
         #region [ Properties ]
+
         public EmailSettings EmailSettings { get; }
         public PQReportsSettings ReportSettings { get; }
         public DataContext DataContext { get; }
         public TimeZoneInfo XDATimeZone { get; }
+
         #endregion
 
         #region [ Methods ]
@@ -216,6 +207,5 @@ namespace openXDA.Reports
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(EmailWriter));
         #endregion
-
     }
 }

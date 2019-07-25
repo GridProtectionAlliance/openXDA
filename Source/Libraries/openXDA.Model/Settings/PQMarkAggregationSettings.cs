@@ -21,13 +21,8 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace openXDA.Model
 {
@@ -35,45 +30,26 @@ namespace openXDA.Model
     {
         #region [ Members ]
 
-        // Fields
-        private bool m_enable;
-        private string m_frequency;
+        // Constants
+        public const string CategoryName = "PQMarkAggregation";
 
         #endregion
+
         #region [ Properties ]
+
         /// <summary>
         /// Indicates whether operation is enabled.
         /// </summary>
         [Setting]
         [DefaultValue(false)]
-        public bool Enabled
-        {
-            get
-            {
-                return m_enable;
-            }
-            set
-            {
-                m_enable = value;
-            }
-        }
+        public bool Enabled { get; set; }
 
         /// <summary>
         /// Indicates whether operation is enabled.
         /// </summary>
         [Setting]
         [DefaultValue("0 0 1 * *")]
-        public string Frequency
-        {
-            get
-            {
-                return m_frequency;
-            }
-            set
-            {
-                m_frequency = value;
-            }
-        }
+        public string Frequency { get; set; }
 
         #endregion
     }

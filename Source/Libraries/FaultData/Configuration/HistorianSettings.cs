@@ -34,6 +34,7 @@ namespace FaultData.Configuration
         #region [ Members ]
 
         // Constants
+        public const string CategoryName = "Historian";
 
         /// <summary>
         /// Default historian server port number.
@@ -41,11 +42,7 @@ namespace FaultData.Configuration
         public const int DefaultHistorianPort = 38402;
 
         // Fields
-        private string m_hostName;
         private int m_port;
-        private string m_instanceName;
-        private string m_url;
-        private SecureString m_securePassword;
 
         #endregion
 
@@ -60,7 +57,7 @@ namespace FaultData.Configuration
         {
             get
             {
-                return string.Format("{0}:{1}", m_hostName.ToNonNullNorEmptyString("127.0.0.1"), m_port);
+                return string.Format("{0}:{1}", HostName.ToNonNullNorEmptyString("127.0.0.1"), m_port);
             }
             set
             {
@@ -68,7 +65,7 @@ namespace FaultData.Configuration
                     throw new ArgumentNullException("value", "historian server null or empty");
 
                 string[] parts = value.Split(':');
-                m_hostName = parts[0];
+                HostName = parts[0];
 
                 if (parts.Length < 2 || !int.TryParse(parts[1], out m_port))
                     m_port = DefaultHistorianPort;
@@ -80,34 +77,14 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue("XDA")]
-        public string InstanceName
-        {
-            get
-            {
-                return m_instanceName;
-            }
-            set
-            {
-                m_instanceName = value;
-            }
-        }
+        public string InstanceName { get; set; }
 
         /// <summary>
         /// Gets or sets the URL of the historian web management tool.
         /// </summary>
         [Setting]
         [DefaultValue("http://127.0.0.1:8180")]
-        public string URL
-        {
-            get
-            {
-                return m_url;
-            }
-            set
-            {
-                m_url = value;
-            }
-        }
+        public string URL { get; set; }
 
         /// <summary>
         /// Gets or sets the password used to create imported
@@ -119,11 +96,11 @@ namespace FaultData.Configuration
         {
             get
             {
-                return m_securePassword.ToUnsecureString();
+                return SecurePassword.ToUnsecureString();
             }
             set
             {
-                m_securePassword = value.ToSecureString();
+                SecurePassword = value.ToSecureString();
             }
         }
 
@@ -131,35 +108,17 @@ namespace FaultData.Configuration
         /// Gets the password used to create imported
         /// measurements in the historian metadata database.
         /// </summary>
-        public SecureString SecurePassword
-        {
-            get
-            {
-                return m_securePassword;
-            }
-        }
+        public SecureString SecurePassword { get; private set; }
 
         /// <summary>
         /// Gets the host name of the historian server.
         /// </summary>
-        public string HostName
-        {
-            get
-            {
-                return m_hostName;
-            }
-        }
+        public string HostName { get; private set; }
 
         /// <summary>
         /// Gets the port on which the historian server is listening.
         /// </summary>
-        public int Port
-        {
-            get
-            {
-                return m_port;
-            }
-        }
+        public int Port => m_port;
 
         #endregion
     }

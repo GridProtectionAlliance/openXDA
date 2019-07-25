@@ -21,6 +21,13 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading;
 using GSF;
 using GSF.Configuration;
 using GSF.Scheduling;
@@ -29,17 +36,6 @@ using GSF.Web.Model;
 using log4net;
 using openHistorian.XDALink;
 using openXDA.Model;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace openXDA.PQTrendingWebReport
 {
@@ -68,14 +64,16 @@ namespace openXDA.PQTrendingWebReport
         #endregion
 
         #region [ Properties ]
+
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
         public bool Running => m_running;
         private int RunningCount => m_runningCount;
         private bool IsProcessing => RunningCount > 0;
 
         [Category]
-        [SettingName("PQTrendingWebReport")]
+        [SettingName(PQTrendingWebReportSettings.CategoryName)]
         public PQTrendingWebReportSettings PQTrendingWebReportSettings => m_pqTrendingWebReportSettings;
+
         #endregion
 
         #region [ Static ]
@@ -314,6 +312,5 @@ namespace openXDA.PQTrendingWebReport
             return helpMessage.ToString();
         }
         #endregion
-
     }
 }

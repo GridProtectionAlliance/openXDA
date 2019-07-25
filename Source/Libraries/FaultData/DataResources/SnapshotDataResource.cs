@@ -23,18 +23,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
 using System.Linq;
 using System.Numerics;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
-using GSF;
 using GSF.Data;
 using MathNet.Numerics.IntegralTransforms;
-using Phase = GSF.PQDIF.Logical.Phase;
 using Newtonsoft.Json;
 using openXDA.Model;
+using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataResources
 {
@@ -42,8 +39,9 @@ namespace FaultData.DataResources
     {
         #region [ Members ]
 
-        // Fields
-        private class PhasorResult {
+        // Nested Types
+        private class PhasorResult
+        {
             public double Angle { get; set; }
             public double Magnitude { get; set; }
         }
@@ -51,8 +49,11 @@ namespace FaultData.DataResources
         #endregion
 
         #region [ Properties ]
+
         public bool IsSnapshot { get; private set; } = false;
+
         public Dictionary<Channel, string> Snapshots { get; } = new Dictionary<Channel, string>();
+
         #endregion
 
         #region [ Methods ]
@@ -125,7 +126,6 @@ namespace FaultData.DataResources
 
             return complexSamples;
         }
-
 
         #endregion
     }

@@ -248,7 +248,7 @@ namespace FaultData.DataOperations
         }
 
         [Category]
-        [SettingName("FaultLocation")]
+        [SettingName(FaultLocationSettings.CategoryName)]
         public FaultLocationSettings FaultLocationSettings
         {
             get

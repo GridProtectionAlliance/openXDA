@@ -62,13 +62,15 @@ namespace openXDA.DataPusher
         #endregion
 
         #region [ Properties ]
+
         private DataContext DataContext => m_dataContext ?? (m_dataContext = new DataContext("systemSettings"));
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
         public bool Running => m_running;
 
         [Category]
-        [SettingName("DataPusher")]
+        [SettingName(DataPusherSettings.CategoryName)]
         public DataPusherSettings DataPusherSettings => m_dataPusherSettings;
+
         #endregion
 
         // Client-side script functionality

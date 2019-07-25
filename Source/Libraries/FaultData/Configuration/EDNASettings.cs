@@ -31,10 +31,8 @@ namespace FaultData.Configuration
     {
         #region [ Members ]
 
-        // Fields
-        private string m_pointQuery;
-        private double m_queryTolerance;
-        private double m_breakerOpenValue;
+        // Constants
+        public const string CategoryName = "EDNA";
 
         #endregion
 
@@ -46,17 +44,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue("SELECT NULL AS Point WHERE 1 IS NULL")]
-        public string PointQuery
-        {
-            get
-            {
-                return m_pointQuery;
-            }
-            set
-            {
-                m_pointQuery = value;
-            }
-        }
+        public string PointQuery { get; set; }
 
         /// <summary>
         /// Gets or sets the tolerance, in seconds, that determines the
@@ -64,17 +52,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(4.0D)]
-        public double QueryTolerance
-        {
-            get
-            {
-                return m_queryTolerance;
-            }
-            set
-            {
-                m_queryTolerance = value;
-            }
-        }
+        public double QueryTolerance { get; set; }
 
         /// <summary>
         /// Gets or sets the value of the point representing
@@ -82,17 +60,7 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(0.0D)]
-        public double BreakerOpenValue
-        {
-            get
-            {
-                return m_breakerOpenValue;
-            }
-            set
-            {
-                m_breakerOpenValue = value;
-            }
-        }
+        public double BreakerOpenValue { get; set; }
 
         /// <summary>
         /// Gets the tolerance that determines the time range
@@ -102,7 +70,7 @@ namespace FaultData.Configuration
         {
             get
             {
-                return TimeSpan.FromSeconds(m_queryTolerance);
+                return TimeSpan.FromSeconds(QueryTolerance);
             }
         }
 
