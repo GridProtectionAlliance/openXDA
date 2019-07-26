@@ -170,8 +170,7 @@
                         (!endTime || currentTime <= moment.utc(endTime));
 
                     var pending =
-                        (!startTime || currentTime < moment.utc(startTime)) &&
-                        !active;
+                        (startTime && currentTime < moment.utc(startTime));
 
                     if (active)
                         return "darkred";
@@ -196,8 +195,7 @@
                         (!endTime || currentTime <= moment.utc(endTime));
 
                     var pending =
-                        (!startTime || currentTime < moment.utc(startTime)) &&
-                        !active;
+                        (startTime && currentTime < moment.utc(startTime));
 
                     if (active)
                         return "Under Maintenance";
