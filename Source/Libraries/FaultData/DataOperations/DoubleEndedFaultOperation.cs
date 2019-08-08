@@ -341,7 +341,13 @@ namespace FaultData.DataOperations
                                 rightCycleDataGroup = GetCycleData(connection, rightEventID);
                             }
 
-                            if ((object)leftCycleDataGroup == null || (object)rightCycleDataGroup == null)
+                            if (leftCycleDataGroup == null || rightCycleDataGroup == null)
+                                continue;
+
+                            if (leftCycleDataGroup.IA == null || leftCycleDataGroup.IB == null || leftCycleDataGroup.IC == null)
+                                continue;
+
+                            if (rightCycleDataGroup.IA == null || rightCycleDataGroup.IB == null || rightCycleDataGroup.IC == null)
                                 continue;
 
                             // Make sure double-ended distance has not already been calculated and entered into the database

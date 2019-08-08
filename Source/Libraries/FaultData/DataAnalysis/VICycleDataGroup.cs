@@ -206,6 +206,9 @@ namespace FaultData.DataAnalysis
 
                 for (int j = 0; j < cycles.Length; j++)
                 {
+                    if (cycleDataGroups[j] == null)
+                        continue;
+
                     cycles[j].RMS = cycleDataGroups[j].RMS[i].Value;
                     cycles[j].Phase = cycleDataGroups[j].Phase[i].Value;
                     cycles[j].Peak = cycleDataGroups[j].Peak[i].Value;

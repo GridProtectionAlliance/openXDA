@@ -178,7 +178,22 @@ namespace FaultData.DataResources
                             // Push data from the cycle data set
                             // to the fault location data set
                             FaultLocationDataSet.Cycles.Clear();
-                            subGroup.PushDataTo(FaultLocationDataSet.Cycles);
+                            CopyToFaultLocationDataSet(subGroup.VA, cycleData => cycleData.AN.V);
+                            CopyToFaultLocationDataSet(subGroup.VB, cycleData => cycleData.BN.V);
+                            CopyToFaultLocationDataSet(subGroup.VC, cycleData => cycleData.CN.V);
+                            CopyToFaultLocationDataSet(subGroup.IA, cycleData => cycleData.AN.I);
+                            CopyToFaultLocationDataSet(subGroup.IB, cycleData => cycleData.BN.I);
+                            CopyToFaultLocationDataSet(subGroup.IC, cycleData => cycleData.CN.I);
+
+                            // For single-phase faults, if we don't have the appropriate
+                            // phase current to execute the fault location algorithms,
+                            // we can use the residual current channel instead
+                            if (segment.FaultType == FaultType.AN && subGroup.IA == null)
+                                CopyToFaultLocationDataSet(subGroup.IR, cycleData => cycleData.AN.I);
+                            else if (segment.FaultType == FaultType.BN && subGroup.IB == null)
+                                CopyToFaultLocationDataSet(subGroup.IR, cycleData => cycleData.BN.I);
+                            else if (segment.FaultType == FaultType.CN && subGroup.IC == null)
+                                CopyToFaultLocationDataSet(subGroup.IR, cycleData => cycleData.CN.I);
 
                             // Attempt to execute each fault location algorithm
                             for (int i = 0; i < FaultLocationAlgorithms.Count; i++)
@@ -204,6 +219,27 @@ namespace FaultData.DataResources
                             }
                         }
                     }
+                }
+            }
+
+            private void CopyToFaultLocationDataSet(CycleDataGroup cycleDataGroup, Func<CycleData, Cycle> cycleSelector)
+            {
+                if (cycleDataGroup == null)
+                    return;
+
+                int numDataPoints = cycleDataGroup.RMS.DataPoints.Count;
+
+                for (int i = FaultLocationDataSet.Cycles.Count; i < numDataPoints; i++)
+                    FaultLocationDataSet.Cycles[i] = new CycleData();
+
+                for (int i = 0;  i < numDataPoints; i++)
+                {
+                    CycleData cycleData = FaultLocationDataSet.Cycles[i];
+                    Cycle cycle = cycleSelector(cycleData);
+                    cycle.RMS = cycleDataGroup.RMS[i].Value;
+                    cycle.Phase = cycleDataGroup.Phase[i].Value;
+                    cycle.Peak = cycleDataGroup.Peak[i].Value;
+                    cycle.Error = cycleDataGroup.Error[i].Value;
                 }
             }
 
@@ -308,7 +344,7 @@ namespace FaultData.DataResources
                     continue;
                 }
 
-                if (viDataGroup.DefinedCurrents < 3)
+                if (viDataGroup.DefinedCurrents < 3 && viDataGroup.IR == null)
                 {
                     Log.Debug($"Not enough current channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
                     continue;
@@ -351,6 +387,14 @@ namespace FaultData.DataResources
                 }
 
                 // Break into faults and segments
+                Func<List<Fault>> detectFaultsByCurrent = () => DetectFaultsByCurrent(viDataGroup, viCycleDataGroup);
+                Func<List<Fault>> detectFaultsByVoltage = () => DetectSinglePhaseFaultsByVoltage(viCycleDataGroup, viDataGroup.IR);
+                Func<List<Fault>> detectFaults = (viDataGroup.DefinedCurrents >= 3) ? detectFaultsByCurrent : detectFaultsByVoltage;
+
+                Action<List<Fault>> classifyFaultsByCurrent = faultList => ClassifyFaultsByCurrent(faultList, dataGroup, viCycleDataGroup);
+                Action<List<Fault>> classifyFaultsByVoltage = faultList => ClassifyFaultsByVoltage(faultList, dataGroup, viCycleDataGroup);
+                Action<List<Fault>> classifyFaults = (viDataGroup.DefinedCurrents >= 3) ? classifyFaultsByCurrent : classifyFaultsByVoltage;
+
                 List<Fault> faults;
 
                 Log.Debug("Classifying data into faults and segments...");
@@ -359,10 +403,10 @@ namespace FaultData.DataResources
                 {
                     stopwatch.Restart();
 
-                    faults = DetectFaults(viDataGroup, viCycleDataGroup);
+                    faults = detectFaults();
 
                     if (faults.Count > 0)
-                        ClassifyFaults(faults, dataGroup, viCycleDataGroup);
+                        classifyFaults(faults);
                 }
                 finally
                 {
@@ -383,7 +427,7 @@ namespace FaultData.DataResources
                         EndSample = dataGroup[0].DataPoints.Count - 1
                     });
 
-                    ClassifyFaults(faults, dataGroup, viCycleDataGroup);
+                    classifyFaults(faults);
                 }
 
                 // Generate fault curves for fault analysis
@@ -513,55 +557,6 @@ namespace FaultData.DataResources
             return Delegate.CreateDelegate(typeof(T), method) as T;
         }
 
-        private List<Fault> DetectFaults(VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup)
-        {
-            List<Fault> iaFaults = DetectFaults(viDataGroup.IA, viCycleDataGroup.IA.RMS);
-            List<Fault> ibFaults = DetectFaults(viDataGroup.IB, viCycleDataGroup.IB.RMS);
-            List<Fault> icFaults = DetectFaults(viDataGroup.IC, viCycleDataGroup.IC.RMS);
-
-            return Merge(iaFaults, ibFaults, icFaults);
-        }
-
-        private List<Fault> DetectFaults(DataSeries waveForm, DataSeries rms)
-        {
-            List<Fault> faults = new List<Fault>();
-            Fault currentFault = null;
-
-            bool[] faultApparent = rms.DataPoints
-                .Select(dataPoint => dataPoint.Value - FaultLocationSettings.PrefaultTriggerAdjustment)
-                .Select(value => value / rms[0].Value)
-                .Select(ratio => ratio > FaultLocationSettings.PrefaultTrigger)
-                .ToArray();
-
-            for (int i = 0; i < rms.DataPoints.Count; i++)
-            {
-                if (faultApparent[i])
-                {
-                    if ((object)currentFault == null)
-                    {
-                        currentFault = new Fault();
-                        currentFault.StartSample = FindFaultInception(waveForm, i);
-                        faults.Add(currentFault);
-                    }
-                }
-                else
-                {
-                    if ((object)currentFault != null)
-                    {
-                        currentFault.EndSample = FindFaultClearing(waveForm, i);
-                        currentFault = null;
-                    }
-                }
-            }
-
-            if ((object)currentFault != null)
-                currentFault.EndSample = rms.DataPoints.Count - 1;
-
-            faults.RemoveWhere(fault => fault.StartSample >= fault.EndSample);
-
-            return faults;
-        }
-
         private List<Fault> Merge(params List<Fault>[] faultLists)
         {
             IEnumerable<Fault> allFaults = faultLists
@@ -610,10 +605,10 @@ namespace FaultData.DataResources
 
             DataSeries[] currents =
             {
-                viCycleDataGroup.IA.RMS,
-                viCycleDataGroup.IB.RMS,
-                viCycleDataGroup.IC.RMS,
-                viCycleDataGroup.IR.RMS
+                viCycleDataGroup.IA?.RMS,
+                viCycleDataGroup.IB?.RMS,
+                viCycleDataGroup.IC?.RMS,
+                viCycleDataGroup.IR?.RMS
             };
 
             // Determine if any of the RMS voltages are unreasonably high
@@ -623,8 +618,8 @@ namespace FaultData.DataResources
                 return false;
             }
 
-            // Determine if any of the RMS currents are unreasonably low
-            if (currents.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > MaxCurrent)))
+            // Determine if any of the RMS currents are unreasonably high
+            if (currents.Any(current => current != null && current.DataPoints.Any(dataPoint => dataPoint.Value > MaxCurrent)))
             {
                 Log.Debug("Data unreasonable: current > maxCurrent");
                 return false;
@@ -775,7 +770,750 @@ namespace FaultData.DataResources
             return startIndex;
         }
 
-        private void ClassifyFaults(List<Fault> faults, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        private CycleData GetCycle(VICycleDataGroup viCycleDataGroup, int index)
+        {
+            CycleData cycle = new CycleData();
+
+            Cycle[] cycles =
+            {
+                cycle.AN.V,
+                cycle.BN.V,
+                cycle.CN.V,
+                cycle.AN.I,
+                cycle.BN.I,
+                cycle.CN.I
+            };
+
+            CycleDataGroup[] cycleDataGroups =
+            {
+                viCycleDataGroup.VA,
+                viCycleDataGroup.VB,
+                viCycleDataGroup.VC,
+                viCycleDataGroup.IA,
+                viCycleDataGroup.IB,
+                viCycleDataGroup.IC
+            };
+
+            for (int i = 0; i < cycles.Length; i++)
+            {
+                if (cycleDataGroups[i] == null)
+                    continue;
+
+                cycles[i].RMS = cycleDataGroups[i].RMS.DataPoints[index].Value;
+                cycles[i].Phase = cycleDataGroups[i].Phase.DataPoints[index].Value;
+                cycles[i].Peak = cycleDataGroups[i].Peak.DataPoints[index].Value;
+                cycles[i].Error = cycleDataGroups[i].Error.DataPoints[index].Value;
+            }
+
+            return cycle;
+        }
+
+        private CycleData FirstCycle(VICycleDataGroup viCycleDataGroup)
+        {
+            return GetCycle(viCycleDataGroup, 0);
+        }
+
+        private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes)
+        {
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
+            DateTime startTime = dataGroup[0][fault.StartSample].Time;
+            DateTime endTime = dataGroup[0][fault.EndSample].Time;
+            double prefaultPeak = GetPrefaultPeak(fault, dataGroup, viCycleDataGroup);
+            double postfaultPeak = GetPostfaultPeak(fault, dataGroup, viCycleDataGroup);
+
+            fault.CalculationCycle = calculationCycle;
+            fault.InceptionTime = startTime;
+            fault.ClearingTime = endTime;
+            fault.Duration = endTime - startTime;
+            fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
+            fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
+
+            fault.IsSuppressed =
+                (double.IsNaN(postfaultPeak) && viDataGroup.DefinedCurrents > 1) ||
+                (!double.IsNaN(postfaultPeak) && postfaultPeak > BreakerSettings.OpenBreakerThreshold) ||
+                !AskSCADAIfBreakerOpened(dataGroup.Line, fault.ClearingTime);
+
+            fault.IsReclose =
+                !double.IsNaN(prefaultPeak) &&
+                !double.IsNaN(postfaultPeak) &&
+                prefaultPeak <= BreakerSettings.OpenBreakerThreshold &&
+                postfaultPeak <= BreakerSettings.OpenBreakerThreshold;
+
+            if (fault.Segments.Any())
+            {
+                fault.Type = fault.Segments
+                    .Where(segment => segment.StartSample <= fault.CalculationCycle)
+                    .Where(segment => fault.CalculationCycle <= segment.EndSample)
+                    .Select(segment => segment.FaultType)
+                    .FirstOrDefault();
+
+                fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
+                fault.CurrentLag = GetFaultCurrentLag(viCycleDataGroup, fault.Type, calculationCycle);
+                fault.TreeFaultResistance = GetTreeFaultResistance(fault, dataGroup, viCycleDataGroup);
+                fault.LightningMilliseconds = GetLightningMilliseconds(fault, lightningStrikes);
+                fault.InceptionDistanceFromPeak = GetInceptionDistanceFromPeak(fault, viCycleDataGroup, samplesPerCycle);
+                fault.PrefaultThirdHarmonic = GetPrefaultThirdHarmonic(fault, viDataGroup, viCycleDataGroup, samplesPerCycle);
+                fault.GroundCurrentRatio = GetGroundCurrentRatio(fault, viCycleDataGroup);
+                fault.LowPrefaultCurrentRatio = GetLowPrefaultCurrentRatio(fault, viCycleDataGroup, samplesPerCycle);
+
+                if (calculationCycle >= 0)
+                {
+                    CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
+                    ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
+                    ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
+
+                    double impedanceMagnitude = (voltage / current).Magnitude;
+                    double impedanceReactance = (voltage / current).Imaginary;
+                    fault.ReactanceRatio = impedanceReactance / impedanceMagnitude;
+                }
+            }
+
+            if (calculationCycle >= 0)
+            {
+                for (int i = 0; i < fault.Curves.Count; i++)
+                {
+                    Fault.Summary summary = new Fault.Summary();
+                    summary.DistanceAlgorithmIndex = i;
+                    summary.DistanceAlgorithm = fault.Curves[i].Algorithm;
+                    summary.Distance = fault.Curves[i][calculationCycle].Value;
+                    summary.IsValid = IsValid(summary.Distance, dataGroup);
+
+                    fault.Summaries.Add(summary);
+                }
+
+                if (fault.Summaries.Any(s => !s.IsValid))
+                    fault.IsSuppressed |= fault.CurrentLag < 0;
+
+                List<Fault.Summary> validSummaries = fault.Summaries
+                    .Where(s => s.IsValid)
+                    .OrderBy(s => s.Distance)
+                    .ToList();
+
+                if (!validSummaries.Any())
+                {
+                    validSummaries = fault.Summaries
+                        .Where(s => !double.IsNaN(s.Distance))
+                        .OrderBy(s => s.Distance)
+                        .ToList();
+                }
+
+                if (validSummaries.Any())
+                    validSummaries[validSummaries.Count / 2].IsSelectedAlgorithm = true;
+            }
+            else
+            {
+                fault.IsSuppressed = true;
+            }
+        }
+
+        private bool IsValid(double faultDistance, DataGroup dataGroup)
+        {
+            double lineLength = dataGroup.Line.Length;
+            double maxDistance = FaultLocationSettings.MaxFaultDistanceMultiplier * lineLength;
+            double minDistance = FaultLocationSettings.MinFaultDistanceMultiplier * lineLength;
+            return faultDistance >= minDistance && faultDistance <= maxDistance;
+        }
+
+        private double GetPrefaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int start = fault.StartSample - samplesPerCycle;
+            int end = fault.StartSample;
+
+            double?[] minRMS =
+            {
+                viCycleDataGroup.IA?.RMS.ToSubSeries(start, end).Minimum,
+                viCycleDataGroup.IB?.RMS.ToSubSeries(start, end).Minimum,
+                viCycleDataGroup.IC?.RMS.ToSubSeries(start, end).Minimum
+            };
+
+            return minRMS
+                .Where(rms => rms != null)
+                .Select(rms => rms.GetValueOrDefault())
+                .DefaultIfEmpty(double.NaN)
+                .Min();
+        }
+
+        private double GetPostfaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int start = fault.EndSample + 1;
+            int end = fault.EndSample + samplesPerCycle;
+
+            double?[] minRMS =
+            {
+                viCycleDataGroup.IA?.RMS.ToSubSeries(start, end).Minimum,
+                viCycleDataGroup.IB?.RMS.ToSubSeries(start, end).Minimum,
+                viCycleDataGroup.IC?.RMS.ToSubSeries(start, end).Minimum
+            };
+
+            return minRMS
+                .Where(rms => rms != null)
+                .Select(rms => rms.GetValueOrDefault())
+                .DefaultIfEmpty(double.NaN)
+                .Min();
+        }
+
+        private double GetPrefaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int start = fault.StartSample - 5 * samplesPerCycle;
+            int end = fault.StartSample - samplesPerCycle - 1;
+
+            double?[] minPeaks =
+            {
+                viCycleDataGroup.IA?.Peak.ToSubSeries(start, end).Minimum,
+                viCycleDataGroup.IB?.Peak.ToSubSeries(start, end).Minimum,
+                viCycleDataGroup.IC?.Peak.ToSubSeries(start, end).Minimum
+            };
+
+            return minPeaks
+                .Where(peak => peak != null)
+                .Select(peak => peak.GetValueOrDefault())
+                .DefaultIfEmpty(double.NaN)
+                .Min();
+        }
+
+        private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int start = fault.EndSample + samplesPerCycle + 1;
+            int end = fault.EndSample + 5 * samplesPerCycle;
+
+            double?[] minPeaks =
+            {
+                viCycleDataGroup.IA?.Peak.ToSubSeries(start, end).Minimum,
+                viCycleDataGroup.IB?.Peak.ToSubSeries(start, end).Minimum,
+                viCycleDataGroup.IC?.Peak.ToSubSeries(start, end).Minimum
+            };
+
+            return minPeaks
+                .Where(peak => peak != null)
+                .Select(peak => peak.GetValueOrDefault())
+                .DefaultIfEmpty(double.NaN)
+                .Min();
+        }
+
+        private int GetCalculationCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        {
+            if (!fault.Curves.Any())
+                return -1;
+
+            int minFaultCurveLength = fault.Curves.Min(curve => curve.Series.DataPoints.Count);
+
+            if (minFaultCurveLength == 0)
+                return -1;
+
+            switch (FaultLocationSettings.FaultCalculationCycleMethod)
+            {
+                default:
+                case FaultCalculationCycleMethod.MaxCurrent:
+                    return GetCycleWithMaximumCurrent(fault, viCycleDataGroup, samplesPerCycle);
+
+                case FaultCalculationCycleMethod.LastFaultedCycle:
+                    return GetLastFaultedCycle(fault, samplesPerCycle);
+            }
+        }
+
+        private int GetCycleWithMaximumCurrent(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        {
+            Func<int, double> sumPhases = i =>
+            {
+                double ia = viCycleDataGroup.IA.RMS[i].Value;
+                double ib = viCycleDataGroup.IB.RMS[i].Value;
+                double ic = viCycleDataGroup.IC.RMS[i].Value;
+                return ia + ib + ic;
+            };
+
+            Func<int, double> residual = i => viCycleDataGroup.IR.RMS[i].Value;
+
+            bool phaseCurrentsDefined =
+                viCycleDataGroup.IA != null &&
+                viCycleDataGroup.IB != null &&
+                viCycleDataGroup.IC != null;
+
+            Func<int, double> getCurrent = phaseCurrentsDefined ? sumPhases : residual;
+
+            int startSample = fault.StartSample + samplesPerCycle;
+            int endSample = fault.StartSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
+
+            if (startSample > endSample)
+                startSample = fault.StartSample;
+
+            double max = double.MinValue;
+            int maxIndex = -1;
+
+            for (int i = startSample; i <= endSample; i++)
+            {
+                double current = getCurrent(i);
+
+                if (current > max)
+                {
+                    maxIndex = i;
+                    max = current;
+                }
+            }
+
+            return maxIndex;
+        }
+
+        private int GetLastFaultedCycle(Fault fault, int samplesPerCycle)
+        {
+            int SelectEndSample()
+            {
+                int GetSampleCount(Fault.Segment segment)
+                {
+                    // The fault type algorithm gets applied to cycles that extend beyond the end of the fault,
+                    // so any segments with samples close to the end of the fault cannot be fully trusted
+                    int maxEndSample = fault.EndSample - (samplesPerCycle - 1);
+                    int startSample = segment.StartSample;
+                    int endSample = Math.Min(segment.EndSample, maxEndSample);
+                    return endSample - startSample + 1;
+                };
+
+                Fault.Segment lastValidSegment = fault.Segments
+                    .Where(segment => GetSampleCount(segment) >= samplesPerCycle)
+                    .LastOrDefault();
+
+                switch (lastValidSegment?.FaultType)
+                {
+                    case FaultType.AN:
+                    case FaultType.BN:
+                    case FaultType.CN:
+                        // For single-phase faults, we can simply shift the
+                        // calculation cycle by a few samples to account for
+                        // minor errors in the clearing time logic
+                        return lastValidSegment.EndSample - FaultLocationSettings.FaultClearingAdjustmentSamples;
+
+                    default:
+                        // For multi-phase faults, the various phases will clear at different times.
+                        // On a three-phase system, there ought to be a maximum of two-thirds of a
+                        // cycle (240 degrees) between clearing times for individual phases.
+                        // Thus, shifting by a full cycle (360 degrees) will likely adjust for the
+                        // different clearing times as well as minor errors in the clearing time calculations
+                        return lastValidSegment.EndSample - samplesPerCycle;
+
+                    case null:
+                        // Not enough data in any individual segment
+                        // to identify a prominent fault type.
+                        // Assume multi-phase (360 degree adjustment),
+                        // but from the very end of the fault
+                        return fault.EndSample - samplesPerCycle;
+                }
+            }
+
+            // Adjustment to move from the very end of the fault
+            // or segment to the beginning of the selected cycle
+            int selectedCycle = SelectEndSample() - (samplesPerCycle - 1);
+
+            int minCycle = fault.StartSample;
+            int maxCycle = fault.EndSample - (samplesPerCycle - 1);
+
+            // If the selected cycle falls outside the valid range,
+            // fall back on the single-phase adjustment from the very end of the fault
+            if (selectedCycle < minCycle || selectedCycle > maxCycle)
+                selectedCycle = maxCycle - FaultLocationSettings.FaultClearingAdjustmentSamples;
+
+            // If even the single-phase adjustment is invalid,
+            // just pick the last valid cycle
+            if (selectedCycle < minCycle || selectedCycle > maxCycle)
+                selectedCycle = maxCycle;
+
+            return selectedCycle;
+        }
+
+        private double GetFaultCurrentMagnitude(VICycleDataGroup viCycleDataGroup, FaultType faultType, int cycle)
+        {
+            FaultType viFaultType = faultType;
+
+            if (viFaultType == FaultType.ABC || viFaultType == FaultType.ABCG)
+            {
+                double anError = viCycleDataGroup.IA.Error[cycle].Value;
+                double bnError = viCycleDataGroup.IB.Error[cycle].Value;
+                double cnError = viCycleDataGroup.IC.Error[cycle].Value;
+
+                if (anError < bnError && anError < cnError)
+                    viFaultType = FaultType.AN;
+                else if (bnError < anError && bnError < cnError)
+                    viFaultType = FaultType.BN;
+                else
+                    viFaultType = FaultType.CN;
+            }
+
+            CycleDataGroup cycleDataGroup;
+
+            ComplexNumber an;
+            ComplexNumber bn;
+            ComplexNumber cn;
+
+            switch (viFaultType)
+            {
+                case FaultType.AN:
+                    cycleDataGroup = viCycleDataGroup.IA ?? viCycleDataGroup.IR;
+                    return cycleDataGroup.RMS[cycle].Value;
+
+                case FaultType.BN:
+                    cycleDataGroup = viCycleDataGroup.IB ?? viCycleDataGroup.IR;
+                    return cycleDataGroup.RMS[cycle].Value;
+
+                case FaultType.CN:
+                    cycleDataGroup = viCycleDataGroup.IC ?? viCycleDataGroup.IR;
+                    return cycleDataGroup.RMS[cycle].Value;
+
+                case FaultType.AB:
+                case FaultType.ABG:
+                    an = ToComplexNumber(viCycleDataGroup.IA, cycle);
+                    bn = ToComplexNumber(viCycleDataGroup.IB, cycle);
+                    return (an - bn).Magnitude;
+
+                case FaultType.BC:
+                case FaultType.BCG:
+                    bn = ToComplexNumber(viCycleDataGroup.IB, cycle);
+                    cn = ToComplexNumber(viCycleDataGroup.IC, cycle);
+                    return (bn - cn).Magnitude;
+
+                case FaultType.CA:
+                case FaultType.CAG:
+                    cn = ToComplexNumber(viCycleDataGroup.IC, cycle);
+                    an = ToComplexNumber(viCycleDataGroup.IA, cycle);
+                    return (cn - an).Magnitude;
+
+                default:
+                    return double.NaN;
+            }
+        }
+
+        private double GetFaultCurrentLag(VICycleDataGroup viCycleDataGroup, FaultType faultType, int cycle)
+        {
+            FaultType viFaultType = faultType;
+
+            if (viFaultType == FaultType.ABC || viFaultType == FaultType.ABCG)
+            {
+                double anError = viCycleDataGroup.IA.Error[cycle].Value;
+                double bnError = viCycleDataGroup.IB.Error[cycle].Value;
+                double cnError = viCycleDataGroup.IC.Error[cycle].Value;
+
+                if (anError < bnError && anError < cnError)
+                    viFaultType = FaultType.AN;
+                else if (bnError < anError && bnError < cnError)
+                    viFaultType = FaultType.BN;
+                else
+                    viFaultType = FaultType.CN;
+            }
+
+            CycleDataGroup voltageDataGroup;
+            CycleDataGroup currentDataGroup;
+            Angle currentLag;
+
+            ComplexNumber van;
+            ComplexNumber vbn;
+            ComplexNumber vcn;
+            ComplexNumber ian;
+            ComplexNumber ibn;
+            ComplexNumber icn;
+
+            switch (viFaultType)
+            {
+                case FaultType.AN:
+                    voltageDataGroup = viCycleDataGroup.VA;
+                    currentDataGroup = viCycleDataGroup.IA ?? viCycleDataGroup.IR;
+                    currentLag = voltageDataGroup.Phase[cycle].Value - currentDataGroup.Phase[cycle].Value;
+                    return currentLag.ToRange(-Math.PI, false);
+
+                case FaultType.BN:
+                    voltageDataGroup = viCycleDataGroup.VB;
+                    currentDataGroup = viCycleDataGroup.IB ?? viCycleDataGroup.IR;
+                    currentLag = voltageDataGroup.Phase[cycle].Value - currentDataGroup.Phase[cycle].Value;
+                    return currentLag.ToRange(-Math.PI, false);
+
+                case FaultType.CN:
+                    voltageDataGroup = viCycleDataGroup.VC;
+                    currentDataGroup = viCycleDataGroup.IC ?? viCycleDataGroup.IR;
+                    currentLag = voltageDataGroup.Phase[cycle].Value - currentDataGroup.Phase[cycle].Value;
+                    return currentLag.ToRange(-Math.PI, false);
+
+                case FaultType.AB:
+                case FaultType.ABG:
+                    van = ToComplexNumber(viCycleDataGroup.VA, cycle);
+                    vbn = ToComplexNumber(viCycleDataGroup.VB, cycle);
+                    ian = ToComplexNumber(viCycleDataGroup.IA, cycle);
+                    ibn = ToComplexNumber(viCycleDataGroup.IB, cycle);
+                    return ((van - vbn).Angle - (ian - ibn).Angle).ToRange(-Math.PI, false);
+
+                case FaultType.BC:
+                case FaultType.BCG:
+                    vbn = ToComplexNumber(viCycleDataGroup.VB, cycle);
+                    vcn = ToComplexNumber(viCycleDataGroup.VC, cycle);
+                    ibn = ToComplexNumber(viCycleDataGroup.IB, cycle);
+                    icn = ToComplexNumber(viCycleDataGroup.IC, cycle);
+                    return ((vbn - vcn).Angle - (ibn - icn).Angle).ToRange(-Math.PI, false);
+
+                case FaultType.CA:
+                case FaultType.CAG:
+                    vcn = ToComplexNumber(viCycleDataGroup.VC, cycle);
+                    van = ToComplexNumber(viCycleDataGroup.VA, cycle);
+                    icn = ToComplexNumber(viCycleDataGroup.IC, cycle);
+                    ian = ToComplexNumber(viCycleDataGroup.IA, cycle);
+                    return ((vcn - van).Angle - (icn - ian).Angle).ToRange(-Math.PI, false);
+
+                default:
+                    return double.NaN;
+            }
+        }
+
+        // Tree in line
+        private double GetTreeFaultResistance(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            if (fault.CalculationCycle < 0)
+                return double.NaN;
+
+            if (!new[] { FaultType.AN, FaultType.BN, FaultType.CN }.Contains(fault.Type))
+                return double.NaN;
+
+            CycleDataGroup faultedVoltage = new Func<CycleDataGroup>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viCycleDataGroup.VA;
+                    case FaultType.BN: return viCycleDataGroup.VB;
+                    case FaultType.CN: return viCycleDataGroup.VC;
+                    default: return null;
+                }
+            })();
+
+            CycleDataGroup faultedCurrent = new Func<CycleDataGroup>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viCycleDataGroup.IA ?? viCycleDataGroup.IR;
+                    case FaultType.BN: return viCycleDataGroup.IB ?? viCycleDataGroup.IR;
+                    case FaultType.CN: return viCycleDataGroup.IC ?? viCycleDataGroup.IR;
+                    default: return null;
+                }
+            })();
+
+            if (faultedVoltage == null || faultedCurrent == null)
+                return double.NaN;
+
+            ComplexNumber faultVoltage = ToComplexNumber(faultedVoltage, fault.CalculationCycle);
+            ComplexNumber faultCurrent = ToComplexNumber(faultedCurrent, fault.CalculationCycle);
+            ComplexNumber faultImpedance = faultVoltage / faultCurrent;
+
+            LineImpedance lineImpedance = new Func<LineImpedance>(() =>
+            {
+                using (AdoDataConnection connection = dataGroup.Line.ConnectionFactory())
+                {
+                    TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
+                    return lineImpedanceTable.QueryRecordWhere("LineID = {0}", dataGroup.Line.ID);
+                }
+            })();
+
+            if (lineImpedance == null)
+                return double.NaN;
+
+            ComplexNumber z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
+            ComplexNumber z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
+            ComplexNumber loopImpedance = (z0 + 2.0D * z1) / 3.0D;
+
+            double zf = faultImpedance.Magnitude;
+            double xf = faultImpedance.Imaginary;
+            double rs = loopImpedance.Real;
+            double xs = loopImpedance.Imaginary;
+
+            double term1 = zf * zf;
+            double term2 = xf * xf;
+            double term3 = xf * rs / xs;
+            return (Math.Sqrt(term1 - term2) - term3);
+        }
+
+        // Lightning
+        private double GetLightningMilliseconds(Fault fault, List<ILightningStrike> lightningStrikes)
+        {
+            DateTime inception = TimeZoneInfo.ConvertTimeToUtc(fault.InceptionTime, XDATimeZone);
+
+            return lightningStrikes
+                .Select(strike => inception - strike.UTCTime)
+                .Select(span => span.TotalMilliseconds)
+                .Select(new Func<double, double>(Math.Round))
+                .Select(Math.Abs)
+                .DefaultIfEmpty(double.NaN)
+                .Min();
+        }
+
+        // Insulation contamination
+        private double GetInceptionDistanceFromPeak(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        {
+            DataSeries angleSeries = new Func<DataSeries>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viCycleDataGroup.VA.Phase;
+                    case FaultType.BN: return viCycleDataGroup.VB.Phase;
+                    case FaultType.CN: return viCycleDataGroup.VC.Phase;
+                    default: return null;
+                }
+            })();
+
+            if (angleSeries == null)
+                return double.NaN;
+
+            int inceptionIndex = fault.StartSample;
+            double angle = angleSeries[inceptionIndex].Value * 180.0D / Math.PI;
+            double positiveDistance = Math.Abs(angle - 90.0D);
+            double negativeDistance = Math.Abs(angle + 90.0D);
+            return Math.Min(positiveDistance, negativeDistance);
+        }
+
+        // Lightning arrester failure
+        private double GetPrefaultThirdHarmonic(Fault fault, VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        {
+            int startIndex = fault.StartSample - samplesPerCycle;
+
+            if (startIndex < 0)
+                return double.NaN;
+
+            DataSeries PeakSeries = new Func<DataSeries>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viCycleDataGroup.IA?.Peak;
+                    case FaultType.BN: return viCycleDataGroup.IB?.Peak;
+                    case FaultType.CN: return viCycleDataGroup.IC?.Peak;
+                    default: return null;
+                }
+            })();
+
+            if (PeakSeries == null)
+                return double.NaN;
+
+            // If there is no load current before the fault,
+            // then the FFT is invalid
+            if (PeakSeries[startIndex].Value <= BreakerSettings.OpenBreakerThreshold)
+                return double.NaN;
+
+            DataSeries faultedSeries = new Func<DataSeries>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viDataGroup.IA;
+                    case FaultType.BN: return viDataGroup.IB;
+                    case FaultType.CN: return viDataGroup.IC;
+                    default: return null;
+                }
+            })();
+
+            if (faultedSeries == null)
+                return double.NaN;
+
+            int endIndex = startIndex + samplesPerCycle - 1;
+            DataSeries prefaultCycle = faultedSeries.ToSubSeries(startIndex, endIndex);
+
+            Complex[] samples = prefaultCycle.DataPoints
+                .Select(dataPoint => new Complex(dataPoint.Value, 0))
+                .ToArray();
+
+            Fourier.Forward(samples);
+
+            return samples[3].Magnitude / samples[1].Magnitude;
+        }
+
+        // Conductor slap
+        private double GetGroundCurrentRatio(Fault fault, VICycleDataGroup viCycleDataGroup)
+        {
+            if (fault.CalculationCycle < 0)
+                return double.NaN;
+
+            if (viCycleDataGroup.IR == null)
+                return double.NaN;
+
+            double faultMagnitude = fault.CurrentMagnitude;
+            double groundCurrent = viCycleDataGroup.IR.RMS[fault.CalculationCycle].Value;
+            return groundCurrent / faultMagnitude;
+        }
+
+        // Conductor Break
+        private double GetLowPrefaultCurrentRatio(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        {
+            // Back up two cycles from the beginning of the fault
+            int prefaultCycleIndex = fault.StartSample - 2 * samplesPerCycle;
+
+            if (prefaultCycleIndex < 0)
+                return double.NaN;
+
+            double[] prefaultValues = new[] { viCycleDataGroup.IA, viCycleDataGroup.IB, viCycleDataGroup.IC }
+                .Where(cycleDataGroup => cycleDataGroup != null)
+                .Select(cycleDataGroup => cycleDataGroup.RMS[prefaultCycleIndex].Value)
+                .OrderBy(value => value)
+                .ToArray();
+
+            if (prefaultValues.Length < 2)
+                return double.NaN;
+
+            double min = prefaultValues[0];
+            double nextMin = prefaultValues[1];
+            return min / nextMin;
+        }
+
+        private ComplexNumber ToComplexNumber(CycleDataGroup cycleDataGroup, int cycle)
+        {
+            Angle angle = cycleDataGroup.Phase[cycle].Value;
+            double magnitude = cycleDataGroup.RMS[cycle].Value;
+            return new ComplexNumber(angle, magnitude);
+        }
+
+        #region [ Current-Based Fault Analysis ]
+
+        private List<Fault> DetectFaultsByCurrent(VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            List<Fault> iaFaults = DetectFaultsByCurrent(viDataGroup.IA, viCycleDataGroup.IA.RMS);
+            List<Fault> ibFaults = DetectFaultsByCurrent(viDataGroup.IB, viCycleDataGroup.IB.RMS);
+            List<Fault> icFaults = DetectFaultsByCurrent(viDataGroup.IC, viCycleDataGroup.IC.RMS);
+
+            return Merge(iaFaults, ibFaults, icFaults);
+        }
+
+        private List<Fault> DetectFaultsByCurrent(DataSeries waveForm, DataSeries rms)
+        {
+            List<Fault> faults = new List<Fault>();
+            Fault currentFault = null;
+
+            bool[] faultApparent = rms.DataPoints
+                .Select(dataPoint => dataPoint.Value - FaultLocationSettings.PrefaultTriggerAdjustment)
+                .Select(value => value / rms[0].Value)
+                .Select(ratio => ratio > FaultLocationSettings.PrefaultTrigger)
+                .ToArray();
+
+            for (int i = 0; i < rms.DataPoints.Count; i++)
+            {
+                if (faultApparent[i])
+                {
+                    if ((object)currentFault == null)
+                    {
+                        currentFault = new Fault();
+                        currentFault.StartSample = FindFaultInception(waveForm, i);
+                        faults.Add(currentFault);
+                    }
+                }
+                else
+                {
+                    if ((object)currentFault != null)
+                    {
+                        currentFault.EndSample = FindFaultClearing(waveForm, i);
+                        currentFault = null;
+                    }
+                }
+            }
+
+            if ((object)currentFault != null)
+                currentFault.EndSample = rms.DataPoints.Count - 1;
+
+            faults.RemoveWhere(fault => fault.StartSample >= fault.EndSample);
+
+            return faults;
+        }
+
+        private void ClassifyFaultsByCurrent(List<Fault> faults, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             Fault.Segment currentSegment = null;
 
@@ -891,646 +1629,177 @@ namespace FaultData.DataResources
             return FaultType.None;
         }
 
-        private CycleData GetCycle(VICycleDataGroup viCycleDataGroup, int index)
+        #endregion
+
+        #region [ Voltage-Based Fault Analysis ]
+
+        private List<Fault> DetectSinglePhaseFaultsByVoltage(VICycleDataGroup viCycleDataGroup, DataSeries irWaveform)
         {
-            CycleData cycle = new CycleData();
+            const double FaultedPhaseThreshold = 0.8D;
 
-            Cycle[] cycles =
-            {
-                cycle.AN.V,
-                cycle.BN.V,
-                cycle.CN.V,
-                cycle.AN.I,
-                cycle.BN.I,
-                cycle.CN.I
-            };
+            List<Fault> faults = new List<Fault>();
+            Fault currentFault = null;
 
-            CycleDataGroup[] cycleDataGroups =
-            {
-                viCycleDataGroup.VA,
-                viCycleDataGroup.VB,
-                viCycleDataGroup.VC,
-                viCycleDataGroup.IA,
-                viCycleDataGroup.IB,
-                viCycleDataGroup.IC
-            };
+            DataSeries vaRMS = ToPerUnit(viCycleDataGroup.VA.RMS);
+            DataSeries vbRMS = ToPerUnit(viCycleDataGroup.VB.RMS);
+            DataSeries vcRMS = ToPerUnit(viCycleDataGroup.VC.RMS);
 
-            for (int i = 0; i < cycles.Length; i++)
-            {
-                cycles[i].RMS = cycleDataGroups[i].RMS.DataPoints[index].Value;
-                cycles[i].Phase = cycleDataGroups[i].Phase.DataPoints[index].Value;
-                cycles[i].Peak = cycleDataGroups[i].Peak.DataPoints[index].Value;
-                cycles[i].Error = cycleDataGroups[i].Error.DataPoints[index].Value;
-            }
+            List<bool> vaFaultedCycles = vaRMS.DataPoints
+                .Select(point => point.Value < FaultedPhaseThreshold)
+                .ToList();
 
-            return cycle;
-        }
+            List<bool> vbFaultedCycles = vbRMS.DataPoints
+                .Select(point => point.Value < FaultedPhaseThreshold)
+                .ToList();
 
-        private CycleData FirstCycle(VICycleDataGroup viCycleDataGroup)
-        {
-            return GetCycle(viCycleDataGroup, 0);
-        }
+            List<bool> vcFaultedCycles = vcRMS.DataPoints
+                .Select(point => point.Value < FaultedPhaseThreshold)
+                .ToList();
 
-        private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes)
-        {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
-            int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
-            DateTime startTime = dataGroup[0][fault.StartSample].Time;
-            DateTime endTime = dataGroup[0][fault.EndSample].Time;
-            double prefaultPeak = GetPrefaultPeak(fault, dataGroup, viCycleDataGroup);
-            double postfaultPeak = GetPostfaultPeak(fault, dataGroup, viCycleDataGroup);
-
-            List<Fault.Summary> validSummaries;
-            Fault.Summary summary;
-
-            fault.CalculationCycle = calculationCycle;
-            fault.InceptionTime = startTime;
-            fault.ClearingTime = endTime;
-            fault.Duration = endTime - startTime;
-            fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
-            fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
-            fault.IsSuppressed = double.IsNaN(postfaultPeak) || postfaultPeak > BreakerSettings.OpenBreakerThreshold || !AskSCADAIfBreakerOpened(dataGroup.Line, fault.ClearingTime);
-
-            fault.IsReclose =
-                !double.IsNaN(prefaultPeak) &&
-                !double.IsNaN(postfaultPeak) &&
-                prefaultPeak <= BreakerSettings.OpenBreakerThreshold &&
-                postfaultPeak <= BreakerSettings.OpenBreakerThreshold;
-
-            if (fault.Segments.Any())
-            {
-                fault.Type = fault.Segments
-                    .Where(segment => segment.StartSample <= fault.CalculationCycle)
-                    .Where(segment => fault.CalculationCycle <= segment.EndSample)
-                    .Select(segment => segment.FaultType)
-                    .FirstOrDefault();
-
-                fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
-                fault.CurrentLag = GetFaultCurrentLag(viCycleDataGroup, fault.Type, calculationCycle);
-                fault.TreeFaultResistance = GetTreeFaultResistance(fault, dataGroup, viCycleDataGroup);
-                fault.LightningMilliseconds = GetLightningMilliseconds(fault, lightningStrikes);
-                fault.InceptionDistanceFromPeak = GetInceptionDistanceFromPeak(fault, viCycleDataGroup, samplesPerCycle);
-                fault.PrefaultThirdHarmonic = GetPrefaultThirdHarmonic(fault, viDataGroup, viCycleDataGroup, samplesPerCycle);
-                fault.GroundCurrentRatio = GetGroundCurrentRatio(fault, viCycleDataGroup);
-                fault.LowPrefaultCurrentRatio = GetLowPrefaultCurrentRatio(fault, viCycleDataGroup, samplesPerCycle);
-
-                if (calculationCycle >= 0)
+            bool[] faultApparent = Enumerable.Range(0, vaRMS.DataPoints.Count)
+                .Select(index =>
                 {
-                    CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
-                    ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
-                    ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
-
-                    double impedanceMagnitude = (voltage / current).Magnitude;
-                    double impedanceReactance = (voltage / current).Imaginary;
-                    fault.ReactanceRatio = impedanceReactance / impedanceMagnitude;
-                }
-            }
-
-            if (calculationCycle >= 0)
-            {
-                for (int i = 0; i < fault.Curves.Count; i++)
-                {
-                    summary = new Fault.Summary();
-                    summary.DistanceAlgorithmIndex = i;
-                    summary.DistanceAlgorithm = fault.Curves[i].Algorithm;
-                    summary.Distance = fault.Curves[i][calculationCycle].Value;
-                    summary.IsValid = IsValid(summary.Distance, dataGroup);
-
-                    fault.Summaries.Add(summary);
-                }
-
-                if (fault.Summaries.Any(s => !s.IsValid))
-                    fault.IsSuppressed |= fault.CurrentLag < 0;
-
-                validSummaries = fault.Summaries
-                    .Where(s => s.IsValid)
-                    .OrderBy(s => s.Distance)
-                    .ToList();
-
-                if (!validSummaries.Any())
-                {
-                    validSummaries = fault.Summaries
-                        .Where(s => !double.IsNaN(s.Distance))
-                        .OrderBy(s => s.Distance)
-                        .ToList();
-                }
-
-                if (validSummaries.Any())
-                    validSummaries[validSummaries.Count / 2].IsSelectedAlgorithm = true;
-            }
-            else
-            {
-                fault.IsSuppressed = true;
-            }
-        }
-
-        private bool IsValid(double faultDistance, DataGroup dataGroup)
-        {
-            double lineLength = dataGroup.Line.Length;
-            double maxDistance = FaultLocationSettings.MaxFaultDistanceMultiplier * lineLength;
-            double minDistance = FaultLocationSettings.MinFaultDistanceMultiplier * lineLength;
-            return faultDistance >= minDistance && faultDistance <= maxDistance;
-        }
-
-        private double GetPrefaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
-        {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
-            int start = fault.StartSample - samplesPerCycle;
-            int end = fault.StartSample;
-
-            double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
-            double ib = viCycleDataGroup.IB.RMS.ToSubSeries(start, end).Minimum;
-            double ic = viCycleDataGroup.IC.RMS.ToSubSeries(start, end).Minimum;
-
-            return Common.Min(ia, ib, ic);
-        }
-
-        private double GetPostfaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
-        {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
-            int start = fault.EndSample + 1;
-            int end = fault.EndSample + samplesPerCycle;
-
-            double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
-            double ib = viCycleDataGroup.IB.RMS.ToSubSeries(start, end).Minimum;
-            double ic = viCycleDataGroup.IC.RMS.ToSubSeries(start, end).Minimum;
-
-            return Common.Min(ia, ib, ic);
-        }
-
-        private double GetPrefaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
-        {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
-            int start = fault.StartSample - 5 * samplesPerCycle;
-            int end = fault.StartSample - samplesPerCycle - 1;
-
-            double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
-            double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
-            double ic = viCycleDataGroup.IC.Peak.ToSubSeries(start, end).Minimum;
-
-            return Common.Min(ia, ib, ic);
-        }
-
-        private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
-        {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
-            int start = fault.EndSample + samplesPerCycle + 1;
-            int end = fault.EndSample + 5 * samplesPerCycle;
-
-            double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
-            double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
-            double ic = viCycleDataGroup.IC.Peak.ToSubSeries(start, end).Minimum;
-
-            return Common.Min(ia, ib, ic);
-        }
-
-        private int GetCalculationCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
-        {
-            if (!fault.Curves.Any())
-                return -1;
-
-            int minFaultCurveLength = fault.Curves.Min(curve => curve.Series.DataPoints.Count);
-
-            if (minFaultCurveLength == 0)
-                return -1;
-
-            switch (FaultLocationSettings.FaultCalculationCycleMethod)
-            {
-                default:
-                case FaultCalculationCycleMethod.MaxCurrent:
-                    return GetCycleWithMaximumCurrent(fault, viCycleDataGroup, samplesPerCycle);
-
-                case FaultCalculationCycleMethod.LastFaultedCycle:
-                    return GetLastFaultedCycle(fault, samplesPerCycle);
-            }
-        }
-
-        private int GetCycleWithMaximumCurrent(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
-        {
-            int startSample = fault.StartSample + samplesPerCycle;
-            int endSample = fault.StartSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
-
-            if (startSample > endSample)
-                startSample = fault.StartSample;
-
-            double max = double.MinValue;
-            int maxIndex = -1;
-
-            for (int i = startSample; i <= endSample; i++)
-            {
-                double ia = viCycleDataGroup.IA.RMS[i].Value;
-                double ib = viCycleDataGroup.IB.RMS[i].Value;
-                double ic = viCycleDataGroup.IC.RMS[i].Value;
-                double sum = ia + ib + ic;
-
-                if (sum > max)
-                {
-                    maxIndex = i;
-                    max = sum;
-                }
-            }
-
-            return maxIndex;
-        }
-
-        private int GetLastFaultedCycle(Fault fault, int samplesPerCycle)
-        {
-            int SelectEndSample()
-            {
-                int GetSampleCount(Fault.Segment segment)
-                {
-                    // The fault type algorithm gets applied to cycles that extend beyond the end of the fault,
-                    // so any segments with samples close to the end of the fault cannot be fully trusted
-                    int maxEndSample = fault.EndSample - (samplesPerCycle - 1);
-                    int startSample = segment.StartSample;
-                    int endSample = Math.Min(segment.EndSample, maxEndSample);
-                    return endSample - startSample + 1;
-                };
-
-                Fault.Segment lastValidSegment = fault.Segments
-                    .Where(segment => GetSampleCount(segment) >= samplesPerCycle)
-                    .LastOrDefault();
-
-                switch (lastValidSegment?.FaultType)
-                {
-                    case FaultType.AN:
-                    case FaultType.BN:
-                    case FaultType.CN:
-                        // For single-phase faults, we can simply shift the
-                        // calculation cycle by a few samples to account for
-                        // minor errors in the clearing time logic
-                        return lastValidSegment.EndSample - FaultLocationSettings.FaultClearingAdjustmentSamples;
-
-                    default:
-                        // For multi-phase faults, the various phases will clear at different times.
-                        // On a three-phase system, there ought to be a maximum of two-thirds of a
-                        // cycle (240 degrees) between clearing times for individual phases.
-                        // Thus, shifting by a full cycle (360 degrees) will likely adjust for the
-                        // different clearing times as well as minor errors in the clearing time calculations
-                        return lastValidSegment.EndSample - samplesPerCycle;
-
-                    case null:
-                        // Not enough data in any individual segment
-                        // to identify a prominent fault type.
-                        // Assume multi-phase (360 degree adjustment),
-                        // but from the very end of the fault
-                        return fault.EndSample - samplesPerCycle;
-                }
-            }
-
-            // Adjustment to move from the very end of the fault
-            // or segment to the beginning of the selected cycle
-            int selectedCycle = SelectEndSample() - (samplesPerCycle - 1);
-
-            int minCycle = fault.StartSample;
-            int maxCycle = fault.EndSample - (samplesPerCycle - 1);
-
-            // If the selected cycle falls outside the valid range,
-            // fall back on the single-phase adjustment from the very end of the fault
-            if (selectedCycle < minCycle || selectedCycle > maxCycle)
-                selectedCycle = maxCycle - FaultLocationSettings.FaultClearingAdjustmentSamples;
-
-            // If even the single-phase adjustment is invalid,
-            // just pick the last valid cycle
-            if (selectedCycle < minCycle || selectedCycle > maxCycle)
-                selectedCycle = maxCycle;
-
-            return selectedCycle;
-        }
-
-        private double GetFaultCurrentMagnitude(VICycleDataGroup viCycleDataGroup, FaultType faultType, int cycle)
-        {
-            FaultType viFaultType;
-
-            double anError;
-            double bnError;
-            double cnError;
-
-            ComplexNumber an;
-            ComplexNumber bn;
-            ComplexNumber cn;
-
-            viFaultType = faultType;
-
-            if (viFaultType == FaultType.ABC || viFaultType == FaultType.ABCG)
-            {
-                anError = viCycleDataGroup.IA.Error[cycle].Value;
-                bnError = viCycleDataGroup.IB.Error[cycle].Value;
-                cnError = viCycleDataGroup.IC.Error[cycle].Value;
-
-                if (anError < bnError && anError < cnError)
-                    viFaultType = FaultType.AN;
-                else if (bnError < anError && bnError < cnError)
-                    viFaultType = FaultType.BN;
-                else
-                    viFaultType = FaultType.CN;
-            }
-
-            switch (viFaultType)
-            {
-                case FaultType.AN:
-                    return viCycleDataGroup.IA.RMS[cycle].Value;
-
-                case FaultType.BN:
-                    return viCycleDataGroup.IB.RMS[cycle].Value;
-
-                case FaultType.CN:
-                    return viCycleDataGroup.IC.RMS[cycle].Value;
-
-                case FaultType.AB:
-                case FaultType.ABG:
-                    an = ToComplexNumber(viCycleDataGroup.IA, cycle);
-                    bn = ToComplexNumber(viCycleDataGroup.IB, cycle);
-                    return (an - bn).Magnitude;
-
-                case FaultType.BC:
-                case FaultType.BCG:
-                    bn = ToComplexNumber(viCycleDataGroup.IB, cycle);
-                    cn = ToComplexNumber(viCycleDataGroup.IC, cycle);
-                    return (bn - cn).Magnitude;
-
-                case FaultType.CA:
-                case FaultType.CAG:
-                    cn = ToComplexNumber(viCycleDataGroup.IC, cycle);
-                    an = ToComplexNumber(viCycleDataGroup.IA, cycle);
-                    return (cn - an).Magnitude;
-
-                default:
-                    return double.NaN;
-            }
-        }
-
-        private double GetFaultCurrentLag(VICycleDataGroup viCycleDataGroup, FaultType faultType, int cycle)
-        {
-            FaultType viFaultType;
-
-            double anError;
-            double bnError;
-            double cnError;
-
-            ComplexNumber van;
-            ComplexNumber vbn;
-            ComplexNumber vcn;
-
-            ComplexNumber ian;
-            ComplexNumber ibn;
-            ComplexNumber icn;
-
-            viFaultType = faultType;
-
-            if (viFaultType == FaultType.ABC || viFaultType == FaultType.ABCG)
-            {
-                anError = viCycleDataGroup.IA.Error[cycle].Value;
-                bnError = viCycleDataGroup.IB.Error[cycle].Value;
-                cnError = viCycleDataGroup.IC.Error[cycle].Value;
-
-                if (anError < bnError && anError < cnError)
-                    viFaultType = FaultType.AN;
-                else if (bnError < anError && bnError < cnError)
-                    viFaultType = FaultType.BN;
-                else
-                    viFaultType = FaultType.CN;
-            }
-
-            switch (viFaultType)
-            {
-                case FaultType.AN:
-                    return new Angle(viCycleDataGroup.VA.Phase[cycle].Value - viCycleDataGroup.IA.Phase[cycle].Value).ToRange(-Math.PI, false);
-
-                case FaultType.BN:
-                    return new Angle(viCycleDataGroup.VB.Phase[cycle].Value - viCycleDataGroup.IB.Phase[cycle].Value).ToRange(-Math.PI, false);
-
-                case FaultType.CN:
-                    return new Angle(viCycleDataGroup.VC.Phase[cycle].Value - viCycleDataGroup.IC.Phase[cycle].Value).ToRange(-Math.PI, false);
-
-                case FaultType.AB:
-                case FaultType.ABG:
-                    van = ToComplexNumber(viCycleDataGroup.VA, cycle);
-                    vbn = ToComplexNumber(viCycleDataGroup.VB, cycle);
-                    ian = ToComplexNumber(viCycleDataGroup.IA, cycle);
-                    ibn = ToComplexNumber(viCycleDataGroup.IB, cycle);
-                    return ((van - vbn).Angle - (ian - ibn).Angle).ToRange(-Math.PI, false);
-
-                case FaultType.BC:
-                case FaultType.BCG:
-                    vbn = ToComplexNumber(viCycleDataGroup.VB, cycle);
-                    vcn = ToComplexNumber(viCycleDataGroup.VC, cycle);
-                    ibn = ToComplexNumber(viCycleDataGroup.IB, cycle);
-                    icn = ToComplexNumber(viCycleDataGroup.IC, cycle);
-                    return ((vbn - vcn).Angle - (ibn - icn).Angle).ToRange(-Math.PI, false);
-
-                case FaultType.CA:
-                case FaultType.CAG:
-                    vcn = ToComplexNumber(viCycleDataGroup.VC, cycle);
-                    van = ToComplexNumber(viCycleDataGroup.VA, cycle);
-                    icn = ToComplexNumber(viCycleDataGroup.IC, cycle);
-                    ian = ToComplexNumber(viCycleDataGroup.IA, cycle);
-                    return ((vcn - van).Angle - (icn - ian).Angle).ToRange(-Math.PI, false);
-
-                default:
-                    return double.NaN;
-            }
-        }
-
-        // Tree in line
-        private double GetTreeFaultResistance(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
-        {
-            if (fault.CalculationCycle < 0)
-                return double.NaN;
-
-            if (!new[] { FaultType.AN, FaultType.BN, FaultType.CN }.Contains(fault.Type))
-                return double.NaN;
-
-            CycleDataGroup faultedVoltage = new Func<CycleDataGroup>(() =>
-            {
-                switch (fault.Type)
-                {
-                    case FaultType.AN: return viCycleDataGroup.VA;
-                    case FaultType.BN: return viCycleDataGroup.VB;
-                    case FaultType.CN: return viCycleDataGroup.VC;
-                    default: return null;
-                }
-            })();
-
-            CycleDataGroup faultedCurrent = new Func<CycleDataGroup>(() =>
-            {
-                switch (fault.Type)
-                {
-                    case FaultType.AN: return viCycleDataGroup.IA;
-                    case FaultType.BN: return viCycleDataGroup.IB;
-                    case FaultType.CN: return viCycleDataGroup.IC;
-                    default: return null;
-                }
-            })();
-
-            if (faultedVoltage == null || faultedCurrent == null)
-                return double.NaN;
-
-            ComplexNumber faultVoltage = ToComplexNumber(faultedVoltage, fault.CalculationCycle);
-            ComplexNumber faultCurrent = ToComplexNumber(faultedCurrent, fault.CalculationCycle);
-            ComplexNumber faultImpedance = faultVoltage / faultCurrent;
-
-            LineImpedance lineImpedance = new Func<LineImpedance>(() =>
-            {
-                using (AdoDataConnection connection = dataGroup.Line.ConnectionFactory())
-                {
-                    TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
-                    return lineImpedanceTable.QueryRecordWhere("LineID = {0}", dataGroup.Line.ID);
-                }
-            })();
-
-            if (lineImpedance == null)
-                return double.NaN;
-
-            ComplexNumber z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
-            ComplexNumber z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
-            ComplexNumber loopImpedance = (z0 + 2.0D * z1) / 3.0D;
-
-            double zf = faultImpedance.Magnitude;
-            double xf = faultImpedance.Imaginary;
-            double rs = loopImpedance.Real;
-            double xs = loopImpedance.Imaginary;
-
-            double term1 = zf * zf;
-            double term2 = xf * xf;
-            double term3 = xf * rs / xs;
-            return (Math.Sqrt(term1 - term2) - term3);
-        }
-
-        // Lightning
-        private double GetLightningMilliseconds(Fault fault, List<ILightningStrike> lightningStrikes)
-        {
-            DateTime inception = TimeZoneInfo.ConvertTimeToUtc(fault.InceptionTime, XDATimeZone);
-
-            return lightningStrikes
-                .Select(strike => inception - strike.UTCTime)
-                .Select(span => span.TotalMilliseconds)
-                .Select(new Func<double, double>(Math.Round))
-                .Select(Math.Abs)
-                .DefaultIfEmpty(double.NaN)
-                .Min();
-        }
-
-        // Insulation contamination
-        private double GetInceptionDistanceFromPeak(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
-        {
-            DataSeries angleSeries = new Func<DataSeries>(() =>
-            {
-                switch (fault.Type)
-                {
-                    case FaultType.AN: return viCycleDataGroup.VA?.Phase;
-                    case FaultType.BN: return viCycleDataGroup.VB?.Phase;
-                    case FaultType.CN: return viCycleDataGroup.VC?.Phase;
-                    default: return null;
-                }
-            })();
-
-            if (angleSeries == null)
-                return double.NaN;
-
-            int inceptionIndex = fault.StartSample;
-            double angle = angleSeries[inceptionIndex].Value * 180.0D / Math.PI;
-            double positiveDistance = Math.Abs(angle - 90.0D);
-            double negativeDistance = Math.Abs(angle + 90.0D);
-            return Math.Min(positiveDistance, negativeDistance);
-        }
-
-        // Lightning arrester failure
-        private double GetPrefaultThirdHarmonic(Fault fault, VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
-        {
-            int startIndex = fault.StartSample - samplesPerCycle;
-
-            if (startIndex < 0)
-                return double.NaN;
-
-            DataSeries PeakSeries = new Func<DataSeries>(() =>
-            {
-                switch (fault.Type)
-                {
-                    case FaultType.AN: return viCycleDataGroup.IA?.Peak;
-                    case FaultType.BN: return viCycleDataGroup.IB?.Peak;
-                    case FaultType.CN: return viCycleDataGroup.IC?.Peak;
-                    default: return null;
-                }
-            })();
-
-            if (PeakSeries == null)
-                return double.NaN;
-
-            // If there is no load current before the fault,
-            // then the FFT is invalid
-            if (PeakSeries[startIndex].Value <= BreakerSettings.OpenBreakerThreshold)
-                return double.NaN;
-
-            DataSeries faultedSeries = new Func<DataSeries>(() =>
-            {
-                switch (fault.Type)
-                {
-                    case FaultType.AN: return viDataGroup.IA;
-                    case FaultType.BN: return viDataGroup.IB;
-                    case FaultType.CN: return viDataGroup.IC;
-                    default: return null;
-                }
-            })();
-
-            if (faultedSeries == null)
-                return double.NaN;
-
-            int endIndex = startIndex + samplesPerCycle - 1;
-            DataSeries prefaultCycle = faultedSeries.ToSubSeries(startIndex, endIndex);
-
-            Complex[] samples = prefaultCycle.DataPoints
-                .Select(dataPoint => new Complex(dataPoint.Value, 0))
+                    bool vaFault = vaFaultedCycles[index];
+                    bool vbFault = vbFaultedCycles[index];
+                    bool vcFault = vcFaultedCycles[index];
+
+                    return
+                        (vaFault && !vbFault && !vcFault) ||
+                        (vbFault && !vcFault && !vaFault) ||
+                        (vcFault && !vaFault && !vbFault);
+                })
                 .ToArray();
 
-            Fourier.Forward(samples);
+            for (int i = 0; i < vaRMS.DataPoints.Count; i++)
+            {
+                if (faultApparent[i])
+                {
+                    if ((object)currentFault == null)
+                    {
+                        currentFault = new Fault();
+                        currentFault.StartSample = FindFaultInception(irWaveform, i);
+                        faults.Add(currentFault);
+                    }
+                }
+                else
+                {
+                    if ((object)currentFault != null)
+                    {
+                        currentFault.EndSample = FindFaultClearing(irWaveform, i);
+                        currentFault = null;
+                    }
+                }
+            }
 
-            return samples[3].Magnitude / samples[1].Magnitude;
+            if ((object)currentFault != null)
+                currentFault.EndSample = vaRMS.DataPoints.Count - 1;
+
+            faults.RemoveWhere(fault => fault.StartSample >= fault.EndSample);
+
+            return faults;
         }
 
-        // Conductor slap
-        private double GetGroundCurrentRatio(Fault fault, VICycleDataGroup viCycleDataGroup)
+        private void ClassifyFaultsByVoltage(List<Fault> faults, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            if (fault.CalculationCycle < 0)
-                return double.NaN;
+            Fault.Segment currentSegment = null;
 
-            if (viCycleDataGroup.IR == null)
-                return double.NaN;
+            DataSeries vaRMS = ToPerUnit(viCycleDataGroup.VA.RMS);
+            DataSeries vbRMS = ToPerUnit(viCycleDataGroup.VB.RMS);
+            DataSeries vcRMS = ToPerUnit(viCycleDataGroup.VC.RMS);
+            double nominalLineVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
 
-            double faultMagnitude = fault.CurrentMagnitude;
-            double groundCurrent = viCycleDataGroup.IR.RMS[fault.CalculationCycle].Value;
-            return groundCurrent / faultMagnitude;
+            foreach (Fault fault in faults)
+            {
+                for (int i = fault.StartSample; i <= fault.EndSample && i < vaRMS.DataPoints.Count; i++)
+                {
+                    double va = vaRMS[i].Value;
+                    double vb = vbRMS[i].Value;
+                    double vc = vcRMS[i].Value;
+
+                    CycleData cycleData = GetCycle(viCycleDataGroup, i);
+                    ComplexNumber[] sequenceComponents = CycleData.CalculateSequenceComponents(cycleData.AN.V, cycleData.BN.V, cycleData.CN.V);
+                    double v0 = sequenceComponents[0].Magnitude / nominalLineVoltage;
+
+                    FaultType faultType = GetFaultType(va, vb, vc, v0);
+
+                    if ((object)currentSegment == null)
+                    {
+                        currentSegment = new Fault.Segment(faultType);
+                        currentSegment.StartTime = viCycleDataGroup.VA.RMS[i].Time;
+                        currentSegment.StartSample = i;
+                        fault.Segments.Add(currentSegment);
+                    }
+                    else if (currentSegment.FaultType != faultType)
+                    {
+                        currentSegment.EndTime = viCycleDataGroup.VA.RMS[i - 1].Time;
+                        currentSegment.EndSample = i - 1;
+
+                        currentSegment = new Fault.Segment(faultType);
+                        currentSegment.StartTime = viCycleDataGroup.VA.RMS[i].Time;
+                        currentSegment.StartSample = i;
+                        fault.Segments.Add(currentSegment);
+                    }
+                }
+
+                if ((object)currentSegment != null)
+                {
+                    currentSegment.EndTime = dataGroup[0][fault.EndSample].Time;
+                    currentSegment.EndSample = fault.EndSample;
+                    currentSegment = null;
+                }
+            }
         }
 
-        // Conductor Break
-        private double GetLowPrefaultCurrentRatio(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        private FaultType GetFaultType(double va, double vb, double vc, double v0)
         {
-            // Back up two cycles from the beginning of the fault
-            int prefaultCycleIndex = fault.StartSample - 2 * samplesPerCycle;
+            const double FaultedPhaseThreshold = 0.8D;
+            const double GroundFaultThreshold = 0.001D;
 
-            if (prefaultCycleIndex < 0)
-                return double.NaN;
+            bool vaFault = va < FaultedPhaseThreshold;
+            bool vbFault = vb < FaultedPhaseThreshold;
+            bool vcFault = vc < FaultedPhaseThreshold;
+            bool groundFault = v0 > GroundFaultThreshold;
 
-            double[] prefaultValues = new[] { viCycleDataGroup.IA, viCycleDataGroup.IB, viCycleDataGroup.IC }
-                .Where(cycleDataGroup => cycleDataGroup != null)
-                .Select(cycleDataGroup => cycleDataGroup.RMS[prefaultCycleIndex].Value)
-                .OrderBy(value => value)
-                .ToArray();
+            if (vaFault && vbFault && vcFault)
+                return groundFault ? FaultType.ABCG : FaultType.ABC;
 
-            if (prefaultValues.Length < 2)
-                return double.NaN;
+            if (vaFault && vbFault)
+                return groundFault ? FaultType.ABG : FaultType.AB;
 
-            double min = prefaultValues[0];
-            double nextMin = prefaultValues[1];
-            return min / nextMin;
+            if (vbFault && vcFault)
+                return groundFault ? FaultType.BCG : FaultType.BC;
+
+            if (vcFault && vaFault)
+                return groundFault ? FaultType.CAG : FaultType.CA;
+
+            if (vaFault)
+                return FaultType.AN;
+
+            if (vbFault)
+                return FaultType.BN;
+
+            if (vcFault)
+                return FaultType.CN;
+
+            return FaultType.None;
         }
 
-        private ComplexNumber ToComplexNumber(CycleDataGroup cycleDataGroup, int cycle)
+        private DataSeries ToPerUnit(DataSeries voltageRMS)
         {
-            Angle angle = cycleDataGroup.Phase[cycle].Value;
-            double magnitude = cycleDataGroup.RMS[cycle].Value;
-            return new ComplexNumber(angle, magnitude);
+            double? perUnitValue = voltageRMS.SeriesInfo.Channel.PerUnitValue;
+            double lineVoltage = voltageRMS.SeriesInfo.Channel.Line.VoltageKV * 1000.0D;
+            string phase = voltageRMS.SeriesInfo.Channel.Phase.Name;
+
+            if (new[] { "AN", "BN", "CN" }.Contains(phase))
+                lineVoltage /= Math.Sqrt(3.0D);
+
+            double mult = 1.0D / (perUnitValue ?? lineVoltage);
+            DataSeries perUnitSeries = voltageRMS.Multiply(mult);
+            perUnitSeries.SeriesInfo = voltageRMS.SeriesInfo;
+            return perUnitSeries;
         }
+
+        #endregion
 
         #endregion
 
