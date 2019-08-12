@@ -909,9 +909,16 @@ namespace FaultData.DataResources
 
         private bool IsValid(double faultDistance, DataGroup dataGroup)
         {
-            double lineLength = dataGroup.Line.Length;
-            double maxDistance = FaultLocationSettings.MaxFaultDistanceMultiplier * lineLength;
-            double minDistance = FaultLocationSettings.MinFaultDistanceMultiplier * lineLength;
+            Line line = dataGroup.Line;
+            double maxFaultDistanceMultiplier = FaultLocationSettings.MaxFaultDistanceMultiplier;
+            double minFaultDistanceMultiplier = FaultLocationSettings.MinFaultDistanceMultiplier;
+
+            double maxDistance = line.MaxFaultDistance
+                ?? maxFaultDistanceMultiplier * line.Length;
+
+            double minDistance = line.MinFaultDistance
+                ?? minFaultDistanceMultiplier * line.Length;
+
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 

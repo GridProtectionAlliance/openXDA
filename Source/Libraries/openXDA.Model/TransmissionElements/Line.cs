@@ -61,6 +61,10 @@ namespace openXDA.Model
         [Required]
         public double Length { get; set; }
 
+        public double? MaxFaultDistance { get; set; }
+
+        public double? MinFaultDistance { get; set; }
+
         public string Description { get; set; }
 
         [JsonIgnore]

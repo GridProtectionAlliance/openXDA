@@ -2737,6 +2737,8 @@ namespace openXDA.Hubs
             line.AssetKey = record.AssetKey;
             line.Description = record.Description;
             line.Length = record.Length;
+            line.MaxFaultDistance = record.MaxFaultDistance;
+            line.MinFaultDistance = record.MinFaultDistance;
             line.ThermalRating = record.ThermalRating;
             line.VoltageKV = record.VoltageKV;
             return line;

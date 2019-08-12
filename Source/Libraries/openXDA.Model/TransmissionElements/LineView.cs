@@ -43,6 +43,10 @@ namespace openXDA.Model
 
         public float Length { get; set; }
 
+        public float MaxFaultDistance { get; set; }
+
+        public float MinFaultDistance { get; set; }
+
         public string Description { get; set; }
 
         [Searchable]

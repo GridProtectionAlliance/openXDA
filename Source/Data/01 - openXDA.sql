@@ -192,6 +192,8 @@ CREATE TABLE Line
     VoltageKV FLOAT NOT NULL,
     ThermalRating FLOAT NOT NULL,
     Length FLOAT NOT NULL,
+    MaxFaultDistance FLOAT NULL,
+    MinFaultDistance FLOAT NULL,
     Description VARCHAR(MAX) NULL
 )
 GO
@@ -2927,6 +2929,8 @@ SELECT
     Line.VoltageKV,
     Line.ThermalRating,
     Line.Length,
+    COALESCE(Line.MaxFaultDistance, Line.Length * MaxFaultDistanceMultiplier.Value) MaxFaultDistance,
+    COALESCE(Line.MinFaultDistance, Line.Length * MinFaultDistanceMultiplier.Value) MinFaultDistance,
     Line.Description,
     (
         SELECT TOP 1 LineName
@@ -2940,7 +2944,9 @@ SELECT
     LineImpedance.ID AS LineImpedanceID
 FROM
     Line LEFT OUTER JOIN
-    LineImpedance ON Line.ID = LineImpedance.LineID
+    LineImpedance ON Line.ID = LineImpedance.LineID CROSS JOIN
+    (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MaxFaultDistanceMultiplier'), 1.05) Value) MaxFaultDistanceMultiplier CROSS JOIN
+    (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MinFaultDistanceMultiplier'), 1.05) Value) MinFaultDistanceMultiplier
 GO
 
 CREATE VIEW MeterLineDetail
