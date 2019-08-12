@@ -90,6 +90,22 @@ namespace FaultData.Configuration
         [DefaultValue(20.0D)]
         public double OpenBreakerThreshold { get; set; }
 
+        /// <summary>
+        /// Gets or sets the minimum duration, in cycles, for which the current must remain
+        /// at zero in order for a subsequent current spike to be considered a restrike.
+        /// </summary>
+        [Setting]
+        [DefaultValue(0.125D)]
+        public double MinCyclesBeforeRestrike { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum duration, in cycles, for which the current must remain
+        /// at zero in order for a subsequent current spike to be considered a restrike.
+        /// </summary>
+        [Setting]
+        [DefaultValue(2.0D)]
+        public double MaxCyclesBeforeRestrike { get; set; }
+
         #endregion
     }
 }

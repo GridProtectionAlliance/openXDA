@@ -120,7 +120,7 @@
     <Compile Include="DataReaders\IGridPQDIFReader.cs" />
     <Compile Include="DataReaders\PQViewDIFReader.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />
-    <Compile Include="DataResources\BreakerOpenResource.cs" />
+    <Compile Include="DataResources\BreakerDataResource.cs" />
     <Compile Include="DataResources\GTC\BreakerRestrikeResource.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\EventClassificationResource.cs" />

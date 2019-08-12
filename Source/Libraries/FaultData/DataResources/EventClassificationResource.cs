@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataGroupClassificationResource.cs - Gbtc
+//  EventClassificationResource.cs - Gbtc
 //
 //  Copyright © 2015, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -206,9 +206,9 @@ namespace FaultData.DataResources
                 }
             }
 
-            BreakerOpenResource breakerOpenResource = meterDataSet.GetResource<BreakerOpenResource>();
+            BreakerDataResource breakerOpenResource = meterDataSet.GetResource<BreakerDataResource>();
 
-            if (breakerOpenResource.TripLookup.TryGetValue(dataGroup, out List<BreakerOpenResource.Trip> trips))
+            if (breakerOpenResource.TripLookup.TryGetValue(dataGroup, out List<BreakerDataResource.Trip> trips))
                 return EventClassification.BreakerTrip;
 
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
