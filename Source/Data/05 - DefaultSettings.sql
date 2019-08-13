@@ -7,7 +7,13 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.LateBreakerThreshold', '0.0', '0.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.MaxCyclesBeforeRestrike', '2.0', '2.0')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.MinCyclesBeforeOpen', '0.0', '0.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.MinCyclesBeforeRestrike', '0.125', '0.125')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.MinWaitBeforeReclose', '15.0', '15.0')
