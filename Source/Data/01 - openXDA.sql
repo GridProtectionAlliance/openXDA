@@ -1040,7 +1040,7 @@ GO
 INSERT INTO EventType(Name, Description) VALUES ('RecloseIntoFault', 'Reclose Into Fault')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('BreakerTrip', 'Breaker Opening - Nonfault')
+INSERT INTO EventType(Name, Description) VALUES ('BreakerOpen', 'Breaker Opening - Nonfault')
 GO
 
 INSERT INTO EventType(Name, Description) VALUES ('Interruption', 'Interruption')

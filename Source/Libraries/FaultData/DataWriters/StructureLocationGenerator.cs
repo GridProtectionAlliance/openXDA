@@ -6,6 +6,7 @@ using System.Net;
 using HtmlAgilityPack;
 using log4net.Core;
 using log4net;
+using System.Text;
 
 namespace FaultData.DataWriters
 {
@@ -110,7 +111,7 @@ namespace FaultData.DataWriters
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(StructureLocationGenerator));
 
-        public static XElement GetStructureLocationInformation(XElement element)
+        public static object GetStructureLocationInformation(XElement element)
         {
             try
             {
@@ -265,6 +266,21 @@ namespace FaultData.DataWriters
             return returnElement;
         }
 
+        private static string ToFormat(CommonForm input, string headerFormat, string rowFormat)
+        {
+            object[] headerData = input.Headers.AsEnumerable<object>().ToArray();
+            string header = string.Format(headerFormat, headerData);
+
+            List<string> rows = input.Body
+                .Select(rowData => rowData.AsEnumerable<object>().ToArray())
+                .Select(rowData => string.Format(rowFormat, rowData))
+                .ToList();
+
+            List<string> lines = new[] { header }.Concat(rows).ToList();
+
+            return string.Join(Environment.NewLine, lines);
+        }
+
         private static string GetStructureInfo(string url, bool decode, ICredentials credential = null)
         {
             HtmlWeb webClient = new HtmlWeb();
@@ -281,8 +297,6 @@ namespace FaultData.DataWriters
             Log.Debug(result);
             return result;
         }
-
-
 
         #endregion
     }

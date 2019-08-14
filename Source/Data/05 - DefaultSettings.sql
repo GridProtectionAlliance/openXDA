@@ -265,7 +265,7 @@ GO
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'RecloseIntoFault', 1)
 GO
 
-INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'BreakerTrip', 1)
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'BreakerOpen', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Sag', 1)
@@ -298,7 +298,7 @@ GO
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'RecloseIntoFault,#323232', 1)
 GO
 
-INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'BreakerTrip,#B245BA', 1)
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'BreakerOpen,#B245BA', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'Sag,#FF9600', 1)
