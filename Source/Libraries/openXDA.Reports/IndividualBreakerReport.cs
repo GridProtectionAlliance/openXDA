@@ -95,7 +95,7 @@ namespace openXDA.Reports
 	                    BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
 	                    Phase ON Phase.ID = BreakerOperation.PhaseID JOIN
 	                    Event ON BreakerOperation.EventID = Event.ID JOIN
-	                    MeterLINE ON Event.MeterID = MeterLine.MeterID AND Event.LineID = MeterLine.LineID JOIN
+	                    MeterLINE ON Event.MeterID = MeterLine.MeterID AND Event.LineID = MeterLine.LineID LEFT JOIN
 	                    MaximoBreaker ON BreakerOperation.BreakerNumber = SUBSTRING(MaximoBreaker.BreakerNum, PATINDEX('%[^0]%', MaximoBreaker.BreakerNum + '.'), LEN(MaximoBreaker.BreakerNum)) LEFT JOIN
 	                    FaultSummary ON Event.ID = FaultSummary.EventID AND FaultSummary.IsSelectedAlgorithm = 1 LEFT JOIN
                         EventStat ON Event.ID = EventStat.EventID

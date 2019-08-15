@@ -87,7 +87,7 @@ namespace openXDA.Reports
                 MaximoBreaker.ContinuousAmpRating
             FROM 
                 BreakerOperation LEFT JOIN
-                BreakerOperation as BOLate ON BreakerOperation.ID = BOLate.ID AND BOLate.BreakerOperationTypeID = (SELECT ID FROM BreakerOperationType WHERE Name = 'Late') JOIN
+                BreakerOperation as BOLate ON BreakerOperation.ID = BOLate.ID AND BOLate.BreakerOperationTypeID = (SELECT ID FROM BreakerOperationType WHERE Name = 'Late') LEFT JOIN
                 MeterLine ON (SELECT LineID FROM Channel WHERE ID = (SELECT TOP 1 ChannelID FROM BreakerChannel WHERE BreakerChannel.BreakerNumber = BreakerOperation.BreakerNumber)) = MeterLine.LineID AND (SELECT MeterID FROM Channel WHERE ID = (SELECT TOP 1 ChannelID FROM BreakerChannel WHERE BreakerChannel.BreakerNumber = BreakerOperation.BreakerNumber)) = MeterLine.MeterID LEFT JOIN
                 MaximoBreaker ON BreakerOperation.BreakerNumber = SUBSTRING(MaximoBreaker.BreakerNum, PATINDEX('%[^0]%', MaximoBreaker.BreakerNum + '.'), LEN(MaximoBreaker.BreakerNum))
             WHERE

@@ -292,7 +292,7 @@ FROM
         [BreakerOperationType] LEFT OUTER JOIN
         (
             SELECT CAST([TripCoilEnergized] AS Date) AS EventDate, [BreakerOperationTypeID] as EventTypeID, COUNT(*) AS EventCount
-            FROM [BreakerOperation] join [Event] on [BreakerOperation].[EventID] = [Event].[ID] and [Event].[MeterID] in (select * from authMeters(@username))
+            FROM [BreakerOperation] join [Event] on [BreakerOperation].[EventID] = [Event].[ID] 
             GROUP BY CAST([TripCoilEnergized] AS Date), [BreakerOperationTypeID]
         ) AS Event ON #temp.Date = Event.EventDate AND [BreakerOperationType].ID = Event.EventTypeID
 ) AS EventDate
@@ -388,7 +388,7 @@ SET @SQLStatement =
 '   FROM BreakerOperation JOIN                                                                               ' +
 '        BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN      ' +
 '        Event ON Event.ID = BreakerOperation.EventID                                                        ' +
-'   WHERE MeterID in (select * from #authMeters) AND                                                         ' +
+'   WHERE --MeterID in (select * from #authMeters) AND                                                         ' +
 '         MeterID IN (SELECT * FROM #selectedMeters) AND                                                     ' +
 '         TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate                                   ' +
 '   GROUP BY ' + @groupByStatement + ', BreakerOperationType.Name                                        ' +
