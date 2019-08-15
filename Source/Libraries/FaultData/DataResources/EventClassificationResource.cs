@@ -41,7 +41,7 @@ namespace FaultData.DataResources
     {
         Fault,
         RecloseIntoFault,
-        BreakerTrip,
+        BreakerOpen,
         Interruption,
         Sag,
         Swell,
@@ -209,7 +209,7 @@ namespace FaultData.DataResources
             BreakerDataResource breakerOpenResource = meterDataSet.GetResource<BreakerDataResource>();
 
             if (breakerOpenResource.TripLookup.TryGetValue(dataGroup, out List<BreakerDataResource.Trip> trips))
-                return EventClassification.BreakerTrip;
+                return EventClassification.BreakerOpen;
 
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
