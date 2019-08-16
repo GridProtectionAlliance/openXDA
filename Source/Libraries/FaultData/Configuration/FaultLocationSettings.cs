@@ -79,6 +79,14 @@ namespace FaultData.Configuration
         [DefaultValue(true)]
         public bool UseDefaultFaultDetectionLogic { get; set; }
 
+        [Setting]
+        [DefaultValue(0.8D)]
+        public double FaultedVoltageThreshold { get; set; }
+
+        [Setting]
+        [DefaultValue(0.001D)]
+        public double GroundedFaultVoltageThreshold { get; set; }
+
         #endregion
     }
 }

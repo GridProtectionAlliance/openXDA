@@ -1642,8 +1642,6 @@ namespace FaultData.DataResources
 
         private List<Fault> DetectSinglePhaseFaultsByVoltage(VICycleDataGroup viCycleDataGroup, DataSeries irWaveform)
         {
-            const double FaultedPhaseThreshold = 0.8D;
-
             List<Fault> faults = new List<Fault>();
             Fault currentFault = null;
 
@@ -1651,16 +1649,18 @@ namespace FaultData.DataResources
             DataSeries vbRMS = ToPerUnit(viCycleDataGroup.VB.RMS);
             DataSeries vcRMS = ToPerUnit(viCycleDataGroup.VC.RMS);
 
+            double faultedPhaseThreshold = FaultLocationSettings.FaultedVoltageThreshold;
+
             List<bool> vaFaultedCycles = vaRMS.DataPoints
-                .Select(point => point.Value < FaultedPhaseThreshold)
+                .Select(point => point.Value < faultedPhaseThreshold)
                 .ToList();
 
             List<bool> vbFaultedCycles = vbRMS.DataPoints
-                .Select(point => point.Value < FaultedPhaseThreshold)
+                .Select(point => point.Value < faultedPhaseThreshold)
                 .ToList();
 
             List<bool> vcFaultedCycles = vcRMS.DataPoints
-                .Select(point => point.Value < FaultedPhaseThreshold)
+                .Select(point => point.Value < faultedPhaseThreshold)
                 .ToList();
 
             bool[] faultApparent = Enumerable.Range(0, vaRMS.DataPoints.Count)
@@ -1759,13 +1759,13 @@ namespace FaultData.DataResources
 
         private FaultType GetFaultType(double va, double vb, double vc, double v0)
         {
-            const double FaultedPhaseThreshold = 0.8D;
-            const double GroundFaultThreshold = 0.001D;
+            double faultedPhaseThreshold = FaultLocationSettings.FaultedVoltageThreshold;
+            double groundFaultThreshold = FaultLocationSettings.GroundedFaultVoltageThreshold;
 
-            bool vaFault = va < FaultedPhaseThreshold;
-            bool vbFault = vb < FaultedPhaseThreshold;
-            bool vcFault = vc < FaultedPhaseThreshold;
-            bool groundFault = v0 > GroundFaultThreshold;
+            bool vaFault = va < faultedPhaseThreshold;
+            bool vbFault = vb < faultedPhaseThreshold;
+            bool vcFault = vc < faultedPhaseThreshold;
+            bool groundFault = v0 > groundFaultThreshold;
 
             if (vaFault && vbFault && vcFault)
                 return groundFault ? FaultType.ABCG : FaultType.ABC;

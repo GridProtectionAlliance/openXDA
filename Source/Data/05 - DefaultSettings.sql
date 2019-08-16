@@ -106,6 +106,12 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.FaultClearingAdjustmentSamples', '10', '10')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.FaultedVoltageThreshold', '0.8', '0.8')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.GroundedFaultVoltageThreshold', '0.001', '0.001')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.UseDefaultFaultDetectionLogic', 'True', 'True')
 GO
 
