@@ -28,8 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FileViewer));
             this.DataChart = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.SELEVEButton = new System.Windows.Forms.Button();
             this.ChannelListBox = new System.Windows.Forms.ListBox();
@@ -37,26 +38,36 @@
             this.COMTRADEButton = new System.Windows.Forms.Button();
             this.CSVExportButton = new System.Windows.Forms.Button();
             this.EMAXButton = new System.Windows.Forms.Button();
+            this.LogoPictureBox = new System.Windows.Forms.PictureBox();
+            this.ButtonPanel = new System.Windows.Forms.Panel();
+            this.ChannelPanel = new System.Windows.Forms.Panel();
+            this.ChartPanel = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.DataChart)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).BeginInit();
+            this.ButtonPanel.SuspendLayout();
+            this.ChannelPanel.SuspendLayout();
+            this.ChartPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // DataChart
             // 
-            chartArea2.AxisX.MajorGrid.Enabled = false;
-            chartArea2.AxisY.MajorGrid.Enabled = false;
-            chartArea2.Name = "ChartArea1";
-            this.DataChart.ChartAreas.Add(chartArea2);
-            legend2.Name = "Legend1";
-            this.DataChart.Legends.Add(legend2);
-            this.DataChart.Location = new System.Drawing.Point(328, 12);
+            chartArea1.AxisX.MajorGrid.Enabled = false;
+            chartArea1.AxisY.MajorGrid.Enabled = false;
+            chartArea1.Name = "ChartArea1";
+            this.DataChart.ChartAreas.Add(chartArea1);
+            this.DataChart.Dock = System.Windows.Forms.DockStyle.Fill;
+            legend1.Name = "Legend1";
+            this.DataChart.Legends.Add(legend1);
+            this.DataChart.Location = new System.Drawing.Point(10, 10);
             this.DataChart.Name = "DataChart";
-            this.DataChart.Size = new System.Drawing.Size(544, 537);
-            this.DataChart.TabIndex = 6;
+            this.DataChart.Size = new System.Drawing.Size(527, 521);
+            this.DataChart.TabIndex = 0;
+            this.DataChart.TabStop = false;
             this.DataChart.Text = "DataChart";
             // 
             // SELEVEButton
             // 
-            this.SELEVEButton.Location = new System.Drawing.Point(20, 68);
+            this.SELEVEButton.Location = new System.Drawing.Point(10, 66);
             this.SELEVEButton.Name = "SELEVEButton";
             this.SELEVEButton.Size = new System.Drawing.Size(120, 22);
             this.SELEVEButton.TabIndex = 2;
@@ -66,17 +77,18 @@
             // 
             // ChannelListBox
             // 
+            this.ChannelListBox.Dock = System.Windows.Forms.DockStyle.Left;
             this.ChannelListBox.FormattingEnabled = true;
-            this.ChannelListBox.Location = new System.Drawing.Point(162, 12);
+            this.ChannelListBox.Location = new System.Drawing.Point(10, 10);
             this.ChannelListBox.Name = "ChannelListBox";
             this.ChannelListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.ChannelListBox.Size = new System.Drawing.Size(157, 537);
+            this.ChannelListBox.Size = new System.Drawing.Size(157, 521);
             this.ChannelListBox.TabIndex = 5;
             this.ChannelListBox.SelectedIndexChanged += new System.EventHandler(this.ChannelListBox_SelectedIndexChanged);
             // 
             // PQDIFButton
             // 
-            this.PQDIFButton.Location = new System.Drawing.Point(20, 40);
+            this.PQDIFButton.Location = new System.Drawing.Point(10, 38);
             this.PQDIFButton.Name = "PQDIFButton";
             this.PQDIFButton.Size = new System.Drawing.Size(120, 22);
             this.PQDIFButton.TabIndex = 1;
@@ -86,7 +98,7 @@
             // 
             // COMTRADEButton
             // 
-            this.COMTRADEButton.Location = new System.Drawing.Point(20, 12);
+            this.COMTRADEButton.Location = new System.Drawing.Point(10, 10);
             this.COMTRADEButton.Name = "COMTRADEButton";
             this.COMTRADEButton.Size = new System.Drawing.Size(120, 22);
             this.COMTRADEButton.TabIndex = 0;
@@ -96,7 +108,7 @@
             // 
             // CSVExportButton
             // 
-            this.CSVExportButton.Location = new System.Drawing.Point(20, 151);
+            this.CSVExportButton.Location = new System.Drawing.Point(10, 136);
             this.CSVExportButton.Name = "CSVExportButton";
             this.CSVExportButton.Size = new System.Drawing.Size(120, 22);
             this.CSVExportButton.TabIndex = 4;
@@ -106,7 +118,7 @@
             // 
             // EMAXButton
             // 
-            this.EMAXButton.Location = new System.Drawing.Point(20, 96);
+            this.EMAXButton.Location = new System.Drawing.Point(10, 94);
             this.EMAXButton.Name = "EMAXButton";
             this.EMAXButton.Size = new System.Drawing.Size(120, 22);
             this.EMAXButton.TabIndex = 3;
@@ -114,23 +126,76 @@
             this.EMAXButton.UseVisualStyleBackColor = true;
             this.EMAXButton.Click += new System.EventHandler(this.EMAXButton_Click);
             // 
+            // LogoPictureBox
+            // 
+            this.LogoPictureBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.LogoPictureBox.Image = ((System.Drawing.Image)(resources.GetObject("LogoPictureBox.Image")));
+            this.LogoPictureBox.Location = new System.Drawing.Point(10, 290);
+            this.LogoPictureBox.Margin = new System.Windows.Forms.Padding(10);
+            this.LogoPictureBox.Name = "LogoPictureBox";
+            this.LogoPictureBox.Size = new System.Drawing.Size(120, 240);
+            this.LogoPictureBox.TabIndex = 7;
+            this.LogoPictureBox.TabStop = false;
+            // 
+            // ButtonPanel
+            // 
+            this.ButtonPanel.AutoSize = true;
+            this.ButtonPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ButtonPanel.Controls.Add(this.COMTRADEButton);
+            this.ButtonPanel.Controls.Add(this.PQDIFButton);
+            this.ButtonPanel.Controls.Add(this.SELEVEButton);
+            this.ButtonPanel.Controls.Add(this.EMAXButton);
+            this.ButtonPanel.Controls.Add(this.CSVExportButton);
+            this.ButtonPanel.Controls.Add(this.LogoPictureBox);
+            this.ButtonPanel.Dock = System.Windows.Forms.DockStyle.Left;
+            this.ButtonPanel.Location = new System.Drawing.Point(10, 10);
+            this.ButtonPanel.Name = "ButtonPanel";
+            this.ButtonPanel.Size = new System.Drawing.Size(140, 541);
+            this.ButtonPanel.TabIndex = 0;
+            // 
+            // ChannelPanel
+            // 
+            this.ChannelPanel.AutoSize = true;
+            this.ChannelPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ChannelPanel.Controls.Add(this.ChannelListBox);
+            this.ChannelPanel.Dock = System.Windows.Forms.DockStyle.Left;
+            this.ChannelPanel.Location = new System.Drawing.Point(150, 10);
+            this.ChannelPanel.Name = "ChannelPanel";
+            this.ChannelPanel.Padding = new System.Windows.Forms.Padding(10);
+            this.ChannelPanel.Size = new System.Drawing.Size(177, 541);
+            this.ChannelPanel.TabIndex = 0;
+            // 
+            // ChartPanel
+            // 
+            this.ChartPanel.Controls.Add(this.DataChart);
+            this.ChartPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ChartPanel.Location = new System.Drawing.Point(327, 10);
+            this.ChartPanel.Name = "ChartPanel";
+            this.ChartPanel.Padding = new System.Windows.Forms.Padding(10);
+            this.ChartPanel.Size = new System.Drawing.Size(547, 541);
+            this.ChartPanel.TabIndex = 0;
+            // 
             // FileViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(884, 562);
-            this.Controls.Add(this.EMAXButton);
-            this.Controls.Add(this.CSVExportButton);
-            this.Controls.Add(this.COMTRADEButton);
-            this.Controls.Add(this.PQDIFButton);
-            this.Controls.Add(this.ChannelListBox);
-            this.Controls.Add(this.SELEVEButton);
-            this.Controls.Add(this.DataChart);
+            this.ClientSize = new System.Drawing.Size(884, 561);
+            this.Controls.Add(this.ChartPanel);
+            this.Controls.Add(this.ChannelPanel);
+            this.Controls.Add(this.ButtonPanel);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimumSize = new System.Drawing.Size(600, 500);
             this.Name = "FileViewer";
+            this.Padding = new System.Windows.Forms.Padding(10);
             this.Text = "XDA Waveform Data Parser";
             this.Resize += new System.EventHandler(this.Form_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.DataChart)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).EndInit();
+            this.ButtonPanel.ResumeLayout(false);
+            this.ChannelPanel.ResumeLayout(false);
+            this.ChartPanel.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -143,6 +208,10 @@
         private System.Windows.Forms.Button COMTRADEButton;
         private System.Windows.Forms.Button CSVExportButton;
         private System.Windows.Forms.Button EMAXButton;
+        private System.Windows.Forms.PictureBox LogoPictureBox;
+        private System.Windows.Forms.Panel ButtonPanel;
+        private System.Windows.Forms.Panel ChannelPanel;
+        private System.Windows.Forms.Panel ChartPanel;
     }
 }
 
