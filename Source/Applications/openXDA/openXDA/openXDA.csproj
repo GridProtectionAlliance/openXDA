@@ -231,6 +231,7 @@
     <Compile Include="AppModel.cs" />
     <Compile Include="Configuration\CategorizedSetting.cs" />
     <Compile Include="Configuration\FileShare.cs" />
+    <Compile Include="Controllers\Config\EmailTemplateController.cs" />
     <Compile Include="Controllers\Config\QueryController.cs" />
     <Compile Include="DataObjectWrapper.cs" />
     <Compile Include="DebugHost.cs">

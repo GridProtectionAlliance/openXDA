@@ -1,25 +1,26 @@
 ﻿@*//******************************************************************************************************
-    //  EditEventEmailParameters.cshtml - Gbtc
-    //
-    //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
-    //
-    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
-    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
-    //  file except in compliance with the License. You may obtain a copy of the License at:
-    //
-    //      http://opensource.org/licenses/MIT
-    //
-    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
-    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
-    //  License for the specific language governing permissions and limitations.
-    //
-    //  Code Modification History:
-    //  ----------------------------------------------------------------------------------------------------
-    //  07/27/2018 - Billy Ernest
-    //       Generated original version of source code.
-    //
-    //*******************************************************************************************************@
+//  EditEventEmailParameters.cshtml - Gbtc
+//
+//  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  07/27/2018 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+
 @using System.Net.Http
 @using GSF.Web
 @using GSF.Web.Model
@@ -53,11 +54,12 @@
     EmailType emailType = dataContext.Table<EmailType>().QueryRecordWhere("ID = {0}", eventEmailParameters.EmailTypeID);
 }
 
-<ul class="nav nav-tabs">
+<ul id="email-tabs" class="nav nav-tabs">
     <li class="active"><a data-toggle="tab" href="#config">Configuration</a></li>
     <li><a data-toggle="tab" href="#template">Template</a></li>
     <li><a data-toggle="tab" href="#trigger">Trigger SQL</a></li>
     <li><a data-toggle="tab" href="#event">Event SQL</a></li>
+    <li><a data-toggle="tab" href="#test">Test</a></li>
 </ul>
 
 <div id="xslTemplate" hidden>@xslTemplate.Template</div>
@@ -107,6 +109,7 @@
         </div>
         <button id="updateEventBtn" type="submit" style="float: right" class="btn btn-primary" onclick="updateEvent()">Update</button>
     </div>
+    <div id="test" class="tab-pane fade" />
 </div>
 @section Scripts
 {
@@ -133,6 +136,60 @@
             editor.getSession().setMode("ace/mode/sql");
             editor.setFontSize("14px");
             editor.setValue($('#eventTemplate').text());
+
+            $('#email-tabs a').on('click', function (e) {
+                if (e.target.innerText !== "Test")
+                    return;
+
+                $('#test').empty();
+
+                $.ajax('@Url.Content("~/api/Config/EmailTemplate/" + @xslTemplate.ID)').done(function (events) {
+                    if (events.length === 0) {
+                        var baseURL = '@request.RequestUri.GetLeftPart(UriPartial.Authority)';
+                        var path = '@Url.Content("~/Config/EmailTemplateHandler.ashx")';
+                        var query = '?EventID=<span style="background-color: yellow">##</span>&TemplateID=@xslTemplate.ID';
+
+                        $('#test')
+                            .append('No events found that match the trigger SQL. ')
+                            .append('To test an arbitrary event, copy the following URL ')
+                            .append('with the ID of the event you would like to test.')
+                            .append('<br>')
+                            .append(baseURL + path + query);
+
+                        return;
+                    }
+
+                    var table = $('<table class="table table-condensed table-hover">');
+                    var tableHeader = $('<thead>');
+                    var tableBody = $('<tbody>');
+
+                    var headerRow = $('<tr>');
+                    headerRow.append('<th>Start Time</th>');
+                    headerRow.append('<th>Event Type</th>');
+                    headerRow.append('<th>Meter</th>');
+                    headerRow.append('<th>Line</th>');
+                    headerRow.appendTo(tableHeader);
+
+                    $.each(events, function (_, evt) {
+                        var row = $('<tr>');
+                        row.append('<td><a target="_blank" href="@Url.Content("~/Config/EmailTemplateHandler.ashx")?EventID=' + evt.ID + '&TemplateID=@xslTemplate.ID">' + evt.StartTime + '</a></td>');
+                        row.append('<td>' + evt.MeterName + '</td>');
+                        row.append('<td>' + evt.EventTypeName + '</td>');
+                        row.append('<td>' + evt.LineName + '</td>');
+                        row.appendTo(tableBody);
+                    });
+
+                    table.append(tableHeader);
+                    table.append(tableBody);
+                    table.appendTo('#test');
+                }).fail(function (err) {
+                    var pre = $('<pre>');
+                    pre.append(err.responseJSON.ExceptionType).append('<br>');
+                    pre.append(err.responseJSON.ExceptionMessage).append('<br>');
+                    pre.append(err.responseJSON.StackTrace);
+                    pre.appendTo('#test');
+                });
+            });
         });
 
         function updateConfiguration() {
