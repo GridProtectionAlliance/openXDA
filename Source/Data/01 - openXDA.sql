@@ -4226,6 +4226,7 @@ FOR XML PATH(''EventDetail''), TYPE'
 WHERE EventEmailParameters.ID = 2
 GO
 
+UPDATE EventEmailParameters
 SET TriggersEmailSQL = 'SELECT CASE WHEN (SELECT COUNT(RP.ID) FROM RelayPerformance RP LEFT OUTER JOIN
 	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
 	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
@@ -4233,7 +4234,7 @@ SET TriggersEmailSQL = 'SELECT CASE WHEN (SELECT COUNT(RP.ID) FROM RelayPerforma
 	RelayAlertSetting RA ON RA.LineID = LN.ID
 	WHERE RP.EventID = {0}
 		AND (RP.TripTime > RA.TripTime OR RP.PickupTime > RA.PickupTime OR RP.TripCoilCondition > RA.TripCoilCondition)) > 0 THEN 1 ELSE 0 END'
-WHERE EventEmailParameters.ID = 2
+WHERE EventEmailParameters.ID = 3
 GO		
 		
 UPDATE EventEmailParameters
@@ -4246,7 +4247,7 @@ SELECT LN.ID AS LineID, ML.LineName AS Name, LN.AssetKey AS AssetKey,
 	( SELECT CASE WHEN RP.TripTime > RA.TripTime THEN 1 ELSE 0 END ) AS TTAlert,
 	( SELECT CASE WHEN RP.PickupTime > RA.PickupTime THEN 1 ELSE 0 END ) AS PTAlert,
 	( SELECT CASE WHEN RP.TripCoilCondition > RA.TripCoilCondition THEN 1 ELSE 0 END ) AS TCCAlert,
-	( SELECT CASE WHEN 
+	( SELECT CASE WHEN
 		RP.TripCoilCondition > RA.TripCoilCondition OR
 		RP.PickupTime > RA.PickupTime OR
 		RP.TripTime > RA.TripTime 
@@ -4272,14 +4273,26 @@ SELECT ML.LineName AS Name, LN.AssetKey AS AssetKey
 		AND (RP.TripTime > RA.TripTime OR RP.PickupTime > RA.PickupTime OR RP.TripCoilCondition > RA.TripCoilCondition)
 
 /* History */
-SELECT Line.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime AS PT, Relay.TripTime AS TT, Relay.TripCoilCondition AS TCC,  Relay.Imax1 AS L1, Relay.Imax2 AS L2, Relay.TripInitiate AS TI INTO #History FROM  
+SELECT Line.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime AS PT, Relay.TripTime AS TT, Relay.TripCoilCondition AS TCC,  Relay.Imax1 AS L1, Relay.Imax2 AS L2, Relay.TripInitiate AS TI,
+	( SELECT CASE WHEN Relay.TripTime > RelayAlert.TripTime THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN Relay.PickupTime > RelayAlert.PickupTime THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN Relay.TripCoilCondition > RelayAlert.TripCoilCondition THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN
+		Relay.TripCoilCondition > RelayAlert.TripCoilCondition OR
+		Relay.PickupTime > RelayAlert.PickupTime OR
+		Relay.TripTime > RelayAlert.TripTime 
+		THEN 1 ELSE 0 END 
+	) AS Alert
+	INTO #History FROM  
 	RelayPerformance Relay LEFT OUTER JOIN
 	Channel ON Relay.ChannelID = Channel.ID LEFT OUTER JOIN
-	Line ON Channel.LineID = Line.ID
+	Line ON Channel.LineID = Line.ID LEFT OUTER JOIN
+	RelayAlertSetting RelayAlert ON RelayAlert.LineID = Line.ID
 	WHERE Relay.EventID <> {0}
 
 /* Event */
-SELECT StartTime, EndTime INTO #EventDetails FROM EVENT WHERE Id = {0}
+
+SELECT EV.StartTime, EV.EndTime, STAT.IA2t, STAT.IB2t, STAT.IC2t INTO #EventDetails FROM EVENT EV LEFT OUTER JOIN EventStat STAT ON STAT.EventID = EV.ID WHERE EV.Id = {0}
 
 
 SELECT @url AS [PQDashboard],
@@ -4289,10 +4302,10 @@ SELECT @url AS [PQDashboard],
 		TT, PT, TCC, TI, L1, L2,
 		Alert, TTAlert, PTAlert, TCCAlert,
 		(
-			SELECT TT, PT, TCC, TI, L1, L2 FROM #History H WHERE H.LineID = B.LineID FOR XML PATH(''Data''), TYPE
+			SELECT TT, PT, TCC, TI, L1, L2, Alert, TTAlert, PTAlert, TCCAlert FROM #History H WHERE H.LineID = B.LineID FOR XML PATH(''Data''), TYPE
 		) AS History FROM #Breaker B FOR XML PATH(''Breaker''), TYPE
 	) AS Breakers,
-	(SELECT * FROM #EventDetails) AS EventDetails
+	( SELECT * FROM #EventDetails FOR XML PATH(''Event''), TYPE) AS EventDetail
 	FOR XML PATH(''AlertDetail'')'
 WHERE EventEmailParameters.ID = 3
 GO
@@ -4523,6 +4536,7 @@ SET Template = '<?xml version="1.0"?>
 WHERE Name = 'Default Fault'
 GO
 
+
 UPDATE XSLTemplate
 SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:output method="xml" />
@@ -4570,10 +4584,26 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
                 color: #ff0000;
             }
             
-            .norm {
-                color: #ffffff;
+            .normal {
+                color: #000000;
             }
             
+			table.tblstyle-center tr th, table.tblstyle-center tr td
+			{
+				border-spacing: 0;
+                border-collapse: collapse
+				border: 1px solid black
+				text-align: center
+
+			}
+			table.tblstyle-left tr th, table.tblstyle-left tr td,
+			{
+				border-spacing: 0;
+                border-collapse: collapse
+				border: 1px solid black
+				text-align: left
+			}
+
         </style>
     </head>
     <body>
@@ -4636,6 +4666,20 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
         <hr />
         <span class="section-header">Event Details </span>
         <br/><br/>
+		<div class="Event-details">
+			<table class="table.tblstyle-left">
+				<tr>
+                    <td> Start Time:</td>
+					<td> <format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format>
+								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format> </td>
+                </tr>
+				<tr>
+                    <td> End Time:</td>
+					<td> <format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EndTime" /> </format>
+								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EndTime" /> </format> </td>
+                </tr>
+            </table>
+		</div>
         <hr />
         <xsl:for-each select="/AlertDetail/Breakers/Breaker">
             <span class="section-header">Breaker <xsl:value-of select="Name" /> (<xsl:value-of select="AssetKey" />) History</span>
