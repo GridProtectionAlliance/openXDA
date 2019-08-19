@@ -116,6 +116,7 @@
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
+    <Compile Include="DataOperations\TVA\StructureQueryOperation.cs" />
     <Compile Include="DataReaders\PQubeTrendingDataCSVReader.cs" />
     <Compile Include="DataReaders\IGridPQDIFReader.cs" />
     <Compile Include="DataReaders\PQViewDIFReader.cs" />
