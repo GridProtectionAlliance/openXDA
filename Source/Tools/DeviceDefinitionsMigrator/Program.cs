@@ -781,7 +781,7 @@ namespace DeviceDefinitionsMigrator
             { "IR", "Instantaneous" },
             { "IN", "Instantaneous" },
             { "IG", "Instantaneous" },
-            { "TCE", "TCE" }
+            { "TCE", "Instantaneous" }
         };
 
         private static readonly Dictionary<string, string> MeasurementTypeNameLookup = new Dictionary<string, string>()
@@ -795,7 +795,7 @@ namespace DeviceDefinitionsMigrator
             { "IR", "Current" },
             { "IN", "Current" },
             { "IG", "Current" },
-            { "TCE", "Current" }
+            { "TCE", "TripCoilCurrent" }
         };
 
         private static readonly Dictionary<string, string> PhaseNameLookup = new Dictionary<string, string>()

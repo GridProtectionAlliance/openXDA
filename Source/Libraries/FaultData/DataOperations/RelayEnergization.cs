@@ -171,18 +171,10 @@ namespace FaultData.DataOperations
 
         #region[ Static ]
 
-        private static Boolean IsCurrent(Channel channel)
-        {
-            return channel.MeasurementType.Name == "Current" &&
-                   (channel.MeasurementCharacteristic.Name == "Instantaneous" ||
-                    channel.MeasurementCharacteristic.Name == "RMS" ||
-                    channel.MeasurementCharacteristic.Name == "TCE");
-        }
-
         private static Boolean IsRelayEnergization(Channel channel)
         {
-            return channel.MeasurementCharacteristic.Name == "TCE" &&
-                   IsCurrent(channel);
+            return channel.MeasurementType.Name == "TripCoilCurrent" &&
+                   (channel.MeasurementCharacteristic.Name == "Instantaneous");
         }
 
         private static Double LeastSquare(DataSeries series)

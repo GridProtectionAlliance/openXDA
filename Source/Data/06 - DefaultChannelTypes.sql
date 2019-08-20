@@ -13,6 +13,9 @@ GO
 INSERT INTO MeasurementType(Name, Description) VALUES ('Digital', 'Digital')
 GO
 
+INSERT INTO MeasurementType(Name, Description) VALUES ('TripCoilCurrent', 'Relay Trip Coil Energization Current')
+GO
+
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('AngleFund', 'Power angle at fundamental frequency', 0)
 GO
 
@@ -113,9 +116,6 @@ INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('Total
 GO
 
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('BreakerStatus', 'Breaker Status', 0)
-GO
-
-INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('TCE', 'Trip Coil Energized', 0)
 GO
 
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('Q', 'Reactive power (VAR)', 0)
