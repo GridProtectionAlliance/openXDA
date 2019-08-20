@@ -2924,6 +2924,22 @@ GO
 
 ----- VIEWS -----
 
+CREATE VIEW BreakerHistory
+AS
+SELECT  Line.ID,
+        RelayPerformance.Imax1,
+		RelayPerformance.Imax2,
+		RelayPerformance.TripInitiate,
+		RelayPerformance.TripTime,
+		RelayPerformance.PickupTime,
+		RelayPerformance.TripCoilCondition
+FROM    RelayPerformance LEFT OUTER JOIN
+        Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
+        Line ON Channel.LineID = Line.ID
+
+GO
+
+
 CREATE VIEW MeterDetail
 AS
 SELECT  Meter.ID,
