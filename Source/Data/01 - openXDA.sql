@@ -2932,12 +2932,16 @@ SELECT  Line.ID,
 		RelayPerformance.TripInitiate,
 		RelayPerformance.TripTime,
 		RelayPerformance.PickupTime,
-		RelayPerformance.TripCoilCondition
+		RelayPerformance.TripCoilCondition,
+		RelayAlertSetting.TripCoilCondition AS TripCoilConditionAlert,
+		RelayAlertSetting.TripTime AS TripTimeAlert,
+		RelayAlertSetting.PickupTime AS PickupTimeAlert
 FROM    RelayPerformance LEFT OUTER JOIN
         Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
-        Line ON Channel.LineID = Line.ID
-
+        Line ON Channel.LineID = Line.ID LEFT OUTER JOIN 
+		RelayAlertSetting ON RelayAlertSetting.LineID = Line.ID
 GO
+
 
 
 CREATE VIEW MeterDetail
@@ -4307,8 +4311,20 @@ SELECT Line.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime AS PT, Rela
 	WHERE Relay.EventID <> {0}
 
 /* Event */
-
-SELECT EV.StartTime, EV.EndTime, STAT.IA2t, STAT.IB2t, STAT.IC2t INTO #EventDetails FROM EVENT EV LEFT OUTER JOIN EventStat STAT ON STAT.EventID = EV.ID WHERE EV.Id = {0}
+SELECT EV.StartTime, EV.EndTime, STAT.IA2t, STAT.IB2t, STAT.IC2t,
+	EVT.Description AS EventType,
+	(SELECT CASE 
+		WHEN ((SELECT COUNT(FaultSummary.ID) FROM FaultSummary WHERE FaultSummary.IsSelectedAlgorithm <> 0 AND FaultSummary.EventID = {0}) > 0) 
+			THEN (SELECT Fault.DurationSeconds * 1000) 
+			ELSE (SELECT DATEDIFF(millisecond, EV.StartTime, EV.EndTime)) 
+		END
+	) AS EventDuration
+	INTO #EventDetails FROM 
+	EVENT EV LEFT OUTER JOIN 
+	EventStat STAT ON STAT.EventID = EV.ID LEFT OUTER JOIN
+	EventType EVT ON EVT.ID = EV.EventTypeID LEFT OUTER JOIN
+	FaultSummary Fault ON Fault.EventID = EV.ID
+	WHERE EV.Id = {0} AND (Fault.IsSelectedAlgorithm <> 0 OR Fault.IsSelectedAlgorithm IS NULL)
 
 
 SELECT @url AS [PQDashboard],
@@ -4690,9 +4706,24 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
 								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format> </td>
                 </tr>
 				<tr>
-                    <td> End Time:</td>
-					<td> <format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EndTime" /> </format>
-								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EndTime" /> </format> </td>
+                    <td> Event:</td>
+					<td> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EventType" /> </td>
+                </tr>
+				<tr>
+                    <td> Event Duration:</td>
+					<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EventDuration" /></format> ms</td>
+                </tr>
+				<tr>
+                    <td> I2(t) Phase A :</td>
+					<td> <format type="System.Double" spec="########"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/I2tA" /></format>  </td>
+                </tr>
+				<tr>
+                    <td> I2(t) Phase B :</td>
+					<td> <format type="System.Double" spec="########"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/I2tB" /></format>  </td>
+                </tr>
+				<tr>
+                    <td> I2(t) Phase C :</td>
+					<td> <format type="System.Double" spec="########"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/I2tC" /></format>  </td>
                 </tr>
             </table>
 		</div>
