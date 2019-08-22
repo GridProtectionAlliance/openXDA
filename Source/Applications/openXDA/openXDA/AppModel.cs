@@ -112,6 +112,11 @@ namespace openXDA.Model
             return javascript.ToString();
         }
 
+
+        public bool DetectIE(string userAgent)
+        {
+            return userAgent.Contains("MSIE ") || userAgent.Contains("Trident/") || userAgent.Contains("Edge/");
+        }
         #endregion
 
         #region [ Static  ]
