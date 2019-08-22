@@ -374,9 +374,6 @@ FROM #TEMP ORDER BY Name desc
 DROP TABLE #TEMP
 
 SET @SQLStatement =
-' SELECT *                                                                                                   ' +
-' INTO #authMeters                                                                                           ' +
-' FROM authMeters(@username)                                                                                 ' +
 '                                                                                                            ' +
 ' SELECT *                                                                                                   ' +
 ' INTO #selectedMeters                                                                                       ' +
@@ -390,8 +387,7 @@ SET @SQLStatement =
 '   FROM BreakerOperation JOIN                                                                               ' +
 '        BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN      ' +
 '        Event ON Event.ID = BreakerOperation.EventID                                                        ' +
-'   WHERE MeterID in (select * from #authMeters) AND                                                         ' +
-'         MeterID IN (SELECT * FROM #selectedMeters) AND                                                     ' +
+'   WHERE MeterID IN (SELECT * FROM #selectedMeters) AND                                                     ' +
 '         TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate                                   ' +
 '   GROUP BY ' + @groupByStatement + ', BreakerOperationType.Name                                        ' +
 ') as table1                                                                                                 ' +
@@ -426,7 +422,7 @@ BEGIN
     SET NOCOUNT ON;
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
@@ -436,7 +432,7 @@ SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
 
 CREATE TABLE #temp (thesiteid int, thesitename varchar(100))
 
-INSERT INTO #temp Select [dbo].[Meter].[ID], [dbo].[Meter].[Name] from [dbo].[Meter] where [dbo].[Meter].[ID] in (select * from authMeters(@username))
+INSERT INTO #temp Select [dbo].[Meter].[ID], [dbo].[Meter].[Name] from [dbo].[Meter]
 
 SELECT thesiteid as siteid, thesitename as sitename , Normal as normal, Late as late, Indeterminate as indeterminate
 FROM
@@ -487,10 +483,6 @@ DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
 SELECT *
-INTO #authMeters
-FROM authMeters(@username)
-
-SELECT *
 INTO #selectedMeters
 FROM String_To_Int_Table(@MeterID, ',')
 
@@ -513,7 +505,7 @@ FROM
             (
                 SELECT Date, 100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Completeness
                 FROM MeterDataQualitySummary
-                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM #selectedMeters) AND MeterID IN (SELECT * FROM #authMeters)
+                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM #selectedMeters)
             ) MeterDataQualitySummary
         ) MeterDataQualitySummary
         GROUP BY Date, CompletenessLevel
@@ -548,7 +540,7 @@ BEGIN
     SET NOCOUNT ON;
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
@@ -634,10 +626,6 @@ DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
 SELECT *
-INTO #authMeters
-FROM authMeters(@username)
-
-SELECT *
 INTO #selectedMeters
 FROM String_To_Int_Table(@MeterID, ',')
 
@@ -660,7 +648,7 @@ FROM
             (
                 SELECT Date, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT) AS Correctness
                 FROM MeterDataQualitySummary
-                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM #selectedMeters) AND MeterID IN (SELECT * FROM #authMeters)
+                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM #selectedMeters)
             ) MeterDataQualitySummary
         ) MeterDataQualitySummary
         GROUP BY Date, CompletenessLevel
@@ -695,7 +683,7 @@ BEGIN
     SET NOCOUNT ON;
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
@@ -839,7 +827,6 @@ BEGIN
                 FOR SeverityCode IN ([5], [4], [3], [2], [1], [0])
             ) AS PivotTable
         ) AS SeverityCount ON SeverityCount.MeterID = Meter.ID
-    WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
 END
 GO
 
@@ -895,7 +882,6 @@ FROM
                  Event ON Event.ID = Disturbance.EventID JOIN
                  VoltageEnvelope ON VoltageEnvelope.ID = DisturbanceSeverity.VoltageEnvelopeID
             Where ( (CAST( Event.StartTime as Date) between @EventDateFrom and @EventDateTo))
-            and MeterID in (select * from authMeters(@username))
             and Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
             and VoltageEnvelope.Name = COALESCE(@voltageEnvelope, 'ITIC')
             GROUP BY SeverityCode, MeterID
@@ -985,10 +971,6 @@ DECLARE @start DateTime = @startDate
 DECLARE @end DateTime = @endDate
 
 SELECT *
-INTO #authMeters
-FROM authMeters(@user)
-
-SELECT *
 INTO #selectedMeters
 FROM String_To_Int_Table(@ids, '','')
 
@@ -1009,7 +991,6 @@ SELECT DisturbanceDate as thedate, ' + @ReturnColumns + '
             @MeterID = ''0'' OR
             MeterID IN (SELECT * FROM #selectedMeters)
         ) AND
-        MeterID IN (SELECT * FROM #authMeters) AND
         Phase.Name = ''Worst'' AND
         VoltageEnvelope.Name = COALESCE(@voltageEnvelope, ''ITIC'') AND
         Disturbance.StartTime BETWEEN @start AND @end AND
@@ -1175,7 +1156,7 @@ FROM
         EventType LEFT OUTER JOIN
         (
             SELECT CAST(StartTime AS Date) AS EventDate, EventTypeID, COUNT(*) AS EventCount
-            FROM Event where Event.MeterID in (select * from authMeters(@username))
+            FROM Event 
             GROUP BY CAST(StartTime AS Date), EventTypeID
         ) AS Event ON #temp.Date = Event.EventDate AND EventType.ID = Event.EventTypeID
 ) AS EventDate
@@ -1260,10 +1241,6 @@ DECLARE @start DateTime = @startDate
 DECLARE @end DateTime = @endDate
 
 SELECT *
-INTO #authMeters
-FROM authMeters(@user)
-
-SELECT *
 INTO #selectedMeters
 FROM String_To_Int_Table(@ids, '','')
 
@@ -1273,7 +1250,6 @@ FROM (
         FROM Event JOIN
         EventType ON Event.EventTypeID = EventType.ID
        WHERE
-            MeterID in (select * from #authMeters) AND
             MeterID IN (SELECT * FROM #selectedMeters) AND
              StartTime >= @start AND StartTime < @end
        GROUP BY ' + @groupByStatement + ', EventType.Name
@@ -1314,7 +1290,7 @@ BEGIN
     SET NOCOUNT ON;
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
@@ -1511,10 +1487,6 @@ FROM (Select Distinct Line.VoltageKV
 
 SET @SQLStatement =
 ' SELECT * ' +
-' INTO #authMeters ' +
-' FROM authMeters(@username) ' +
-' ' +
-' SELECT * ' +
 ' INTO #selectedMeters ' +
 ' FROM String_To_Int_Table(@MeterID, '','') ' +
 ' ' +
@@ -1525,7 +1497,7 @@ SET @SQLStatement =
 '       EventType ON Event.EventTypeID = EventType.ID JOIN ' +
 '       Line ON Event.LineID = Line.ID ' +
 '       WHERE EventType.Name = ''Fault'' AND ' +
-'       MeterID in (select * from #authMeters) AND MeterID IN (SELECT * FROM #selectedMeters) AND Event.StartTime >= @startDate AND Event.StartTime < @endDate  ' +
+'       MeterID IN (SELECT * FROM #selectedMeters) AND Event.StartTime >= @startDate AND Event.StartTime < @endDate  ' +
 '       GROUP BY ' + @groupByStatement + ', EventType.Name, Line.VoltageKV ' +
 '       ) as eventtable ' +
 ' PIVOT( ' +
@@ -1558,7 +1530,7 @@ BEGIN
 
 declare  @MeterIDs TABLE (ID int);
 
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
@@ -1671,7 +1643,6 @@ FROM (Select * FROM EASExtension) AS t
 SELECT * INTO #temp
 FROM EVENT
 WHERE   StartTime Between @startDate AND @endDate AND
-        MeterID in (select * from authMeters(@username)) AND
         MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  ','))
 
 CREATE INDEX tempIndex ON #temp (MeterID)
@@ -1738,7 +1709,7 @@ BEGIN
     SET NOCOUNT ON;
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @ChannelList VARCHAR(MAX)
 
@@ -1932,7 +1903,6 @@ BEGIN
         SELECT distinct [dbo].[Meter].[ID] as TheMeterID from [dbo].[Meter] inner join [dbo].[MeterLocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID]
 
         where ( [dbo].[MeterLocation].[Latitude] between @by and @ay and [dbo].[MeterLocation].[Longitude] between @ax and @bx )
-        and [dbo].[Meter].[ID] in (select * from authMeters(@username))
 
 END
 GO
@@ -2042,11 +2012,7 @@ BEGIN
 
 
     SET @SQLStatement =
-    'SELECT *
-    INTO #authMeters
-    FROM authMeters(@username)
-
-    SELECT *
+'   SELECT *
     INTO #selectedMeters
     FROM String_To_Int_Table(@MeterIds, '','')
 
@@ -2076,7 +2042,6 @@ BEGIN
                  FOR ed.OperationType IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
            ) as pvt On pvt.MeterID = meter.ID
     WHERE
-        Meter.ID in (select * from #authMeters) AND
         Meter.ID IN (SELECT * FROM #selectedMeters)
 
     ORDER BY Meter.Name'
@@ -2270,10 +2235,6 @@ DECLARE @start DateTime = @startDate
 DECLARE @end DateTime = @endDate
 
 SELECT *
-INTO #authMeters
-FROM authMeters(@user)
-
-SELECT *
 INTO #selectedMeters
 FROM String_To_Int_Table(@ids, '','')
 
@@ -2306,7 +2267,6 @@ FROM
              FOR ed.SeverityCode IN(' + @PivotColumns + ')
        ) as pvt On pvt.MeterID = meter.ID
     WHERE
-        Meter.ID in (select * from #authMeters) AND
         Meter.ID IN (SELECT * FROM #selectedMeters)
 
 Order By Name '
@@ -2383,10 +2343,6 @@ DECLARE @start DateTime = @startDate
 DECLARE @end DateTime = @endDate
 
 SELECT *
-INTO #authMeters
-FROM authMeters(@user)
-
-SELECT *
 INTO #selectedMeters
 FROM String_To_Int_Table(@ids, '','')
 
@@ -2415,7 +2371,6 @@ FROM
              FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
        ) as pvt On pvt.MeterID = meter.ID
 WHERE
-    Meter.ID in (select * from #authMeters) AND
     Meter.ID IN (SELECT * FROM #selectedMeters)
 
 ORDER BY Meter.Name'
@@ -2495,10 +2450,6 @@ FROM (Select Distinct Line.VoltageKV
 
 SET @SQLStatement =
 'SELECT *
-INTO #authMeters
-FROM authMeters(@username)
-
-SELECT *
 INTO #selectedMeters
 FROM String_To_Int_Table(@MeterIds, '','')
 
@@ -2528,7 +2479,6 @@ FROM
              FOR ed.VoltageKV IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
        ) as pvt On pvt.MeterID = meter.ID
     WHERE
-        Meter.ID in (select * from #authMeters) AND
         Meter.ID IN (SELECT * FROM #selectedMeters)
 
 ORDER BY Meter.Name'
@@ -2798,7 +2748,6 @@ DECLARE @MiddleStatment NVARCHAR(MAX) = N''
 SELECT * INTO #temp
 FROM EVENT
 WHERE   StartTime Between @startDate AND @endDate AND
-        MeterID in (select * from authMeters(@username)) AND
         MeterID IN (SELECT * FROM String_To_Int_Table( @meterIds,  ','))
 
 CREATE INDEX tempIndex ON #temp (MeterID)
@@ -2851,10 +2800,6 @@ FROM (Select * FROM EASExtension) AS t
 
 SET @SQLStatement =
 'SELECT *
-INTO #authMeters
-FROM authMeters(@username)
-
-SELECT *
 INTO #selectedMeters
 FROM String_To_Int_Table(@MeterIds, '','')
 
@@ -2873,7 +2818,6 @@ FROM
              FOR ed.ServiceName IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
        ) as pvt On pvt.MeterID = meter.ID
 WHERE
-    Meter.ID in (select * from #authMeters) AND
     Meter.ID IN (SELECT * FROM #selectedMeters)
 
 ORDER BY Meter.Name
@@ -2905,7 +2849,7 @@ BEGIN
 
     SET NOCOUNT ON;
         SELECT distinct [dbo].[Meter].[ID] as id, [dbo].[Meter].[Name]
-        from [dbo].[Meter] where [dbo].[Meter].[ID] in (Select * from authMeters(@username) )
+        from [dbo].[Meter] 
         order by [dbo].[Meter].[Name]
 
 END
@@ -2961,7 +2905,6 @@ BEGIN
 select distinct VoltageKV as class from [dbo].[Line]
 join Channel on Line.ID = Channel.LineID
 join Meter on Channel.MeterID = Meter.ID
-where Meter.ID in (select * from authMeters(@username))
 
 order by VoltageKV Desc
 
@@ -3488,8 +3431,7 @@ BEGIN
         Phase ON BreakerOperation.PhaseID = Phase.ID
     WHERE
         TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate AND
-        Meter.ID IN (SELECT * FROM  dbo.String_to_int_table(@MeterID, ',')) AND
-        Meter.ID IN (select * from authMeters(@username))
+        Meter.ID IN (SELECT * FROM  dbo.String_to_int_table(@MeterID, ','))
 END
 GO
 
@@ -3515,7 +3457,6 @@ BEGIN
 
     INSERT INTO @MeterIDs(ID)
     SELECT Value FROM dbo.String_to_int_table(@MeterID, ',')
-    WHERE Value IN (SELECT * FROM authMeters(@username));
 
     DECLARE @TempTable TABLE (themeterid INT, thesite VARCHAR(100), thecount FLOAT, thename VARCHAR(100));
 
@@ -3666,7 +3607,6 @@ BEGIN
     INSERT INTO @MeterIDs(ID)
     SELECT Value
     FROM dbo.String_to_int_table(@MeterID, ',')
-    WHERE Value IN (SELECT * FROM authMeters(@username));
 
     DECLARE @TempTable TABLE (themeterid INT, thesite VARCHAR(100), thecount FLOAT, thename VARCHAR(100));
 
@@ -3818,10 +3758,6 @@ BEGIN
 
     SET @SQLStatement =
     'SELECT *
-    INTO #authMeters
-    FROM authMeters(@username)
-
-    SELECT *
     INTO #meterSelections
     FROM String_To_Int_Table(@MeterID, '','')
 
@@ -3843,7 +3779,7 @@ BEGIN
             VoltageEnvelope ON VoltageEnvelope.ID = DisturbanceSeverity.VoltageEnvelopeID
         WHERE
             Phase.Name = ''Worst'' AND
-            MeterID in (select * from #authMeters) AND MeterID IN (SELECT * FROM #meterSelections) AND
+            MeterID IN (SELECT * FROM #meterSelections) AND
             VoltageEnvelope.Name = COALESCE(@voltageEnvelope, ''ITIC'') AND
             Event.StartTime >= @startDate AND Event.StartTime < @endDate
         GROUP BY Event.MeterID,Meter.Name,SeverityCode
@@ -3906,10 +3842,6 @@ BEGIN
 
     SET @SQLStatement =
     'SELECT *
-    INTO #authMeters
-    FROM authMeters(@username)
-
-    SELECT *
     INTO #meterSelections
     FROM String_To_Int_Table(@MeterID, '','')
 
@@ -3925,7 +3857,7 @@ BEGIN
             EventType ON Event.EventTypeID = EventType.ID JOIN
             Meter ON Event.MeterID = Meter.ID
            WHERE
-            MeterID in (select * from #authMeters) AND MeterID IN (SELECT * FROM #meterSelections) AND
+            MeterID IN (SELECT * FROM #meterSelections) AND
             StartTime >= @startDate AND StartTime < @endDate
            GROUP BY Event.MeterID,Meter.Name,EventType.Name
            ) as ed
@@ -3963,7 +3895,6 @@ BEGIN
     INSERT INTO @MeterIDs(ID)
     SELECT Value
     FROM dbo.String_to_int_table(@MeterID, ',')
-    WHERE Value IN (SELECT * FROM authMeters(@username));
 
     SELECT
         CAST(CAST(Event.StartTime AS DATETIME2(7)) AS VARCHAR(26)) AS starttime,
@@ -4018,10 +3949,6 @@ BEGIN
         SET @endDate = DATEADD(SECOND, 1, @startDate);
 
     SELECT *
-    INTO #authMeters
-    FROM authMeters(@username)
-
-    SELECT *
     INTO #meterSelections
     FROM String_to_int_table(@MeterID, ',')
 
@@ -4053,8 +3980,7 @@ BEGIN
         WHERE
             EventType.Name = 'Fault' AND
             Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
-            Meter.ID IN (SELECT * FROM #meterSelections) AND
-            Meter.ID IN (select * from #authMeters)
+            Meter.ID IN (SELECT * FROM #meterSelections)
     )
     SELECT *
     FROM FaultDetail
@@ -4085,7 +4011,7 @@ BEGIN
     SET  @Date = CAST(@EventDate AS DATE)
 
     -- Create MeterIDs Table
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
     -- Trending Data
     SELECT
@@ -4132,7 +4058,7 @@ BEGIN
 
     set @theDate = CAST(@EventDate as Date)
 
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
         Select
         Meter.ID as meterid,
@@ -4219,17 +4145,12 @@ BEGIN
 
     SET @SQLStatement =
     'SELECT *
-    INTO #authMeters
-    FROM authMeters(@username)
-
-    SELECT *
     INTO #meterSelections
     FROM String_To_Int_Table(@MeterID, '','')
 
     SELECT * INTO #temp
     FROM EVENT
     WHERE   StartTime Between @startDate AND @endDate AND
-            MeterID in (select * from authMeters(@username)) AND
             MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '',''))
 
     SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = Meter.ID AND StartTime >= @startDate AND StartTime < @endDate) as EventID,
@@ -4245,7 +4166,7 @@ BEGIN
                 FOR ed.ServiceName IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
          ) as pvt ON pvt.MeterID = Meter.ID
      WHERE
-        Meter.ID in (select * from #authMeters) AND Meter.ID IN (SELECT * FROM #meterSelections)
+        Meter.ID IN (SELECT * FROM #meterSelections)
 
      ORDER BY MeterID
      DROP Table #temp
@@ -4313,7 +4234,7 @@ BEGIN
     SET @StopDate = @EndDate;
 
     -- Create MeterIDs Table
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
     -- Trending Data
     SELECT
@@ -4666,7 +4587,7 @@ FROM
         (
             SELECT CAST(Time AS Date) AS AlarmDate, AlarmTypeID, COUNT(*) AS AlarmCount
             FROM AlarmLog
-            join Channel on AlarmLog.ChannelID = Channel.ID and Channel.MeterID in (select * from authMeters(@username))
+            join Channel on AlarmLog.ChannelID = Channel.ID
             GROUP BY CAST(Time AS Date), AlarmTypeID
         ) AS Alarm ON #temp.Date = Alarm.AlarmDate AND AlarmType.ID = Alarm.AlarmTypeID
 ) AS AlarmDate
@@ -4703,10 +4624,6 @@ DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
 SELECT *
-INTO #authMeters
-FROM authMeters(@username)
-
-SELECT *
 INTO #selectedMeters
 FROM String_To_Int_Table(@MeterID, ',')
 
@@ -4716,7 +4633,7 @@ FROM(
     FROM ChannelAlarmSummary JOIN
          Channel ON ChannelAlarmSummary.ChannelID = Channel.ID JOIN
          AlarmType ON AlarmType.ID = ChannelAlarmSummary.AlarmTypeID
-    WHERE MeterID in (select * from #authMeters) AND MeterID IN (SELECT * FROM #selectedMeters) AND Date >= @startDate AND Date < @endDate
+    WHERE MeterID IN (SELECT * FROM #selectedMeters) AND Date >= @startDate AND Date < @endDate
     GROUP BY Date, AlarmType.Name
 ) AS table1
 PIVOT(
@@ -4753,7 +4670,7 @@ BEGIN
 --End
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
@@ -4832,18 +4749,6 @@ BEGIN
    RETURN
 END
 GO
-
-CREATE FUNCTION [dbo].[authMeters](@username varchar(100))
-RETURNS TABLE
-AS
-RETURN
-(
-Select distinct MeterID
-from UserMeter
-where UserName = @username
-)
-GO
-
 
 
 CREATE PROCEDURE [dbo].[GetSiteSummaries]
