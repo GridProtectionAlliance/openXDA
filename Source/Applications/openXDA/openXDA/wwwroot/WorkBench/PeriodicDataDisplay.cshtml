@@ -43,6 +43,12 @@
     Dictionary<string, string> parameters = request.QueryParameters();
     IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (select DISTINCT MeterID from MeterDataQualitySummary)").OrderBy(x => x.AssetKey);
 
+#if DEBUG
+    bool debug = true;
+#else
+    bool debug = false;
+#endif
+
 }
 @section StyleSheets {
     <style>
@@ -98,4 +104,16 @@
 
     var meters = JSON.parse('@Raw(Json.Encode(meters))');
 </script>
+
+@if (debug)
+{
+    <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/react.development.js")"></script>
+    <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/react-dom.development.js")"></script> 
+}
+else
+{
+    <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/react.production.min.js")"></script>
+    <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/react-dom.production.min.js")"></script>
+}
+
 <script type="text/javascript" src="~/Scripts/PeriodicDataDisplay.js"></script>

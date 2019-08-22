@@ -1,21 +1,26 @@
 ﻿"use strict";
 const webpack = require("webpack");
+const path = require("path");
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
+    //mode: 'development',
+    context: path.resolve(__dirname, 'wwwroot','Scripts'),
+    cache: true,
     entry: {
-        PeriodicDataDisplay: "./wwwroot/Scripts/TSX/PeriodicDataDisplay.tsx",
-        TrendingDataDisplay: "./wwwroot/Scripts/TSX/TrendingDataDisplay.tsx",
-        DataQualitySummary: "./wwwroot/Scripts/TSX/DataQualitySummary.tsx",
-        PQTrendingWebReport: "./wwwroot/Scripts/TSX/PQTrendingWebReport.tsx",
-        StepChangeWebReport: "./wwwroot/Scripts/TSX/StepChangeWebReport.tsx",
-        SpectralDataDisplay: "./wwwroot/Scripts/TSX/SpectralDataDisplay.tsx"
+        PeriodicDataDisplay: "./TSX/PeriodicDataDisplay.tsx",
+        TrendingDataDisplay: "./TSX/TrendingDataDisplay.tsx",
+        DataQualitySummary: "./TSX/DataQualitySummary.tsx",
+        PQTrendingWebReport: "./TSX/PQTrendingWebReport.tsx",
+        StepChangeWebReport: "./TSX/StepChangeWebReport.tsx",
+        SpectralDataDisplay: "./TSX/SpectralDataDisplay.tsx"
     },
     output: {
-        filename: "./wwwroot/Scripts/[name].js"
+        path: path.resolve(__dirname, 'wwwroot', 'Scripts'),
+        filename: "[name].js"
     },
     // Enable sourcemaps for debugging webpack's output.
-    devtool: "source-map",
-
+    devtool: "inline-source-map",
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js", ".css"]
@@ -43,5 +48,11 @@ module.exports = {
         'react-dom': 'ReactDOM',
         moment: 'moment'
 
-    }
+    },
+    optimization: {
+        minimizer: [new UglifyJsPlugin({
+            test: /\.js(\?.*)?$/i,
+            sourceMap: true
+        })],
+    },
 };
