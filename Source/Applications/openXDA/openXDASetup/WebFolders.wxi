@@ -157,6 +157,7 @@
     </Directory>
     <Directory Id="wwwroot_SCRIPTSTSXFOLDER" Name="TSX" />
   </Directory>
+  <Directory Id="wwwroot_SYSTEMCENTERFOLDER" Name="SystemCenter" />
   <Directory Id="wwwroot_WORKBENCHFOLDER" Name="WorkBench" />
 </Directory>
 </Include>
