@@ -500,8 +500,8 @@
   <Component Id="wwwroot_Images_dDAssetolds_png">
     <File Id="wwwroot_Images_dDAssetolds.png" Name="dD Assetolds.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assetolds.png" />
   </Component>
-  <Component Id="wwwroot_Images_ddAssets_png">
-    <File Id="wwwroot_Images_ddAssets.png" Name="dd Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dd Assets.png" />
+  <Component Id="wwwroot_Images_dDAssets_png">
+    <File Id="wwwroot_Images_dDAssets.png" Name="dD Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assets.png" />
   </Component>
   <Component Id="wwwroot_Images_dDConfigold_png">
     <File Id="wwwroot_Images_dDConfigold.png" Name="dD Config old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Config old.png" />
@@ -719,9 +719,6 @@
   <Component Id="wwwroot_Scripts_PeriodicDataDisplay_js">
     <File Id="wwwroot_Scripts_PeriodicDataDisplay.js" Name="PeriodicDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PeriodicDataDisplay.js" />
   </Component>
-  <Component Id="wwwroot_Scripts_PeriodicDataDisplay_js_map">
-    <File Id="wwwroot_Scripts_PeriodicDataDisplay.js.map" Name="PeriodicDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PeriodicDataDisplay.js.map" />
-  </Component>
   <Component Id="wwwroot_Scripts_plotly_latest_min_js">
     <File Id="wwwroot_Scripts_plotly_latest.min.js" Name="plotly-latest.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\plotly-latest.min.js" />
   </Component>
@@ -731,14 +728,8 @@
   <Component Id="wwwroot_Scripts_PQTrendingWebReport_js">
     <File Id="wwwroot_Scripts_PQTrendingWebReport.js" Name="PQTrendingWebReport.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PQTrendingWebReport.js" />
   </Component>
-  <Component Id="wwwroot_Scripts_PQTrendingWebReport_js_map">
-    <File Id="wwwroot_Scripts_PQTrendingWebReport.js.map" Name="PQTrendingWebReport.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PQTrendingWebReport.js.map" />
-  </Component>
   <Component Id="wwwroot_Scripts_Report_js">
     <File Id="wwwroot_Scripts_Report.js" Name="Report.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\Report.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_Report_js_map">
-    <File Id="wwwroot_Scripts_Report.js.map" Name="Report.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\Report.js.map" />
   </Component>
   <Component Id="wwwroot_Scripts_respond_js">
     <File Id="wwwroot_Scripts_respond.js" Name="respond.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\respond.js" />
@@ -758,23 +749,14 @@
   <Component Id="wwwroot_Scripts_SpectralDataDisplay_js">
     <File Id="wwwroot_Scripts_SpectralDataDisplay.js" Name="SpectralDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\SpectralDataDisplay.js" />
   </Component>
-  <Component Id="wwwroot_Scripts_SpectralDataDisplay_js_map">
-    <File Id="wwwroot_Scripts_SpectralDataDisplay.js.map" Name="SpectralDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\SpectralDataDisplay.js.map" />
-  </Component>
   <Component Id="wwwroot_Scripts_spin_js">
     <File Id="wwwroot_Scripts_spin.js" Name="spin.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\spin.js" />
   </Component>
   <Component Id="wwwroot_Scripts_StepChangeWebReport_js">
     <File Id="wwwroot_Scripts_StepChangeWebReport.js" Name="StepChangeWebReport.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\StepChangeWebReport.js" />
   </Component>
-  <Component Id="wwwroot_Scripts_StepChangeWebReport_js_map">
-    <File Id="wwwroot_Scripts_StepChangeWebReport.js.map" Name="StepChangeWebReport.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\StepChangeWebReport.js.map" />
-  </Component>
   <Component Id="wwwroot_Scripts_TrendingDataDisplay_js">
     <File Id="wwwroot_Scripts_TrendingDataDisplay.js" Name="TrendingDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TrendingDataDisplay.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TrendingDataDisplay_js_map">
-    <File Id="wwwroot_Scripts_TrendingDataDisplay.js.map" Name="TrendingDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TrendingDataDisplay.js.map" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_D3_Components" Directory="wwwroot_SCRIPTSD3FOLDER">
@@ -4060,6 +4042,11 @@
   </Component>
   <Component Id="wwwroot_Scripts_TSX_TrendingDataDisplay_tsx">
     <File Id="wwwroot_Scripts_TSX_TrendingDataDisplay.tsx" Name="TrendingDataDisplay.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\TrendingDataDisplay.tsx" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_SystemCenter_Components" Directory="wwwroot_SYSTEMCENTERFOLDER">
+  <Component Id="wwwroot_SystemCenter_index_cshtml">
+    <File Id="wwwroot_SystemCenter_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SystemCenter\index.cshtml" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_WorkBench_Components" Directory="wwwroot_WORKBENCHFOLDER">
