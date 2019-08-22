@@ -2926,7 +2926,8 @@ GO
 
 CREATE VIEW BreakerHistory
 AS
-SELECT  Line.ID,
+SELECT  Line.ID AS LineID,
+		RelayPerformance.EventID AS EventID,
         RelayPerformance.Imax1,
 		RelayPerformance.Imax2,
 		RelayPerformance.TripInitiate,
