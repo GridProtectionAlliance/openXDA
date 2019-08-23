@@ -699,6 +699,107 @@ namespace FaultData.DataResources
             return endIndex;
         }
 
+        private int FindFaultInception(DataSeries waveForm, DataSeries rms, int cycleIndex)
+        {
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, SystemFrequency);
+            int startIndex = -1;
+
+            // Adjust cycleIndex using an adaptive threshhold
+            double adaptiveThreshold = (rms[cycleIndex].Value - rms[0].Value)*0.25 + rms[0].Value;
+
+          
+            for (int i = cycleIndex; i > 0; i--)
+            {
+                if (rms[i].Value < adaptiveThreshold)
+                {
+                    startIndex = i;
+                    break;
+                }
+            }
+
+            if (adaptiveThreshold > rms[cycleIndex].Value)
+            {
+                startIndex = cycleIndex;
+            }
+
+            if (startIndex == -1)
+            {
+                startIndex = cycleIndex;
+                Log.Debug("Adaptive Thersholding failed....");
+                Log.Debug("Fallbvack to original Algorithm....");
+            }
+
+            int endIndex = cycleIndex + samplesPerCycle - 1;
+            int prefaultIndex = Math.Max(0, startIndex - samplesPerCycle);
+
+            double largestPrefaultPeak;
+            double largestFaultCyclePeak;
+
+            double previousValue;
+            double value;
+            double nextValue;
+
+            largestPrefaultPeak = 0.0D;
+            largestFaultCyclePeak = 0.0D;
+
+            // Adjust the startIndex using an adaptive threshhold
+            double adaptive_Threshhold = (waveForm[cycleIndex].Value - waveForm[cycleIndex].Value);
+
+
+            // Find the largest prefault peak as the absolute
+            // peak of the cycle before the first faulted cycle
+            for (int i = prefaultIndex; i < startIndex; i++)
+            {
+                value = Math.Abs(waveForm[i].Value);
+
+                if (value > largestPrefaultPeak)
+                    largestPrefaultPeak = value;
+            }
+
+            // Find the largest peak of the first faulted cycle
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                value = Math.Abs(waveForm[i].Value);
+
+                if (value > largestFaultCyclePeak)
+                    largestFaultCyclePeak = value;
+            }
+
+            // Find the first point where the value exceeds a point 25%
+            // of the way from the prefault peak to the fault peak
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                value = Math.Abs(waveForm[i].Value);
+
+                if (value >= (largestPrefaultPeak * 0.75 + largestFaultCyclePeak * 0.25))
+                    endIndex = i;
+            }
+
+            // Starting from the point found in the previous loop and
+            // scanning backwards, find either the first zero crossing
+            // or the first point at which the slope changes drastically
+            for (int i = endIndex; i >= startIndex; i--)
+            {
+                if (i - 1 < 0)
+                    continue;
+
+                if (i + 1 >= waveForm.DataPoints.Count)
+                    continue;
+
+                previousValue = waveForm.DataPoints[i - 1].Value;
+                value = waveForm.DataPoints[i].Value;
+                nextValue = waveForm.DataPoints[i + 1].Value;
+
+                if (value * nextValue < 0.0D)
+                    return i + 1;
+
+                if (5.0D * Math.Abs(value - previousValue) < Math.Abs(nextValue - value))
+                    return i;
+            }
+
+            return endIndex;
+        }
+
         private int FindFaultClearing(DataSeries waveForm, int cycleIndex)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, SystemFrequency);
@@ -1498,7 +1599,7 @@ namespace FaultData.DataResources
                     if ((object)currentFault == null)
                     {
                         currentFault = new Fault();
-                        currentFault.StartSample = FindFaultInception(waveForm, i);
+                        currentFault.StartSample = FindFaultInception(waveForm, rms, i);
                         faults.Add(currentFault);
                     }
                 }
