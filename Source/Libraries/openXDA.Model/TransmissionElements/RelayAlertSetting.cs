@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  LineView.cs - Gbtc
+//  LineImpedance.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,61 +16,27 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
-//       Generated original version of source code.
 //  07/23/2019 - Christoph Lackner
-//       Added Relay Alert Threshholds.
+//       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [TableName("LineView")]
-    public class LineView
+    public class RelayAlertSetting
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        [Required]
-        [StringLength(50)]
-        [Searchable]
-        public string AssetKey { get; set; }
-
-        public float VoltageKV { get; set; }
-
-        public float ThermalRating { get; set; }
-
-        public float Length { get; set; }
-
-        public float MaxFaultDistance { get; set; }
-
-        public float MinFaultDistance { get; set; }
-
-        public string Description { get; set; }
-
-        [Searchable]
-        public string TopName { get; set; }
-
-        public int LineImpedanceID { get; set; }
-
-        public float R0 { get; set; }
-
-        public float R1 { get; set; }
-
-        public float X0 { get; set; }
-
-        public float X1 { get; set; }
-
-        public int RelayAlertSettingID { get; set; }
-
-        public int PickupTime { get; set; }
+        public int LineID { get; set; }
 
         public int TripTime { get; set; }
 
-        public float TripCoilCondition { get; set; }
+        public int PickupTime { get; set; }
+
+        public double TripCoilCondition { get; set; }
 
     }
 }

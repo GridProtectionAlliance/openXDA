@@ -731,6 +731,9 @@ GO
 INSERT INTO XSLTemplate(Name, Template) VALUES('Default Alarm', '')
 GO
 
+INSERT INTO XSLTemplate(Name, Template) VALUES('Default Breaker', '')
+GO
+
 INSERT INTO EmailCategory(Name) VALUES('Daily')
 GO
 
@@ -752,12 +755,17 @@ GO
 INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(3, 4)
 GO
 
+INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(2, 5)
+GO
+
 INSERT INTO EventEmailParameters(EmailTypeID) VALUES(2)
 GO
 
 INSERT INTO EventEmailParameters(EmailTypeID) VALUES(3)
 GO
 
+INSERT INTO EventEmailParameters(EmailTypeID) VALUES(5)
+GO
 
 -- ------ --
 -- Events --
@@ -2297,6 +2305,15 @@ ALTER TABLE FileGroupLocalToRemote WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
 REFERENCES FileGroup(ID)
 GO
 
+CREATE TABLE RelayAlertSetting
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    LineID INT NOT NULL REFERENCES Line(ID),
+	TripTime INT NULL,
+	PickupTime INT NULL,
+	TripCoilCondition FLOAT NULL,
+)
+GO
 
 -- ------------ --
 -- PQ Dashboard --
@@ -2583,6 +2600,21 @@ CREATE TABLE EventStat
     CONSTRAINT UC_EventStat_EventID UNIQUE(EventID)
 )
 GO
+
+CREATE TABLE RelayPerformance
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+	ChannelID INT NOT NULL REFERENCES Channel(ID),
+	Imax1 FLOAT NULL,
+	Imax2 FLOAT NULL,
+    TripInitiate DATETIME NULL,
+	TripTime INT NULL,
+	PickupTime INT NULL,
+	TripCoilCondition FLOAT NULL,
+)
+GO
+
 
 ----- FUNCTIONS -----
 
@@ -2897,6 +2929,27 @@ GO
 
 ----- VIEWS -----
 
+CREATE VIEW BreakerHistory
+AS
+SELECT  Line.ID AS LineID,
+		RelayPerformance.EventID AS EventID,
+        RelayPerformance.Imax1,
+		RelayPerformance.Imax2,
+		RelayPerformance.TripInitiate,
+		RelayPerformance.TripTime,
+		RelayPerformance.PickupTime,
+		RelayPerformance.TripCoilCondition,
+		RelayAlertSetting.TripCoilCondition AS TripCoilConditionAlert,
+		RelayAlertSetting.TripTime AS TripTimeAlert,
+		RelayAlertSetting.PickupTime AS PickupTimeAlert
+FROM    RelayPerformance LEFT OUTER JOIN
+        Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
+        Line ON Channel.LineID = Line.ID LEFT OUTER JOIN 
+		RelayAlertSetting ON RelayAlertSetting.LineID = Line.ID
+GO
+
+
+
 CREATE VIEW MeterDetail
 AS
 SELECT  Meter.ID,
@@ -2941,12 +2994,18 @@ SELECT
     LineImpedance.X0,
     LineImpedance.R1,
     LineImpedance.X1,
-    LineImpedance.ID AS LineImpedanceID
+    LineImpedance.ID AS LineImpedanceID,
+	RelayAlertSetting.TripTime,
+	RelayAlertSetting.PickupTime,
+	RelayAlertSetting.TripCoilCondition,
+	RelayAlertSetting.ID AS RelayAlertSettingID
 FROM
     Line LEFT OUTER JOIN
-    LineImpedance ON Line.ID = LineImpedance.LineID CROSS JOIN
+    LineImpedance ON Line.ID = LineImpedance.LineID LEFT OUTER JOIN
+	RelayAlertSetting ON Line.ID = RelayAlertSetting.LineID CROSS JOIN
     (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MaxFaultDistanceMultiplier'), 1.05) Value) MaxFaultDistanceMultiplier CROSS JOIN
     (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MinFaultDistanceMultiplier'), 1.05) Value) MinFaultDistanceMultiplier
+
 GO
 
 CREATE VIEW MeterLineDetail
@@ -3513,7 +3572,13 @@ SELECT
     IAN.Mapping AS [IAN Channel],
     IBN.Mapping AS [IBN Channel],
     ICN.Mapping AS [ICN Channel],
-    IR.Mapping AS [IR Channel]
+    IR.Mapping AS [IR Channel],
+	FORMAT(RP.Imax1, '0.000') AS [Lmax 1],
+	FORMAT(RP.Imax2, '0.000') AS [Lmax 2],
+	FORMAT(RP.TripInitiate,'HH:mm:ss.fff') AS [Trip Initiation],
+	RP.TripTime AS [Trip Time (microsec)],
+	RP.PickupTime AS [Pickup Time (microsec)],
+	FORMAT(RP.TripCoilCondition, '0.000') AS [Trip Coil Condition (Aps)]
 FROM
     Event JOIN
     MeterLine ON
@@ -3576,7 +3641,15 @@ FROM
         IR.MeasurementType = 'Current' AND
         IR.Phase = 'RES' AND
         IR.MeasurementCharacteristic = 'Instantaneous' AND
-        IR.SeriesType IN ('Values', 'Instantaneous') CROSS JOIN
+        IR.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+	RelayPerformance RP ON
+		Event.ID = RP.EventID AND
+		RP.ChannelID IN 
+		(
+			SELECT ID fROM ChannelDetail RPD WHERE 
+				Event.MeterID = RPD.MeterID AND
+				Event.LineID = RPD.LineID
+		) CROSS JOIN
     (
         SELECT COALESCE(CONVERT(FLOAT,
         (
@@ -4183,6 +4256,104 @@ FOR XML PATH(''EventDetail''), TYPE'
 WHERE EventEmailParameters.ID = 2
 GO
 
+UPDATE EventEmailParameters
+SET TriggersEmailSQL = 'SELECT CASE WHEN (SELECT COUNT(RP.ID) FROM RelayPerformance RP LEFT OUTER JOIN
+	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
+	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
+	LINE LN ON LN.ID = EV.LineID INNER JOIN
+	RelayAlertSetting RA ON RA.LineID = LN.ID
+	WHERE RP.EventID = {0}
+		AND (RP.TripTime > RA.TripTime OR RP.PickupTime > RA.PickupTime OR RP.TripCoilCondition > RA.TripCoilCondition)) > 0 THEN 1 ELSE 0 END'
+WHERE EventEmailParameters.ID = 3
+GO		
+		
+UPDATE EventEmailParameters
+SET EventDetailSQL = 'DECLARE @url VARCHAR(MAX) = (SELECT Value FROM DashSettings WHERE Name = ''System.URL'')
+
+/*  Temporary Tables */
+/* Breaker */
+SELECT LN.ID AS LineID, ML.LineName AS Name, LN.AssetKey AS AssetKey, 
+	RP.TripTime AS TT, RP.PickupTime AS PT, RP.TripCoilCondition AS TCC, RP.TripInitiate AS TI, RP.Imax1 AS L1, RP.Imax2 AS L2,
+	( SELECT CASE WHEN RP.TripTime > RA.TripTime THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN RP.PickupTime > RA.PickupTime THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN RP.TripCoilCondition > RA.TripCoilCondition THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN
+		RP.TripCoilCondition > RA.TripCoilCondition OR
+		RP.PickupTime > RA.PickupTime OR
+		RP.TripTime > RA.TripTime 
+		THEN 1 ELSE 0 END 
+	) AS Alert
+	INTO #Breaker 
+	FROM RelayPerformance RP LEFT OUTER JOIN
+	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
+	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
+	LINE LN ON LN.ID = EV.LineID LEFT OUTER JOIN
+	RelayAlertSetting RA ON RA.LineID = LN.ID
+	WHERE RP.EventID = {0}
+
+/* Alert */
+SELECT ML.LineName AS Name, LN.AssetKey AS AssetKey
+	INTO #Alert 
+	FROM RelayPerformance RP LEFT OUTER JOIN
+	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
+	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
+	LINE LN ON LN.ID = EV.LineID INNER JOIN
+	RelayAlertSetting RA ON RA.LineID = LN.ID
+	WHERE RP.EventID = {0}
+		AND (RP.TripTime > RA.TripTime OR RP.PickupTime > RA.PickupTime OR RP.TripCoilCondition > RA.TripCoilCondition)
+
+/* History */
+SELECT Line.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime AS PT, Relay.TripTime AS TT, Relay.TripCoilCondition AS TCC,  Relay.Imax1 AS L1, Relay.Imax2 AS L2, Relay.TripInitiate AS TI,
+	( SELECT CASE WHEN Relay.TripTime > RelayAlert.TripTime THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN Relay.PickupTime > RelayAlert.PickupTime THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN Relay.TripCoilCondition > RelayAlert.TripCoilCondition THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN
+		Relay.TripCoilCondition > RelayAlert.TripCoilCondition OR
+		Relay.PickupTime > RelayAlert.PickupTime OR
+		Relay.TripTime > RelayAlert.TripTime 
+		THEN 1 ELSE 0 END 
+	) AS Alert
+	INTO #History FROM  
+	RelayPerformance Relay LEFT OUTER JOIN
+	Channel ON Relay.ChannelID = Channel.ID LEFT OUTER JOIN
+	Line ON Channel.LineID = Line.ID LEFT OUTER JOIN
+	RelayAlertSetting RelayAlert ON RelayAlert.LineID = Line.ID
+	WHERE Relay.EventID <> {0}
+
+/* Event */
+SELECT EV.StartTime, EV.EndTime, STAT.IA2t, STAT.IB2t, STAT.IC2t,
+	EVT.Description AS EventType,
+	(SELECT CASE 
+		WHEN ((SELECT COUNT(FaultSummary.ID) FROM FaultSummary WHERE FaultSummary.IsSelectedAlgorithm <> 0 AND FaultSummary.EventID = {0}) > 0) 
+			THEN (SELECT Fault.DurationSeconds * 1000) 
+			ELSE (SELECT DATEDIFF(millisecond, EV.StartTime, EV.EndTime)) 
+		END
+	) AS EventDuration
+	INTO #EventDetails FROM 
+	EVENT EV LEFT OUTER JOIN 
+	EventStat STAT ON STAT.EventID = EV.ID LEFT OUTER JOIN
+	EventType EVT ON EVT.ID = EV.EventTypeID LEFT OUTER JOIN
+	FaultSummary Fault ON Fault.EventID = EV.ID
+	WHERE EV.Id = {0} AND (Fault.IsSelectedAlgorithm <> 0 OR Fault.IsSelectedAlgorithm IS NULL)
+
+
+SELECT @url AS [PQDashboard],
+	(SELECT * FROM #ALERT FOR XML PATH(''Breaker''), TYPE) AS [Alerts],
+	( SELECT 
+		Name, AssetKey, 
+		TT, PT, TCC, TI, L1, L2,
+		Alert, TTAlert, PTAlert, TCCAlert,
+		(
+			SELECT TT, PT, TCC, TI, L1, L2, Alert, TTAlert, PTAlert, TCCAlert FROM #History H WHERE H.LineID = B.LineID FOR XML PATH(''Data''), TYPE
+		) AS History FROM #Breaker B FOR XML PATH(''Breaker''), TYPE
+	) AS Breakers,
+	( SELECT * FROM #EventDetails FOR XML PATH(''Event''), TYPE) AS EventDetail
+	FOR XML PATH(''AlertDetail'')'
+WHERE EventEmailParameters.ID = 3
+GO
+
+
+
 UPDATE XSLTemplate
 SET Template = '<?xml version="1.0"?>
 
@@ -4405,6 +4576,237 @@ SET Template = '<?xml version="1.0"?>
 
 </xsl:stylesheet>'
 WHERE Name = 'Default Fault'
+GO
+
+
+UPDATE XSLTemplate
+SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:output method="xml" />
+
+<xsl:template match="/">
+    <html>
+    <head>
+        <title>Breaker <xsl:value-of select="/AlertDetail/Alerts/Breaker[1]/Name" /> (<xsl:value-of select="/AlertDetail/Alerts/Breaker[1]/AssetKey" />) trip not within Limits</title>
+
+        <style>
+            td {
+                border: 1px solid #ddd;
+                border-collapse: collapse;
+                padding: 8px;
+                text-align: center;
+            }
+
+            .Trip-details {
+                margin-left: 1cm;
+            }
+
+            .section-header {
+                font-size: 120%;
+                font-weight: bold;
+                text-decoration: underline
+            }
+
+            table {
+                border-spacing: 0;
+                border-collapse: collapse;
+                
+            }
+
+            tr:nth-child(even){background-color: #f2f2f2;}
+            
+            th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: center;
+                background-color: #4CAF50;
+                color: white;
+            }
+            
+            .alert {
+                color: #ff0000;
+            }
+            
+            .normal {
+                color: #000000;
+            }
+            
+			table.tblstyle-center tr th, table.tblstyle-center tr td
+			{
+				border-spacing: 0;
+                border-collapse: collapse
+				border: 1px solid black
+				text-align: center
+
+			}
+			table.tblstyle-left tr th, table.tblstyle-left tr td,
+			{
+				border-spacing: 0;
+                border-collapse: collapse
+				border: 1px solid black
+				text-align: left
+			}
+
+        </style>
+    </head>
+    <body>
+        <span class="section-header">Tripped Breakers</span>
+        <br/><br/>
+        <div class="Trip-details">
+            <table>
+                <tr>
+                  <th>Breaker</th>
+                  <th>Trip Initiated</th>
+                  <th>Pickup Time <br />(micros)</th>
+                  <th>Trip Time <br />(micros)</th>
+                  <th>Imax 1 <br />(A)</th>
+                  <th>Imax 2 <br />(A)</th>
+                  <th>Trip Coil Condition <br />(A/s)</th>
+                </tr>
+                <xsl:for-each select="/AlertDetail/Breakers/Breaker">
+                    <tr>
+                        <xsl:choose>
+                            <xsl:when test="Alert = 1">
+                                <td class = "alert"> <xsl:value-of select="Name" /> <br/> (<xsl:value-of select="AssetKey" />) </td>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <td class = "normal"> <xsl:value-of select="Name" /> <br/> (<xsl:value-of select="AssetKey" />) </td>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                        <td> <format type="System.DateTime" spec="HH:mm:ss.ffffff"> <xsl:value-of select="TI" /> </format> </td>
+                        <xsl:choose>
+                            <xsl:when test="PTAlert = 1">
+                                <td class = "alert"> <format type="System.Double" spec="#####"> <xsl:value-of select="PT" /> </format> </td>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <td class = "normal"> <format type="System.Double" spec="#####"> <xsl:value-of select="PT" /> </format> </td>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                        <xsl:choose>
+                            <xsl:when test="TTAlert = 1">
+                                <td class = "alert"> <format type="System.Double" spec="#####"> <xsl:value-of select="TT" /> </format> </td>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <td class = "normal"> <format type="System.Double" spec="#####"> <xsl:value-of select="TT" /> </format> </td>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                        <td> <format type="System.Double" spec="#0.###"> <xsl:value-of select="L1" /> </format> </td>
+                        <td> <format type="System.Double" spec="#0.###"> <xsl:value-of select="L2" /> </format></td>
+                        
+                        <xsl:choose>
+                            <xsl:when test="TCCAlert = 1">
+                                <td class = "alert"> <format type="System.Double" spec="##0.###"> <xsl:value-of select="TCC" /> </format> </td>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <td class = "normal"> <format type="System.Double" spec="##0.###"> <xsl:value-of select="TCC" /> </format> </td>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </tr>
+                </xsl:for-each>
+                
+            </table>
+        </div>
+        <hr />
+        <span class="section-header">Event Details </span>
+        <br/><br/>
+		<div class="Event-details">
+			<table class="table.tblstyle-left">
+				<tr>
+                    <td> Start Time:</td>
+					<td> <format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format>
+								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format> </td>
+                </tr>
+				<tr>
+                    <td> Event:</td>
+					<td> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EventType" /> </td>
+                </tr>
+				<tr>
+                    <td> Event Duration:</td>
+					<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EventDuration" /></format> ms</td>
+                </tr>
+				<tr>
+                    <td> I2(t) Phase A :</td>
+					<td> <format type="System.Double" spec="########"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/I2tA" /></format>  </td>
+                </tr>
+				<tr>
+                    <td> I2(t) Phase B :</td>
+					<td> <format type="System.Double" spec="########"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/I2tB" /></format>  </td>
+                </tr>
+				<tr>
+                    <td> I2(t) Phase C :</td>
+					<td> <format type="System.Double" spec="########"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/I2tC" /></format>  </td>
+                </tr>
+            </table>
+		</div>
+        <hr />
+        <xsl:for-each select="/AlertDetail/Breakers/Breaker">
+            <span class="section-header">Breaker <xsl:value-of select="Name" /> (<xsl:value-of select="AssetKey" />) History</span>
+            <br/><br/>
+            <div class="Breaker-details">
+                <table>
+                <tr>
+                  <th>Trip Initiated</th>
+                  <th>Pickup Time <br/> (micros)</th>
+                  <th>Trip Time <br/> (micros)</th>
+                  <th>Imax 1 <br/> (A)</th>
+                  <th>Imax 2 <br/> (A)</th>
+                  <th>Trip Coil Condition <br/> (A/s)</th>
+                </tr>
+                <xsl:for-each select="History/Data">
+                    <tr>                  
+                        <xsl:choose>
+                            <xsl:when test="Alert = 1">
+                                <td class = "alert"> <format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="TI" /> </format>
+								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="TI" /> </format> </td>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <td class = "normal"> <format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="TI" /> </format>
+								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="TI" /> </format> </td>
+                            </xsl:otherwise>
+						</xsl:choose>
+
+						<xsl:choose>
+                            <xsl:when test="PTAlert = 1">
+                                <td class = "alert"> <format type="System.Double" spec="#####"> <xsl:value-of select="PT" /> </format> </td>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <td class = "normal"> <format type="System.Double" spec="#####"> <xsl:value-of select="PT" /> </format> </td>
+                            </xsl:otherwise>
+						</xsl:choose>
+
+						<xsl:choose>
+                            <xsl:when test="TTAlert = 1">
+                                <td class = "alert"> <format type="System.Double" spec="#####"> <xsl:value-of select="TT" /> </format> </td>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <td class = "normal"> <format type="System.Double" spec="#####"> <xsl:value-of select="TT" /> </format> </td>
+                            </xsl:otherwise>
+						</xsl:choose>
+
+                        <td> <format type="System.Double" spec="#0.###"> <xsl:value-of select="L1" /> </format> </td>
+                        <td> <format type="System.Double" spec="#0.###"> <xsl:value-of select="L2" /> </format></td>
+						<xsl:choose>
+                            <xsl:when test="TCCAlert = 1">
+                                <td class = "alert"> <format type="System.Double" spec="##0.###"> <xsl:value-of select="TCC" /> </format> </td>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <td class = "normal"> <format type="System.Double" spec="##0.###"> <xsl:value-of select="TCC" /> </format> </td>
+                            </xsl:otherwise>
+						</xsl:choose>
+                    </tr>
+                </xsl:for-each>
+                
+            </table>
+            </div>
+        </xsl:for-each>
+        <p style="font-size: .8em">
+            If you would like receive a different set of emails or unsubscribe, you can <a><xsl:attribute name="href"><xsl:value-of select="/AlertDetail/PQDashboard" />/Email/UpdateSettings</xsl:attribute>manage your subscriptions</a>.
+        </p>
+    </body>
+    </html>
+</xsl:template>
+
+</xsl:stylesheet>'
+WHERE Name = 'Default Breaker'
 GO
 
 ----- PQInvestigator Integration -----

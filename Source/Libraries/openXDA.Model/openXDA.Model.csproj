@@ -69,6 +69,7 @@
     <Compile Include="Emails\EventEmailParameters.cs" />
     <Compile Include="Events\Disturbances\VoltageCurve.cs" />
     <Compile Include="Events\Disturbances\VoltageEnvelopeCurve.cs" />
+    <Compile Include="Events\RelayPerformance.cs" />
     <Compile Include="Events\EventStat.cs" />
     <Compile Include="Events\Faults\FaultCauseMetrics.cs" />
     <Compile Include="Events\Faults\FaultCurve.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="Alarms\DataQualityRangeLimit.cs" />
     <Compile Include="TransmissionElements\BreakerOperationType.cs" />
     <Compile Include="TransmissionElements\Structure.cs" />
+    <Compile Include="TransmissionElements\RelayAlertSetting.cs" />
     <Compile Include="Trending\DailyTrendingSummary.cs" />
     <Compile Include="Alarms\DefaultAlarmRangeLimit.cs" />
     <Compile Include="Events\Disturbances\Disturbance.cs" />

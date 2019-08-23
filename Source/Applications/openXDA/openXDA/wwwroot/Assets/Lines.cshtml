@@ -18,6 +18,8 @@
     //  ----------------------------------------------------------------------------------------------------
     //  01/15/2016 - J. Ritchie Carroll
     //       Generated original version of source code.
+    //  08/23/2019 - Christoph Lackner
+    //       Added Relay Alert Settings.
     //
     //*****************************************************************************************************@
 @using System.Collections.Generic
@@ -47,13 +49,13 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
-        new[] { "AssetKey", "Key", "text-Left" },
-        new[] { "VoltageKV", "Voltage", "text-left"},
-        new[] { "ThermalRating", "Thermal Rating", "text-left" },
-        new[] { "Length", "Length", "text-left" },
-        new[] { null, "Meter-to-Line", "text-center valign-middle"}
+new[] { "AssetKey", "Key", "text-Left" },
+new[] { "VoltageKV", "Voltage", "text-left"},
+new[] { "ThermalRating", "Thermal Rating", "text-left" },
+new[] { "Length", "Length", "text-left" },
+new[] { null, "Meter-to-Line", "text-center valign-middle"}
 
-    };
+};
 
     ViewBag.AddNewEditTitle = "Line";
     ViewBag.lengthUnits = dataContext.Connection.ExecuteScalar<string>("Select Value From [Setting] WHERE Name = 'LengthUnits'");
@@ -88,7 +90,7 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    <div class="col-md-6">
+    <div class="col-md-4">
         @Raw(dataContext.AddInputField<LineView>("AssetKey", fieldLabel: "Key"))
         @Raw(dataContext.AddInputField<LineView>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
         @Raw(dataContext.AddInputField<LineView>("ThermalRating", fieldLabel: "Thermal Rating (50" + char.ConvertFromUtf32(176) + "F)"))
@@ -98,12 +100,19 @@
         @Raw(dataContext.AddTextAreaField<LineView>("Description"))
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-4">
         <h5><b>Line Impedance:</b></h5>
         @Raw(dataContext.AddInputField<LineView>("R0"))
         @Raw(dataContext.AddInputField<LineView>("X0"))
         @Raw(dataContext.AddInputField<LineView>("R1"))
         @Raw(dataContext.AddInputField<LineView>("X1"))
+    </div>
+
+    <div class="col-md-4">
+        <h5><b>Relay Alert Settings:</b></h5>
+        @Raw(dataContext.AddInputField<LineView>("TripTime", fieldLabel: "Trip Time"))
+        @Raw(dataContext.AddInputField<LineView>("PickupTime", fieldLabel: "Pickup Time"))
+        @Raw(dataContext.AddInputField<LineView>("TripCoilCondition", fieldLabel: "Trip Coil Condition"))
     </div>
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")

@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  08/18/2016 - J. Ritchie Carroll
 //       Updated to use record operations hub base class.
+//  07/23/2019 - Christoph Lackner
+//       Added RelayAlertSettings to LineView.
 //
 //******************************************************************************************************
 
@@ -50,6 +52,7 @@ using Event = openXDA.Model.Event;
 using Fault = openXDA.Model.Fault;
 using Line = openXDA.Model.Line;
 using LineImpedance = openXDA.Model.LineImpedance;
+using RelayAlertSetting = openXDA.Model.RelayAlertSetting;
 using Meter = openXDA.Model.Meter;
 using MeterDetail = openXDA.Model.MeterDetail;
 using MeterLine = openXDA.Model.MeterLine;
@@ -2720,6 +2723,7 @@ namespace openXDA.Hubs
             int index = DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Line')") ?? 0;
             record.ID = index;
             DataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
+            DataContext.Table <RelayAlertSetting>().AddNewRecord(CreateRelayAlertSetting(record));
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
@@ -2728,6 +2732,7 @@ namespace openXDA.Hubs
         {
             DataContext.Table<Line>().UpdateRecord(CreateLine(record));
             DataContext.Table<LineImpedance>().UpdateRecord(CreateLineImpedance(record));
+            DataContext.Table<RelayAlertSetting>().UpdateRecord(CreateRelayAlertSetting(record));
         }
 
         public Line CreateLine(LineView record)
@@ -2756,6 +2761,17 @@ namespace openXDA.Hubs
             return li;
         }
 
+        public RelayAlertSetting CreateRelayAlertSetting(LineView record)
+        {
+            RelayAlertSetting ras = new RelayAlertSetting();
+            ras.ID = record.RelayAlertSettingID;
+            ras.TripTime = record.TripTime;
+            ras.PickupTime = record.PickupTime;
+            ras.TripCoilCondition = record.TripCoilCondition;
+            ras.LineID = record.ID;
+
+            return ras;
+        }
         #endregion
 
         #region [ MeterLine Table Operations ]

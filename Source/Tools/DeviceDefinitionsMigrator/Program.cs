@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/06/2014 - Stephen C. Wills
 //       Generated original version of source code.
+//  07/10/2019 - Christoph Lackner
+//       Added trip coil currents.
 //
 //******************************************************************************************************
 
@@ -346,11 +348,19 @@ namespace DeviceDefinitionsMigrator
 
                         // Get a lookup table for the channels monitoring this line
                         channelLookup = lookupTables.GetChannelLookup(meter, line, connection);
+                        List<String> channelAdded = new List<String>();
                         outputChannelIndex = 0;
 
                         foreach (XElement channelElement in lineElement.Elements("channels").Elements())
                         {
                             channelKey = channelElement.Name.LocalName;
+
+                            // Don't allow same key twice
+                            if (channelAdded.Contains(channelKey))
+                            {
+                                Console.WriteLine("Channel {0} already exists in xml file, skipping duplicate", channelKey);
+                                continue;
+                            }
 
                             // Attempt to find an existing channel corresponding to this element
                             if (channelLookup.TryGetValue(channelKey, out tuple))
@@ -366,6 +376,7 @@ namespace DeviceDefinitionsMigrator
                                 outputChannel = new OutputChannel();
 
                                 channelLookup.Add(channelKey, Tuple.Create(series, outputChannel));
+                                channelAdded.Add(channelKey);
                             }
 
                             // Load updates to channel configuration into the database
@@ -375,7 +386,7 @@ namespace DeviceDefinitionsMigrator
                             outputChannel.ChannelKey = channelKey;
                             outputChannel.LoadOrder = outputChannelIndex;
                             outputChannels.Add(Tuple.Create(series, outputChannel));
-
+                            
                             outputChannelIndex++;
                         }
 
@@ -655,6 +666,7 @@ namespace DeviceDefinitionsMigrator
 
         private static void LoadChannelAttributes(Meter meter, Line line, MeterLocation remoteMeterLocation, Channel channel, string channelKey, LookupTables lookupTables, AdoDataConnection connection)
         {
+           
             if ((object)remoteMeterLocation != null)
                 channel.Name = string.Format("{0}({1}) {2}", remoteMeterLocation.Name, line.AssetKey, channelKey);
             else
@@ -663,7 +675,8 @@ namespace DeviceDefinitionsMigrator
             channel.MeterID = meter.ID;
             channel.LineID = line.ID;
             channel.MeasurementTypeID = GetOrAddMeasurementType(GetMeasurementTypeName(channelKey), lookupTables, connection);
-            channel.MeasurementCharacteristicID = GetOrAddMeasurementCharacteristic("Instantaneous", lookupTables, connection);
+            channel.MeasurementCharacteristicID = GetOrAddMeasurementCharacteristic(GetCharacteristicName(channelKey), lookupTables, connection);
+
             channel.PhaseID = GetOrAddPhase(GetPhaseName(channelKey), lookupTables, connection);
             channel.HarmonicGroup = 0;
 
@@ -747,6 +760,30 @@ namespace DeviceDefinitionsMigrator
             return phaseName;
         }
 
+        private static string GetCharacteristicName(string channelName)
+        {
+            string characName;
+
+            if (!MeasurementCharacteristicNameLookup.TryGetValue(channelName, out characName))
+                characName = "Unknown";
+
+            return characName;
+        }
+
+        private static readonly Dictionary<string, string> MeasurementCharacteristicNameLookup = new Dictionary<string, string>()
+        {
+            { "VA", "Instantaneous" },
+            { "VB", "Instantaneous" },
+            { "VC", "Instantaneous" },
+            { "IA", "Instantaneous" },
+            { "IB", "Instantaneous" },
+            { "IC", "Instantaneous" },
+            { "IR", "Instantaneous" },
+            { "IN", "Instantaneous" },
+            { "IG", "Instantaneous" },
+            { "TCE", "Instantaneous" }
+        };
+
         private static readonly Dictionary<string, string> MeasurementTypeNameLookup = new Dictionary<string, string>()
         {
             { "VA", "Voltage" },
@@ -757,7 +794,8 @@ namespace DeviceDefinitionsMigrator
             { "IC", "Current" },
             { "IR", "Current" },
             { "IN", "Current" },
-            { "IG", "Current" }
+            { "IG", "Current" },
+            { "TCE", "TripCoilCurrent" }
         };
 
         private static readonly Dictionary<string, string> PhaseNameLookup = new Dictionary<string, string>()
@@ -770,7 +808,8 @@ namespace DeviceDefinitionsMigrator
             { "IC", "CN" },
             { "IR", "RES" },
             { "IN", "NG" },
-            { "IG", "NG" }
+            { "IG", "NG" },
+            { "TCE", "None" }
         };
 
         private static int GetOrAddSeriesType(LookupTables lookupTables, AdoDataConnection connection)
