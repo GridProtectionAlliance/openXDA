@@ -4712,8 +4712,8 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
 			<table class="table.tblstyle-left">
 				<tr>
                     <td> Start Time:</td>
-					<td> <format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format>
-								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format> </td>
+					<td><format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format>
+								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format></td>
                 </tr>
 				<tr>
                     <td> Event:</td>
@@ -4723,18 +4723,24 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
                     <td> Event Duration:</td>
 					<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EventDuration" /></format> ms</td>
                 </tr>
-				<tr>
-                    <td> I2(t) Phase A :</td>
-					<td> <format type="System.Double" spec="########"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/I2tA" /></format>  </td>
-                </tr>
-				<tr>
-                    <td> I2(t) Phase B :</td>
-					<td> <format type="System.Double" spec="########"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/I2tB" /></format>  </td>
-                </tr>
-				<tr>
-                    <td> I2(t) Phase C :</td>
-					<td> <format type="System.Double" spec="########"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/I2tC" /></format>  </td>
-                </tr>
+                <xsl:if test="/AlertDetail/EventDetail/Event[1]/IA2t">
+    				<tr>
+                        <td> I2(t) Phase A :</td>
+    					<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/IA2t" /> </format>  </td>
+                    </tr>
+                </xsl:if>
+                <xsl:if test="/AlertDetail/EventDetail/Event[1]/IB2t">
+    				<tr>
+                        <td> I2(t) Phase B :</td>
+    					<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/IB2t" /> </format>  </td>
+                    </tr>
+                </xsl:if>
+                <xsl:if test="/AlertDetail/EventDetail/Event[1]/IC2t">
+        			<tr>
+                        <td> I2(t) Phase C :</td>
+        				<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/IC2t" /> </format> </td>
+                    </tr>
+                </xsl:if>
             </table>
 		</div>
         <hr />
