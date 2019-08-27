@@ -380,6 +380,14 @@ namespace XDAWaveformDataParser
             }
         }
 
+        private void AboutButton_Click(object sender, EventArgs e)
+        {
+            using (AboutWindow aboutWindow = new AboutWindow())
+            {
+                aboutWindow.ShowDialog(this);
+            }
+        }
+
         private void ChannelListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             ParsedChannel parsedChannel;
