@@ -23,6 +23,8 @@
 
 using GSF;
 using GSF.Configuration;
+using GSF.Data;
+using GSF.Data.Model;
 using GSF.Scheduling;
 using GSF.Web.Model;
 using openHistorian.XDALink;
@@ -47,25 +49,104 @@ namespace PQMark.DataAggregator
         private bool m_running = false;
         private PQMarkAggregationSettings m_pqMarkAggregationSettings;
 
+        private class DisturbanceData
+        {
+            public int MeterID { get; set; }
+            public double PerUnitMagnitude { get; set; }
+            public DateTime StartTime { get; set; }
+            public DateTime EndTime { get; set; }
+            public double DurationSeconds { get; set; }
+            public double DurationCycles { get; set; }
+        }
+
+        private class Curves
+        {
+            public class Point
+            {
+                public double Magnitude { get; set; }
+                public double Duration { get; set; }
+                public Point(double mag, double dur)
+                {
+                    Magnitude = mag;
+                    Duration = dur;
+                }
+            }
+            public static List<Point> IticUpperCurve { get; }
+            public static List<Point> IticLowerCurve { get; }
+            public static List<Point> SemiCurve { get; }
+
+            static Curves()
+            {
+                IticUpperCurve = new List<Point>()
+                {
+                    new Point(2.0,0.001),
+                    new Point(1.4,0.003),
+                    new Point(1.2,0.003),
+                    new Point(1.2,0.5),
+                    new Point(1.1,0.5),
+                };
+                IticLowerCurve = new List<Point>()
+                {
+                    new Point(0.0,0.02),
+                    new Point(0.7,0.02),
+                    new Point(0.7,0.5),
+                    new Point(0.8,0.5),
+                    new Point(0.8,10.0),
+                    new Point(0.9,10.0),
+                };
+                SemiCurve = new List<Point>()
+                {
+                    new Point(0.0,0.02),
+                    new Point(0.5,0.02),
+                    new Point(0.5,0.2),
+                    new Point(0.7,0.2),
+                    new Point(0.7,0.5),
+                    new Point(0.8,0.5),
+                    new Point(0.8,10.0),
+                    new Point(0.9,10.0),
+                };
+
+            }
+        }
+
+
         #endregion
 
         #region [ Constructors ]
         public DataAggregationEngine()
         {
-            m_pqMarkAggregationSettings = new PQMarkAggregationSettings();
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                HistorianServer = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+                HistorianInstance = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+
+                Meters = new TableOperations<PQMarkCompanyMeter>(connection).QueryRecordsWhere("Enabled = 1");
+
+                m_pqMarkAggregationSettings = new PQMarkAggregationSettings();
+            }
         }
 
         public DataAggregationEngine(PQMarkAggregationSettings settings)
         {
-            m_pqMarkAggregationSettings = settings;
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                HistorianServer = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+                HistorianInstance = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+
+                Meters = new TableOperations<PQMarkCompanyMeter>(connection).QueryRecordsWhere("Enabled = 1");
+
+                m_pqMarkAggregationSettings = settings;
+            }
         }
 
         #endregion
 
         #region [ Properties ]
-        private DataContext DataContext => m_dataContext ?? (m_dataContext = new DataContext("systemSettings"));
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
         public bool Running => m_running;
+        private IEnumerable<PQMarkCompanyMeter> Meters { get; set; }
+        private string HistorianServer { get; set; }
+        private string HistorianInstance { get; set; }
 
         [Category]
         [SettingName(PQMarkAggregationSettings.CategoryName)]
@@ -161,423 +242,183 @@ namespace PQMark.DataAggregator
 
         }
 
-        private class DisturbanceData
-        {
-            public int MeterID { get; set; }
-            public double PerUnitMagnitude { get; set; }
-            public DateTime StartTime { get; set; }
-            public DateTime EndTime { get; set; }
-            public double DurationSeconds { get; set; }
-            public double DurationCycles { get; set; }
-        }
-
-        public class Curves
-        {
-            private readonly static List<Tuple<double, double>> s_IticUpperCurve;
-            private readonly static List<Tuple<double, double>> s_IticLowerCurve;
-            private readonly static List<Tuple<double, double>> s_SemiCurve;
-
-            public static List<Tuple<double, double>> IticUpperCurve { get { return s_IticUpperCurve; }}
-            public static List<Tuple<double, double>> IticLowerCurve { get { return s_IticLowerCurve; } }
-            public static List<Tuple<double, double>> SemiCurve { get { return s_SemiCurve; } }
-
-            static Curves()
-            {
-                s_IticUpperCurve = new List<Tuple<double, double>>()
-                {
-                    Tuple.Create(2.0,0.001),
-                    Tuple.Create(1.4,0.003),
-                    Tuple.Create(1.2,0.003),
-                    Tuple.Create(1.2,0.5),
-                    Tuple.Create(1.1,0.5),
-                };
-                s_IticLowerCurve = new List<Tuple<double, double>>()
-                {
-                    Tuple.Create(0.0,0.02),
-                    Tuple.Create(0.7,0.02),
-                    Tuple.Create(0.7,0.5),
-                    Tuple.Create(0.8,0.5),
-                    Tuple.Create(0.8,10.0),
-                    Tuple.Create(0.9,10.0),
-                };
-                s_SemiCurve = new List<Tuple<double, double>>()
-                {
-                    Tuple.Create(0.0,0.02),
-                    Tuple.Create(0.5,0.02),
-                    Tuple.Create(0.5,0.2),
-                    Tuple.Create(0.7,0.2),
-                    Tuple.Create(0.7,0.5),
-                    Tuple.Create(0.8,0.5),
-                    Tuple.Create(0.8,10.0),
-                    Tuple.Create(0.9,10.0),
-                };
-
-            }
-        }
-
         public void ProcessAllData()
         {
-            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-
-            IEnumerable<PQMarkCompanyMeter> meters = DataContext.Table<PQMarkCompanyMeter>().QueryRecordsWhere("Enabled = 1");
-
-            if (!meters.Any()) return;
-
-            DataTable table = DataContext.Connection.RetrieveData(
-                @"SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
-                  FROM  	Disturbance JOIN
-		                    Event ON Event.ID = Disturbance.EventID
-                  WHERE	    Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
-		                    Event.MeterID IN ("+ string.Join(",", meters.Select(x => x.MeterID)) +")"
-            );
-            IEnumerable<DisturbanceData> dd = table.Select().Select(row => DataContext.Table<DisturbanceData>().LoadRecord(row));
-
-            var assetGroups = dd.GroupBy(x => x.MeterID);
-
-            foreach(var assetGroup in assetGroups)
+            using(AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
-                var yearGroups = assetGroup.GroupBy(x => x.StartTime.Year);
-                foreach(var yearGroup in yearGroups)
+
+                if (!Meters.Any()) return;
+
+                DataTable table = connection.RetrieveData(
+                    @"
+                        SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
+                        FROM  	Disturbance JOIN
+		                        Event ON Event.ID = Disturbance.EventID
+                        WHERE   Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
+		                        Event.MeterID IN (" + string.Join(",", Meters.Select(x => x.MeterID)) + ")"
+                );
+                IEnumerable<DisturbanceData> dd = table.Select().Select(row => new TableOperations<DisturbanceData>(connection).LoadRecord(row));
+
+                var assetGroups = dd.GroupBy(x => x.MeterID);
+
+                foreach (var assetGroup in assetGroups)
                 {
-                    var dateGroups = yearGroup.GroupBy(x => x.StartTime.Month);
-                    foreach(var dateGroup in dateGroups)
+                    OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
+                    foreach (var yearGroup in assetGroup.GroupBy(x => x.StartTime.Year))
                     {
-                        DateTime startDate = new DateTime(yearGroup.Key, dateGroup.Key, 1);
-                        DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
-
-                        // Get Easy Counts for SARFI 90, 70, 50, 10
-                        int sarfi90 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.9).Count();
-                        int sarfi70 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.7).Count();
-                        int sarfi50 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.5).Count();
-                        int sarfi10 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.1).Count();
-
-                        // Get Counts for semi
-                        int semi = dateGroup.Where(x => {
-                            double vc = 0.0D;
-
-                            int point1 = Curves.SemiCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
-                            if (point1 == -1) return false;
-                            else if (point1 + 1 == Curves.SemiCurve.Count()) vc = Curves.SemiCurve[point1].Item1;
-                            else if (Curves.SemiCurve[point1].Item2 == Curves.SemiCurve[point1 + 1].Item2) vc = Curves.SemiCurve[point1 + 1].Item1;
-                            else
-                            {
-                                double slope = (Curves.SemiCurve[point1 + 1].Item1 - Curves.SemiCurve[point1].Item1) / (Curves.SemiCurve[point1 + 1].Item2 - Curves.SemiCurve[point1].Item2);
-                                vc = slope * (x.DurationSeconds - Curves.SemiCurve[point1].Item2) + Curves.SemiCurve[point1].Item1;
-                            }
-                            double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                            return value >= 1.0D;
-                        }).Count();
-
-                        // Get counts for ITIC
-                        int iticLower = dateGroup.Where(x => {
-                            double vc = 0.0D;
-
-                            int point1 = Curves.IticLowerCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
-                            if (point1 == -1) return false;
-                            else if (point1 + 1 == Curves.IticLowerCurve.Count()) vc = Curves.IticLowerCurve[point1].Item1;
-                            else if (Curves.IticLowerCurve[point1].Item2 == Curves.IticLowerCurve[point1 + 1].Item2) vc = Curves.IticLowerCurve[point1 + 1].Item1;
-                            else
-                            {
-                                double slope = (Curves.IticLowerCurve[point1 + 1].Item1 - Curves.IticLowerCurve[point1].Item1) / (Curves.IticLowerCurve[point1 + 1].Item2 - Curves.IticLowerCurve[point1].Item2);
-                                vc = slope * (x.DurationSeconds - Curves.IticLowerCurve[point1].Item2) + Curves.IticLowerCurve[point1].Item1;
-                            }
-                            double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                            return value >= 1.0D;
-                        }).Count();
-
-                        int iticUpper = dateGroup.Where(x => {
-                            double vc = 0.0D;
-
-                            int point1 = Curves.IticUpperCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
-                            if (point1 == -1) return false;
-                            else if (point1 + 1 == Curves.IticUpperCurve.Count()) vc = Curves.IticUpperCurve[point1].Item1;
-                            else if (Curves.IticUpperCurve[point1].Item2 == Curves.IticUpperCurve[point1 + 1].Item2) vc = Curves.IticUpperCurve[point1 + 1].Item2;
-                            else
-                            {
-                                double slope = (Curves.IticUpperCurve[point1 + 1].Item1 - Curves.IticUpperCurve[point1].Item1) / (Curves.IticUpperCurve[point1 + 1].Item2 - Curves.IticUpperCurve[point1].Item2);
-                                vc = slope * (x.DurationSeconds - Curves.IticUpperCurve[point1].Item2) + Curves.IticUpperCurve[point1].Item1;
-                            }
-                            double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                            return value >= 1.0D;
-                        }).Count();
-
-                        List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", assetGroup.Key).Select(x => x.ID).ToList();
-                        List<openHistorian.XDALink.TrendingDataPoint> historianPoints = new List<openHistorian.XDALink.TrendingDataPoint>();
-                        using (Historian historian = new Historian(historianServer, historianInstance))
+                        foreach (var dateGroup in yearGroup.GroupBy(x => x.StartTime.Month))
                         {
-                            foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
-                            {
-                                if (point.Value < 0.1)
-                                    point.Value *= 100;
-                                if (point.SeriesID.ToString() == "Average" && point.Value >= 0 && point.Value <= 10)
-                                    historianPoints.Add(point);
-                            }
+                            DateTime startDate = new DateTime(yearGroup.Key, dateGroup.Key, 1);
+                            DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
 
+                            ProcessMonthOfData(dateGroup, startDate, endDate);
                         }
 
-                        string thdjson = "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Where(x => x.Key > 0).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
-
-                        PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, yearGroup.Key, dateGroup.Key);
-                        if(record != null)
-                        {
-                            record.ITIC = iticLower + iticUpper;
-                            record.SEMI = semi;
-                            record.SARFI90 = sarfi90;
-                            record.SARFI70 = sarfi70;
-                            record.SARFI50 = sarfi50;
-                            record.SARFI10 = sarfi10;
-                            record.THDJson = thdjson;
-
-                            DataContext.Table<PQMarkAggregate>().UpdateRecord(record);
-                        }
-                        else
-                        {
-                            record = new PQMarkAggregate()
-                            {
-                                MeterID = assetGroup.Key,
-                                Year = yearGroup.Key,
-                                Month = dateGroup.Key,
-                                ITIC = iticLower + iticUpper,
-                                SEMI = semi,
-                                SARFI90 = sarfi90,
-                                SARFI70 = sarfi70,
-                                SARFI50 = sarfi50,
-                                SARFI10 = sarfi10,
-                                THDJson = thdjson
-                            };
-
-                            DataContext.Table<PQMarkAggregate>().AddNewRecord(record);
-
-                        }
                     }
-
                 }
+
+                OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
+
+
             }
-
-            OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
-
         }
 
         public void ProcessAllEmptyData()
         {
-            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+            if (!Meters.Any()) return;
 
-            IEnumerable<PQMarkCompanyMeter> meters = DataContext.Table<PQMarkCompanyMeter>().QueryRecordsWhere("Enabled = 1");
-
-            if (!meters.Any()) return;
-
-            DataTable table = DataContext.Connection.RetrieveData(
-                @"SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
-                  FROM  	Disturbance JOIN
-		                    Event ON Event.ID = Disturbance.EventID
-                  WHERE	    Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
-		                    Event.MeterID IN (" + string.Join(",", meters.Select(x => x.MeterID)) + ")"
-            );
-            IEnumerable<DisturbanceData> dd = table.Select().Select(row => DataContext.Table<DisturbanceData>().LoadRecord(row));
-
-            var assetGroups = dd.GroupBy(x => x.MeterID);
-
-            foreach (var assetGroup in assetGroups)
+            using(AdoDataConnection connection = new AdoDataConnection("systemSetting"))
             {
-                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
-                var yearGroups = assetGroup.GroupBy(x => x.StartTime.Year);
-                foreach (var yearGroup in yearGroups)
+                DataTable table = connection.RetrieveData(
+                    @"
+                        SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
+                        FROM  	Disturbance JOIN
+		                        Event ON Event.ID = Disturbance.EventID
+                        WHERE	Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
+		                        Event.MeterID IN (" + string.Join(",", Meters.Select(x => x.MeterID)) + ")"
+                );
+                IEnumerable<DisturbanceData> dd = table.Select().Select(row => new TableOperations<DisturbanceData>(connection).LoadRecord(row));
+
+                foreach (var assetGroup in dd.GroupBy(x => x.MeterID))
                 {
-                    var dateGroups = yearGroup.GroupBy(x => x.StartTime.Month);
-                    foreach (var dateGroup in dateGroups)
+                    OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
+                    foreach (var yearGroup in assetGroup.GroupBy(x => x.StartTime.Year))
                     {
-                        PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, yearGroup.Key, dateGroup.Key);
-                        if (record != null) continue;
-
-                        DateTime startDate = new DateTime(yearGroup.Key, dateGroup.Key, 1);
-                        DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
-
-                        // Get Easy Counts for SARFI 90, 70, 50, 10
-                        int sarfi90 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.9).Count();
-                        int sarfi70 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.7).Count();
-                        int sarfi50 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.5).Count();
-                        int sarfi10 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.1).Count();
-
-                        // Get Counts for semi
-                        int semi = dateGroup.Where(x => {
-                            double vc = 0.0D;
-
-                            int point1 = Curves.SemiCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
-                            if (point1 == -1) return false;
-                            else if (point1 + 1 == Curves.SemiCurve.Count()) vc = Curves.SemiCurve[point1].Item1;
-                            else if (Curves.SemiCurve[point1].Item2 == Curves.SemiCurve[point1 + 1].Item2) vc = Curves.SemiCurve[point1 + 1].Item1;
-                            else
-                            {
-                                double slope = (Curves.SemiCurve[point1 + 1].Item1 - Curves.SemiCurve[point1].Item1) / (Curves.SemiCurve[point1 + 1].Item2 - Curves.SemiCurve[point1].Item2);
-                                vc = slope * (x.DurationSeconds - Curves.SemiCurve[point1].Item2) + Curves.SemiCurve[point1].Item1;
-                            }
-                            double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                            return value >= 1.0D;
-                        }).Count();
-
-                        // Get counts for ITIC
-                        int iticLower = dateGroup.Where(x => {
-                            double vc = 0.0D;
-
-                            int point1 = Curves.IticLowerCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
-                            if (point1 == -1) return false;
-                            else if (point1 + 1 == Curves.IticLowerCurve.Count()) vc = Curves.IticLowerCurve[point1].Item1;
-                            else if (Curves.IticLowerCurve[point1].Item2 == Curves.IticLowerCurve[point1 + 1].Item2) vc = Curves.IticLowerCurve[point1 + 1].Item1;
-                            else
-                            {
-                                double slope = (Curves.IticLowerCurve[point1 + 1].Item1 - Curves.IticLowerCurve[point1].Item1) / (Curves.IticLowerCurve[point1 + 1].Item2 - Curves.IticLowerCurve[point1].Item2);
-                                vc = slope * (x.DurationSeconds - Curves.IticLowerCurve[point1].Item2) + Curves.IticLowerCurve[point1].Item1;
-                            }
-                            double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                            return value >= 1.0D;
-                        }).Count();
-
-                        int iticUpper = dateGroup.Where(x => {
-                            double vc = 0.0D;
-
-                            int point1 = Curves.IticUpperCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
-                            if (point1 == -1) return false;
-                            else if (point1 + 1 == Curves.IticUpperCurve.Count()) vc = Curves.IticUpperCurve[point1].Item1;
-                            else if (Curves.IticUpperCurve[point1].Item2 == Curves.IticUpperCurve[point1 + 1].Item2) vc = Curves.IticUpperCurve[point1 + 1].Item2;
-                            else
-                            {
-                                double slope = (Curves.IticUpperCurve[point1 + 1].Item1 - Curves.IticUpperCurve[point1].Item1) / (Curves.IticUpperCurve[point1 + 1].Item2 - Curves.IticUpperCurve[point1].Item2);
-                                vc = slope * (x.DurationSeconds - Curves.IticUpperCurve[point1].Item2) + Curves.IticUpperCurve[point1].Item1;
-                            }
-                            double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                            return value >= 1.0D;
-                        }).Count();
-
-                        List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", assetGroup.Key).Select(x => x.ID).ToList();
-                        List<openHistorian.XDALink.TrendingDataPoint> historianPoints = new List<openHistorian.XDALink.TrendingDataPoint>();
-                        using (Historian historian = new Historian(historianServer, historianInstance))
+                        var dateGroups = yearGroup.GroupBy(x => x.StartTime.Month);
+                        foreach (var dateGroup in dateGroups)
                         {
-                            foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
-                            {
-                                if (point.Value < 0.1)
-                                    point.Value *= 100;
-                                if (point.SeriesID.ToString() == "Average" && point.Value >= 0 && point.Value <= 10)
-                                    historianPoints.Add(point);
-                            }
+                            PQMarkAggregate record = new TableOperations<PQMarkAggregate>(connection).QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, yearGroup.Key, dateGroup.Key);
+                            if (record != null) continue;
+
+                            DateTime startDate = new DateTime(yearGroup.Key, dateGroup.Key, 1);
+                            DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
+
+                            ProcessMonthOfData(dateGroup, startDate, endDate);
                         }
 
-                        string thdjson = "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Where(x => x.Key > 0).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
-
-                        record = new PQMarkAggregate()
-                        {
-                            MeterID = assetGroup.Key,
-                            Year = yearGroup.Key,
-                            Month = dateGroup.Key,
-                            ITIC = iticLower + iticUpper,
-                            SEMI = semi,
-                            SARFI90 = sarfi90,
-                            SARFI70 = sarfi70,
-                            SARFI50 = sarfi50,
-                            SARFI10 = sarfi10,
-                            THDJson = thdjson
-                        };
-
-                        DataContext.Table<PQMarkAggregate>().AddNewRecord(record);
-
                     }
-
                 }
-            }
 
+
+            }
             OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
 
         }
 
         public void ProcessMonthToDateData()
         {
-            DateTime endDate = DateTime.UtcNow;
-            DateTime startDate = new DateTime(endDate.Year, endDate.Month, 1);
+            if (!Meters.Any()) return;
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                DateTime endDate = DateTime.UtcNow;
+                DateTime startDate = new DateTime(endDate.Year, endDate.Month, 1);
 
 
-            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+                DataTable table = connection.RetrieveData(
+                    @"
+                        SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
+                        FROM  	Disturbance JOIN
+		                        Event ON Event.ID = Disturbance.EventID
+                        WHERE	Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
+		                        Event.MeterID IN (" + string.Join(",", Meters.Select(x => x.MeterID)) + @") AND
+                                Event.StartTime Between '" + startDate + @"' AND '" + endDate + @"'"
+                );
+                IEnumerable<DisturbanceData> dd = table.Select().Select(row => new TableOperations<DisturbanceData>(connection).LoadRecord(row));
 
-            IEnumerable<PQMarkCompanyMeter> meters = DataContext.Table<PQMarkCompanyMeter>().QueryRecordsWhere("Enabled = 1");
+                foreach (var assetGroup in dd.GroupBy(x => x.MeterID))
+                    ProcessMonthOfData(assetGroup, startDate, endDate);
+            }
+            OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
 
-            if (!meters.Any()) return;
+        }
 
-            DataTable table = DataContext.Connection.RetrieveData(
-                @"SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
+        private void ProcessMonthOfData(IGrouping<int, DisturbanceData> assetGroup, DateTime startDate, DateTime endDate) {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
+
+                PQMarkAggregate record = new TableOperations<PQMarkAggregate>(connection).QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, startDate.Year, startDate.Month);
+                if (record == null) record = new PQMarkAggregate();
+
+                record.MeterID = assetGroup.Key;
+                record.Year = startDate.Year;
+                record.Month = startDate.Month;
+                record.ITIC = GetCounts(assetGroup, Curves.IticLowerCurve) + GetCounts(assetGroup, Curves.IticUpperCurve);
+                record.SEMI = GetCounts(assetGroup, Curves.SemiCurve);
+                record.SARFI90 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.9).Count();
+                record.SARFI70 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.7).Count();
+                record.SARFI50 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.5).Count();
+                record.SARFI10 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.1).Count();
+                record.THDJson = GetTHDJsonString(assetGroup, startDate, endDate);
+                new TableOperations<PQMarkAggregate>(connection).AddNewOrUpdateRecord(record);
+            }
+        }
+
+        private IEnumerable<DisturbanceData> GetDisturbanceDatas(DateTime startDate, DateTime endDate) {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+                IEnumerable<PQMarkCompanyMeter> meters = new TableOperations<PQMarkCompanyMeter>(connection).QueryRecordsWhere("Enabled = 1");
+
+                if (!meters.Any()) return null;
+
+                DataTable table = connection.RetrieveData(
+                    @"SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
                   FROM  	Disturbance JOIN
 		                    Event ON Event.ID = Disturbance.EventID
                   WHERE	    Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
 		                    Event.MeterID IN (" + string.Join(",", meters.Select(x => x.MeterID)) + @") AND
                             Event.StartTime Between '" + startDate + @"' AND '" + endDate + @"'"
-            );
-            IEnumerable<DisturbanceData> dd = table.Select().Select(row => DataContext.Table<DisturbanceData>().LoadRecord(row));
+                );
+                return table.Select().Select(row => new TableOperations<DisturbanceData>(connection).LoadRecord(row));
+            }
 
-            var assetGroups = dd.GroupBy(x => x.MeterID);
+        }
 
-            foreach (var assetGroup in assetGroups)
+        private int GetCounts(IGrouping<int, DisturbanceData> assetGroup, List<Curves.Point> curve) {
+
+            return assetGroup.Where(x => {
+                double vc = 0.0D;
+
+                int point1 = curve.TakeWhile(y => y.Duration < x.DurationSeconds).Count() - 1;
+                if (point1 == -1) return false;
+                else if (point1 + 1 == curve.Count()) vc = curve[point1].Magnitude;
+                else if (curve[point1].Duration == curve[point1 + 1].Duration) vc = curve[point1 + 1].Duration;
+                else
+                {
+                    double slope = (curve[point1 + 1].Magnitude - curve[point1].Magnitude) / (curve[point1 + 1].Duration - curve[point1].Duration);
+                    vc = slope * (x.DurationSeconds - curve[point1].Duration) + curve[point1].Magnitude;
+                }
+                double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
+                return value >= 1.0D;
+            }).Count();
+
+        }
+
+        private string GetTHDJsonString(IGrouping<int, DisturbanceData> assetGroup, DateTime startDate, DateTime endDate)
+        {
+            using(AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
-                // Get Easy Counts for SARFI 90, 70, 50, 10
-                int sarfi90 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.9).Count();
-                int sarfi70 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.7).Count();
-                int sarfi50 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.5).Count();
-                int sarfi10 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.1).Count();
-
-                // Get Counts for semi
-                int semi = assetGroup.Where(x => {
-                    double vc = 0.0D;
-
-                    int point1 = Curves.SemiCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
-                    if (point1 == -1) return false;
-                    else if (point1 + 1 == Curves.SemiCurve.Count()) vc = Curves.SemiCurve[point1].Item1;
-                    else if (Curves.SemiCurve[point1].Item2 == Curves.SemiCurve[point1 + 1].Item2) vc = Curves.SemiCurve[point1 + 1].Item1;
-                    else
-                    {
-                        double slope = (Curves.SemiCurve[point1 + 1].Item1 - Curves.SemiCurve[point1].Item1) / (Curves.SemiCurve[point1 + 1].Item2 - Curves.SemiCurve[point1].Item2);
-                        vc = slope * (x.DurationSeconds - Curves.SemiCurve[point1].Item2) + Curves.SemiCurve[point1].Item1;
-                    }
-                    double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                    return value >= 1.0D;
-                }).Count();
-
-                // Get counts for ITIC
-                int iticLower = assetGroup.Where(x => {
-                    double vc = 0.0D;
-
-                    int point1 = Curves.IticLowerCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
-                    if (point1 == -1) return false;
-                    else if (point1 + 1 == Curves.IticLowerCurve.Count()) vc = Curves.IticLowerCurve[point1].Item1;
-                    else if (Curves.IticLowerCurve[point1].Item2 == Curves.IticLowerCurve[point1 + 1].Item2) vc = Curves.IticLowerCurve[point1 + 1].Item1;
-                    else
-                    {
-                        double slope = (Curves.IticLowerCurve[point1 + 1].Item1 - Curves.IticLowerCurve[point1].Item1) / (Curves.IticLowerCurve[point1 + 1].Item2 - Curves.IticLowerCurve[point1].Item2);
-                        vc = slope * (x.DurationSeconds - Curves.IticLowerCurve[point1].Item2) + Curves.IticLowerCurve[point1].Item1;
-                    }
-                    double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                    return value >= 1.0D;
-                }).Count();
-
-                int iticUpper = assetGroup.Where(x => {
-                    double vc = 0.0D;
-
-                    int point1 = Curves.IticUpperCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
-                    if (point1 == -1) return false;
-                    else if (point1 + 1 == Curves.IticUpperCurve.Count()) vc = Curves.IticUpperCurve[point1].Item1;
-                    else if (Curves.IticUpperCurve[point1].Item2 == Curves.IticUpperCurve[point1 + 1].Item2) vc = Curves.IticUpperCurve[point1 + 1].Item2;
-                    else
-                    {
-                        double slope = (Curves.IticUpperCurve[point1 + 1].Item1 - Curves.IticUpperCurve[point1].Item1) / (Curves.IticUpperCurve[point1 + 1].Item2 - Curves.IticUpperCurve[point1].Item2);
-                        vc = slope * (x.DurationSeconds - Curves.IticUpperCurve[point1].Item2) + Curves.IticUpperCurve[point1].Item1;
-                    }
-                    double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                    return value >= 1.0D;
-                }).Count();
-
-                List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", assetGroup.Key).Select(x => x.ID).ToList();
+                List<int> channelIds = new TableOperations<Channel>(connection).QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", assetGroup.Key).Select(x => x.ID).ToList();
                 List<openHistorian.XDALink.TrendingDataPoint> historianPoints = new List<openHistorian.XDALink.TrendingDataPoint>();
-                using (Historian historian = new Historian(historianServer, historianInstance))
+                using (Historian historian = new Historian(HistorianServer, HistorianInstance))
                 {
                     foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
                     {
@@ -588,63 +429,8 @@ namespace PQMark.DataAggregator
                     }
                 }
 
-                string thdjson = "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Where(x => x.Key > 0).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
-
-                PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, startDate.Year, startDate.Month);
-                if (record != null)
-                {
-                    record.ITIC = iticLower + iticUpper;
-                    record.SEMI = semi;
-                    record.SARFI90 = sarfi90;
-                    record.SARFI70 = sarfi70;
-                    record.SARFI50 = sarfi50;
-                    record.SARFI10 = sarfi10;
-                    record.THDJson = thdjson;
-
-                    DataContext.Table<PQMarkAggregate>().UpdateRecord(record);
-                }
-                else
-                {
-                    record = new PQMarkAggregate()
-                    {
-                        MeterID = assetGroup.Key,
-                        Year = startDate.Year,
-                        Month = startDate.Month,
-                        ITIC = iticLower + iticUpper,
-                        SEMI = semi,
-                        SARFI90 = sarfi90,
-                        SARFI70 = sarfi70,
-                        SARFI50 = sarfi50,
-                        SARFI10 = sarfi10,
-                        THDJson = thdjson
-                    };
-
-                    DataContext.Table<PQMarkAggregate>().AddNewRecord(record);
-
-                }
+                return "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Where(x => x.Key > 0).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
             }
-
-            OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
-
-        }
-
-        private IEnumerable<DisturbanceData> GetDisturbanceDatas(DateTime startDate, DateTime endDate) {
-            using (DataContext dataContext = new DataContext("systemSettings")) {
-                IEnumerable<PQMarkCompanyMeter> meters = dataContext.Table<PQMarkCompanyMeter>().QueryRecordsWhere("Enabled = 1");
-
-                if (!meters.Any()) return null;
-
-                DataTable table = dataContext.Connection.RetrieveData(
-                    @"SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
-                  FROM  	Disturbance JOIN
-		                    Event ON Event.ID = Disturbance.EventID
-                  WHERE	    Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
-		                    Event.MeterID IN (" + string.Join(",", meters.Select(x => x.MeterID)) + @") AND
-                            Event.StartTime Between '" + startDate + @"' AND '" + endDate + @"'"
-                );
-                return table.Select().Select(row => dataContext.Table<DisturbanceData>().LoadRecord(row));
-            }
-
         }
 
         public string GetHelpMessage(string command)

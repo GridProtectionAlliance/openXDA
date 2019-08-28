@@ -32,7 +32,6 @@ using openXDA.Model;
 
 namespace openXDA.Adapters
 {
-    //[EnableCors(origins: "*", headers: "*", methods: "*")]
     public class JSONApiController : ApiController
     {
 
