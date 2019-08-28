@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+      "baseUrl": ".",
+      "paths": { "*": ["types/*"] },
     "jsx": "react",
     "lib": [ "dom", "es5", "scripthost", "es2015" ],
     "noEmitOnError": true,

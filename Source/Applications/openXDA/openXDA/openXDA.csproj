@@ -233,6 +233,7 @@
     <Compile Include="Configuration\FileShare.cs" />
     <Compile Include="Controllers\Config\EmailTemplateController.cs" />
     <Compile Include="Controllers\Config\QueryController.cs" />
+    <Compile Include="Controllers\SystemCenter\MetersController.cs" />
     <Compile Include="DataObjectWrapper.cs" />
     <Compile Include="DebugHost.cs">
       <SubType>Form</SubType>
@@ -4231,6 +4232,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\SystemCenter\ByLocation.tsx" />
+    <TypeScriptCompile Include="wwwroot\Scripts\TSX\SystemCenter\Meter.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\SystemCenter\ByMeter.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\SystemCenter\SystemCenter.tsx" />
   </ItemGroup>

@@ -2227,6 +2227,32 @@ CREATE NONCLUSTERED INDEX IX_FaultNote_UserAccountID
 ON FaultNote(UserAccountID ASC)
 GO
 
+CREATE TABLE NoteType(
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+	Name varchar(max) not null,
+	ReferenceTableName varchar(max) not null,
+)
+GO
+
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Meter', 'Meter')
+GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Event', 'Event')
+GO
+
+CREATE TABLE Note (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+	NoteTypeID int Not NULL REFERENCES NoteType(ID),
+	ReferenceTableID INT NOT NULL,
+    Note VARCHAR(MAX) NOT NULL,
+    UserAccount VARCHAR(MAX) NOT NULL DEFAULT SUSER_NAME(),
+    Timestamp DATETIME NOT NULL DEFAULT GETUTCDATE(),
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Note_NoteTypeID_ReferenceTableID  
+ON Note(NoteTypeID, ReferenceTableID)
+GO
+
 CREATE TABLE EventNote
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,

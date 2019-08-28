@@ -24,9 +24,26 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 
-export default class Table extends React.Component<any, any> {
+const AngleIcon: React.FunctionComponent<{ ascending: boolean }> = (props) => <span style={{ width: 10, height: 10, margin: 3 }} className={"fa fa-angle-" + (props.ascending ? 'up' : 'down')}></span>
 
-    props: { cols: Array<any>, data: Array<any>, onClick: Function, sortField: string, ascending: boolean, onSort: Function, tableClass?: string, theadStyle?: object, tbodyStyle?: object };
+export interface TableProps {
+    cols: Array<{ key: string, label: string, headerStyle?: React.CSSProperties, rowStyle?: React.CSSProperties, content?(item: any, key: string, style: React.CSSProperties): void }>,
+    data: Array<any>,
+    onClick: Function,
+    sortField: string,
+    ascending: boolean,
+    onSort(data: any): void,
+    tableClass?: string,
+    tableStyle?: React.CSSProperties,
+    theadStyle?: React.CSSProperties,
+    theadClass?: string,
+    tbodyStyle?: React.CSSProperties,
+    tbodyClass?: string,
+    selected?(data: any): boolean,
+    rowStyle?: React.CSSProperties,
+}
+
+export default class Table extends React.Component<TableProps, {}> {
     constructor(props) {
         super(props);
     }
@@ -38,7 +55,7 @@ export default class Table extends React.Component<any, any> {
         var rowComponents = this.generateRows();
         var headerComponents = this.generateHeaders();
         return (
-            <table className={(this.props.tableClass != undefined ? this.props.tableClass : '')} >
+            <table className={(this.props.tableClass != undefined ? this.props.tableClass : '')} style={this.props.tableStyle}>
                 <thead style={this.props.theadStyle}>{headerComponents}</thead>
                 <tbody style={this.props.tbodyStyle}>{rowComponents}</tbody>
             </table>
@@ -49,11 +66,17 @@ export default class Table extends React.Component<any, any> {
         if (this.props.cols.length == 0) return null;
 
         var cells = this.props.cols.map(colData => {
-            var style = colData.headerStyle;
-            if(style.cursor == undefined)
+            var style: React.CSSProperties;
+            if (colData.headerStyle != undefined) {
+                style = colData.headerStyle;
+            }
+            else
+                style = {};
+
+            if (style.cursor == undefined)
                 style.cursor = 'pointer';
 
-            return <th key={colData.key} style={style} onClick={this.handleSort.bind(this, {col: colData.key, ascending: this.props.ascending})}>{colData.label}{(this.props.sortField == colData.key ? <span className={"glyphicon " + (this.props.ascending ? "glyphicon-triangle-top" : "glyphicon-triangle-bottom")}></span>: null)}</th>
+            return <th key={colData.key} style={style} onClick={(e) => this.handleSort({ col: colData.key, ascending: this.props.ascending }, e)}>{colData.label}{(this.props.sortField == colData.key ? <AngleIcon ascending={this.props.ascending} /> : null)}</th>
         });
 
         return <tr>{cells}</tr>;
@@ -74,7 +97,16 @@ export default class Table extends React.Component<any, any> {
                 </td>
             });
 
-            var style = { cursor: 'pointer' };
+            var style: React.CSSProperties;
+
+            if (this.props.rowStyle != undefined) {
+                style = this.props.rowStyle;
+            }
+            else
+                style = {};
+
+            if (style.cursor == undefined)
+                style.cursor = 'pointer';
 
             return <tr style={style} key={index.toString()}>{cells}</tr>;
         });

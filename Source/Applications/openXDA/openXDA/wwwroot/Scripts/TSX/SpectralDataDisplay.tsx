@@ -31,9 +31,9 @@ import SpectralDataDisplayService from "./../TS/Services/SpectralDataDisplay";
 import MeterInput from './MeterInput';
 import 'react-datetime/css/react-datetime.css';
 import * as DateTime from "react-datetime";
-import * as Plot from 'react-plotly.js';
+//import * as Plotly from 'plotly.js';
 
-
+declare var Plotly: any;
 declare var phases: Array<{ID: number, Name: string }>;
 declare var meters: Array<{ ID: number, Name: string }>;
 
@@ -187,17 +187,7 @@ export class SpectralDataDisplay extends React.Component{
 
                 </div>
 
-                <div className="waveform-viewer" style={{ width: window.innerWidth - 250, height: height, float: 'right' }}>
-                    <Plot
-                        data={this.state.data}
-                        layout={{
-                            width: window.innerWidth - 250, height: height, scene: {
-                                xaxis: { title: 'Bin' },
-                                yaxis: { title: 'Time' },
-                                zaxis: { title: 'Value' }
-                            }
-                        }}
-                    />
+                <div id="plot" className="waveform-viewer" style={{ width: window.innerWidth - 250, height: height, float: 'right' }}>
                 </div>
             </div>
         );
@@ -207,12 +197,12 @@ export class SpectralDataDisplay extends React.Component{
     getData(): void {
         $(this.refs.loader).show();
         this.spectralDataDisplayService.getData(this.state.meterID, this.state.date, this.state.type, this.state.level, this.state.phase).done(data => {
-            if (data.length < 2) {
-                this.setState({ data: [{ type: 'surface', x: [11, 12, 13], y: ["a", 'b', 'c'], z: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] }] }, () => {
-                    $(this.refs.loader).hide();
-                });
-                return;
-            } 
+            //if (data.length < 2) {
+            //    this.setState({ data: [{ type: 'surface', x: [11, 12, 13], y: ["a", 'b', 'c'], z: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] }] }, () => {
+            //        $(this.refs.loader).hide();
+            //    });
+            //    return;
+            //} 
             var x = data[0].filter((a,i) => i != 0);
             var y = data.filter((a, i) => i != 0).map(a => a[0]);
             var z = data.filter((a,i) => i != 0).map((a,i) => a.filter((b,index) => index != 0));
@@ -222,10 +212,20 @@ export class SpectralDataDisplay extends React.Component{
             var oldMean = (dmax - dmin) / 2;
             var cmin = oldMean - span;
             var cmax = oldMean + span;
-            var colorScale = [[0, 'blue'], [parseInt(this.state.center)/100, 'yellow'], [1, 'red']];
-            this.setState({ data: [{ type: 'surface', x: x, y: y, z: z, cmin: cmin, cmax: cmax, colorscale: colorScale }] }, () => {
-                $(this.refs.loader).hide();
-             });
+            var colorScale: any = [[0, 'blue'], [parseInt(this.state.center) / 100, 'yellow'], [1, 'red']];
+            var plotData = [{ type: 'surface', x: x, y: y, z: z, cmin: cmin, cmax: cmax, colorscale: colorScale }];
+            Plotly.newPlot('plot', plotData, {
+                width: window.innerWidth - 250, height: window.innerHeight - 60, scene: {
+                    xaxis: { title: 'Bin' },
+                    yaxis: { title: 'Time' },
+                    zaxis: { title: 'Value' }
+                }
+            });
+            $(this.refs.loader).hide();
+
+            //this.setState({ data: [{ type: 'surface', x: x, y: y, z: z, cmin: cmin, cmax: cmax, colorscale: colorScale }] }, () => {
+            //    $(this.refs.loader).hide();
+            // });
         });
     }
 

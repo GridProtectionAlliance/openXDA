@@ -26,6 +26,9 @@ import * as ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, NavLink } from 'react-router-dom';
 import ByMeter from './ByMeter';
 import ByLocation from './ByLocation';
+import Meter from './Meter';
+import * as queryString from "query-string";
+import createHistory from "history/createBrowserHistory"
 
 declare var homePath: string;
 declare var controllerViewPath: string;
@@ -46,8 +49,8 @@ class SystemCenter extends React.Component<{}, {}, {}>{
                         <div style={{ width: '100%', marginTop: 5, textAlign: 'center' }}><h3>System Center</h3></div>
                         <div style={{ width: '100%', height: '100%', marginTop: 30 }}>
                             <div className="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical" style={{ height: 'calc(100% - 240px)' }}>
-                                <NavLink activeClassName='nav-link active' className="nav-link" isActive={(match, location) => location.pathname + location.search == controllerViewPath || location.pathname + location.search == controllerViewPath + "?name=Meter"} to={controllerViewPath + "?name=Meter" }>By Meter</NavLink>
-                                <NavLink activeClassName='nav-link active' className="nav-link" isActive={(match, location) => location.pathname + location.search == controllerViewPath + "?name=MeterLocation" } to={ controllerViewPath + "?name=MeterLocation"}>By Location</NavLink>
+                                <NavLink activeClassName='nav-link active' className="nav-link" isActive={(match, location) => location.pathname + location.search == controllerViewPath || location.pathname + location.search == controllerViewPath + "?name=Meters"} to={controllerViewPath + "?name=Meters" }>By Meter</NavLink>
+                                <NavLink activeClassName='nav-link active' className="nav-link" isActive={(match, location) => location.pathname + location.search == controllerViewPath + "?name=MeterLocations" } to={ controllerViewPath + "?name=MeterLocation"}>By Location</NavLink>
                             </div>
                             <div style={{ width: '100%', textAlign: 'center' }}>
 
@@ -59,17 +62,24 @@ class SystemCenter extends React.Component<{}, {}, {}>{
                     </div>
                     <div style={{ width: 'calc(100% - 300px)', height: 'inherit', position: 'relative', float: 'right' }}>
                         <Route children={({ match, ...rest }) => {
-                            if (rest.location.pathname + rest.location.search == controllerViewPath || rest.location.pathname + rest.location.search == controllerViewPath + "?name=Meter")
+                            if (rest.location.pathname + rest.location.search == controllerViewPath || rest.location.pathname + rest.location.search == controllerViewPath + "?name=Meters")
                                 return <ByMeter />
                             else
                                 return null;
                         }} />
                         <Route children={({ match, ...rest }) => {
-                            if (rest.location.pathname + rest.location.search == controllerViewPath + "?name=MeterLocation")
+                            if (rest.location.pathname + rest.location.search == controllerViewPath + "?name=MeterLocations")
                                 return <ByLocation />
                             else
                                 return null;
                         }} />
+                        <Route children={({ match, ...rest }) => {
+                            if ( queryString.parse(rest.location.search).name == "Meter")
+                                return <Meter meterId={queryString.parse(rest.location.search).meterId}/>
+                            else
+                                return null;
+                        }} />
+
                     </div>
                 </div>
             </Router>
