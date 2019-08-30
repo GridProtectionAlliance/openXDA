@@ -2453,6 +2453,10 @@ CREATE TABLE PQMarkCompanyMeter
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_MeterID 
+ON PQMarkCompanyMeter(MeterID) 
+GO
+
 CREATE TABLE PQMarkAggregate
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
