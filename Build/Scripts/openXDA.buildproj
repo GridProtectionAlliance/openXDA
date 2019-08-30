@@ -152,7 +152,7 @@
       <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.dll" Exclude="$(BuildOutputFolder)\Applications\WixFolderGen\**\*.*"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.sql" Exclude="$(BuildOutputFolder)\Applications\WixFolderGen\**\*.*"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.exe.config" Exclude="$(BuildOutputFolder)\Applications\WixFolderGen\**\*.*"/>
-      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\openXDA\wwwroot\**\*"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\wwwroot\**\*"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Tools\**\*.exe"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Tools\**\*.dll"/>
       
