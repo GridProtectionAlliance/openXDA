@@ -4682,7 +4682,7 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
         <span class="section-header">Tripped Breakers</span>
         <br/><br/>
         <div class="Trip-details">
-            <table>
+            <table class="table.tblstyle-left">
                 <tr>
                   <th>Breaker</th>
                   <th>Trip Initiated</th>
