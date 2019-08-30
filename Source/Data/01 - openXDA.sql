@@ -899,6 +899,16 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime_ID_EventID_PhaseID
 ON Disturbance ( StartTime ASC ) INCLUDE ( ID, EventID, PhaseID)
 GO
 
+CREATE TABLE BreakerRestrike
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    PhaseID INT NOT NULL REFERENCES Phase(ID),
+    Sample INT NOT NULL,
+    Timestamp DATETIME2 NOT NULL
+)
+GO
+
 CREATE TABLE VoltageEnvelope
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

@@ -21,15 +21,54 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
+using System.Linq;
+using FaultData.DataAnalysis;
+using FaultData.DataResources;
 using FaultData.DataResources.GTC;
 using FaultData.DataSets;
 using GSF.Data;
+using GSF.Data.Model;
+using openXDA.Model;
 
 namespace FaultData.DataOperations
 {
     public class BreakerRestrikeOperation : DataOperationBase<MeterDataSet>
     {
         public override void Execute(MeterDataSet meterDataSet)
+        {
+            BreakerDataResource breakerDataResource = meterDataSet.GetResource<BreakerDataResource>();
+
+            foreach (var kvp in breakerDataResource.RestrikeLookup)
+            {
+                DataGroup dataGroup = kvp.Key;
+                List<BreakerDataResource.Restrike> restrikes = kvp.Value;
+
+                using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+                {
+                    TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+                    TableOperations<Phase> phaseTable = new TableOperations<Phase>(connection);
+                    TableOperations<BreakerRestrike> breakerRestrikeTable = new TableOperations<BreakerRestrike>(connection);
+
+                    Event evt = eventTable.GetEvent(meterDataSet.FileGroup, dataGroup);
+
+                    foreach (BreakerDataResource.Restrike restrike in restrikes)
+                    {
+                        Phase phase = phaseTable.GetOrAdd(restrike.Phase.ToString());
+                        BreakerRestrike breakerRestrike = new BreakerRestrike();
+                        breakerRestrike.EventID = evt.ID;
+                        breakerRestrike.PhaseID = phase.ID;
+                        breakerRestrike.Sample = restrike.Sample;
+                        breakerRestrike.Timestamp = restrike.Timestamp;
+                        breakerRestrikeTable.AddNewRecord(breakerRestrike);
+                    }
+                }
+            }
+
+            LoadGTCRestrikeData(meterDataSet);
+        }
+
+        private void LoadGTCRestrikeData(MeterDataSet meterDataSet)
         {
             string breakerRestrikeData = GetBreakerRestrikeData(meterDataSet);
 

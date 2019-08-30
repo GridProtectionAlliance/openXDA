@@ -54,13 +54,15 @@ namespace FaultData.DataResources
 
         public class Restrike
         {
-            public Restrike(Phase phase, DateTime timestamp)
+            public Restrike(Phase phase, int sample, DateTime timestamp)
             {
                 Phase = phase;
+                Sample = sample;
                 Timestamp = timestamp;
             }
 
             public Phase Phase { get; }
+            public int Sample { get; }
             public DateTime Timestamp { get; }
         }
 
@@ -136,15 +138,18 @@ namespace FaultData.DataResources
             {
                 DataGroup dataGroup = cycleDataResource.DataGroups[i];
                 VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
+                DataSeries ia = viDataGroup.IA;
+                DataSeries ib = viDataGroup.IB;
+                DataSeries ic = viDataGroup.IC;
 
-                IEnumerable<Restrike> iaRestrikes = FindRestrikes(viDataGroup.IA)
-                    .Select(point => new Restrike(Phase.AN, point.Time));
+                IEnumerable<Restrike> iaRestrikes = FindRestrikes(ia)
+                    .Select(index => new Restrike(Phase.AN, index, ia[index].Time));
 
-                IEnumerable<Restrike> ibRestrikes = FindRestrikes(viDataGroup.IB)
-                    .Select(point => new Restrike(Phase.BN, point.Time));
+                IEnumerable<Restrike> ibRestrikes = FindRestrikes(ib)
+                    .Select(index => new Restrike(Phase.BN, index, ib[index].Time));
 
-                IEnumerable<Restrike> icRestrikes = FindRestrikes(viDataGroup.IC)
-                    .Select(point => new Restrike(Phase.CN, point.Time));
+                IEnumerable<Restrike> icRestrikes = FindRestrikes(ic)
+                    .Select(index => new Restrike(Phase.CN, index, ic[index].Time));
 
                 List<Restrike> allRestrikes = Enumerable.Empty<Restrike>()
                     .Concat(iaRestrikes)
@@ -157,9 +162,9 @@ namespace FaultData.DataResources
             }
         }
 
-        private List<DataPoint> FindRestrikes(DataSeries waveform)
+        private List<int> FindRestrikes(DataSeries waveform)
         {
-            List<DataPoint> restrikes = new List<DataPoint>();
+            List<int> restrikes = new List<int>();
 
             if (waveform == null)
                 return restrikes;
@@ -190,7 +195,7 @@ namespace FaultData.DataResources
                         TimeSpan duration = end.Time - start.Time;
 
                         if (minTimeBeforeRestrike <= duration && duration <= maxTimeBeforeRestrike)
-                            restrikes.Add(waveform[i]);
+                            restrikes.Add(i);
                     }
 
                     startIndex = -1;
