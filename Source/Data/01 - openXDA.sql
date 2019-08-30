@@ -909,6 +909,14 @@ CREATE TABLE BreakerRestrike
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_BreakerRestrike_EventID
+ON BreakerRestrike(EventID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_BreakerRestrike_Timestamp
+ON BreakerRestrike(Timestamp ASC)
+GO
+
 CREATE TABLE VoltageEnvelope
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
