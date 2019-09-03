@@ -4645,7 +4645,6 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
             }
 
             .Trip-details {
-                margin-left: 1cm;
             }
 
             .section-header {
