@@ -380,6 +380,7 @@
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "openXDA Cloud Data Pusher";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.EventQueryGroupBox.ResumeLayout(false);
             this.EventQueryGroupBox.PerformLayout();

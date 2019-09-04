@@ -26,6 +26,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GSF.Windows.Forms;
 using Newtonsoft.Json.Linq;
 
 namespace XDACloudDataPusher
@@ -51,8 +52,14 @@ namespace XDACloudDataPusher
 
         private void MainForm_Load(object sender, System.EventArgs e)
         {
+            this.RestoreLocation();
             StartDateTimePicker.Value = DateTimePicker.MinimumDateTime;
             EndDateTimePicker.Value = DateTimePicker.MaximumDateTime;
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.SaveLocation();
         }
 
         #endregion
