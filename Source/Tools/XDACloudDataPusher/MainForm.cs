@@ -32,6 +32,7 @@ using GSF.ComponentModel;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Windows.Forms;
+using Microsoft.Azure.EventHubs;
 using Newtonsoft.Json.Linq;
 
 namespace XDACloudDataPusher
@@ -124,6 +125,10 @@ namespace XDACloudDataPusher
             XDAJsonApiUrl = XDAUrlTextBox.Text;
         }
 
+        private void CancelExportButton_Click(object sender, EventArgs e)
+        {
+        }
+
         private void PushToCloudButton_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(ConnectionStringTextBox.Text))
@@ -138,14 +143,163 @@ namespace XDACloudDataPusher
                     return;
             }
 
+            // Spin up export operations task
+            Task.Run(async () =>
+            {
+                const int ProgressSteps = 6;
+
+                try
+                {
+                    SetButtonsEnabledState(false);
+                    SetExportProgressBarMaximum(ProgressSteps);
+                    int progress = 0;
+
+                    void IncrementProgress()
+                    {
+                        UpdateExportProgressBar(progress);
+                        progress++;
+                    }
+
+                    IncrementProgress();
+
+                    // Export event data
+                    if (m_settings.ExportEventData)
+                    {
+                        List<byte[]> records = new List<byte[]>();
+
+                        await PushToCloud(records, "EventData");
+                    }
+                    IncrementProgress();
+
+                    // Export fault data
+                    if (m_settings.ExportFaultData)
+                    {
+                        List<byte[]> records = new List<byte[]>();
+
+                        await PushToCloud(records, "FaultData");
+                    }
+                    IncrementProgress();
+
+                    // Export disturbance data
+                    if (m_settings.ExportDisturbanceData)
+                    {
+                        List<byte[]> records = new List<byte[]>();
+
+                        await PushToCloud(records, "DisturbanceData");
+                    }
+                    IncrementProgress();
+
+                    // Export breaker operation data
+                    if (m_settings.ExportBreakerOperationData)
+                    {
+                        List<byte[]> records = new List<byte[]>();
+
+                        await PushToCloud(records, "BreakerOperationData");
+                    }
+                    IncrementProgress();
+
+                    // Export waveform data
+                    if (m_settings.ExportWaveformData)
+                    {
+                        List<byte[]> records = new List<byte[]>();
+
+                        await PushToCloud(records, "WaveformData");
+                    }
+                    IncrementProgress();
+
+                    // Export frequency domain data
+                    if (m_settings.ExportFrequencyDomainData)
+                    {
+                        List<byte[]> records = new List<byte[]>();
+
+                        await PushToCloud(records, "FrequencyDomainData");
+                    }
+                    IncrementProgress();
+                }
+                catch (Exception ex)
+                {
+                    ShowErrorMessage($"Failed during export: {ex.Message}");
+                }
+                finally
+                {
+                    UpdateExportProgressBar(ProgressSteps);
+                    SetButtonsEnabledState(true);
+                }
+            });
+        }
+
+        private async Task PushToCloud(List<byte[]> records, string type)
+        {
             if (AzureRadioButton.Checked)
             {
+                // Establish connection to Azure Event Hub
+                EventHubClient eventHub;
 
+                try
+                {
+                    EventHubsConnectionStringBuilder builder = new EventHubsConnectionStringBuilder(m_settings.CloudRepostioryConnectionString);
+                    eventHub = EventHubClient.CreateFromConnectionString(builder.ToString());
+                }
+                catch (Exception ex)
+                {
+                    ShowErrorMessage($"Failed to connect to Azure Event Hub: {ex.Message}");
+                    return;
+                }
+
+                await PushToAzure(eventHub, records, type);
             }
             else if (AWSRadioButton.Checked)
             {
-                MessageBox.Show(this, "Amazon Kinesis export is currently unavailable.\n\nCannot push openXDA event data to the cloud.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // TODO: Establish connection to Amazon Kinesis
+                await PushToAWS(null, records, type);
             }
+            else
+            {
+                ShowErrorMessage("No repository type selected for cloud data push");
+            }
+        }
+
+        private async Task PushToAzure(EventHubClient eventHub, List<byte[]> records, string type)
+        {
+            List<EventData> samples = new List<EventData>();
+            int size = 0;
+
+            async Task pushToEventHub()
+            {
+                // Write data to event hub
+                if (samples.Count > 0)
+                    await eventHub.SendAsync(samples, type);
+
+                samples.Clear();
+            }
+
+            foreach (byte[] bytes in records)
+            {
+                EventData record = new EventData(bytes);
+
+                // Keep total post size under specified limit
+                if (size + bytes.Length < m_settings.PostSizeLimit)
+                {
+                    samples.Add(record);
+                }
+                else
+                {
+                    await pushToEventHub();
+                    samples.Add(record);
+                    size = 0;
+                }
+
+                size += bytes.Length;
+            }
+
+            // Push any remaining events
+            await pushToEventHub();
+        }
+
+        private /*async*/ Task PushToAWS(object connection, List<byte[]> records, string type)
+        {
+            // TODO: Add ability to push to Kinesis
+            return Task.CompletedTask;
         }
 
         // Form Element Accessors -- these functions allow access to form elements from non-UI threads
@@ -163,16 +317,6 @@ namespace XDACloudDataPusher
             }
         }
 
-        private void PushToAzure()
-        {
-
-        }
-
-        private void PushToAWS()
-        {
-            // TODO: Add ability to push to Kinesis
-        }
-
         private void ShowUpdateMessage(string message)
         {
             if (m_formClosing)
@@ -188,6 +332,24 @@ namespace XDACloudDataPusher
                     MessageOutputTextBox.AppendText($"{message}{Environment.NewLine}");
 
                 m_log.Publish(MessageLevel.Info, "StatusMessage", message);
+            }
+        }
+
+        private void ShowErrorMessage(string message)
+        {
+            if (m_formClosing)
+                return;
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<string>(ShowErrorMessage), message);
+            }
+            else
+            {
+                lock (MessageOutputTextBox)
+                    MessageOutputTextBox.AppendText($"ERROR: {message}{Environment.NewLine}");
+
+                m_log.Publish(MessageLevel.Error, "ErrorMessage", message);
             }
         }
 
@@ -222,7 +384,7 @@ namespace XDACloudDataPusher
                 SelectAllEventsButton.Enabled = enabled;
                 UnselectAllEventsButton.Enabled = enabled;
                 PushToCloudButton.Enabled = enabled;
-                CancelButton.Enabled = !enabled;
+                CancelExportButton.Enabled = !enabled;
             }
         }
 

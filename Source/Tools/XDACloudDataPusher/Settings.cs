@@ -175,5 +175,13 @@ namespace XDACloudDataPusher
         [Description("Flag that determines frequency domain data should be exported to cloud.")]
         [UserScopedSetting]
         public bool ExportFrequencyDomainData { get; set; }
+
+        /// <summary>
+        /// Gets or sets the post size limit for cloud data.
+        /// </summary>
+        [TypeConvertedValueExpression("Form.PostSizeLimitMaskedTextBox.Text")]
+        [Description("Post size limit for cloud data.")]
+        [UserScopedSetting]
+        public int PostSizeLimit { get; set; }
     }
 }

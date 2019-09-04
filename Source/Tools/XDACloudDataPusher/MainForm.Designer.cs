@@ -59,7 +59,11 @@
             this.MessageGroupBox = new System.Windows.Forms.GroupBox();
             this.MessageOutputTextBox = new System.Windows.Forms.TextBox();
             this.ExportProgressBar = new System.Windows.Forms.ProgressBar();
-            this.CancelButton = new System.Windows.Forms.Button();
+            this.CancelExportButton = new System.Windows.Forms.Button();
+            this.PostSizeLimitMaskedTextBox = new System.Windows.Forms.MaskedTextBox();
+            this.PostSizeLimitSuffixLabel = new System.Windows.Forms.Label();
+            this.PostSizeLimitLabel = new System.Windows.Forms.Label();
+            this.PostSizeLimitNoteLabel = new System.Windows.Forms.Label();
             this.EventQueryGroupBox.SuspendLayout();
             this.CloudRepositoryGroupBox.SuspendLayout();
             this.MessageGroupBox.SuspendLayout();
@@ -230,6 +234,10 @@
             // CloudRepositoryGroupBox
             // 
             this.CloudRepositoryGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitNoteLabel);
+            this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitLabel);
+            this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitSuffixLabel);
+            this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitMaskedTextBox);
             this.CloudRepositoryGroupBox.Controls.Add(this.ExportFrequencyDomainDataCheckBox);
             this.CloudRepositoryGroupBox.Controls.Add(this.ExportWaveformDataCheckBox);
             this.CloudRepositoryGroupBox.Controls.Add(this.ExportBreakerOperationCheckBox);
@@ -332,7 +340,7 @@
             this.PushToCloudButton.Location = new System.Drawing.Point(279, 288);
             this.PushToCloudButton.Name = "PushToCloudButton";
             this.PushToCloudButton.Size = new System.Drawing.Size(75, 23);
-            this.PushToCloudButton.TabIndex = 11;
+            this.PushToCloudButton.TabIndex = 15;
             this.PushToCloudButton.Text = "&Push";
             this.PushToCloudButton.UseVisualStyleBackColor = true;
             this.PushToCloudButton.Click += new System.EventHandler(this.PushToCloudButton_Click);
@@ -432,24 +440,63 @@
             this.ExportProgressBar.Size = new System.Drawing.Size(749, 27);
             this.ExportProgressBar.TabIndex = 3;
             // 
-            // CancelButton
+            // CancelExportButton
             // 
-            this.CancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.CancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.CancelButton.Enabled = false;
-            this.CancelButton.Location = new System.Drawing.Point(768, 608);
-            this.CancelButton.Name = "CancelButton";
-            this.CancelButton.Size = new System.Drawing.Size(75, 23);
-            this.CancelButton.TabIndex = 4;
-            this.CancelButton.Text = "Cancel";
-            this.CancelButton.UseVisualStyleBackColor = true;
+            this.CancelExportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.CancelExportButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.CancelExportButton.Enabled = false;
+            this.CancelExportButton.Location = new System.Drawing.Point(768, 608);
+            this.CancelExportButton.Name = "CancelExportButton";
+            this.CancelExportButton.Size = new System.Drawing.Size(75, 23);
+            this.CancelExportButton.TabIndex = 4;
+            this.CancelExportButton.Text = "Cancel";
+            this.CancelExportButton.UseVisualStyleBackColor = true;
+            this.CancelExportButton.Click += new System.EventHandler(this.CancelExportButton_Click);
+            // 
+            // PostSizeLimitMaskedTextBox
+            // 
+            this.PostSizeLimitMaskedTextBox.Location = new System.Drawing.Point(237, 166);
+            this.PostSizeLimitMaskedTextBox.Mask = "0000000";
+            this.PostSizeLimitMaskedTextBox.Name = "PostSizeLimitMaskedTextBox";
+            this.PostSizeLimitMaskedTextBox.Size = new System.Drawing.Size(84, 20);
+            this.PostSizeLimitMaskedTextBox.TabIndex = 12;
+            this.PostSizeLimitMaskedTextBox.Text = "500000";
+            this.PostSizeLimitMaskedTextBox.TextChanged += new System.EventHandler(this.FormElementChanged);
+            // 
+            // PostSizeLimitSuffixLabel
+            // 
+            this.PostSizeLimitSuffixLabel.AutoSize = true;
+            this.PostSizeLimitSuffixLabel.Location = new System.Drawing.Point(322, 169);
+            this.PostSizeLimitSuffixLabel.Name = "PostSizeLimitSuffixLabel";
+            this.PostSizeLimitSuffixLabel.Size = new System.Drawing.Size(32, 13);
+            this.PostSizeLimitSuffixLabel.TabIndex = 13;
+            this.PostSizeLimitSuffixLabel.Text = "bytes";
+            // 
+            // PostSizeLimitLabel
+            // 
+            this.PostSizeLimitLabel.AutoSize = true;
+            this.PostSizeLimitLabel.Location = new System.Drawing.Point(236, 150);
+            this.PostSizeLimitLabel.Name = "PostSizeLimitLabel";
+            this.PostSizeLimitLabel.Size = new System.Drawing.Size(78, 13);
+            this.PostSizeLimitLabel.TabIndex = 11;
+            this.PostSizeLimitLabel.Text = "Post Size Limit:";
+            // 
+            // PostSizeLimitNoteLabel
+            // 
+            this.PostSizeLimitNoteLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.PostSizeLimitNoteLabel.Location = new System.Drawing.Point(237, 189);
+            this.PostSizeLimitNoteLabel.Name = "PostSizeLimitNoteLabel";
+            this.PostSizeLimitNoteLabel.Size = new System.Drawing.Size(130, 57);
+            this.PostSizeLimitNoteLabel.TabIndex = 14;
+            this.PostSizeLimitNoteLabel.Text = "Multiple exported events will be grouped together by type. Groups will not exceed" +
+    " this size.";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(849, 636);
-            this.Controls.Add(this.CancelButton);
+            this.Controls.Add(this.CancelExportButton);
             this.Controls.Add(this.ExportProgressBar);
             this.Controls.Add(this.MessageGroupBox);
             this.Controls.Add(this.CloudRepositoryGroupBox);
@@ -504,7 +551,11 @@
         private System.Windows.Forms.GroupBox MessageGroupBox;
         private System.Windows.Forms.TextBox MessageOutputTextBox;
         private System.Windows.Forms.ProgressBar ExportProgressBar;
-        private System.Windows.Forms.Button CancelButton;
+        private System.Windows.Forms.Button CancelExportButton;
+        private System.Windows.Forms.Label PostSizeLimitLabel;
+        private System.Windows.Forms.Label PostSizeLimitSuffixLabel;
+        private System.Windows.Forms.Label PostSizeLimitNoteLabel;
+        public System.Windows.Forms.MaskedTextBox PostSizeLimitMaskedTextBox;
     }
 }
 
