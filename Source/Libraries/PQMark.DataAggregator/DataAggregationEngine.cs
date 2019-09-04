@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 
 namespace PQMark.DataAggregator
@@ -43,12 +44,9 @@ namespace PQMark.DataAggregator
         #region [ Members ]
 
         // Fields
-        private DataContext m_dataContext;
         private bool m_disposed;
         private ScheduleManager m_scheduler;
-        private bool m_running = false;
-        private PQMarkAggregationSettings m_pqMarkAggregationSettings;
-
+ 
         private class DisturbanceData
         {
             public int MeterID { get; set; }
@@ -56,7 +54,6 @@ namespace PQMark.DataAggregator
             public DateTime StartTime { get; set; }
             public DateTime EndTime { get; set; }
             public double DurationSeconds { get; set; }
-            public double DurationCycles { get; set; }
         }
 
         private class Curves
@@ -119,10 +116,6 @@ namespace PQMark.DataAggregator
             {
                 HistorianServer = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
                 HistorianInstance = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-
-                Meters = new TableOperations<PQMarkCompanyMeter>(connection).QueryRecordsWhere("Enabled = 1");
-
-                m_pqMarkAggregationSettings = new PQMarkAggregationSettings();
             }
         }
 
@@ -132,10 +125,7 @@ namespace PQMark.DataAggregator
             {
                 HistorianServer = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
                 HistorianInstance = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-
-                Meters = new TableOperations<PQMarkCompanyMeter>(connection).QueryRecordsWhere("Enabled = 1");
-
-                m_pqMarkAggregationSettings = settings;
+                PQMarkAggregationSettings = settings;
             }
         }
 
@@ -143,15 +133,63 @@ namespace PQMark.DataAggregator
 
         #region [ Properties ]
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
-        public bool Running => m_running;
-        private IEnumerable<PQMarkCompanyMeter> Meters { get; set; }
+        public bool Running { get; set; } = false;
         private string HistorianServer { get; set; }
         private string HistorianInstance { get; set; }
 
         [Category]
         [SettingName(PQMarkAggregationSettings.CategoryName)]
-        public PQMarkAggregationSettings PQMarkAggregationSettings => m_pqMarkAggregationSettings;
+        public PQMarkAggregationSettings PQMarkAggregationSettings { get; set; } = new PQMarkAggregationSettings();
 
+        private Func<bool, string> TempTableQuery = (useDates) => @"
+                    SELECT 
+	                    Event.*, DATEADD(MINUTE, DATEDIFF(MINUTE, CAST(StartTime as DAte), StartTime), CAST(CAST(StartTime as DAte) as datetime))as Minute 
+                    into #Temp 
+                    FROM 
+	                    Event JOIN
+	                    PQMarkCompanyMeter ON Event.MeterID = PQMarkCompanyMeter.MeterID 
+					WHERE
+						PQMarkCompanyMeter.Enabled = 1" + 
+                        (useDates ? @" AND StartTime Between {0} AND {1}" : "" )
+                    + @"
+                    CREATE CLUSTERED INDEX IX_ADSFADSGASDFEWCDSVDFGWERASDFS ON #Temp(ID)
+                    CREATE NONCLUSTERED INDEX IX_ADSFASDGAGDASDFAS ON #Temp(Minute)
+        ";
+
+        private const string Query = @"
+                    SELECT
+	                    evt.ID,
+                        evt.MeterID,
+	                    evt.PerUnitMagnitude,
+	                    evt.DurationSeconds,
+	                    evt.StartTime,
+	                    evt.EndTime
+                    FROM
+	                    (
+		                    select
+			                    DISTINCT DATEADD(MINUTE, DATEDIFF(MINUTE, CAST(StartTime as DAte), StartTime), CAST(CAST(StartTime as DAte) as datetime)) as Minute
+		                    from
+			                    event
+	                    ) as EventMINUTE OUTER APPLY
+	                    (
+		                    SELECT TOP 1
+			                    Event.ID,
+                                Event.MeterID,
+			                    DurationSeconds,
+			                    PerUnitMagnitude,
+			                    Event.StartTime,
+			                    Event.EndTime
+		                    FROM
+			                    #Temp as Event JOIN
+			                    Disturbance ON Disturbance.EventID = Event.ID AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND Disturbance.EventTypeID != (SELECT ID FROM EventType WHERE Name = 'Transient')
+		                    WHERE
+			                    Event.Minute = EventMINUTE.Minute
+		                    ORDER BY 
+		                    Abs(1 - PerUnitMagnitude) DESC
+	                    ) as evt
+
+                    DROP TABLE #Temp
+        ";
         #endregion
 
         #region [ Static ]
@@ -180,7 +218,6 @@ namespace PQMark.DataAggregator
                 try
                 {
                     Stop();
-                    m_dataContext.Dispose();
                     m_disposed = true;
                 }
                 catch (Exception ex)
@@ -202,7 +239,7 @@ namespace PQMark.DataAggregator
                 Scheduler.Disposed += Scheduler_Disposed;
                 Scheduler.AddSchedule("PQMarkAggregation", PQMarkAggregationSettings.Frequency);
                 Scheduler.Start();
-                m_running = true;
+                Running = true;
             }
         }
 
@@ -211,7 +248,7 @@ namespace PQMark.DataAggregator
             if (Running)
             {
                 Scheduler.Stop();
-                m_running = false;
+                Running = false;
             }
         }
 
@@ -226,7 +263,7 @@ namespace PQMark.DataAggregator
 
         private void Scheduler_Starting(object sender, EventArgs e)
         {
-            OnLogStatusMessage("PQMark Data Aggregator Scheduler is starting...");
+            //OnLogStatusMessage("PQMark Data Aggregator Scheduler is starting...");
         }
 
         private void Scheduler_Disposed(object sender, EventArgs e)
@@ -242,39 +279,40 @@ namespace PQMark.DataAggregator
 
         }
 
-        public void ProcessAllData()
+        public void ProcessAllData(bool onlyEmpty = false)
         {
             using(AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
 
-                if (!Meters.Any()) return;
+                DataTable table = connection.RetrieveData(TempTableQuery(false) + Query);
 
-                DataTable table = connection.RetrieveData(
-                    @"
-                        SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
-                        FROM  	Disturbance JOIN
-		                        Event ON Event.ID = Disturbance.EventID
-                        WHERE   Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
-		                        Event.MeterID IN (" + string.Join(",", Meters.Select(x => x.MeterID)) + ")"
-                );
+                if (table.Rows.Count == 0) return;
+
                 IEnumerable<DisturbanceData> dd = table.Select().Select(row => new TableOperations<DisturbanceData>(connection).LoadRecord(row));
 
-                var assetGroups = dd.GroupBy(x => x.MeterID);
-
-                foreach (var assetGroup in assetGroups)
+                foreach (var assetGroup in dd.GroupBy(x => x.MeterID))
                 {
+                    int meterID = assetGroup.Key;
+                    if (meterID == 0) continue;
                     OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
                     foreach (var yearGroup in assetGroup.GroupBy(x => x.StartTime.Year))
                     {
+                        int year = yearGroup.Key;
                         foreach (var dateGroup in yearGroup.GroupBy(x => x.StartTime.Month))
                         {
+                            int month = dateGroup.Key;
                             DateTime startDate = new DateTime(yearGroup.Key, dateGroup.Key, 1);
                             DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
 
-                            ProcessMonthOfData(dateGroup, startDate, endDate);
+                            PQMarkAggregate record = new TableOperations<PQMarkAggregate>(connection).QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", meterID, year, month);
+                            if (onlyEmpty && record != null) continue;
+
+                            ProcessMonthOfData(dateGroup, meterID, year, month, startDate, endDate);
                         }
 
                     }
+
+
                 }
 
                 OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
@@ -283,85 +321,36 @@ namespace PQMark.DataAggregator
             }
         }
 
-        public void ProcessAllEmptyData()
-        {
-            if (!Meters.Any()) return;
-
-            using(AdoDataConnection connection = new AdoDataConnection("systemSetting"))
-            {
-                DataTable table = connection.RetrieveData(
-                    @"
-                        SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
-                        FROM  	Disturbance JOIN
-		                        Event ON Event.ID = Disturbance.EventID
-                        WHERE	Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
-		                        Event.MeterID IN (" + string.Join(",", Meters.Select(x => x.MeterID)) + ")"
-                );
-                IEnumerable<DisturbanceData> dd = table.Select().Select(row => new TableOperations<DisturbanceData>(connection).LoadRecord(row));
-
-                foreach (var assetGroup in dd.GroupBy(x => x.MeterID))
-                {
-                    OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
-                    foreach (var yearGroup in assetGroup.GroupBy(x => x.StartTime.Year))
-                    {
-                        var dateGroups = yearGroup.GroupBy(x => x.StartTime.Month);
-                        foreach (var dateGroup in dateGroups)
-                        {
-                            PQMarkAggregate record = new TableOperations<PQMarkAggregate>(connection).QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, yearGroup.Key, dateGroup.Key);
-                            if (record != null) continue;
-
-                            DateTime startDate = new DateTime(yearGroup.Key, dateGroup.Key, 1);
-                            DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
-
-                            ProcessMonthOfData(dateGroup, startDate, endDate);
-                        }
-
-                    }
-                }
-
-
-            }
-            OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
-
-        }
-
         public void ProcessMonthToDateData()
         {
-            if (!Meters.Any()) return;
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
                 DateTime endDate = DateTime.UtcNow;
                 DateTime startDate = new DateTime(endDate.Year, endDate.Month, 1);
 
+                DataTable table = connection.RetrieveData(TempTableQuery(true) + Query, startDate, endDate);
 
-                DataTable table = connection.RetrieveData(
-                    @"
-                        SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
-                        FROM  	Disturbance JOIN
-		                        Event ON Event.ID = Disturbance.EventID
-                        WHERE	Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
-		                        Event.MeterID IN (" + string.Join(",", Meters.Select(x => x.MeterID)) + @") AND
-                                Event.StartTime Between '" + startDate + @"' AND '" + endDate + @"'"
-                );
+                if (table.Rows.Count == 0) return;
+
                 IEnumerable<DisturbanceData> dd = table.Select().Select(row => new TableOperations<DisturbanceData>(connection).LoadRecord(row));
 
                 foreach (var assetGroup in dd.GroupBy(x => x.MeterID))
-                    ProcessMonthOfData(assetGroup, startDate, endDate);
+                    ProcessMonthOfData(assetGroup, assetGroup.Key, startDate.Month, startDate.Year, startDate, endDate);
             }
             OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
 
         }
 
-        private void ProcessMonthOfData(IGrouping<int, DisturbanceData> assetGroup, DateTime startDate, DateTime endDate) {
+        private void ProcessMonthOfData(IGrouping<int, DisturbanceData> assetGroup, int meterID, int year, int month, DateTime startDate, DateTime endDate) {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
                 OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
 
-                PQMarkAggregate record = new TableOperations<PQMarkAggregate>(connection).QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, startDate.Year, startDate.Month);
+                PQMarkAggregate record = new TableOperations<PQMarkAggregate>(connection).QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", meterID, year, month);
                 if (record == null) record = new PQMarkAggregate();
 
-                record.MeterID = assetGroup.Key;
-                record.Year = startDate.Year;
-                record.Month = startDate.Month;
+                record.MeterID = meterID;
+                record.Year = year;
+                record.Month = month;
                 record.ITIC = GetCounts(assetGroup, Curves.IticLowerCurve) + GetCounts(assetGroup, Curves.IticUpperCurve);
                 record.SEMI = GetCounts(assetGroup, Curves.SemiCurve);
                 record.SARFI90 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.9).Count();
@@ -418,18 +407,37 @@ namespace PQMark.DataAggregator
             {
                 List<int> channelIds = new TableOperations<Channel>(connection).QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", assetGroup.Key).Select(x => x.ID).ToList();
                 List<openHistorian.XDALink.TrendingDataPoint> historianPoints = new List<openHistorian.XDALink.TrendingDataPoint>();
-                using (Historian historian = new Historian(HistorianServer, HistorianInstance))
+                try
                 {
-                    foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
+                    using (Historian historian = new Historian(HistorianServer, HistorianInstance))
                     {
-                        if (point.Value < 0.1)
-                            point.Value *= 100;
-                        if (point.SeriesID.ToString() == "Average" && point.Value >= 0 && point.Value <= 10)
-                            historianPoints.Add(point);
+                        foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
+                        {
+                            if (point.Value < 0.1)
+                                point.Value *= 100;
+                            if (point.SeriesID.ToString() == "Average" && point.Value >= 0 && point.Value <= 10)
+                                historianPoints.Add(point);
+
+
+                        }
+
+                        return "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Where(x => x.Key > 0).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
                     }
+
+                }
+                catch(KeyNotFoundException ex)
+                {
+                    return "";
+                }
+                catch (SocketException ex)
+                {
+                    return "";
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
                 }
 
-                return "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Where(x => x.Key > 0).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
             }
         }
 
