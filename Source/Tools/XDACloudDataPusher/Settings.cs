@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Configuration;
 using ExpressionEvaluator;
@@ -51,8 +52,26 @@ namespace XDACloudDataPusher
     /// function to the "MainForm.FormElementChanged" handler.
     /// </para>
     /// </remarks>
-    public sealed class Settings : CategorizedSettingsBase<Settings>
+    public sealed class Settings : CategorizedSettingsBase<Settings>, INotifyPropertyChanged
     {
+        /// <summary>
+        /// Occurs when a property value changes.
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;  
+
+        private readonly ConcurrentDictionary<string, object> m_propertyValues = new ConcurrentDictionary<string, object>(StringComparer.Ordinal);
+
+        private T GetPropertyValue<T>(string propertyName)
+        {
+            return (T)m_propertyValues.GetOrAdd(propertyName, default(T));
+        }
+
+        private void SetPropertyValue(string propertyName, object value)
+        {
+            m_propertyValues[propertyName] = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         /// <summary>
         /// Creates a new <see cref="Settings"/> instance.
         /// </summary>
@@ -67,121 +86,181 @@ namespace XDACloudDataPusher
         /// <summary>
         /// Gets or sets root URL for openXDA instance to query.
         /// </summary>
-        [TypeConvertedValueExpression("Form.XDAUrlTextBox.Text")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.XDAUrlTextBox) + ".Text")]
         [Description("Root URL for openXDA instance to query.")]
         [UserScopedSetting]
-        public string XDARootURL { get; set; }
+        public string XDARootURL
+        { 
+            get => GetPropertyValue<string>(nameof(XDARootURL));
+            set => SetPropertyValue(nameof(XDARootURL), value);
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if source type to query is lines.
         /// </summary>
-        [TypeConvertedValueExpression("Form.QueryLinesRadioButton.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.QueryLinesRadioButton) + ".Checked")]
         [Description("Flag that determines if the source type to query is lines. Value is mutually exclusive of SourceQueryTypeIsMeters.")]
         [UserScopedSetting]
-        public bool SourceQueryTypeIsLines { get; set; }
+        public bool SourceQueryTypeIsLines
+        { 
+            get => GetPropertyValue<bool>(nameof(SourceQueryTypeIsLines));
+            set => SetPropertyValue(nameof(SourceQueryTypeIsLines), value);
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if source type to query is meters.
         /// </summary>
-        [TypeConvertedValueExpression("Form.QueryMetersRadioButton.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.QueryMetersRadioButton) + ".Checked")]
         [Description("Flag that determines if the source type to query is meters. Value is mutually exclusive of SourceQueryTypeIsLines.")]
         [UserScopedSetting]
-        public bool SourceQueryTypeIsMeters { get; set; }
+        public bool SourceQueryTypeIsMeters
+        { 
+            get => GetPropertyValue<bool>(nameof(SourceQueryTypeIsMeters));
+            set => SetPropertyValue(nameof(SourceQueryTypeIsMeters), value);
+        }
 
         /// <summary>
         /// Gets or sets start date/time for query.
         /// </summary>
-        [TypeConvertedValueExpression("Form.StartDateTimePicker.Value")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.StartDateTimePicker) + ".Value")]
         [Description("Start date/time for query.")]
         [UserScopedSetting]
-        public DateTime StartDateTimeForQuery { get; set; }
+        public DateTime StartDateTimeForQuery
+        { 
+            get => GetPropertyValue<DateTime>(nameof(StartDateTimeForQuery));
+            set => SetPropertyValue(nameof(StartDateTimeForQuery), value);
+        }
 
         /// <summary>
         /// Gets or sets end date/time for query.
         /// </summary>
-        [TypeConvertedValueExpression("Form.EndDateTimePicker.Value")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.EndDateTimePicker) + ".Value")]
         [Description("End date/time for query.")]
         [UserScopedSetting]
-        public DateTime EndDateTimeForQuery { get; set; }
+        public DateTime EndDateTimeForQuery
+        { 
+            get => GetPropertyValue<DateTime>(nameof(EndDateTimeForQuery));
+            set => SetPropertyValue(nameof(EndDateTimeForQuery), value);
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if cloud repository is Azure.
         /// </summary>
-        [TypeConvertedValueExpression("Form.AzureRadioButton.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.AzureRadioButton) + ".Checked")]
         [Description("Flag that determines if cloud repository is Azure. Value is mutually exclusive of CloudRepositoryIsAWS.")]
         [UserScopedSetting]
-        public bool CloudRepositoryIsAzure { get; set; }
+        public bool CloudRepositoryIsAzure
+        { 
+            get => GetPropertyValue<bool>(nameof(CloudRepositoryIsAzure));
+            set => SetPropertyValue(nameof(CloudRepositoryIsAzure), value);
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if cloud repository is Amazon Web Services.
         /// </summary>
-        [TypeConvertedValueExpression("Form.AWSRadioButton.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.AWSRadioButton) + ".Checked")]
         [Description("Flag that determines if cloud repository is Amazon Web Services. Value is mutually exclusive of CloudRepositoryIsAzure.")]
         [UserScopedSetting]
-        public bool CloudRepositoryIsAWS { get; set; }
+        public bool CloudRepositoryIsAWS
+        { 
+            get => GetPropertyValue<bool>(nameof(CloudRepositoryIsAWS));
+            set => SetPropertyValue(nameof(CloudRepositoryIsAWS), value);
+        }
 
         /// <summary>
         /// Gets or sets cloud repository connection string.
         /// </summary>
-        [TypeConvertedValueExpression("Form.ConnectionStringTextBox.Text")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.ConnectionStringTextBox) + ".Text")]
         [Description("Defines the cloud repository connection string.")]
         [UserScopedSetting]
-        public string CloudRepostioryConnectionString { get; set; }
+        public string CloudRepostioryConnectionString
+        { 
+            get => GetPropertyValue<string>(nameof(CloudRepostioryConnectionString));
+            set => SetPropertyValue(nameof(CloudRepostioryConnectionString), value);
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if event data should be exported to cloud.
         /// </summary>
-        [TypeConvertedValueExpression("Form.ExportEventDataCheckBox.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportEventDataCheckBox) + ".Checked")]
         [Description("Flag that determines event data should be exported to cloud.")]
         [UserScopedSetting]
-        public bool ExportEventData { get; set; }
+        public bool ExportEventData
+        { 
+            get => GetPropertyValue<bool>(nameof(ExportEventData));
+            set => SetPropertyValue(nameof(ExportEventData), value);
+        }
         
         /// <summary>
         /// Gets or sets flag that determines if fault data should be exported to cloud.
         /// </summary>
-        [TypeConvertedValueExpression("Form.ExportFaultDataCheckBox.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportFaultDataCheckBox) + ".Checked")]
         [Description("Flag that determines fault data should be exported to cloud.")]
         [UserScopedSetting]
-        public bool ExportFaultData { get; set; }
+        public bool ExportFaultData
+        { 
+            get => GetPropertyValue<bool>(nameof(ExportFaultData));
+            set => SetPropertyValue(nameof(ExportFaultData), value);
+        }
         
         /// <summary>
         /// Gets or sets flag that determines if disturbance data should be exported to cloud.
         /// </summary>
-        [TypeConvertedValueExpression("Form.ExportDisturbanceDataCheckBox.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportDisturbanceDataCheckBox) + ".Checked")]
         [Description("Flag that determines disturbance data should be exported to cloud.")]
         [UserScopedSetting]
-        public bool ExportDisturbanceData { get; set; }
+        public bool ExportDisturbanceData
+        { 
+            get => GetPropertyValue<bool>(nameof(ExportDisturbanceData));
+            set => SetPropertyValue(nameof(ExportDisturbanceData), value);
+        }
         
         /// <summary>
         /// Gets or sets flag that determines if breaker operation data should be exported to cloud.
         /// </summary>
-        [TypeConvertedValueExpression("Form.ExportBreakerOperationCheckBox.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportBreakerOperationCheckBox) + ".Checked")]
         [Description("Flag that determines breaker operation data should be exported to cloud.")]
         [UserScopedSetting]
-        public bool ExportBreakerOperationData { get; set; }
+        public bool ExportBreakerOperationData
+        { 
+            get => GetPropertyValue<bool>(nameof(ExportBreakerOperationData));
+            set => SetPropertyValue(nameof(ExportBreakerOperationData), value);
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if waveform data should be exported to cloud.
         /// </summary>
-        [TypeConvertedValueExpression("Form.ExportWaveformDataCheckBox.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportWaveformDataCheckBox) + ".Checked")]
         [Description("Flag that determines waveform data should be exported to cloud.")]
         [UserScopedSetting]
-        public bool ExportWaveformData { get; set; }
+        public bool ExportWaveformData
+        { 
+            get => GetPropertyValue<bool>(nameof(ExportWaveformData));
+            set => SetPropertyValue(nameof(ExportWaveformData), value);
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if frequency domain data should be exported to cloud.
         /// </summary>
-        [TypeConvertedValueExpression("Form.ExportFrequencyDomainDataCheckBox.Checked")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportFrequencyDomainDataCheckBox) + ".Checked")]
         [Description("Flag that determines frequency domain data should be exported to cloud.")]
         [UserScopedSetting]
-        public bool ExportFrequencyDomainData { get; set; }
+        public bool ExportFrequencyDomainData
+        { 
+            get => GetPropertyValue<bool>(nameof(ExportFrequencyDomainData));
+            set => SetPropertyValue(nameof(ExportFrequencyDomainData), value);
+        }
 
         /// <summary>
         /// Gets or sets the post size limit for cloud data.
         /// </summary>
-        [TypeConvertedValueExpression("Form.PostSizeLimitMaskedTextBox.Text")]
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.PostSizeLimitMaskedTextBox) + ".Text")]
         [Description("Post size limit for cloud data.")]
         [UserScopedSetting]
-        public int PostSizeLimit { get; set; }
+        public int PostSizeLimit
+        { 
+            get => GetPropertyValue<int>(nameof(PostSizeLimit));
+            set => SetPropertyValue(nameof(PostSizeLimit), value);
+        }
     }
 }

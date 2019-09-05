@@ -23,9 +23,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GSF.ComponentModel;
@@ -34,6 +36,8 @@ using GSF.IO;
 using GSF.Windows.Forms;
 using Microsoft.Azure.EventHubs;
 using Newtonsoft.Json.Linq;
+using openXDA.Model;
+using EventData = Microsoft.Azure.EventHubs.EventData;
 
 namespace XDACloudDataPusher
 {
@@ -49,6 +53,7 @@ namespace XDACloudDataPusher
         private Settings m_settings;
         private bool m_formLoaded;
         private volatile bool m_formClosing;
+        private CancellationTokenSource m_cancellationTokenSource;
 
         #endregion
 
@@ -59,8 +64,7 @@ namespace XDACloudDataPusher
             InitializeComponent();
             
             // Set initial default values for date/time pickers
-            StartDateTimePicker.Value = DateTimePicker.MinimumDateTime;
-            EndDateTimePicker.Value = DateTimePicker.MaximumDateTime;
+            ResetTimeRange();
 
             // Create a new log publisher instance
             m_log = Logger.CreatePublisher(typeof(MainForm), MessageClass.Application);
@@ -74,8 +78,9 @@ namespace XDACloudDataPusher
         {
             try
             {
-                // Load current settings registering a symbolic reference to this form instance for use by default value expressions
+                // Load current settings registering a symbolic reference to this form instance for use by value expressions
                 m_settings = new Settings(new Dictionary<string, object> {{ "Form", this }}.RegisterSymbols());
+                m_settings.PropertyChanged += Settings_PropertyChanged;
 
                 // Restore last window size/location
                 this.RestoreLayout();
@@ -96,13 +101,16 @@ namespace XDACloudDataPusher
         {
             try
             {
+                // Make sure any pending operation is canceled
+                m_cancellationTokenSource?.Cancel();
+
                 m_formClosing = true;
 
                 // Save current window size/location
                 this.SaveLayout();
 
                 // Save any updates to current screen values
-                m_settings.Save();
+                m_settings?.Save();
             }
             catch (Exception ex)
             {
@@ -117,45 +125,128 @@ namespace XDACloudDataPusher
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             m_settings?.Dispose();
+            m_cancellationTokenSource?.Dispose();
         }
 
-        private void XDAUrlTextBox_TextChanged(object sender, EventArgs e)
+        private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            FormElementChanged(sender, e);
-            XDAJsonApiUrl = XDAUrlTextBox.Text;
+            if (m_formClosing)
+                return;
+
+            if (e.PropertyName == nameof(Settings.XDARootURL))
+                XDAJsonApiUrl = m_settings.XDARootURL;
+        }
+
+        private void LoadSourcesButton_Click(object sender, EventArgs e)
+        {
+            SetButtonsEnabledState(false);
+            SelectedSourcesCheckedListBox.Items.Clear();
+
+            Task.Run(async () =>
+            {
+                using (m_cancellationTokenSource)
+                    m_cancellationTokenSource = new CancellationTokenSource();
+
+                CancellationToken cancellationToken = m_cancellationTokenSource.Token;
+
+                try
+                {
+                    if (m_settings.SourceQueryTypeIsLines)
+                    {
+                        Line[] lines = (await CallAPIFunction("GetLines", cancellationToken)).ToObject<Line[]>();
+
+                        foreach (Line line in lines)
+                        {
+                            BeginInvoke(new Action(() =>
+                            {
+                                SelectedSourcesCheckedListBox.Items.Add($"{line.AssetKey}: {line.Description}");
+                            }));
+                        }
+                    }
+                    else if (m_settings.SourceQueryTypeIsMeters)
+                    {
+                        Meter[] meters = (await CallAPIFunction("GetMeters", cancellationToken)).ToObject<Meter[]>();
+
+                        foreach (Meter meter in meters)
+                        {
+                            BeginInvoke(new Action(() =>
+                            {
+                                SelectedSourcesCheckedListBox.Items.Add($"{meter.Name} @ {meter.MeterLocation.Name}");
+                            }));
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("No source type was selected for openXDA load operation.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ShowErrorMessage($"Failed to load source data: {ex.Message}");
+                }
+                finally
+                {
+                    SetButtonsEnabledState(true);
+                }
+            });
+        }
+
+        private void SelectAllEventsButton_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < SelectedSourcesCheckedListBox.Items.Count; i++)
+                SelectedSourcesCheckedListBox.SetItemChecked(i, true);
+        }
+
+        private void UnselectAllEventsButton_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < SelectedSourcesCheckedListBox.Items.Count; i++)
+                SelectedSourcesCheckedListBox.SetItemChecked(i, false);
+        }
+
+        private void ClearTimeRangeButton_Click(object sender, EventArgs e)
+        {
+            ResetTimeRange();
         }
 
         private void CancelExportButton_Click(object sender, EventArgs e)
         {
+            m_cancellationTokenSource?.Cancel();
         }
 
         private void PushToCloudButton_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(ConnectionStringTextBox.Text))
+            if (string.IsNullOrWhiteSpace(m_settings.CloudRepostioryConnectionString))
             {
                 MessageBox.Show(this, "No cloud service connection string was defined.\n\nCannot push openXDA event data to the cloud.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            if (StartDateTimePicker.Value == DateTimePicker.MinimumDateTime && EndDateTimePicker.Value == DateTimePicker.MaximumDateTime)
+            if (m_settings.StartDateTimeForQuery == DateTimePicker.MinimumDateTime && m_settings.EndDateTimeForQuery == DateTimePicker.MaximumDateTime)
             {
                 if (MessageBox.Show(this, "No start and end times have been defined for the export query.\n\nAre you sure you want to export all available openXDA event data?", "Export Volume Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                     return;
             }
 
+            SetButtonsEnabledState(false);
+
             // Spin up export operations task
             Task.Run(async () =>
             {
-                const int ProgressSteps = 6;
+                const int ProgressSteps = 7; // 6 tasks plus 1 for complete
+
+                using (m_cancellationTokenSource)
+                    m_cancellationTokenSource = new CancellationTokenSource();
+
+                CancellationToken cancellationToken = m_cancellationTokenSource.Token;
 
                 try
                 {
-                    SetButtonsEnabledState(false);
                     SetExportProgressBarMaximum(ProgressSteps);
                     int progress = 0;
 
                     void IncrementProgress()
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         UpdateExportProgressBar(progress);
                         progress++;
                     }
@@ -167,7 +258,7 @@ namespace XDACloudDataPusher
                     {
                         List<byte[]> records = new List<byte[]>();
 
-                        await PushToCloud(records, "EventData");
+                        await PushToCloud(records, "EventData", cancellationToken);
                     }
                     IncrementProgress();
 
@@ -176,7 +267,7 @@ namespace XDACloudDataPusher
                     {
                         List<byte[]> records = new List<byte[]>();
 
-                        await PushToCloud(records, "FaultData");
+                        await PushToCloud(records, "FaultData", cancellationToken);
                     }
                     IncrementProgress();
 
@@ -185,7 +276,7 @@ namespace XDACloudDataPusher
                     {
                         List<byte[]> records = new List<byte[]>();
 
-                        await PushToCloud(records, "DisturbanceData");
+                        await PushToCloud(records, "DisturbanceData", cancellationToken);
                     }
                     IncrementProgress();
 
@@ -194,7 +285,7 @@ namespace XDACloudDataPusher
                     {
                         List<byte[]> records = new List<byte[]>();
 
-                        await PushToCloud(records, "BreakerOperationData");
+                        await PushToCloud(records, "BreakerOperationData", cancellationToken);
                     }
                     IncrementProgress();
 
@@ -203,7 +294,7 @@ namespace XDACloudDataPusher
                     {
                         List<byte[]> records = new List<byte[]>();
 
-                        await PushToCloud(records, "WaveformData");
+                        await PushToCloud(records, "WaveformData", cancellationToken);
                     }
                     IncrementProgress();
 
@@ -212,13 +303,13 @@ namespace XDACloudDataPusher
                     {
                         List<byte[]> records = new List<byte[]>();
 
-                        await PushToCloud(records, "FrequencyDomainData");
+                        await PushToCloud(records, "FrequencyDomainData", cancellationToken);
                     }
                     IncrementProgress();
                 }
                 catch (Exception ex)
                 {
-                    ShowErrorMessage($"Failed during export: {ex.Message}");
+                    ShowErrorMessage(cancellationToken.IsCancellationRequested ? "Export canceled." : $"Failed during export: {ex.Message}");
                 }
                 finally
                 {
@@ -228,7 +319,7 @@ namespace XDACloudDataPusher
             });
         }
 
-        private async Task PushToCloud(List<byte[]> records, string type)
+        private async Task PushToCloud(List<byte[]> records, string type, CancellationToken cancellationToken)
         {
             if (AzureRadioButton.Checked)
             {
@@ -246,12 +337,12 @@ namespace XDACloudDataPusher
                     return;
                 }
 
-                await PushToAzure(eventHub, records, type);
+                await PushToAzure(eventHub, records, type, cancellationToken);
             }
             else if (AWSRadioButton.Checked)
             {
                 // TODO: Establish connection to Amazon Kinesis
-                await PushToAWS(null, records, type);
+                await PushToAWS(null, records, type, cancellationToken);
             }
             else
             {
@@ -259,13 +350,15 @@ namespace XDACloudDataPusher
             }
         }
 
-        private async Task PushToAzure(EventHubClient eventHub, List<byte[]> records, string type)
+        private async Task PushToAzure(EventHubClient eventHub, List<byte[]> records, string type, CancellationToken cancellationToken)
         {
             List<EventData> samples = new List<EventData>();
             int size = 0;
 
             async Task pushToEventHub()
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // Write data to event hub
                 if (samples.Count > 0)
                     await eventHub.SendAsync(samples, type);
@@ -275,6 +368,8 @@ namespace XDACloudDataPusher
 
             foreach (byte[] bytes in records)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 EventData record = new EventData(bytes);
 
                 // Keep total post size under specified limit
@@ -296,7 +391,7 @@ namespace XDACloudDataPusher
             await pushToEventHub();
         }
 
-        private /*async*/ Task PushToAWS(object connection, List<byte[]> records, string type)
+        private /*async*/ Task PushToAWS(object connection, List<byte[]> records, string type, CancellationToken cancellationToken)
         {
             // TODO: Add ability to push to Kinesis
             return Task.CompletedTask;
@@ -383,6 +478,7 @@ namespace XDACloudDataPusher
                 LoadSourcesButton.Enabled = enabled;
                 SelectAllEventsButton.Enabled = enabled;
                 UnselectAllEventsButton.Enabled = enabled;
+                ClearTimeRangeButton.Enabled = enabled;
                 PushToCloudButton.Enabled = enabled;
                 CancelExportButton.Enabled = !enabled;
             }
@@ -420,6 +516,22 @@ namespace XDACloudDataPusher
                 ExportProgressBar.Maximum = maximum;
         }
 
+        private void ResetTimeRange()
+        {
+            if (m_formClosing)
+                return;
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(ResetTimeRange));
+            }
+            else
+            {
+                StartDateTimePicker.Value = DateTimePicker.MinimumDateTime;
+                EndDateTimePicker.Value = DateTimePicker.MaximumDateTime;
+            }
+        }
+
         #endregion
 
         #region [ Static ]
@@ -443,7 +555,7 @@ namespace XDACloudDataPusher
         }
 
         // Static Methods
-        private static async Task<JArray> CallAPIFunction(string function, string content = null)
+        private static async Task<JArray> CallAPIFunction(string function, CancellationToken cancellationToken, string content = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{XDAJsonApiUrl}{function}");
 
@@ -452,9 +564,11 @@ namespace XDACloudDataPusher
             if ((object)content != null)
                 request.Content = new StringContent(content, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage response = await s_http.SendAsync(request);
+            HttpResponseMessage response = await s_http.SendAsync(request, cancellationToken);
 
             content = await response.Content.ReadAsStringAsync();
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             return JArray.Parse(content);
         }

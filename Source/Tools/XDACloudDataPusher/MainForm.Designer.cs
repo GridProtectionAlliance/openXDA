@@ -44,6 +44,10 @@
             this.QueryMetersRadioButton = new System.Windows.Forms.RadioButton();
             this.SelectedSourcesCheckedListBox = new System.Windows.Forms.CheckedListBox();
             this.CloudRepositoryGroupBox = new System.Windows.Forms.GroupBox();
+            this.PostSizeLimitNoteLabel = new System.Windows.Forms.Label();
+            this.PostSizeLimitLabel = new System.Windows.Forms.Label();
+            this.PostSizeLimitSuffixLabel = new System.Windows.Forms.Label();
+            this.PostSizeLimitMaskedTextBox = new System.Windows.Forms.MaskedTextBox();
             this.ExportFrequencyDomainDataCheckBox = new System.Windows.Forms.CheckBox();
             this.ExportWaveformDataCheckBox = new System.Windows.Forms.CheckBox();
             this.ExportBreakerOperationCheckBox = new System.Windows.Forms.CheckBox();
@@ -60,10 +64,7 @@
             this.MessageOutputTextBox = new System.Windows.Forms.TextBox();
             this.ExportProgressBar = new System.Windows.Forms.ProgressBar();
             this.CancelExportButton = new System.Windows.Forms.Button();
-            this.PostSizeLimitMaskedTextBox = new System.Windows.Forms.MaskedTextBox();
-            this.PostSizeLimitSuffixLabel = new System.Windows.Forms.Label();
-            this.PostSizeLimitLabel = new System.Windows.Forms.Label();
-            this.PostSizeLimitNoteLabel = new System.Windows.Forms.Label();
+            this.ClearTimeRangeButton = new System.Windows.Forms.Button();
             this.EventQueryGroupBox.SuspendLayout();
             this.CloudRepositoryGroupBox.SuspendLayout();
             this.MessageGroupBox.SuspendLayout();
@@ -73,6 +74,7 @@
             // 
             this.EventQueryGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.EventQueryGroupBox.Controls.Add(this.ClearTimeRangeButton);
             this.EventQueryGroupBox.Controls.Add(this.UnselectAllEventsButton);
             this.EventQueryGroupBox.Controls.Add(this.EndDateTimeLabel);
             this.EventQueryGroupBox.Controls.Add(this.StartDateTimeLabel);
@@ -102,9 +104,11 @@
             this.UnselectAllEventsButton.TabIndex = 9;
             this.UnselectAllEventsButton.Text = "U&nselect All";
             this.UnselectAllEventsButton.UseVisualStyleBackColor = true;
+            this.UnselectAllEventsButton.Click += new System.EventHandler(this.UnselectAllEventsButton_Click);
             // 
             // EndDateTimeLabel
             // 
+            this.EndDateTimeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.EndDateTimeLabel.AutoSize = true;
             this.EndDateTimeLabel.Location = new System.Drawing.Point(240, 275);
             this.EndDateTimeLabel.Name = "EndDateTimeLabel";
@@ -114,6 +118,7 @@
             // 
             // StartDateTimeLabel
             // 
+            this.StartDateTimeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.StartDateTimeLabel.AutoSize = true;
             this.StartDateTimeLabel.Location = new System.Drawing.Point(18, 275);
             this.StartDateTimeLabel.Name = "StartDateTimeLabel";
@@ -123,6 +128,7 @@
             // 
             // EndDateTimePicker
             // 
+            this.EndDateTimePicker.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.EndDateTimePicker.Location = new System.Drawing.Point(243, 291);
             this.EndDateTimePicker.Name = "EndDateTimePicker";
             this.EndDateTimePicker.Size = new System.Drawing.Size(200, 20);
@@ -131,6 +137,7 @@
             // 
             // StartDateTimePicker
             // 
+            this.StartDateTimePicker.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.StartDateTimePicker.Location = new System.Drawing.Point(21, 291);
             this.StartDateTimePicker.Name = "StartDateTimePicker";
             this.StartDateTimePicker.Size = new System.Drawing.Size(200, 20);
@@ -145,6 +152,7 @@
             this.SelectAllEventsButton.TabIndex = 8;
             this.SelectAllEventsButton.Text = "Select &All";
             this.SelectAllEventsButton.UseVisualStyleBackColor = true;
+            this.SelectAllEventsButton.Click += new System.EventHandler(this.SelectAllEventsButton_Click);
             // 
             // LoadSourcesButton
             // 
@@ -155,6 +163,7 @@
             this.LoadSourcesButton.TabIndex = 5;
             this.LoadSourcesButton.Text = "L&oad";
             this.LoadSourcesButton.UseVisualStyleBackColor = true;
+            this.LoadSourcesButton.Click += new System.EventHandler(this.LoadSourcesButton_Click);
             // 
             // SelectSourcesLabel
             // 
@@ -169,11 +178,11 @@
             // XDAUrlLabel
             // 
             this.XDAUrlLabel.AutoSize = true;
-            this.XDAUrlLabel.Location = new System.Drawing.Point(21, 25);
+            this.XDAUrlLabel.Location = new System.Drawing.Point(22, 25);
             this.XDAUrlLabel.Name = "XDAUrlLabel";
             this.XDAUrlLabel.Size = new System.Drawing.Size(81, 13);
             this.XDAUrlLabel.TabIndex = 0;
-            this.XDAUrlLabel.Text = "openXDA &URL:";
+            this.XDAUrlLabel.Text = "open&XDA URL:";
             this.XDAUrlLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // XDAUrlTextBox
@@ -184,7 +193,7 @@
             this.XDAUrlTextBox.Name = "XDAUrlTextBox";
             this.XDAUrlTextBox.Size = new System.Drawing.Size(338, 20);
             this.XDAUrlTextBox.TabIndex = 1;
-            this.XDAUrlTextBox.TextChanged += new System.EventHandler(this.XDAUrlTextBox_TextChanged);
+            this.XDAUrlTextBox.TextChanged += new System.EventHandler(this.FormElementChanged);
             // 
             // SourceTypeLabel
             // 
@@ -257,6 +266,44 @@
             this.CloudRepositoryGroupBox.TabStop = false;
             this.CloudRepositoryGroupBox.Text = "Cloud Repository";
             // 
+            // PostSizeLimitNoteLabel
+            // 
+            this.PostSizeLimitNoteLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.PostSizeLimitNoteLabel.Location = new System.Drawing.Point(237, 189);
+            this.PostSizeLimitNoteLabel.Name = "PostSizeLimitNoteLabel";
+            this.PostSizeLimitNoteLabel.Size = new System.Drawing.Size(130, 57);
+            this.PostSizeLimitNoteLabel.TabIndex = 14;
+            this.PostSizeLimitNoteLabel.Text = "Multiple exported events will be grouped together by type. Groups will not exceed" +
+    " this size.";
+            // 
+            // PostSizeLimitLabel
+            // 
+            this.PostSizeLimitLabel.AutoSize = true;
+            this.PostSizeLimitLabel.Location = new System.Drawing.Point(236, 150);
+            this.PostSizeLimitLabel.Name = "PostSizeLimitLabel";
+            this.PostSizeLimitLabel.Size = new System.Drawing.Size(78, 13);
+            this.PostSizeLimitLabel.TabIndex = 11;
+            this.PostSizeLimitLabel.Text = "Post Size Limit:";
+            // 
+            // PostSizeLimitSuffixLabel
+            // 
+            this.PostSizeLimitSuffixLabel.AutoSize = true;
+            this.PostSizeLimitSuffixLabel.Location = new System.Drawing.Point(322, 169);
+            this.PostSizeLimitSuffixLabel.Name = "PostSizeLimitSuffixLabel";
+            this.PostSizeLimitSuffixLabel.Size = new System.Drawing.Size(32, 13);
+            this.PostSizeLimitSuffixLabel.TabIndex = 13;
+            this.PostSizeLimitSuffixLabel.Text = "bytes";
+            // 
+            // PostSizeLimitMaskedTextBox
+            // 
+            this.PostSizeLimitMaskedTextBox.Location = new System.Drawing.Point(237, 166);
+            this.PostSizeLimitMaskedTextBox.Mask = "0000000";
+            this.PostSizeLimitMaskedTextBox.Name = "PostSizeLimitMaskedTextBox";
+            this.PostSizeLimitMaskedTextBox.Size = new System.Drawing.Size(84, 20);
+            this.PostSizeLimitMaskedTextBox.TabIndex = 12;
+            this.PostSizeLimitMaskedTextBox.Text = "500000";
+            this.PostSizeLimitMaskedTextBox.TextChanged += new System.EventHandler(this.FormElementChanged);
+            // 
             // ExportFrequencyDomainDataCheckBox
             // 
             this.ExportFrequencyDomainDataCheckBox.AutoSize = true;
@@ -266,7 +313,7 @@
             this.ExportFrequencyDomainDataCheckBox.Name = "ExportFrequencyDomainDataCheckBox";
             this.ExportFrequencyDomainDataCheckBox.Size = new System.Drawing.Size(174, 17);
             this.ExportFrequencyDomainDataCheckBox.TabIndex = 10;
-            this.ExportFrequencyDomainDataCheckBox.Text = "Export Fre&quency Domain Data";
+            this.ExportFrequencyDomainDataCheckBox.Text = "Export &Frequency Domain Data";
             this.ExportFrequencyDomainDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportFrequencyDomainDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
             // 
@@ -318,7 +365,7 @@
             this.ExportFaultDataCheckBox.Name = "ExportFaultDataCheckBox";
             this.ExportFaultDataCheckBox.Size = new System.Drawing.Size(108, 17);
             this.ExportFaultDataCheckBox.TabIndex = 6;
-            this.ExportFaultDataCheckBox.Text = "Export &Fault Data";
+            this.ExportFaultDataCheckBox.Text = "Export Fa&ult Data";
             this.ExportFaultDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportFaultDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
             // 
@@ -453,43 +500,16 @@
             this.CancelExportButton.UseVisualStyleBackColor = true;
             this.CancelExportButton.Click += new System.EventHandler(this.CancelExportButton_Click);
             // 
-            // PostSizeLimitMaskedTextBox
+            // ClearTimeRangeButton
             // 
-            this.PostSizeLimitMaskedTextBox.Location = new System.Drawing.Point(237, 166);
-            this.PostSizeLimitMaskedTextBox.Mask = "0000000";
-            this.PostSizeLimitMaskedTextBox.Name = "PostSizeLimitMaskedTextBox";
-            this.PostSizeLimitMaskedTextBox.Size = new System.Drawing.Size(84, 20);
-            this.PostSizeLimitMaskedTextBox.TabIndex = 12;
-            this.PostSizeLimitMaskedTextBox.Text = "500000";
-            this.PostSizeLimitMaskedTextBox.TextChanged += new System.EventHandler(this.FormElementChanged);
-            // 
-            // PostSizeLimitSuffixLabel
-            // 
-            this.PostSizeLimitSuffixLabel.AutoSize = true;
-            this.PostSizeLimitSuffixLabel.Location = new System.Drawing.Point(322, 169);
-            this.PostSizeLimitSuffixLabel.Name = "PostSizeLimitSuffixLabel";
-            this.PostSizeLimitSuffixLabel.Size = new System.Drawing.Size(32, 13);
-            this.PostSizeLimitSuffixLabel.TabIndex = 13;
-            this.PostSizeLimitSuffixLabel.Text = "bytes";
-            // 
-            // PostSizeLimitLabel
-            // 
-            this.PostSizeLimitLabel.AutoSize = true;
-            this.PostSizeLimitLabel.Location = new System.Drawing.Point(236, 150);
-            this.PostSizeLimitLabel.Name = "PostSizeLimitLabel";
-            this.PostSizeLimitLabel.Size = new System.Drawing.Size(78, 13);
-            this.PostSizeLimitLabel.TabIndex = 11;
-            this.PostSizeLimitLabel.Text = "Post Size Limit:";
-            // 
-            // PostSizeLimitNoteLabel
-            // 
-            this.PostSizeLimitNoteLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.PostSizeLimitNoteLabel.Location = new System.Drawing.Point(237, 189);
-            this.PostSizeLimitNoteLabel.Name = "PostSizeLimitNoteLabel";
-            this.PostSizeLimitNoteLabel.Size = new System.Drawing.Size(130, 57);
-            this.PostSizeLimitNoteLabel.TabIndex = 14;
-            this.PostSizeLimitNoteLabel.Text = "Multiple exported events will be grouped together by type. Groups will not exceed" +
-    " this size.";
+            this.ClearTimeRangeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ClearTimeRangeButton.Location = new System.Drawing.Point(327, 238);
+            this.ClearTimeRangeButton.Name = "ClearTimeRangeButton";
+            this.ClearTimeRangeButton.Size = new System.Drawing.Size(116, 22);
+            this.ClearTimeRangeButton.TabIndex = 14;
+            this.ClearTimeRangeButton.Text = "Clear &Time Range >>";
+            this.ClearTimeRangeButton.UseVisualStyleBackColor = true;
+            this.ClearTimeRangeButton.Click += new System.EventHandler(this.ClearTimeRangeButton_Click);
             // 
             // MainForm
             // 
@@ -556,6 +576,7 @@
         private System.Windows.Forms.Label PostSizeLimitSuffixLabel;
         private System.Windows.Forms.Label PostSizeLimitNoteLabel;
         public System.Windows.Forms.MaskedTextBox PostSizeLimitMaskedTextBox;
+        private System.Windows.Forms.Button ClearTimeRangeButton;
     }
 }
 
