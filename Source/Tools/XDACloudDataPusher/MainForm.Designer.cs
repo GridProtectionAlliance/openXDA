@@ -340,8 +340,7 @@
             // ExportFrequencyDomainDataCheckBox
             // 
             this.ExportFrequencyDomainDataCheckBox.AutoSize = true;
-            this.ExportFrequencyDomainDataCheckBox.Checked = true;
-            this.ExportFrequencyDomainDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ExportFrequencyDomainDataCheckBox.Enabled = false;
             this.ExportFrequencyDomainDataCheckBox.Location = new System.Drawing.Point(13, 261);
             this.ExportFrequencyDomainDataCheckBox.Name = "ExportFrequencyDomainDataCheckBox";
             this.ExportFrequencyDomainDataCheckBox.Size = new System.Drawing.Size(174, 17);
@@ -539,12 +538,13 @@
             this.ClearTextButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.ClearTextButton.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
             this.ClearTextButton.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ClearTextButton.Location = new System.Drawing.Point(809, -2);
+            this.ClearTextButton.Location = new System.Drawing.Point(809, 0);
             this.ClearTextButton.Name = "ClearTextButton";
             this.ClearTextButton.Size = new System.Drawing.Size(20, 18);
             this.ClearTextButton.TabIndex = 1;
             this.ClearTextButton.Text = "X";
             this.ClearTextButton.UseVisualStyleBackColor = true;
+            this.ClearTextButton.Click += new System.EventHandler(this.ClearTextButton_Click);
             // 
             // MainForm
             // 

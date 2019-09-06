@@ -45,6 +45,7 @@ using openXDA.Model;
 using CancellationToken = System.Threading.CancellationToken;
 using EventData = Microsoft.Azure.EventHubs.EventData;
 using EventFilter = openXDA.Adapters.JSONApiController.EventJSON;
+using EventDataFilter = openXDA.Adapters.JSONApiController.EventDataJSON;
 
 // ReSharper disable ClassNeverInstantiated.Local
 // ReSharper disable CoVariantArrayConversion
@@ -199,6 +200,11 @@ namespace XDACloudDataPusher
                 case nameof(Settings.EndDateTimeForQuery):
                     CalculateSelectedTimeRange();
                     break;
+                case nameof(Settings.ExportWaveformData):
+                case nameof(Settings.ExportEventData):
+                    if (m_settings.ExportWaveformData && !m_settings.ExportEventData)
+                        ExportEventDataCheckBox.Checked = true;
+                    break;
             }
         }
 
@@ -303,6 +309,11 @@ namespace XDACloudDataPusher
             m_cancellationTokenSource?.Cancel();
         }
 
+        private void ClearTextButton_Click(object sender, EventArgs e)
+        {
+            ClearUpdateMessages();
+        }
+
         private void PushToCloudButton_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(m_settings.CloudRepostioryConnectionString))
@@ -341,7 +352,7 @@ namespace XDACloudDataPusher
                         progress++;
                     }
 
-                    // Setup JSON event query filter
+                    // Setup event query filter
                     string eventFilter = JsonConvert.SerializeObject(new EventFilter
                     {
                         LineIDList = m_lineIDList,
@@ -352,9 +363,11 @@ namespace XDACloudDataPusher
 
                     IncrementProgress();
 
+                    Event[] events = null;
+
                     // Export event data
                     if (m_settings.ExportEventData)
-                        await QueryAndPushToCloud<Event>("GetEvents", eventFilter, cancellationToken);
+                        events = await QueryAndPushToCloud<Event>("GetEvents", eventFilter, cancellationToken);
 
                     IncrementProgress();
 
@@ -376,17 +389,38 @@ namespace XDACloudDataPusher
 
                     IncrementProgress();
 
-                    // Export waveform data
-                    if (m_settings.ExportWaveformData)
-                        await QueryAndPushToCloud<EventData>("GetEventWaveformData", eventFilter, cancellationToken, "Waveform EventData");
+                    if (events?.Length > 0)
+                    {
+                        // Export waveform data
+                        if (m_settings.ExportWaveformData)
+                        {
+                            foreach (Event record in events)
+                            {
+                                string eventDataFilter = JsonConvert.SerializeObject(new EventDataFilter
+                                {
+                                    EventID = $"{record.ID}"
+                                });
 
-                    IncrementProgress();
+                                await QueryAndPushToCloud<dynamic>("GetEventWaveformData", eventDataFilter, cancellationToken, $"Waveform Event {record.ID} DataRow");
+                            }
+                        }                        
+                        IncrementProgress();
 
-                    // Export frequency domain data
-                    if (m_settings.ExportFrequencyDomainData)
-                        await QueryAndPushToCloud<EventData>("GetEventFrequencyDomainData", eventFilter, cancellationToken, "Frequency Domain EventData");
+                        // Export frequency domain data
+                        if (m_settings.ExportFrequencyDomainData)
+                        {
+                            foreach (Event record in events)
+                            {
+                                string eventDataFilter = JsonConvert.SerializeObject(new EventDataFilter
+                                {
+                                    EventID = $"{record.ID}"
+                                });
 
-                    IncrementProgress();
+                                await QueryAndPushToCloud<dynamic>("GetEventFrequencyDomainData", eventDataFilter, cancellationToken, $"Frequency Domain Event {record.ID} DataRow");
+                            }
+                        }
+                        IncrementProgress();
+                    }                    
                 }
                 catch (Exception ex)
                 {
@@ -400,7 +434,7 @@ namespace XDACloudDataPusher
             });
         }
 
-        private async Task QueryAndPushToCloud<T>(string function, string eventFilter, CancellationToken cancellationToken, string typeName = null)
+        private async Task<T[]> QueryAndPushToCloud<T>(string function, string eventFilter, CancellationToken cancellationToken, string typeName = null)
         {
             Ticks startTime = DateTime.UtcNow.Ticks;
             
@@ -417,7 +451,7 @@ namespace XDACloudDataPusher
             catch (Exception ex)
             {
                 ShowErrorMessage($"Failed during {typeName} API query: {ex.Message}");
-                return;
+                return new T[0];
             }
 
             ShowUpdateMessage($"Deserializing {typeName} query results...");
@@ -430,13 +464,13 @@ namespace XDACloudDataPusher
             catch (Exception ex)
             {
                 ShowErrorMessage($"Failed during {typeName} query result deserialization: {ex.Message}");
-                return;
+                return new T[0];
             }
 
             if (results.Length == 0)
             {
                 ShowUpdateMessage($"No {typeName} records were found, skipping cloud push operations...");
-                return;
+                return new T[0];
             }
 
             ShowUpdateMessage($"Serializing {typeName} records...");
@@ -449,12 +483,14 @@ namespace XDACloudDataPusher
             catch (Exception ex)
             {
                 ShowErrorMessage($"Failed during {typeName} record serialization: {ex.Message}");
-                return;
+                return new T[0];
             }
 
             ShowUpdateMessage($"Successfully queried and serialized {records.Count:N0} {typeName} records in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
             
             await PushToCloud(records, typeName, cancellationToken);
+
+            return results;
         }
 
         private async Task PushToCloud(List<byte[]> records, string typeName, CancellationToken cancellationToken)
@@ -801,8 +837,6 @@ namespace XDACloudDataPusher
             content = await response.Content.ReadAsStringAsync();
 
             cancellationToken.ThrowIfCancellationRequested();
-
-            ShowUpdateMessage(content);
 
             return string.IsNullOrWhiteSpace(content) || content == "null" ? new JArray() : JArray.Parse(content);
         }
