@@ -65,6 +65,7 @@
             this.ExportProgressBar = new System.Windows.Forms.ProgressBar();
             this.CancelExportButton = new System.Windows.Forms.Button();
             this.ClearTimeRangeButton = new System.Windows.Forms.Button();
+            this.SelectedTimeRangeLabel = new System.Windows.Forms.Label();
             this.EventQueryGroupBox.SuspendLayout();
             this.CloudRepositoryGroupBox.SuspendLayout();
             this.MessageGroupBox.SuspendLayout();
@@ -74,6 +75,7 @@
             // 
             this.EventQueryGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.EventQueryGroupBox.Controls.Add(this.SelectedTimeRangeLabel);
             this.EventQueryGroupBox.Controls.Add(this.ClearTimeRangeButton);
             this.EventQueryGroupBox.Controls.Add(this.UnselectAllEventsButton);
             this.EventQueryGroupBox.Controls.Add(this.EndDateTimeLabel);
@@ -110,7 +112,7 @@
             // 
             this.EndDateTimeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.EndDateTimeLabel.AutoSize = true;
-            this.EndDateTimeLabel.Location = new System.Drawing.Point(240, 275);
+            this.EndDateTimeLabel.Location = new System.Drawing.Point(179, 269);
             this.EndDateTimeLabel.Name = "EndDateTimeLabel";
             this.EndDateTimeLabel.Size = new System.Drawing.Size(129, 13);
             this.EndDateTimeLabel.TabIndex = 12;
@@ -120,7 +122,7 @@
             // 
             this.StartDateTimeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.StartDateTimeLabel.AutoSize = true;
-            this.StartDateTimeLabel.Location = new System.Drawing.Point(18, 275);
+            this.StartDateTimeLabel.Location = new System.Drawing.Point(18, 269);
             this.StartDateTimeLabel.Name = "StartDateTimeLabel";
             this.StartDateTimeLabel.Size = new System.Drawing.Size(132, 13);
             this.StartDateTimeLabel.TabIndex = 10;
@@ -129,18 +131,22 @@
             // EndDateTimePicker
             // 
             this.EndDateTimePicker.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.EndDateTimePicker.Location = new System.Drawing.Point(243, 291);
+            this.EndDateTimePicker.CustomFormat = "MMM dd, yyyy HH:mm:ss";
+            this.EndDateTimePicker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+            this.EndDateTimePicker.Location = new System.Drawing.Point(182, 285);
             this.EndDateTimePicker.Name = "EndDateTimePicker";
-            this.EndDateTimePicker.Size = new System.Drawing.Size(200, 20);
+            this.EndDateTimePicker.Size = new System.Drawing.Size(148, 20);
             this.EndDateTimePicker.TabIndex = 13;
             this.EndDateTimePicker.ValueChanged += new System.EventHandler(this.FormElementChanged);
             // 
             // StartDateTimePicker
             // 
             this.StartDateTimePicker.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartDateTimePicker.Location = new System.Drawing.Point(21, 291);
+            this.StartDateTimePicker.CustomFormat = "MMM dd, yyyy HH:mm:ss";
+            this.StartDateTimePicker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+            this.StartDateTimePicker.Location = new System.Drawing.Point(21, 285);
             this.StartDateTimePicker.Name = "StartDateTimePicker";
-            this.StartDateTimePicker.Size = new System.Drawing.Size(200, 20);
+            this.StartDateTimePicker.Size = new System.Drawing.Size(148, 20);
             this.StartDateTimePicker.TabIndex = 11;
             this.StartDateTimePicker.ValueChanged += new System.EventHandler(this.FormElementChanged);
             // 
@@ -233,12 +239,15 @@
             // 
             this.SelectedSourcesCheckedListBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.SelectedSourcesCheckedListBox.CheckOnClick = true;
             this.SelectedSourcesCheckedListBox.FormattingEnabled = true;
+            this.SelectedSourcesCheckedListBox.HorizontalScrollbar = true;
             this.SelectedSourcesCheckedListBox.Location = new System.Drawing.Point(21, 93);
             this.SelectedSourcesCheckedListBox.Name = "SelectedSourcesCheckedListBox";
             this.SelectedSourcesCheckedListBox.ScrollAlwaysVisible = true;
             this.SelectedSourcesCheckedListBox.Size = new System.Drawing.Size(422, 139);
             this.SelectedSourcesCheckedListBox.TabIndex = 7;
+            this.SelectedSourcesCheckedListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.SelectedSourcesCheckedListBox_ItemCheck);
             // 
             // CloudRepositoryGroupBox
             // 
@@ -288,7 +297,7 @@
             // PostSizeLimitSuffixLabel
             // 
             this.PostSizeLimitSuffixLabel.AutoSize = true;
-            this.PostSizeLimitSuffixLabel.Location = new System.Drawing.Point(322, 169);
+            this.PostSizeLimitSuffixLabel.Location = new System.Drawing.Point(295, 169);
             this.PostSizeLimitSuffixLabel.Name = "PostSizeLimitSuffixLabel";
             this.PostSizeLimitSuffixLabel.Size = new System.Drawing.Size(32, 13);
             this.PostSizeLimitSuffixLabel.TabIndex = 13;
@@ -296,19 +305,18 @@
             // 
             // PostSizeLimitMaskedTextBox
             // 
-            this.PostSizeLimitMaskedTextBox.Location = new System.Drawing.Point(237, 166);
+            this.PostSizeLimitMaskedTextBox.Location = new System.Drawing.Point(240, 166);
             this.PostSizeLimitMaskedTextBox.Mask = "0000000";
             this.PostSizeLimitMaskedTextBox.Name = "PostSizeLimitMaskedTextBox";
-            this.PostSizeLimitMaskedTextBox.Size = new System.Drawing.Size(84, 20);
+            this.PostSizeLimitMaskedTextBox.Size = new System.Drawing.Size(54, 20);
             this.PostSizeLimitMaskedTextBox.TabIndex = 12;
             this.PostSizeLimitMaskedTextBox.Text = "500000";
+            this.PostSizeLimitMaskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.PostSizeLimitMaskedTextBox.TextChanged += new System.EventHandler(this.FormElementChanged);
             // 
             // ExportFrequencyDomainDataCheckBox
             // 
             this.ExportFrequencyDomainDataCheckBox.AutoSize = true;
-            this.ExportFrequencyDomainDataCheckBox.Checked = true;
-            this.ExportFrequencyDomainDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ExportFrequencyDomainDataCheckBox.Location = new System.Drawing.Point(13, 261);
             this.ExportFrequencyDomainDataCheckBox.Name = "ExportFrequencyDomainDataCheckBox";
             this.ExportFrequencyDomainDataCheckBox.Size = new System.Drawing.Size(174, 17);
@@ -320,8 +328,6 @@
             // ExportWaveformDataCheckBox
             // 
             this.ExportWaveformDataCheckBox.AutoSize = true;
-            this.ExportWaveformDataCheckBox.Checked = true;
-            this.ExportWaveformDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ExportWaveformDataCheckBox.Location = new System.Drawing.Point(13, 238);
             this.ExportWaveformDataCheckBox.Name = "ExportWaveformDataCheckBox";
             this.ExportWaveformDataCheckBox.Size = new System.Drawing.Size(134, 17);
@@ -503,13 +509,24 @@
             // ClearTimeRangeButton
             // 
             this.ClearTimeRangeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ClearTimeRangeButton.Location = new System.Drawing.Point(327, 238);
+            this.ClearTimeRangeButton.Location = new System.Drawing.Point(343, 283);
             this.ClearTimeRangeButton.Name = "ClearTimeRangeButton";
-            this.ClearTimeRangeButton.Size = new System.Drawing.Size(116, 22);
+            this.ClearTimeRangeButton.Size = new System.Drawing.Size(100, 22);
             this.ClearTimeRangeButton.TabIndex = 14;
-            this.ClearTimeRangeButton.Text = "Clear &Time Range >>";
+            this.ClearTimeRangeButton.Text = "Clear &Time Range";
             this.ClearTimeRangeButton.UseVisualStyleBackColor = true;
             this.ClearTimeRangeButton.Click += new System.EventHandler(this.ClearTimeRangeButton_Click);
+            // 
+            // SelectedTimeRangeLabel
+            // 
+            this.SelectedTimeRangeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.SelectedTimeRangeLabel.AutoSize = true;
+            this.SelectedTimeRangeLabel.Location = new System.Drawing.Point(18, 310);
+            this.SelectedTimeRangeLabel.Name = "SelectedTimeRangeLabel";
+            this.SelectedTimeRangeLabel.Size = new System.Drawing.Size(90, 13);
+            this.SelectedTimeRangeLabel.TabIndex = 15;
+            this.SelectedTimeRangeLabel.Text = "Selected Range: ";
+            this.SelectedTimeRangeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // MainForm
             // 
@@ -577,6 +594,7 @@
         private System.Windows.Forms.Label PostSizeLimitNoteLabel;
         public System.Windows.Forms.MaskedTextBox PostSizeLimitMaskedTextBox;
         private System.Windows.Forms.Button ClearTimeRangeButton;
+        private System.Windows.Forms.Label SelectedTimeRangeLabel;
     }
 }
 
