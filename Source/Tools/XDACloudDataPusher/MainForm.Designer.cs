@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.EventQueryGroupBox = new System.Windows.Forms.GroupBox();
+            this.SelectedTimeRangeLabel = new System.Windows.Forms.Label();
+            this.ClearTimeRangeButton = new System.Windows.Forms.Button();
             this.UnselectAllEventsButton = new System.Windows.Forms.Button();
             this.EndDateTimeLabel = new System.Windows.Forms.Label();
             this.StartDateTimeLabel = new System.Windows.Forms.Label();
@@ -64,8 +66,7 @@
             this.MessageOutputTextBox = new System.Windows.Forms.TextBox();
             this.ExportProgressBar = new System.Windows.Forms.ProgressBar();
             this.CancelExportButton = new System.Windows.Forms.Button();
-            this.ClearTimeRangeButton = new System.Windows.Forms.Button();
-            this.SelectedTimeRangeLabel = new System.Windows.Forms.Label();
+            this.ClearTextButton = new System.Windows.Forms.Button();
             this.EventQueryGroupBox.SuspendLayout();
             this.CloudRepositoryGroupBox.SuspendLayout();
             this.MessageGroupBox.SuspendLayout();
@@ -97,6 +98,28 @@
             this.EventQueryGroupBox.TabIndex = 0;
             this.EventQueryGroupBox.TabStop = false;
             this.EventQueryGroupBox.Text = "Event Query";
+            // 
+            // SelectedTimeRangeLabel
+            // 
+            this.SelectedTimeRangeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.SelectedTimeRangeLabel.AutoSize = true;
+            this.SelectedTimeRangeLabel.Location = new System.Drawing.Point(18, 310);
+            this.SelectedTimeRangeLabel.Name = "SelectedTimeRangeLabel";
+            this.SelectedTimeRangeLabel.Size = new System.Drawing.Size(90, 13);
+            this.SelectedTimeRangeLabel.TabIndex = 15;
+            this.SelectedTimeRangeLabel.Text = "Selected Range: ";
+            this.SelectedTimeRangeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // ClearTimeRangeButton
+            // 
+            this.ClearTimeRangeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ClearTimeRangeButton.Location = new System.Drawing.Point(343, 283);
+            this.ClearTimeRangeButton.Name = "ClearTimeRangeButton";
+            this.ClearTimeRangeButton.Size = new System.Drawing.Size(100, 22);
+            this.ClearTimeRangeButton.TabIndex = 14;
+            this.ClearTimeRangeButton.Text = "Clear &Time Range";
+            this.ClearTimeRangeButton.UseVisualStyleBackColor = true;
+            this.ClearTimeRangeButton.Click += new System.EventHandler(this.ClearTimeRangeButton_Click);
             // 
             // UnselectAllEventsButton
             // 
@@ -317,6 +340,8 @@
             // ExportFrequencyDomainDataCheckBox
             // 
             this.ExportFrequencyDomainDataCheckBox.AutoSize = true;
+            this.ExportFrequencyDomainDataCheckBox.Checked = true;
+            this.ExportFrequencyDomainDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ExportFrequencyDomainDataCheckBox.Location = new System.Drawing.Point(13, 261);
             this.ExportFrequencyDomainDataCheckBox.Name = "ExportFrequencyDomainDataCheckBox";
             this.ExportFrequencyDomainDataCheckBox.Size = new System.Drawing.Size(174, 17);
@@ -328,6 +353,8 @@
             // ExportWaveformDataCheckBox
             // 
             this.ExportWaveformDataCheckBox.AutoSize = true;
+            this.ExportWaveformDataCheckBox.Checked = true;
+            this.ExportWaveformDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ExportWaveformDataCheckBox.Location = new System.Drawing.Point(13, 238);
             this.ExportWaveformDataCheckBox.Name = "ExportWaveformDataCheckBox";
             this.ExportWaveformDataCheckBox.Size = new System.Drawing.Size(134, 17);
@@ -457,6 +484,7 @@
             this.MessageGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.MessageGroupBox.Controls.Add(this.ClearTextButton);
             this.MessageGroupBox.Controls.Add(this.MessageOutputTextBox);
             this.MessageGroupBox.Location = new System.Drawing.Point(12, 345);
             this.MessageGroupBox.Margin = new System.Windows.Forms.Padding(2);
@@ -506,27 +534,17 @@
             this.CancelExportButton.UseVisualStyleBackColor = true;
             this.CancelExportButton.Click += new System.EventHandler(this.CancelExportButton_Click);
             // 
-            // ClearTimeRangeButton
+            // ClearTextButton
             // 
-            this.ClearTimeRangeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ClearTimeRangeButton.Location = new System.Drawing.Point(343, 283);
-            this.ClearTimeRangeButton.Name = "ClearTimeRangeButton";
-            this.ClearTimeRangeButton.Size = new System.Drawing.Size(100, 22);
-            this.ClearTimeRangeButton.TabIndex = 14;
-            this.ClearTimeRangeButton.Text = "Clear &Time Range";
-            this.ClearTimeRangeButton.UseVisualStyleBackColor = true;
-            this.ClearTimeRangeButton.Click += new System.EventHandler(this.ClearTimeRangeButton_Click);
-            // 
-            // SelectedTimeRangeLabel
-            // 
-            this.SelectedTimeRangeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.SelectedTimeRangeLabel.AutoSize = true;
-            this.SelectedTimeRangeLabel.Location = new System.Drawing.Point(18, 310);
-            this.SelectedTimeRangeLabel.Name = "SelectedTimeRangeLabel";
-            this.SelectedTimeRangeLabel.Size = new System.Drawing.Size(90, 13);
-            this.SelectedTimeRangeLabel.TabIndex = 15;
-            this.SelectedTimeRangeLabel.Text = "Selected Range: ";
-            this.SelectedTimeRangeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.ClearTextButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ClearTextButton.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.ClearTextButton.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ClearTextButton.Location = new System.Drawing.Point(809, -2);
+            this.ClearTextButton.Name = "ClearTextButton";
+            this.ClearTextButton.Size = new System.Drawing.Size(20, 18);
+            this.ClearTextButton.TabIndex = 1;
+            this.ClearTextButton.Text = "X";
+            this.ClearTextButton.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -595,6 +613,7 @@
         public System.Windows.Forms.MaskedTextBox PostSizeLimitMaskedTextBox;
         private System.Windows.Forms.Button ClearTimeRangeButton;
         private System.Windows.Forms.Label SelectedTimeRangeLabel;
+        private System.Windows.Forms.Button ClearTextButton;
     }
 }
 

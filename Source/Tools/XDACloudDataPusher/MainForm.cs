@@ -495,7 +495,7 @@ namespace XDACloudDataPusher
             }
         }
 
-        private async Task PushToAzure(EventHubClient eventHub, List<byte[]> records, string type, CancellationToken cancellationToken)
+        private async Task PushToAzure(EventHubClient eventHub, List<byte[]> records, string typeName, CancellationToken cancellationToken)
         {
             List<EventData> samples = new List<EventData>();
             int size = 0;
@@ -506,7 +506,7 @@ namespace XDACloudDataPusher
 
                 // Write data to event hub
                 if (samples.Count > 0)
-                    await eventHub.SendAsync(samples, type);
+                    await eventHub.SendAsync(samples, typeName);
 
                 samples.Clear();
             }
@@ -536,7 +536,7 @@ namespace XDACloudDataPusher
             await pushToEventHub();
         }
 
-        private /*async*/ Task PushToAWS(object connection, List<byte[]> records, string type, CancellationToken cancellationToken)
+        private /*async*/ Task PushToAWS(object connection, List<byte[]> records, string typeName, CancellationToken cancellationToken)
         {
             // TODO: Add ability to push to Kinesis minding post size limit
             return Task.CompletedTask;
@@ -787,13 +787,13 @@ namespace XDACloudDataPusher
         // Static Methods
         private static string GetAPIFunctionURL(string function) => $"{XDAJsonApiUrl}{function}";
 
-        private static async Task<JArray> CallAPIFunction(string function, CancellationToken cancellationToken, string content = null)
+        private /*static*/ async Task<JArray> CallAPIFunction(string function, CancellationToken cancellationToken, string content = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, GetAPIFunctionURL(function));
 
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            if ((object)content != null)
+            if (!string.IsNullOrWhiteSpace(content))
                 request.Content = new StringContent(content, Encoding.UTF8, "application/json");
 
             HttpResponseMessage response = await s_http.SendAsync(request, cancellationToken);
@@ -801,6 +801,8 @@ namespace XDACloudDataPusher
             content = await response.Content.ReadAsStringAsync();
 
             cancellationToken.ThrowIfCancellationRequested();
+
+            ShowUpdateMessage(content);
 
             return string.IsNullOrWhiteSpace(content) || content == "null" ? new JArray() : JArray.Parse(content);
         }
