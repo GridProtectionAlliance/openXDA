@@ -108,6 +108,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\openXDA.Adapters\openXDA.Adapters.csproj">
+      <Project>{ec5adf62-c5c8-4a0a-955a-abeb54e78816}</Project>
+      <Name>openXDA.Adapters</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>
