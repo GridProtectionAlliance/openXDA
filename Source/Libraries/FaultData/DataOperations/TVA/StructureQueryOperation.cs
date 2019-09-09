@@ -27,6 +27,8 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using FaultData.DataAnalysis;
+using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
@@ -44,13 +46,23 @@ namespace FaultData.DataOperations.TVA
         public class StructureQuerySettings
         {
             [Setting]
-            [DefaultValue("")]
-            public string URL { get; set; }
+            [DefaultValue("http://server/site/neareststructure?station={0}&line={1}&distance={2}")]
+            public string URLFormat { get; set; }
 
             [Setting]
             [DefaultValue("StrNumber:AssetKey,Latitude:Latitude,Longitude:Longitude")]
             public string FieldMappings { get; set; }
         }
+
+        // Constants
+
+        private const string FaultSummaryQuery =
+            "SELECT ID " +
+            "FROM FaultSummary " +
+            "WHERE " +
+            "    EventID = {0} AND " +
+            "    FaultNumber = {1} AND " +
+            "    IsSelectedAlgorithm <> 0";
 
         #endregion
 
@@ -66,7 +78,7 @@ namespace FaultData.DataOperations.TVA
             {
                 Dictionary<string, string> fieldMappings = Settings.FieldMappings.Split(',')
                     .Select(mapping => mapping.Split(':'))
-                    .ToDictionary(mapping => mapping[1].Trim(), mapping => mapping[2].Trim());
+                    .ToDictionary(mapping => mapping[1].Trim(), mapping => mapping[0].Trim());
 
                 return inputField => fieldMappings.TryGetValue(inputField, out string outputField) ? outputField : inputField;
             }
@@ -78,47 +90,87 @@ namespace FaultData.DataOperations.TVA
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            string url = Settings.URL;
-            string structureInfo = GetStructureInfo(url);
-            DataTable structureData = ToDataTable(structureInfo);
+            FaultDataResource faultDataResource = meterDataSet.GetResource<FaultDataResource>();
+            string stationKey = meterDataSet.Meter.MeterLocation.AssetKey;
 
-            if (structureData.Rows.Count == 0)
-                return;
-
-            Func<string, string> fieldMappingLookup = FieldMappingLookup;
-            string assetKeyField = fieldMappingLookup("AssetKey");
-            string latitudeKeyField = fieldMappingLookup("Latitude");
-            string longitudeKeyField = fieldMappingLookup("Longitude");
-
-            if (structureData.Columns.Contains(assetKeyField))
-                return;
-
-            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            foreach (var kvp in faultDataResource.FaultLookup)
             {
-                TableOperations<Structure> structureTable = new TableOperations<Structure>(connection);
+                DataGroup dataGroup = kvp.Key;
+                DataAnalysis.FaultGroup faultGroup = kvp.Value;
+                string lineKey = dataGroup.Line.AssetKey;
 
-                foreach (DataRow row in structureData.Rows)
+                for (int i = 0; i < faultGroup.Faults.Count; i++)
                 {
-                    string assetKey = row.Field<string>(assetKeyField);
-                    string latitude = null;
-                    string longitude = null;
+                    int faultNumber = i + 1;
+                    DataAnalysis.Fault fault = faultGroup.Faults[i];
 
-                    if (structureData.Columns.Contains(latitudeKeyField))
-                        latitude = row.Field<string>(latitudeKeyField);
+                    if (fault.IsSuppressed)
+                        continue;
 
-                    if (structureData.Columns.Contains(longitudeKeyField))
-                        longitude = row.Field<string>(longitudeKeyField);
+                    string distance = fault.Summaries
+                        .Where(summary => summary.IsValid)
+                        .Where(summary => summary.IsSelectedAlgorithm)
+                        .Select(summary => summary.Distance.ToString("0.###"))
+                        .FirstOrDefault();
 
-                    Structure structure = structureTable.QueryRecordWhere("AssetKey = {0}", assetKey)
-                        ?? new Structure() { AssetKey = assetKey };
+                    if (distance == null)
+                        return;
 
-                    if (double.TryParse(latitude, out double lat))
-                        structure.Latitude = lat;
+                    string url = string.Format(Settings.URLFormat, stationKey, lineKey, distance);
+                    string structureInfo = GetStructureInfo(url);
+                    DataTable structureData = ToDataTable(structureInfo);
 
-                    if (double.TryParse(longitude, out double lon))
-                        structure.Longitude = lon;
+                    if (structureData.Rows.Count == 0)
+                        return;
 
-                    structureTable.AddNewOrUpdateRecord(structure);
+                    Func<string, string> fieldMappingLookup = FieldMappingLookup;
+                    string assetKeyField = fieldMappingLookup("AssetKey");
+                    string latitudeKeyField = fieldMappingLookup("Latitude");
+                    string longitudeKeyField = fieldMappingLookup("Longitude");
+
+                    if (!structureData.Columns.Contains(assetKeyField))
+                        return;
+
+                    using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+                    {
+                        TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+                        Event evt = eventTable.GetEvent(meterDataSet.FileGroup, dataGroup);
+                        int faultSummaryID = connection.ExecuteScalar<int>(FaultSummaryQuery, evt.ID, faultNumber);
+
+                        TableOperations<Structure> structureTable = new TableOperations<Structure>(connection);
+
+                        foreach (DataRow row in structureData.Rows)
+                        {
+                            string assetKey = row.Field<string>(assetKeyField);
+                            string latitude = null;
+                            string longitude = null;
+
+                            if (structureData.Columns.Contains(latitudeKeyField))
+                                latitude = row.Field<string>(latitudeKeyField);
+
+                            if (structureData.Columns.Contains(longitudeKeyField))
+                                longitude = row.Field<string>(longitudeKeyField);
+
+                            Structure structure = structureTable.QueryRecordWhere("AssetKey = {0}", assetKey)
+                                ?? new Structure() { AssetKey = assetKey };
+
+                            structure.LineID = dataGroup.Line.ID;
+
+                            if (double.TryParse(latitude, out double lat))
+                                structure.Latitude = lat;
+
+                            if (double.TryParse(longitude, out double lon))
+                                structure.Longitude = lon;
+
+                            structureTable.AddNewOrUpdateRecord(structure);
+
+                            if (structure.ID == 0)
+                                structure.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+
+                            if (faultSummaryID != 0)
+                                connection.ExecuteNonQuery("INSERT INTO NearestStructure(FaultSummaryID, StructureID) VALUES({0}, {1})", faultSummaryID, structure.ID);
+                        }
+                    }
                 }
             }
         }
@@ -133,7 +185,13 @@ namespace FaultData.DataOperations.TVA
         private DataTable ToDataTable(string csvInput)
         {
             char[] newLineChars = new[] { '\r', '\n' };
-            string[] lines = csvInput.Trim().Split(newLineChars, StringSplitOptions.RemoveEmptyEntries);
+
+            string[] lines = csvInput.Trim()
+                .Split(newLineChars, StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Trim())
+                .Where(line => !string.IsNullOrEmpty(line))
+                .ToArray();
+
             string[] fields = lines[0].Split(',');
 
             DataTable table = new DataTable();
