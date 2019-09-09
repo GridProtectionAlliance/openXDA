@@ -369,6 +369,9 @@ namespace XDACloudDataPusher
                     if (m_settings.ExportEventData)
                         events = await QueryAndPushToCloud<Event>("GetEvents", eventFilter, cancellationToken);
 
+                    if (events?.Length > 0)
+                        SetExportProgressBarMaximum(ProgressSteps + (m_settings.ExportWaveformData ? events.Length - 1 : 0) + (m_settings.ExportFrequencyDomainData ? events.Length - 1 : 0));
+
                     IncrementProgress();
 
                     // Export fault data
@@ -401,10 +404,14 @@ namespace XDACloudDataPusher
                                     EventID = $"{record.ID}"
                                 });
 
-                                await QueryAndPushToCloud<dynamic>("GetEventWaveformData", eventDataFilter, cancellationToken, $"Waveform Data for Event {record.ID}");
+                                await QueryAndPushToCloud<dynamic>("GetEventWaveformData", eventDataFilter, cancellationToken, $"Event {record.ID} Waveform Data");
+                                IncrementProgress();
                             }
-                        }                        
-                        IncrementProgress();
+                        }
+                        else
+                        {
+                            IncrementProgress();
+                        }
 
                         // Export frequency domain data
                         if (m_settings.ExportFrequencyDomainData)
@@ -416,10 +423,14 @@ namespace XDACloudDataPusher
                                     EventID = $"{record.ID}"
                                 });
 
-                                await QueryAndPushToCloud<dynamic>("GetEventFrequencyDomainData", eventDataFilter, cancellationToken, $"Frequency Domain Data for Event {record.ID}");
+                                await QueryAndPushToCloud<dynamic>("GetEventFrequencyDomainData", eventDataFilter, cancellationToken, $"Event {record.ID} Frequency Domain Data");
+                                IncrementProgress();
                             }
                         }
-                        IncrementProgress();
+                        else
+                        {
+                            IncrementProgress();
+                        }
                     }                    
                 }
                 catch (Exception ex)
