@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.EventQueryGroupBox = new System.Windows.Forms.GroupBox();
             this.SelectedTimeRangeLabel = new System.Windows.Forms.Label();
             this.ClearTimeRangeButton = new System.Windows.Forms.Button();
@@ -562,6 +563,7 @@
             this.Controls.Add(this.MessageGroupBox);
             this.Controls.Add(this.CloudRepositoryGroupBox);
             this.Controls.Add(this.EventQueryGroupBox);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(865, 675);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
