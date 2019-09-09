@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.EventQueryGroupBox = new System.Windows.Forms.GroupBox();
             this.SelectedTimeRangeLabel = new System.Windows.Forms.Label();
             this.ClearTimeRangeButton = new System.Windows.Forms.Button();
@@ -63,10 +64,11 @@
             this.ConnectionStringLabel = new System.Windows.Forms.Label();
             this.ConnectionStringTextBox = new System.Windows.Forms.TextBox();
             this.MessageGroupBox = new System.Windows.Forms.GroupBox();
+            this.ClearTextButton = new System.Windows.Forms.Button();
             this.MessageOutputTextBox = new System.Windows.Forms.TextBox();
             this.ExportProgressBar = new System.Windows.Forms.ProgressBar();
             this.CancelExportButton = new System.Windows.Forms.Button();
-            this.ClearTextButton = new System.Windows.Forms.Button();
+            this.PrimaryToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.EventQueryGroupBox.SuspendLayout();
             this.CloudRepositoryGroupBox.SuspendLayout();
             this.MessageGroupBox.SuspendLayout();
@@ -347,6 +349,7 @@
             this.ExportFrequencyDomainDataCheckBox.TabIndex = 10;
             this.ExportFrequencyDomainDataCheckBox.Text = "Export &Frequency Domain Data";
             this.ExportFrequencyDomainDataCheckBox.UseVisualStyleBackColor = true;
+            this.ExportFrequencyDomainDataCheckBox.Visible = false;
             this.ExportFrequencyDomainDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
             // 
             // ExportWaveformDataCheckBox
@@ -359,6 +362,7 @@
             this.ExportWaveformDataCheckBox.Size = new System.Drawing.Size(134, 17);
             this.ExportWaveformDataCheckBox.TabIndex = 9;
             this.ExportWaveformDataCheckBox.Text = "Export &Waveform Data";
+            this.PrimaryToolTip.SetToolTip(this.ExportWaveformDataCheckBox, "Waveform Export Requires Export of Event Data...");
             this.ExportWaveformDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportWaveformDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
             // 
@@ -494,6 +498,21 @@
             this.MessageGroupBox.TabStop = false;
             this.MessageGroupBox.Text = "Messages";
             // 
+            // ClearTextButton
+            // 
+            this.ClearTextButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ClearTextButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ClearTextButton.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ClearTextButton.Location = new System.Drawing.Point(790, 17);
+            this.ClearTextButton.Name = "ClearTextButton";
+            this.ClearTextButton.Size = new System.Drawing.Size(20, 18);
+            this.ClearTextButton.TabIndex = 1;
+            this.ClearTextButton.Text = "X";
+            this.PrimaryToolTip.SetToolTip(this.ClearTextButton, "Clear Messages...");
+            this.ClearTextButton.UseCompatibleTextRendering = true;
+            this.ClearTextButton.UseVisualStyleBackColor = false;
+            this.ClearTextButton.Click += new System.EventHandler(this.ClearTextButton_Click);
+            // 
             // MessageOutputTextBox
             // 
             this.MessageOutputTextBox.BackColor = System.Drawing.SystemColors.WindowText;
@@ -532,19 +551,6 @@
             this.CancelExportButton.Text = "Cancel";
             this.CancelExportButton.UseVisualStyleBackColor = true;
             this.CancelExportButton.Click += new System.EventHandler(this.CancelExportButton_Click);
-            // 
-            // ClearTextButton
-            // 
-            this.ClearTextButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ClearTextButton.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.ClearTextButton.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ClearTextButton.Location = new System.Drawing.Point(809, 0);
-            this.ClearTextButton.Name = "ClearTextButton";
-            this.ClearTextButton.Size = new System.Drawing.Size(20, 18);
-            this.ClearTextButton.TabIndex = 1;
-            this.ClearTextButton.Text = "X";
-            this.ClearTextButton.UseVisualStyleBackColor = true;
-            this.ClearTextButton.Click += new System.EventHandler(this.ClearTextButton_Click);
             // 
             // MainForm
             // 
@@ -614,6 +620,7 @@
         private System.Windows.Forms.Button ClearTimeRangeButton;
         private System.Windows.Forms.Label SelectedTimeRangeLabel;
         private System.Windows.Forms.Button ClearTextButton;
+        private System.Windows.Forms.ToolTip PrimaryToolTip;
     }
 }
 

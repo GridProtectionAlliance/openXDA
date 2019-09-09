@@ -823,7 +823,7 @@ namespace XDACloudDataPusher
         // Static Methods
         private static string GetAPIFunctionURL(string function) => $"{XDAJsonApiUrl}{function}";
 
-        private /*static*/ async Task<JArray> CallAPIFunction(string function, CancellationToken cancellationToken, string content = null)
+        private static async Task<JArray> CallAPIFunction(string function, CancellationToken cancellationToken, string content = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, GetAPIFunctionURL(function));
 
