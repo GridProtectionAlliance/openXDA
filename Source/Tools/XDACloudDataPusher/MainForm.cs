@@ -401,7 +401,7 @@ namespace XDACloudDataPusher
                                     EventID = $"{record.ID}"
                                 });
 
-                                await QueryAndPushToCloud<dynamic>("GetEventWaveformData", eventDataFilter, cancellationToken, $"Waveform Event {record.ID} DataRow");
+                                await QueryAndPushToCloud<dynamic>("GetEventWaveformData", eventDataFilter, cancellationToken, $"Waveform Data for Event {record.ID}");
                             }
                         }                        
                         IncrementProgress();
@@ -416,7 +416,7 @@ namespace XDACloudDataPusher
                                     EventID = $"{record.ID}"
                                 });
 
-                                await QueryAndPushToCloud<dynamic>("GetEventFrequencyDomainData", eventDataFilter, cancellationToken, $"Frequency Domain Event {record.ID} DataRow");
+                                await QueryAndPushToCloud<dynamic>("GetEventFrequencyDomainData", eventDataFilter, cancellationToken, $"Frequency Domain Data for Event {record.ID}");
                             }
                         }
                         IncrementProgress();
