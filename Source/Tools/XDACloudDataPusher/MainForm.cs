@@ -791,7 +791,7 @@ namespace XDACloudDataPusher
 
             if (InvokeRequired)
             {
-                BeginInvoke(new Action(ResetTimeRange));
+                BeginInvoke(new Action(CalculateSelectedTimeRange));
             }
             else
             {
