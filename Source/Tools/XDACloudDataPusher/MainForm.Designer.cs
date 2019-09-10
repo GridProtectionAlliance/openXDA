@@ -70,6 +70,7 @@
             this.ExportProgressBar = new System.Windows.Forms.ProgressBar();
             this.CancelExportButton = new System.Windows.Forms.Button();
             this.PrimaryToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.VersionLabel = new System.Windows.Forms.Label();
             this.EventQueryGroupBox.SuspendLayout();
             this.CloudRepositoryGroupBox.SuspendLayout();
             this.MessageGroupBox.SuspendLayout();
@@ -553,11 +554,23 @@
             this.CancelExportButton.UseVisualStyleBackColor = true;
             this.CancelExportButton.Click += new System.EventHandler(this.CancelExportButton_Click);
             // 
+            // VersionLabel
+            // 
+            this.VersionLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.VersionLabel.AutoSize = true;
+            this.VersionLabel.Location = new System.Drawing.Point(771, 2);
+            this.VersionLabel.Name = "VersionLabel";
+            this.VersionLabel.Size = new System.Drawing.Size(75, 13);
+            this.VersionLabel.TabIndex = 16;
+            this.VersionLabel.Text = "Version: X.Y.Z";
+            this.VersionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(849, 636);
+            this.Controls.Add(this.VersionLabel);
             this.Controls.Add(this.CancelExportButton);
             this.Controls.Add(this.ExportProgressBar);
             this.Controls.Add(this.MessageGroupBox);
@@ -578,6 +591,7 @@
             this.MessageGroupBox.ResumeLayout(false);
             this.MessageGroupBox.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -623,6 +637,7 @@
         private System.Windows.Forms.Label SelectedTimeRangeLabel;
         private System.Windows.Forms.Button ClearTextButton;
         private System.Windows.Forms.ToolTip PrimaryToolTip;
+        private System.Windows.Forms.Label VersionLabel;
     }
 }
 

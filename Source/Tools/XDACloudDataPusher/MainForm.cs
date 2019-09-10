@@ -35,6 +35,7 @@ using GSF;
 using GSF.ComponentModel;
 using GSF.Diagnostics;
 using GSF.IO;
+using GSF.Reflection;
 using GSF.Threading;
 using GSF.Units;
 using GSF.Windows.Forms;
@@ -139,6 +140,10 @@ namespace XDACloudDataPusher
 
                 // After attaching to event, refresh all properties to pickup any needed initial values
                 m_settings.UpdateProperties();
+
+                // Assign application version to visible label
+                Version version = AssemblyInfo.EntryAssembly.Version;
+                VersionLabel.Text = $"Version {version.Major}.{version.Minor}.{version.Build}";
 
                 // Restore last window size/location
                 this.RestoreLayout();
