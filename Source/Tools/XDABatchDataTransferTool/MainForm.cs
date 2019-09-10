@@ -51,7 +51,7 @@ using EventDataFilter = openXDA.Adapters.JSONApiController.EventDataJSON;
 // ReSharper disable ClassNeverInstantiated.Local
 // ReSharper disable CoVariantArrayConversion
 // ReSharper disable UnusedParameter.Local
-namespace XDACloudDataPusher
+namespace XDABatchDataTransferTool
 {
     public partial class MainForm : Form //-V3073
     {

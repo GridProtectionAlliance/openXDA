@@ -5,14 +5,19 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("XDACloudDataPusher")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("XDACloudDataPusher")]
-[assembly: AssemblyCopyright("Copyright ©  2019")]
+[assembly: AssemblyTitle("openXDA Batch Data Transfer Tool")]
+[assembly: AssemblyDescription("openXDA Tool for Batch Data Transfer")]
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyProduct("openXDA")]
+[assembly: AssemblyCopyright("Copyright © GPA, 2019.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug Build")]
+#else
+[assembly: AssemblyConfiguration("Release Build")]
+#endif
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from

@@ -29,7 +29,7 @@ using ExpressionEvaluator;
 using GSF.ComponentModel;
 using GSF.Configuration;
 
-namespace XDACloudDataPusher
+namespace XDABatchDataTransferTool
 {
     /// <summary>
     /// Defines settings for the XDACloudDataPusher application.

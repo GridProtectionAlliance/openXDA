@@ -24,7 +24,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace XDACloudDataPusher
+namespace XDABatchDataTransferTool
 {
     static class Program
     {

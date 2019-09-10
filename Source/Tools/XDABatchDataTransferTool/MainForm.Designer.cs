@@ -1,4 +1,4 @@
-﻿namespace XDACloudDataPusher
+﻿namespace XDABatchDataTransferTool
 {
     partial class MainForm
     {
@@ -48,6 +48,7 @@
             this.QueryMetersRadioButton = new System.Windows.Forms.RadioButton();
             this.SelectedSourcesCheckedListBox = new System.Windows.Forms.CheckedListBox();
             this.CloudRepositoryGroupBox = new System.Windows.Forms.GroupBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.PostSizeLimitNoteLabel = new System.Windows.Forms.Label();
             this.PostSizeLimitLabel = new System.Windows.Forms.Label();
             this.PostSizeLimitSuffixLabel = new System.Windows.Forms.Label();
@@ -279,6 +280,7 @@
             // CloudRepositoryGroupBox
             // 
             this.CloudRepositoryGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.CloudRepositoryGroupBox.Controls.Add(this.label1);
             this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitNoteLabel);
             this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitLabel);
             this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitSuffixLabel);
@@ -298,9 +300,20 @@
             this.CloudRepositoryGroupBox.Location = new System.Drawing.Point(476, 12);
             this.CloudRepositoryGroupBox.Name = "CloudRepositoryGroupBox";
             this.CloudRepositoryGroupBox.Size = new System.Drawing.Size(367, 328);
-            this.CloudRepositoryGroupBox.TabIndex = 1;
+            this.CloudRepositoryGroupBox.TabIndex = 0;
             this.CloudRepositoryGroupBox.TabStop = false;
-            this.CloudRepositoryGroupBox.Text = "Cloud Repository";
+            this.CloudRepositoryGroupBox.Text = "Receiving Cloud Repository";
+            // 
+            // label1
+            // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(10, 171);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(127, 13);
+            this.label1.TabIndex = 6;
+            this.label1.Text = "Export openXDA Results:";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // PostSizeLimitNoteLabel
             // 
@@ -308,7 +321,7 @@
             this.PostSizeLimitNoteLabel.Location = new System.Drawing.Point(237, 189);
             this.PostSizeLimitNoteLabel.Name = "PostSizeLimitNoteLabel";
             this.PostSizeLimitNoteLabel.Size = new System.Drawing.Size(130, 57);
-            this.PostSizeLimitNoteLabel.TabIndex = 14;
+            this.PostSizeLimitNoteLabel.TabIndex = 15;
             this.PostSizeLimitNoteLabel.Text = "Multiple exported events will be grouped together by type. Groups will not exceed" +
     " this size.";
             // 
@@ -318,7 +331,7 @@
             this.PostSizeLimitLabel.Location = new System.Drawing.Point(236, 150);
             this.PostSizeLimitLabel.Name = "PostSizeLimitLabel";
             this.PostSizeLimitLabel.Size = new System.Drawing.Size(78, 13);
-            this.PostSizeLimitLabel.TabIndex = 11;
+            this.PostSizeLimitLabel.TabIndex = 12;
             this.PostSizeLimitLabel.Text = "Post Size Limit:";
             // 
             // PostSizeLimitSuffixLabel
@@ -327,7 +340,7 @@
             this.PostSizeLimitSuffixLabel.Location = new System.Drawing.Point(295, 169);
             this.PostSizeLimitSuffixLabel.Name = "PostSizeLimitSuffixLabel";
             this.PostSizeLimitSuffixLabel.Size = new System.Drawing.Size(32, 13);
-            this.PostSizeLimitSuffixLabel.TabIndex = 13;
+            this.PostSizeLimitSuffixLabel.TabIndex = 14;
             this.PostSizeLimitSuffixLabel.Text = "bytes";
             // 
             // PostSizeLimitMaskedTextBox
@@ -336,7 +349,7 @@
             this.PostSizeLimitMaskedTextBox.Mask = "0000000";
             this.PostSizeLimitMaskedTextBox.Name = "PostSizeLimitMaskedTextBox";
             this.PostSizeLimitMaskedTextBox.Size = new System.Drawing.Size(54, 20);
-            this.PostSizeLimitMaskedTextBox.TabIndex = 12;
+            this.PostSizeLimitMaskedTextBox.TabIndex = 13;
             this.PostSizeLimitMaskedTextBox.Text = "500000";
             this.PostSizeLimitMaskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.PostSizeLimitMaskedTextBox.TextChanged += new System.EventHandler(this.FormElementChanged);
@@ -345,10 +358,10 @@
             // 
             this.ExportFrequencyDomainDataCheckBox.AutoSize = true;
             this.ExportFrequencyDomainDataCheckBox.Enabled = false;
-            this.ExportFrequencyDomainDataCheckBox.Location = new System.Drawing.Point(13, 261);
+            this.ExportFrequencyDomainDataCheckBox.Location = new System.Drawing.Point(10, 294);
             this.ExportFrequencyDomainDataCheckBox.Name = "ExportFrequencyDomainDataCheckBox";
             this.ExportFrequencyDomainDataCheckBox.Size = new System.Drawing.Size(174, 17);
-            this.ExportFrequencyDomainDataCheckBox.TabIndex = 10;
+            this.ExportFrequencyDomainDataCheckBox.TabIndex = 11;
             this.ExportFrequencyDomainDataCheckBox.Text = "Export &Frequency Domain Data";
             this.ExportFrequencyDomainDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportFrequencyDomainDataCheckBox.Visible = false;
@@ -359,11 +372,11 @@
             this.ExportWaveformDataCheckBox.AutoSize = true;
             this.ExportWaveformDataCheckBox.Checked = true;
             this.ExportWaveformDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ExportWaveformDataCheckBox.Location = new System.Drawing.Point(13, 238);
+            this.ExportWaveformDataCheckBox.Location = new System.Drawing.Point(13, 146);
             this.ExportWaveformDataCheckBox.Name = "ExportWaveformDataCheckBox";
-            this.ExportWaveformDataCheckBox.Size = new System.Drawing.Size(134, 17);
-            this.ExportWaveformDataCheckBox.TabIndex = 9;
-            this.ExportWaveformDataCheckBox.Text = "Export &Waveform Data";
+            this.ExportWaveformDataCheckBox.Size = new System.Drawing.Size(159, 17);
+            this.ExportWaveformDataCheckBox.TabIndex = 5;
+            this.ExportWaveformDataCheckBox.Text = "Export Raw &Waveform Data";
             this.PrimaryToolTip.SetToolTip(this.ExportWaveformDataCheckBox, "Waveform Export Requires Export of Event Data...");
             this.ExportWaveformDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportWaveformDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
@@ -373,10 +386,10 @@
             this.ExportBreakerOperationCheckBox.AutoSize = true;
             this.ExportBreakerOperationCheckBox.Checked = true;
             this.ExportBreakerOperationCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ExportBreakerOperationCheckBox.Location = new System.Drawing.Point(13, 215);
+            this.ExportBreakerOperationCheckBox.Location = new System.Drawing.Point(38, 261);
             this.ExportBreakerOperationCheckBox.Name = "ExportBreakerOperationCheckBox";
             this.ExportBreakerOperationCheckBox.Size = new System.Drawing.Size(171, 17);
-            this.ExportBreakerOperationCheckBox.TabIndex = 8;
+            this.ExportBreakerOperationCheckBox.TabIndex = 10;
             this.ExportBreakerOperationCheckBox.Text = "Export &Breaker Operation Data";
             this.ExportBreakerOperationCheckBox.UseVisualStyleBackColor = true;
             this.ExportBreakerOperationCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
@@ -386,11 +399,11 @@
             this.ExportDisturbanceDataCheckBox.AutoSize = true;
             this.ExportDisturbanceDataCheckBox.Checked = true;
             this.ExportDisturbanceDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ExportDisturbanceDataCheckBox.Location = new System.Drawing.Point(13, 192);
+            this.ExportDisturbanceDataCheckBox.Location = new System.Drawing.Point(38, 238);
             this.ExportDisturbanceDataCheckBox.Name = "ExportDisturbanceDataCheckBox";
-            this.ExportDisturbanceDataCheckBox.Size = new System.Drawing.Size(142, 17);
-            this.ExportDisturbanceDataCheckBox.TabIndex = 7;
-            this.ExportDisturbanceDataCheckBox.Text = "Export &Disturbance Data";
+            this.ExportDisturbanceDataCheckBox.Size = new System.Drawing.Size(181, 17);
+            this.ExportDisturbanceDataCheckBox.TabIndex = 9;
+            this.ExportDisturbanceDataCheckBox.Text = "Export Voltage &Disturbance Data";
             this.ExportDisturbanceDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportDisturbanceDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
             // 
@@ -399,10 +412,10 @@
             this.ExportFaultDataCheckBox.AutoSize = true;
             this.ExportFaultDataCheckBox.Checked = true;
             this.ExportFaultDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ExportFaultDataCheckBox.Location = new System.Drawing.Point(13, 169);
+            this.ExportFaultDataCheckBox.Location = new System.Drawing.Point(38, 214);
             this.ExportFaultDataCheckBox.Name = "ExportFaultDataCheckBox";
             this.ExportFaultDataCheckBox.Size = new System.Drawing.Size(108, 17);
-            this.ExportFaultDataCheckBox.TabIndex = 6;
+            this.ExportFaultDataCheckBox.TabIndex = 8;
             this.ExportFaultDataCheckBox.Text = "Export Fa&ult Data";
             this.ExportFaultDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportFaultDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
@@ -412,10 +425,10 @@
             this.ExportEventDataCheckBox.AutoSize = true;
             this.ExportEventDataCheckBox.Checked = true;
             this.ExportEventDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ExportEventDataCheckBox.Location = new System.Drawing.Point(13, 146);
+            this.ExportEventDataCheckBox.Location = new System.Drawing.Point(38, 191);
             this.ExportEventDataCheckBox.Name = "ExportEventDataCheckBox";
             this.ExportEventDataCheckBox.Size = new System.Drawing.Size(113, 17);
-            this.ExportEventDataCheckBox.TabIndex = 5;
+            this.ExportEventDataCheckBox.TabIndex = 7;
             this.ExportEventDataCheckBox.Text = "Export E&vent Data";
             this.ExportEventDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportEventDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
@@ -425,8 +438,8 @@
             this.PushToCloudButton.Location = new System.Drawing.Point(279, 288);
             this.PushToCloudButton.Name = "PushToCloudButton";
             this.PushToCloudButton.Size = new System.Drawing.Size(75, 23);
-            this.PushToCloudButton.TabIndex = 15;
-            this.PushToCloudButton.Text = "&Push";
+            this.PushToCloudButton.TabIndex = 16;
+            this.PushToCloudButton.Text = "Transfer";
             this.PushToCloudButton.UseVisualStyleBackColor = true;
             this.PushToCloudButton.Click += new System.EventHandler(this.PushToCloudButton_Click);
             // 
@@ -580,7 +593,7 @@
             this.MinimumSize = new System.Drawing.Size(865, 675);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "openXDA Cloud Data Pusher";
+            this.Text = "openXDA Batch Data Transfer Tool";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
@@ -638,6 +651,7 @@
         private System.Windows.Forms.Button ClearTextButton;
         private System.Windows.Forms.ToolTip PrimaryToolTip;
         private System.Windows.Forms.Label VersionLabel;
+        private System.Windows.Forms.Label label1;
     }
 }
 

@@ -134,7 +134,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.EMCB", "Libraries\o
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.ArcGIS", "Libraries\openXDA.ArcGIS\openXDA.ArcGIS.csproj", "{A74AEBC8-4A3F-49DF-A95B-B992ED8F6CEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDACloudDataPusher", "Tools\XDACloudDataPusher\XDACloudDataPusher.csproj", "{DC15C938-C7A4-47C4-B12C-8F36E9D886B9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDABatchDataTransferTool", "Tools\XDABatchDataTransferTool\XDABatchDataTransferTool.csproj", "{DC15C938-C7A4-47C4-B12C-8F36E9D886B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
