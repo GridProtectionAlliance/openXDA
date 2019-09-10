@@ -333,6 +333,12 @@ namespace XDABatchDataTransferTool
                     return;
             }
 
+            if (string.IsNullOrEmpty(m_lineIDList) && string.IsNullOrEmpty(m_meterIDList))
+            {
+                if (MessageBox.Show(this, "No meters or lines have been selected for the export query.\n\nAre you sure you want to export all available openXDA event data?", "Export Volume Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    return;
+            }
+
             SetButtonsEnabledState(false);
 
             // Spin up export operations task
