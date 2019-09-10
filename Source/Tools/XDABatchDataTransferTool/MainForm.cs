@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -319,11 +320,11 @@ namespace XDABatchDataTransferTool
             ClearUpdateMessages();
         }
 
-        private void TransferToCloudButton_Click(object sender, EventArgs e)
+        private void TransferToRepositoryButton_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(m_settings.CloudRepostioryConnectionString))
+            if (string.IsNullOrWhiteSpace(m_settings.RepositoryConnectionString))
             {
-                MessageBox.Show(this, "No cloud service connection string was defined.\n\nCannot transfer openXDA event data to the cloud.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "No repository connection string was defined.\n\nCannot transfer openXDA event data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -378,7 +379,7 @@ namespace XDABatchDataTransferTool
 
                     // Export event data
                     if (m_settings.ExportEventData)
-                        events = await QueryAndTransferToCloud<Event>("GetEvents", eventFilter, cancellationToken);
+                        events = await QueryAndTransferToRepository<Event>("GetEvents", eventFilter, cancellationToken);
 
                     if (events?.Length > 0)
                         SetExportProgressBarMaximum(ProgressSteps + (m_settings.ExportWaveformData ? events.Length - 1 : 0) + (m_settings.ExportFrequencyDomainData ? events.Length - 1 : 0));
@@ -387,19 +388,19 @@ namespace XDABatchDataTransferTool
 
                     // Export fault data
                     if (m_settings.ExportFaultData)
-                        await QueryAndTransferToCloud<Fault>("GetFaults", eventFilter, cancellationToken);
+                        await QueryAndTransferToRepository<Fault>("GetFaults", eventFilter, cancellationToken);
 
                     IncrementProgress();
 
                     // Export disturbance data
                     if (m_settings.ExportDisturbanceData)
-                        await QueryAndTransferToCloud<Disturbance>("GetDisturbances", eventFilter, cancellationToken);
+                        await QueryAndTransferToRepository<Disturbance>("GetDisturbances", eventFilter, cancellationToken);
 
                     IncrementProgress();
 
                     // Export breaker operation data
                     if (m_settings.ExportBreakerOperationData)
-                        await QueryAndTransferToCloud<BreakerOperation>("GetBreakerOperations", eventFilter, cancellationToken);
+                        await QueryAndTransferToRepository<BreakerOperation>("GetBreakerOperations", eventFilter, cancellationToken);
 
                     IncrementProgress();
 
@@ -415,7 +416,7 @@ namespace XDABatchDataTransferTool
                                     EventID = $"{record.ID}"
                                 });
 
-                                await QueryAndTransferToCloud<dynamic>("GetEventWaveformData", eventDataFilter, cancellationToken, $"Event {record.ID} Waveform Data");
+                                await QueryAndTransferToRepository<dynamic>("GetEventWaveformData", eventDataFilter, cancellationToken, $"Event {record.ID} Waveform Data");
                                 IncrementProgress();
                             }
                         }
@@ -434,7 +435,7 @@ namespace XDABatchDataTransferTool
                                     EventID = $"{record.ID}"
                                 });
 
-                                await QueryAndTransferToCloud<dynamic>("GetEventFrequencyDomainData", eventDataFilter, cancellationToken, $"Event {record.ID} Frequency Domain Data");
+                                await QueryAndTransferToRepository<dynamic>("GetEventFrequencyDomainData", eventDataFilter, cancellationToken, $"Event {record.ID} Frequency Domain Data");
                                 IncrementProgress();
                             }
                         }
@@ -456,7 +457,7 @@ namespace XDABatchDataTransferTool
             });
         }
 
-        private async Task<T[]> QueryAndTransferToCloud<T>(string function, string eventFilter, CancellationToken cancellationToken, string typeName = null)
+        private async Task<T[]> QueryAndTransferToRepository<T>(string function, string eventFilter, CancellationToken cancellationToken, string typeName = null)
         {
             Ticks startTime = DateTime.UtcNow.Ticks;
             
@@ -491,7 +492,7 @@ namespace XDABatchDataTransferTool
 
             if (results.Length == 0)
             {
-                ShowUpdateMessage($"No {typeName} records were found, skipping cloud transfer operations...");
+                ShowUpdateMessage($"No {typeName} records were found, skipping repository transfer operations...");
                 return new T[0];
             }
 
@@ -510,24 +511,24 @@ namespace XDABatchDataTransferTool
 
             ShowUpdateMessage($"Successfully queried and serialized {records.Count:N0} {typeName} records in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
             
-            await TransferToCloud(records, typeName, cancellationToken);
+            await TransferToRepository(records, typeName, cancellationToken);
 
             return results;
         }
 
-        private async Task TransferToCloud(List<byte[]> records, string typeName, CancellationToken cancellationToken)
+        private async Task TransferToRepository(List<byte[]> records, string typeName, CancellationToken cancellationToken)
         {
             Ticks startTime = DateTime.UtcNow.Ticks;
-            ShowUpdateMessage($"Transferring {typeName} records to the cloud...");
+            ShowUpdateMessage($"Transferring {typeName} records to the repository...");
 
-            if (AzureRadioButton.Checked)
+            if (m_settings.RepositoryIsAzure)
             {
                 // Establish connection to Azure Event Hub
                 EventHubClient eventHub;
 
                 try
                 {
-                    EventHubsConnectionStringBuilder builder = new EventHubsConnectionStringBuilder(m_settings.CloudRepostioryConnectionString);
+                    EventHubsConnectionStringBuilder builder = new EventHubsConnectionStringBuilder(m_settings.RepositoryConnectionString);
                     eventHub = EventHubClient.CreateFromConnectionString(builder.ToString());
                 }
                 catch (Exception ex)
@@ -540,16 +541,29 @@ namespace XDABatchDataTransferTool
 
                 ShowUpdateMessage($"Successfully transferred {SI2.ToScaledString(records.Sum(record => (long)record.Length), "B")} of {records.Count:N0} JSON serialized {typeName} records to Azure Event Hub in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
             }
-            else if (AWSRadioButton.Checked)
+            else if (m_settings.RepositoryIsAWS)
             {
                 // TODO: Establish connection to Amazon Kinesis
                 await TransferToAWS(null, records, typeName, cancellationToken);
 
                 ShowUpdateMessage($"Successfully transferred {SI2.ToScaledString(records.Sum(record => (long)record.Length), "B")} of {records.Count:N0} JSON serialized {typeName} records to Amazon Kinesis in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
             }
+            else if (m_settings.RepositoryIsGoogle)
+            {
+                // TODO: Establish connection to Google Pub/Sub
+                await TransferToGoogle(null, records, typeName, cancellationToken);
+
+                ShowUpdateMessage($"Successfully transferred {SI2.ToScaledString(records.Sum(record => (long)record.Length), "B")} of {records.Count:N0} JSON serialized {typeName} records to Google Pub/Sub in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
+            }
+            else if (m_settings.RepositoryIsPQDS)
+            {
+                await TransferToPQDS(null, records, typeName, cancellationToken);
+
+                ShowUpdateMessage($"Successfully transferred {SI2.ToScaledString(records.Sum(record => (long)record.Length), "B")} of {records.Count:N0} JSON serialized {typeName} records to PQDS.csv in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
+            }
             else
             {
-                ShowErrorMessage("No repository type selected for cloud data transfer");
+                ShowErrorMessage("No repository type selected for data transfer");
             }
         }
 
@@ -596,8 +610,40 @@ namespace XDABatchDataTransferTool
 
         private /*async*/ Task TransferToAWS(object connection, List<byte[]> records, string typeName, CancellationToken cancellationToken)
         {
-            // TODO: Add ability to transfer to Kinesis minding post size limit
+            // TODO: Add ability to transfer to Amazon Kinesis minding post size limit
             return Task.CompletedTask;
+        }
+
+        private /*async*/ Task TransferToGoogle(object connection, List<byte[]> records, string typeName, CancellationToken cancellationToken)
+        {
+            // TODO: Add ability to transfer to Google Pub/Sub minding post size limit
+            return Task.CompletedTask;
+        }
+
+        private async Task TransferToPQDS(object connection, List<byte[]> records, string typeName, CancellationToken cancellationToken)
+        {
+            byte[] newLine = Encoding.UTF8.GetBytes(Environment.NewLine);
+            string rootPath = "";
+
+            if (Directory.Exists(m_settings.RepositoryConnectionString))
+                rootPath = FilePath.AddPathSuffix(m_settings.RepositoryConnectionString);
+
+            string filePath = FilePath.GetAbsolutePath($"{rootPath}{typeName}.txt");
+
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+
+            using (FileStream destination = File.OpenWrite(filePath))
+            {
+                foreach (byte[] record in records)
+                {
+                    if (record?.Length > 0)
+                    {
+                        await destination.WriteAsync(record, 0, record.Length, cancellationToken);
+                        await destination.WriteAsync(newLine, 0, newLine.Length, cancellationToken);
+                    }
+                }
+            }
         }
 
         // Form Element Accessors -- these functions allow access to form elements from non-UI threads
@@ -712,7 +758,7 @@ namespace XDABatchDataTransferTool
                     SelectAllEventsButton.Enabled = enabled;
                     UnselectAllEventsButton.Enabled = enabled;
                     ClearTimeRangeButton.Enabled = enabled;
-                    TransferToCloudButton.Enabled = enabled;
+                    TransferToRepositoryButton.Enabled = enabled;
                     CancelExportButton.Enabled = !enabled;
                 }
                 catch (Exception ex)

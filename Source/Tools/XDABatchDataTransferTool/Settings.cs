@@ -32,7 +32,7 @@ using GSF.Configuration;
 namespace XDABatchDataTransferTool
 {
     /// <summary>
-    /// Defines settings for the XDACloudDataPusher application.
+    /// Defines settings for the XDABatchDataTransferTool application.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -144,46 +144,70 @@ namespace XDABatchDataTransferTool
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if cloud repository is Azure.
+        /// Gets or sets flag that determines if receiving repository is Azure.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.AzureRadioButton) + ".Checked")]
-        [Description("Flag that determines if cloud repository is Azure. Value is mutually exclusive of CloudRepositoryIsAWS.")]
+        [Description("Flag that determines if receiving repository is Azure. Value is mutually exclusive of RepositoryIsAWS, RepositoryIsPQDS, and RepositoryIsGoogle.")]
         [UserScopedSetting]
-        public bool CloudRepositoryIsAzure
+        public bool RepositoryIsAzure
         { 
-            get => GetPropertyValue<bool>(nameof(CloudRepositoryIsAzure));
-            set => SetPropertyValue(nameof(CloudRepositoryIsAzure), value);
+            get => GetPropertyValue<bool>(nameof(RepositoryIsAzure));
+            set => SetPropertyValue(nameof(RepositoryIsAzure), value);
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if cloud repository is Amazon Web Services.
+        /// Gets or sets flag that determines if receiving repository is Amazon Web Services.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.AWSRadioButton) + ".Checked")]
-        [Description("Flag that determines if cloud repository is Amazon Web Services. Value is mutually exclusive of CloudRepositoryIsAzure.")]
+        [Description("Flag that determines if receiving repository is Amazon Web Services. Value is mutually exclusive of RepositoryIsAzure, RepositoryIsPQDS, and RepositoryIsGoogle.")]
         [UserScopedSetting]
-        public bool CloudRepositoryIsAWS
+        public bool RepositoryIsAWS
         { 
-            get => GetPropertyValue<bool>(nameof(CloudRepositoryIsAWS));
-            set => SetPropertyValue(nameof(CloudRepositoryIsAWS), value);
+            get => GetPropertyValue<bool>(nameof(RepositoryIsAWS));
+            set => SetPropertyValue(nameof(RepositoryIsAWS), value);
         }
 
         /// <summary>
-        /// Gets or sets cloud repository connection string.
+        /// Gets or sets flag that determines if receiving repository is PQDS.
+        /// </summary>
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.PQDSRadioButton) + ".Checked")]
+        [Description("Flag that determines if receiving repository is Power Quality Data Sharing format. Value is mutually exclusive of RepositoryIsAzure, RepositoryIsAWS, and RepositoryIsGoogle.")]
+        [UserScopedSetting]
+        public bool RepositoryIsPQDS
+        { 
+            get => GetPropertyValue<bool>(nameof(RepositoryIsPQDS));
+            set => SetPropertyValue(nameof(RepositoryIsPQDS), value);
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if receiving repository is Google.
+        /// </summary>
+        [TypeConvertedValueExpression("Form." + nameof(MainForm.GoogleRadioButton) + ".Checked")]
+        [Description("Flag that determines if receiving repository is Google. Value is mutually exclusive of RepositoryIsAzure, RepositoryIsAWS, and RepositoryIsPQDS.")]
+        [UserScopedSetting]
+        public bool RepositoryIsGoogle
+        { 
+            get => GetPropertyValue<bool>(nameof(RepositoryIsGoogle));
+            set => SetPropertyValue(nameof(RepositoryIsGoogle), value);
+        }
+
+        /// <summary>
+        /// Gets or sets receiving repository connection string.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.ConnectionStringTextBox) + ".Text")]
-        [Description("Defines the cloud repository connection string.")]
+        [Description("Defines the receiving repository connection string.")]
         [UserScopedSetting]
-        public string CloudRepostioryConnectionString
+        public string RepositoryConnectionString
         { 
-            get => GetPropertyValue<string>(nameof(CloudRepostioryConnectionString));
-            set => SetPropertyValue(nameof(CloudRepostioryConnectionString), value);
+            get => GetPropertyValue<string>(nameof(RepositoryConnectionString));
+            set => SetPropertyValue(nameof(RepositoryConnectionString), value);
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if event data should be exported to cloud.
+        /// Gets or sets flag that determines if event data should be exported.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportEventDataCheckBox) + ".Checked")]
-        [Description("Flag that determines event data should be exported to cloud.")]
+        [Description("Flag that determines event data should be exported.")]
         [UserScopedSetting]
         public bool ExportEventData
         { 
@@ -192,10 +216,10 @@ namespace XDABatchDataTransferTool
         }
         
         /// <summary>
-        /// Gets or sets flag that determines if fault data should be exported to cloud.
+        /// Gets or sets flag that determines if fault data should be exported.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportFaultDataCheckBox) + ".Checked")]
-        [Description("Flag that determines fault data should be exported to cloud.")]
+        [Description("Flag that determines fault data should be exported.")]
         [UserScopedSetting]
         public bool ExportFaultData
         { 
@@ -204,10 +228,10 @@ namespace XDABatchDataTransferTool
         }
         
         /// <summary>
-        /// Gets or sets flag that determines if disturbance data should be exported to cloud.
+        /// Gets or sets flag that determines if disturbance data should be exported.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportDisturbanceDataCheckBox) + ".Checked")]
-        [Description("Flag that determines disturbance data should be exported to cloud.")]
+        [Description("Flag that determines disturbance data should be exported.")]
         [UserScopedSetting]
         public bool ExportDisturbanceData
         { 
@@ -216,10 +240,10 @@ namespace XDABatchDataTransferTool
         }
         
         /// <summary>
-        /// Gets or sets flag that determines if breaker operation data should be exported to cloud.
+        /// Gets or sets flag that determines if breaker operation data should be exported.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportBreakerOperationCheckBox) + ".Checked")]
-        [Description("Flag that determines breaker operation data should be exported to cloud.")]
+        [Description("Flag that determines breaker operation data should be exported.")]
         [UserScopedSetting]
         public bool ExportBreakerOperationData
         { 
@@ -228,10 +252,10 @@ namespace XDABatchDataTransferTool
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if waveform data should be exported to cloud.
+        /// Gets or sets flag that determines if waveform data should be exported.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportWaveformDataCheckBox) + ".Checked")]
-        [Description("Flag that determines waveform data should be exported to cloud.")]
+        [Description("Flag that determines waveform data should be exported.")]
         [UserScopedSetting]
         public bool ExportWaveformData
         { 
@@ -240,10 +264,10 @@ namespace XDABatchDataTransferTool
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if frequency domain data should be exported to cloud.
+        /// Gets or sets flag that determines if frequency domain data should be exported.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.ExportFrequencyDomainDataCheckBox) + ".Checked")]
-        [Description("Flag that determines frequency domain data should be exported to cloud.")]
+        [Description("Flag that determines frequency domain data should be exported.")]
         [UserScopedSetting]
         public bool ExportFrequencyDomainData
         { 
@@ -252,10 +276,10 @@ namespace XDABatchDataTransferTool
         }
 
         /// <summary>
-        /// Gets or sets the post size limit for cloud data.
+        /// Gets or sets the post size limit for repository data.
         /// </summary>
         [TypeConvertedValueExpression("Form." + nameof(MainForm.PostSizeLimitMaskedTextBox) + ".Text")]
-        [Description("Post size limit for cloud data.")]
+        [Description("Post size limit for repository data.")]
         [UserScopedSetting]
         public int PostSizeLimit
         { 

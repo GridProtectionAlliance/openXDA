@@ -47,8 +47,10 @@
             this.QueryLinesRadioButton = new System.Windows.Forms.RadioButton();
             this.QueryMetersRadioButton = new System.Windows.Forms.RadioButton();
             this.SelectedSourcesCheckedListBox = new System.Windows.Forms.CheckedListBox();
-            this.CloudRepositoryGroupBox = new System.Windows.Forms.GroupBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.RepositoryGroupBox = new System.Windows.Forms.GroupBox();
+            this.PQDSRadioButton = new System.Windows.Forms.RadioButton();
+            this.GoogleRadioButton = new System.Windows.Forms.RadioButton();
+            this.ExportXDAResultsLabel = new System.Windows.Forms.Label();
             this.PostSizeLimitNoteLabel = new System.Windows.Forms.Label();
             this.PostSizeLimitLabel = new System.Windows.Forms.Label();
             this.PostSizeLimitSuffixLabel = new System.Windows.Forms.Label();
@@ -59,7 +61,7 @@
             this.ExportDisturbanceDataCheckBox = new System.Windows.Forms.CheckBox();
             this.ExportFaultDataCheckBox = new System.Windows.Forms.CheckBox();
             this.ExportEventDataCheckBox = new System.Windows.Forms.CheckBox();
-            this.TransferToCloudButton = new System.Windows.Forms.Button();
+            this.TransferToRepositoryButton = new System.Windows.Forms.Button();
             this.AWSRadioButton = new System.Windows.Forms.RadioButton();
             this.RepositoryTypeLabel = new System.Windows.Forms.Label();
             this.AzureRadioButton = new System.Windows.Forms.RadioButton();
@@ -73,7 +75,7 @@
             this.PrimaryToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.VersionLabel = new System.Windows.Forms.Label();
             this.EventQueryGroupBox.SuspendLayout();
-            this.CloudRepositoryGroupBox.SuspendLayout();
+            this.RepositoryGroupBox.SuspendLayout();
             this.MessageGroupBox.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -128,9 +130,9 @@
             // 
             // UnselectAllEventsButton
             // 
-            this.UnselectAllEventsButton.Location = new System.Drawing.Point(100, 238);
+            this.UnselectAllEventsButton.Location = new System.Drawing.Point(102, 238);
             this.UnselectAllEventsButton.Name = "UnselectAllEventsButton";
-            this.UnselectAllEventsButton.Size = new System.Drawing.Size(73, 22);
+            this.UnselectAllEventsButton.Size = new System.Drawing.Size(75, 22);
             this.UnselectAllEventsButton.TabIndex = 9;
             this.UnselectAllEventsButton.Text = "U&nselect All";
             this.UnselectAllEventsButton.UseVisualStyleBackColor = true;
@@ -182,7 +184,7 @@
             // 
             this.SelectAllEventsButton.Location = new System.Drawing.Point(21, 238);
             this.SelectAllEventsButton.Name = "SelectAllEventsButton";
-            this.SelectAllEventsButton.Size = new System.Drawing.Size(73, 22);
+            this.SelectAllEventsButton.Size = new System.Drawing.Size(75, 22);
             this.SelectAllEventsButton.TabIndex = 8;
             this.SelectAllEventsButton.Text = "Select &All";
             this.SelectAllEventsButton.UseVisualStyleBackColor = true;
@@ -191,9 +193,9 @@
             // LoadSourcesButton
             // 
             this.LoadSourcesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.LoadSourcesButton.Location = new System.Drawing.Point(370, 53);
+            this.LoadSourcesButton.Location = new System.Drawing.Point(368, 48);
             this.LoadSourcesButton.Name = "LoadSourcesButton";
-            this.LoadSourcesButton.Size = new System.Drawing.Size(73, 22);
+            this.LoadSourcesButton.Size = new System.Drawing.Size(75, 22);
             this.LoadSourcesButton.TabIndex = 5;
             this.LoadSourcesButton.Text = "L&oad";
             this.LoadSourcesButton.UseVisualStyleBackColor = true;
@@ -277,43 +279,68 @@
             this.SelectedSourcesCheckedListBox.TabIndex = 7;
             this.SelectedSourcesCheckedListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.SelectedSourcesCheckedListBox_ItemCheck);
             // 
-            // CloudRepositoryGroupBox
+            // RepositoryGroupBox
             // 
-            this.CloudRepositoryGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.CloudRepositoryGroupBox.Controls.Add(this.label1);
-            this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitNoteLabel);
-            this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitLabel);
-            this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitSuffixLabel);
-            this.CloudRepositoryGroupBox.Controls.Add(this.PostSizeLimitMaskedTextBox);
-            this.CloudRepositoryGroupBox.Controls.Add(this.ExportFrequencyDomainDataCheckBox);
-            this.CloudRepositoryGroupBox.Controls.Add(this.ExportWaveformDataCheckBox);
-            this.CloudRepositoryGroupBox.Controls.Add(this.ExportBreakerOperationCheckBox);
-            this.CloudRepositoryGroupBox.Controls.Add(this.ExportDisturbanceDataCheckBox);
-            this.CloudRepositoryGroupBox.Controls.Add(this.ExportFaultDataCheckBox);
-            this.CloudRepositoryGroupBox.Controls.Add(this.ExportEventDataCheckBox);
-            this.CloudRepositoryGroupBox.Controls.Add(this.TransferToCloudButton);
-            this.CloudRepositoryGroupBox.Controls.Add(this.AWSRadioButton);
-            this.CloudRepositoryGroupBox.Controls.Add(this.RepositoryTypeLabel);
-            this.CloudRepositoryGroupBox.Controls.Add(this.AzureRadioButton);
-            this.CloudRepositoryGroupBox.Controls.Add(this.ConnectionStringLabel);
-            this.CloudRepositoryGroupBox.Controls.Add(this.ConnectionStringTextBox);
-            this.CloudRepositoryGroupBox.Location = new System.Drawing.Point(476, 12);
-            this.CloudRepositoryGroupBox.Name = "CloudRepositoryGroupBox";
-            this.CloudRepositoryGroupBox.Size = new System.Drawing.Size(367, 328);
-            this.CloudRepositoryGroupBox.TabIndex = 0;
-            this.CloudRepositoryGroupBox.TabStop = false;
-            this.CloudRepositoryGroupBox.Text = "Receiving Cloud Repository";
+            this.RepositoryGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.RepositoryGroupBox.Controls.Add(this.PQDSRadioButton);
+            this.RepositoryGroupBox.Controls.Add(this.GoogleRadioButton);
+            this.RepositoryGroupBox.Controls.Add(this.ExportXDAResultsLabel);
+            this.RepositoryGroupBox.Controls.Add(this.PostSizeLimitNoteLabel);
+            this.RepositoryGroupBox.Controls.Add(this.PostSizeLimitLabel);
+            this.RepositoryGroupBox.Controls.Add(this.PostSizeLimitSuffixLabel);
+            this.RepositoryGroupBox.Controls.Add(this.PostSizeLimitMaskedTextBox);
+            this.RepositoryGroupBox.Controls.Add(this.ExportFrequencyDomainDataCheckBox);
+            this.RepositoryGroupBox.Controls.Add(this.ExportWaveformDataCheckBox);
+            this.RepositoryGroupBox.Controls.Add(this.ExportBreakerOperationCheckBox);
+            this.RepositoryGroupBox.Controls.Add(this.ExportDisturbanceDataCheckBox);
+            this.RepositoryGroupBox.Controls.Add(this.ExportFaultDataCheckBox);
+            this.RepositoryGroupBox.Controls.Add(this.ExportEventDataCheckBox);
+            this.RepositoryGroupBox.Controls.Add(this.TransferToRepositoryButton);
+            this.RepositoryGroupBox.Controls.Add(this.AWSRadioButton);
+            this.RepositoryGroupBox.Controls.Add(this.RepositoryTypeLabel);
+            this.RepositoryGroupBox.Controls.Add(this.AzureRadioButton);
+            this.RepositoryGroupBox.Controls.Add(this.ConnectionStringLabel);
+            this.RepositoryGroupBox.Controls.Add(this.ConnectionStringTextBox);
+            this.RepositoryGroupBox.Location = new System.Drawing.Point(476, 12);
+            this.RepositoryGroupBox.Name = "RepositoryGroupBox";
+            this.RepositoryGroupBox.Size = new System.Drawing.Size(367, 328);
+            this.RepositoryGroupBox.TabIndex = 1;
+            this.RepositoryGroupBox.TabStop = false;
+            this.RepositoryGroupBox.Text = "Receiving Repository";
             // 
-            // label1
+            // PQDSRadioButton
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(10, 171);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(127, 13);
-            this.label1.TabIndex = 6;
-            this.label1.Text = "Export openXDA Results:";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.PQDSRadioButton.AutoSize = true;
+            this.PQDSRadioButton.Enabled = false;
+            this.PQDSRadioButton.Location = new System.Drawing.Point(103, 35);
+            this.PQDSRadioButton.Name = "PQDSRadioButton";
+            this.PQDSRadioButton.Size = new System.Drawing.Size(75, 17);
+            this.PQDSRadioButton.TabIndex = 3;
+            this.PQDSRadioButton.Text = "P&QDS.csv";
+            this.PrimaryToolTip.SetToolTip(this.PQDSRadioButton, "Create Power Quality Data Sharing CSV Files");
+            this.PQDSRadioButton.UseVisualStyleBackColor = true;
+            // 
+            // GoogleRadioButton
+            // 
+            this.GoogleRadioButton.AutoSize = true;
+            this.GoogleRadioButton.Enabled = false;
+            this.GoogleRadioButton.Location = new System.Drawing.Point(215, 35);
+            this.GoogleRadioButton.Name = "GoogleRadioButton";
+            this.GoogleRadioButton.Size = new System.Drawing.Size(105, 17);
+            this.GoogleRadioButton.TabIndex = 4;
+            this.GoogleRadioButton.Text = "&Google Pub/Sub";
+            this.GoogleRadioButton.UseVisualStyleBackColor = true;
+            // 
+            // ExportXDAResultsLabel
+            // 
+            this.ExportXDAResultsLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ExportXDAResultsLabel.AutoSize = true;
+            this.ExportXDAResultsLabel.Location = new System.Drawing.Point(10, 171);
+            this.ExportXDAResultsLabel.Name = "ExportXDAResultsLabel";
+            this.ExportXDAResultsLabel.Size = new System.Drawing.Size(127, 13);
+            this.ExportXDAResultsLabel.TabIndex = 8;
+            this.ExportXDAResultsLabel.Text = "Export openXDA Results:";
+            this.ExportXDAResultsLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // PostSizeLimitNoteLabel
             // 
@@ -321,7 +348,7 @@
             this.PostSizeLimitNoteLabel.Location = new System.Drawing.Point(237, 189);
             this.PostSizeLimitNoteLabel.Name = "PostSizeLimitNoteLabel";
             this.PostSizeLimitNoteLabel.Size = new System.Drawing.Size(130, 57);
-            this.PostSizeLimitNoteLabel.TabIndex = 15;
+            this.PostSizeLimitNoteLabel.TabIndex = 17;
             this.PostSizeLimitNoteLabel.Text = "Multiple exported events will be grouped together by type. Groups will not exceed" +
     " this size.";
             // 
@@ -331,7 +358,7 @@
             this.PostSizeLimitLabel.Location = new System.Drawing.Point(236, 150);
             this.PostSizeLimitLabel.Name = "PostSizeLimitLabel";
             this.PostSizeLimitLabel.Size = new System.Drawing.Size(78, 13);
-            this.PostSizeLimitLabel.TabIndex = 12;
+            this.PostSizeLimitLabel.TabIndex = 14;
             this.PostSizeLimitLabel.Text = "Post Size Limit:";
             // 
             // PostSizeLimitSuffixLabel
@@ -340,7 +367,7 @@
             this.PostSizeLimitSuffixLabel.Location = new System.Drawing.Point(295, 169);
             this.PostSizeLimitSuffixLabel.Name = "PostSizeLimitSuffixLabel";
             this.PostSizeLimitSuffixLabel.Size = new System.Drawing.Size(32, 13);
-            this.PostSizeLimitSuffixLabel.TabIndex = 14;
+            this.PostSizeLimitSuffixLabel.TabIndex = 16;
             this.PostSizeLimitSuffixLabel.Text = "bytes";
             // 
             // PostSizeLimitMaskedTextBox
@@ -349,7 +376,7 @@
             this.PostSizeLimitMaskedTextBox.Mask = "0000000";
             this.PostSizeLimitMaskedTextBox.Name = "PostSizeLimitMaskedTextBox";
             this.PostSizeLimitMaskedTextBox.Size = new System.Drawing.Size(54, 20);
-            this.PostSizeLimitMaskedTextBox.TabIndex = 13;
+            this.PostSizeLimitMaskedTextBox.TabIndex = 15;
             this.PostSizeLimitMaskedTextBox.Text = "500000";
             this.PostSizeLimitMaskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.PostSizeLimitMaskedTextBox.TextChanged += new System.EventHandler(this.FormElementChanged);
@@ -361,7 +388,7 @@
             this.ExportFrequencyDomainDataCheckBox.Location = new System.Drawing.Point(10, 294);
             this.ExportFrequencyDomainDataCheckBox.Name = "ExportFrequencyDomainDataCheckBox";
             this.ExportFrequencyDomainDataCheckBox.Size = new System.Drawing.Size(174, 17);
-            this.ExportFrequencyDomainDataCheckBox.TabIndex = 11;
+            this.ExportFrequencyDomainDataCheckBox.TabIndex = 13;
             this.ExportFrequencyDomainDataCheckBox.Text = "Export Frequency Domain Data";
             this.ExportFrequencyDomainDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportFrequencyDomainDataCheckBox.Visible = false;
@@ -375,7 +402,7 @@
             this.ExportWaveformDataCheckBox.Location = new System.Drawing.Point(13, 146);
             this.ExportWaveformDataCheckBox.Name = "ExportWaveformDataCheckBox";
             this.ExportWaveformDataCheckBox.Size = new System.Drawing.Size(159, 17);
-            this.ExportWaveformDataCheckBox.TabIndex = 5;
+            this.ExportWaveformDataCheckBox.TabIndex = 7;
             this.ExportWaveformDataCheckBox.Text = "Export Raw &Waveform Data";
             this.PrimaryToolTip.SetToolTip(this.ExportWaveformDataCheckBox, "Waveform Export Requires Export of Event Data...");
             this.ExportWaveformDataCheckBox.UseVisualStyleBackColor = true;
@@ -389,7 +416,7 @@
             this.ExportBreakerOperationCheckBox.Location = new System.Drawing.Point(38, 261);
             this.ExportBreakerOperationCheckBox.Name = "ExportBreakerOperationCheckBox";
             this.ExportBreakerOperationCheckBox.Size = new System.Drawing.Size(171, 17);
-            this.ExportBreakerOperationCheckBox.TabIndex = 10;
+            this.ExportBreakerOperationCheckBox.TabIndex = 12;
             this.ExportBreakerOperationCheckBox.Text = "Export &Breaker Operation Data";
             this.ExportBreakerOperationCheckBox.UseVisualStyleBackColor = true;
             this.ExportBreakerOperationCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
@@ -402,7 +429,7 @@
             this.ExportDisturbanceDataCheckBox.Location = new System.Drawing.Point(38, 238);
             this.ExportDisturbanceDataCheckBox.Name = "ExportDisturbanceDataCheckBox";
             this.ExportDisturbanceDataCheckBox.Size = new System.Drawing.Size(181, 17);
-            this.ExportDisturbanceDataCheckBox.TabIndex = 9;
+            this.ExportDisturbanceDataCheckBox.TabIndex = 11;
             this.ExportDisturbanceDataCheckBox.Text = "Export Voltage &Disturbance Data";
             this.ExportDisturbanceDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportDisturbanceDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
@@ -415,7 +442,7 @@
             this.ExportFaultDataCheckBox.Location = new System.Drawing.Point(38, 214);
             this.ExportFaultDataCheckBox.Name = "ExportFaultDataCheckBox";
             this.ExportFaultDataCheckBox.Size = new System.Drawing.Size(108, 17);
-            this.ExportFaultDataCheckBox.TabIndex = 8;
+            this.ExportFaultDataCheckBox.TabIndex = 10;
             this.ExportFaultDataCheckBox.Text = "Export Fa&ult Data";
             this.ExportFaultDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportFaultDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
@@ -427,27 +454,27 @@
             this.ExportEventDataCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ExportEventDataCheckBox.Location = new System.Drawing.Point(38, 191);
             this.ExportEventDataCheckBox.Name = "ExportEventDataCheckBox";
-            this.ExportEventDataCheckBox.Size = new System.Drawing.Size(113, 17);
-            this.ExportEventDataCheckBox.TabIndex = 7;
-            this.ExportEventDataCheckBox.Text = "Export E&vent Data";
+            this.ExportEventDataCheckBox.Size = new System.Drawing.Size(161, 17);
+            this.ExportEventDataCheckBox.TabIndex = 9;
+            this.ExportEventDataCheckBox.Text = "Export E&vent Tags and Time";
             this.ExportEventDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportEventDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
             // 
-            // TransferToCloudButton
+            // TransferToRepositoryButton
             // 
-            this.TransferToCloudButton.Location = new System.Drawing.Point(279, 288);
-            this.TransferToCloudButton.Name = "TransferToCloudButton";
-            this.TransferToCloudButton.Size = new System.Drawing.Size(75, 23);
-            this.TransferToCloudButton.TabIndex = 16;
-            this.TransferToCloudButton.Text = "Trans&fer";
-            this.TransferToCloudButton.UseVisualStyleBackColor = true;
-            this.TransferToCloudButton.Click += new System.EventHandler(this.TransferToCloudButton_Click);
+            this.TransferToRepositoryButton.Location = new System.Drawing.Point(279, 288);
+            this.TransferToRepositoryButton.Name = "TransferToRepositoryButton";
+            this.TransferToRepositoryButton.Size = new System.Drawing.Size(75, 23);
+            this.TransferToRepositoryButton.TabIndex = 18;
+            this.TransferToRepositoryButton.Text = "Trans&fer";
+            this.TransferToRepositoryButton.UseVisualStyleBackColor = true;
+            this.TransferToRepositoryButton.Click += new System.EventHandler(this.TransferToRepositoryButton_Click);
             // 
             // AWSRadioButton
             // 
             this.AWSRadioButton.AutoSize = true;
             this.AWSRadioButton.Enabled = false;
-            this.AWSRadioButton.Location = new System.Drawing.Point(215, 19);
+            this.AWSRadioButton.Location = new System.Drawing.Point(215, 17);
             this.AWSRadioButton.Name = "AWSRadioButton";
             this.AWSRadioButton.Size = new System.Drawing.Size(99, 17);
             this.AWSRadioButton.TabIndex = 2;
@@ -458,7 +485,7 @@
             // RepositoryTypeLabel
             // 
             this.RepositoryTypeLabel.AutoSize = true;
-            this.RepositoryTypeLabel.Location = new System.Drawing.Point(10, 21);
+            this.RepositoryTypeLabel.Location = new System.Drawing.Point(10, 19);
             this.RepositoryTypeLabel.Name = "RepositoryTypeLabel";
             this.RepositoryTypeLabel.Size = new System.Drawing.Size(87, 13);
             this.RepositoryTypeLabel.TabIndex = 0;
@@ -469,7 +496,7 @@
             // 
             this.AzureRadioButton.AutoSize = true;
             this.AzureRadioButton.Checked = true;
-            this.AzureRadioButton.Location = new System.Drawing.Point(103, 19);
+            this.AzureRadioButton.Location = new System.Drawing.Point(103, 17);
             this.AzureRadioButton.Name = "AzureRadioButton";
             this.AzureRadioButton.Size = new System.Drawing.Size(106, 17);
             this.AzureRadioButton.TabIndex = 1;
@@ -481,20 +508,20 @@
             // ConnectionStringLabel
             // 
             this.ConnectionStringLabel.AutoSize = true;
-            this.ConnectionStringLabel.Location = new System.Drawing.Point(10, 44);
+            this.ConnectionStringLabel.Location = new System.Drawing.Point(10, 57);
             this.ConnectionStringLabel.Name = "ConnectionStringLabel";
-            this.ConnectionStringLabel.Size = new System.Drawing.Size(163, 13);
-            this.ConnectionStringLabel.TabIndex = 3;
-            this.ConnectionStringLabel.Text = "Cloud Service &Connection String:";
+            this.ConnectionStringLabel.Size = new System.Drawing.Size(94, 13);
+            this.ConnectionStringLabel.TabIndex = 5;
+            this.ConnectionStringLabel.Text = "&Connection String:";
             // 
             // ConnectionStringTextBox
             // 
-            this.ConnectionStringTextBox.Location = new System.Drawing.Point(13, 60);
+            this.ConnectionStringTextBox.Location = new System.Drawing.Point(13, 73);
             this.ConnectionStringTextBox.Multiline = true;
             this.ConnectionStringTextBox.Name = "ConnectionStringTextBox";
             this.ConnectionStringTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ConnectionStringTextBox.Size = new System.Drawing.Size(341, 70);
-            this.ConnectionStringTextBox.TabIndex = 4;
+            this.ConnectionStringTextBox.Size = new System.Drawing.Size(341, 67);
+            this.ConnectionStringTextBox.TabIndex = 6;
             this.ConnectionStringTextBox.TextChanged += new System.EventHandler(this.FormElementChanged);
             // 
             // MessageGroupBox
@@ -574,7 +601,7 @@
             this.VersionLabel.Location = new System.Drawing.Point(771, 2);
             this.VersionLabel.Name = "VersionLabel";
             this.VersionLabel.Size = new System.Drawing.Size(75, 13);
-            this.VersionLabel.TabIndex = 16;
+            this.VersionLabel.TabIndex = 5;
             this.VersionLabel.Text = "Version: X.Y.Z";
             this.VersionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
@@ -587,7 +614,7 @@
             this.Controls.Add(this.CancelExportButton);
             this.Controls.Add(this.ExportProgressBar);
             this.Controls.Add(this.MessageGroupBox);
-            this.Controls.Add(this.CloudRepositoryGroupBox);
+            this.Controls.Add(this.RepositoryGroupBox);
             this.Controls.Add(this.EventQueryGroupBox);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(865, 675);
@@ -599,8 +626,8 @@
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.EventQueryGroupBox.ResumeLayout(false);
             this.EventQueryGroupBox.PerformLayout();
-            this.CloudRepositoryGroupBox.ResumeLayout(false);
-            this.CloudRepositoryGroupBox.PerformLayout();
+            this.RepositoryGroupBox.ResumeLayout(false);
+            this.RepositoryGroupBox.PerformLayout();
             this.MessageGroupBox.ResumeLayout(false);
             this.MessageGroupBox.PerformLayout();
             this.ResumeLayout(false);
@@ -619,8 +646,8 @@
         private System.Windows.Forms.Label XDAUrlLabel;
         private System.Windows.Forms.Label SourceTypeLabel;
         private System.Windows.Forms.CheckedListBox SelectedSourcesCheckedListBox;
-        private System.Windows.Forms.GroupBox CloudRepositoryGroupBox;
-        private System.Windows.Forms.Button TransferToCloudButton;
+        private System.Windows.Forms.GroupBox RepositoryGroupBox;
+        private System.Windows.Forms.Button TransferToRepositoryButton;
         private System.Windows.Forms.Label RepositoryTypeLabel;
         private System.Windows.Forms.Label ConnectionStringLabel;
         private System.Windows.Forms.Button UnselectAllEventsButton;
@@ -651,7 +678,9 @@
         private System.Windows.Forms.Button ClearTextButton;
         private System.Windows.Forms.ToolTip PrimaryToolTip;
         private System.Windows.Forms.Label VersionLabel;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label ExportXDAResultsLabel;
+        public System.Windows.Forms.RadioButton PQDSRadioButton;
+        public System.Windows.Forms.RadioButton GoogleRadioButton;
     }
 }
 
