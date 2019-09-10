@@ -319,11 +319,11 @@ namespace XDABatchDataTransferTool
             ClearUpdateMessages();
         }
 
-        private void PushToCloudButton_Click(object sender, EventArgs e)
+        private void TransferToCloudButton_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(m_settings.CloudRepostioryConnectionString))
             {
-                MessageBox.Show(this, "No cloud service connection string was defined.\n\nCannot push openXDA event data to the cloud.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "No cloud service connection string was defined.\n\nCannot transfer openXDA event data to the cloud.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -372,7 +372,7 @@ namespace XDABatchDataTransferTool
 
                     // Export event data
                     if (m_settings.ExportEventData)
-                        events = await QueryAndPushToCloud<Event>("GetEvents", eventFilter, cancellationToken);
+                        events = await QueryAndTransferToCloud<Event>("GetEvents", eventFilter, cancellationToken);
 
                     if (events?.Length > 0)
                         SetExportProgressBarMaximum(ProgressSteps + (m_settings.ExportWaveformData ? events.Length - 1 : 0) + (m_settings.ExportFrequencyDomainData ? events.Length - 1 : 0));
@@ -381,19 +381,19 @@ namespace XDABatchDataTransferTool
 
                     // Export fault data
                     if (m_settings.ExportFaultData)
-                        await QueryAndPushToCloud<Fault>("GetFaults", eventFilter, cancellationToken);
+                        await QueryAndTransferToCloud<Fault>("GetFaults", eventFilter, cancellationToken);
 
                     IncrementProgress();
 
                     // Export disturbance data
                     if (m_settings.ExportDisturbanceData)
-                        await QueryAndPushToCloud<Disturbance>("GetDisturbances", eventFilter, cancellationToken);
+                        await QueryAndTransferToCloud<Disturbance>("GetDisturbances", eventFilter, cancellationToken);
 
                     IncrementProgress();
 
                     // Export breaker operation data
                     if (m_settings.ExportBreakerOperationData)
-                        await QueryAndPushToCloud<BreakerOperation>("GetBreakerOperations", eventFilter, cancellationToken);
+                        await QueryAndTransferToCloud<BreakerOperation>("GetBreakerOperations", eventFilter, cancellationToken);
 
                     IncrementProgress();
 
@@ -409,7 +409,7 @@ namespace XDABatchDataTransferTool
                                     EventID = $"{record.ID}"
                                 });
 
-                                await QueryAndPushToCloud<dynamic>("GetEventWaveformData", eventDataFilter, cancellationToken, $"Event {record.ID} Waveform Data");
+                                await QueryAndTransferToCloud<dynamic>("GetEventWaveformData", eventDataFilter, cancellationToken, $"Event {record.ID} Waveform Data");
                                 IncrementProgress();
                             }
                         }
@@ -428,7 +428,7 @@ namespace XDABatchDataTransferTool
                                     EventID = $"{record.ID}"
                                 });
 
-                                await QueryAndPushToCloud<dynamic>("GetEventFrequencyDomainData", eventDataFilter, cancellationToken, $"Event {record.ID} Frequency Domain Data");
+                                await QueryAndTransferToCloud<dynamic>("GetEventFrequencyDomainData", eventDataFilter, cancellationToken, $"Event {record.ID} Frequency Domain Data");
                                 IncrementProgress();
                             }
                         }
@@ -450,7 +450,7 @@ namespace XDABatchDataTransferTool
             });
         }
 
-        private async Task<T[]> QueryAndPushToCloud<T>(string function, string eventFilter, CancellationToken cancellationToken, string typeName = null)
+        private async Task<T[]> QueryAndTransferToCloud<T>(string function, string eventFilter, CancellationToken cancellationToken, string typeName = null)
         {
             Ticks startTime = DateTime.UtcNow.Ticks;
             
@@ -485,7 +485,7 @@ namespace XDABatchDataTransferTool
 
             if (results.Length == 0)
             {
-                ShowUpdateMessage($"No {typeName} records were found, skipping cloud push operations...");
+                ShowUpdateMessage($"No {typeName} records were found, skipping cloud transfer operations...");
                 return new T[0];
             }
 
@@ -504,15 +504,15 @@ namespace XDABatchDataTransferTool
 
             ShowUpdateMessage($"Successfully queried and serialized {records.Count:N0} {typeName} records in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
             
-            await PushToCloud(records, typeName, cancellationToken);
+            await TransferToCloud(records, typeName, cancellationToken);
 
             return results;
         }
 
-        private async Task PushToCloud(List<byte[]> records, string typeName, CancellationToken cancellationToken)
+        private async Task TransferToCloud(List<byte[]> records, string typeName, CancellationToken cancellationToken)
         {
             Ticks startTime = DateTime.UtcNow.Ticks;
-            ShowUpdateMessage($"Pushing {typeName} records to the cloud...");
+            ShowUpdateMessage($"Transferring {typeName} records to the cloud...");
 
             if (AzureRadioButton.Checked)
             {
@@ -530,29 +530,29 @@ namespace XDABatchDataTransferTool
                     return;
                 }
 
-                await PushToAzure(eventHub, records, typeName, cancellationToken);
+                await TransferToAzure(eventHub, records, typeName, cancellationToken);
 
-                ShowUpdateMessage($"Successfully pushed {SI2.ToScaledString(records.Sum(record => (long)record.Length), "B")} of {records.Count:N0} JSON serialized {typeName} records to Azure Event Hub in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
+                ShowUpdateMessage($"Successfully transferred {SI2.ToScaledString(records.Sum(record => (long)record.Length), "B")} of {records.Count:N0} JSON serialized {typeName} records to Azure Event Hub in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
             }
             else if (AWSRadioButton.Checked)
             {
                 // TODO: Establish connection to Amazon Kinesis
-                await PushToAWS(null, records, typeName, cancellationToken);
+                await TransferToAWS(null, records, typeName, cancellationToken);
 
-                ShowUpdateMessage($"Successfully pushed {SI2.ToScaledString(records.Sum(record => (long)record.Length), "B")} of {records.Count:N0} JSON serialized {typeName} records to Amazon Kinesis in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
+                ShowUpdateMessage($"Successfully transferred {SI2.ToScaledString(records.Sum(record => (long)record.Length), "B")} of {records.Count:N0} JSON serialized {typeName} records to Amazon Kinesis in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3)}.");
             }
             else
             {
-                ShowErrorMessage("No repository type selected for cloud data push");
+                ShowErrorMessage("No repository type selected for cloud data transfer");
             }
         }
 
-        private async Task PushToAzure(EventHubClient eventHub, List<byte[]> records, string typeName, CancellationToken cancellationToken)
+        private async Task TransferToAzure(EventHubClient eventHub, List<byte[]> records, string typeName, CancellationToken cancellationToken)
         {
             List<EventData> samples = new List<EventData>();
             int size = 0;
 
-            async Task pushToEventHub()
+            async Task SendToEventHub()
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -576,7 +576,7 @@ namespace XDABatchDataTransferTool
                 }
                 else
                 {
-                    await pushToEventHub();
+                    await SendToEventHub();
                     samples.Add(record);
                     size = 0;
                 }
@@ -584,13 +584,13 @@ namespace XDABatchDataTransferTool
                 size += bytes.Length;
             }
 
-            // Push any remaining events
-            await pushToEventHub();
+            // Transfer any remaining events
+            await SendToEventHub();
         }
 
-        private /*async*/ Task PushToAWS(object connection, List<byte[]> records, string typeName, CancellationToken cancellationToken)
+        private /*async*/ Task TransferToAWS(object connection, List<byte[]> records, string typeName, CancellationToken cancellationToken)
         {
-            // TODO: Add ability to push to Kinesis minding post size limit
+            // TODO: Add ability to transfer to Kinesis minding post size limit
             return Task.CompletedTask;
         }
 
@@ -706,7 +706,7 @@ namespace XDABatchDataTransferTool
                     SelectAllEventsButton.Enabled = enabled;
                     UnselectAllEventsButton.Enabled = enabled;
                     ClearTimeRangeButton.Enabled = enabled;
-                    PushToCloudButton.Enabled = enabled;
+                    TransferToCloudButton.Enabled = enabled;
                     CancelExportButton.Enabled = !enabled;
                 }
                 catch (Exception ex)

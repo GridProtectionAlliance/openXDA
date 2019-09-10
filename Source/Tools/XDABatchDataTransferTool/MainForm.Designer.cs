@@ -59,7 +59,7 @@
             this.ExportDisturbanceDataCheckBox = new System.Windows.Forms.CheckBox();
             this.ExportFaultDataCheckBox = new System.Windows.Forms.CheckBox();
             this.ExportEventDataCheckBox = new System.Windows.Forms.CheckBox();
-            this.PushToCloudButton = new System.Windows.Forms.Button();
+            this.TransferToCloudButton = new System.Windows.Forms.Button();
             this.AWSRadioButton = new System.Windows.Forms.RadioButton();
             this.RepositoryTypeLabel = new System.Windows.Forms.Label();
             this.AzureRadioButton = new System.Windows.Forms.RadioButton();
@@ -291,7 +291,7 @@
             this.CloudRepositoryGroupBox.Controls.Add(this.ExportDisturbanceDataCheckBox);
             this.CloudRepositoryGroupBox.Controls.Add(this.ExportFaultDataCheckBox);
             this.CloudRepositoryGroupBox.Controls.Add(this.ExportEventDataCheckBox);
-            this.CloudRepositoryGroupBox.Controls.Add(this.PushToCloudButton);
+            this.CloudRepositoryGroupBox.Controls.Add(this.TransferToCloudButton);
             this.CloudRepositoryGroupBox.Controls.Add(this.AWSRadioButton);
             this.CloudRepositoryGroupBox.Controls.Add(this.RepositoryTypeLabel);
             this.CloudRepositoryGroupBox.Controls.Add(this.AzureRadioButton);
@@ -362,7 +362,7 @@
             this.ExportFrequencyDomainDataCheckBox.Name = "ExportFrequencyDomainDataCheckBox";
             this.ExportFrequencyDomainDataCheckBox.Size = new System.Drawing.Size(174, 17);
             this.ExportFrequencyDomainDataCheckBox.TabIndex = 11;
-            this.ExportFrequencyDomainDataCheckBox.Text = "Export &Frequency Domain Data";
+            this.ExportFrequencyDomainDataCheckBox.Text = "Export Frequency Domain Data";
             this.ExportFrequencyDomainDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportFrequencyDomainDataCheckBox.Visible = false;
             this.ExportFrequencyDomainDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
@@ -433,15 +433,15 @@
             this.ExportEventDataCheckBox.UseVisualStyleBackColor = true;
             this.ExportEventDataCheckBox.CheckedChanged += new System.EventHandler(this.FormElementChanged);
             // 
-            // PushToCloudButton
+            // TransferToCloudButton
             // 
-            this.PushToCloudButton.Location = new System.Drawing.Point(279, 288);
-            this.PushToCloudButton.Name = "PushToCloudButton";
-            this.PushToCloudButton.Size = new System.Drawing.Size(75, 23);
-            this.PushToCloudButton.TabIndex = 16;
-            this.PushToCloudButton.Text = "Transfer";
-            this.PushToCloudButton.UseVisualStyleBackColor = true;
-            this.PushToCloudButton.Click += new System.EventHandler(this.PushToCloudButton_Click);
+            this.TransferToCloudButton.Location = new System.Drawing.Point(279, 288);
+            this.TransferToCloudButton.Name = "TransferToCloudButton";
+            this.TransferToCloudButton.Size = new System.Drawing.Size(75, 23);
+            this.TransferToCloudButton.TabIndex = 16;
+            this.TransferToCloudButton.Text = "Trans&fer";
+            this.TransferToCloudButton.UseVisualStyleBackColor = true;
+            this.TransferToCloudButton.Click += new System.EventHandler(this.TransferToCloudButton_Click);
             // 
             // AWSRadioButton
             // 
@@ -620,7 +620,7 @@
         private System.Windows.Forms.Label SourceTypeLabel;
         private System.Windows.Forms.CheckedListBox SelectedSourcesCheckedListBox;
         private System.Windows.Forms.GroupBox CloudRepositoryGroupBox;
-        private System.Windows.Forms.Button PushToCloudButton;
+        private System.Windows.Forms.Button TransferToCloudButton;
         private System.Windows.Forms.Label RepositoryTypeLabel;
         private System.Windows.Forms.Label ConnectionStringLabel;
         private System.Windows.Forms.Button UnselectAllEventsButton;
