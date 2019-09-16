@@ -26,9 +26,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web.Http;
+using FaultData.DataAnalysis;
 using GSF.Collections;
+using GSF.Data;
+using GSF.Data.Model;
 using GSF.Web.Model;
 using openXDA.Model;
+using Disturbance = openXDA.Model.Disturbance;
+using Fault = openXDA.Model.Fault;
 
 namespace openXDA.Adapters
 {
@@ -373,25 +378,50 @@ namespace openXDA.Adapters
         #region [Event Data Calls]
 
         [HttpPost]
-        public IEnumerable<EventData> GetEventWaveformData(EventDataJSON json)
+        public IHttpActionResult GetEventWaveformData(EventDataJSON json)
         {
             if(json != null && json.EventID != null)
             {
                 try {
                     int eventID = int.Parse(json.EventID);
-                    using (DataContext dataContext = new DataContext("systemSettings"))
+                    using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                     {
-                        DataTable table = dataContext.Connection.RetrieveData("Select * FROM GetEventData({0}) as GottenEventData JOIN Series ON GottenEventData.SeriesID = Series.ID JOIN Channel ON Series.ChannelID = Channel.ID WHERE Characteristic = 'Instantaneous'", eventID);
-                        return table.Select().Select(row => dataContext.Table<EventData>().LoadRecord(row)).ToList();
+                        Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                        Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
+                        meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                        byte[] frequencyDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = (SELECT EventDataID FROM Event WHERE ID = {0})", eventID);
+                        DataGroup dataGroup = new DataGroup();
+                        dataGroup.FromData(meter, frequencyDomainData);
+                        VIDataGroup vIDataGroup = new VIDataGroup(dataGroup);
+                        dataGroup = vIDataGroup.ToDataGroup();
+                        DataTable table = new DataTable();
+
+                        table.Columns.Add("Timestamp", typeof(DateTime));
+                        foreach(var series in dataGroup.DataSeries)
+                            table.Columns.Add(series.SeriesInfo.Channel.MeasurementType.Name + "(" + series.SeriesInfo.Channel.Phase.Name + ")", typeof(double));
+                        
+                        for(int i = 0; i < dataGroup.DataSeries[0].DataPoints.Count(); ++i)
+                        {
+                            DataRow row = table.NewRow();
+                            row["Timestamp"] = dataGroup.DataSeries[0].DataPoints[i].Time;
+                            for (int j = 1; j < table.Columns.Count; ++j)
+                            {
+                                row[table.Columns[j].ColumnName] = dataGroup.DataSeries[j-1].DataPoints[i].Value;
+                            }
+
+                            table.Rows.Add(row);
+
+                        }
+                        return Ok(table);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return null;
+                    return InternalServerError(ex);
                 }
             }
             else
-                return null;
+                return BadRequest("Please provide event id");
         }
 
         [HttpPost]

@@ -921,13 +921,13 @@ namespace openXDA
                 return;
             }
 
-            if (m_dataAggregationEngine.Running)
-            {
-                m_dataAggregationEngine.ProcessAllData();
+            try {
+                m_dataAggregationEngine.ProcessAllData(false);
                 SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating all data.");
             }
-            else
-                SendResponseWithAttachment(requestInfo, false, null, "PQMark data aggregation engine is not current running.");
+            catch (Exception ex) {
+                SendResponseWithAttachment(requestInfo, false, null, ex.ToString());
+            }
         }
 
         public void OnProcessAllEmptyData(ClientRequestInfo requestInfo)
@@ -939,13 +939,15 @@ namespace openXDA
                 return;
             }
 
-            if (m_dataAggregationEngine.Running)
+            try
             {
-                m_dataAggregationEngine.ProcessAllEmptyData();
+                m_dataAggregationEngine.ProcessAllData(true);
                 SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating all empty data.");
             }
-            else
-                SendResponseWithAttachment(requestInfo, false, null, "PQMark data aggregation engine is not current running.");
+            catch (Exception ex)
+            {
+                SendResponseWithAttachment(requestInfo, false, null, ex.ToString());
+            }
         }
 
         public void OnProcessMonthToDateData(ClientRequestInfo requestInfo)
@@ -957,13 +959,15 @@ namespace openXDA
                 return;
             }
 
-            if (m_dataAggregationEngine.Running)
+            try
             {
                 m_dataAggregationEngine.ProcessMonthToDateData();
-                SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating month to date data.");
+                SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating  month to date  data.");
             }
-            else
-                SendResponseWithAttachment(requestInfo, false, null, "PQMark data aggregation engine is not current running.");
+            catch (Exception ex)
+            {
+                SendResponseWithAttachment(requestInfo, false, null, ex.ToString());
+            }
         }
 
         public void OnProcessPQTrending(ClientRequestInfo requestInfo)

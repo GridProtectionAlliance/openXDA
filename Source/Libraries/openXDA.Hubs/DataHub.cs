@@ -2719,11 +2719,14 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(LineView), RecordOperation.AddNewRecord)]
         public void AddNewLineView(LineView record)
         {
-            DataContext.Table<Line>().AddNewRecord(CreateLine(record));
-            int index = DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Line')") ?? 0;
-            record.ID = index;
-            DataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
-            DataContext.Table <RelayAlertSetting>().AddNewRecord(CreateRelayAlertSetting(record));
+            
+            int added = DataContext.Table<Line>().AddNewRecord(CreateLine(record));
+            if (added != 0) {
+                int index = DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Line')") ?? 0;
+                record.ID = index;
+                DataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
+                DataContext.Table<RelayAlertSetting>().AddNewRecord(CreateRelayAlertSetting(record));
+            }
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
