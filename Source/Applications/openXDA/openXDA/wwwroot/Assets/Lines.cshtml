@@ -102,17 +102,17 @@ new[] { null, "Meter-to-Line", "text-center valign-middle"}
 
     <div class="col-md-4">
         <h5><b>Line Impedance:</b></h5>
-        @Raw(dataContext.AddInputField<LineView>("R0"))
-        @Raw(dataContext.AddInputField<LineView>("X0"))
-        @Raw(dataContext.AddInputField<LineView>("R1"))
-        @Raw(dataContext.AddInputField<LineView>("X1"))
+        @Raw(dataContext.AddInputField<LineView>("R0", fieldLabel: "R0 (pu)"))
+        @Raw(dataContext.AddInputField<LineView>("X0", fieldLabel: "X0 (pu)"))
+        @Raw(dataContext.AddInputField<LineView>("R1", fieldLabel: "R1 (pu)"))
+        @Raw(dataContext.AddInputField<LineView>("X1", fieldLabel: "X1 (pu)"))
     </div>
 
     <div class="col-md-4">
         <h5><b>Breaker Performance Alert Settings:</b></h5>
-        @Raw(dataContext.AddInputField<LineView>("TripTime", fieldLabel: "Trip Time"))
-        @Raw(dataContext.AddInputField<LineView>("PickupTime", fieldLabel: "Pickup Time"))
-        @Raw(dataContext.AddInputField<LineView>("TripCoilCondition", fieldLabel: "Trip Coil Condition"))
+        @Raw(dataContext.AddInputField<LineView>("TripTime", fieldLabel: "Trip Time (micros)"))
+        @Raw(dataContext.AddInputField<LineView>("PickupTime", fieldLabel: "Pickup Time (micros)"))
+        @Raw(dataContext.AddInputField<LineView>("TripCoilCondition", fieldLabel: "Trip Coil Condition (A/s)"))
     </div>
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
