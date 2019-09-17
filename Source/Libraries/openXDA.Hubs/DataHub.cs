@@ -6243,12 +6243,10 @@ namespace openXDA.Hubs
         public IEnumerable<AuditLog> QueryAuditLogs(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            using (DataContext dataContext = new DataContext("systemSettings"))
             {
 
                 int auditLogMax = connection.ExecuteScalar<int>("SELECT Value FROM Setting WHERE Name = 'MaxAuditLogRecords'");
-                dataContext.CustomTableOperationTokens[typeof(AuditLog)] = new[] { new KeyValuePair<string, string>("{count}", auditLogMax.ToString()) };
-                TableOperations<AuditLog> tableOperations = new TableOperations<AuditLog>(connection);
+                TableOperations<AuditLog> tableOperations = new TableOperations<AuditLog>(connection, new[] { new KeyValuePair<string, string>("{count}", auditLogMax.ToString()) });
                 RecordRestriction restriction;
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy IS NOT NULL AND NewValue IS NOT NULL");
                 return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
