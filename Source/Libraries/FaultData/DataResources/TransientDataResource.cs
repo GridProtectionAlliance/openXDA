@@ -104,12 +104,12 @@ namespace FaultData.DataResources
 
         private IEnumerable<Disturbance> DetectTransients(VIDataGroup viDataGroup)
         {
-            IEnumerable<Disturbance> vaTransients = DetectTransients(viDataGroup.VA, Phase.AN, lineToGroundThreshold);
-            IEnumerable<Disturbance> vbTransients = DetectTransients(viDataGroup.VB, Phase.BN, lineToGroundThreshold);
-            IEnumerable<Disturbance> vcTransients = DetectTransients(viDataGroup.VC, Phase.CN, lineToGroundThreshold);
-            IEnumerable<Disturbance> vabTransients = DetectTransients(viDataGroup.VAB, Phase.AB, lineToLineThreshold);
-            IEnumerable<Disturbance> vbcTransients = DetectTransients(viDataGroup.VBC, Phase.BC, lineToLineThreshold);
-            IEnumerable<Disturbance> vcaTransients = DetectTransients(viDataGroup.VCA, Phase.CA, lineToLineThreshold);
+            IEnumerable<Disturbance> vaTransients = DetectTransients(viDataGroup.VA, Phase.AN);
+            IEnumerable<Disturbance> vbTransients = DetectTransients(viDataGroup.VB, Phase.BN);
+            IEnumerable<Disturbance> vcTransients = DetectTransients(viDataGroup.VC, Phase.CN);
+            IEnumerable<Disturbance> vabTransients = DetectTransients(viDataGroup.VAB, Phase.AB);
+            IEnumerable<Disturbance> vbcTransients = DetectTransients(viDataGroup.VBC, Phase.BC);
+            IEnumerable<Disturbance> vcaTransients = DetectTransients(viDataGroup.VCA, Phase.CA);
 
             List<Disturbance> transientList = vaTransients.Concat(vbTransients).Concat(vcTransients).Concat(vabTransients).Concat(vbcTransients).Concat(vcaTransients).ToList();
 
@@ -130,7 +130,7 @@ namespace FaultData.DataResources
             return transientList;
         }
 
-        private IEnumerable<Disturbance> DetectTransients(DataSeries waveform, Phase phase, Func<double, double, double> thresholdFunc) {
+        private IEnumerable<Disturbance> DetectTransients(DataSeries waveform, Phase phase) {
             if (waveform == null)
                 return Enumerable.Empty<Disturbance>();
 
@@ -151,8 +151,12 @@ namespace FaultData.DataResources
 
             double sampleRate = waveform.SampleRate;
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveform.SampleRate, SystemFrequency);
-            double nominalVoltage = waveform.SeriesInfo.Channel.Line.VoltageKV;
-            double thresholdValue = thresholdFunc(nominalVoltage, TransientThreshold);
+            double nominalVoltage = waveform.SeriesInfo.Channel.Line.VoltageKV * 1000.0D;
+
+            if (IsLineToNeutral(waveform.SeriesInfo.Channel.Phase.Name))
+                nominalVoltage /= Math.Sqrt(3.0D);
+
+            double thresholdValue = nominalVoltage * TransientThreshold / 100;
             List<Disturbance> disturbances = new List<Disturbance>();
 
             List<int> detections = Enumerable.Range(0, waveform.DataPoints.Count)
@@ -198,18 +202,11 @@ namespace FaultData.DataResources
                 .ToList();
         }
 
-        Func<double, double, double> lineToLineThreshold = (nominalKV, transientThreshold) =>
-         {
-             double nominalVoltage = nominalKV * 1000;
-             return nominalVoltage * transientThreshold / 100;
-         };
-
-        Func<double, double, double> lineToGroundThreshold = (nominalKV, transientThreshold) =>
+        private bool IsLineToNeutral(string phase)
         {
-            double nominalVoltage = nominalKV * 1000;
-            nominalVoltage /= Math.Sqrt(3);
-            return nominalVoltage * transientThreshold / 100;
-        };
+            string[] lineToNeutralPhases = { "AN", "BN", "CN" };
+            return lineToNeutralPhases.Contains(phase);
+        }
 
         #endregion
     }
