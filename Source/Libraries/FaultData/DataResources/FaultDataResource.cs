@@ -1830,7 +1830,7 @@ namespace FaultData.DataResources
 
                     FaultType faultType = GetFaultType(va, vb, vc, v0);
 
-                    if ((object)currentSegment == null)
+                    if (currentSegment == null)
                     {
                         currentSegment = new Fault.Segment(faultType);
                         currentSegment.StartTime = viCycleDataGroup.VA.RMS[i].Time;
@@ -1849,8 +1849,17 @@ namespace FaultData.DataResources
                     }
                 }
 
-                if ((object)currentSegment != null)
+                if (currentSegment != null)
                 {
+                    if (fault.Segments.Count > 1 && currentSegment.FaultType == FaultType.None)
+                    {
+                        // The last segment could have an incorrect fault type because the waveform
+                        // is transitioning and the RMS voltages are cyclic aggregates. All we can
+                        // do is extend the last good fault type to the end of the fault
+                        fault.Segments.RemoveAt(fault.Segments.Count - 1);
+                        currentSegment = fault.Segments.Last();
+                    }
+
                     currentSegment.EndTime = dataGroup[0][fault.EndSample].Time;
                     currentSegment.EndSample = fault.EndSample;
                     currentSegment = null;
