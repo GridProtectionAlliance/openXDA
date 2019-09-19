@@ -7,8 +7,8 @@
     <ProjectGuid>{79FBD416-8CFF-425E-A010-15E61B9D3BD7}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>XDAWaveformDataParser</RootNamespace>
-    <AssemblyName>XDAWaveformDataParser</AssemblyName>
+    <RootNamespace>PQWaveformDataParser</RootNamespace>
+    <AssemblyName>PQWaveformDataParser</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

@@ -1,4 +1,4 @@
-﻿namespace XDAWaveformDataParser
+﻿namespace PQWaveformDataParser
 {
     partial class FileViewer
     {
@@ -28,8 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FileViewer));
             this.DataChart = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.SELEVEButton = new System.Windows.Forms.Button();
@@ -40,9 +40,9 @@
             this.EMAXButton = new System.Windows.Forms.Button();
             this.LogoPictureBox = new System.Windows.Forms.PictureBox();
             this.ButtonPanel = new System.Windows.Forms.Panel();
+            this.AboutButton = new System.Windows.Forms.Button();
             this.ChannelPanel = new System.Windows.Forms.Panel();
             this.ChartPanel = new System.Windows.Forms.Panel();
-            this.AboutButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.DataChart)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).BeginInit();
             this.ButtonPanel.SuspendLayout();
@@ -52,13 +52,13 @@
             // 
             // DataChart
             // 
-            chartArea3.AxisX.MajorGrid.Enabled = false;
-            chartArea3.AxisY.MajorGrid.Enabled = false;
-            chartArea3.Name = "ChartArea1";
-            this.DataChart.ChartAreas.Add(chartArea3);
+            chartArea1.AxisX.MajorGrid.Enabled = false;
+            chartArea1.AxisY.MajorGrid.Enabled = false;
+            chartArea1.Name = "ChartArea1";
+            this.DataChart.ChartAreas.Add(chartArea1);
             this.DataChart.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend3.Name = "Legend1";
-            this.DataChart.Legends.Add(legend3);
+            legend1.Name = "Legend1";
+            this.DataChart.Legends.Add(legend1);
             this.DataChart.Location = new System.Drawing.Point(10, 10);
             this.DataChart.Name = "DataChart";
             this.DataChart.Size = new System.Drawing.Size(547, 541);
@@ -131,10 +131,10 @@
             // 
             this.LogoPictureBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.LogoPictureBox.Image = ((System.Drawing.Image)(resources.GetObject("LogoPictureBox.Image")));
-            this.LogoPictureBox.Location = new System.Drawing.Point(10, 280);
+            this.LogoPictureBox.Location = new System.Drawing.Point(10, 301);
             this.LogoPictureBox.Margin = new System.Windows.Forms.Padding(10);
             this.LogoPictureBox.Name = "LogoPictureBox";
-            this.LogoPictureBox.Size = new System.Drawing.Size(120, 240);
+            this.LogoPictureBox.Size = new System.Drawing.Size(120, 219);
             this.LogoPictureBox.TabIndex = 7;
             this.LogoPictureBox.TabStop = false;
             // 
@@ -154,6 +154,17 @@
             this.ButtonPanel.Name = "ButtonPanel";
             this.ButtonPanel.Size = new System.Drawing.Size(140, 561);
             this.ButtonPanel.TabIndex = 0;
+            // 
+            // AboutButton
+            // 
+            this.AboutButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.AboutButton.Location = new System.Drawing.Point(10, 530);
+            this.AboutButton.Name = "AboutButton";
+            this.AboutButton.Size = new System.Drawing.Size(120, 22);
+            this.AboutButton.TabIndex = 6;
+            this.AboutButton.Text = "About";
+            this.AboutButton.UseVisualStyleBackColor = true;
+            this.AboutButton.Click += new System.EventHandler(this.AboutButton_Click);
             // 
             // ChannelPanel
             // 
@@ -177,17 +188,6 @@
             this.ChartPanel.Size = new System.Drawing.Size(567, 561);
             this.ChartPanel.TabIndex = 0;
             // 
-            // AboutButton
-            // 
-            this.AboutButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.AboutButton.Location = new System.Drawing.Point(10, 530);
-            this.AboutButton.Name = "AboutButton";
-            this.AboutButton.Size = new System.Drawing.Size(120, 22);
-            this.AboutButton.TabIndex = 6;
-            this.AboutButton.Text = "About";
-            this.AboutButton.UseVisualStyleBackColor = true;
-            this.AboutButton.Click += new System.EventHandler(this.AboutButton_Click);
-            // 
             // FileViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -199,7 +199,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(600, 500);
             this.Name = "FileViewer";
-            this.Text = "XDA Waveform Data Parser";
+            this.Text = "PQ Waveform Data Parser";
             this.Resize += new System.EventHandler(this.Form_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.DataChart)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).EndInit();

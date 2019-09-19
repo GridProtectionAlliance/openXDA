@@ -25,7 +25,7 @@ using System;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace XDAWaveformDataParser
+namespace PQWaveformDataParser
 {
     static class Program
     {

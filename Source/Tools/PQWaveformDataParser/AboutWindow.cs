@@ -26,7 +26,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace XDAWaveformDataParser
+namespace PQWaveformDataParser
 {
     public partial class AboutWindow : Form
     {
@@ -37,7 +37,7 @@ namespace XDAWaveformDataParser
 
         private void AboutWindow_Load(object sender, EventArgs e)
         {
-            using (Stream aboutStream = Assembly.GetEntryAssembly().GetManifestResourceStream("XDAWaveformDataParser.About.rtf"))
+            using (Stream aboutStream = Assembly.GetEntryAssembly().GetManifestResourceStream("PQWaveformDataParser.About.rtf"))
             using (TextReader aboutReader = new StreamReader(aboutStream))
             {
                 AboutTextBox.Rtf = aboutReader.ReadToEnd();

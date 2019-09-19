@@ -1,4 +1,4 @@
-﻿namespace XDAWaveformDataParser
+﻿namespace PQWaveformDataParser
 {
     partial class AboutWindow
     {
@@ -38,7 +38,7 @@
             this.AboutTextBox.Location = new System.Drawing.Point(10, 10);
             this.AboutTextBox.Name = "AboutTextBox";
             this.AboutTextBox.ReadOnly = true;
-            this.AboutTextBox.Size = new System.Drawing.Size(384, 291);
+            this.AboutTextBox.Size = new System.Drawing.Size(524, 366);
             this.AboutTextBox.TabIndex = 0;
             this.AboutTextBox.Text = "";
             // 
@@ -46,11 +46,12 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(404, 311);
+            this.ClientSize = new System.Drawing.Size(544, 386);
             this.Controls.Add(this.AboutTextBox);
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(200, 200);
             this.Name = "AboutWindow";
             this.Padding = new System.Windows.Forms.Padding(10);
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

@@ -35,7 +35,7 @@ using GSF.PQDIF.Logical;
 using GSF.SELEventParser;
 using Parser = GSF.COMTRADE.Parser;
 
-namespace XDAWaveformDataParser
+namespace PQWaveformDataParser
 {
     public partial class FileViewer : Form
     {
