@@ -61,7 +61,7 @@ namespace FaultData.DataOperations
 
                     // Determine P1 (Trip Initiate Time)
                     // find value above threshhold and walk backwards until I increases
-                    int threshholdIndex = meterDataSet.DataSeries[i].Threshhold(0.02);
+                    int threshholdIndex = meterDataSet.DataSeries[i].Threshhold(0.15);
                     int minIndex = threshholdIndex - 1;
 
                     if (threshholdIndex < 1)
