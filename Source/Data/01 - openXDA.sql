@@ -4311,7 +4311,10 @@ SET TriggersEmailSQL = 'SELECT CASE WHEN (SELECT COUNT(RP.ID) FROM RelayPerforma
 	LINE LN ON LN.ID = EV.LineID INNER JOIN
 	RelayAlertSetting RA ON RA.LineID = LN.ID
 	WHERE RP.EventID = {0}
-		AND (RP.TripTime > RA.TripTime OR RP.PickupTime > RA.PickupTime OR RP.TripCoilCondition > RA.TripCoilCondition)) > 0 THEN 1 ELSE 0 END'
+		AND ((RP.TripTime > RA.TripTime AND RA.TripTime > 0) 
+			OR (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0)
+			OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
+	) > 0 THEN 1 ELSE 0 END'
 WHERE EventEmailParameters.ID = 3
 GO		
 		
@@ -4322,13 +4325,13 @@ SET EventDetailSQL = 'DECLARE @url VARCHAR(MAX) = (SELECT Value FROM DashSetting
 /* Breaker */
 SELECT LN.ID AS LineID, ML.LineName AS Name, LN.AssetKey AS AssetKey, 
 	RP.TripTime AS TT, RP.PickupTime AS PT, RP.TripCoilCondition AS TCC, RP.TripInitiate AS TI, RP.Imax1 AS L1, RP.Imax2 AS L2,
-	( SELECT CASE WHEN RP.TripTime > RA.TripTime THEN 1 ELSE 0 END ) AS TTAlert,
-	( SELECT CASE WHEN RP.PickupTime > RA.PickupTime THEN 1 ELSE 0 END ) AS PTAlert,
-	( SELECT CASE WHEN RP.TripCoilCondition > RA.TripCoilCondition THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN (RP.TripTime > RA.TripTime AND RA.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
 	( SELECT CASE WHEN
-		RP.TripCoilCondition > RA.TripCoilCondition OR
-		RP.PickupTime > RA.PickupTime OR
-		RP.TripTime > RA.TripTime 
+		(RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) OR
+		(RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0) OR
+		(RP.TripTime > RA.TripTime AND RA.TripTime > 0)
 		THEN 1 ELSE 0 END 
 	) AS Alert
 	INTO #Breaker 
@@ -4348,17 +4351,19 @@ SELECT ML.LineName AS Name, LN.AssetKey AS AssetKey
 	LINE LN ON LN.ID = EV.LineID INNER JOIN
 	RelayAlertSetting RA ON RA.LineID = LN.ID
 	WHERE RP.EventID = {0}
-		AND (RP.TripTime > RA.TripTime OR RP.PickupTime > RA.PickupTime OR RP.TripCoilCondition > RA.TripCoilCondition)
+		AND ((RP.TripTime > RA.TripTime AND RA.TripTime > 0) 
+			OR (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0)
+			OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
 
 /* History */
 SELECT Line.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime AS PT, Relay.TripTime AS TT, Relay.TripCoilCondition AS TCC,  Relay.Imax1 AS L1, Relay.Imax2 AS L2, Relay.TripInitiate AS TI,
-	( SELECT CASE WHEN Relay.TripTime > RelayAlert.TripTime THEN 1 ELSE 0 END ) AS TTAlert,
-	( SELECT CASE WHEN Relay.PickupTime > RelayAlert.PickupTime THEN 1 ELSE 0 END ) AS PTAlert,
-	( SELECT CASE WHEN Relay.TripCoilCondition > RelayAlert.TripCoilCondition THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN (Relay.TripTime > RelayAlert.TripTime AND RelayAlert.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN (Relay.PickupTime > RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN (Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
 	( SELECT CASE WHEN
-		Relay.TripCoilCondition > RelayAlert.TripCoilCondition OR
-		Relay.PickupTime > RelayAlert.PickupTime OR
-		Relay.TripTime > RelayAlert.TripTime 
+		(Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) OR
+		(Relay.PickupTime > RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) OR
+		(Relay.TripTime > RelayAlert.TripTime AND RelayAlert.TripTime > 0)
 		THEN 1 ELSE 0 END 
 	) AS Alert
 	INTO #History FROM  
