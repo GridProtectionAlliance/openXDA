@@ -2989,7 +2989,8 @@ SELECT  Line.ID AS LineID,
 		RelayPerformance.TripCoilCondition,
 		RelayAlertSetting.TripCoilCondition AS TripCoilConditionAlert,
 		RelayAlertSetting.TripTime AS TripTimeAlert,
-		RelayAlertSetting.PickupTime AS PickupTimeAlert
+		RelayAlertSetting.PickupTime AS PickupTimeAlert,
+		RelayPerformance.ChannelID AS TripCoilChannelID
 FROM    RelayPerformance LEFT OUTER JOIN
         Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
         Line ON Channel.LineID = Line.ID LEFT OUTER JOIN 
