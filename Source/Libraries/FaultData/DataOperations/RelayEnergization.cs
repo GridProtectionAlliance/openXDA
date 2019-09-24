@@ -35,6 +35,7 @@ using FaultData.DataSets;
 using GSF.Data;
 using GSF.Data.Model;
 using openXDA.Model;
+using log4net;
 
 namespace FaultData.DataOperations
 {
@@ -50,6 +51,8 @@ namespace FaultData.DataOperations
                 // Check if Channel is Relay Coil Current
                 if (IsRelayEnergization(channel))
                 {
+                    Log.Info("Processing Trip Coil Energization Current....");
+
                     DateTime tripInitiate;
                     DateTime Imax1Time;
                     DateTime latchOff;
@@ -64,8 +67,10 @@ namespace FaultData.DataOperations
                     int threshholdIndex = meterDataSet.DataSeries[i].Threshhold(0.15);
                     int minIndex = threshholdIndex - 1;
 
+
                     if (threshholdIndex < 1)
                     {
+                        Log.Info("Trip Coil Energization Current too low.");
                         continue;
                     }
                     
@@ -146,6 +151,8 @@ namespace FaultData.DataOperations
                     fingerOpen = window[0].Time;
 
                     // Save Relay Characteristics
+                    Log.Info("Saving Trip Coil Characteristics to DB.");
+
                     using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
                     {
                         TableOperations<RelayPerformance> relayStatTable = new TableOperations<RelayPerformance>(connection);
@@ -259,6 +266,8 @@ namespace FaultData.DataOperations
                 return parameter;
             }
         }
+
+        private static readonly ILog Log = LogManager.GetLogger(typeof(RelayEnergization));
 
         #endregion
     }
