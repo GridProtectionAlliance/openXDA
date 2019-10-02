@@ -136,9 +136,6 @@ namespace FaultData.DataWriters
 
         public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
         {
-            const int DefaultSMTPPort = 25;
-            const int DefaultSecureSMTPPort = 587;
-
             EmailSettings emailSettings = GetEmailSettings();
             string smtpServer = emailSettings.SMTPServer;
 
@@ -149,10 +146,12 @@ namespace FaultData.DataWriters
             string host = smtpServerParts[0];
             int port;
 
-            if (smtpServerParts.Length <= 1 || !int.TryParse(smtpServerParts[1], out port))
-                port = (emailSettings.EnableSSL) ? DefaultSecureSMTPPort : DefaultSMTPPort;
+            Func<SmtpClient> clientFactory = () => new SmtpClient(host);
 
-            using (SmtpClient smtpClient = new SmtpClient(host, port))
+            if (smtpServerParts.Length > 1 && int.TryParse(smtpServerParts[1], out port))
+                clientFactory = () => new SmtpClient(host, port);
+
+            using (SmtpClient smtpClient = clientFactory())
             using (MailMessage emailMessage = new MailMessage())
             {
                 string username = emailSettings.Username;

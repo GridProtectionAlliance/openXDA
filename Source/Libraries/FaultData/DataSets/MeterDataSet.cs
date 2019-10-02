@@ -83,6 +83,7 @@ namespace FaultData.DataSets
         public string ConnectionString { get; set; }
         public string FilePath { get; set; }
         public FileGroup FileGroup { get; set; }
+        public bool LoadHistoricConfiguration { get; set; }
 
         public Meter Meter { get; set; }
         public ConfigurationDataSet Configuration { get; }

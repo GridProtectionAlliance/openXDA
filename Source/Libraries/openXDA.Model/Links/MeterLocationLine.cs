@@ -35,6 +35,7 @@ namespace openXDA.Model
         // Fields
         private MeterLocation m_meterLocation;
         private Line m_line;
+        private SourceImpedance m_sourceImpedance;
 
         #endregion
 
@@ -72,6 +73,20 @@ namespace openXDA.Model
             set
             {
                 m_line = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public SourceImpedance SourceImpedance
+        {
+            get
+            {
+                return m_sourceImpedance ?? (m_sourceImpedance ?? QuerySourceImpedance());
+            }
+            set
+            {
+                m_sourceImpedance = value;
             }
         }
 
@@ -115,6 +130,15 @@ namespace openXDA.Model
             return lineTable.QueryRecordWhere("ID = {0}", LineID);
         }
 
+        public SourceImpedance GetSourceImpedance(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<SourceImpedance> sourceImpedanceTable = new TableOperations<SourceImpedance>(connection);
+            return sourceImpedanceTable.QueryRecordWhere("MeterLocationLineID = {0}", ID);
+        }
+
         private MeterLocation QueryMeterLocation()
         {
             MeterLocation meterLocation;
@@ -143,6 +167,21 @@ namespace openXDA.Model
                 line.LazyContext = LazyContext;
 
             return LazyContext.GetLine(line);
+        }
+
+        private SourceImpedance QuerySourceImpedance()
+        {
+            SourceImpedance sourceImpedance;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                sourceImpedance = GetSourceImpedance(connection);
+            }
+
+            if ((object)sourceImpedance != null)
+                sourceImpedance.LazyContext = LazyContext;
+
+            return LazyContext.GetSourceImpedance(sourceImpedance);
         }
 
         #endregion

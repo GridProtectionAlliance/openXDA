@@ -78,68 +78,6 @@ CREATE TABLE DataWriter
 )
 GO
 
-CREATE TABLE FileGroup
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    DataStartTime DATETIME2 NOT NULL,
-    DataEndTime DATETIME2 NOT NULL,
-    ProcessingStartTime DATETIME2 NOT NULL,
-    ProcessingEndTime DATETIME2 NOT NULL,
-    Error INT NOT NULL DEFAULT 0,
-    FileHash INT
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileGroup_FileHash
-ON FileGroup(FileHash ASC)
-GO
-
-CREATE TABLE DataFile
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
-    FilePath VARCHAR(MAX) NOT NULL,
-    FilePathHash INT NOT NULL,
-    FileSize BIGINT NOT NULL,
-    CreationTime DATETIME NOT NULL,
-    LastWriteTime DATETIME NOT NULL,
-    LastAccessTime DATETIME NOT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_DataFile_FileGroupID
-ON DataFile(FileGroupID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_DataFile_FilePathHash
-ON DataFile(FilePathHash ASC)
-GO
-
-CREATE TABLE FileGroupField
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL UNIQUE,
-    Description VARCHAR(MAX) NULL
-)
-GO
-
-CREATE TABLE FileGroupFieldValue
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
-    FileGroupFieldID INT NOT NULL REFERENCES FileGroupField(ID),
-    Value VARCHAR(MAX) NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupID
-ON FileGroupFieldValue(FileGroupID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupFieldID
-ON FileGroupFieldValue(FileGroupFieldID ASC)
-GO
-
 CREATE TABLE MeterLocation
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -168,14 +106,6 @@ CREATE TABLE Meter
 )
 GO
 
-CREATE TABLE MeterFileGroup
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    MeterID INT NOT NULL REFERENCES Meter(ID),
-    FileGroupID INT NOT NULL REFERENCES FileGroup(ID)
-)
-GO
-
 CREATE TABLE MeterFacility
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -183,7 +113,6 @@ CREATE TABLE MeterFacility
     FacilityID INT NOT NULL
 )
 GO
-
 
 CREATE TABLE Line
 (
@@ -314,7 +243,6 @@ GO
 INSERT INTO SeriesType(Name, Description) VALUES('Duration', 'Duration data values')
 GO
 
-
 CREATE TABLE Series
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -324,12 +252,97 @@ CREATE TABLE Series
 )
 GO
 
-CREATE TABLE BreakerChannel
+CREATE TABLE MeterConfiguration
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    ChannelID INT NOT NULL REFERENCES Channel(ID),
-    BreakerNumber VARCHAR(120) NOT NULL
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    DiffID INT NULL REFERENCES MeterConfiguration(ID),
+    ConfigKey VARCHAR(50) NOT NULL,
+    ConfigText VARCHAR(MAX) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterConfiguration_MeterID
+ON MeterConfiguration(MeterID)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterConfiguration_DiffID
+ON MeterConfiguration(DiffID)
+GO
+
+CREATE TABLE FileGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeterConfigurationID INT NULL REFERENCES MeterConfiguration(ID),
+    DataStartTime DATETIME2 NOT NULL,
+    DataEndTime DATETIME2 NOT NULL,
+    ProcessingStartTime DATETIME2 NOT NULL,
+    ProcessingEndTime DATETIME2 NOT NULL,
+    Error INT NOT NULL DEFAULT 0,
+    FileHash INT
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroup_FileHash
+ON FileGroup(FileHash ASC)
+GO
+
+CREATE TABLE DataFile
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    FilePath VARCHAR(MAX) NOT NULL,
+    FilePathHash INT NOT NULL,
+    FileSize BIGINT NOT NULL,
+    CreationTime DATETIME NOT NULL,
+    LastWriteTime DATETIME NOT NULL,
+    LastAccessTime DATETIME NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataFile_FileGroupID
+ON DataFile(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataFile_FilePathHash
+ON DataFile(FilePathHash ASC)
+GO
+
+CREATE TABLE FileBlob
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataFileID INT NOT NULL REFERENCES DataFile(ID),
+    Blob VARBINARY(MAX) NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
+ON FileBlob(DataFileID ASC)
+GO
+
+CREATE TABLE FileGroupField
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL UNIQUE,
+    Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE FileGroupFieldValue
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    FileGroupFieldID INT NOT NULL REFERENCES FileGroupField(ID),
+    Value VARCHAR(MAX) NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupID
+ON FileGroupFieldValue(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupFieldID
+ON FileGroupFieldValue(FileGroupFieldID ASC)
 GO
 
 CREATE TABLE AssetGroup
@@ -413,13 +426,20 @@ CREATE NONCLUSTERED INDEX IX_AssetGroupAssetGroup_ChildAssetGroupID
 ON AssetGroupAssetGroup(ChildAssetGroupID ASC)
 GO
 
-
 CREATE TABLE MaintenanceWindow
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
     StartTime DATETIME,
     EndTime DATETIME
+)
+GO
+
+CREATE TABLE BreakerChannel
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    BreakerNumber VARCHAR(120) NOT NULL
 )
 GO
 
@@ -705,18 +725,6 @@ CREATE TABLE SentEmail
     Subject VARCHAR(500) NOT NULL,
     Message VARCHAR(MAX) NOT NULL
 )
-GO
-
-CREATE TABLE FileBlob
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    DataFileID INT NOT NULL REFERENCES DataFile(ID),
-    Blob VARBINARY(MAX) NOT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
-ON FileBlob(DataFileID ASC)
 GO
 
 INSERT INTO XSLTemplate(Name, Template) VALUES('Default Daily', '')
