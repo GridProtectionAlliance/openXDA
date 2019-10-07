@@ -960,12 +960,12 @@ namespace openXDA
                         // Process the data that was parsed from the file
                         ProcessFile(state);
 
-                        // Save the current meter configuration.
-                        SaveMeterConfiguration(state);
-
                         // Set the processing end time of the file
                         // group and save it to the database
                         CompleteProcessing(state);
+
+                        // Save the current meter configuration
+                        SaveMeterConfiguration(state);
                     }
                     finally
                     {
@@ -1130,6 +1130,11 @@ namespace openXDA
                         // Set the processing end time of the file
                         // group and save it to the database
                         completeProcessingCallback(state);
+
+                        // If using the current meter configuration,
+                        // make sure to save and reference it
+                        if (!state.MeterDataSet.LoadHistoricConfiguration)
+                            SaveMeterConfiguration(state);
                     }
                     finally
                     {
@@ -1549,12 +1554,18 @@ namespace openXDA
 
             using (AdoDataConnection connection = state.MeterDataSet.CreateDbConnection())
             {
-                string configKey = "openXDA";
+                const string ConfigKey = "openXDA";
                 TableOperations<MeterConfiguration> meterConfigurationTable = new TableOperations<MeterConfiguration>(connection);
-                meterSettingsSheet.UpdateConfiguration(meterConfigurationTable, configKey);
+                meterSettingsSheet.UpdateConfiguration(meterConfigurationTable, ConfigKey);
 
-                MeterConfiguration currentConfiguration = meterConfigurationTable.QueryRecordWhere("MeterID = {0} AND ConfigKey = {1} AND DiffID IS NULL", meter.ID, configKey);
-                state.FileGroup.MeterConfigurationID = currentConfiguration.ID;
+                RecordRestriction queryRestriction =
+                    new RecordRestriction("MeterID = {0}", meter.ID) &
+                    new RecordRestriction("ConfigKey = {0}", ConfigKey) &
+                    new RecordRestriction("DiffID IS NULL");
+
+                MeterConfiguration currentConfiguration = meterConfigurationTable.QueryRecord("ID DESC", queryRestriction);
+                connection.ExecuteNonQuery("DELETE FROM FileGroupMeterConfiguration WHERE FileGroupID = {0} AND MeterConfigurationID IN (SELECT ID FROM MeterConfiguration WHERE ConfigKey = {1})", state.FileGroup.ID, ConfigKey);
+                connection.ExecuteNonQuery("INSERT INTO FileGroupMeterConfiguration VALUES({0}, {1})", state.FileGroup.ID, currentConfiguration.ID);
             }
         }
 

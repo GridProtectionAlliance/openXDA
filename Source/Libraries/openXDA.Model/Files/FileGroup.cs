@@ -33,8 +33,6 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int? MeterConfigurationID { get; set; }
-
         [FieldDataType(System.Data.DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime DataStartTime { get; set; }
 

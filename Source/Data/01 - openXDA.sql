@@ -78,6 +78,80 @@ CREATE TABLE DataWriter
 )
 GO
 
+CREATE TABLE FileGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataStartTime DATETIME2 NOT NULL,
+    DataEndTime DATETIME2 NOT NULL,
+    ProcessingStartTime DATETIME2 NOT NULL,
+    ProcessingEndTime DATETIME2 NOT NULL,
+    Error INT NOT NULL DEFAULT 0,
+    FileHash INT
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroup_FileHash
+ON FileGroup(FileHash ASC)
+GO
+
+CREATE TABLE DataFile
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    FilePath VARCHAR(MAX) NOT NULL,
+    FilePathHash INT NOT NULL,
+    FileSize BIGINT NOT NULL,
+    CreationTime DATETIME NOT NULL,
+    LastWriteTime DATETIME NOT NULL,
+    LastAccessTime DATETIME NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataFile_FileGroupID
+ON DataFile(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataFile_FilePathHash
+ON DataFile(FilePathHash ASC)
+GO
+
+CREATE TABLE FileBlob
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataFileID INT NOT NULL REFERENCES DataFile(ID),
+    Blob VARBINARY(MAX) NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
+ON FileBlob(DataFileID ASC)
+GO
+
+CREATE TABLE FileGroupField
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL UNIQUE,
+    Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE FileGroupFieldValue
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    FileGroupFieldID INT NOT NULL REFERENCES FileGroupField(ID),
+    Value VARCHAR(MAX) NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupID
+ON FileGroupFieldValue(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupFieldID
+ON FileGroupFieldValue(FileGroupFieldID ASC)
+GO
+
 CREATE TABLE MeterLocation
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -270,79 +344,20 @@ CREATE NONCLUSTERED INDEX IX_MeterConfiguration_DiffID
 ON MeterConfiguration(DiffID)
 GO
 
-CREATE TABLE FileGroup
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    MeterConfigurationID INT NULL REFERENCES MeterConfiguration(ID),
-    DataStartTime DATETIME2 NOT NULL,
-    DataEndTime DATETIME2 NOT NULL,
-    ProcessingStartTime DATETIME2 NOT NULL,
-    ProcessingEndTime DATETIME2 NOT NULL,
-    Error INT NOT NULL DEFAULT 0,
-    FileHash INT
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileGroup_FileHash
-ON FileGroup(FileHash ASC)
-GO
-
-CREATE TABLE DataFile
+CREATE TABLE FileGroupMeterConfiguration
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
-    FilePath VARCHAR(MAX) NOT NULL,
-    FilePathHash INT NOT NULL,
-    FileSize BIGINT NOT NULL,
-    CreationTime DATETIME NOT NULL,
-    LastWriteTime DATETIME NOT NULL,
-    LastAccessTime DATETIME NOT NULL
+    MeterConfigurationID INT NOT NULL REFERENCES MeterConfiguration(ID)
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_DataFile_FileGroupID
-ON DataFile(FileGroupID ASC)
+CREATE NONCLUSTERED INDEX IX_FileGroupMeterConfiguration_FileGroupID
+ON FileGroupMeterConfiguration(FileGroupID)
 GO
 
-CREATE NONCLUSTERED INDEX IX_DataFile_FilePathHash
-ON DataFile(FilePathHash ASC)
-GO
-
-CREATE TABLE FileBlob
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    DataFileID INT NOT NULL REFERENCES DataFile(ID),
-    Blob VARBINARY(MAX) NOT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
-ON FileBlob(DataFileID ASC)
-GO
-
-CREATE TABLE FileGroupField
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL UNIQUE,
-    Description VARCHAR(MAX) NULL
-)
-GO
-
-CREATE TABLE FileGroupFieldValue
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
-    FileGroupFieldID INT NOT NULL REFERENCES FileGroupField(ID),
-    Value VARCHAR(MAX) NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupID
-ON FileGroupFieldValue(FileGroupID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupFieldID
-ON FileGroupFieldValue(FileGroupFieldID ASC)
+CREATE NONCLUSTERED INDEX IX_FileGroupMeterConfiguration_MeterConfigurationID
+ON FileGroupMeterConfiguration(MeterConfigurationID)
 GO
 
 CREATE TABLE AssetGroup

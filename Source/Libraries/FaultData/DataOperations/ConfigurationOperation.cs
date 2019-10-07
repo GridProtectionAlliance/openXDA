@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Linq;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
@@ -213,30 +214,34 @@ namespace FaultData.DataOperations
 
                 Meter LoadHistoricMeter()
                 {
-                    int? configID = meterDataSet.FileGroup.MeterConfigurationID;
-                    RecordRestriction recordRestriction = new RecordRestriction("ID = {0}", configID);
-
-                    if (configID == null)
-                    {
-                        // Need to find the oldest configuration record for this meter
-                        string whereClause =
-                            "MeterID = {0} AND " +
-                            "ConfigKey = {1} AND " +
-                            "ID NOT IN (SELECT DiffID FROM MeterConfiguration WHERE DiffID IS NOT NULL)";
-
-                        Meter dbMeter = LoadCurrentMeter();
-                        int? meterID = dbMeter?.ID;
-                        string configKey = "openXDA";
-                        recordRestriction = new RecordRestriction(whereClause, meterID, configKey);
-                    }
+                    const string ConfigKey = "openXDA";
 
                     TableOperations<MeterConfiguration> meterConfigurationTable = new TableOperations<MeterConfiguration>(connection);
-                    MeterConfiguration configuration = meterConfigurationTable.QueryRecord(recordRestriction);
 
-                    if (configuration == null)
+                    RecordRestriction recordRestriction =
+                        new RecordRestriction("ConfigKey = {0}", ConfigKey) &
+                        new RecordRestriction("{1} IN (SELECT FileGroupID FROM FileGroupMeterConfiguration WHERE MeterConfigurationID = MeterConfiguration.ID)");
+
+                    MeterConfiguration meterConfiguration = meterConfigurationTable.QueryRecord("ID DESC", recordRestriction);
+
+                    if (meterConfiguration == null)
+                    {
+                        // Need to find the oldest configuration record for this meter
+                        Meter dbMeter = LoadCurrentMeter();
+                        int? meterID = dbMeter?.ID;
+
+                        recordRestriction =
+                            new RecordRestriction("MeterID = {0}", meterID) &
+                            new RecordRestriction("ConfigKey = {0}", ConfigKey) &
+                            new RecordRestriction("ID NOT IN (SELECT DiffID FROM MeterConfiguration WHERE DiffID IS NOT NULL)");
+
+                        meterConfiguration = meterConfigurationTable.QueryRecord("ID", recordRestriction);
+                    }
+
+                    if (meterConfiguration == null)
                         return null;
 
-                    MeterSettingsSheet settingsSheet = new MeterSettingsSheet(meterConfigurationTable, configuration);
+                    MeterSettingsSheet settingsSheet = new MeterSettingsSheet(meterConfigurationTable, meterConfiguration);
                     return settingsSheet.Meter;
                 }
 
