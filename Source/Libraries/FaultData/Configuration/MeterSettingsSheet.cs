@@ -21,14 +21,13 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Data.Model;
-using GSF.Text;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using GSF.Collections;
+using GSF.Data.Model;
+using openXDA.Model;
 
 namespace FaultData.Configuration
 {
@@ -46,22 +45,9 @@ namespace FaultData.Configuration
             Sheet = sheet;
         }
 
-        public MeterSettingsSheet(TableOperations<MeterConfiguration> meterConfigurationTable, MeterConfiguration configuration)
+        public MeterSettingsSheet(TableOperations<MeterConfiguration> meterConfigurationTable, MeterConfiguration meterConfiguration)
         {
-            DiffMatchPatch patchProvider = new DiffMatchPatch();
-
-            string ToSheetText(MeterConfiguration config)
-            {
-                if (config.DiffID == null)
-                    return config.ConfigText;
-
-                MeterConfiguration configToPatch = meterConfigurationTable.QueryRecordWhere("ID = {0}", config.DiffID);
-                List<Patch> patches = patchProvider.PatchFromText(config.ConfigText);
-                string sheetToPatch = ToSheetText(configToPatch);
-                return (string)patchProvider.PatchApply(patches, sheetToPatch)[0];
-            }
-
-            string sheetText = ToSheetText(configuration);
+            string sheetText = meterConfigurationTable.Unpatch(meterConfiguration);
             XDocument sheet = XDocument.Parse(sheetText);
             Meter = ToMeter(sheet);
             Sheet = sheet;
@@ -70,32 +56,8 @@ namespace FaultData.Configuration
         public Meter Meter { get; }
         public XDocument Sheet { get; }
 
-        public void UpdateConfiguration(TableOperations<MeterConfiguration> meterConfigurationTable, string configKey)
-        {
-            MeterConfiguration newConfiguration = new MeterConfiguration();
-            newConfiguration.MeterID = Meter.ID;
-            newConfiguration.ConfigKey = configKey;
-            newConfiguration.ConfigText = Sheet.ToString();
-
-            MeterConfiguration oldConfiguration = meterConfigurationTable.QueryRecordWhere("MeterID = {0} AND ConfigKey = {1} AND DiffID IS NULL", Meter.ID, configKey);
-
-            if (oldConfiguration == null)
-            {
-                meterConfigurationTable.AddNewRecord(newConfiguration);
-                return;
-            }
-
-            DiffMatchPatch patchProvider = new DiffMatchPatch();
-            List<Patch> patches = patchProvider.PatchMake(newConfiguration.ConfigText, oldConfiguration.ConfigText);
-
-            if (patches.Count > 0)
-            {
-                meterConfigurationTable.AddNewRecord(newConfiguration);
-                oldConfiguration.DiffID = meterConfigurationTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-                oldConfiguration.ConfigText = patchProvider.PatchToText(patches);
-                meterConfigurationTable.UpdateRecord(oldConfiguration);
-            }
-        }
+        public void UpdateConfiguration(TableOperations<MeterConfiguration> meterConfigurationTable, string configKey) =>
+            meterConfigurationTable.PatchLatestConfiguration(Meter, configKey, Sheet.ToString());
 
         private XDocument ToSheet(Meter meter)
         {
