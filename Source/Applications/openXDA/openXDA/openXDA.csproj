@@ -233,7 +233,6 @@
     <Compile Include="Configuration\FileShare.cs" />
     <Compile Include="Controllers\Config\EmailTemplateController.cs" />
     <Compile Include="Controllers\Config\QueryController.cs" />
-    <Compile Include="Controllers\SystemCenter\MetersController.cs" />
     <Compile Include="DataObjectWrapper.cs" />
     <Compile Include="DebugHost.cs">
       <SubType>Form</SubType>
@@ -4109,10 +4108,6 @@
     <None Include="wwwroot\Scripts\TS\Services\TrendingDataDisplay.ts" />
     <Content Include="wwwroot\Scripts\default.polyfill.min.js" />
     <Content Include="wwwroot\Scripts\SpectralDataDisplay.js" />
-    <Content Include="wwwroot\Scripts\SystemCenter.js" />
-    <Content Include="wwwroot\SystemCenter\index.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="wwwroot\WorkBench\AuditLog.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -4229,12 +4224,6 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
-  </ItemGroup>
-  <ItemGroup>
-    <TypeScriptCompile Include="wwwroot\Scripts\TSX\SystemCenter\ByLocation.tsx" />
-    <TypeScriptCompile Include="wwwroot\Scripts\TSX\SystemCenter\Meter.tsx" />
-    <TypeScriptCompile Include="wwwroot\Scripts\TSX\SystemCenter\ByMeter.tsx" />
-    <TypeScriptCompile Include="wwwroot\Scripts\TSX\SystemCenter\SystemCenter.tsx" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="wwwroot\Scripts\TS\Services\SystemCenter\" />

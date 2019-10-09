@@ -66,10 +66,9 @@ namespace openXDA
 
             HubConfiguration hubConfig = new HubConfiguration();
             HttpConfiguration httpConfig = new HttpConfiguration();
-#if DEBUG
+            
             // Enabled detailed client errors
             hubConfig.EnableDetailedErrors = true;
-#endif
 
             // Enable GSF session management
             httpConfig.EnableSessions(AuthenticationOptions);

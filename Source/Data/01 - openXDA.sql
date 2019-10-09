@@ -115,18 +115,6 @@ CREATE NONCLUSTERED INDEX IX_DataFile_FilePathHash
 ON DataFile(FilePathHash ASC)
 GO
 
-CREATE TABLE FileBlob
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    DataFileID INT NOT NULL REFERENCES DataFile(ID),
-    Blob VARBINARY(MAX) NOT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
-ON FileBlob(DataFileID ASC)
-GO
-
 CREATE TABLE FileGroupField
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -740,6 +728,18 @@ CREATE TABLE SentEmail
     Subject VARCHAR(500) NOT NULL,
     Message VARCHAR(MAX) NOT NULL
 )
+GO
+
+CREATE TABLE FileBlob
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataFileID INT NOT NULL REFERENCES DataFile(ID),
+    Blob VARBINARY(MAX) NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
+ON FileBlob(DataFileID ASC)
 GO
 
 INSERT INTO XSLTemplate(Name, Template) VALUES('Default Daily', '')
@@ -2494,6 +2494,13 @@ CREATE TABLE PQMarkCompanyMeter
 )
 GO
 
+CREATE TABLE [dbo].[PQMarkCompanyCustomer](
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	[PQMarkCompanyID] [int] NOT NULL FOREIGN KEY REFERENCES PQMarkCompany(ID),
+	[CustomerID] [int] NOT NULL
+)
+GO
+
 CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_MeterID 
 ON PQMarkCompanyMeter(MeterID) 
 GO
@@ -3732,8 +3739,8 @@ FROM
     ) System OUTER APPLY
     (
         SELECT TOP 1
-            Disturbance.PerUnitMagnitude * 100 AS MagnitudePercent,
-            Disturbance.Magnitude AS MagnitudeVolts
+			FORMAT(Disturbance.PerUnitMagnitude * 100, '0.0') + '%' AS MagnitudePercent,
+			FORMAT(Disturbance.Magnitude, '0') + ' volts' AS MagnitudeVolts
         FROM
             Disturbance JOIN
             EventType ON
