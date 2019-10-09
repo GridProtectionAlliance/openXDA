@@ -167,7 +167,8 @@ namespace PQMark.DataAggregator
                     FROM
 	                    (
 		                    select
-			                    DISTINCT DATEADD(MINUTE, DATEDIFF(MINUTE, CAST(StartTime as DAte), StartTime), CAST(CAST(StartTime as DAte) as datetime)) as Minute
+			                    DISTINCT DATEADD(MINUTE, DATEDIFF(MINUTE, CAST(StartTime as DAte), StartTime), CAST(CAST(StartTime as DAte) as datetime)) as Minute,
+			                    MeterID
 		                    from
 			                    event
 	                    ) as EventMINUTE OUTER APPLY
@@ -183,11 +184,10 @@ namespace PQMark.DataAggregator
 			                    #Temp as Event JOIN
 			                    Disturbance ON Disturbance.EventID = Event.ID AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND Disturbance.EventTypeID != (SELECT ID FROM EventType WHERE Name = 'Transient')
 		                    WHERE
-			                    Event.Minute = EventMINUTE.Minute
+			                    Event.Minute = EventMINUTE.Minute AND Event.MeterID = EventMINUTE.MeterID
 		                    ORDER BY 
 		                    Abs(1 - PerUnitMagnitude) DESC
 	                    ) as evt
-
                     DROP TABLE #Temp
         ";
         #endregion
