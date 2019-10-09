@@ -489,15 +489,15 @@ namespace openXDA
 
             using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
             {
-                TableOperations<ConfigurationLoader> configurationLoaderTable = new TableOperations<ConfigurationLoader>(connection);
+                TableOperations<Model.ConfigurationLoader> configurationLoaderTable = new TableOperations<Model.ConfigurationLoader>(connection);
 
-                List<ConfigurationLoader> configurationLoaderDefinitions = configurationLoaderTable
+                List<Model.ConfigurationLoader> configurationLoaderDefinitions = configurationLoaderTable
                     .QueryRecords("LoadOrder")
                     .ToList();
 
                 string connectionString = LoadSystemSettings(connection);
 
-                foreach (ConfigurationLoader configurationLoaderDefinition in configurationLoaderDefinitions)
+                foreach (Model.ConfigurationLoader configurationLoaderDefinition in configurationLoaderDefinitions)
                 {
                     try
                     {
@@ -963,6 +963,9 @@ namespace openXDA
                         // Set the processing end time of the file
                         // group and save it to the database
                         CompleteProcessing(state);
+
+                        // Save the current meter configuration
+                        SaveMeterConfiguration(state);
                     }
                     finally
                     {
@@ -1003,9 +1006,9 @@ namespace openXDA
         /// <summary>
         /// Processes a group of data files that have already been processed.
         /// </summary>
-        /// <param name="fileGroupId">The ID of the file group representing the group of files to be processed again.</param>
-        /// <param name="meterId">The ID of the meter representing the group of files to be processed again.</param>
-        public void ReprocessFile(int fileGroupId, int meterId)
+        /// <param name="fileGroupID">The ID of the file group representing the group of files to be processed again.</param>
+        /// <param name="meterID">The ID of the meter representing the group of files to be processed again.</param>
+        public void ReprocessFile(int fileGroupID, int meterID, bool loadHistoricConfiguration)
         {
             FileGroup fileGroup;
             string meterKey;
@@ -1022,14 +1025,14 @@ namespace openXDA
                     TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
                     TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
 
-                    fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", fileGroupId);
+                    fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", fileGroupID);
 
                     fileGroup.DataFiles = dataFileTable
-                        .QueryRecordsWhere("FileGroupID = {0}", fileGroupId)
+                        .QueryRecordsWhere("FileGroupID = {0}", fileGroupID)
                         .ToList();
 
                     // Determine which meter the file is associated with
-                    meterKey = meterTable.QueryRecordWhere("ID = {0}", meterId).AssetKey;
+                    meterKey = meterTable.QueryRecordWhere("ID = {0}", meterID).AssetKey;
                 }
 
                 // Get the first file that matches the file processor's filter
@@ -1118,12 +1121,20 @@ namespace openXDA
                         if (state.Retry)
                             return;
 
+                        if (state.MeterDataSet != null)
+                            state.MeterDataSet.LoadHistoricConfiguration = loadHistoricConfiguration;
+
                         // Process the data that was parsed from the file
                         ProcessFile(state);
 
                         // Set the processing end time of the file
                         // group and save it to the database
                         completeProcessingCallback(state);
+
+                        // If using the current meter configuration,
+                        // make sure to save and reference it
+                        if (!state.MeterDataSet.LoadHistoricConfiguration)
+                            SaveMeterConfiguration(state);
                     }
                     finally
                     {
@@ -1535,6 +1546,29 @@ namespace openXDA
             m_eventEmailEngine.Process(state.MeterDataSet);
         }
 
+        // Saves the current meter configuration to the database.
+        private void SaveMeterConfiguration(DataProcessorState state)
+        {
+            Meter meter = state.MeterDataSet.Meter;
+            MeterSettingsSheet meterSettingsSheet = new MeterSettingsSheet(meter);
+
+            using (AdoDataConnection connection = state.MeterDataSet.CreateDbConnection())
+            {
+                const string ConfigKey = "openXDA";
+                TableOperations<MeterConfiguration> meterConfigurationTable = new TableOperations<MeterConfiguration>(connection);
+                meterSettingsSheet.UpdateConfiguration(meterConfigurationTable, ConfigKey);
+
+                RecordRestriction queryRestriction =
+                    new RecordRestriction("MeterID = {0}", meter.ID) &
+                    new RecordRestriction("ConfigKey = {0}", ConfigKey) &
+                    new RecordRestriction("DiffID IS NULL");
+
+                MeterConfiguration currentConfiguration = meterConfigurationTable.QueryRecord("ID DESC", queryRestriction);
+                connection.ExecuteNonQuery("DELETE FROM FileGroupMeterConfiguration WHERE FileGroupID = {0} AND MeterConfigurationID IN (SELECT ID FROM MeterConfiguration WHERE ConfigKey = {1})", state.FileGroup.ID, ConfigKey);
+                connection.ExecuteNonQuery("INSERT INTO FileGroupMeterConfiguration VALUES({0}, {1})", state.FileGroup.ID, currentConfiguration.ID);
+            }
+        }
+
         // Saves the file group to the database and cleans up state for logging and reporting.
         private void CompleteProcessing(DataProcessorState state)
         {
@@ -1874,7 +1908,7 @@ namespace openXDA
         }
 
         // Instantiates the given data writer and wraps it in a disposable wrapper object.
-        private static ConfigurationLoaderWrapper Wrap(ConfigurationLoader loader)
+        private static ConfigurationLoaderWrapper Wrap(Model.ConfigurationLoader loader)
         {
             try
             {

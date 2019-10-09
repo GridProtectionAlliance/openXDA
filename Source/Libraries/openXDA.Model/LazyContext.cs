@@ -35,7 +35,9 @@ namespace openXDA.Model
         private Dictionary<int, MeterLocation> m_meterLocations;
         private Dictionary<int, Meter> m_meters;
         private Dictionary<int, Line> m_lines;
+        private Dictionary<int, LineImpedance> m_lineImpedances;
         private Dictionary<int, MeterLocationLine> m_meterLocationLines;
+        private Dictionary<int, SourceImpedance> m_sourceImpedances;
         private Dictionary<int, MeterLine> m_meterLines;
         private Dictionary<int, Channel> m_channels;
         private Dictionary<int, Series> m_series;
@@ -53,7 +55,9 @@ namespace openXDA.Model
             m_meterLocations = new Dictionary<int, MeterLocation>();
             m_meters = new Dictionary<int, Meter>();
             m_lines = new Dictionary<int, Line>();
+            m_lineImpedances = new Dictionary<int, LineImpedance>();
             m_meterLocationLines = new Dictionary<int, MeterLocationLine>();
+            m_sourceImpedances = new Dictionary<int, SourceImpedance>();
             m_meterLines = new Dictionary<int, MeterLine>();
             m_channels = new Dictionary<int, Channel>();
             m_series = new Dictionary<int, Series>();
@@ -124,6 +128,23 @@ namespace openXDA.Model
             return line;
         }
 
+        public LineImpedance GetLineImpedance(LineImpedance lineImpedance)
+        {
+            LineImpedance cachedLineImpedance;
+
+            if ((object)lineImpedance == null)
+                return null;
+
+            if (lineImpedance.ID == 0)
+                return lineImpedance;
+
+            if (m_lineImpedances.TryGetValue(lineImpedance.ID, out cachedLineImpedance))
+                return cachedLineImpedance;
+
+            m_lineImpedances.Add(lineImpedance.ID, lineImpedance);
+            return lineImpedance;
+        }
+
         public MeterLocationLine GetMeterLocationLine(MeterLocationLine meterLocationLine)
         {
             MeterLocationLine cachedMeterLocationLine;
@@ -139,6 +160,23 @@ namespace openXDA.Model
 
             m_meterLocationLines.Add(meterLocationLine.ID, meterLocationLine);
             return meterLocationLine;
+        }
+
+        public SourceImpedance GetSourceImpedance(SourceImpedance sourceImpedance)
+        {
+            SourceImpedance cachedSourceImpedance;
+
+            if ((object)sourceImpedance == null)
+                return null;
+
+            if (sourceImpedance.ID == 0)
+                return sourceImpedance;
+
+            if (m_sourceImpedances.TryGetValue(sourceImpedance.ID, out cachedSourceImpedance))
+                return cachedSourceImpedance;
+
+            m_sourceImpedances.Add(sourceImpedance.ID, sourceImpedance);
+            return sourceImpedance;
         }
 
         public MeterLine GetMeterLine(MeterLine meterLine)

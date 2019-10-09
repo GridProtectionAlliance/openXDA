@@ -94,9 +94,10 @@
             </div>
             <div class="modal-body">
                 <div hidden="hidden" id="FileGroupID"></div>
-                <div hidden="hidden" id="DataFileID"></div>
                 <label for="eventList">Events in File:</label>
                 <ul id="eventList"></ul>
+                <input type="checkbox" id="LoadHistoricConfiguration" checked />
+                <label for="LoadHistoricConfiguration">Use historic configuration?</label>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="reprocessSingleFileGroup()">Reprocess</button>
@@ -227,8 +228,7 @@
 
 
         $('#reprocessModal').on('shown.bs.modal', function (event) {
-            $('#DataFileID').text($(event.relatedTarget.parentElement.parentElement.children).first().text())
-            $('#FileGroupID').text($(event.relatedTarget.parentElement.parentElement.children).first().next().next().text())
+            $('#FileGroupID').text($(event.relatedTarget.parentElement.parentElement.children).first().next().next().text());
             $('#eventList').children().remove();
             dataHub.getEventsForFileGroup($('#FileGroupID').text()).done(function (data) {
                 $.each(data, function (i, d) {
@@ -244,7 +244,7 @@
         }
 
         function reprocessSingleFileGroup() {
-            dataHub.reprocessFile($('#DataFileID').text(), $('#FileGroupID').text());
+            dataHub.reprocessFile($('#FileGroupID').text(), $('#LoadHistoricConfiguration').is(':checked'));
         }
         
         function selectAll(control) {

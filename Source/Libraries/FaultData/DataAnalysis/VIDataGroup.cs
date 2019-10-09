@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
@@ -433,59 +434,51 @@ namespace FaultData.DataAnalysis
 
             if ((object)dbSeries == null)
             {
-                using (AdoDataConnection connection = meter.ConnectionFactory())
+                Channel dbChannel = meter.Channels
+                    .FirstOrDefault(channel => channelKey.Equals(new ChannelKey(channel)));
+
+                if ((object)dbChannel == null)
                 {
-                    Channel dbChannel = meter.Channels
-                        .FirstOrDefault(channel => channelKey.Equals(new ChannelKey(channel)));
+                    MeasurementType measurementType = new MeasurementType() { Name = measurementTypeName };
+                    MeasurementCharacteristic measurementCharacteristic = new MeasurementCharacteristic() { Name = measurementCharacteristicName };
+                    Phase phase = new Phase() { Name = phaseName };
 
-                    if ((object)dbChannel == null)
+                    dbChannel = new Channel()
                     {
-                        TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
-                        TableOperations<MeasurementType> measurementTypeTable = new TableOperations<MeasurementType>(connection);
-                        TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
-                        TableOperations<Phase> phaseTable = new TableOperations<Phase>(connection);
+                        MeterID = meter.ID,
+                        LineID = lineID,
+                        MeasurementTypeID = measurementType.ID,
+                        MeasurementCharacteristicID = measurementCharacteristic.ID,
+                        PhaseID = phase.ID,
+                        Name = channelKey.Name,
+                        SamplesPerHour = dataGroup.SamplesPerHour,
+                        Description = string.Concat(measurementCharacteristicName, " ", measurementTypeName, " ", phaseName),
+                        Enabled = true,
 
-                        MeasurementType measurementType = measurementTypeTable.GetOrAdd(measurementTypeName);
-                        MeasurementCharacteristic measurementCharacteristic = measurementCharacteristicTable.GetOrAdd(measurementCharacteristicName);
-                        Phase phase = phaseTable.GetOrAdd(phaseName);
-
-                        dbChannel = new Channel()
-                        {
-                            MeterID = meter.ID,
-                            LineID = lineID,
-                            MeasurementTypeID = measurementType.ID,
-                            MeasurementCharacteristicID = measurementCharacteristic.ID,
-                            PhaseID = phase.ID,
-                            Name = channelKey.Name,
-                            SamplesPerHour = dataGroup.SamplesPerHour,
-                            Description = string.Concat(measurementCharacteristicName, " ", measurementTypeName, " ", phaseName),
-                            Enabled = true
-                        };
-
-                        channelTable.AddNewRecord(dbChannel);
-                        dbChannel.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-                        meter.Channels = null;
-                    }
-
-                    TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
-                    TableOperations<SeriesType> seriesTypeTable = new TableOperations<SeriesType>(connection);
-                    SeriesType seriesType = seriesTypeTable.GetOrAdd(seriesTypeName);
-
-                    dbSeries = new Series()
-                    {
-                        ChannelID = dbChannel.ID,
-                        SeriesTypeID = seriesType.ID,
-                        SourceIndexes = string.Empty
+                        Meter = meter,
+                        Line = dataGroup.Line,
+                        MeasurementType = measurementType,
+                        MeasurementCharacteristic = measurementCharacteristic,
+                        Phase = phase,
+                        Series = new List<Series>()
                     };
 
-                    seriesTable.AddNewRecord(dbSeries);
-                    dbSeries.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-                    dbChannel.Series = null;
-
-                    dbSeries = meter.Channels
-                        .SelectMany(channel => channel.Series)
-                        .First(series => seriesKey.Equals(new SeriesKey(series)));
+                    meter.Channels.Add(dbChannel);
                 }
+
+                SeriesType seriesType = new SeriesType() { Name = seriesTypeName };
+
+                dbSeries = new Series()
+                {
+                    ChannelID = dbChannel.ID,
+                    SeriesTypeID = seriesType.ID,
+                    SourceIndexes = string.Empty,
+
+                    Channel = dbChannel,
+                    SeriesType = seriesType
+                };
+
+                dbChannel.Series.Add(dbSeries);
             }
 
             return dbSeries;

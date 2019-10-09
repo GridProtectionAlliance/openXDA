@@ -52,6 +52,8 @@ namespace FaultData.DataResources
         private TimeZoneInfo XDATimeZone =>
             TimeZoneInfo.FindSystemTimeZoneById(XDATimeZoneID);
 
+        private Func<AdoDataConnection> ConnectionFactory { get; set; }
+
         #endregion
 
         #region [ Methods ]
@@ -61,7 +63,7 @@ namespace FaultData.DataResources
             string pointQuery = EDNASettings.PointQuery;
             List<string> points;
 
-            using (AdoDataConnection connection = line.ConnectionFactory())
+            using (AdoDataConnection connection = ConnectionFactory())
             using (DataTable pointTable = connection.RetrieveData(pointQuery, line.ID))
             {
                 points = pointTable
@@ -142,7 +144,8 @@ namespace FaultData.DataResources
             return false;
         }
 
-        public override void Initialize(MeterDataSet dataSet) { }
+        public override void Initialize(MeterDataSet meterDataSet) =>
+            ConnectionFactory = meterDataSet.CreateDbConnection;
 
         #endregion
 

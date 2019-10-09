@@ -115,6 +115,18 @@ CREATE NONCLUSTERED INDEX IX_DataFile_FilePathHash
 ON DataFile(FilePathHash ASC)
 GO
 
+CREATE TABLE FileBlob
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataFileID INT NOT NULL REFERENCES DataFile(ID),
+    Blob VARBINARY(MAX) NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
+ON FileBlob(DataFileID ASC)
+GO
+
 CREATE TABLE FileGroupField
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -168,14 +180,6 @@ CREATE TABLE Meter
 )
 GO
 
-CREATE TABLE MeterFileGroup
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    MeterID INT NOT NULL REFERENCES Meter(ID),
-    FileGroupID INT NOT NULL REFERENCES FileGroup(ID)
-)
-GO
-
 CREATE TABLE MeterFacility
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -183,7 +187,6 @@ CREATE TABLE MeterFacility
     FacilityID INT NOT NULL
 )
 GO
-
 
 CREATE TABLE Line
 (
@@ -314,7 +317,6 @@ GO
 INSERT INTO SeriesType(Name, Description) VALUES('Duration', 'Duration data values')
 GO
 
-
 CREATE TABLE Series
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -324,12 +326,38 @@ CREATE TABLE Series
 )
 GO
 
-CREATE TABLE BreakerChannel
+CREATE TABLE MeterConfiguration
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    ChannelID INT NOT NULL REFERENCES Channel(ID),
-    BreakerNumber VARCHAR(120) NOT NULL
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    DiffID INT NULL REFERENCES MeterConfiguration(ID),
+    ConfigKey VARCHAR(50) NOT NULL,
+    ConfigText VARCHAR(MAX) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterConfiguration_MeterID
+ON MeterConfiguration(MeterID)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterConfiguration_DiffID
+ON MeterConfiguration(DiffID)
+GO
+
+CREATE TABLE FileGroupMeterConfiguration
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    MeterConfigurationID INT NOT NULL REFERENCES MeterConfiguration(ID)
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupMeterConfiguration_FileGroupID
+ON FileGroupMeterConfiguration(FileGroupID)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupMeterConfiguration_MeterConfigurationID
+ON FileGroupMeterConfiguration(MeterConfigurationID)
 GO
 
 CREATE TABLE AssetGroup
@@ -413,13 +441,20 @@ CREATE NONCLUSTERED INDEX IX_AssetGroupAssetGroup_ChildAssetGroupID
 ON AssetGroupAssetGroup(ChildAssetGroupID ASC)
 GO
 
-
 CREATE TABLE MaintenanceWindow
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
     StartTime DATETIME,
     EndTime DATETIME
+)
+GO
+
+CREATE TABLE BreakerChannel
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    BreakerNumber VARCHAR(120) NOT NULL
 )
 GO
 
@@ -705,18 +740,6 @@ CREATE TABLE SentEmail
     Subject VARCHAR(500) NOT NULL,
     Message VARCHAR(MAX) NOT NULL
 )
-GO
-
-CREATE TABLE FileBlob
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    DataFileID INT NOT NULL REFERENCES DataFile(ID),
-    Blob VARBINARY(MAX) NOT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
-ON FileBlob(DataFileID ASC)
 GO
 
 INSERT INTO XSLTemplate(Name, Template) VALUES('Default Daily', '')
@@ -2989,7 +3012,8 @@ SELECT  Line.ID AS LineID,
 		RelayPerformance.TripCoilCondition,
 		RelayAlertSetting.TripCoilCondition AS TripCoilConditionAlert,
 		RelayAlertSetting.TripTime AS TripTimeAlert,
-		RelayAlertSetting.PickupTime AS PickupTimeAlert
+		RelayAlertSetting.PickupTime AS PickupTimeAlert,
+		RelayPerformance.ChannelID AS TripCoilChannelID
 FROM    RelayPerformance LEFT OUTER JOIN
         Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
         Line ON Channel.LineID = Line.ID LEFT OUTER JOIN 
@@ -4311,7 +4335,10 @@ SET TriggersEmailSQL = 'SELECT CASE WHEN (SELECT COUNT(RP.ID) FROM RelayPerforma
 	LINE LN ON LN.ID = EV.LineID INNER JOIN
 	RelayAlertSetting RA ON RA.LineID = LN.ID
 	WHERE RP.EventID = {0}
-		AND (RP.TripTime > RA.TripTime OR RP.PickupTime > RA.PickupTime OR RP.TripCoilCondition > RA.TripCoilCondition)) > 0 THEN 1 ELSE 0 END'
+		AND ((RP.TripTime > RA.TripTime AND RA.TripTime > 0) 
+			OR (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0)
+			OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
+	) > 0 THEN 1 ELSE 0 END'
 WHERE EventEmailParameters.ID = 3
 GO		
 		
@@ -4322,13 +4349,13 @@ SET EventDetailSQL = 'DECLARE @url VARCHAR(MAX) = (SELECT Value FROM DashSetting
 /* Breaker */
 SELECT LN.ID AS LineID, ML.LineName AS Name, LN.AssetKey AS AssetKey, 
 	RP.TripTime AS TT, RP.PickupTime AS PT, RP.TripCoilCondition AS TCC, RP.TripInitiate AS TI, RP.Imax1 AS L1, RP.Imax2 AS L2,
-	( SELECT CASE WHEN RP.TripTime > RA.TripTime THEN 1 ELSE 0 END ) AS TTAlert,
-	( SELECT CASE WHEN RP.PickupTime > RA.PickupTime THEN 1 ELSE 0 END ) AS PTAlert,
-	( SELECT CASE WHEN RP.TripCoilCondition > RA.TripCoilCondition THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN (RP.TripTime > RA.TripTime AND RA.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
 	( SELECT CASE WHEN
-		RP.TripCoilCondition > RA.TripCoilCondition OR
-		RP.PickupTime > RA.PickupTime OR
-		RP.TripTime > RA.TripTime 
+		(RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) OR
+		(RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0) OR
+		(RP.TripTime > RA.TripTime AND RA.TripTime > 0)
 		THEN 1 ELSE 0 END 
 	) AS Alert
 	INTO #Breaker 
@@ -4348,17 +4375,19 @@ SELECT ML.LineName AS Name, LN.AssetKey AS AssetKey
 	LINE LN ON LN.ID = EV.LineID INNER JOIN
 	RelayAlertSetting RA ON RA.LineID = LN.ID
 	WHERE RP.EventID = {0}
-		AND (RP.TripTime > RA.TripTime OR RP.PickupTime > RA.PickupTime OR RP.TripCoilCondition > RA.TripCoilCondition)
+		AND ((RP.TripTime > RA.TripTime AND RA.TripTime > 0) 
+			OR (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0)
+			OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
 
 /* History */
 SELECT Line.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime AS PT, Relay.TripTime AS TT, Relay.TripCoilCondition AS TCC,  Relay.Imax1 AS L1, Relay.Imax2 AS L2, Relay.TripInitiate AS TI,
-	( SELECT CASE WHEN Relay.TripTime > RelayAlert.TripTime THEN 1 ELSE 0 END ) AS TTAlert,
-	( SELECT CASE WHEN Relay.PickupTime > RelayAlert.PickupTime THEN 1 ELSE 0 END ) AS PTAlert,
-	( SELECT CASE WHEN Relay.TripCoilCondition > RelayAlert.TripCoilCondition THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN (Relay.TripTime > RelayAlert.TripTime AND RelayAlert.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN (Relay.PickupTime > RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN (Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
 	( SELECT CASE WHEN
-		Relay.TripCoilCondition > RelayAlert.TripCoilCondition OR
-		Relay.PickupTime > RelayAlert.PickupTime OR
-		Relay.TripTime > RelayAlert.TripTime 
+		(Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) OR
+		(Relay.PickupTime > RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) OR
+		(Relay.TripTime > RelayAlert.TripTime AND RelayAlert.TripTime > 0)
 		THEN 1 ELSE 0 END 
 	) AS Alert
 	INTO #History FROM  

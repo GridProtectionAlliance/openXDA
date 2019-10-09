@@ -73,58 +73,36 @@ namespace FaultData.DataResources
 
             public bool TryExtractImpedances()
             {
-                using (AdoDataConnection connection = Meter.ConnectionFactory())
+                LineImpedance lineImpedance = Line.LineImpedance;
+
+                if (lineImpedance != null)
                 {
-                    int lineID = Line.ID;
-                    TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
-                    LineImpedance lineImpedance = lineImpedanceTable.QueryRecordWhere("LineID = {0}", lineID);
+                    if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
+                        return false;
 
-                    if ((object)lineImpedance != null)
-                    {
-                        if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
-                            return false;
+                    FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
+                    FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
 
-                        FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
-                        FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
+                    SourceImpedance localImpedance = Line.MeterLocationLines
+                        .Where(link => link.MeterLocation == Meter.MeterLocation)
+                        .Select(link => link.SourceImpedance)
+                        .FirstOrDefault();
 
-                        int localMeterLocationID = Meter.MeterLocationID;
+                    List<SourceImpedance> remoteImpedances = Line.MeterLocationLines
+                        .Where(link => link.MeterLocation != Meter.MeterLocation)
+                        .Select(link => link.SourceImpedance)
+                        .ToList();
 
-                        List<int> linkIDs = Line.MeterLocationLines
-                            .Select(link => link.ID)
-                            .ToList();
+                    if (localImpedance != null)
+                        FaultLocationDataSet.ZSrc = new ComplexNumber(localImpedance.RSrc, localImpedance.XSrc);
 
-                        int localLinkID = Line.MeterLocationLines
-                            .Where(link => link.MeterLocationID == localMeterLocationID)
-                            .Select(link => link.ID)
-                            .FirstOrDefault();
+                    if (remoteImpedances.Count == 1)
+                        FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
 
-                        TableOperations<SourceImpedance> sourceImpedanceTable = new TableOperations<SourceImpedance>(connection);
-
-                        if (linkIDs.Count == 0)
-                            return true;
-
-                        List<SourceImpedance> sourceImpedances = sourceImpedanceTable
-                            .QueryRecordsWhere($"MeterLocationLineID IN ({string.Join(",", linkIDs)})")
-                            .ToList();
-
-                        SourceImpedance localImpedance = sourceImpedances
-                            .FirstOrDefault(impedance => impedance.MeterLocationLineID == localLinkID);
-
-                        List<SourceImpedance> remoteImpedances = sourceImpedances
-                            .Where(impedance => impedance.MeterLocationLineID != localMeterLocationID)
-                            .ToList();
-
-                        if ((object)localImpedance != null)
-                            FaultLocationDataSet.ZSrc = new ComplexNumber(localImpedance.RSrc, localImpedance.XSrc);
-
-                        if (remoteImpedances.Count == 1)
-                            FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
-
-                        return true;
-                    }
-
-                    return false;
+                    return true;
                 }
+
+                return false;
             }
 
             #endregion
@@ -1408,14 +1386,7 @@ namespace FaultData.DataResources
             ComplexNumber faultCurrent = ToComplexNumber(faultedCurrent, fault.CalculationCycle);
             ComplexNumber faultImpedance = faultVoltage / faultCurrent;
 
-            LineImpedance lineImpedance = new Func<LineImpedance>(() =>
-            {
-                using (AdoDataConnection connection = dataGroup.Line.ConnectionFactory())
-                {
-                    TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
-                    return lineImpedanceTable.QueryRecordWhere("LineID = {0}", dataGroup.Line.ID);
-                }
-            })();
+            LineImpedance lineImpedance = dataGroup.Line.LineImpedance;
 
             if (lineImpedance == null)
                 return double.NaN;

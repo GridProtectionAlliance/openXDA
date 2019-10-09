@@ -39,6 +39,7 @@ namespace openXDA.Model
         private List<MeterLocationLine> m_meterLocationLines;
         private List<MeterLine> m_meterLines;
         private List<Channel> m_channels;
+        private LineImpedance m_lineImpedance;
 
         #endregion
 
@@ -75,6 +76,10 @@ namespace openXDA.Model
             {
                 return m_meterLocationLines ?? (m_meterLocationLines = QueryMeterLocationLines());
             }
+            set
+            {
+                m_meterLocationLines = value;
+            }
         }
 
         [JsonIgnore]
@@ -102,6 +107,20 @@ namespace openXDA.Model
             set
             {
                 m_channels = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public LineImpedance LineImpedance
+        {
+            get
+            {
+                return m_lineImpedance ?? (m_lineImpedance ?? QueryLineImpedance());
+            }
+            set
+            {
+                m_lineImpedance = value;
             }
         }
 
@@ -152,6 +171,15 @@ namespace openXDA.Model
 
             TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
             return channelTable.QueryRecordsWhere("LineID = {0}", ID);
+        }
+
+        public LineImpedance GetLineImpedance(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
+            return lineImpedanceTable.QueryRecordWhere("LineID = {0}", ID);
         }
 
         private List<MeterLocationLine> QueryMeterLocationLines()
@@ -221,6 +249,21 @@ namespace openXDA.Model
             }
 
             return channels;
+        }
+
+        private LineImpedance QueryLineImpedance()
+        {
+            LineImpedance lineImpedance;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                lineImpedance = GetLineImpedance(connection);
+            }
+
+            if ((object)lineImpedance != null)
+                lineImpedance.LazyContext = LazyContext;
+
+            return LazyContext.GetLineImpedance(lineImpedance);
         }
 
         #endregion

@@ -24,7 +24,9 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Linq;
+using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.Collections;
@@ -118,22 +120,11 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            Meter parsedMeter;
-            Meter dbMeter;
-            List<Series> seriesList;
-
-            Log.Info("Executing operation to locate meter in database...");
-
             // Grab the parsed meter right away as we will be replacing it in the meter data set with the meter from the database
-            parsedMeter = meterDataSet.Meter;
+            Meter parsedMeter = meterDataSet.Meter;
 
             // Search the database for a meter definition that matches the parsed meter
-            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
-            {
-                TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
-                dbMeter = meterTable.QueryRecordWhere("AssetKey = {0}", parsedMeter.AssetKey);
-                dbMeter.ConnectionFactory = meterDataSet.CreateDbConnection;
-            }
+            Meter dbMeter = LoadMeterFromDatabase(meterDataSet);
 
             if ((object)dbMeter == null)
             {
@@ -144,14 +135,17 @@ namespace FaultData.DataOperations
                 throw new InvalidOperationException("Cannot process meter - configuration does not exist");
             }
 
-            Log.Info(string.Format("Found meter {0} in database.", dbMeter.Name));
+            if (!meterDataSet.LoadHistoricConfiguration)
+                Log.Info(string.Format("Found meter {0} in database.", dbMeter.Name));
+            else
+                Log.Info(string.Format("Found meter {0} in configuration history.", dbMeter.Name));
 
             // Replace the parsed meter with
             // the one from the database
             meterDataSet.Meter = dbMeter;
 
             // Get the list of series associated with the meter in the database
-            seriesList = dbMeter.Channels
+            List<Series> seriesList = dbMeter.Channels
                 .SelectMany(channel => channel.Series)
                 .ToList();
 
@@ -189,16 +183,75 @@ namespace FaultData.DataOperations
             // in the configuration or the source data
             RemoveUnknownChannelTypes(meterDataSet);
 
-            // Add channels that are not already defined in the
-            // configuration by assuming the meter monitors only one line
-            AddUndefinedChannels(meterDataSet);
+            // Only update database configuration if NOT using historic configuration.
+            if (!meterDataSet.LoadHistoricConfiguration)
+            {
+                // Add channels that are not already defined in the
+                // configuration by assuming the meter monitors only one line
+                AddUndefinedChannels(meterDataSet);
 
-            // Set samples per hour and enabled flags based on
-            // the configuration obtained from the latest file
-            FixUpdatedChannelInfo(meterDataSet, parsedMeter);
+                // Set samples per hour and enabled flags based on
+                // the configuration obtained from the latest file
+                FixUpdatedChannelInfo(meterDataSet, parsedMeter);
 
-            // Update line parameters pulled from the input data
-            UpdateConfigurationData(meterDataSet);
+                // Update line parameters pulled from the input data
+                UpdateConfigurationData(meterDataSet);
+            }
+        }
+
+        private Meter LoadMeterFromDatabase(MeterDataSet meterDataSet)
+        {
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                Meter LoadCurrentMeter()
+                {
+                    TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+                    Meter parsedMeter = meterDataSet.Meter;
+                    Meter dbMeter = meterTable.QueryRecordWhere("AssetKey = {0}", parsedMeter.AssetKey);
+                    dbMeter.ConnectionFactory = meterDataSet.CreateDbConnection;
+                    return dbMeter;
+                }
+
+                Meter LoadHistoricMeter()
+                {
+                    const string ConfigKey = "openXDA";
+
+                    TableOperations<MeterConfiguration> meterConfigurationTable = new TableOperations<MeterConfiguration>(connection);
+
+                    RecordRestriction recordRestriction =
+                        new RecordRestriction("ConfigKey = {0}", ConfigKey) &
+                        new RecordRestriction("{1} IN (SELECT FileGroupID FROM FileGroupMeterConfiguration WHERE MeterConfigurationID = MeterConfiguration.ID)");
+
+                    MeterConfiguration meterConfiguration = meterConfigurationTable.QueryRecord("ID DESC", recordRestriction);
+
+                    if (meterConfiguration == null)
+                    {
+                        // Need to find the oldest configuration record for this meter
+                        Meter dbMeter = LoadCurrentMeter();
+                        int? meterID = dbMeter?.ID;
+
+                        recordRestriction =
+                            new RecordRestriction("MeterID = {0}", meterID) &
+                            new RecordRestriction("ConfigKey = {0}", ConfigKey) &
+                            new RecordRestriction("ID NOT IN (SELECT DiffID FROM MeterConfiguration WHERE DiffID IS NOT NULL)");
+
+                        meterConfiguration = meterConfigurationTable.QueryRecord("ID", recordRestriction);
+                    }
+
+                    if (meterConfiguration == null)
+                        return null;
+
+                    MeterSettingsSheet settingsSheet = new MeterSettingsSheet(meterConfigurationTable, meterConfiguration);
+                    return settingsSheet.Meter;
+                }
+
+                Log.Info("Locating meter in database...");
+
+                if (meterDataSet.LoadHistoricConfiguration)
+                    return LoadHistoricMeter();
+
+                return LoadCurrentMeter();
+            }
         }
 
         private void AddCalculatedDataSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)

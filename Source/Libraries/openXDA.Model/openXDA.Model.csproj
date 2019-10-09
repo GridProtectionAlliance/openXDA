@@ -83,6 +83,7 @@
     <Compile Include="Links\AssetGroupAssetGroup.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
+    <Compile Include="Meters\MeterConfiguration.cs" />
     <Compile Include="Settings\BreakerReportsSettings.cs" />
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />

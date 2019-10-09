@@ -92,6 +92,7 @@
     <Compile Include="Configuration\EMAXSettings.cs" />
     <Compile Include="Configuration\FaultLocationSettings.cs" />
     <Compile Include="Configuration\HistorianSettings.cs" />
+    <Compile Include="Configuration\MeterSettingsSheet.cs" />
     <Compile Include="DataAnalysis\CycleDataGroup.cs" />
     <Compile Include="DataAnalysis\DataGroup.cs" />
     <Compile Include="DataAnalysis\DataPoint.cs" />

@@ -324,7 +324,7 @@ namespace openXDA
 
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument1, Args.Argument2);
-            DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2);
+            DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2, Args.Argument3);
             DataHub.ReloadSystemSettingsEvent += (obj, Args) => OnReloadSystemSettingsRequestHandler();
             DataHub.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
 
@@ -1289,10 +1289,22 @@ namespace openXDA
         /// <summary>
         /// Sends a command request to the service to reprocess files.
         /// </summary>
-        /// <param name="dataFiles">Identifier for the file group to be reprocessed.</param>
-        public void ReprocessFile(int fileGroupId, int meterId)
+        /// <param name="fileGroupID">Identifier for the file group to be reprocessed.</param>
+        /// <param name="meterID">Identifier for the meter that provided the files.</param>
+        public void ReprocessFile(int fileGroupID, int meterID)
         {
-            m_extensibleDisturbanceAnalysisEngine.ReprocessFile(fileGroupId, meterId);
+            ReprocessFile(fileGroupID, meterID, false);
+        }
+
+        /// <summary>
+        /// Sends a command request to the service to reprocess files.
+        /// </summary>
+        /// <param name="fileGroupID">Identifier for the file group to be reprocessed.</param>
+        /// <param name="meterID">Identifier for the meter that provided the files.</param>
+        /// <param name="loadHistoricConfiguration">True to load historic configuration; false otherwise.</param>
+        public void ReprocessFile(int fileGroupID, int meterID, bool loadHistoricConfiguration)
+        {
+            m_extensibleDisturbanceAnalysisEngine.ReprocessFile(fileGroupID, meterID, loadHistoricConfiguration);
         }
 
         public void DisconnectClient(Guid clientID)

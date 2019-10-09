@@ -21,12 +21,24 @@
 //
 //******************************************************************************************************
 
+using System;
+using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     public class LineImpedance
     {
+        #region [ Members ]
+
+        // Fields
+        private Line m_line;
+
+        #endregion
+
+        #region [ Properties ]
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -39,5 +51,67 @@ namespace openXDA.Model
         public double X0 { get; set; }
 
         public double X1 { get; set; }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Line Line
+        {
+            get
+            {
+                return m_line ?? (m_line = QueryLine());
+            }
+            set
+            {
+                m_line = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Func<AdoDataConnection> ConnectionFactory
+        {
+            get
+            {
+                return LazyContext.ConnectionFactory;
+            }
+            set
+            {
+                LazyContext.ConnectionFactory = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        internal LazyContext LazyContext { get; set; } = new LazyContext();
+
+        #endregion
+
+        #region [ Methods ]
+
+        public Line GetLine(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Line> lineTable = new TableOperations<Line>(connection);
+            return lineTable.QueryRecordWhere("ID = {0}", LineID);
+        }
+
+        private Line QueryLine()
+        {
+            Line line;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                line = GetLine(connection);
+            }
+
+            if ((object)line != null)
+                line.LazyContext = LazyContext;
+
+            return LazyContext.GetLine(line);
+        }
+
+        #endregion
     }
 }

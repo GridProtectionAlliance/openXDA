@@ -90,11 +90,11 @@ namespace openXDA.Hubs
             LogStatusMessageEvent?.Invoke(new object(),new EventArgs<string, UpdateType>(message, updateType));
         }
 
-        public static event EventHandler<EventArgs<int, int>> ReprocessFilesEvent;
+        public static event EventHandler<EventArgs<int, int, bool>> ReprocessFilesEvent;
 
-        private static void OnReprocessFile(int fileGroupId, int meterId)
+        private static void OnReprocessFile(int fileGroupId, int meterId, bool loadHistoricConfiguration)
         {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int, int>(fileGroupId, meterId));
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int, int, bool>(fileGroupId, meterId, loadHistoricConfiguration));
         }
 
         public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
@@ -6485,12 +6485,12 @@ namespace openXDA.Hubs
                 {
                     CascadeDelete("Event", $"FileGroupID = {fileGroupID}");
                     CascadeDelete("EventData", $"FileGroupID = {fileGroupID}");
-                    OnReprocessFile(fileGroupID.Item1, fileGroupID.Item2);
+                    OnReprocessFile(fileGroupID.Item1, fileGroupID.Item2, true);
                 }
             }
         }
 
-        public void ReprocessFile(int dataFileID, int fileGroupID)
+        public void ReprocessFile(int fileGroupID, bool loadHistoricConfiguration)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
@@ -6523,7 +6523,7 @@ namespace openXDA.Hubs
                 CascadeDelete("Event", $"FileGroupID = {fileGroupID}");
                 CascadeDelete("EventData", $"FileGroupID = {fileGroupID}");
 
-                OnReprocessFile(fileGroupID, meterID.GetValueOrDefault());
+                OnReprocessFile(fileGroupID, meterID.GetValueOrDefault(), loadHistoricConfiguration);
             }
         }
 

@@ -21,12 +21,24 @@
 //
 //******************************************************************************************************
 
+using System;
+using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     public class SourceImpedance
     {
+        #region [ Members ]
+
+        // Fields
+        private MeterLocationLine m_meterLocationLine;
+
+        #endregion
+
+        #region [ Properties ]
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -35,5 +47,67 @@ namespace openXDA.Model
         public double RSrc { get; set; }
 
         public double XSrc { get; set; }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public MeterLocationLine MeterLocationLine
+        {
+            get
+            {
+                return m_meterLocationLine ?? (m_meterLocationLine = QueryMeterLocationLine());
+            }
+            set
+            {
+                m_meterLocationLine = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Func<AdoDataConnection> ConnectionFactory
+        {
+            get
+            {
+                return LazyContext.ConnectionFactory;
+            }
+            set
+            {
+                LazyContext.ConnectionFactory = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        internal LazyContext LazyContext { get; set; } = new LazyContext();
+
+        #endregion
+
+        #region [ Methods ]
+
+        public MeterLocationLine GetMeterLocationLine(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<MeterLocationLine> meterLocationTable = new TableOperations<MeterLocationLine>(connection);
+            return meterLocationTable.QueryRecordWhere("ID = {0}", MeterLocationLineID);
+        }
+
+        private MeterLocationLine QueryMeterLocationLine()
+        {
+            MeterLocationLine meterLocationLine;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                meterLocationLine = GetMeterLocationLine(connection);
+            }
+
+            if ((object)meterLocationLine != null)
+                meterLocationLine.LazyContext = LazyContext;
+
+            return LazyContext.GetMeterLocationLine(meterLocationLine);
+        }
+
+        #endregion
     }
 }
