@@ -109,8 +109,8 @@
   <ComponentGroupRef Id="wwwroot_Scripts_src_noconflict_snippets_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_TS_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_TS_Services_Components" />
+  <ComponentGroupRef Id="wwwroot_Scripts_TS_Services_SystemCenter_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_TSX_Components" />
-  <ComponentGroupRef Id="wwwroot_SystemCenter_Components" />
   <ComponentGroupRef Id="wwwroot_WorkBench_Components" />
 </Feature>
 </Include>

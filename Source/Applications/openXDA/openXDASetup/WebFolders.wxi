@@ -153,11 +153,12 @@
       <Directory Id="wwwroot_SCRIPTSSRCNOCONFLICTSNIPPETSFOLDER" Name="snippets" />
     </Directory>
     <Directory Id="wwwroot_SCRIPTSTSFOLDER" Name="TS">
-      <Directory Id="wwwroot_SCRIPTSTSSERVICESFOLDER" Name="Services" />
+      <Directory Id="wwwroot_SCRIPTSTSSERVICESFOLDER" Name="Services">
+        <Directory Id="wwwroot_SCRIPTSTSSERVICESSYSTEMCENTERFOLDER" Name="SystemCenter" />
+      </Directory>
     </Directory>
     <Directory Id="wwwroot_SCRIPTSTSXFOLDER" Name="TSX" />
   </Directory>
-  <Directory Id="wwwroot_SYSTEMCENTERFOLDER" Name="SystemCenter" />
   <Directory Id="wwwroot_WORKBENCHFOLDER" Name="WorkBench" />
 </Directory>
 </Include>

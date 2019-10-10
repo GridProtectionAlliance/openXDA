@@ -469,6 +469,8 @@ namespace openXDA.Adapters
 
                     if(modelName == "Meter")
                         recordId = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = {0}", ((Meter)obj).AssetKey).ID;
+                    else if (modelName == "Line")
+                        recordId = dataContext.Table<Line>().QueryRecordWhere("AssetKey = {0}", ((Line)obj).AssetKey).ID;
                     else
                         recordId = dataContext.Connection.ExecuteScalar<int>("SELECT @@Identity");
 

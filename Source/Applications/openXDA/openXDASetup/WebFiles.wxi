@@ -500,8 +500,8 @@
   <Component Id="wwwroot_Images_dDAssetolds_png">
     <File Id="wwwroot_Images_dDAssetolds.png" Name="dD Assetolds.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assetolds.png" />
   </Component>
-  <Component Id="wwwroot_Images_dDAssets_png">
-    <File Id="wwwroot_Images_dDAssets.png" Name="dD Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assets.png" />
+  <Component Id="wwwroot_Images_ddAssets_png">
+    <File Id="wwwroot_Images_ddAssets.png" Name="dd Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dd Assets.png" />
   </Component>
   <Component Id="wwwroot_Images_dDConfigold_png">
     <File Id="wwwroot_Images_dDConfigold.png" Name="dD Config old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Config old.png" />
@@ -670,6 +670,9 @@
   </Component>
   <Component Id="wwwroot_Scripts_daterangepicker_js">
     <File Id="wwwroot_Scripts_daterangepicker.js" Name="daterangepicker.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\daterangepicker.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_default_polyfill_min_js">
+    <File Id="wwwroot_Scripts_default.polyfill.min.js" Name="default.polyfill.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\default.polyfill.min.js" />
   </Component>
   <Component Id="wwwroot_Scripts_fileinput_js">
     <File Id="wwwroot_Scripts_fileinput.js" Name="fileinput.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fileinput.js" />
@@ -3985,6 +3988,8 @@
     <File Id="wwwroot_Scripts_TS_Services_TrendingDataDisplay.ts" Name="TrendingDataDisplay.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\TrendingDataDisplay.ts" />
   </Component>
 </ComponentGroup>
+<ComponentGroup Id="wwwroot_Scripts_TS_Services_SystemCenter_Components" Directory="wwwroot_SCRIPTSTSSERVICESSYSTEMCENTERFOLDER">
+</ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_TSX_Components" Directory="wwwroot_SCRIPTSTSXFOLDER">
   <Component Id="wwwroot_Scripts_TSX_BigTable_tsx">
     <File Id="wwwroot_Scripts_TSX_BigTable.tsx" Name="BigTable.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\BigTable.tsx" />
@@ -4042,11 +4047,6 @@
   </Component>
   <Component Id="wwwroot_Scripts_TSX_TrendingDataDisplay_tsx">
     <File Id="wwwroot_Scripts_TSX_TrendingDataDisplay.tsx" Name="TrendingDataDisplay.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\TrendingDataDisplay.tsx" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_SystemCenter_Components" Directory="wwwroot_SYSTEMCENTERFOLDER">
-  <Component Id="wwwroot_SystemCenter_index_cshtml">
-    <File Id="wwwroot_SystemCenter_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SystemCenter\index.cshtml" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_WorkBench_Components" Directory="wwwroot_WORKBENCHFOLDER">
