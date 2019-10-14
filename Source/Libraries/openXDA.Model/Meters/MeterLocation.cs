@@ -67,10 +67,10 @@ namespace openXDA.Model
         [Required]
         public double Latitude { get; set; }
 
-        [StringLength(200)]
         [Required]
         public double Longitude { get; set; }
 
+        [StringLength(200)]
         public string Description { get; set; }
 
         [JsonIgnore]
