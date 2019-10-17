@@ -85,11 +85,13 @@ namespace FaultData.DataResources
 
                     SourceImpedance localImpedance = Line.MeterLocationLines
                         .Where(link => link.MeterLocation == Meter.MeterLocation)
+                        .Where(link => link.SourceImpedance != null)
                         .Select(link => link.SourceImpedance)
                         .FirstOrDefault();
 
                     List<SourceImpedance> remoteImpedances = Line.MeterLocationLines
                         .Where(link => link.MeterLocation != Meter.MeterLocation)
+                        .Where(link => link.SourceImpedance != null)
                         .Select(link => link.SourceImpedance)
                         .ToList();
 
