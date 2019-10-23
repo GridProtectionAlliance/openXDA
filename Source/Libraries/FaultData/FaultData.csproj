@@ -118,6 +118,7 @@
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
+    <Compile Include="DataOperations\TVA\SmartFawgOperation.cs" />
     <Compile Include="DataOperations\TVA\StructureQueryOperation.cs" />
     <Compile Include="DataReaders\PQubeTrendingDataCSVReader.cs" />
     <Compile Include="DataReaders\IGridPQDIFReader.cs" />
@@ -202,6 +203,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Dependencies\eDNA\*" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <EmbeddedResource Include="DataOperations\TVA\SmartFawg.sql" />
     <Content Include="DataWriters\DisturbanceEmailTemplate.xslt" />
     <Content Include="DataWriters\FaultEmailTemplate.xslt">
       <SubType>Designer</SubType>
