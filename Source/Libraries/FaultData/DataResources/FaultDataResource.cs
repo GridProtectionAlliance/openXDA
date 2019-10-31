@@ -608,6 +608,80 @@ namespace FaultData.DataResources
             return true;
         }
 
+        private void Classify(Fault fault, Func<int, FaultType> getFaultType, Func<int, DateTime> getTime)
+        {
+            TimeSpan minSegmentDuration = TimeSpan.FromSeconds(FaultLocationSettings.MinFaultSegmentCycles / SystemFrequency);
+
+            Action<int, FaultType> UpdateSegments = new Func<Action<int, FaultType>>(() =>
+            {
+                var nullTransition = new { Sample = default(int), FaultType = default(FaultType) };
+                var previousTransition = nullTransition;
+
+                return (sample, faultType) =>
+                {
+                    var nextTransition = new { Sample = sample, FaultType = faultType };
+
+                    if (previousTransition == nullTransition)
+                    {
+                        previousTransition = nextTransition;
+                    }
+                    else if (previousTransition.FaultType != nextTransition.FaultType)
+                    {
+                        DateTime start = getTime(previousTransition.Sample);
+                        DateTime end = getTime(nextTransition.Sample);
+                        TimeSpan duration = end - start;
+
+                        if (duration >= minSegmentDuration)
+                        {
+                            fault.Segments.Add(new Fault.Segment(previousTransition.FaultType)
+                            {
+                                StartSample = previousTransition.Sample,
+                                EndSample = nextTransition.Sample - 1
+                            });
+                        }
+
+                        previousTransition = nextTransition;
+                    }
+                };
+            })();
+
+            for (int sample = fault.StartSample; sample <= fault.EndSample; sample++)
+            {
+                FaultType faultType = getFaultType(sample);
+                UpdateSegments(sample, faultType);
+            }
+
+            // We found all the fault type transitions during the fault,
+            // but there is always one more transition at the very end
+            UpdateSegments(fault.EndSample + 1, FaultType.None);
+
+            for (int i = 0; i < fault.Segments.Count; i++)
+            {
+                Fault.Segment segment = fault.Segments[i];
+
+                // Fill gaps around segments in regions
+                // where transitions happened too quickly
+                if (i == 0)
+                    segment.StartSample = fault.StartSample;
+
+                if (i == fault.Segments.Count)
+                    segment.EndSample = fault.EndSample;
+
+                if (i + 1 < fault.Segments.Count)
+                {
+                    Fault.Segment next = fault.Segments[i + 1];
+                    int mid = (segment.EndSample + next.StartSample) / 2;
+                    segment.EndSample = mid;
+                    next.StartSample = mid + 1;
+                }
+
+                // Don't forget to update start/end time
+                // based on the latest start/end samples
+                segment.StartTime = getTime(segment.StartSample);
+                segment.EndTime = getTime(segment.EndSample);
+            }
+        }
+
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, SystemFrequency);
@@ -1596,7 +1670,7 @@ namespace FaultData.DataResources
 
         private void ClassifyFaultsByCurrent(List<Fault> faults, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            Fault.Segment currentSegment = null;
+            DateTime GetTime(int sample) => dataGroup[0][sample].Time;
 
             DataSeries iaRMS = viCycleDataGroup.IA.RMS;
             DataSeries ibRMS = viCycleDataGroup.IB.RMS;
@@ -1607,55 +1681,40 @@ namespace FaultData.DataResources
             double ibPre = ibRMS[0].Value;
             double icPre = icRMS[0].Value;
 
-            double ia;
-            double ib;
-            double ic;
-            double ir;
-
-            int numPhases;
-            FaultType faultType;
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup[0], SystemFrequency);
+            int samplesPerHalfCycle = samplesPerCycle / 2;
 
             foreach (Fault fault in faults)
             {
-                for (int i = fault.StartSample; i <= fault.EndSample && i < iaRMS.DataPoints.Count; i++)
-                {
-                    ia = iaRMS[i].Value;
-                    ib = ibRMS[i].Value;
-                    ic = icRMS[i].Value;
-                    ir = irRMS[i].Value;
+                int rmsStart = fault.StartSample;
+                int rmsEnd = fault.EndSample - samplesPerCycle;
 
-                    numPhases = GetNumPhases(4.0D, ia, ib, ic);
+                FaultType GetFaultType(int sample)
+                {
+                    // Each RMS sample represents a full cycle of waveform data;
+                    // in this case, we are interested in the cycle centered around
+                    // the waveform data point so shift the index by half a cycle
+                    int rmsIndex = sample - samplesPerHalfCycle;
+
+                    if (rmsIndex < rmsStart)
+                        rmsIndex = rmsStart;
+                    else if (rmsIndex > rmsEnd)
+                        rmsIndex = rmsEnd;
+
+                    double ia = iaRMS[rmsIndex].Value;
+                    double ib = ibRMS[rmsIndex].Value;
+                    double ic = icRMS[rmsIndex].Value;
+                    double ir = irRMS[rmsIndex].Value;
+
+                    int numPhases = GetNumPhases(4.0D, ia, ib, ic);
 
                     if (numPhases == 3)
                         numPhases = GetNumPhases(1.5, ia - iaPre, ib - ibPre, ic - icPre);
 
-                    faultType = GetFaultType(numPhases, ia, ib, ic, ir);
-
-                    if ((object)currentSegment == null)
-                    {
-                        currentSegment = new Fault.Segment(faultType);
-                        currentSegment.StartTime = viCycleDataGroup.IA.RMS[i].Time;
-                        currentSegment.StartSample = i;
-                        fault.Segments.Add(currentSegment);
-                    }
-                    else if (currentSegment.FaultType != faultType)
-                    {
-                        currentSegment.EndTime = viCycleDataGroup.IA.RMS[i - 1].Time;
-                        currentSegment.EndSample = i - 1;
-
-                        currentSegment = new Fault.Segment(faultType);
-                        currentSegment.StartTime = viCycleDataGroup.IA.RMS[i].Time;
-                        currentSegment.StartSample = i;
-                        fault.Segments.Add(currentSegment);
-                    }
+                    return this.GetFaultType(numPhases, ia, ib, ic, ir);
                 }
 
-                if ((object)currentSegment != null)
-                {
-                    currentSegment.EndTime = dataGroup[0][fault.EndSample].Time;
-                    currentSegment.EndSample = fault.EndSample;
-                    currentSegment = null;
-                }
+                Classify(fault, GetFaultType, GetTime);
             }
         }
 
@@ -1782,61 +1841,45 @@ namespace FaultData.DataResources
 
         private void ClassifyFaultsByVoltage(List<Fault> faults, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            Fault.Segment currentSegment = null;
+            DateTime GetTime(int sample) => dataGroup[0][sample].Time;
 
             DataSeries vaRMS = ToPerUnit(viCycleDataGroup.VA.RMS);
             DataSeries vbRMS = ToPerUnit(viCycleDataGroup.VB.RMS);
             DataSeries vcRMS = ToPerUnit(viCycleDataGroup.VC.RMS);
             double nominalLineVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
 
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup[0], SystemFrequency);
+            int samplesPerHalfCycle = samplesPerCycle / 2;
+
             foreach (Fault fault in faults)
             {
-                for (int i = fault.StartSample; i <= fault.EndSample && i < vaRMS.DataPoints.Count; i++)
-                {
-                    double va = vaRMS[i].Value;
-                    double vb = vbRMS[i].Value;
-                    double vc = vcRMS[i].Value;
+                int rmsStart = fault.StartSample;
+                int rmsEnd = fault.EndSample - samplesPerCycle;
 
-                    CycleData cycleData = GetCycle(viCycleDataGroup, i);
+                FaultType GetFaultType(int sample)
+                {
+                    // Each RMS sample represents a full cycle of waveform data;
+                    // in this case, we are interested in the cycle centered around
+                    // the waveform data point so shift the index by half a cycle
+                    int rmsIndex = sample - samplesPerHalfCycle;
+
+                    if (rmsIndex < rmsStart)
+                        rmsIndex = rmsStart;
+                    else if (rmsIndex > rmsEnd)
+                        rmsIndex = rmsEnd;
+
+                    double va = vaRMS[rmsIndex].Value;
+                    double vb = vbRMS[rmsIndex].Value;
+                    double vc = vcRMS[rmsIndex].Value;
+
+                    CycleData cycleData = GetCycle(viCycleDataGroup, rmsIndex);
                     ComplexNumber[] sequenceComponents = CycleData.CalculateSequenceComponents(cycleData.AN.V, cycleData.BN.V, cycleData.CN.V);
                     double v0 = sequenceComponents[0].Magnitude / nominalLineVoltage;
 
-                    FaultType faultType = GetFaultType(va, vb, vc, v0);
-
-                    if (currentSegment == null)
-                    {
-                        currentSegment = new Fault.Segment(faultType);
-                        currentSegment.StartTime = viCycleDataGroup.VA.RMS[i].Time;
-                        currentSegment.StartSample = i;
-                        fault.Segments.Add(currentSegment);
-                    }
-                    else if (currentSegment.FaultType != faultType)
-                    {
-                        currentSegment.EndTime = viCycleDataGroup.VA.RMS[i - 1].Time;
-                        currentSegment.EndSample = i - 1;
-
-                        currentSegment = new Fault.Segment(faultType);
-                        currentSegment.StartTime = viCycleDataGroup.VA.RMS[i].Time;
-                        currentSegment.StartSample = i;
-                        fault.Segments.Add(currentSegment);
-                    }
+                    return this.GetFaultType(va, vb, vc, v0);
                 }
 
-                if (currentSegment != null)
-                {
-                    if (fault.Segments.Count > 1 && currentSegment.FaultType == FaultType.None)
-                    {
-                        // The last segment could have an incorrect fault type because the waveform
-                        // is transitioning and the RMS voltages are cyclic aggregates. All we can
-                        // do is extend the last good fault type to the end of the fault
-                        fault.Segments.RemoveAt(fault.Segments.Count - 1);
-                        currentSegment = fault.Segments.Last();
-                    }
-
-                    currentSegment.EndTime = dataGroup[0][fault.EndSample].Time;
-                    currentSegment.EndSample = fault.EndSample;
-                    currentSegment = null;
-                }
+                Classify(fault, GetFaultType, GetTime);
             }
         }
 

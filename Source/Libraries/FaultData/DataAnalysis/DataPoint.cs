@@ -32,6 +32,15 @@ namespace FaultData.DataAnalysis
         public DateTime Time;
         public double Value;
 
+        public DataPoint Shift(TimeSpan timeShift)
+        {
+            return new DataPoint()
+            {
+                Time = Time.Add(timeShift),
+                Value = Value
+            };
+        }
+
         public DataPoint Negate()
         {
             return new DataPoint()

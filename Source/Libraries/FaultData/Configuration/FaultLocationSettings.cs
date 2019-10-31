@@ -64,6 +64,10 @@ namespace FaultData.Configuration
         public FaultCalculationCycleMethod FaultCalculationCycleMethod { get; set; }
 
         [Setting]
+        [DefaultValue(1.0D)]
+        public double MinFaultSegmentCycles { get; set; }
+
+        [Setting]
         [DefaultValue(10)]
         public int FaultClearingAdjustmentSamples { get; set; }
 

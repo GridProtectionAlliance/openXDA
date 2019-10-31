@@ -1755,9 +1755,6 @@ GO
 INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'Novosel', 5)
 GO
 
-INSERT INTO SegmentType(Name, Description) VALUES('Prefault', 'Before fault inception')
-GO
-
 INSERT INTO SegmentType(Name, Description) VALUES('AN Fault', 'Line A to neutral fault')
 GO
 
@@ -1788,7 +1785,7 @@ GO
 INSERT INTO SegmentType(Name, Description) VALUES('3-Phase Fault', 'Fault on all three lines')
 GO
 
-INSERT INTO SegmentType(Name, Description) VALUES('Postfault', 'After the fault ends')
+INSERT INTO SegmentType(Name, Description) VALUES('3-Phase-to-Ground Fault', 'Fault on all three lines')
 GO
 
 -- -------- --
