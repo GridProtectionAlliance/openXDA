@@ -1727,8 +1727,17 @@ CREATE TABLE NearestStructure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FaultSummaryID INT NOT NULL REFERENCES FaultSummary(ID),
-    StructureID INT NOT NULL REFERENCES Structure(ID)
+    StructureID INT NOT NULL REFERENCES Structure(ID),
+    Deviation FLOAT NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_NearestStructure_FaultSummaryID
+ON NearestStructure(FaultSummaryID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_NearestStructure_StructureID
+ON NearestStructure(StructureID ASC)
 GO
 
 CREATE TABLE DoubleEndedFaultDistance
