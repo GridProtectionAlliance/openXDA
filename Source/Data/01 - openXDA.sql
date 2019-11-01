@@ -500,8 +500,8 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 5)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.BreakerRestrikeOperation', 6)
-GO
+--INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.BreakerRestrikeOperation', 6)
+--GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 7)
 GO
@@ -927,17 +927,27 @@ CREATE TABLE BreakerRestrike
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
-    Sample INT NOT NULL,
-    Timestamp DATETIME2 NOT NULL
+    InitialExtinguishSample INT NOT NULL,
+    InitialExtinguishTime DATETIME2 NOT NULL,
+    InitialExtinguishVoltage FLOAT NOT NULL,
+    RestrikeSample INT NOT NULL,
+    RestrikeTime DATETIME2 NOT NULL,
+    RestrikeVoltage FLOAT NOT NULL,
+    RestrikeCurrentPeak FLOAT NOT NULL,
+    RestrikeVoltageDip FLOAT NOT NULL,
+    TransientPeakSample INT NOT NULL,
+    TransientPeakTime DATETIME2 NOT NULL,
+    TransientPeakVoltage FLOAT NOT NULL,
+    PerUnitTransientPeakVoltage FLOAT NOT NULL,
+    FinalExtinguishSample INT NOT NULL,
+    FinalExtinguishTime DATETIME2 NOT NULL,
+    FinalExtinguishVoltage FLOAT NOT NULL,
+    I2t FLOAT NOT NULL
 )
 GO
 
 CREATE NONCLUSTERED INDEX IX_BreakerRestrike_EventID
 ON BreakerRestrike(EventID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_BreakerRestrike_Timestamp
-ON BreakerRestrike(Timestamp ASC)
 GO
 
 CREATE TABLE VoltageEnvelope
