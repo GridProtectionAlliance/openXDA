@@ -1804,7 +1804,7 @@ GO
 INSERT INTO SegmentType(Name, Description) VALUES('3-Phase Fault', 'Fault on all three lines')
 GO
 
-INSERT INTO SegmentType(Name, Description) VALUES('3-Phase-to-Ground Fault', 'Fault on all three lines')
+INSERT INTO SegmentType(Name, Description) VALUES('3-Phase-to-Ground Fault', 'Fault on all three lines with ground')
 GO
 
 -- -------- --
