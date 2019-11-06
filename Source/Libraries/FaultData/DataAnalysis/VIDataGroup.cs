@@ -111,6 +111,7 @@ namespace FaultData.DataAnalysis
                     m_irIndex = i;
             }
 
+            CalculateMissingCurrentChannel();
             CalculateMissingLLVoltageChannels();
         }
 
@@ -268,8 +269,7 @@ namespace FaultData.DataAnalysis
         /// Given three of the four current channels, calculates the
         /// missing channel based on the relationship IR = IA + IB + IC.
         /// </summary>
-        /// <param name="meterInfo">Data context for accessing configuration tables in the database.</param>
-        public DataSeries CalculateMissingCurrentChannel()
+        private void CalculateMissingCurrentChannel()
         {
             Meter meter;
             DataSeries missingSeries;
@@ -278,7 +278,7 @@ namespace FaultData.DataAnalysis
             // then there is no missing channel or there is not
             // enough data to calculate the missing channel
             if (DefinedCurrents != 3)
-                return null;
+                return;
 
             // Get the meter associated with the channels in this data group
             meter = (IA ?? IB).SeriesInfo.Channel.Meter;
@@ -288,6 +288,7 @@ namespace FaultData.DataAnalysis
                 // Calculate IA = IR - IB - IC
                 missingSeries = IR.Add(IB.Negate()).Add(IC.Negate());
                 missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "AN");
+                missingSeries.Calculated = true;
                 m_iaIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
             }
@@ -296,6 +297,7 @@ namespace FaultData.DataAnalysis
                 // Calculate IB = IR - IA - IC
                 missingSeries = IR.Add(IA.Negate()).Add(IC.Negate());
                 missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "BN");
+                missingSeries.Calculated = true;
                 m_ibIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
             }
@@ -304,6 +306,7 @@ namespace FaultData.DataAnalysis
                 // Calculate IC = IR - IA - IB
                 missingSeries = IR.Add(IA.Negate()).Add(IB.Negate());
                 missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "CN");
+                missingSeries.Calculated = true;
                 m_icIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
             }
@@ -312,14 +315,13 @@ namespace FaultData.DataAnalysis
                 // Calculate IR = IA + IB + IC
                 missingSeries = IA.Add(IB).Add(IC);
                 missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "RES");
+                missingSeries.Calculated = true;
                 m_irIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
             }
-
-            return missingSeries;
         }
 
-        public void CalculateMissingLLVoltageChannels()
+        private void CalculateMissingLLVoltageChannels()
         {
             Meter meter;
             DataSeries missingSeries;
@@ -363,7 +365,6 @@ namespace FaultData.DataAnalysis
             }
 
         }
-
 
         public DataGroup ToDataGroup()
         {
