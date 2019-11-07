@@ -6346,22 +6346,26 @@ namespace openXDA.Hubs
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-
                 const string QueryFormat =
+                "WITH cte AS " +
+                "( " +
+                "    SELECT * " +
+                "    FROM DataFile " +
+                "    WHERE {0} " +
+                ") " +
                 "SELECT DataFile.* " +
                 "FROM " +
                 "( " +
                 "    SELECT " +
                 "        ROW_NUMBER() OVER(ORDER BY {2}) AS RowNumber, " +
                 "        DataFile.* " +
-                "    FROM FileGroup CROSS APPLY " +
+                "    FROM (SELECT DISTINCT FileGroupID ID FROM cte) FileGroup CROSS APPLY " +
                 "    ( " +
                 "        SELECT TOP 1 * " +
-                "        FROM DataFile " +
+                "        FROM cte DataFile " +
                 "        WHERE DataFile.FileGroupID = FileGroup.ID " +
                 "        ORDER BY FileSize DESC, FilePath " +
                 "    ) DataFile " +
-                "    WHERE {0} " +
                 ") DataFile " +
                 "WHERE {1} " +
                 "ORDER BY RowNumber";
