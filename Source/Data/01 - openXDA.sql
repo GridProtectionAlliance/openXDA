@@ -2715,7 +2715,23 @@ CREATE TABLE RelayPerformance
 )
 GO
 
+-- Uncomment if needed
+--CREATE TABLE EDNAPoint(
+--	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+--	LineID int NOT NULL FOREIGN KEY REFERENCES Line(ID),
+--	Point varchar(20) NOT NULL DEFAULT (0),
+--)
 
+--GO
+
+--CREATE TABLE PQViewSite(
+--	ID int IDENTITY(1,1) NOT NULL,
+--	MeterID int NOT NULL FOREIGN KEY REFERENCES Meter(ID),
+--	SiteID varchar(20) NOT NULL,
+--	Enabled bit NOT NULL DEFAULT 1
+--)
+
+--GO
 ----- FUNCTIONS -----
 
 CREATE FUNCTION ComputeHash
