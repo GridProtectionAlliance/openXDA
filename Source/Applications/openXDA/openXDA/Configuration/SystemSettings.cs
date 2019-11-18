@@ -120,6 +120,14 @@ namespace openXDA.Configuration
         public string FilePattern { get; set; }
 
         /// <summary>
+        /// Gets or sets the patterns used to determine which
+        /// folders to skip when enumerating watch directories.
+        /// </summary>
+        [Setting]
+        [DefaultValue("")]
+        public string FolderExclusion { get; set; }
+
+        /// <summary>
         /// Gets or sets the time zone identifier for the time zone
         /// used by meters in the system unless configured otherwise.
         /// </summary>

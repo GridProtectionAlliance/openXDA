@@ -145,6 +145,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherMaxFragmentation', '10', '10')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FolderExclusion', '', '')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.InstanceName', 'XDA', 'XDA')
 GO
 

@@ -357,6 +357,10 @@ namespace openXDA
                     statusBuilder.AppendLine("File Processor Status:");
                     statusBuilder.AppendLine(new string('=', 50));
                     statusBuilder.AppendLine($"                 Filter: {m_fileProcessor.Filter}");
+
+                    if (!string.IsNullOrEmpty(m_fileProcessor.FolderExclusion))
+                        statusBuilder.AppendLine($"       Folder Exclusion: {m_fileProcessor.FolderExclusion}");
+
                     statusBuilder.AppendLine($"   Internal buffer size: {m_fileProcessor.InternalBufferSize}");
                     statusBuilder.AppendLine($"   Max thread pool size: {m_fileProcessor.MaxThreadCount}");
                     statusBuilder.AppendLine($"      Max fragmentation: {m_fileProcessor.MaxFragmentation}");
@@ -453,6 +457,7 @@ namespace openXDA
             if ((object)m_fileProcessor == null)
             {
                 m_fileProcessor = new FileProcessor(m_systemSettings.FileProcessorID);
+                m_fileProcessor.FolderExclusion = m_systemSettings.FolderExclusion;
                 m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
                 m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
                 m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
@@ -560,6 +565,7 @@ namespace openXDA
             // Update the FileProcessor with the latest system settings
             if ((object)m_fileProcessor != null)
             {
+                m_fileProcessor.FolderExclusion = m_systemSettings.FolderExclusion;
                 m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
                 m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
                 m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
@@ -716,6 +722,7 @@ namespace openXDA
 
                 propertyListBuilder.AppendLine("File processor properties:");
                 propertyListBuilder.AppendLine("  Filter");
+                propertyListBuilder.AppendLine("  FolderExclusion");
                 propertyListBuilder.AppendLine("  InternalBufferSize");
                 propertyListBuilder.AppendLine("  MaxThreadCount");
                 propertyListBuilder.AppendLine("  MaxFragmentation");
@@ -735,6 +742,11 @@ namespace openXDA
                 {
                     oldValue = m_fileProcessor.Filter;
                     m_fileProcessor.Filter = args[2];
+                }
+                else if (args[1].Equals("FolderExclusion", StringComparison.OrdinalIgnoreCase))
+                {
+                    oldValue = m_fileProcessor.FolderExclusion;
+                    m_fileProcessor.FolderExclusion = args[2];
                 }
                 else if (args[1].Equals("InternalBufferSize", StringComparison.OrdinalIgnoreCase))
                 {

@@ -48,6 +48,7 @@ namespace openXDAFileWatcher.Configuration
 
         private string m_watchDirectories;
         private string m_filePattern;
+        private string m_folderExclusion;
 
         private string m_xdaTimeZone;
         private double m_maxFileCreationTimeOffset;
@@ -177,6 +178,24 @@ namespace openXDAFileWatcher.Configuration
             set
             {
                 m_filePattern = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the patterns used to determine which
+        /// folders to skip when enumerating watch directories.
+        /// </summary>
+        [Setting]
+        [DefaultValue("")]
+        public string FolderExclusion
+        {
+            get
+            {
+                return m_folderExclusion;
+            }
+            set
+            {
+                m_folderExclusion = value;
             }
         }
 
