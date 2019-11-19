@@ -113,6 +113,7 @@
     <Compile Include="DataOperations\DataOperationBase.cs" />
     <Compile Include="DataOperations\DataPusherOperation.cs" />
     <Compile Include="DataOperations\DataQualityOperation.cs" />
+    <Compile Include="DataOperations\LightningDataOperation.cs" />
     <Compile Include="DataOperations\RelayEnergization.cs" />
     <Compile Include="DataOperations\StatisticOperation.cs" />
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />

@@ -922,6 +922,23 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime_ID_EventID_PhaseID
 ON Disturbance ( StartTime ASC ) INCLUDE ( ID, EventID, PhaseID)
 GO
 
+CREATE TABLE LightningStrike
+(
+    ID INT IDENTITY(1, 1) NOT NULL,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    Service VARCHAR(50) NOT NULL,
+    UTCTime DATETIME2 NOT NULL,
+    DisplayTime VARCHAR(50) NOT NULL,
+    Amplitude FLOAT NOT NULL,
+    Latitude FLOAT NOT NULL,
+    Longitude FLOAT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_LightningStrike_EventID
+ON LightningStrike(EventID ASC)
+GO
+
 CREATE TABLE BreakerRestrike
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
