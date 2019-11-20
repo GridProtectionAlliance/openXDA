@@ -39,5 +39,7 @@ namespace openXDA.Model
         [StringLength(200)]
         public string RemoteXDAAssetKey { get; set; }
 
+        public bool RemoteLineCreatedByDataPusher { get; set; }
+
     }
 }

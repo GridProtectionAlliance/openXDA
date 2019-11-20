@@ -269,6 +269,9 @@ namespace openXDA.DataPusher
                     // if MeterLine association has not been previously made, make it
                     MeterLine remoteMeterLine = AddMeterLine(instance.Address, meterToDataPush, remoteLine, userAccount, localMeterLine);
 
+                    // Add MeterLocationLine Record for double ended fault location to work
+                    AddMeterLocationLine(instance.Address, userAccount, remoteMeterLocation.ID, remoteLine.ID);
+
                     // ensure remote and local line impedance matches
                     AddOrUpdateLineImpedances(instance.Address, localMeterLine, remoteLine, userAccount);
 
@@ -383,9 +386,17 @@ namespace openXDA.DataPusher
         {
             Meter remoteMeter = (Meter)WebAPIHub.GetRecordWhere(address, "Meter", $"ID={meter.RemoteXDAMeterID}", userAccount);
 
+            if (remoteMeter == null)
+            {
+                remoteMeter = (Meter)WebAPIHub.GetRecordWhere(address, "Meter", $"AssetKey='{meter.RemoteXDAAssetKey}'", userAccount);
+                if(remoteMeter != null)
+                throw new Exception($"A meter with this Asset Key ({meter.RemoteXDAAssetKey}) already exists.  Please update the Remote Asset Key field in the data pusher.");
+            }
+
             // if meter doesnt exist remotely create the meter record
             if (remoteMeter == null)
             {
+
                 if (meter.Obsfucate)
                 {
                     remoteMeter = new Meter()
@@ -412,7 +423,6 @@ namespace openXDA.DataPusher
                 remoteMeter.TimeZone = localMeterRecord.TimeZone;
 
                 remoteMeter.ID = meter.RemoteXDAMeterID = WebAPIHub.CreateRecord(address, "Meter", JObject.FromObject(remoteMeter), userAccount);
-                DataContext.Table<MetersToDataPush>().UpdateRecord(meter);
             }
             else
             {
@@ -436,7 +446,12 @@ namespace openXDA.DataPusher
                 remoteMeter.TimeZone = localMeterRecord.TimeZone;
 
                 WebAPIHub.UpdateRecord(address, "Meter", JObject.FromObject(remoteMeter), userAccount);
+                meter.RemoteXDAMeterID = remoteMeter.ID;
+
             }
+
+            DataContext.Table<MetersToDataPush>().UpdateRecord(meter);
+
 
             return remoteMeter;
         }
@@ -462,19 +477,22 @@ namespace openXDA.DataPusher
         {
             Line localLine = DataContext.Table<Line>().QueryRecordWhere("ID = {0}", meterLine.LineID);
             LinesToDataPush lineToDataPush = DataContext.Table<LinesToDataPush>().QueryRecordWhere("LocalXDALineID = {0}", localLine.ID);
-            Line remoteLine = null;
+            Line remoteLine = (Line)WebAPIHub.GetRecordWhere(address, "Line", $"AssetKey='{localLine.AssetKey}'", userAccount); ;
+
             if (lineToDataPush != null)
                 remoteLine = (Line)WebAPIHub.GetRecordWhere(address, "Line", $"ID={lineToDataPush.RemoteXDALineID}", userAccount);
 
             //if the line does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-            if (lineToDataPush == null)
+            if (lineToDataPush == null && remoteLine == null)
             {
                 lineToDataPush = new LinesToDataPush()
                 {
                     LocalXDALineID = localLine.ID,
                     RemoteXDALineID = 0,
                     LocalXDAAssetKey = localLine.AssetKey,
-                    RemoteXDAAssetKey = (obsfucate ? Guid.NewGuid().ToString() : localLine.AssetKey)
+                    RemoteXDAAssetKey = (obsfucate ? Guid.NewGuid().ToString() : localLine.AssetKey),
+                    RemoteLineCreatedByDataPusher = true
+
                 };
 
                 remoteLine = new Line()
@@ -489,7 +507,20 @@ namespace openXDA.DataPusher
                 remoteLine.ID = lineToDataPush.RemoteXDALineID = WebAPIHub.CreateRecord(address, "Line", JObject.FromObject(remoteLine), userAccount);
                 DataContext.Table<LinesToDataPush>().AddNewRecord(lineToDataPush);
             }
-            else
+            else if (lineToDataPush == null && remoteLine != null){
+                lineToDataPush = new LinesToDataPush()
+                {
+                    LocalXDALineID = localLine.ID,
+                    RemoteXDALineID = remoteLine.ID,
+                    LocalXDAAssetKey = localLine.AssetKey,
+                    RemoteXDAAssetKey = (obsfucate ? Guid.NewGuid().ToString() : localLine.AssetKey),
+                    RemoteLineCreatedByDataPusher = false
+                };
+
+                DataContext.Table<LinesToDataPush>().AddNewRecord(lineToDataPush);
+
+            }
+            else if(lineToDataPush.RemoteLineCreatedByDataPusher)
             {
                 remoteLine.AssetKey = (obsfucate ? lineToDataPush.RemoteXDAAssetKey.ToString() : localLine.AssetKey);
                 remoteLine.VoltageKV = localLine.VoltageKV;
@@ -501,6 +532,15 @@ namespace openXDA.DataPusher
 
             return remoteLine;
 
+        }
+
+        private void AddMeterLocationLine(string address, UserAccount userAccount, int meterLocationID, int lineID) {
+            MeterLocationLine remoteMeterLocationLine = (MeterLocationLine)WebAPIHub.GetRecordWhere(address, "MeterLocationLine", $"MeterLocationID = {meterLocationID} AND LineID = {lineID}", userAccount);
+
+            // if MeterLineLine association has not been previously made, make it
+            if (remoteMeterLocationLine == null)
+                WebAPIHub.CreateRecord(address, "MeterLocationLine", JObject.FromObject(new MeterLocationLine() { MeterLocationID = meterLocationID, LineID = lineID }), userAccount);
+            
         }
 
         private MeterLine AddMeterLine(string address, MetersToDataPush meter, Line remoteLine, UserAccount userAccount, MeterLine localMeterLine)
