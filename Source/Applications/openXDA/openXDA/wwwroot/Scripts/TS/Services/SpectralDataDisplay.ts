@@ -21,12 +21,13 @@
 //
 //******************************************************************************************************
 import * as moment from 'moment';
+declare var homePath: string;
 
 export default class SpectralDataDisplayService {
     getData(meterID: string, date: string, type: string, level: string, phase: string) {
         return $.ajax({
             type: "GET",
-            url: `${window.location.origin}/api/SpectralDataDisplay/GetData?MeterID=${meterID}` +
+            url: `${homePath}/api/SpectralDataDisplay/GetData?MeterID=${meterID}` +
                 `&date=${moment(date).format('YYYY-MM-DD')}` +
                 `&type=${type}` +
                 `&level=${level}` +
