@@ -500,8 +500,8 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 5)
 GO
 
---INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.BreakerRestrikeOperation', 6)
---GO
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.BreakerRestrikeOperation', 6)
+GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 7)
 GO
@@ -922,49 +922,22 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime_ID_EventID_PhaseID
 ON Disturbance ( StartTime ASC ) INCLUDE ( ID, EventID, PhaseID)
 GO
 
-CREATE TABLE LightningStrike
-(
-    ID INT IDENTITY(1, 1) NOT NULL,
-    EventID INT NOT NULL REFERENCES Event(ID),
-    Service VARCHAR(50) NOT NULL,
-    UTCTime DATETIME2 NOT NULL,
-    DisplayTime VARCHAR(50) NOT NULL,
-    Amplitude FLOAT NOT NULL,
-    Latitude FLOAT NOT NULL,
-    Longitude FLOAT NOT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_LightningStrike_EventID
-ON LightningStrike(EventID ASC)
-GO
-
 CREATE TABLE BreakerRestrike
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
-    InitialExtinguishSample INT NOT NULL,
-    InitialExtinguishTime DATETIME2 NOT NULL,
-    InitialExtinguishVoltage FLOAT NOT NULL,
-    RestrikeSample INT NOT NULL,
-    RestrikeTime DATETIME2 NOT NULL,
-    RestrikeVoltage FLOAT NOT NULL,
-    RestrikeCurrentPeak FLOAT NOT NULL,
-    RestrikeVoltageDip FLOAT NOT NULL,
-    TransientPeakSample INT NOT NULL,
-    TransientPeakTime DATETIME2 NOT NULL,
-    TransientPeakVoltage FLOAT NOT NULL,
-    PerUnitTransientPeakVoltage FLOAT NOT NULL,
-    FinalExtinguishSample INT NOT NULL,
-    FinalExtinguishTime DATETIME2 NOT NULL,
-    FinalExtinguishVoltage FLOAT NOT NULL,
-    I2t FLOAT NOT NULL
+    Sample INT NOT NULL,
+    Timestamp DATETIME2 NOT NULL
 )
 GO
 
 CREATE NONCLUSTERED INDEX IX_BreakerRestrike_EventID
 ON BreakerRestrike(EventID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_BreakerRestrike_Timestamp
+ON BreakerRestrike(Timestamp ASC)
 GO
 
 CREATE TABLE VoltageEnvelope
@@ -1744,17 +1717,8 @@ CREATE TABLE NearestStructure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FaultSummaryID INT NOT NULL REFERENCES FaultSummary(ID),
-    StructureID INT NOT NULL REFERENCES Structure(ID),
-    Deviation FLOAT NOT NULL
+    StructureID INT NOT NULL REFERENCES Structure(ID)
 )
-GO
-
-CREATE NONCLUSTERED INDEX IX_NearestStructure_FaultSummaryID
-ON NearestStructure(FaultSummaryID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_NearestStructure_StructureID
-ON NearestStructure(StructureID ASC)
 GO
 
 CREATE TABLE DoubleEndedFaultDistance
@@ -1791,6 +1755,9 @@ GO
 INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'Novosel', 5)
 GO
 
+INSERT INTO SegmentType(Name, Description) VALUES('Prefault', 'Before fault inception')
+GO
+
 INSERT INTO SegmentType(Name, Description) VALUES('AN Fault', 'Line A to neutral fault')
 GO
 
@@ -1821,7 +1788,7 @@ GO
 INSERT INTO SegmentType(Name, Description) VALUES('3-Phase Fault', 'Fault on all three lines')
 GO
 
-INSERT INTO SegmentType(Name, Description) VALUES('3-Phase-to-Ground Fault', 'Fault on all three lines with ground')
+INSERT INTO SegmentType(Name, Description) VALUES('Postfault', 'After the fault ends')
 GO
 
 -- -------- --
@@ -2048,8 +2015,7 @@ GO
 INSERT INTO Unit (Name) VALUES ('Percent')
 GO
 
-CREATE TABLE StepChangeMeasurement
-(
+CREATE TABLE StepChangeMeasurement(
     ID INT PRIMARY KEY IDENTITY(1,1),
     PQMeasurementID INT FOREIGN KEY REFERENCES PQMeasurement(ID) NOT NULL,
     Setting FLOAT NULL
@@ -2060,11 +2026,10 @@ CREATE NONCLUSTERED INDEX IX_StepChangeMeasurement_PQMeasurement
 ON StepChangeMeasurement(PQMeasurementID ASC)
 GO
 
-CREATE TABLE StepChangeStat
-(
+CREATE TABLE StepChangeStat(
     ID INT PRIMARY KEY IDENTITY(1,1),
     MeterID INT FOREIGN KEY REFERENCES Meter(ID) NOT NULL,
-    Date DATE NOT NULL,
+    Date Date NOT NULL,
     StepChangeMeasurementID INT FOREIGN KEY REFERENCES StepChangeMeasurement(ID) NOT NULL,
     Value FLOAT NULL
 )
@@ -2303,11 +2268,10 @@ CREATE NONCLUSTERED INDEX IX_FaultNote_UserAccountID
 ON FaultNote(UserAccountID ASC)
 GO
 
-CREATE TABLE NoteType
-(
-    ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-    Name VARCHAR(MAX) NOT NULL,
-    ReferenceTableName VARCHAR(MAX) NOT NULL,
+CREATE TABLE NoteType(
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+	Name varchar(max) not null,
+	ReferenceTableName varchar(max) not null,
 )
 GO
 
@@ -2316,18 +2280,17 @@ GO
 INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Event', 'Event')
 GO
 
-CREATE TABLE Note
-(
-    ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-    NoteTypeID INT NOT NULL REFERENCES NoteType(ID),
-    ReferenceTableID INT NOT NULL,
+CREATE TABLE Note (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+	NoteTypeID int Not NULL REFERENCES NoteType(ID),
+	ReferenceTableID INT NOT NULL,
     Note VARCHAR(MAX) NOT NULL,
     UserAccount VARCHAR(MAX) NOT NULL DEFAULT SUSER_NAME(),
     Timestamp DATETIME NOT NULL DEFAULT GETUTCDATE(),
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_Note_NoteTypeID_ReferenceTableID
+CREATE NONCLUSTERED INDEX IX_Note_NoteTypeID_ReferenceTableID  
 ON Note(NoteTypeID, ReferenceTableID)
 GO
 
@@ -2369,7 +2332,6 @@ CREATE TABLE LinesToDataPush
     RemoteXDALineID INT NULL,
     LocalXDAAssetKey VARCHAR(200) NOT NULL,
     RemoteXDAAssetKey VARCHAR(200) NOT NULL,
-	RemoteLineCreatedByDataPusher BIT NOT NULL DEFAULT(0)
 )
 GO
 
@@ -2383,8 +2345,7 @@ CREATE TABLE RemoteXDAInstance
 )
 GO
 
-CREATE TABLE RemoteXDAInstanceMeter
-(
+CREATE TABLE RemoteXDAInstanceMeter(
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     RemoteXDAInstanceID INT NOT NULL,
     MetersToDataPushID INT NOT NULL
@@ -2415,9 +2376,9 @@ CREATE TABLE RelayAlertSetting
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     LineID INT NOT NULL REFERENCES Line(ID),
-    TripTime INT NULL,
-    PickupTime INT NULL,
-    TripCoilCondition FLOAT NULL,
+	TripTime INT NULL,
+	PickupTime INT NULL,
+	TripCoilCondition FLOAT NULL,
 )
 GO
 
@@ -2533,16 +2494,15 @@ CREATE TABLE PQMarkCompanyMeter
 )
 GO
 
-CREATE TABLE PQMarkCompanyCustomer
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    PQMarkCompanyID INT NOT NULL FOREIGN KEY REFERENCES PQMarkCompany(ID),
-    CustomerID INT NOT NULL
+CREATE TABLE [dbo].[PQMarkCompanyCustomer](
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	[PQMarkCompanyID] [int] NOT NULL FOREIGN KEY REFERENCES PQMarkCompany(ID),
+	[CustomerID] [int] NOT NULL
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_MeterID
-ON PQMarkCompanyMeter(MeterID)
+CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_MeterID 
+ON PQMarkCompanyMeter(MeterID) 
 GO
 
 CREATE TABLE PQMarkAggregate
@@ -2723,33 +2683,17 @@ CREATE TABLE RelayPerformance
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
-    ChannelID INT NOT NULL REFERENCES Channel(ID),
-    Imax1 FLOAT NULL,
-    Imax2 FLOAT NULL,
-    TripInitiate DATETIME NULL,
-    TripTime INT NULL,
-    PickupTime INT NULL,
-    TripCoilCondition FLOAT NULL,
+	ChannelID INT NOT NULL REFERENCES Channel(ID),
+	Imax1 FLOAT NULL,
+	Imax2 FLOAT NULL,
+    TripInitiate DATETIME2 NULL,
+	TripTime INT NULL,
+	PickupTime INT NULL,
+	TripCoilCondition FLOAT NULL,
 )
 GO
 
--- Uncomment if needed
---CREATE TABLE EDNAPoint(
---	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
---	LineID int NOT NULL FOREIGN KEY REFERENCES Line(ID),
---	Point varchar(20) NOT NULL DEFAULT (0),
---)
 
---GO
-
---CREATE TABLE PQViewSite(
---	ID int IDENTITY(1,1) NOT NULL,
---	MeterID int NOT NULL FOREIGN KEY REFERENCES Meter(ID),
---	SiteID varchar(20) NOT NULL,
---	Enabled bit NOT NULL DEFAULT 1
---)
-
---GO
 ----- FUNCTIONS -----
 
 CREATE FUNCTION ComputeHash
@@ -3066,21 +3010,21 @@ GO
 CREATE VIEW BreakerHistory
 AS
 SELECT  Line.ID AS LineID,
-        RelayPerformance.EventID AS EventID,
+		RelayPerformance.EventID AS EventID,
         RelayPerformance.Imax1,
-        RelayPerformance.Imax2,
-        RelayPerformance.TripInitiate,
-        RelayPerformance.TripTime,
-        RelayPerformance.PickupTime,
-        RelayPerformance.TripCoilCondition,
-        RelayAlertSetting.TripCoilCondition AS TripCoilConditionAlert,
-        RelayAlertSetting.TripTime AS TripTimeAlert,
-        RelayAlertSetting.PickupTime AS PickupTimeAlert,
-        RelayPerformance.ChannelID AS TripCoilChannelID
+		RelayPerformance.Imax2,
+		RelayPerformance.TripInitiate,
+		RelayPerformance.TripTime / 10 AS TripTime,
+		RelayPerformance.PickupTime / 10 AS PickupTime,
+		RelayPerformance.TripCoilCondition,
+		RelayAlertSetting.TripCoilCondition AS TripCoilConditionAlert,
+		RelayAlertSetting.TripTime AS TripTimeAlert,
+		RelayAlertSetting.PickupTime AS PickupTimeAlert,
+		RelayPerformance.ChannelID AS TripCoilChannelID
 FROM    RelayPerformance LEFT OUTER JOIN
         Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
-        Line ON Channel.LineID = Line.ID LEFT OUTER JOIN
-        RelayAlertSetting ON RelayAlertSetting.LineID = Line.ID
+        Line ON Channel.LineID = Line.ID LEFT OUTER JOIN 
+		RelayAlertSetting ON RelayAlertSetting.LineID = Line.ID
 GO
 
 
@@ -3130,14 +3074,14 @@ SELECT
     LineImpedance.R1,
     LineImpedance.X1,
     LineImpedance.ID AS LineImpedanceID,
-    RelayAlertSetting.TripTime,
-    RelayAlertSetting.PickupTime,
-    RelayAlertSetting.TripCoilCondition,
-    RelayAlertSetting.ID AS RelayAlertSettingID
+	RelayAlertSetting.TripTime,
+	RelayAlertSetting.PickupTime,
+	RelayAlertSetting.TripCoilCondition,
+	RelayAlertSetting.ID AS RelayAlertSettingID
 FROM
     Line LEFT OUTER JOIN
     LineImpedance ON Line.ID = LineImpedance.LineID LEFT OUTER JOIN
-    RelayAlertSetting ON Line.ID = RelayAlertSetting.LineID CROSS JOIN
+	RelayAlertSetting ON Line.ID = RelayAlertSetting.LineID CROSS JOIN
     (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MaxFaultDistanceMultiplier'), 1.05) Value) MaxFaultDistanceMultiplier CROSS JOIN
     (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MinFaultDistanceMultiplier'), 1.05) Value) MinFaultDistanceMultiplier
 
@@ -3678,8 +3622,8 @@ SELECT
     FORMAT(FaultSummary.Distance, '0.##') AS [Fault Distance (mi)],
     FORMAT(FaultSummary.DurationSeconds * 1000.0, '0') AS [Fault Duration (ms)],
     FORMAT(FaultSummary.DurationCycles, '0.##') AS [Fault Duration (cycles)],
-    Sag.MagnitudePercent AS [Sag Magnitude (%)],
-    Sag.MagnitudeVolts AS [Sag Magnitude (RMS volts)],
+    FORMAT(Sag.MagnitudePercent, '0.0') AS [Sag Magnitude (%)],
+    FORMAT(Sag.MagnitudeVolts, '0') AS [Sag Magnitude (RMS volts)],
     FaultSummary.Algorithm,
     FORMAT(EventStat.VPeak, '0') AS [Voltage Peak (volts)],
     FORMAT(EventStat.VAMax, '0') AS [VA Maximum (RMS volts)],
@@ -3708,12 +3652,12 @@ SELECT
     IBN.Mapping AS [IBN Channel],
     ICN.Mapping AS [ICN Channel],
     IR.Mapping AS [IR Channel],
-    FORMAT(RP.Imax1, '0.000') AS [Lmax 1],
-    FORMAT(RP.Imax2, '0.000') AS [Lmax 2],
-    FORMAT(RP.TripInitiate,'HH:mm:ss.fff') AS [Trip Initiation],
-    RP.TripTime AS [Trip Time (microsec)],
-    RP.PickupTime AS [Pickup Time (microsec)],
-    FORMAT(RP.TripCoilCondition, '0.000') AS [Trip Coil Condition (Aps)]
+	FORMAT(RP.Imax1, '0.000') AS [Lmax 1],
+	FORMAT(RP.Imax2, '0.000') AS [Lmax 2],
+	FORMAT(RP.TripInitiate,'HH:mm:ss.fff') AS [Trip Initiation],
+	(RP.TripTime / 10) AS [Trip Time (microsec)],
+	(RP.PickupTime / 10) AS [Pickup Time (microsec)],
+	FORMAT(RP.TripCoilCondition, '0.000') AS [Trip Coil Condition (Aps)]
 FROM
     Event JOIN
     MeterLine ON
@@ -3777,14 +3721,14 @@ FROM
         IR.Phase = 'RES' AND
         IR.MeasurementCharacteristic = 'Instantaneous' AND
         IR.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
-    RelayPerformance RP ON
-        Event.ID = RP.EventID AND
-        RP.ChannelID IN
-        (
-            SELECT ID fROM ChannelDetail RPD WHERE
-                Event.MeterID = RPD.MeterID AND
-                Event.LineID = RPD.LineID
-        ) CROSS JOIN
+	RelayPerformance RP ON
+		Event.ID = RP.EventID AND
+		RP.ChannelID IN 
+		(
+			SELECT ID fROM ChannelDetail RPD WHERE 
+				Event.MeterID = RPD.MeterID AND
+				Event.LineID = RPD.LineID
+		) CROSS JOIN
     (
         SELECT COALESCE(CONVERT(FLOAT,
         (
@@ -3795,8 +3739,8 @@ FROM
     ) System OUTER APPLY
     (
         SELECT TOP 1
-            FORMAT(Disturbance.PerUnitMagnitude * 100, '0.0') + '%' AS MagnitudePercent,
-            FORMAT(Disturbance.Magnitude, '0') + ' volts' AS MagnitudeVolts
+            Disturbance.PerUnitMagnitude * 100 AS MagnitudePercent,
+            Disturbance.Magnitude AS MagnitudeVolts
         FROM
             Disturbance JOIN
             EventType ON
@@ -3811,6 +3755,7 @@ FROM
             Disturbance.EndTime >= FaultSummary.Inception
     ) Sag
 GO
+
 
 CREATE FUNCTION RecursiveMeterSearch(@assetGroupID int)
 RETURNS TABLE
@@ -4393,102 +4338,102 @@ GO
 
 UPDATE EventEmailParameters
 SET TriggersEmailSQL = 'SELECT CASE WHEN (SELECT COUNT(RP.ID) FROM RelayPerformance RP LEFT OUTER JOIN
-    EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
-    METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
-    LINE LN ON LN.ID = EV.LineID INNER JOIN
-    RelayAlertSetting RA ON RA.LineID = LN.ID
-    WHERE RP.EventID = {0}
-        AND ((RP.TripTime > RA.TripTime AND RA.TripTime > 0)
-            OR (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0)
-            OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
-    ) > 0 THEN 1 ELSE 0 END'
+	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
+	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
+	LINE LN ON LN.ID = EV.LineID INNER JOIN
+	RelayAlertSetting RA ON RA.LineID = LN.ID
+	WHERE RP.EventID = {0}
+		AND ((RP.TripTime > 10*RA.TripTime AND RA.TripTime > 0) 
+			OR (RP.PickupTime > 10*RA.PickupTime AND RA.PickupTime > 0)
+			OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
+	) > 0 THEN 1 ELSE 0 END'
 WHERE EventEmailParameters.ID = 3
-GO
-
+GO		
+		
 UPDATE EventEmailParameters
 SET EventDetailSQL = 'DECLARE @url VARCHAR(MAX) = (SELECT Value FROM DashSettings WHERE Name = ''System.URL'')
 
 /*  Temporary Tables */
 /* Breaker */
-SELECT LN.ID AS LineID, ML.LineName AS Name, LN.AssetKey AS AssetKey,
-    RP.TripTime AS TT, RP.PickupTime AS PT, RP.TripCoilCondition AS TCC, RP.TripInitiate AS TI, RP.Imax1 AS L1, RP.Imax2 AS L2,
-    ( SELECT CASE WHEN (RP.TripTime > RA.TripTime AND RA.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
-    ( SELECT CASE WHEN (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
-    ( SELECT CASE WHEN (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
-    ( SELECT CASE WHEN
-        (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) OR
-        (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0) OR
-        (RP.TripTime > RA.TripTime AND RA.TripTime > 0)
-        THEN 1 ELSE 0 END
-    ) AS Alert
-    INTO #Breaker
-    FROM RelayPerformance RP LEFT OUTER JOIN
-    EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
-    METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
-    LINE LN ON LN.ID = EV.LineID LEFT OUTER JOIN
-    RelayAlertSetting RA ON RA.LineID = LN.ID
-    WHERE RP.EventID = {0}
+SELECT LN.ID AS LineID, ML.LineName AS Name, LN.AssetKey AS AssetKey, 
+	RP.TripTime / 10 AS TT, RP.PickupTime / 10 AS PT, RP.TripCoilCondition AS TCC, RP.TripInitiate AS TI, RP.Imax1 AS L1, RP.Imax2 AS L2,
+	( SELECT CASE WHEN (RP.TripTime > 10*RA.TripTime AND RA.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN (RP.PickupTime > 10*RA.PickupTime AND RA.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN
+		(RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) OR
+		(RP.PickupTime > 10 * RA.PickupTime AND RA.PickupTime > 0) OR
+		(RP.TripTime > 10 * RA.TripTime AND RA.TripTime > 0)
+		THEN 1 ELSE 0 END 
+	) AS Alert
+	INTO #Breaker 
+	FROM RelayPerformance RP LEFT OUTER JOIN
+	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
+	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
+	LINE LN ON LN.ID = EV.LineID LEFT OUTER JOIN
+	RelayAlertSetting RA ON RA.LineID = LN.ID
+	WHERE RP.EventID = {0}
 
 /* Alert */
 SELECT ML.LineName AS Name, LN.AssetKey AS AssetKey
-    INTO #Alert
-    FROM RelayPerformance RP LEFT OUTER JOIN
-    EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
-    METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
-    LINE LN ON LN.ID = EV.LineID INNER JOIN
-    RelayAlertSetting RA ON RA.LineID = LN.ID
-    WHERE RP.EventID = {0}
-        AND ((RP.TripTime > RA.TripTime AND RA.TripTime > 0)
-            OR (RP.PickupTime > RA.PickupTime AND RA.PickupTime > 0)
-            OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
+	INTO #Alert 
+	FROM RelayPerformance RP LEFT OUTER JOIN
+	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
+	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
+	LINE LN ON LN.ID = EV.LineID INNER JOIN
+	RelayAlertSetting RA ON RA.LineID = LN.ID
+	WHERE RP.EventID = {0}
+		AND ((RP.TripTime > 10 * RA.TripTime AND RA.TripTime > 0) 
+			OR (RP.PickupTime > 10 * RA.PickupTime AND RA.PickupTime > 0)
+			OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
 
 /* History */
-SELECT Line.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime AS PT, Relay.TripTime AS TT, Relay.TripCoilCondition AS TCC,  Relay.Imax1 AS L1, Relay.Imax2 AS L2, Relay.TripInitiate AS TI,
-    ( SELECT CASE WHEN (Relay.TripTime > RelayAlert.TripTime AND RelayAlert.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
-    ( SELECT CASE WHEN (Relay.PickupTime > RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
-    ( SELECT CASE WHEN (Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
-    ( SELECT CASE WHEN
-        (Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) OR
-        (Relay.PickupTime > RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) OR
-        (Relay.TripTime > RelayAlert.TripTime AND RelayAlert.TripTime > 0)
-        THEN 1 ELSE 0 END
-    ) AS Alert
-    INTO #History FROM
-    RelayPerformance Relay LEFT OUTER JOIN
-    Channel ON Relay.ChannelID = Channel.ID LEFT OUTER JOIN
-    Line ON Channel.LineID = Line.ID LEFT OUTER JOIN
-    RelayAlertSetting RelayAlert ON RelayAlert.LineID = Line.ID
-    WHERE Relay.EventID <> {0}
+SELECT Line.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime / 10 AS PT, Relay.TripTime / 10 AS TT, Relay.TripCoilCondition AS TCC,  Relay.Imax1 AS L1, Relay.Imax2 AS L2, Relay.TripInitiate AS TI,
+	( SELECT CASE WHEN (Relay.TripTime >10 * RelayAlert.TripTime AND RelayAlert.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN (Relay.PickupTime > 10 * RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN (Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN
+		(Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) OR
+		(Relay.PickupTime > RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) OR
+		(Relay.TripTime > RelayAlert.TripTime AND RelayAlert.TripTime > 0)
+		THEN 1 ELSE 0 END 
+	) AS Alert
+	INTO #History FROM  
+	RelayPerformance Relay LEFT OUTER JOIN
+	Channel ON Relay.ChannelID = Channel.ID LEFT OUTER JOIN
+	Line ON Channel.LineID = Line.ID LEFT OUTER JOIN
+	RelayAlertSetting RelayAlert ON RelayAlert.LineID = Line.ID
+	WHERE Relay.EventID <> {0}
 
 /* Event */
 SELECT EV.StartTime, EV.EndTime, STAT.IA2t, STAT.IB2t, STAT.IC2t,
-    EVT.Description AS EventType,
-    (SELECT CASE
-        WHEN ((SELECT COUNT(FaultSummary.ID) FROM FaultSummary WHERE FaultSummary.IsSelectedAlgorithm <> 0 AND FaultSummary.EventID = {0}) > 0)
-            THEN (SELECT Fault.DurationSeconds * 1000)
-            ELSE (SELECT DATEDIFF(millisecond, EV.StartTime, EV.EndTime))
-        END
-    ) AS EventDuration
-    INTO #EventDetails FROM
-    EVENT EV LEFT OUTER JOIN
-    EventStat STAT ON STAT.EventID = EV.ID LEFT OUTER JOIN
-    EventType EVT ON EVT.ID = EV.EventTypeID LEFT OUTER JOIN
-    FaultSummary Fault ON Fault.EventID = EV.ID
-    WHERE EV.Id = {0} AND (Fault.IsSelectedAlgorithm <> 0 OR Fault.IsSelectedAlgorithm IS NULL)
+	EVT.Description AS EventType,
+	(SELECT CASE 
+		WHEN ((SELECT COUNT(FaultSummary.ID) FROM FaultSummary WHERE FaultSummary.IsSelectedAlgorithm <> 0 AND FaultSummary.EventID = {0}) > 0) 
+			THEN (SELECT Fault.DurationSeconds * 1000) 
+			ELSE (SELECT DATEDIFF(millisecond, EV.StartTime, EV.EndTime)) 
+		END
+	) AS EventDuration
+	INTO #EventDetails FROM 
+	EVENT EV LEFT OUTER JOIN 
+	EventStat STAT ON STAT.EventID = EV.ID LEFT OUTER JOIN
+	EventType EVT ON EVT.ID = EV.EventTypeID LEFT OUTER JOIN
+	FaultSummary Fault ON Fault.EventID = EV.ID
+	WHERE EV.Id = {0} AND (Fault.IsSelectedAlgorithm <> 0 OR Fault.IsSelectedAlgorithm IS NULL)
 
 
 SELECT @url AS [PQDashboard],
-    (SELECT * FROM #ALERT FOR XML PATH(''Breaker''), TYPE) AS [Alerts],
-    ( SELECT
-        Name, AssetKey,
-        TT, PT, TCC, TI, L1, L2,
-        Alert, TTAlert, PTAlert, TCCAlert,
-        (
-            SELECT TT, PT, TCC, TI, L1, L2, Alert, TTAlert, PTAlert, TCCAlert FROM #History H WHERE H.LineID = B.LineID FOR XML PATH(''Data''), TYPE
-        ) AS History FROM #Breaker B FOR XML PATH(''Breaker''), TYPE
-    ) AS Breakers,
-    ( SELECT * FROM #EventDetails FOR XML PATH(''Event''), TYPE) AS EventDetail
-    FOR XML PATH(''AlertDetail'')'
+	(SELECT * FROM #ALERT FOR XML PATH(''Breaker''), TYPE) AS [Alerts],
+	( SELECT 
+		Name, AssetKey, 
+		TT, PT, TCC, TI, L1, L2,
+		Alert, TTAlert, PTAlert, TCCAlert,
+		(
+			SELECT TT, PT, TCC, TI, L1, L2, Alert, TTAlert, PTAlert, TCCAlert FROM #History H WHERE H.LineID = B.LineID FOR XML PATH(''Data''), TYPE
+		) AS History FROM #Breaker B FOR XML PATH(''Breaker''), TYPE
+	) AS Breakers,
+	( SELECT * FROM #EventDetails FOR XML PATH(''Event''), TYPE) AS EventDetail
+	FOR XML PATH(''AlertDetail'')'
 WHERE EventEmailParameters.ID = 3
 GO
 
@@ -4748,11 +4693,11 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
             table {
                 border-spacing: 0;
                 border-collapse: collapse;
-
+                
             }
 
             tr:nth-child(even){background-color: #f2f2f2;}
-
+            
             th {
                 padding-top: 12px;
                 padding-bottom: 12px;
@@ -4760,30 +4705,30 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
                 background-color: #4CAF50;
                 color: white;
             }
-
+            
             .alert {
                 color: #ff0000;
             }
-
+            
             .normal {
                 color: #000000;
             }
-
-            table.tblstyle-center tr th, table.tblstyle-center tr td
-            {
-                border-spacing: 0;
+            
+			table.tblstyle-center tr th, table.tblstyle-center tr td
+			{
+				border-spacing: 0;
                 border-collapse: collapse
-                border: 1px solid black
-                text-align: center
+				border: 1px solid black
+				text-align: center
 
-            }
-            table.tblstyle-left tr th, table.tblstyle-left tr td,
-            {
-                border-spacing: 0;
+			}
+			table.tblstyle-left tr th, table.tblstyle-left tr td,
+			{
+				border-spacing: 0;
                 border-collapse: collapse
-                border: 1px solid black
-                text-align: left
-            }
+				border: 1px solid black
+				text-align: left
+			}
 
         </style>
     </head>
@@ -4830,7 +4775,7 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
                         </xsl:choose>
                         <td> <format type="System.Double" spec="#0.###"> <xsl:value-of select="L1" /> </format> </td>
                         <td> <format type="System.Double" spec="#0.###"> <xsl:value-of select="L2" /> </format></td>
-
+                        
                         <xsl:choose>
                             <xsl:when test="TCCAlert = 1">
                                 <td class = "alert"> <format type="System.Double" spec="##0.###"> <xsl:value-of select="TCC" /> </format> </td>
@@ -4841,47 +4786,47 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
                         </xsl:choose>
                     </tr>
                 </xsl:for-each>
-
+                
             </table>
         </div>
         <hr />
         <span class="section-header">Event Details </span>
         <br/><br/>
-        <div class="Event-details">
-            <table class="table.tblstyle-left">
-                <tr>
+		<div class="Event-details">
+			<table class="table.tblstyle-left">
+				<tr>
                     <td> Start Time:</td>
-                    <td><format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format>
-                                <br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format></td>
+					<td><format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format>
+								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/StartTime" /> </format></td>
                 </tr>
-                <tr>
+				<tr>
                     <td> Event:</td>
-                    <td> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EventType" /> </td>
+					<td> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EventType" /> </td>
                 </tr>
-                <tr>
+				<tr>
                     <td> Event Duration:</td>
-                    <td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EventDuration" /></format> ms</td>
+					<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/EventDuration" /></format> ms</td>
                 </tr>
                 <xsl:if test="/AlertDetail/EventDetail/Event[1]/IA2t">
-                    <tr>
+    				<tr>
                         <td> I2(t) Phase A :</td>
-                        <td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/IA2t" /> </format>  </td>
+    					<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/IA2t" /> </format>  </td>
                     </tr>
                 </xsl:if>
                 <xsl:if test="/AlertDetail/EventDetail/Event[1]/IB2t">
-                    <tr>
+    				<tr>
                         <td> I2(t) Phase B :</td>
-                        <td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/IB2t" /> </format>  </td>
+    					<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/IB2t" /> </format>  </td>
                     </tr>
                 </xsl:if>
                 <xsl:if test="/AlertDetail/EventDetail/Event[1]/IC2t">
-                    <tr>
+        			<tr>
                         <td> I2(t) Phase C :</td>
-                        <td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/IC2t" /> </format> </td>
+        				<td> <format type="System.Double" spec="#####"> <xsl:value-of select="/AlertDetail/EventDetail/Event[1]/IC2t" /> </format> </td>
                     </tr>
                 </xsl:if>
             </table>
-        </div>
+		</div>
         <hr />
         <xsl:for-each select="/AlertDetail/Breakers/Breaker">
             <span class="section-header">Breaker <xsl:value-of select="Name" /> (<xsl:value-of select="AssetKey" />) History</span>
@@ -4897,49 +4842,49 @@ SET Template = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/
                   <th>Trip Coil Condition <br/> (A/s)</th>
                 </tr>
                 <xsl:for-each select="History/Data">
-                    <tr>
+                    <tr>                  
                         <xsl:choose>
                             <xsl:when test="Alert = 1">
                                 <td class = "alert"> <format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="TI" /> </format>
-                                <br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="TI" /> </format> </td>
+								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="TI" /> </format> </td>
                             </xsl:when>
                             <xsl:otherwise>
                                 <td class = "normal"> <format type="System.DateTime" spec="MM/dd/yyyy"> <xsl:value-of select="TI" /> </format>
-                                <br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="TI" /> </format> </td>
+								<br/> <format type="System.DateTime" spec="HH:mm:ss:ffffff"> <xsl:value-of select="TI" /> </format> </td>
                             </xsl:otherwise>
-                        </xsl:choose>
+						</xsl:choose>
 
-                        <xsl:choose>
+						<xsl:choose>
                             <xsl:when test="PTAlert = 1">
                                 <td class = "alert"> <format type="System.Double" spec="#####"> <xsl:value-of select="PT" /> </format> </td>
                             </xsl:when>
                             <xsl:otherwise>
                                 <td class = "normal"> <format type="System.Double" spec="#####"> <xsl:value-of select="PT" /> </format> </td>
                             </xsl:otherwise>
-                        </xsl:choose>
+						</xsl:choose>
 
-                        <xsl:choose>
+						<xsl:choose>
                             <xsl:when test="TTAlert = 1">
                                 <td class = "alert"> <format type="System.Double" spec="#####"> <xsl:value-of select="TT" /> </format> </td>
                             </xsl:when>
                             <xsl:otherwise>
                                 <td class = "normal"> <format type="System.Double" spec="#####"> <xsl:value-of select="TT" /> </format> </td>
                             </xsl:otherwise>
-                        </xsl:choose>
+						</xsl:choose>
 
                         <td> <format type="System.Double" spec="#0.###"> <xsl:value-of select="L1" /> </format> </td>
                         <td> <format type="System.Double" spec="#0.###"> <xsl:value-of select="L2" /> </format></td>
-                        <xsl:choose>
+						<xsl:choose>
                             <xsl:when test="TCCAlert = 1">
                                 <td class = "alert"> <format type="System.Double" spec="##0.###"> <xsl:value-of select="TCC" /> </format> </td>
                             </xsl:when>
                             <xsl:otherwise>
                                 <td class = "normal"> <format type="System.Double" spec="##0.###"> <xsl:value-of select="TCC" /> </format> </td>
                             </xsl:otherwise>
-                        </xsl:choose>
+						</xsl:choose>
                     </tr>
                 </xsl:for-each>
-
+                
             </table>
             </div>
         </xsl:for-each>

@@ -166,8 +166,8 @@ namespace FaultData.DataOperations
                             Imax1 = Imax1,
                             Imax2 = Imax2,
                             TripInitiate = tripInitiate,
-                            PickupTime = (int)((latchOff - tripInitiate).TotalMilliseconds * 1000),
-                            TripTime = (int)((fingerOpen - tripInitiate).TotalMilliseconds * 1000),
+                            PickupTimeTicks = (int)((latchOff - tripInitiate).TotalMilliseconds * 10000),
+                            TripTimeTicks = (int)((fingerOpen - tripInitiate).TotalMilliseconds * 10000),
                             TripCoilCondition = tripCoilCondition
                         });
                     }
