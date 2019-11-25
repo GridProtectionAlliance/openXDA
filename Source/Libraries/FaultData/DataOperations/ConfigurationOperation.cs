@@ -556,8 +556,11 @@ namespace FaultData.DataOperations
                         if (samplesPerHour <= 60.0D)
                         {
                             Channel channel = dataSeries.SeriesInfo.Channel;
-                            channel.SamplesPerHour = samplesPerHour;
-                            channelTable.UpdateRecord(channel);
+                            if(channel.SamplesPerHour == 0)
+                            {
+                                channel.SamplesPerHour = samplesPerHour;
+                                channelTable.UpdateRecord(channel);
+                            }
                         }
                     }
                 }
