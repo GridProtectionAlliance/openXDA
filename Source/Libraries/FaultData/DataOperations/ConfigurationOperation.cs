@@ -220,7 +220,7 @@ namespace FaultData.DataOperations
 
                     RecordRestriction recordRestriction =
                         new RecordRestriction("ConfigKey = {0}", ConfigKey) &
-                        new RecordRestriction("{1} IN (SELECT FileGroupID FROM FileGroupMeterConfiguration WHERE MeterConfigurationID = MeterConfiguration.ID)");
+                        new RecordRestriction("{0} IN (SELECT FileGroupID FROM FileGroupMeterConfiguration WHERE MeterConfigurationID = MeterConfiguration.ID)", meterDataSet.FileGroup.ID);
 
                     MeterConfiguration meterConfiguration = meterConfigurationTable.QueryRecord("ID DESC", recordRestriction);
 

@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -99,7 +100,16 @@ namespace FaultData.DataOperations
                         // Create fault segments for each fault type found within the fault
                         foreach (Fault.Segment segment in fault.Segments)
                         {
-                            string segmentTypeName = string.Format("{0} Fault", segment.FaultType).Replace("ABC", "3-Phase");
+                            string segmentTypeName = new Func<string>(() =>
+                            {
+                                switch (segment.FaultType)
+                                {
+                                    case FaultAlgorithms.FaultType.ABC: return "3-Phase Fault";
+                                    case FaultAlgorithms.FaultType.ABCG: return "3-Phase-to-Ground Fault";
+                                    default: return $"{segment.FaultType} Fault";
+                                }
+                            })();
+
                             SegmentType segmentType = segmentTypeTable.GetOrAdd(segmentTypeName);
                             faultSegmentTable.AddNewRecord(CreateFaultSegment(evt.ID, segment, segmentType));
                         }

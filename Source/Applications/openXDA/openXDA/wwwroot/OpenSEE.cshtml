@@ -20,12 +20,14 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
+@using System.Net.Http
 
 @inherits RazorEngine.Templating.TemplateBase<openXDA.Model.AppModel>
 
 @{
     openXDA.Adapters.OpenSEEController.ConfigureView(ViewBag);
     bool enableLightningQuery = (ViewBag.EnableLightningQuery ?? false);
+    HttpRequestMessage Request = ViewBag.Request;
 }
 
 <!DOCTYPE html>
@@ -67,6 +69,7 @@
         var eventStartTime = '@Raw(ViewBag.EventStartTime.ToString())';
         var eventEndTime = '@Raw(ViewBag.EventEndTime.ToString())';
         var cycles = @Raw((ViewBag.Cycles ?? 0).ToString());
+        console.log('@Raw(Request.Headers.UserAgent.ToString())')
     </script>
 
     @if (enableLightningQuery)
@@ -75,7 +78,7 @@
         <script src="~/Scripts/openSEE-lightning-query.js"></script>
     }
 
-    @if ("Request.Browser.Browser" == "InternetExplorer") {
+    @if (!Request.Headers.UserAgent.ToString().Contains( "Chrome") && !Request.Headers.UserAgent.ToString().Contains( "Firefox")) {
         @*<script src="https://polyfill.io/v3/polyfill.min.js?features=default%2Ces2015%2Ces2016%2Ces2017%2Ces5%2Ces6%2Ces7"></script>*@
         <script src="~/Scripts/default.polyfill.min.js"></script>
     }

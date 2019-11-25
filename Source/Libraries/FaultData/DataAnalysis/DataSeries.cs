@@ -277,6 +277,19 @@ namespace FaultData.DataAnalysis
             return subSeries;
         }
 
+        public DataSeries Shift(TimeSpan timeShift)
+        {
+            DataSeries shifted = new DataSeries();
+
+            shifted.SeriesInfo = m_seriesInfo;
+
+            shifted.DataPoints = m_dataPoints
+                .Select(dataPoint => dataPoint.Shift(timeShift))
+                .ToList();
+
+            return shifted;
+        }
+
         public DataSeries Negate()
         {
             DataSeries negatedDataSeries = new DataSeries();

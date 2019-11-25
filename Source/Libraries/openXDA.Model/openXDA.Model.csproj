@@ -81,6 +81,8 @@
     <Compile Include="Files\FileGroupFieldValue.cs" />
     <Compile Include="LazyContext.cs" />
     <Compile Include="Links\AssetGroupAssetGroup.cs" />
+    <Compile Include="Links\PQViewSite.cs" />
+    <Compile Include="Links\EDNAPoint.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="Meters\MeterConfiguration.cs" />

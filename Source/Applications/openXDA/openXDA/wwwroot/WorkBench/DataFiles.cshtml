@@ -96,7 +96,7 @@
                 <div hidden="hidden" id="FileGroupID"></div>
                 <label for="eventList">Events in File:</label>
                 <ul id="eventList"></ul>
-                <input type="checkbox" id="LoadHistoricConfiguration" checked />
+                <input type="checkbox" id="LoadHistoricConfiguration" />
                 <label for="LoadHistoricConfiguration">Use historic configuration?</label>
             </div>
             <div class="modal-footer">
@@ -113,7 +113,9 @@
 @section Scripts {
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<openXDA.Model.DataFile, DataHub>(ViewBag, "FileGroupID"))
-        
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
+
         $(function () {
             $('#addRecordButton').html("Advanced Reprocess");
             $('#addNewEditDialog .modal-footer').prepend("<button class='btn btn-primary' onclick='reprocessForRange()'>Reprocess</button>");

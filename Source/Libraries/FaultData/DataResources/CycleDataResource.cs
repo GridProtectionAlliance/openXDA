@@ -99,12 +99,7 @@ namespace FaultData.DataResources
             Log.Info(string.Format("Found data for {0} events.", m_dataGroups.Count));
 
             m_viDataGroups = m_dataGroups
-                .Select(dataGroup =>
-                {
-                    VIDataGroup viDataGroup = new VIDataGroup(dataGroup);
-                    dataGroup.Add(viDataGroup.CalculateMissingCurrentChannel());
-                    return viDataGroup;
-                })
+                .Select(dataGroup => new VIDataGroup(dataGroup))
                 .ToList();
 
             Log.Info(string.Format("Calculating cycle data for all {0} events.", m_dataGroups.Count));

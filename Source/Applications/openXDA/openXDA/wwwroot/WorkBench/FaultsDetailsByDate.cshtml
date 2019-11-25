@@ -108,6 +108,8 @@
         @Raw(dataContext.RenderViewModelConfiguration<FaultsDetailsByDate, DataHub>(ViewBag, "theinceptiontime", null, meterIds, date, context ))
         var IDs;
         var lastChanges;
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
 
         $('#pageControlsRow').prepend("<button id='undoBtn' class='btn btn-sm btn-primary' onclick='undoLastChange()'>Undo</button>");
         $('#undoBtn').hide();

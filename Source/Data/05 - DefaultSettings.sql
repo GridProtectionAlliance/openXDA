@@ -112,6 +112,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.GroundedFaultVoltageThreshold', '0.001', '0.001')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.MinFaultSegmentCycles', '1.0', '1.0')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.UseDefaultFaultDetectionLogic', 'True', 'True')
 GO
 
@@ -140,6 +143,9 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherInternalThread
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherMaxFragmentation', '10', '10')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FolderExclusion', '', '')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.InstanceName', 'XDA', 'XDA')

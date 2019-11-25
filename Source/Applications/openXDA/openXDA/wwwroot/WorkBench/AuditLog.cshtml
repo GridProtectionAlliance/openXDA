@@ -124,6 +124,9 @@
 
 @section Scripts {
     <script>
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
+
         @Raw(dataContext.RenderViewModelConfiguration<AuditLog, DataHub>(ViewBag))        
 
         $('#pageControlsRow').prepend("<button id='reprocessSelectedButton' class='btn btn-sm btn-primary' onclick='reprocessForRange()' disabled='disabled'>Reprocess Selected</button>");

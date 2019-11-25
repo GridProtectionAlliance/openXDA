@@ -380,6 +380,7 @@ namespace openXDAFileWatcher
             if ((object)m_fileProcessor == null)
             {
                 m_fileProcessor = new FileProcessor(m_systemSettings.FileProcessorID);
+                m_fileProcessor.FolderExclusion = m_systemSettings.FolderExclusion;
                 m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
                 m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
                 m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
@@ -428,6 +429,7 @@ namespace openXDAFileWatcher
             // Update the FileProcessor with the latest system settings
             if ((object)m_fileProcessor != null)
             {
+                m_fileProcessor.FolderExclusion = m_systemSettings.FolderExclusion;
                 m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
                 m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
                 m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
@@ -561,6 +563,11 @@ namespace openXDAFileWatcher
                 {
                     oldValue = m_fileProcessor.Filter;
                     m_fileProcessor.Filter = args[2];
+                }
+                else if (args[1].Equals("FolderExclusion", StringComparison.OrdinalIgnoreCase))
+                {
+                    oldValue = m_fileProcessor.FolderExclusion;
+                    m_fileProcessor.FolderExclusion = args[2];
                 }
                 else if (args[1].Equals("InternalBufferSize", StringComparison.OrdinalIgnoreCase))
                 {

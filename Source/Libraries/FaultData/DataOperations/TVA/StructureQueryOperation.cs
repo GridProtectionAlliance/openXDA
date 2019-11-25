@@ -168,7 +168,7 @@ namespace FaultData.DataOperations.TVA
                                 structure.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
 
                             if (faultSummaryID != 0)
-                                connection.ExecuteNonQuery("INSERT INTO NearestStructure(FaultSummaryID, StructureID) VALUES({0}, {1})", faultSummaryID, structure.ID);
+                                connection.ExecuteNonQuery("INSERT INTO NearestStructure(FaultSummaryID, StructureID, Deviation) VALUES({0}, {1}, 0)", faultSummaryID, structure.ID);
                         }
                     }
                 }
