@@ -2686,7 +2686,7 @@ CREATE TABLE RelayPerformance
 	ChannelID INT NOT NULL REFERENCES Channel(ID),
 	Imax1 FLOAT NULL,
 	Imax2 FLOAT NULL,
-    TripInitiate DATETIME NULL,
+    TripInitiate DATETIME2 NULL,
 	TripTime INT NULL,
 	PickupTime INT NULL,
 	TripCoilCondition FLOAT NULL,
