@@ -304,6 +304,7 @@ else {
 <script>
     $('#selectedText').show()
     $('#globalFilter').show()
+    var homePath = '@Url.Content("~")';
     $(function () {
             $(window).one('hubConnected', function (event) {
                 dataHub.getWorkbenchFiltersForSelect().done(function (data) {

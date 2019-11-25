@@ -39,8 +39,8 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { null, "<input id='selectAll' type='checkbox' onclick='selectAll(this)'/> Select All", "text-left"},
-        new[] { "FileGroupID", "File Group", "text-left"},
+        new[] { null, "<input id='selectAll' type='checkbox' onclick='selectAll(this)'/>", "text-left"},
+        new[] { "FileGroupID", "ID", "text-left"},
         new[] { "FilePath", "File Path", "text-left"},
         new[] { "CreationTime", "Creation", "text-left"},
     };
@@ -61,9 +61,9 @@
 @helper BodyRows()
 {
     <td hidden="hidden" data-bind="text: ID"></td>
-    <td width="5%"><input type="checkbox" data-bind="attr: {id: 'checkbox' + FileGroupID}" onclick="checkButton(this)" /></td>
-    <td width="5%" class="text-left valign-middle" data-bind="text: FileGroupID"></td>
-    <td width="75%" class="text-left valign-middle" data-bind="text: FilePath"></td>
+    <td width="2%"><input type="checkbox" data-bind="attr: {id: 'checkbox' + FileGroupID}" onclick="checkButton(this)" /></td>
+    <td width="3%" class="text-left valign-middle" data-bind="text: FileGroupID"></td>
+    <td width="80%" class="text-left valign-middle"><div data-bind="text: FilePath.truncateLeft(130), attr:{title: FilePath}"></div></td>
     <td width="15%" class="text-left valign-middle" data-bind="text: CreationTime.formatDate(DateTimeFormat)"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-toggle="modal" data-target="#reprocessModal" title="Reprocess File" data-bind="enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
@@ -152,7 +152,45 @@
                 }
             }
         });
-        
+
+        var ajaxCount = null;
+        viewModel.setQueryRecordCount(function (filterText) {
+            if (ajaxCount != null && ajaxCount.abort != undefined) ajaxCount.abort('');
+            ajaxCount = $.ajax({
+                type: "POST",
+                url: homePath + "/api/Workbench/DataFiles/Count",
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                data: JSON.stringify({ filterString: filterText }),
+                cache: true,
+                async: true
+            });
+            return ajaxCount;
+        });
+
+        var ajaxQuery = null;
+        viewModel.setQueryRecords(function (sortField, ascending, page, pageSize, filterText) {
+            if (ajaxQuery != null && ajaxQuery.abort != undefined) ajaxQuery.abort('');
+
+            ajaxQuery = $.ajax({
+                type: "POST",
+                url: `${homePath}/api/Workbench/DataFiles`,
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                data: JSON.stringify({
+                    sortField: sortField,
+                    ascending: ascending,
+                    page: page,
+                    pageSize: pageSize,
+                    filterString: filterText
+                }),
+                cache: true,
+                async: true
+            });
+
+            return ajaxQuery
+        });
+
         var mobileSelectOptions = {
             padding: {
                 top: '5%',
@@ -283,6 +321,14 @@
             });
         }
 
+        String.prototype.truncateLeft = function(limit) {
+            const text = this.trim();
+
+            if (text.length > limit)
+                return "..." + text.substr(text.length - limit + 3,text.length);
+
+            return text;
+        };
     </script>
 }
 
