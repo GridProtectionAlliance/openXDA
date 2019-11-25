@@ -82,6 +82,10 @@
 @section Scripts
 {
     <script>
+
         @Raw(dataContext.RenderViewModelConfiguration<PQMeasurement, DataHub>(ViewBag))
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
+
     </script>
 }

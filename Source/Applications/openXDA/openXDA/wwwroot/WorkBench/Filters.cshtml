@@ -108,7 +108,9 @@
 
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<WorkbenchFilter, DataHub>(ViewBag))
-        
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
+
         var mobileSelectOptions = {
             padding: {
                 top: '5%',

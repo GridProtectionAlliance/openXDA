@@ -101,7 +101,9 @@
     <script>
         var context = '@context';
         @Raw(dataContext.RenderViewModelConfiguration<MeterEventsByLine, DataHub>(ViewBag, "theeventid", null, theEvent.MeterID, theEvent.StartTime, context))
-        
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
+
         $(function () {
             $('#addRecordButton').text('Update Selected');
             

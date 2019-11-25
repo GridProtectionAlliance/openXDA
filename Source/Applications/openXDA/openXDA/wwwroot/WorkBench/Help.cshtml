@@ -37,6 +37,9 @@
 <embed id="pdfContent" src="/Docs/openXDAsettings.pdf" width="100%" height="200">
 @section Scripts {
     <script>
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
+
         function resizePDFContent() {
             $("#pdfContent").attr("height", (calculateRemainingBodyHeight() + 40) + "px");
         }

@@ -113,7 +113,9 @@
 @section Scripts {
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<openXDA.Model.DataFile, DataHub>(ViewBag, "FileGroupID"))
-        
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
+
         $(function () {
             $('#addRecordButton').html("Advanced Reprocess");
             $('#addNewEditDialog .modal-footer').prepend("<button class='btn btn-primary' onclick='reprocessForRange()'>Reprocess</button>");

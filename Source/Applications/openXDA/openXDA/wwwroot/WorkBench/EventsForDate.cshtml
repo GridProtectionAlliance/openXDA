@@ -138,6 +138,8 @@
 @section Scripts {
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<EventForDate, DataHub>(ViewBag, "ID", null, ViewBag.EventID, ViewBag.time))
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
 
         $('#addNewEditDialog').on('shown.bs.modal', function () {
         });

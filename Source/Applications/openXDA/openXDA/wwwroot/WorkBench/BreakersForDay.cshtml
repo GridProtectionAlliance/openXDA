@@ -108,6 +108,9 @@
 @section Scripts {
     <script language="javascript" type="text/javascript" src="/Scripts/spin.js"></script>
     <script>
+        $('#selectedText').hide()
+        $('#globalFilter').hide()
+
         @Raw(dataContext.RenderViewModelConfiguration<BreakersForDay, DataHub>(ViewBag, "ID", null, ViewBag.Date, ViewBag.Types, ViewBag.Filter))
         $(function () {
         });

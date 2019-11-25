@@ -219,6 +219,7 @@
                             <li @Raw(pageTitle == "Filters" ? "class=\"active\"" : "")><a href="Filters.cshtml">Filters</a></li>
                             <li @Raw(pageTitle == "Events" ? "class=\"active\"" : "")><a href="Events.cshtml">Events List</a></li>
                             <li @Raw(pageTitle == "Charts" ? "class=\"active\"" : "")><a href="Charts.cshtml">Charts</a></li>
+                            <li @Raw(pageTitle == "Site Summary" ? "class=\"active\"" : "")><a href="SiteSummary.cshtml">Site Summary</a></li>
                         </ul>
                     </li>
 
@@ -254,14 +255,13 @@
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
-                            <li @Raw(pageTitle == "Site Summary" ? "class=\"active\"" : "")><a href="SiteSummary.cshtml">Site Summary</a></li>
                             <li @Raw(pageTitle == "Data Files" ? "class=\"active\"" : "")><a href="DataFiles.cshtml">Data Files</a></li>
                             <li @Raw(pageTitle == "Audit Log" ? "class=\"active\"" : "")><a href="AuditLog.cshtml">Audit Log</a></li>
                         </ul>
                     </li>
                 </ul>
                 <p class="nav navbar-text navbar-right">
-                    Selected Filter:
+                    <span id="selectedText">Selected Filter:</span>
                     <select id="globalFilter"></select>
                     <button id="logoutButton"type="button" class="btn btn-sm btn-info" style="display:none">Log Out</button>
                     <a href="https://www.gridprotectionalliance.org/" target="_blank" style="padding-left: 10px">
@@ -302,7 +302,9 @@ else {
     </div><!--/.container -->
 
 <script>
-        $(function () {
+    $('#selectedText').show()
+    $('#globalFilter').show()
+    $(function () {
             $(window).one('hubConnected', function (event) {
                 dataHub.getWorkbenchFiltersForSelect().done(function (data) {
                     $.each(data, function (index, option) {
