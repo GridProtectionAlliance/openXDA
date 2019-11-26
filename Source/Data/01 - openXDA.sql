@@ -2332,6 +2332,7 @@ CREATE TABLE LinesToDataPush
     RemoteXDALineID INT NULL,
     LocalXDAAssetKey VARCHAR(200) NOT NULL,
     RemoteXDAAssetKey VARCHAR(200) NOT NULL,
+	RemoteLineCreatedByDataPusher bit NOT NULL DEFAULT (1)
 )
 GO
 
