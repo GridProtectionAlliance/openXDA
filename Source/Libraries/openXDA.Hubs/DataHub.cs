@@ -3373,6 +3373,41 @@ namespace openXDA.Hubs
 
             return ras;
         }
+
+        public int QueryLineBreakersCount(int lineID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<EDNAPoint>(connection).QueryRecordsWhere("LineID = {0}", lineID).ToList().Count();
+            }
+        }
+
+
+        public IEnumerable<EDNAPoint> QueryLineBreakers(int lineID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<EDNAPoint>(connection).QueryRecordsWhere("LineID = {0}", lineID).ToList();
+            }
+        }
+
+        public void DeleteLineBreaker(int id)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<EDNAPoint>(connection).DeleteRecord(new RecordRestriction("ID = {0}", id));
+            }
+        }
+
+        public EDNAPoint AddNewLineBreaker(EDNAPoint record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<EDNAPoint>(connection).AddNewRecord(record);
+                return new TableOperations<EDNAPoint>(connection).QueryRecordWhere("LineID = {0} AND Point = {1}", record.LineID, record.Point);
+            }
+        }
+
         #endregion
 
         #region [ MeterLine Table Operations ]
