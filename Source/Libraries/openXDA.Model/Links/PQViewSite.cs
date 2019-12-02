@@ -29,8 +29,10 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int MeterID { get; set; }
-        public string SiteID { get; set; }
+        public int SiteID { get; set; }
+        public string StationKey { get; set; }
+        public string LineKey { get; set; }
+        public int PQIFacility { get; set; }
         public bool Enabled { get; set; }
 
     }

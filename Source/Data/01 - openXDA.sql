@@ -461,6 +461,25 @@ CREATE TABLE AuditLog
 )
 GO
 
+CREATE TABLE PQViewSite(
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	SiteID int NOT NULL,
+	StationKey varchar(20) NULL,
+	LineKey varchar(20) NULL,
+	PQIFacility int NULL,
+	Enabled bit NOT NULL DEFAULT 1
+)
+GO
+
+CREATE TABLE EDNAPoint(
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	LineID int NOT NULL FOREIGN KEY REFERENCES Line(ID),
+	Point varchar(20) NOT NULL,
+)
+GO
+
+
+
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.dat', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
 GO
 
