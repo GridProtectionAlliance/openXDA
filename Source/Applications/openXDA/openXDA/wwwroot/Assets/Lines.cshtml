@@ -84,7 +84,7 @@
     <td width="20%" class="text-left valign-middle" data-bind="text: ThermalRating"></td>
     <td width="15%" class="text-left valign-middle" data-bind="text: Length"></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?LineID=' + ID + '&MeterID=-1&Title=' + AssetKey }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
-    <td width="5%" class="text-center valign-middle"><button data-bind="click: function() {openBreakerModal(ID)}, enable: $parent.dataHubIsConnected" data-toggle="modal" data-target="#breakerModal" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getBreakerCount(ID, $($element)), attr: {id: 'breakerCount' + ID}">0</span></button></td>
+    <td width="5%" class="text-center valign-middle"><button data-bind="click: function() {openBreakerModal(ID)}, enable: $parent.dataHubIsConnected" data-toggle="modal" data-target="#breakerModal" class="btn btn-default form-control">Breakers&nbsp;&nbsp;<span class="badge" data-bind="text: getBreakerCount(ID, $($element)), attr: {id: 'breakerCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
