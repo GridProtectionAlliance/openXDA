@@ -170,6 +170,11 @@
     <File Id="wwwroot_Config_XSLTemplate.cshtml" Name="XSLTemplate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\XSLTemplate.cshtml" />
   </Component>
 </ComponentGroup>
+<ComponentGroup Id="wwwroot_Config_ExternalLinks_Components" Directory="wwwroot_CONFIGEXTERNALLINKSFOLDER">
+  <Component Id="wwwroot_Config_ExternalLinks_PQViewDataLoader_cshtml">
+    <File Id="wwwroot_Config_ExternalLinks_PQViewDataLoader.cshtml" Name="PQViewDataLoader.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\ExternalLinks\PQViewDataLoader.cshtml" />
+  </Component>
+</ComponentGroup>
 <ComponentGroup Id="wwwroot_Content_Components" Directory="wwwroot_CONTENTFOLDER">
   <Component Id="wwwroot_Content_BigTable_css">
     <File Id="wwwroot_Content_BigTable.css" Name="BigTable.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\BigTable.css" />

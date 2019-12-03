@@ -3,6 +3,7 @@
   <ComponentGroupRef Id="wwwroot_Components" />
   <ComponentGroupRef Id="wwwroot_Assets_Components" />
   <ComponentGroupRef Id="wwwroot_Config_Components" />
+  <ComponentGroupRef Id="wwwroot_Config_ExternalLinks_Components" />
   <ComponentGroupRef Id="wwwroot_Content_Components" />
   <ComponentGroupRef Id="wwwroot_Content_fonts_Components" />
   <ComponentGroupRef Id="wwwroot_Content_fullscreenselect_Components" />

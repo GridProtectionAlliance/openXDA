@@ -191,7 +191,8 @@
 
         function addBreaker(lineID) {
             if (viewModel.dataHubIsConnected()) {
-                dataHub.addNewLineBreaker({LineID: lineID, Point: $('#breakerNumber').val()}).done(function (record) {
+                dataHub.addNewLineBreaker({ LineID: lineID, Point: $('#breakerNumber').val() }).done(function (record) {
+                    $('#breakerNumber').val('')
                     $('#breakerModal .modal-content .modal-body table').append('<tr id='+record.ID+'><td>'+ record.Point +'</td><td><button type="button" class="btn btn-xs" onclick="removeBreaker(' + record.ID + ')" ' +( viewModel.canDelete() && viewModel.dataHubIsConnected()? '': 'disabled') + '><span class="glyphicon glyphicon-remove"></span></button></td></tr>');
                 });
             }

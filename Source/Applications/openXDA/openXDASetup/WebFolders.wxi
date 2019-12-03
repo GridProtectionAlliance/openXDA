@@ -1,7 +1,9 @@
 <Include>
 <Directory Id="wwwroot_WWWROOTFOLDER" Name="wwwroot">
   <Directory Id="wwwroot_ASSETSFOLDER" Name="Assets" />
-  <Directory Id="wwwroot_CONFIGFOLDER" Name="Config" />
+  <Directory Id="wwwroot_CONFIGFOLDER" Name="Config">
+    <Directory Id="wwwroot_CONFIGEXTERNALLINKSFOLDER" Name="ExternalLinks" />
+  </Directory>
   <Directory Id="wwwroot_CONTENTFOLDER" Name="Content">
     <Directory Id="wwwroot_CONTENTFONTSFOLDER" Name="fonts" />
     <Directory Id="wwwroot_CONTENTFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
