@@ -479,7 +479,6 @@ CREATE TABLE EDNAPoint(
 GO
 
 
-
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.dat', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
 GO
 

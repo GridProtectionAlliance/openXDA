@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System.ComponentModel.DataAnnotations;
 
 namespace openXDA.Model
 {
@@ -29,10 +30,11 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        [Required]
         public int SiteID { get; set; }
         public string StationKey { get; set; }
         public string LineKey { get; set; }
-        public int PQIFacility { get; set; }
+        public int? PQIFacility { get; set; }
         public bool Enabled { get; set; }
 
     }
