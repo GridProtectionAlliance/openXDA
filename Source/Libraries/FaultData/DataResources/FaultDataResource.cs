@@ -1670,7 +1670,10 @@ namespace FaultData.DataResources
 
         private void ClassifyFaultsByCurrent(List<Fault> faults, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            DateTime GetTime(int sample) => dataGroup[0][sample].Time;
+            int minSample = 0;
+            int maxSample = dataGroup.Samples - 1;
+            int Snap(int sample) => Math.Max(Math.Min(sample, maxSample), minSample);
+            DateTime GetTime(int sample) => dataGroup[0][Snap(sample)].Time;
 
             DataSeries iaRMS = viCycleDataGroup.IA.RMS;
             DataSeries ibRMS = viCycleDataGroup.IB.RMS;
@@ -1841,7 +1844,10 @@ namespace FaultData.DataResources
 
         private void ClassifyFaultsByVoltage(List<Fault> faults, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            DateTime GetTime(int sample) => dataGroup[0][sample].Time;
+            int minSample = 0;
+            int maxSample = dataGroup.Samples - 1;
+            int Snap(int sample) => Math.Max(Math.Min(sample, maxSample), minSample);
+            DateTime GetTime(int sample) => dataGroup[0][Snap(sample)].Time;
 
             DataSeries vaRMS = ToPerUnit(viCycleDataGroup.VA.RMS);
             DataSeries vbRMS = ToPerUnit(viCycleDataGroup.VB.RMS);
