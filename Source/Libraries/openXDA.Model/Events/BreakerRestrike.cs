@@ -41,5 +41,31 @@ namespace openXDA.Model
 
         [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime Timestamp { get; set; }
+
+        public int InitialExtinguishSample { get; set; }
+
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime InitialExtinguishTime { get; set; }
+        public float InitialExtinguishVoltage { get; set; }
+        public int RestrikeSample { get; set; }
+
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime RestrikeTime { get; set; }
+        public float RestrikeVoltage { get; set; }
+        public float RestrikeCurrentPeak { get; set; }
+        public float RestrikeVoltageDip { get; set; }
+        public int TransientPeakSample { get; set; }
+
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime TransientPeakTime { get; set; }
+        public float TransientPeakVoltage { get; set; }
+        public float PerUnitTransientPeakVoltage { get; set; }
+        public int FinalExtinguishSample { get; set; }
+
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime FinalExtinguishTime { get; set; }
+        public float FinalExtinguishVoltage { get; set; }
+        public float I2t { get; set; }
+
     }
 }

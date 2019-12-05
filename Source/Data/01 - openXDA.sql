@@ -940,13 +940,26 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime_ID_EventID_PhaseID
 ON Disturbance ( StartTime ASC ) INCLUDE ( ID, EventID, PhaseID)
 GO
 
-CREATE TABLE BreakerRestrike
-(
+CREATE TABLE BreakerRestrike (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
-    Sample INT NOT NULL,
-    Timestamp DATETIME2 NOT NULL
+	InitialExtinguishSample int NOT NULL,
+	InitialExtinguishTime datetime2(7) NOT NULL,
+	InitialExtinguishVoltage float NOT NULL,
+	RestrikeSample int NOT NULL,
+	RestrikeTime datetime2(7) NOT NULL,
+	RestrikeVoltage float NOT NULL,
+	RestrikeCurrentPeak float NOT NULL,
+	RestrikeVoltageDip float NOT NULL,
+	TransientPeakSample int NOT NULL,
+	TransientPeakTime datetime2(7) NOT NULL,
+	TransientPeakVoltage float NOT NULL,
+	PerUnitTransientPeakVoltage float NOT NULL,
+	FinalExtinguishSample int NOT NULL,
+	FinalExtinguishTime datetime2(7) NOT NULL,
+	FinalExtinguishVoltage float NOT NULL,
+	I2t float NOT NULL,
 )
 GO
 
