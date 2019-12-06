@@ -67,10 +67,10 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.ShowSearchFilter = true;
-    IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecords();
-    IEnumerable<Line> lines = dataContext.Table<Line>().QueryRecords();
-    IEnumerable<UserAccount> users = dataContext.Table<UserAccount>().QueryRecords();
-    IEnumerable<AssetGroup> assetGroups = dataContext.Table<AssetGroup>().QueryRecords();
+    IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecords().OrderBy(x => x.Name);
+    IEnumerable<Line> lines = dataContext.Table<Line>().QueryRecords().OrderBy(x => x.AssetKey);
+    IEnumerable<UserAccount> users = dataContext.Table<UserAccount>().QueryRecords().OrderBy(x => x.AccountName);
+    IEnumerable<AssetGroup> assetGroups = dataContext.Table<AssetGroup>().QueryRecords().OrderBy(x => x.Name);
 
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext, meters, lines, users).ToString();
 
