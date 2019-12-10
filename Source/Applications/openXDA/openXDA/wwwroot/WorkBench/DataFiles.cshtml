@@ -174,7 +174,7 @@
 
             ajaxQuery = $.ajax({
                 type: "POST",
-                url: `${homePath}/api/Workbench/DataFiles`,
+                url: homePath + "/api/Workbench/DataFiles",
                 contentType: "application/json; charset=utf-8",
                 dataType: 'json',
                 data: JSON.stringify({
