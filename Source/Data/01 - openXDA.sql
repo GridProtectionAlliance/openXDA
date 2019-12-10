@@ -3039,6 +3039,24 @@ GO
 
 ----- VIEWS -----
 
+CREATE VIEW AssetGroupView AS
+SELECT
+	AssetGroup.ID,
+	AssetGroup.Name,
+	COUNT(DISTINCT AssetGroupAssetGroup.ChildAssetGroupID) as AssetGroups,
+	COUNT(DISTINCT MeterAssetGroup.MeterID) as Meters,
+	COUNT(DISTINCT LineAssetGroup.LineID) as Lines,
+	COUNT(DISTINCT UserAccountAssetGroup.UserAccountID) as Users
+FROM
+	AssetGroup LEFT JOIN
+	AssetGroupAssetGroup ON AssetGroup.ID = AssetGroupAssetGroup.ParentAssetGroupID LEFT JOIN
+	MeterAssetGroup ON AssetGroup.ID = MeterAssetGroup.AssetGroupID LEFT JOIN
+	LineAssetGroup ON AssetGroup.ID = LineAssetGroup.AssetGroupID LEFT JOIN
+	UserAccountAssetGroup ON AssetGroup.ID = UserAccountAssetGroup.AssetGroupID
+GROUP BY
+	AssetGroup.ID,AssetGroup.Name
+GO
+
 CREATE VIEW BreakerHistory
 AS
 SELECT  Line.ID AS LineID,

@@ -700,11 +700,11 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AssetGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<AssetGroup> QueryGroups(int assetGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<AssetGroupView> QueryGroups(int assetGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                TableOperations<AssetGroup> tableOperations = new TableOperations<AssetGroup>(connection);
+                TableOperations<AssetGroupView> tableOperations = new TableOperations<AssetGroupView>(connection);
                 RecordRestriction restriction;
 
                 if (assetGroupID > 0)
@@ -795,7 +795,7 @@ namespace openXDA.Hubs
             foreach (MeterAssetGroup record in records)
             {
                 if (!meters.Contains(record.MeterID.ToString()))
-                        new TableOperations<AssetGroupAssetGroup>(connection).DeleteRecord(record.ID);
+                        new TableOperations<MeterAssetGroup>(connection).DeleteRecord(record.ID);
             }
 
             foreach (string meter in meters)

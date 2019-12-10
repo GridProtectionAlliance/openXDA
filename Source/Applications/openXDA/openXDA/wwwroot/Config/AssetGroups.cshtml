@@ -79,10 +79,10 @@
 @helper BodyRows()
 {
     <td width="75%" class="text-left valign-middle" nowrap data-bind="text: Name"></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openAssetGroups.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Asset Groups&nbsp;&nbsp;<span class="badge" data-bind="text: getAssetGroupCount(ID, $($element)), attr: {id: 'assetGroupCount' + ID}">0</span></button></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></button></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openLines.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getLineCount(ID, $($element)), attr: {id: 'lineCount' + ID}">0</span></button></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="userWindow" data-bind="click: openUsers.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Users&nbsp;&nbsp;<span class="badge" data-bind="text: getUserCount(ID, $($element)), attr: {id: 'userCount' + ID}">0</span></button></td>
+    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openAssetGroups.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Asset Groups&nbsp;&nbsp;<span class="badge" data-bind="text: AssetGroups"></span></button></td>
+    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: Meters"></span></button></td>
+    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openLines.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: Lines"></span></button></td>
+    <td width="5%" class="text-center valign-middle"><button type="button" id="userWindow" data-bind="click: openUsers.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Users&nbsp;&nbsp;<span class="badge" data-bind="text: Users"></span></button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -179,45 +179,6 @@
     <script type="text/javascript" src="/Scripts/fullscreenselect/bootstrap-fullscreen-select.js"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AssetGroup, DataHub>(ViewBag, null, null, ViewBag.AssetGroupID))
-
-        function getAssetGroupCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryGroupAssetGroupAssetGroupCount(sourceID, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
-
-            return element.text();
-        }
-
-        function getMeterCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryGroupMeterViewCount(sourceID, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
-
-            return element.text();
-        }
-
-        function getLineCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryLineAssetGroupViewCount(sourceID, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
-
-            return element.text();
-        }
-
-        function getUserCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryUserAccountAssetGroupCount(sourceID, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
-            return element.text();
-        }
 
         function openAssetGroups(record) {
             //console.log(record);
@@ -474,15 +435,6 @@
                 }
             }
         });
-
-        //$('#addNewEditDialog').on('hidden.bs.modal', function () {
-        //    if($('#userSelect').mobileSelect('exists'))
-        //        $('#userSelect').mobileSelect('destroy');
-        //    if ($('#meterSelect').mobileSelect('exists'))
-        //        $('#meterSelect').mobileSelect('destroy');
-        //    if ($('#lineSelect').mobileSelect('exists'))
-        //        $('#lineSelect').mobileSelect('destroy');
-        //});
 
         $(function () {
             viewModel.queryPageRecords();
