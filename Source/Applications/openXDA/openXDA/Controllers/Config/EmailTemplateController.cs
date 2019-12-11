@@ -55,13 +55,14 @@ namespace openXDA.Controllers.Config
                     "WHERE XSLTemplateID = {0}";
 
                 string triggerFormat = connection.ExecuteScalar<string>(getTriggerSQL, templateID);
-                string triggerSQL = string.Format(triggerFormat, "EventView.ID");
+                string triggerSQL = string.Format(triggerFormat, "E.ID");
 
                 string getEvents =
                     $"SELECT TOP {count} EventView.* " +
                     $"FROM " +
-                    $"    EventView CROSS APPLY " +
-                    $"    ({triggerSQL}) EmailTrigger(Value) " +
+                    $"    Event as E CROSS APPLY " +
+                    $"    ({triggerSQL}) EmailTrigger(Value) JOIN" +
+                    $"    EventView ON E.ID = EventView.ID " +
                     $"WHERE EmailTrigger.Value <> 0 " +
                     $"ORDER BY EventView.StartTime DESC";
 
