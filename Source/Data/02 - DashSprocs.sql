@@ -3404,6 +3404,7 @@ BEGIN
         SET @endDate = DATEADD(SECOND, 1, @startDate)
     END
 
+	SELECT * INTO #MeterSelection FROM dbo.String_to_int_table(@MeterID, ',')
     SELECT
         Meter.ID AS meterid,
         Event.ID AS theeventid,
@@ -3431,7 +3432,7 @@ BEGIN
         Phase ON BreakerOperation.PhaseID = Phase.ID
     WHERE
         TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate AND
-        Meter.ID IN (SELECT * FROM  dbo.String_to_int_table(@MeterID, ','))
+        Meter.ID IN (SELECT * FROM  #MeterSelection)
 END
 GO
 
