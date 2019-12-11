@@ -1880,6 +1880,27 @@ namespace openXDA
                     dataPoint.Time = TimeZoneInfo.ConvertTimeFromUtc(dataPoint.Time, xdaTimeZone);
                 }
             }
+
+            for (int i = 0; i < meterDataSet.ReportedDisturbances.Count; i++)
+            {
+                ReportedDisturbance disturbance = meterDataSet.ReportedDisturbances[i];
+                GSF.PQDIF.Logical.Phase phase = disturbance.Phase;
+                DateTime time = disturbance.Time;
+                double max = disturbance.Maximum;
+                double min = disturbance.Minimum;
+                double avg = disturbance.Average;
+                TimeSpan duration = disturbance.Duration;
+                GSF.PQDIF.Logical.QuantityUnits units = disturbance.Units;
+
+                if (time.Kind != DateTimeKind.Unspecified)
+                    time = TimeZoneInfo.ConvertTimeToUtc(time);
+                else
+                    time = TimeZoneInfo.ConvertTimeToUtc(time, meterTimeZone);
+
+                time = TimeZoneInfo.ConvertTimeFromUtc(time, xdaTimeZone);
+
+                meterDataSet.ReportedDisturbances[i] = new ReportedDisturbance(phase, time, max, min, avg, duration, units);
+            }
         }
 
         // Determines the start time and end time of the given data and sets the properties on the given file group.
