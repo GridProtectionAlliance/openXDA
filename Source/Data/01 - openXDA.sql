@@ -902,6 +902,40 @@ CREATE NONCLUSTERED INDEX IX_EventData_MarkedForDeletion
 ON EventData(MarkedForDeletion ASC)
 GO
 
+
+-- ChannelData references the IDs in other tables,
+-- but no foreign key constraints are defined.
+-- If they were defined, the records in this
+-- table would need to be deleted before we
+-- could delete records in the referenced table.
+CREATE TABLE ChannelData
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL,
+    RuntimeID INT NOT NULL,
+    TimeDomainData VARBINARY(MAX) NOT NULL,
+    MarkedForDeletion INT NOT NULL,
+	SeriesID INT NOT NULL,
+	EventID INT NOT NULL,
+	EventDataID INT NULL
+)
+GO
+
+
+/* Indices for Channel Data potentially Neccesarry
+CREATE NONCLUSTERED INDEX IX_EventData_FileGroupID
+ON EventData(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventData_RuntimeID
+ON EventData(RuntimeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventData_MarkedForDeletion
+ON EventData(MarkedForDeletion ASC)
+GO
+*/
+
 CREATE TABLE EventType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

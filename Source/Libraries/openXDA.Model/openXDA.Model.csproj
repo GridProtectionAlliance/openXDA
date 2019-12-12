@@ -58,6 +58,7 @@
     <Compile Include="Alarms\ChannelsWithNormalLimits.cs" />
     <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
     <Compile Include="Alarms\MetersWithNormalLimits.cs" />
+    <Compile Include="Channels\ChannelData.cs" />
     <Compile Include="Dashboard\ContourClasses.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmLog.cs" />
@@ -104,6 +105,7 @@
     <Compile Include="System\AuditLog.cs" />
     <Compile Include="System\ConfigurationLoader.cs" />
     <Compile Include="System\DataReader.cs" />
+    <Compile Include="TransmissionElements\Asset.cs" />
     <Compile Include="TransmissionElements\BreakerOperation.cs" />
     <Compile Include="Channels\BreakerChannel.cs" />
     <Compile Include="Channels\Channel.cs" />
