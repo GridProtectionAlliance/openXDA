@@ -967,9 +967,6 @@ CREATE NONCLUSTERED INDEX IX_BreakerRestrike_EventID
 ON BreakerRestrike(EventID ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_BreakerRestrike_Timestamp
-ON BreakerRestrike(Timestamp ASC)
-GO
 
 CREATE TABLE VoltageEnvelope
 (
@@ -2395,6 +2392,7 @@ GO
 CREATE TABLE FileGroupLocalToRemote
 (
     ID INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+	RemoteXDAInstanceID int NOT NULL REFERENCES RemoteXDAInstance(ID),
     LocalFileGroupID INT NOT NULL,
     RemoteFileGroupID INT NOT NULL
 )

@@ -6896,6 +6896,11 @@ namespace openXDA.Hubs
             }
         }
 
+        //public string GetConnectionId()
+        //{
+        //    return Context.ConnectionId;
+        //}
+
         [AuthorizeHubRole("Administrator")]
         public void SyncMeterConfigurationForInstance(int instanceId, int meterId)
         {
@@ -6910,7 +6915,7 @@ namespace openXDA.Hubs
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, userAccount);
+                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, userAccount, new CancellationToken());
                 }
                 catch (Exception ex)
                 {
@@ -6932,7 +6937,7 @@ namespace openXDA.Hubs
                     // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                     DataPusherEngine engine = new DataPusherEngine();
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    engine.SyncMeterFilesForInstance(clientId, instance, meterId);
+                    engine.SyncMeterFilesForInstance(clientId, instance, meterId, new CancellationToken());
                 }
                 catch (Exception ex)
                 {
@@ -7010,7 +7015,7 @@ namespace openXDA.Hubs
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
-            engine.SyncInstanceConfiguration(Context.ConnectionId, instanceId);
+            engine.SyncInstanceConfiguration(Context.ConnectionId, instanceId, new CancellationToken());
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -7022,7 +7027,7 @@ namespace openXDA.Hubs
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine();
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                engine.SyncInstanceFiles(Context.ConnectionId, instance);
+                engine.SyncInstanceFiles(Context.ConnectionId, instance, new CancellationToken());
             }
         }
 

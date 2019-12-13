@@ -30,6 +30,8 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        public int RemoteXDAInstanceID { get; set; }
+
         public int LocalFileGroupID { get; set; }
 
         public int RemoteFileGroupID { get; set; }

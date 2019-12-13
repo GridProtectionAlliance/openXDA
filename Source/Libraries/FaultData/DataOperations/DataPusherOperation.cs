@@ -30,6 +30,7 @@ using openXDA.DataPusher;
 using openXDA.Model;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 
 namespace FaultData.DataOperations
 {
@@ -109,7 +110,7 @@ namespace FaultData.DataOperations
                 foreach (MetersToDataPush meter in meters)
                 {
                     Log.Info($"Sending data to intance: {instance.Name} for FileGroup: {fileGroupId}...");
-                    engine.SyncMeterFileForInstance(instance, meter, fileGroupId);
+                    engine.SyncMeterFileForInstance(instance, meter, fileGroupId, new CancellationToken());
                 }
             }
             Log.Info("Sync complete...");

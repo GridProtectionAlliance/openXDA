@@ -226,18 +226,89 @@
         }
 
         function syncConfiguration(record) {
+            var ajaxHandle = null;
+
             $('#notify').puinotify('show');
-            dataHub.syncInstanceConfiguration(record.ID)
-                .done(function () { $('#notify').puinotify('hide'); viewModel.queryPageRecords(); })
-                .fail(function (msg) { $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>') });
+            //dataHub.syncInstanceConfiguration(record.ID)
+            //    .done(function () { $('#notify').puinotify('hide'); viewModel.queryPageRecords(); })
+            //    .fail(function (msg) { $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>') });
+
+            
+            dataHub.getConnectionID().done(function (connectionId) {
+                ajaxHandle = $.ajax({
+                    type: "GET",
+                    url: '@Url.Content("~/")' + "api/DataPusher/SyncInstanceConfig/" + connectionId + "/" + record.ID,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: 'json',
+                    cache: false,
+                    async: true
+
+                }).done(function () {
+                    $('#notify').puinotify('hide');
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+                    viewModel.queryPageRecords();
+                }).fail(function (msg) {
+                    $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>')
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+
+                });
+
+
+            });
+            $('.ui-notify-close').on('click', function (event) {
+                if (ajaxHandle != null && ajaxHandle.abort != null) ajaxHandle.abort();
+            });
+
+
 
         }
 
         function syncFiles(record) {
+            var ajaxHandle = null;
+
             $('#notify').puinotify('show');
             dataHub.syncFilesForInstance(record.ID)
                 .done(function () { $('#notify').puinotify('hide'); viewModel.queryPageRecords(); })
                 .fail(function (msg) { $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>') });
+
+            dataHub.getConnectionID().done(function (connectionId) {
+                ajaxHandle = $.ajax({
+                    type: "GET",
+                    url: '@Url.Content("~/")' + "api/DataPusher/SyncInstanceFiles/" + connectionId + "/" +record.ID,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: 'json',
+                    cache: false,
+                    async: true
+
+                }).done(function () {
+                    $('#notify').puinotify('hide');
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+                    viewModel.queryPageRecords();
+                }).fail(function (msg) {
+                    $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>')
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+
+                });
+
+
+            });
+
+            $('.ui-notify-close').on('click', function (event) {
+                if (ajaxHandle != null && ajaxHandle.abort != null) ajaxHandle.abort();
+            });
+
         }
 
     </script>

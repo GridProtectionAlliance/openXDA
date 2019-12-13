@@ -233,6 +233,7 @@
     <Compile Include="Configuration\FileShare.cs" />
     <Compile Include="Controllers\Config\EmailTemplateController.cs" />
     <Compile Include="Controllers\Config\QueryController.cs" />
+    <Compile Include="Controllers\DataPusher\DataPusherController.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
     <Compile Include="DataObjectWrapper.cs" />
     <Compile Include="DebugHost.cs">

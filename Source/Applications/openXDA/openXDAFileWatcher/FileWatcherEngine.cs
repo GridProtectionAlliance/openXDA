@@ -730,14 +730,13 @@ namespace openXDAFileWatcher
                 // processed or needs to be processed again
                 if (fileProcessorEventArgs.AlreadyProcessed)
                 {
-                    DataFile remoteDataFile = WebAPIHub.GetRecordsWhere(systemSettings.XDAAddress, "DataFile", $"FilePathHash = {filePath.GetHashCode()}", userAccount)
-                        .Cast<DataFile>()
+                    DataFile remoteDataFile = WebAPIHub.GetRecordsWhere<DataFile>(systemSettings.XDAAddress, $"FilePathHash = {filePath.GetHashCode()}", userAccount)
                         .Where(file => file.FilePath == filePath)
                         .MaxBy(file => file.ID);
 
                     if ((object)remoteDataFile != null)
                     {
-                        FileGroup remoteFileGroup = WebAPIHub.GetRecordsWhere(systemSettings.XDAAddress, "FileGroup", $"ID = {remoteDataFile.FileGroupID}", userAccount).FirstOrDefault();
+                        FileGroup remoteFileGroup = WebAPIHub.GetRecordWhere<FileGroup>(systemSettings.XDAAddress, $"ID = {remoteDataFile.FileGroupID}", userAccount);
 
                         // This will tell us whether the service was stopped in the middle
                         // of processing the last time it attempted to process the file
@@ -772,24 +771,21 @@ namespace openXDAFileWatcher
 
                 if (systemSettings.SkipOnCRCHashMatch)
                 {
-                    List<FileGroup> fileGroups = WebAPIHub.GetRecordsWhere(systemSettings.XDAAddress, "FileGroup", $"FileHash = {crc}", userAccount)
-                        .Cast<FileGroup>()
+                    List<FileGroup> fileGroups = WebAPIHub.GetRecordsWhere<FileGroup>(systemSettings.XDAAddress, $"FileHash = {crc}", userAccount)
                         .ToList();
 
                     if (fileGroups.Any())
                     {
                         string fileGroupIDs = string.Join(",", fileGroups.Select(fg => fg.ID));
 
-                        List<DataFile> dataFiles = WebAPIHub.GetRecordsWhere(systemSettings.XDAAddress, "DataFile", $"FileGroupID IN ({fileGroupIDs})", userAccount)
-                            .Cast<DataFile>()
+                        List<DataFile> dataFiles = WebAPIHub.GetRecordsWhere<DataFile>(systemSettings.XDAAddress,$"FileGroupID IN ({fileGroupIDs})", userAccount)
                             .ToList();
 
                         if (dataFiles.Any())
                         {
                             string dataFileIDs = string.Join(",", dataFiles.Select(dataFile => dataFile.ID));
 
-                            List<FileBlob> fileBlobs = WebAPIHub.GetRecordsWhere(systemSettings.XDAAddress, "FileBlob", $"DataFileID IN ({dataFileIDs})", userAccount)
-                                .Cast<FileBlob>()
+                            List<FileBlob> fileBlobs = WebAPIHub.GetRecordsWhere<FileBlob>(systemSettings.XDAAddress, $"DataFileID IN ({dataFileIDs})", userAccount)
                                 .ToList();
 
                             if (fileBlobs.Any(fileBlob => buffer.SequenceEqual(fileBlob.Blob)))
@@ -810,7 +806,7 @@ namespace openXDAFileWatcher
                 SaveFileGroup(fileGroup, systemSettings.XDAAddress, userAccount);
 
                 string meterKey = GetMeterKey(filePath, systemSettings.FilePattern);
-                Meter meter = WebAPIHub.GetRecordsWhere(systemSettings.XDAAddress, "Meter", $"AssetKey = '{meterKey}'", userAccount).FirstOrDefault();
+                Meter meter = WebAPIHub.GetRecordsWhere<Meter>(systemSettings.XDAAddress, $"AssetKey = '{meterKey}'", userAccount).FirstOrDefault();
 
                 Dictionary<string, int> idObject = new Dictionary<string, int>();
                 idObject.Add("FileGroupID", fileGroup.ID);
@@ -869,17 +865,17 @@ namespace openXDAFileWatcher
         // Saves the given file group to the database using the given connection.
         private void SaveFileGroup(FileGroup fileGroup, string xdaAddress, UserAccount userAccount)
         {
-            fileGroup.ID = WebAPIHub.CreateRecord(xdaAddress, "FileGroup", JObject.FromObject(fileGroup), userAccount);
+            fileGroup.ID = WebAPIHub.CreateRecord(xdaAddress, fileGroup, userAccount);
 
             foreach (DataFile dataFile in fileGroup.DataFiles)
             {
                 dataFile.FileGroupID = fileGroup.ID;
-                dataFile.ID = WebAPIHub.CreateRecord(xdaAddress, "DataFile", JObject.FromObject(dataFile), userAccount);
+                dataFile.ID = WebAPIHub.CreateRecord(xdaAddress, dataFile, userAccount);
 
                 FileBlob fileBlob = new FileBlob();
                 fileBlob.DataFileID = dataFile.ID;
                 fileBlob.Blob = File.ReadAllBytes(dataFile.FilePath);
-                WebAPIHub.CreateRecord(xdaAddress, "FileBlob", JObject.FromObject(fileBlob), userAccount);
+                WebAPIHub.CreateRecord(xdaAddress,  fileBlob, userAccount);
             }
         }
 
@@ -896,8 +892,7 @@ namespace openXDAFileWatcher
             userAccount.Password = systemSettings.XDAPassword;
 
             // Get the list of file extensions to be processed by openXDA
-            List<string> filterPatterns = WebAPIHub.GetRecords(systemSettings.XDAAddress, "DataReader", "all", userAccount)
-                .Cast<DataReader>()
+            List<string> filterPatterns = WebAPIHub.GetRecords<DataReader>(systemSettings.XDAAddress, "all", userAccount)
                 .Select(reader => reader.FilePattern)
                 .ToList();
 
@@ -907,8 +902,7 @@ namespace openXDAFileWatcher
         // Loads system settings from the database.
         private string LoadSystemSettings()
         {
-            List<Setting> settingList = WebAPIHub.GetRecords(m_xdaAddress, "Setting", "all", m_xdaUserAccount)
-                .Cast<Setting>()
+            List<Setting> settingList = WebAPIHub.GetRecords<Setting>(m_xdaAddress, "all", m_xdaUserAccount)
                 .ToList();
 
             foreach (IGrouping<string, Setting> grouping in settingList.GroupBy(setting => setting.Name))
@@ -1023,7 +1017,7 @@ namespace openXDAFileWatcher
             xdaUserAccount.Password = systemSettings.XDAPassword;
 
             // Determine whether there exists a meter whose asset key matches the given meterKey
-            if (WebAPIHub.GetRecordsWhere(systemSettings.XDAAddress, "Meter", $"AssetKey = '{meterKey}'", xdaUserAccount).Count() == 0)
+            if (WebAPIHub.GetRecordsWhere<Meter>(systemSettings.XDAAddress, $"AssetKey = '{meterKey}'", xdaUserAccount).Count() == 0)
                 throw new FileSkippedException($"Skipped file \"{filePath}\" because no meter configuration was found for meter {meterKey}.");
         }
 
