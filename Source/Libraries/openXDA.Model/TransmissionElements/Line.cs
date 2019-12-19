@@ -119,6 +119,10 @@ namespace openXDA.Model
 
             TableOperations<Line> lineTable = new TableOperations<Line>(connection);
             Line line = lineTable.QueryRecordWhere("ID = {0}", asset.ID);
+
+            if (line == null)
+                return null;
+
             line.LazyContext = asset.LazyContext;
             line.ConnectionFactory = asset.ConnectionFactory;
 

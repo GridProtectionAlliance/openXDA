@@ -290,7 +290,8 @@ CREATE VIEW Line AS
 		AssetKey,
 		VoltageKV,
 		Description,
-		AssetName
+		AssetName,
+		AssetTypeID
 	FROM Asset JOIN LineAttributes ON Asset.ID = LineAttributes.AssetID
 GO
 
@@ -355,7 +356,8 @@ CREATE VIEW Bus AS
 		AssetKey,
 		VoltageKV,
 		Description,
-		AssetName
+		AssetName,
+		AssetTypeID
 	FROM Asset JOIN BusAttributes ON Asset.ID = BusAttributes.AssetID
 GO
 
@@ -410,7 +412,8 @@ CREATE VIEW Breaker AS
 		ThermalRating,
 		Speed,
 		Description,
-		AssetName
+		AssetName,
+		AssetTypeID
 	FROM Asset JOIN BreakerAttributes ON Asset.ID = BreakerAttributes.AssetID
 GO
 
@@ -478,7 +481,8 @@ CREATE VIEW CapBank AS
 		CansPerBank,
 		CapacitancePerBank,
 		Description,
-		AssetName
+		AssetName,
+		AssetTypeID
 	FROM Asset JOIN CapacitorBankAttributes ON Asset.ID = CapacitorBankAttributes.AssetID
 GO
 
@@ -551,7 +555,8 @@ CREATE VIEW LineSegment AS
 		ThermalRating,
 		Description,
 		AssetName,
-		VoltageKV
+		VoltageKV,
+		AssetTypeID
 	FROM Asset JOIN LineSegmentAttributes ON Asset.ID = LineSegmentAttributes.AssetID
 GO
 
@@ -631,7 +636,8 @@ CREATE VIEW Transformer AS
 		TAP,
 		Description,
 		AssetName,
-		VoltageKV
+		VoltageKV,
+		AssetTypeID
 	FROM Asset JOIN TransformerAttributes ON Asset.ID = TransformerAttributes.AssetID
 GO
 

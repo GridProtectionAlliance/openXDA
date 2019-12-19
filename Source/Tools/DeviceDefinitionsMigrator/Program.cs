@@ -333,20 +333,24 @@ namespace DeviceDefinitionsMigrator
                             case "breaker":
                                 asset.AssetTypeID = (int)AssetType.Breaker;
                                 lookupTables.AssetLookup[asset.AssetKey] = LoadBreakerAttributes(asset, lineElement, lookupTables, connection);
+                                asset = lookupTables.AssetLookup[asset.AssetKey];
                                 break;
 
                             case "bus":
                                 asset.AssetTypeID = (int)AssetType.Bus;
                                 lookupTables.AssetLookup[asset.AssetKey] = LoadBusAttributes(asset, lineElement, lookupTables, connection);
+                                asset = lookupTables.AssetLookup[asset.AssetKey];
                                 break;
 
                             case "transformer":
                                 asset.AssetTypeID = (int)AssetType.Transformer;
                                 lookupTables.AssetLookup[asset.AssetKey] = LoadXfrAttributes(asset, lineElement, lookupTables, connection);
+                                asset = lookupTables.AssetLookup[asset.AssetKey];
                                 break;
                             case "capacitorbank":
                                 asset.AssetTypeID = (int)AssetType.CapacitorBank;
                                 lookupTables.AssetLookup[asset.AssetKey] = LoadCapBankAttributes(asset, lineElement, lookupTables, connection);
+                                asset = lookupTables.AssetLookup[asset.AssetKey];
                                 break;
                             case "line":
                                 asset.AssetTypeID = (int)AssetType.Line;
@@ -357,9 +361,11 @@ namespace DeviceDefinitionsMigrator
                                     //We add a single segment to the line and add it as a Line-Linesegment asset connection
                                     string assetkey = asset.AssetKey + "-Segment1";
                                     lookupTables.AssetLookup[assetkey] = LoadSegmentAttributes(asset, lineElement, lookupTables, connection);
+                                    
                                     addConnection = true;
                                 }
-                                lookupTables.AssetLookup[asset.AssetKey] = LoadLineAttributes(asset, lineElement, lookupTables, connection);        
+                                lookupTables.AssetLookup[asset.AssetKey] = LoadLineAttributes(asset, lineElement, lookupTables, connection);
+                                asset = lookupTables.AssetLookup[asset.AssetKey];
                                 if (addConnection)
                                 {
                                     lookupTables.AssetConnectionLookup[new Tuple<string,string>(asset.AssetKey, asset.AssetKey + "-Segment1")] = LoadLinetoSegmentConnectionAttributes(asset, lookupTables, connection);
@@ -801,7 +807,7 @@ namespace DeviceDefinitionsMigrator
             TableOperations<AssetConnection> assetConnectiontTable = new TableOperations<AssetConnection>(connection);
             assetConnectiontTable.AddNewOrUpdateRecord(assetConnection);
 
-            assetConnection.ID = connection.ExecuteScalar<int>("SELECT ID FROM AssetConnection WHERE ParentID = {0} AND ChildID = {1}", line.ID, segment.ID);
+            assetConnection.ID = connection.ExecuteScalar<int>("SELECT ID FROM AssetRelationship WHERE ParentID = {0} AND ChildID = {1}", line.ID, segment.ID);
 
             return assetConnection;
         }

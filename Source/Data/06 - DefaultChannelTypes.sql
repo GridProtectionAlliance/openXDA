@@ -430,7 +430,7 @@ INSERT INTO AssetType (Name, Description) VALUES ('Breaker','Breaker')
 GO
 INSERT INTO AssetType (Name, Description) VALUES ('CapacitorBank','Bank of Capacitors')
 GO
-INSERT INTO AssetType (Name, Description) VALUES ('LineSegement','Segemnt of a Transmission Line')
+INSERT INTO AssetType (Name, Description) VALUES ('LineSegment','Segment of a Transmission Line')
 GO
 INSERT INTO AssetType (Name, Description) VALUES ('Transformer','Transformer')
 GO
