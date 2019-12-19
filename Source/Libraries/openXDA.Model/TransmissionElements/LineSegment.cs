@@ -96,11 +96,10 @@ namespace openXDA.Model
             if ((object)connection == null)
                 return null;
 
-            List<AssetConnection> connections = GetConnection(connection).ToList();
 
             int id = -1;
 
-            foreach (AssetConnection assetConnection in connections)
+            foreach (AssetConnection assetConnection in Connections)
             {
                 Asset remoteAsset = assetConnection.Child;
                 if (assetConnection.ChildID == ID)
@@ -114,6 +113,9 @@ namespace openXDA.Model
 
             TableOperations<Line> lineTable = new TableOperations<Line>(connection);
             Line line = lineTable.QueryRecordWhere("AssetID = {0}", id);
+            if (line != null)
+                line.LazyContext = LazyContext;
+
             return line;
         }
 

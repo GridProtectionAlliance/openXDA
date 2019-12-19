@@ -71,10 +71,9 @@ namespace openXDA.Model
             if ((object)connection == null)
                 return null;
 
-            List<AssetConnection> connections = GetConnection(connection).ToList();
             List<LineSegment> result = new List<LineSegment>();
 
-            foreach (AssetConnection assetConnection in connections)
+            foreach (AssetConnection assetConnection in Connections)
             {
                 Asset remoteAsset = assetConnection.Child;
                 if (assetConnection.ChildID == ID)
