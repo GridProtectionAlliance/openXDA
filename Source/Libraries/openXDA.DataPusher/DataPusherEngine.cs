@@ -233,7 +233,7 @@ namespace openXDA.DataPusher
                 // Get local meter record
                 Meter localMeterRecord = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
                 // get local MeterLine table 
-                IEnumerable<MeterLine> localMeterLines = DataContext.Table<MeterLine>().QueryRecordsWhere("MeterID = {0}", localMeterRecord.ID);
+                IEnumerable<MeterAsset> localMeterLines = DataContext.Table<MeterAsset>().QueryRecordsWhere("MeterID = {0}", localMeterRecord.ID);
 
                 // update progress
                 int progressTotal = localMeterLines.Count() + 3;
@@ -243,7 +243,7 @@ namespace openXDA.DataPusher
                 AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(instance.Address, userAccount);
 
                 // Add or Update remote meter location
-                MeterLocation remoteMeterLocation = AddOrGetRemoteMeterLocation(instance.Address, meterToDataPush, localMeterRecord, userAccount);
+                Location remoteMeterLocation = AddOrGetRemoteLocation(instance.Address, meterToDataPush, localMeterRecord, userAccount);
 
                 // update progress
                 OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (progressCount) / progressTotal));
@@ -261,25 +261,26 @@ namespace openXDA.DataPusher
                 OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
 
                 // if there is a line for the meter ensure that its data has been uploaded remotely
-                foreach (MeterLine localMeterLine in localMeterLines)
+                foreach (MeterAsset localMeterLine in localMeterLines)
                 {
                     // Add or Update line for meter
-                    Line remoteLine = AddOrGetLine(instance.Address, localMeterLine, meterToDataPush.Obsfucate, userAccount);
+                    Asset remoteAsset = AddOrGetLine(instance.Address, localMeterLine, meterToDataPush.Obsfucate, userAccount);
 
                     // if MeterLine association has not been previously made, make it
-                    MeterLine remoteMeterLine = AddMeterLine(instance.Address, meterToDataPush, remoteLine, userAccount, localMeterLine);
+                    MeterAsset remoteMeterLine = AddMeterLine(instance.Address, meterToDataPush, remoteAsset, userAccount, localMeterLine);
 
                     // Add MeterLocationLine Record for double ended fault location to work
-                    AddMeterLocationLine(instance.Address, userAccount, remoteMeterLocation.ID, remoteLine.ID);
+                    AddMeterLocationLine(instance.Address, userAccount, remoteMeterLocation.ID, remoteAsset.ID);
 
                     // ensure remote and local line impedance matches
-                    AddOrUpdateLineImpedances(instance.Address, localMeterLine, remoteLine, userAccount);
+                    if (remoteAsset.AssetTypeID == 1)
+                        AddOrUpdateLineImpedances(instance.Address, localMeterLine, remoteAsset, userAccount);
 
                     // add line to meterlocationline table
-                    MeterLocationLine remoteMeterLocationLine = AddOrUpdateMeterLocationLines(instance.Address, remoteLine, remoteMeterLocation, userAccount);
+                    AssetLocation remoteAssetLocation = AddOrUpdateAssetLocations(instance.Address, remoteAsset, remoteMeterLocation, userAccount);
 
                     // ensure remote and local Source Impedance records match for the current meter line location
-                    AddOrUpdateSourceImpedance(instance.Address, localMeterLine, remoteMeterLocationLine, userAccount);
+                    AddOrUpdateSourceImpedance(instance.Address, localMeterLine, remoteAssetLocation, userAccount);
 
                     // Sync Channel and channel dependant data
                     AddOrUpdateChannelsForLine(instance.Address, localMeterLine, remoteMeterLine, userAccount);
@@ -315,19 +316,19 @@ namespace openXDA.DataPusher
             return remoteAssetGroup;
         }
 
-        private MeterLocation AddOrGetRemoteMeterLocation(string address, MetersToDataPush meterToDataPush, Meter localMeterRecord, UserAccount userAccount)
+        private Location AddOrGetRemoteLocation(string address, MetersToDataPush meterToDataPush, Meter localMeterRecord, UserAccount userAccount)
         {
-            MeterLocation remoteMeterLocation = (MeterLocation)WebAPIHub.GetRecordWhere(address, "MeterLocation", $"AssetKey='{meterToDataPush.RemoteXDAAssetKey}'", userAccount);
-            MeterLocation localMeterLocation = DataContext.Table<MeterLocation>().QueryRecordWhere("ID = {0}", localMeterRecord.MeterLocationID);
+            Location remoteMeterLocation = (Location)WebAPIHub.GetRecordWhere(address, "MeterLocation", $"AssetKey='{meterToDataPush.RemoteXDAAssetKey}'", userAccount);
+            Location localMeterLocation = DataContext.Table<Location>().QueryRecordWhere("ID = {0}", localMeterRecord.LocationID);
 
             // if the company meter location does not exist, create it
             if (remoteMeterLocation == null)
             {
                 if (meterToDataPush.Obsfucate)
                 {
-                    remoteMeterLocation = new MeterLocation()
+                    remoteMeterLocation = new Location()
                     {
-                        AssetKey = meterToDataPush.RemoteXDAAssetKey,
+                        LocationKey = meterToDataPush.RemoteXDAAssetKey,
                         Name = meterToDataPush.RemoteXDAAssetKey,
                         Alias = meterToDataPush.RemoteXDAAssetKey,
                         ShortName = "",
@@ -338,9 +339,9 @@ namespace openXDA.DataPusher
                 }
                 else
                 {
-                    remoteMeterLocation = new MeterLocation()
+                    remoteMeterLocation = new Location()
                     {
-                        AssetKey = meterToDataPush.RemoteXDAAssetKey,
+                        LocationKey = meterToDataPush.RemoteXDAAssetKey,
                         Name = localMeterLocation.Name,
                         Alias = localMeterLocation.Alias,
                         ShortName = localMeterLocation.ShortName,
@@ -357,7 +358,7 @@ namespace openXDA.DataPusher
             {
                 if (meterToDataPush.Obsfucate)
                 {
-                    remoteMeterLocation.AssetKey = meterToDataPush.RemoteXDAAssetKey;
+                    remoteMeterLocation.LocationKey = meterToDataPush.RemoteXDAAssetKey;
                     remoteMeterLocation.Name = meterToDataPush.RemoteXDAAssetKey;
                     remoteMeterLocation.Alias = meterToDataPush.RemoteXDAAssetKey;
                     remoteMeterLocation.ShortName = "";
@@ -367,7 +368,7 @@ namespace openXDA.DataPusher
 
                 }
                 else {
-                    remoteMeterLocation.AssetKey = meterToDataPush.RemoteXDAAssetKey;
+                    remoteMeterLocation.LocationKey = meterToDataPush.RemoteXDAAssetKey;
                     remoteMeterLocation.Name = localMeterLocation.Name;
                     remoteMeterLocation.Alias = localMeterLocation.Alias;
                     remoteMeterLocation.ShortName = localMeterLocation.ShortName;
@@ -382,7 +383,7 @@ namespace openXDA.DataPusher
             return remoteMeterLocation;
         }
 
-        private Meter AddOrGetRemoteMeter(string address, MetersToDataPush meter, Meter localMeterRecord, MeterLocation remoteMeterLocation, UserAccount userAccount)
+        private Meter AddOrGetRemoteMeter(string address, MetersToDataPush meter, Meter localMeterRecord, Location remoteMeterLocation, UserAccount userAccount)
         {
             Meter remoteMeter = (Meter)WebAPIHub.GetRecordWhere(address, "Meter", $"ID={meter.RemoteXDAMeterID}", userAccount);
 
@@ -416,7 +417,7 @@ namespace openXDA.DataPusher
                 }
                 remoteMeter.AssetKey = meter.RemoteXDAAssetKey.ToString();
                 remoteMeter.Name = meter.RemoteXDAName;
-                remoteMeter.MeterLocationID = remoteMeterLocation.ID;
+                remoteMeter.LocationID = remoteMeterLocation.ID;
                 remoteMeter.Make = localMeterRecord.Make;
                 remoteMeter.Model = localMeterRecord.Model;
                 remoteMeter.Description = localMeterRecord.Description;
@@ -439,7 +440,7 @@ namespace openXDA.DataPusher
 
                 remoteMeter.AssetKey = meter.RemoteXDAAssetKey.ToString();
                 remoteMeter.Name = meter.RemoteXDAName;
-                remoteMeter.MeterLocationID = remoteMeterLocation.ID;
+                remoteMeter.LocationID = remoteMeterLocation.ID;
                 remoteMeter.Make = localMeterRecord.Make;
                 remoteMeter.Model = localMeterRecord.Model;
                 remoteMeter.Description = localMeterRecord.Description;
@@ -473,14 +474,14 @@ namespace openXDA.DataPusher
             }
         }
 
-        private Line AddOrGetLine(string address, MeterLine meterLine, bool obsfucate, UserAccount userAccount)
+        private Asset AddOrGetAsset(string address, MeterAsset meterAsset, bool obsfucate, UserAccount userAccount)
         {
-            Line localLine = DataContext.Table<Line>().QueryRecordWhere("ID = {0}", meterLine.LineID);
-            LinesToDataPush lineToDataPush = DataContext.Table<LinesToDataPush>().QueryRecordWhere("LocalXDALineID = {0}", localLine.ID);
-            Line remoteLine = (Line)WebAPIHub.GetRecordWhere(address, "Line", $"AssetKey='{localLine.AssetKey}'", userAccount); ;
+            Asset localAsset = DataContext.Table<Asset>().QueryRecordWhere("ID = {0}", meterAsset.AssetID);
+            LinesToDataPush lineToDataPush = DataContext.Table<LinesToDataPush>().QueryRecordWhere("LocalXDALineID = {0}", localAsset.ID);
+            Asset remoteLine = (Asset)WebAPIHub.GetRecordWhere(address, "Line", $"AssetKey='{localAsset.AssetKey}'", userAccount); ;
 
             if (lineToDataPush != null)
-                remoteLine = (Line)WebAPIHub.GetRecordWhere(address, "Line", $"ID={lineToDataPush.RemoteXDALineID}", userAccount);
+                remoteLine = (Asset)WebAPIHub.GetRecordWhere(address, "Line", $"ID={lineToDataPush.RemoteXDALineID}", userAccount);
 
             //if the line does not exist in the PQMarkPusher Database to allow for obsfucation add it.
             if (lineToDataPush == null && remoteLine == null)
@@ -543,14 +544,14 @@ namespace openXDA.DataPusher
             
         }
 
-        private MeterLine AddMeterLine(string address, MetersToDataPush meter, Line remoteLine, UserAccount userAccount, MeterLine localMeterLine)
+        private MeterAsset AddMeterLine(string address, MetersToDataPush meter, Line remoteLine, UserAccount userAccount, MeterAsset localMeterLine)
         {
-            MeterLine remoteMeterLine = (MeterLine)WebAPIHub.GetRecordWhere(address, "MeterLine", $"MeterID = {meter.RemoteXDAMeterID} AND LineID = {remoteLine.ID}", userAccount);
+            MeterAsset remoteMeterLine = (MeterAsset)WebAPIHub.GetRecordWhere(address, "MeterLine", $"MeterID = {meter.RemoteXDAMeterID} AND LineID = {remoteLine.ID}", userAccount);
 
             // if MeterLine association has not been previously made, make it
             if (remoteMeterLine == null)
             {
-                remoteMeterLine = new MeterLine()
+                remoteMeterLine = new MeterAsset()
                 {
                     MeterID = meter.RemoteXDAMeterID,
                     LineID = remoteLine.ID,
@@ -570,7 +571,7 @@ namespace openXDA.DataPusher
             return remoteMeterLine;
         }
 
-        private void AddFaultDetectionLogic(string address, MeterLine localMeterLine,MeterLine remoteMeterLine, UserAccount userAccount)
+        private void AddFaultDetectionLogic(string address, MeterAsset localMeterLine,MeterAsset remoteMeterLine, UserAccount userAccount)
         {
             FaultDetectionLogic localFaultDetectionLogic = DataContext.Table<FaultDetectionLogic>().QueryRecordWhere("MeterLineID = {0}", localMeterLine.ID);
             if (localFaultDetectionLogic == null) return;
@@ -593,7 +594,7 @@ namespace openXDA.DataPusher
             }
         }
 
-        private void AddOrUpdateLineImpedances(string address, MeterLine localMeterLine, Line remoteLine, UserAccount userAccount)
+        private void AddOrUpdateLineImpedances(string address, MeterAsset localMeterLine, Line remoteLine, UserAccount userAccount)
         {
             // ensure remote and local line impedance matches
             LineImpedance localLineImpedance = DataContext.Table<LineImpedance>().QueryRecordWhere("LineID = {0}", localMeterLine.LineID);
@@ -623,34 +624,34 @@ namespace openXDA.DataPusher
             }
         }
 
-        private MeterLocationLine AddOrUpdateMeterLocationLines(string address, Line remoteLine, MeterLocation remoteMeterLocation, UserAccount userAccount)
+        private AssetLocation AddOrUpdateAssetLocations(string address, Asset remoteAsset, Location remoteMeterLocation, UserAccount userAccount)
         {
             // add line to meterlocationline table
-            MeterLocationLine remoteMeterLocationLine = (MeterLocationLine)WebAPIHub.GetRecordWhere(address, "MeterLocationLine", $"MeterLocationID = {remoteMeterLocation.ID} AND LineID = {remoteLine.ID}", userAccount);
-            if (remoteMeterLocationLine == null)
+            AssetLocation remoteAssetLocation = (AssetLocation)WebAPIHub.GetRecordWhere(address, "MeterLocationLine", $"LocationID = {remoteMeterLocation.ID} AND AssetID = {remoteAsset.ID}", userAccount);
+            if (remoteAssetLocation == null)
             {
-                remoteMeterLocationLine = new MeterLocationLine();
-                remoteMeterLocationLine.LineID = remoteLine.ID;
-                remoteMeterLocationLine.MeterLocationID = remoteMeterLocation.ID;
+                remoteAssetLocation = new AssetLocation();
+                remoteAssetLocation.AssetID = remoteAsset.ID;
+                remoteAssetLocation.LocationID = remoteMeterLocation.ID;
 
-                WebAPIHub.CreateRecord(address, "MeterLocationLine", JObject.FromObject(remoteMeterLocationLine), userAccount);
+                WebAPIHub.CreateRecord(address, "MeterLocationLine", JObject.FromObject(remoteAssetLocation), userAccount);
             }
 
-            return remoteMeterLocationLine;
+            return remoteAssetLocation;
         }
 
-        private void AddOrUpdateSourceImpedance(string address, MeterLine localMeterLine, MeterLocationLine remoteMeterLocationLine, UserAccount userAccount)
+        private void AddOrUpdateSourceImpedance(string address, MeterAsset localMeterAsset, AssetLocation remoteAssetLocation, UserAccount userAccount)
         {
             // ensure remote and local line impedance matches
-            SourceImpedance localSourceImpedance = DataContext.Table<SourceImpedance>().QueryRecordWhere("MeterLocationLineID  = (SELECT ID FROM MeterLocationLine WHERE MeterLocationID = ( SELECT MeterLocationID FROM Meter WHERE ID = {0}) AND LineID = {1})", localMeterLine.MeterID, localMeterLine.LineID);
+            SourceImpedance localSourceImpedance = DataContext.Table<SourceImpedance>().QueryRecordWhere("MeterLocationLineID  = (SELECT ID FROM AssetLocation WHERE LocationID = ( SELECT LocationID FROM Meter WHERE ID = {0}) AND AssetID = {1})", localMeterAsset.MeterID, localMeterAsset.AssetID);
             if (localSourceImpedance == null) return;
 
-            SourceImpedance remoteSourceImpedance = (SourceImpedance)WebAPIHub.GetRecordWhere(address, "SourceImpedance", $"MeterLocationLineID = {remoteMeterLocationLine.ID}", userAccount);
+            SourceImpedance remoteSourceImpedance = (SourceImpedance)WebAPIHub.GetRecordWhere(address, "SourceImpedance", $"AssetLocationID = {remoteAssetLocation.ID}", userAccount);
 
             if (remoteSourceImpedance == null)
             {
                 remoteSourceImpedance = new SourceImpedance();
-                remoteSourceImpedance.MeterLocationLineID = localSourceImpedance.MeterLocationLineID;
+                remoteSourceImpedance.AssetLocationID = localSourceImpedance.AssetLocationID;
                 remoteSourceImpedance.RSrc = localSourceImpedance.RSrc;
                 remoteSourceImpedance.XSrc = localSourceImpedance.XSrc;
                 WebAPIHub.CreateRecord(address, "LineImpedance", JObject.FromObject(remoteSourceImpedance), userAccount);
@@ -663,7 +664,7 @@ namespace openXDA.DataPusher
 
         }
 
-        private void AddOrUpdateChannelsForLine(string address, MeterLine localMeterLine, MeterLine remoteMeterLine, UserAccount userAccount)
+        private void AddOrUpdateChannelsForLine(string address, MeterAsset localMeterLine, MeterAsset remoteMeterLine, UserAccount userAccount)
         {
             // ensure remote and local line impedance matches
             IEnumerable<ChannelDetail> localChannels = DataContext.Table<ChannelDetail>().QueryRecordsWhere("MeterID = {0} AND LineID = {1}", localMeterLine.MeterID, localMeterLine.LineID);

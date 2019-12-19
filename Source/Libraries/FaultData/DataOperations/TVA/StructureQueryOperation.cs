@@ -91,13 +91,13 @@ namespace FaultData.DataOperations.TVA
         public override void Execute(MeterDataSet meterDataSet)
         {
             FaultDataResource faultDataResource = meterDataSet.GetResource<FaultDataResource>();
-            string stationKey = meterDataSet.Meter.MeterLocation.AssetKey;
+            string stationKey = meterDataSet.Meter.Location.LocationKey;
 
             foreach (var kvp in faultDataResource.FaultLookup)
             {
                 DataGroup dataGroup = kvp.Key;
                 DataAnalysis.FaultGroup faultGroup = kvp.Value;
-                string lineKey = dataGroup.Line.AssetKey;
+                string lineKey = dataGroup.Asset.AssetKey;
 
                 for (int i = 0; i < faultGroup.Faults.Count; i++)
                 {
@@ -154,7 +154,7 @@ namespace FaultData.DataOperations.TVA
                             Structure structure = structureTable.QueryRecordWhere("AssetKey = {0}", assetKey)
                                 ?? new Structure() { AssetKey = assetKey };
 
-                            structure.LineID = dataGroup.Line.ID;
+                            structure.LineID = dataGroup.Asset.ID;
 
                             if (double.TryParse(latitude, out double lat))
                                 structure.Latitude = lat;

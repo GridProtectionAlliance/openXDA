@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  LineImpedance.cs - Gbtc
+//  LineSegment.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,19 +16,23 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
-//       Generated original version of source code.
+//  12/13/2019 - Christoph Lackner
+//      Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    public class LineImpedance
+    [MetadataType(typeof(Asset))]
+    public class LineSegment: Asset
     {
         #region [ Members ]
 
@@ -39,11 +43,6 @@ namespace openXDA.Model
 
         #region [ Properties ]
 
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-
-        public int LineID { get; set; }
-
         public double R0 { get; set; }
 
         public double R1 { get; set; }
@@ -51,6 +50,10 @@ namespace openXDA.Model
         public double X0 { get; set; }
 
         public double X1 { get; set; }
+
+        public double ThermalRating { get; set; }
+
+        public double Length { get; set; }
 
         [JsonIgnore]
         [NonRecordField]
@@ -66,35 +69,52 @@ namespace openXDA.Model
             }
         }
 
-        [JsonIgnore]
-        [NonRecordField]
-        public Func<AdoDataConnection> ConnectionFactory
-        {
-            get
-            {
-                return LazyContext.ConnectionFactory;
-            }
-            set
-            {
-                LazyContext.ConnectionFactory = value;
-            }
-        }
-
-        [JsonIgnore]
-        [NonRecordField]
-        internal LazyContext LazyContext { get; set; } = new LazyContext();
-
         #endregion
 
         #region [ Methods ]
 
-        public Line GetLine(AdoDataConnection connection)
+        public static LineSegment DetailedLineSegment(Asset asset, AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
+            TableOperations<LineSegment> lineTable = new TableOperations<LineSegment>(connection);
+            LineSegment line = lineTable.QueryRecordWhere("ID = {0}", asset.ID);
+            line.LazyContext = asset.LazyContext;
+            line.ConnectionFactory = asset.ConnectionFactory;
+
+            return line;
+        }
+
+        public static LineSegment DetailedLineSegment(Asset asset)
+        {
+            return DetailedLineSegment(asset,asset.ConnectionFactory.Invoke());
+        }
+
+        public Line GetLine( AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            List<AssetConnection> connections = GetConnection(connection).ToList();
+
+            int id = -1;
+
+            foreach (AssetConnection assetConnection in connections)
+            {
+                Asset remoteAsset = assetConnection.Child;
+                if (assetConnection.ChildID == ID)
+                    remoteAsset = assetConnection.Parent;
+
+                if (remoteAsset.AssetTypeID == (int)AssetType.Line)
+                {
+                    id = remoteAsset.ID;
+                }
+            }
+
             TableOperations<Line> lineTable = new TableOperations<Line>(connection);
-            return lineTable.QueryRecordWhere("ID = {0}", LineID);
+            Line line = lineTable.QueryRecordWhere("AssetID = {0}", id);
+            return line;
         }
 
         private Line QueryLine()
@@ -103,14 +123,18 @@ namespace openXDA.Model
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                line = GetLine(connection);
+                line = LazyContext.GetLine(GetLine(connection));
             }
 
             if ((object)line != null)
+            {
                 line.LazyContext = LazyContext;
+                
+            }
 
-            return LazyContext.GetLine(line);
+            return line;
         }
+
 
         #endregion
     }

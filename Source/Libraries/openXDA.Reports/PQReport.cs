@@ -1027,13 +1027,13 @@ namespace openXDA.Reports
             }
 
             if (line1 != null)
-                lineId = line1.LineID;
+                lineId = line1.AssetID;
             else if (line2 != null)
-                lineId = line2.LineID;
+                lineId = line2.AssetID;
             else
-                lineId = line3.LineID;
+                lineId = line3.AssetID;
 
-            double nominal = Summary.VoltageLN.Nominal = DataContext.Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Line WHERE ID = {0}", lineId) * 1000 / Math.Sqrt(3);
+            double nominal = Summary.VoltageLN.Nominal = DataContext.Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Asset WHERE ID = {0}", lineId) * 1000 / Math.Sqrt(3);
             verticalMillimeters += InsertNominal(page, verticalMillimeters, "Voltage", string.Format("{0:N0}", nominal), "V L-N");
 
             using (Historian historian = new Historian(historianServer, historianInstance))
@@ -1232,13 +1232,13 @@ namespace openXDA.Reports
             }
 
             if (line1 != null)
-                lineId = line1.LineID;
+                lineId = line1.AssetID;
             else if (line2 != null)
-                lineId = line2.LineID;
+                lineId = line2.AssetID;
             else
-                lineId = line3.LineID;
+                lineId = line3.AssetID;
 
-            double nominal = Summary.VoltageLL.Nominal = DataContext.Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Line WHERE ID = {0}", lineId) * 1000;
+            double nominal = Summary.VoltageLL.Nominal = DataContext.Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Asset WHERE ID = {0}", lineId) * 1000;
             verticalMillimeters += InsertNominal(page, verticalMillimeters, "Voltage", string.Format("{0:N0}", nominal), "V L-L");
 
             using (Historian historian = new Historian(historianServer, historianInstance))

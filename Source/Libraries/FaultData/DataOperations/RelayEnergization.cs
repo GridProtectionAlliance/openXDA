@@ -235,12 +235,12 @@ namespace FaultData.DataOperations
 
             const string Filter =
                     "FileGroupID = {0} AND " +
-                    "LineID = {1} AND " +
+                    "AssetID = {1} AND " +
                     "StartTime = {2} AND " +
                     "EndTime = {3}";
             
             int fileGroupID = meterDataSet.FileGroup.ID;
-            int lineID = dataGroups[0].Line.ID;
+            int lineID = dataGroups[0].Asset.ID;
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {

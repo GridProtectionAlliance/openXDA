@@ -110,8 +110,8 @@ using PQMark.DataAggregator;
 using Channel = openXDA.Model.Channel;
 using DataHub = openXDA.Hubs.DataHub;
 using Meter = openXDA.Model.Meter;
-using MeterLine = openXDA.Model.MeterLine;
-using MeterLocation = openXDA.Model.MeterLocation;
+using MeterAsset = openXDA.Model.MeterAsset;
+using Location = openXDA.Model.Location;
 using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
 using Setting = openXDA.Model.Setting;
 using openXDA.StepChangeWebReport;
@@ -637,10 +637,10 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/ExternalLinks/PQViewDataLoader.cshtml", new Tuple<Type, Type>(typeof(PQViewSite), typeof(DataHub)));
 
                 webServer.PagedViewModelTypes.TryAdd("Assets/Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Assets/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterAsset), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Sites.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Assets/Sites.cshtml", new Tuple<Type, Type>(typeof(Location), typeof(DataHub)));
 
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Filters.cshtml", new Tuple<Type, Type>(typeof(WorkbenchFilter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Events.cshtml", new Tuple<Type, Type>(typeof(Event), typeof(DataHub)));

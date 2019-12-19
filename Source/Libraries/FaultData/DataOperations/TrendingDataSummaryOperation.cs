@@ -118,7 +118,7 @@ namespace FaultData.DataOperations
                                 Func<string, int, string> truncate = (str, len) => (str.Length > len) ? str.Substring(0, len) : str;
 
                                 Meter meter = meterDataSet.Meter;
-                                MeterLocation meterLocation = meter.MeterLocation;
+                                Location meterLocation = meter.Location;
 
                                 string measurementType = channel.MeasurementType.Name;
                                 string measurementCharacteristic = channel.MeasurementCharacteristic.Name;

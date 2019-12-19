@@ -119,7 +119,6 @@
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
-    <Compile Include="DataOperations\TVA\SmartFawgOperation.cs" />
     <Compile Include="DataOperations\TVA\StructureQueryOperation.cs" />
     <Compile Include="DataReaders\PQubeTrendingDataCSVReader.cs" />
     <Compile Include="DataReaders\IGridPQDIFReader.cs" />
@@ -144,7 +143,6 @@
     <Compile Include="DataResources\SystemEventResource.cs" />
     <Compile Include="DataResources\SnapshotDataResource.cs" />
     <Compile Include="DataResources\TransientDataResource.cs" />
-    <Compile Include="DataSets\ConfigurationDataSet.cs" />
     <Compile Include="DataSets\IDataSet.cs" />
     <Compile Include="DataResources\TrendingDataSummaryResource.cs" />
     <Compile Include="DataResources\TrendingGroupsResource.cs" />
@@ -154,7 +152,6 @@
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataSets\INFDataSet.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
-    <Compile Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\EmailService.cs" />
     <Compile Include="DataWriters\EventEmailService.cs" />
     <Compile Include="DataWriters\FaultTypeGenerator.cs" />

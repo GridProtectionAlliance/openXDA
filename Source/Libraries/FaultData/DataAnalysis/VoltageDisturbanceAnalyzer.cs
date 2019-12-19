@@ -103,7 +103,7 @@ namespace FaultData.DataAnalysis
 
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
 
-            int lineCount = meterDataSet.Meter.MeterLines.Count;
+            int assetCount = meterDataSet.Meter.MeterAssets.Count;
 
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {
@@ -111,7 +111,7 @@ namespace FaultData.DataAnalysis
                 VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
                 Range<DateTime> eventDateRange = new Range<DateTime>(dataGroup.StartTime, dataGroup.EndTime);
 
-                if (lineCount == 1 && dataGroup.Disturbances.Count > 0)
+                if (assetCount == 1 && dataGroup.Disturbances.Count > 0)
                     ProcessReportedDisturbances(meterDataSet.Meter, dataGroup);
                 else
                     DetectDisturbances(dataGroup, viCycleDataGroup);
@@ -124,25 +124,25 @@ namespace FaultData.DataAnalysis
                 if (dataGroup.DataSeries.Count > 0)
                     continue;
 
-                if (lineCount == 1 && dataGroup.Disturbances.Count > 0)
+                if (assetCount == 1 && dataGroup.Disturbances.Count > 0)
                     ProcessReportedDisturbances(meterDataSet.Meter, dataGroup);
             }
         }
 
         private void ProcessReportedDisturbances(Meter meter, DataGroup dataGroup)
         {
-            Line line = dataGroup.Line;
+            Asset asset = dataGroup.Asset;
 
-            if ((object)line == null)
+            if ((object)asset == null)
             {
-                if (meter.MeterLocation.MeterLocationLines.Count != 1)
+                if (meter.Location.AssetLocations.Count != 1)
                     return;
 
-                line = meter.MeterLocation.MeterLocationLines.Single().Line;
+                asset = meter.Location.AssetLocations.Single().Asset;
             }
 
             List<Disturbance> disturbanceList = dataGroup.Disturbances
-                .Select(disturbance => ToDisturbance(line, disturbance))
+                .Select(disturbance => ToDisturbance(asset, disturbance))
                 .Where(IsDisturbed)
                 .ToList();
 
@@ -244,7 +244,8 @@ namespace FaultData.DataAnalysis
 
         private double GetLineVoltage(DataSeries rms)
         {
-            double lineVoltage = rms?.SeriesInfo.Channel.Line.VoltageKV ?? 0.0D;
+            //special case for Transformers..
+            double lineVoltage = rms?.SeriesInfo.Channel.Asset.VoltageKV ?? 0.0D;
 
             if (new string[] { "AN", "BN", "CN" }.Contains(rms?.SeriesInfo.Channel.Phase.Name))
                 lineVoltage /= Math.Sqrt(3.0D);
@@ -314,9 +315,15 @@ namespace FaultData.DataAnalysis
             return disturbanceRanges;
         }
 
-        private Disturbance ToDisturbance(Line line, ReportedDisturbance reportedDisturbance)
+        private Disturbance ToDisturbance(Asset asset, ReportedDisturbance reportedDisturbance)
         {
-            double nominalValue = line.VoltageKV * 1000.0D;
+            double nominalValue = asset.VoltageKV * 1000.0D;
+
+            if (asset.AssetTypeID == (int)AssetType.Transformer)
+            {
+                //Special Case that needs to be treated seperately No Solution Yet
+                nominalValue = 0 * 1000.0D;
+            }
 
             if (new[] { Phase.AN, Phase.BN, Phase.CN }.Contains(reportedDisturbance.Phase))
                 nominalValue /= Math.Sqrt(3.0D);

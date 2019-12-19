@@ -233,7 +233,7 @@ namespace FaultData.DataResources
 
         private static bool HasBreakerChannels(DataGroup dataGroup)
         {
-            using (AdoDataConnection connection = dataGroup.Line.ConnectionFactory())
+            using (AdoDataConnection connection = dataGroup.Asset.ConnectionFactory())
             {
                 TableOperations<BreakerChannel> breakerChannelTable = new TableOperations<BreakerChannel>(connection);
 

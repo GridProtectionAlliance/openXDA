@@ -41,7 +41,7 @@ namespace openXDA.Model
 
         public int MeterID { get; set; }
 
-        public int LineID { get; set; }
+        public int AssetID { get; set; }
 
         public int EventTypeID { get; set; }
 

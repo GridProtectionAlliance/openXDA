@@ -89,7 +89,7 @@ namespace FaultData.DataResources
 
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)
             {
-                string lineKey = dataGroup.Line.AssetKey;
+                string lineKey = dataGroup.Asset.AssetKey;
                 DateTime start = dataGroup.StartTime.AddSeconds(-2.0D);
                 DateTime end = dataGroup.EndTime.AddSeconds(2.0D);
 

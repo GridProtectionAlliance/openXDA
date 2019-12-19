@@ -58,7 +58,7 @@ namespace FaultData.DataResources
 
         #region [ Methods ]
 
-        public bool DidBreakerOpen(Line line, DateTime approximateTime)
+        public bool DidBreakerOpen(Asset line, DateTime approximateTime)
         {
             string pointQuery = EDNASettings.PointQuery;
             List<string> points;

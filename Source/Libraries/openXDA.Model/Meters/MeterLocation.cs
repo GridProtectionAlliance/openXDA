@@ -19,6 +19,9 @@
 //  08/29/2017 - Billy Ernest
 //       Generated original version of source code.
 //
+//  12/13/2019 - Christoph Lackner
+//       Updated MeterLocation to more Generic Location.
+//
 //******************************************************************************************************
 
 using System;
@@ -31,13 +34,13 @@ using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    public class MeterLocation
+    public class Location
     {
         #region [ Members ]
 
         // Fields
         private List<Meter> m_meters;
-        private List<MeterLocationLine> m_meterLocationLines;
+        private List<AssetLocation> m_assetLocations;
 
         #endregion
 
@@ -49,7 +52,7 @@ namespace openXDA.Model
         [StringLength(50)]
         [Searchable]
         [Required]
-        public string AssetKey { get; set; }
+        public string LocationKey { get; set; }
 
         [StringLength(200)]
         [Searchable]
@@ -89,15 +92,15 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
-        public List<MeterLocationLine> MeterLocationLines
+        public List<AssetLocation> AssetLocations
         {
             get
             {
-                return m_meterLocationLines ?? (m_meterLocationLines = QueryMeterLocationLines());
+                return m_assetLocations ?? (m_assetLocations = QueryAssetLocations());
             }
             set
             {
-                m_meterLocationLines = value;
+                m_assetLocations = value;
             }
         }
 
@@ -132,13 +135,13 @@ namespace openXDA.Model
             return meterTable.QueryRecordsWhere("MeterLocationID = {0}", ID);
         }
 
-        public IEnumerable<MeterLocationLine> GetMeterLocationLines(AdoDataConnection connection)
+        public IEnumerable<AssetLocation> GetAssetLocations(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<MeterLocationLine> meterLocationLineTable = new TableOperations<MeterLocationLine>(connection);
-            return meterLocationLineTable.QueryRecordsWhere("MeterLocationID = {0}", ID);
+            TableOperations<AssetLocation> assetLocationTable = new TableOperations<AssetLocation>(connection);
+            return assetLocationTable.QueryRecordsWhere("LocationID = {0}", ID);
         }
 
         private List<Meter> QueryMeters()
@@ -156,7 +159,7 @@ namespace openXDA.Model
             {
                 foreach (Meter meter in meters)
                 {
-                    meter.MeterLocation = this;
+                    meter.Location = this;
                     meter.LazyContext = LazyContext;
                 }
             }
@@ -164,27 +167,27 @@ namespace openXDA.Model
             return meters;
         }
 
-        private List<MeterLocationLine> QueryMeterLocationLines()
+        private List<AssetLocation> QueryAssetLocations()
         {
-            List<MeterLocationLine> meterLocationLines;
+            List<AssetLocation> assetLocations;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                meterLocationLines = GetMeterLocationLines(connection)?
-                    .Select(LazyContext.GetMeterLocationLine)
+                assetLocations = GetAssetLocations(connection)?
+                    .Select(LazyContext.GetAssetLocation)
                     .ToList();
             }
 
-            if ((object)meterLocationLines != null)
+            if ((object)assetLocations != null)
             {
-                foreach (MeterLocationLine meterLocationLine in meterLocationLines)
+                foreach (AssetLocation assetLocation in assetLocations)
                 {
-                    meterLocationLine.MeterLocation = this;
-                    meterLocationLine.LazyContext = LazyContext;
+                    assetLocation.Location = this;
+                    assetLocation.LazyContext = LazyContext;
                 }
             }
 
-            return meterLocationLines;
+            return assetLocations;
         }
 
         #endregion

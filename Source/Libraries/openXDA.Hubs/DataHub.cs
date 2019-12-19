@@ -50,13 +50,12 @@ using ChannelDetail = openXDA.Model.ChannelDetail;
 using Disturbance = openXDA.Model.Disturbance;
 using Event = openXDA.Model.Event;
 using Fault = openXDA.Model.Fault;
-using Line = openXDA.Model.Line;
-using LineImpedance = openXDA.Model.LineImpedance;
+using Asset = openXDA.Model.Asset;
 using RelayAlertSetting = openXDA.Model.RelayAlertSetting;
 using Meter = openXDA.Model.Meter;
 using MeterDetail = openXDA.Model.MeterDetail;
-using MeterLine = openXDA.Model.MeterLine;
-using MeterLocation = openXDA.Model.MeterLocation;
+using MeterAsset = openXDA.Model.MeterAsset;
+using Location = openXDA.Model.Location;
 using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
 using Setting = openXDA.Model.Setting;
 using GSF.Security;
@@ -3197,59 +3196,59 @@ namespace openXDA.Hubs
         #region [ MeterLocation Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
-        public int QueryMeterLocationCount(string filterString)
+        [RecordOperation(typeof(Location), RecordOperation.QueryRecordCount)]
+        public int QueryLocationCount(string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                return new TableOperations<MeterLocation>(connection).QueryRecordCount(filterString);
+                return new TableOperations<Location>(connection).QueryRecordCount(filterString);
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(Location), RecordOperation.QueryRecords)]
+        public IEnumerable<Location> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                return new TableOperations<MeterLocation>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+                return new TableOperations<Location>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(Location), RecordOperation.DeleteRecord)]
         public void DeleteMeterLocation(int id)
         {
-            CascadeDelete("MeterLocation", $"ID = {id}");
+            CascadeDelete("Location", $"ID = {id}");
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.CreateNewRecord)]
-        public MeterLocation NewMeterLocation()
+        [RecordOperation(typeof(Location), RecordOperation.CreateNewRecord)]
+        public Location NewMeterLocation()
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                return new TableOperations<MeterLocation>(connection).NewRecord();
+                return new TableOperations<Location>(connection).NewRecord();
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.AddNewRecord)]
-        public void AddNewMeterLocation(MeterLocation record)
+        [RecordOperation(typeof(Location), RecordOperation.AddNewRecord)]
+        public void AddNewMeterLocation(Location record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                new TableOperations<MeterLocation>(connection).AddNewRecord(record);
+                new TableOperations<Location>(connection).AddNewRecord(record);
             }
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.UpdateRecord)]
-        public void UpdateMeterLocation(MeterLocation record)
+        [RecordOperation(typeof(Location), RecordOperation.UpdateRecord)]
+        public void UpdateMeterLocation(Location record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                new TableOperations<MeterLocation>(connection).UpdateRecord(record);
+                new TableOperations<Location>(connection).UpdateRecord(record);
             }
         }
 
@@ -3259,7 +3258,7 @@ namespace openXDA.Hubs
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
                 RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
-                return new TableOperations<MeterLocation>(connection).QueryRecords("Name", restriction, limit).ToDictionary(x => x.ID.ToString(), x => x.Name);
+                return new TableOperations<Location>(connection).QueryRecords("Name", restriction, limit).ToDictionary(x => x.ID.ToString(), x => x.Name);
             }
         }
 
@@ -3398,7 +3397,6 @@ namespace openXDA.Hubs
                 {
                     int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Line')") ?? 0;
                     record.ID = index;
-                    new TableOperations<LineImpedance>(connection).AddNewRecord(CreateLineImpedance(record));
                     new TableOperations<RelayAlertSetting>(connection).AddNewRecord(CreateRelayAlertSetting(record));
                 }
             }
@@ -3411,7 +3409,6 @@ namespace openXDA.Hubs
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
                 new TableOperations<Line>(connection).UpdateRecord(CreateLine(record));
-                new TableOperations<LineImpedance>(connection).UpdateRecord(CreateLineImpedance(record));
                 new TableOperations<RelayAlertSetting>(connection).UpdateRecord(CreateRelayAlertSetting(record));
             }
         }
@@ -3422,25 +3419,13 @@ namespace openXDA.Hubs
             line.ID = record.ID;
             line.AssetKey = record.AssetKey;
             line.Description = record.Description;
-            line.Length = record.Length;
             line.MaxFaultDistance = record.MaxFaultDistance;
             line.MinFaultDistance = record.MinFaultDistance;
-            line.ThermalRating = record.ThermalRating;
             line.VoltageKV = record.VoltageKV;
             return line;
         }
 
-        public LineImpedance CreateLineImpedance(LineView record)
-        {
-            LineImpedance li = new LineImpedance();
-            li.ID = record.LineImpedanceID;
-            li.R0 = record.R0;
-            li.R1 = record.R1;
-            li.X0 = record.X0;
-            li.X1 = record.X1;
-            li.LineID = record.ID;
-            return li;
-        }
+      
 
         public RelayAlertSetting CreateRelayAlertSetting(LineView record)
         {
@@ -3493,7 +3478,7 @@ namespace openXDA.Hubs
         #region [ MeterLine Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecordCount)]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.QueryRecordCount)]
         public int QueryMeterLineCount(int lineID, int meterID, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -3512,7 +3497,7 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecords)]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.QueryRecords)]
         public IEnumerable<MeterLineDetail> QueryMeterLine(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -3532,14 +3517,14 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.DeleteRecord)]
         public void DeleteMeterLine(int id)
         {
             CascadeDelete("MeterLine", $"ID = {id}");
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.CreateNewRecord)]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.CreateNewRecord)]
         public MeterLineDetail NewMeterLine()
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -3550,11 +3535,11 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.AddNewRecord)]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.AddNewRecord)]
         public void AddNewMeterLine(MeterLineDetail record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
-                new TableOperations<MeterLine>(connection).AddNewRecord(record);
+                new TableOperations<MeterAsset>(connection).AddNewRecord(record);
 
                 if (record.FaultDetectionLogic != null)
                 {
@@ -3568,12 +3553,12 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.UpdateRecord)]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.UpdateRecord)]
         public void UpdateMeterLine(MeterLineDetail record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                new TableOperations<MeterLine>(connection).UpdateRecord(record);
+                new TableOperations<MeterAsset>(connection).UpdateRecord(record);
                 FaultDetectionLogic logic = new TableOperations<FaultDetectionLogic>(connection).QueryRecordWhere("MeterLineID = {0}", record.ID);
 
                 if (record.FaultDetectionLogic != null && record.FaultDetectionLogic != string.Empty && logic == null)
@@ -4213,7 +4198,7 @@ namespace openXDA.Hubs
             newEvent.ID = record.ID;
             newEvent.FileGroupID = record.FileGroupID;
             newEvent.MeterID = record.MeterID;
-            newEvent.LineID = record.LineID;
+            newEvent.AssetID = record.AssetID;
             newEvent.EventTypeID = record.EventTypeID;
             newEvent.EventDataID = record.EventDataID;
             newEvent.Name = record.Name;

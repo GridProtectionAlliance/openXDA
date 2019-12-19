@@ -53,7 +53,7 @@ namespace FaultData.DataAnalysis
         public const double TrendThreshold = 1.0D;
 
         // Fields
-        private Line m_line;
+        private Asset m_asset;
         private DateTime m_startTime;
         private DateTime m_endTime;
         private int m_samples;
@@ -94,11 +94,11 @@ namespace FaultData.DataAnalysis
         /// <summary>
         /// Gets the line from which measurements were taken to create the group of data.
         /// </summary>
-        public Line Line
+        public Asset Asset
         {
             get
             {
-                return m_line;
+                return m_asset;
             }
         }
 
@@ -235,7 +235,7 @@ namespace FaultData.DataAnalysis
         /// </returns>
         public bool Add(DataSeries dataSeries)
         {
-            Line line;
+            Asset asset;
             DateTime startTime;
             DateTime endTime;
             int samples;
@@ -254,9 +254,9 @@ namespace FaultData.DataAnalysis
 
             // Get information about the line this data is associated with
             if ((object)dataSeries.SeriesInfo != null)
-                line = dataSeries.SeriesInfo.Channel.Line;
+                asset = dataSeries.SeriesInfo.Channel.Asset;
             else
-                line = null;
+                asset = null;
 
             // Get the start time, end time, and number of samples
             // for the data series passed into this function
@@ -278,7 +278,7 @@ namespace FaultData.DataAnalysis
             // group, add the data as the first series in the data group
             if (m_dataSeries.Count == 0)
             {
-                m_line = line;
+                m_asset = asset;
                 m_startTime = startTime;
                 m_endTime = endTime;
                 m_samples = samples;
@@ -290,7 +290,7 @@ namespace FaultData.DataAnalysis
             }
             
             // If the data being added matches the parameters for this data group, add the data to the data group
-            if (line == m_line && startTime == m_startTime && endTime == m_endTime && samples == m_samples)
+            if (asset == m_asset && startTime == m_startTime && endTime == m_endTime && samples == m_samples)
             {
                 m_dataSeries.Add(dataSeries);
                 return true;
@@ -717,7 +717,7 @@ namespace FaultData.DataAnalysis
         public static Event GetEvent(this TableOperations<Event> eventTable, FileGroup fileGroup, DataGroup dataGroup)
         {
             int fileGroupID = fileGroup.ID;
-            int lineID = dataGroup.Line.ID;
+            int assetID = dataGroup.Asset.ID;
             DateTime startTime = dataGroup.StartTime;
             DateTime endTime = dataGroup.EndTime;
             int samples = dataGroup.Samples;
@@ -738,7 +738,7 @@ namespace FaultData.DataAnalysis
 
             RecordRestriction recordRestriction =
                 new RecordRestriction("FileGroupID = {0}", fileGroupID) &
-                new RecordRestriction("LineID = {0}", lineID) &
+                new RecordRestriction("AssetID = {0}", assetID) &
                 new RecordRestriction("StartTime = {0}", startTimeParameter) &
                 new RecordRestriction("EndTime = {0}", endTimeParameter) &
                 new RecordRestriction("Samples = {0}", samples);

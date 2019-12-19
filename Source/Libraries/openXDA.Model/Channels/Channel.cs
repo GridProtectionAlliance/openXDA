@@ -43,13 +43,13 @@ namespace openXDA.Model
 
         #region [ Constructors ]
 
-        public ChannelKey(int lineID, int harmonicGroup, string name, string measurementType, string measurementCharacteristic, string phase)
+        public ChannelKey(int assetID, int harmonicGroup, string name, string measurementType, string measurementCharacteristic, string phase)
         {
-            m_tuple = Tuple.Create(lineID, harmonicGroup, name, measurementType, measurementCharacteristic, phase);
+            m_tuple = Tuple.Create(assetID, harmonicGroup, name, measurementType, measurementCharacteristic, phase);
         }
 
         public ChannelKey(Channel channel)
-            : this(channel.LineID, channel.HarmonicGroup, channel.Name, channel.MeasurementType.Name, channel.MeasurementCharacteristic.Name, channel.Phase.Name)
+            : this(channel.AssetID, channel.HarmonicGroup, channel.Name, channel.MeasurementType.Name, channel.MeasurementCharacteristic.Name, channel.Phase.Name)
         {
         }
 
@@ -138,7 +138,7 @@ namespace openXDA.Model
 
         public int MeterID { get; set; }
 
-        public int LineID { get; set; }
+        public int AssetID { get; set; }
 
         public int MeasurementTypeID { get; set; }
 
@@ -170,7 +170,7 @@ namespace openXDA.Model
         private MeasurementCharacteristic m_measurementCharacteristic;
         private Phase m_phase;
         private Meter m_meter;
-        private Line m_line;
+        private Asset m_asset;
         private List<Series> m_series;
 
         #endregion
@@ -235,15 +235,15 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
-        public Line Line
+        public Asset Asset
         {
             get
             {
-                return m_line ?? (m_line = QueryLine());
+                return m_asset ?? (m_asset = QueryAsset());
             }
             set
             {
-                m_line = value;
+                m_asset = value;
             }
         }
 
@@ -319,13 +319,13 @@ namespace openXDA.Model
             return meterTable.QueryRecordWhere("ID = {0}", MeterID);
         }
 
-        public Line GetLine(AdoDataConnection connection)
+        public Asset GetAsset(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<Line> lineTable = new TableOperations<Line>(connection);
-            return lineTable.QueryRecordWhere("ID = {0}", LineID);
+            TableOperations<Asset> assetTable = new TableOperations<Asset>(connection);
+            return assetTable.QueryRecordWhere("ID = {0}", AssetID);
         }
 
         public IEnumerable<Series> GetSeries(AdoDataConnection connection)
@@ -388,19 +388,19 @@ namespace openXDA.Model
             return LazyContext.GetMeter(meter);
         }
 
-        private Line QueryLine()
+        private Asset QueryAsset()
         {
-            Line line;
+            Asset asset;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                line = GetLine(connection);
+                asset = GetAsset(connection);
             }
 
-            if ((object)line != null)
-                line.LazyContext = LazyContext;
+            if ((object)asset != null)
+                asset.LazyContext = LazyContext;
 
-            return LazyContext.GetLine(line);
+            return LazyContext.GetAsset(asset);
         }
 
         private List<Series> QuerySeries()

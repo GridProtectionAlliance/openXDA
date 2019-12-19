@@ -19,6 +19,8 @@
 //  08/29/2017 - Billy Ernest
 //       Generated original version of source code.
 //
+//  12/13/2019 - C. Lackner
+//       Updated to fit in new Asset based model structure.
 //******************************************************************************************************
 
 using System;
@@ -37,8 +39,8 @@ namespace openXDA.Model
         #region [ Members ]
 
         // Fields
-        private MeterLocation m_meterLocation;
-        private List<MeterLine> m_meterLines;
+        private Location m_location;
+        private List<MeterAsset> m_meterAssets;
         private List<Channel> m_channels;
 
         #endregion
@@ -54,7 +56,7 @@ namespace openXDA.Model
 
         [Required]
         [Label("Location")]
-        public int MeterLocationID { get; set; }
+        public int LocationID { get; set; }
 
         [Required]
         [Searchable]
@@ -85,29 +87,29 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
-        public MeterLocation MeterLocation
+        public Location Location
         {
             get
             {
-                return m_meterLocation ?? (m_meterLocation = QueryMeterLocation());
+                return m_location ?? (m_location = QueryLocation());
             }
             set
             {
-                m_meterLocation = value;
+                m_location = value;
             }
         }
 
         [JsonIgnore]
         [NonRecordField]
-        public List<MeterLine> MeterLines
+        public List<MeterAsset> MeterAssets
         {
             get
             {
-                return m_meterLines ?? (m_meterLines = QueryMeterLines());
+                return m_meterAssets ?? (m_meterAssets = QueryMeterAssets());
             }
             set
             {
-                m_meterLines = value;
+                m_meterAssets = value;
             }
         }
 
@@ -147,22 +149,22 @@ namespace openXDA.Model
 
         #region [ Methods ]
 
-        public MeterLocation GetMeterLocation(AdoDataConnection connection)
+        public Location GetLocation(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<MeterLocation> meterLocationTable = new TableOperations<MeterLocation>(connection);
-            return meterLocationTable.QueryRecordWhere("ID = {0}", MeterLocationID);
+            TableOperations<Location> locationTable = new TableOperations<Location>(connection);
+            return locationTable.QueryRecordWhere("ID = {0}", LocationID);
         }
 
-        public IEnumerable<MeterLine> GetMeterLines(AdoDataConnection connection)
+        public IEnumerable<MeterAsset> GetMeterAssets(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<MeterLine> meterLineTable = new TableOperations<MeterLine>(connection);
-            return meterLineTable.QueryRecordsWhere("MeterID = {0}", ID);
+            TableOperations<MeterAsset> meterAssetTable = new TableOperations<MeterAsset>(connection);
+            return meterAssetTable.QueryRecordsWhere("MeterID = {0}", ID);
         }
 
         public IEnumerable<Channel> GetChannels(AdoDataConnection connection)
@@ -182,42 +184,42 @@ namespace openXDA.Model
             return defaultTimeZone;
         }
 
-        private MeterLocation QueryMeterLocation()
+        private Location QueryLocation()
         {
-            MeterLocation meterLocation;
+            Location location;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                meterLocation = GetMeterLocation(connection);
+                location = GetLocation(connection);
             }
 
-            if ((object)meterLocation != null)
-                meterLocation.LazyContext = LazyContext;
+            if ((object)location != null)
+                location.LazyContext = LazyContext;
 
-            return LazyContext.GetMeterLocation(meterLocation);
+            return LazyContext.GetLocation(location);
         }
 
-        private List<MeterLine> QueryMeterLines()
+        private List<MeterAsset> QueryMeterAssets()
         {
-            List<MeterLine> meterLines;
+            List<MeterAsset> meterAssets;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                meterLines = GetMeterLines(connection)?
-                    .Select(LazyContext.GetMeterLine)
+                meterAssets = GetMeterAssets(connection)?
+                    .Select(LazyContext.GetMeterAsset)
                     .ToList();
             }
 
-            if ((object)meterLines != null)
+            if ((object)meterAssets != null)
             {
-                foreach (MeterLine meterLine in meterLines)
+                foreach (MeterAsset meterAsset in meterAssets)
                 {
-                    meterLine.Meter = this;
-                    meterLine.LazyContext = LazyContext;
+                    meterAsset.Meter = this;
+                    meterAsset.LazyContext = LazyContext;
                 }
             }
 
-            return meterLines;
+            return meterAssets;
         }
 
         private List<Channel> QueryChannels()

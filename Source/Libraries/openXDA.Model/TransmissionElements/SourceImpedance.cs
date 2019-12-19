@@ -33,7 +33,7 @@ namespace openXDA.Model
         #region [ Members ]
 
         // Fields
-        private MeterLocationLine m_meterLocationLine;
+        private AssetLocation m_assetLocation;
 
         #endregion
 
@@ -42,7 +42,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int MeterLocationLineID { get; set; }
+        public int AssetLocationID { get; set; }
 
         public double RSrc { get; set; }
 
@@ -50,15 +50,15 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
-        public MeterLocationLine MeterLocationLine
+        public AssetLocation AssetLocation
         {
             get
             {
-                return m_meterLocationLine ?? (m_meterLocationLine = QueryMeterLocationLine());
+                return m_assetLocation ?? (m_assetLocation = QueryAssetLocation());
             }
             set
             {
-                m_meterLocationLine = value;
+                m_assetLocation = value;
             }
         }
 
@@ -84,28 +84,28 @@ namespace openXDA.Model
 
         #region [ Methods ]
 
-        public MeterLocationLine GetMeterLocationLine(AdoDataConnection connection)
+        public AssetLocation GetAssetLocation(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<MeterLocationLine> meterLocationTable = new TableOperations<MeterLocationLine>(connection);
-            return meterLocationTable.QueryRecordWhere("ID = {0}", MeterLocationLineID);
+            TableOperations<AssetLocation> assetLocationTable = new TableOperations<AssetLocation>(connection);
+            return assetLocationTable.QueryRecordWhere("ID = {0}", AssetLocationID);
         }
 
-        private MeterLocationLine QueryMeterLocationLine()
+        private AssetLocation QueryAssetLocation()
         {
-            MeterLocationLine meterLocationLine;
+            AssetLocation assetLocation;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                meterLocationLine = GetMeterLocationLine(connection);
+                assetLocation = GetAssetLocation(connection);
             }
 
-            if ((object)meterLocationLine != null)
-                meterLocationLine.LazyContext = LazyContext;
+            if ((object)assetLocation != null)
+                assetLocation.LazyContext = LazyContext;
 
-            return LazyContext.GetMeterLocationLine(meterLocationLine);
+            return LazyContext.GetAssetLocation(assetLocation);
         }
 
         #endregion

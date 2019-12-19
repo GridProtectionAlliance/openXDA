@@ -81,7 +81,9 @@
     <Compile Include="Files\FileGroupField.cs" />
     <Compile Include="Files\FileGroupFieldValue.cs" />
     <Compile Include="LazyContext.cs" />
+    <Compile Include="Links\AssetConnectionType.cs" />
     <Compile Include="Links\AssetGroupAssetGroup.cs" />
+    <Compile Include="Links\AssetConnection.cs" />
     <Compile Include="Links\PQViewSite.cs" />
     <Compile Include="Links\EDNAPoint.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
@@ -106,6 +108,8 @@
     <Compile Include="System\ConfigurationLoader.cs" />
     <Compile Include="System\DataReader.cs" />
     <Compile Include="TransmissionElements\Asset.cs" />
+    <Compile Include="TransmissionElements\CapBank.cs" />
+    <Compile Include="TransmissionElements\Bus.cs" />
     <Compile Include="TransmissionElements\BreakerOperation.cs" />
     <Compile Include="Channels\BreakerChannel.cs" />
     <Compile Include="Channels\Channel.cs" />
@@ -116,6 +120,9 @@
     <Compile Include="System\DataOperation.cs" />
     <Compile Include="Alarms\DataQualityRangeLimit.cs" />
     <Compile Include="TransmissionElements\BreakerOperationType.cs" />
+    <Compile Include="TransmissionElements\Breaker.cs" />
+    <Compile Include="TransmissionElements\Transformer.cs" />
+    <Compile Include="TransmissionElements\LineSegment.cs" />
     <Compile Include="TransmissionElements\Structure.cs" />
     <Compile Include="TransmissionElements\RelayAlertSetting.cs" />
     <Compile Include="Trending\DailyTrendingSummary.cs" />
@@ -147,7 +154,6 @@
     <Compile Include="EAS\ICFEvent.cs" />
     <Compile Include="EAS\ICFResult.cs" />
     <Compile Include="TransmissionElements\Line.cs" />
-    <Compile Include="TransmissionElements\LineImpedance.cs" />
     <Compile Include="Links\LineAssetGroup.cs" />
     <Compile Include="LinesToDataPush.cs" />
     <Compile Include="TransmissionElements\LineView.cs" />

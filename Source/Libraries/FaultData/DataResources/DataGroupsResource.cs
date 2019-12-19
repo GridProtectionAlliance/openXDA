@@ -57,7 +57,7 @@ namespace FaultData.DataResources
         {
             List<DataGroup> dataGroups = new List<DataGroup>();
 
-            foreach (IGrouping<Line, DataSeries> lineGroup in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(GetLine))
+            foreach (IGrouping<Asset, DataSeries> lineGroup in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(GetAsset))
             {
                 foreach (IGrouping<DateTime, DataSeries> startTimeGroup in lineGroup.GroupBy(dataSeries => dataSeries.DataPoints[0].Time))
                 {
@@ -76,7 +76,7 @@ namespace FaultData.DataResources
                 }
             }
 
-            if (meterDataSet.Meter.MeterLines.Count == 1)
+            if (meterDataSet.Meter.MeterAssets.Count == 1)
             {
                 foreach (ReportedDisturbance disturbance in meterDataSet.ReportedDisturbances.OrderBy(dist => dist.Time))
                 {
@@ -94,10 +94,10 @@ namespace FaultData.DataResources
             m_dataGroups = dataGroups;
         }
 
-        private Line GetLine(DataSeries dataSeries)
+        private Asset GetAsset(DataSeries dataSeries)
         {
             if ((object)dataSeries.SeriesInfo != null)
-                return dataSeries.SeriesInfo.Channel.Line;
+                return dataSeries.SeriesInfo.Channel.Asset;
 
             return null;
         }

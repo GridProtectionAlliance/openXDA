@@ -218,7 +218,7 @@ namespace openXDA.Hubs
                 if ((object)evt == null)
                     return new List<FlotSeries>();
 
-                List<Series> waveformInfo = GetWaveformInfo(connection, evt.MeterID, evt.LineID);
+                List<Series> waveformInfo = GetWaveformInfo(connection, evt.MeterID, evt.AssetID);
 
                 var lookup = waveformInfo
                     .Where(info => info.Channel.MeasurementCharacteristic.Name == "Instantaneous")
@@ -371,8 +371,8 @@ namespace openXDA.Hubs
         /// <param name="line"></param>
         private void FixFaultCurve(DataSeries faultCurve, Line line)
         {
-            double maxFaultDistance = MaxFaultDistanceMultiplier * line.Length;
-            double minFaultDistance = MinFaultDistanceMultiplier * line.Length;
+            double maxFaultDistance = MaxFaultDistanceMultiplier * line.Segments.Select(item => item.Length).Sum();
+            double minFaultDistance = MinFaultDistanceMultiplier * line.Segments.Select(item => item.Length).Sum();
 
             foreach (DataPoint dataPoint in faultCurve.DataPoints)
             {

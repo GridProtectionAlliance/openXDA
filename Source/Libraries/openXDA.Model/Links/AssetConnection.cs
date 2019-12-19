@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MeterLine.cs - Gbtc
+//  AssetConnection.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,11 +16,8 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
-//       Generated original version of source code.
-//
 //  12/13/2019 - C. Lackner
-//       Modified to fit new Asset Model Structure.
+//       Generated original version of source code.
 //
 //******************************************************************************************************
 
@@ -32,13 +29,14 @@ using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    public class MeterAsset
+    [TableName("AssetRelationship")]
+    public class AssetConnection
     {
         #region [ Members ]
 
         // Fields
-        private Meter m_meter;
-        private Asset m_asset;
+        private Asset m_parent;
+        private Asset m_child;
 
         #endregion
 
@@ -47,35 +45,37 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int MeterID { get; set; }
+        public int AssetRelationshipTypeID { get; set; }
 
-        public int AssetID { get; set; }
+        public int ParentID { get; set; }
+
+        public int ChildID { get; set; }
 
         [JsonIgnore]
         [NonRecordField]
-        public Meter Meter
+        public Asset Parent
         {
             get
             {
-                return m_meter ?? (m_meter = QueryMeter());
+                return m_parent ?? (m_parent = QueryParent());
             }
             set
             {
-                m_meter = value;
+                m_parent = value;
             }
         }
 
         [JsonIgnore]
         [NonRecordField]
-        public Asset Asset
+        public Asset Child
         {
             get
             {
-                return m_asset ?? (m_asset = QueryAsset());
+                return m_child ?? (m_child = QueryChild());
             }
             set
             {
-                m_asset = value;
+                m_child = value;
             }
         }
 
@@ -101,65 +101,56 @@ namespace openXDA.Model
 
         #region [ Methods ]
 
-        public Meter GetMeter(AdoDataConnection connection)
-        {
-            if ((object)connection == null)
-                return null;
-
-            TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
-            return meterTable.QueryRecordWhere("ID = {0}", MeterID);
-        }
-
-        public Asset GetAsset(AdoDataConnection connection)
+        public Asset GetParent(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
             TableOperations<Asset> assetTable = new TableOperations<Asset>(connection);
-            return assetTable.QueryRecordWhere("ID = {0}", AssetID);
+            return assetTable.QueryRecordWhere("ID = {0}", ParentID);
         }
 
-        public Meter QueryMeter()
+        public Asset GetChild(AdoDataConnection connection)
         {
-            Meter meter;
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Asset> assetTable = new TableOperations<Asset>(connection);
+            return assetTable.QueryRecordWhere("ID = {0}", ChildID);
+        }
+
+        public Asset QueryParent()
+        {
+            Asset parent;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                meter = GetMeter(connection);
+                parent = GetParent(connection);
             }
 
-            if ((object)meter != null)
-                meter.LazyContext = LazyContext;
+            if ((object)parent != null)
+                parent.LazyContext = LazyContext;
 
-            return LazyContext.GetMeter(meter);
+            return LazyContext.GetAsset(parent);
         }
 
-        public Asset QueryAsset()
+        public Asset QueryChild()
         {
-            Asset asset;
+            Asset child;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                asset = GetAsset(connection);
+                child = GetChild(connection);
             }
 
-            if ((object)asset != null)
-                asset.LazyContext = LazyContext;
+            if ((object)child != null)
+                child.LazyContext = LazyContext;
 
-            return LazyContext.GetAsset(asset);
+            return LazyContext.GetAsset(child);
         }
 
         #endregion
     }
 
-    public class MeterLineDetail : MeterAsset
-    {
-        [Searchable]
-        public string MeterName { get; set; }
-
-        [Searchable]
-        public string LineKey { get; set; }
-
-        public string FaultDetectionLogic { get; set; }
-    }
+   
 }

@@ -140,10 +140,10 @@ CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupFieldID
 ON FileGroupFieldValue(FileGroupFieldID ASC)
 GO
 
-CREATE TABLE MeterLocation
+CREATE TABLE Location
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    AssetKey VARCHAR(50) NOT NULL UNIQUE,
+    LocationKey VARCHAR(50) NOT NULL UNIQUE,
     Name VARCHAR(200) NOT NULL,
     Alias VARCHAR(200) NULL,
     ShortName VARCHAR(50) NULL,
@@ -157,7 +157,7 @@ CREATE TABLE Meter
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetKey VARCHAR(50) NOT NULL UNIQUE,
-    MeterLocationID INT NOT NULL REFERENCES MeterLocation(ID),
+    LocationID INT NOT NULL REFERENCES Location(ID),
     Name VARCHAR(200) NOT NULL,
     Alias VARCHAR(200) NULL,
     ShortName VARCHAR(50) NULL,
@@ -189,7 +189,9 @@ CREATE TABLE Asset
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetTypeID INT NOT NULL REFERENCES AssetType(ID),
     AssetKey VARCHAR(50) NOT NULL UNIQUE,
-    Description VARCHAR(MAX) NULL
+    Description VARCHAR(MAX) NULL,
+	AssetName VARCHAR(200) NOT NULL,
+	VoltageKV FLOAT NOT NULL
 )
 GO
 
@@ -197,7 +199,10 @@ CREATE TABLE AssetRelationshipType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(50) NOT NULL,
-    Description VARCHAR(MAX) NULL
+    Description VARCHAR(MAX) NULL,
+	BiDirectional BIT NOT NULL DEFAULT 0,
+	JumpConnection VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
+	PassThrough VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
 )
 GO
 
@@ -214,7 +219,6 @@ CREATE TABLE BusAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
-    VoltageKV FLOAT NOT NULL
 )
 GO
 
@@ -222,7 +226,9 @@ CREATE TABLE BreakerAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
-    Speed FLOAT NOT NULL
+	ThermalRating FLOAT NOT NULL,
+	Speed FLOAT NOT NULL
+
 )
 GO
 
@@ -241,7 +247,7 @@ CREATE TABLE LineAttributes
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
     MaxFaultDistance FLOAT NULL,
-    MinFaultDistance FLOAT NULL
+    MinFaultDistance FLOAT NULL,
 )
 GO
 
@@ -253,15 +259,454 @@ CREATE TABLE LineSegmentAttributes
     R0 FLOAT NOT NULL,
     X0 FLOAT NOT NULL,
     R1 FLOAT NOT NULL,
-    X1 FLOAT NOT NULL
+    X1 FLOAT NOT NULL,
+	ThermalRating FLOAT NOT NULL
 )
 GO
+
+CREATE TABLE TransformerAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+    R0 FLOAT NOT NULL,
+    X0 FLOAT NOT NULL,
+    R1 FLOAT NOT NULL,
+    X1 FLOAT NOT NULL,
+	ThermalRating FLOAT NOT NULL,
+	SecondaryVoltageKV FLOAT NULL,
+	PrimaryVoltageKV FLOAT NULL,
+	Tap FLOAT NULL
+)
+GO
+
+
+
+/* Correspoding Views and Trigger */
+CREATE VIEW Line AS
+	SELECT 
+		AssetID AS ID,
+		MaxFaultDistance,
+		MinFaultDistance,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName
+	FROM Asset JOIN LineAttributes ON Asset.ID = LineAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_Line ON Line
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName,VoltageKV)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'Line') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV
+	FROM INSERTED
+
+	INSERT INTO LineAttributes (AssetID, MinFaultDistance, MaxFaultDistance)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			MinFaultDistance AS MinFaultDistance,
+			MaxFaultDistance AS MaxFaultDistance,
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Line ON Line
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.AssetID = ASSET.ID;
+	END
+	UPDATE LineAttributes
+		SET
+			LineAttributes.MaxFaultDistance = INSERTED.MaxFaultDistance,
+			LineAttributes.MinFaultDistance = INSERTED.MinFaultDistance
+		FROM
+			LineAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.AssetID = LineAttributes.AssetID;
+END
+GO
+
+/* END Line Model Triggers */
+/* Bus Model */
+CREATE VIEW Bus AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName
+	FROM Asset JOIN BusAttributes ON Asset.ID = BusAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_Bus ON BUS
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'Bus') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV
+	FROM INSERTED
+
+	INSERT INTO BusAttributes (AssetID)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Bus ON BUS
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.AssetID = ASSET.ID;
+	END
+END
+GO
+
+
+/* Breaker Model */
+CREATE VIEW Breaker AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		ThermalRating,
+		Speed,
+		Description,
+		AssetName
+	FROM Asset JOIN BreakerAttributes ON Asset.ID = BreakerAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_Breaker ON Breaker
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, VoltageKV, AssetName)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'Breaker') AS AssetTypeID,
+			Description AS Description,
+			VoltageKV AS VoltageKV,
+			AssetName AS AssetName
+	FROM INSERTED
+
+	INSERT INTO BreakerAttributes (AssetID, VoltageKV, ThermalRating, Speed)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			ThermalRating AS ThermalRating,
+			Speed AS Speed
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Breaker ON Breaker
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.AssetID = ASSET.ID;
+	END
+	UPDATE BreakerAttributes
+		SET
+			BreakerAttributes.ThermalRating = INSERTED.ThermalRating,
+			BreakerAttributes.Speed = INSERTED.Speed
+		FROM
+			BreakerAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.AssetID = BreakerAttributes.AssetID;
+END
+GO
+
+
+/* Capacitor Bank Model */
+CREATE VIEW CapBank AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		NumberofBanks,
+		CansPerBank,
+		CapacitancePerBank,
+		Description,
+		AssetName
+	FROM Asset JOIN CapacitorBankAttributes ON Asset.ID = CapacitorBankAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_CapBank ON CapBank
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'CapacitorBank') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV
+	FROM INSERTED
+
+	INSERT INTO CapacitorBankAttributes (AssetID, VoltageKV, NumberOfBanks, CansPerBank, CapacitancePerBank)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			NumberOfBanks AS NumberOfBanks,
+			CansPerBank AS CansPerBank,
+			CapacitancePerBank AS CapacitancePerBank
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_CapBank ON CapBank
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) )
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.AssetID = ASSET.ID;
+	END
+	UPDATE CapacitorBankAttributes
+		SET
+			CapacitorBankAttributes.NumberOfBanks = INSERTED.NumberOfBanks,
+			CapacitorBankAttributes.CansPerBank = INSERTED.CansPerBank,
+			CapacitorBankAttributes.CapacitancePerBank = INSERTED.CapacitancePerBank
+		FROM
+			CapacitorBankAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.AssetID = CapacitorBankAttributes.AssetID;
+END
+GO
+
+
+/* Line Segment Model */
+CREATE VIEW LineSegment AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		Length,
+		R0,
+		X0,
+		R1,
+		X1,
+		ThermalRating,
+		Description,
+		AssetName
+	FROM Asset JOIN LineSegmentAttributes ON Asset.ID = LineSegmentAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_LineSegment ON LineSegment
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'LineSegment') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV
+	FROM INSERTED
+
+	INSERT INTO LineSegmentAttributes (AssetID, Length, R0, X0, R1, X1, ThermalRating)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			Length AS Length,
+			R0 AS R0,
+			X0 AS X0,
+			R1 AS R1,
+			X1 AS X1,
+			ThermalRating AS ThermalRating
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_LineSegment ON LineSegment
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV  = INSERTED.VoltageKV
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.AssetID = ASSET.ID;
+	END
+	UPDATE LineSegmentAttributes
+		SET
+			LineSegmentAttributes.R0 = INSERTED.R0,
+			LineSegmentAttributes.X0 = INSERTED.X0,
+			LineSegmentAttributes.R1 = INSERTED.R1,
+			LineSegmentAttributes.X1 = INSERTED.X1,
+			LineSegmentAttributes.ThermalRating = INSERTED.ThermalRating
+		FROM
+			LineSegmentAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.AssetID = LineSegmentAttributes.AssetID;
+END
+GO
+
+
+/* Transformers */
+CREATE VIEW Transformer AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		R0,
+		X0,
+		R1,
+		X1,
+		ThermalRating,
+		SecondaryVoltageKV,
+		PrimaryVoltageKV,
+		TAP,
+		Description,
+		AssetName
+	FROM Asset JOIN TransformerAttributes ON Asset.ID = TransformerAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_Tranformer ON Tranformer
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'Tranformer') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV
+	FROM INSERTED
+
+	INSERT INTO TransformerAttributes (AssetID, Length, R0, X0, R1, X1, ThermalRating, SecondaryVoltageKV, PrimaryVoltageKV, Tap )
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			Length AS Length,
+			R0 AS R0,
+			X0 AS X0,
+			R1 AS R1,
+			X1 AS X1,
+			ThermalRating AS ThermalRating,
+			SecondaryVoltageKV AS SecondaryVoltageKV,
+			PrimaryVoltageKV AS PrimaryVoltageKV,
+			Tap AS Tap
+
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Tranformer ON Transformer
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.AssetID = ASSET.ID;
+	END
+	UPDATE TransformerAttributes
+		SET
+			TransformerAttributes.R0 = INSERTED.R0,
+			TransformerAttributes.X0 = INSERTED.X0,
+			TransformerAttributes.R1 = INSERTED.R1,
+			TransformerAttributes.X1 = INSERTED.X1,
+			TransformerAttributes.ThermalRating = INSERTED.ThermalRating,
+			TransformerAttributes.SecondaryVoltageKV = INSERTED.SecondaryVoltageKV,
+			TransformerAttributes.PrimaryVoltageKV = INSERTED.PrimaryVoltageKV,
+			TransformerAttributes.Tap = INSERTED.Tap
+		FROM
+			TransformerAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.AssetID = TransformerAttributes.AssetID;
+END
+GO
+
+/* *************** End Model Section ********* */
 
 CREATE TABLE Structure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetKey VARCHAR(50) NOT NULL UNIQUE,
-    LineID INT NOT NULL REFERENCES Asset(ID),
+    AssetID INT NOT NULL REFERENCES Asset(ID),
     Latitude FLOAT NOT NULL DEFAULT 0.0,
     Longitude FLOAT NOT NULL DEFAULT 0.0
 )
@@ -272,7 +717,14 @@ CREATE TABLE MeterAsset
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
     AssetID INT NOT NULL REFERENCES Asset(ID),
-    AssetName VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE AssetLocation
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    LocationID INT NOT NULL REFERENCES Location(ID),
+    AssetID INT NOT NULL REFERENCES Asset(ID)
 )
 GO
 
@@ -949,6 +1401,7 @@ CREATE TABLE Event
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
     MeterID INT NOT NULL REFERENCES Meter(ID),
+	AssetID INT NOT NULL REFERENCES Asset(ID),
     EventTypeID INT NOT NULL REFERENCES EventType(ID),
     EventDataID INT NULL REFERENCES EventData(ID),
     Name VARCHAR(200) NOT NULL,
@@ -1676,6 +2129,27 @@ CREATE TABLE OutputChannel
     LoadOrder INT NOT NULL
 )
 GO
+
+CREATE TABLE SourceImpedance
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetLocationID INT NOT NULL REFERENCES AssetLocation(ID),
+    RSrc FLOAT NOT NULL,
+    XSrc FLOAT NOT NULL
+)
+GO
+
+CREATE TABLE LineImpedance
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    LineID INT NOT NULL UNIQUE REFERENCES Asset(ID),
+    R0 FLOAT NOT NULL,
+    X0 FLOAT NOT NULL,
+    R1 FLOAT NOT NULL,
+    X1 FLOAT NOT NULL
+)
+GO
+
 
 CREATE TABLE SegmentType
 (
@@ -3094,11 +3568,11 @@ CREATE VIEW MeterDetail
 AS
 SELECT  Meter.ID,
         Meter.AssetKey,
-        Meter.MeterLocationID,
-        MeterLocation.AssetKey AS LocationKey,
-        MeterLocation.Name AS Location,
-        MeterLocation.Latitude,
-        MeterLocation.Longitude,
+        Meter.LocationID,
+        Location.LocationKey AS LocationKey,
+        Location.Name AS Location,
+        Location.Latitude,
+        Location.Longitude,
         Meter.Name,
         Meter.Alias,
         Meter.ShortName,
@@ -3109,7 +3583,7 @@ SELECT  Meter.ID,
             ELSE Meter.TimeZone END AS TimeZone,
         Meter.Description
 FROM    Meter INNER JOIN
-        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+        Location ON Meter.LocationID = Location.ID LEFT OUTER JOIN
         Setting ON Setting.Name = 'DefaultMeterTimeZone'
 
 GO
@@ -3269,11 +3743,11 @@ SELECT
     Meter.Name AS MeterName,
     Meter.ID AS MeterID,
     AssetGroupID,
-    MeterLocation.Name AS Location
+    Location.Name AS Location
 FROM
     MeterAssetGroup JOIN
     Meter ON MeterAssetGroup.MeterID = Meter.ID JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+    Location ON Meter.LocationID = Location.ID
 GO
 
 -- CREATE VIEW LineAssetGroupView

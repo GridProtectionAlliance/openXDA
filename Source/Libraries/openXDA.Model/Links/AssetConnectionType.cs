@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ChannelData.cs - Gbtc
+//  AssetConnectionType.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,44 +16,57 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  12/12/2019 - C. Lackner
+//  12/13/2019 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-
-using GSF.Data.Model;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using GSF.Data;
+using GSF.Data.Model;
+using Newtonsoft.Json;
 
-namespace openXDA.Model.Channels
+namespace openXDA.Model
 {
-    [TableName("ChannelData")]
-    class ChannelData
+    [TableName("AssetRelationshipType")]
+    public class AssetConnectionType
     {
+        #region [ Members ]
+        #endregion
+
+        #region [ Properties ]
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int FileGroupID { get; set; }
+        [Required]
+        [StringLength(50)]
+        [Searchable]
+        public string Name { get; set; }
 
-        public int RunTimeID { get; set; }
+        [Required]
+        [StringLength(250)]
+        [Searchable]
+        public string Description { get; set; }
 
-        public byte[] TimeDomainData { get; set; }
+        public bool BiDirectional { get; set; }
 
-        // Not sure we need this but it was in EventData
-        public int MarkedForDeletion { get; set; }
+        public string JumpConnection { get; set; }
 
-        public int SeriesID { get; set; }
+        public string PassThrough { get; set; }
+        
+        // If Jump Connection is False the measurment is obnly applicaple to this Asset
+        // If PassThrough is False the measurment can only be handed across this connection but no any further
+        // {0} gets replaced with the MeasurementTypeID.
+        // Bidirectional is not relevant at this point.
 
-        public int EventID { get; set; }
+        #endregion
 
-        // This is for backwards compatibility so we can point to data that is still in a EventDataBlob.
-        // As we pull up the data it will be moved out but if this is the first time Calling the ChannelData Blob
-        // it just points back to the eventdata Blob.
-        public int? EventDataID {get; set;}
+        #region [ Methods ]
 
+
+        #endregion
     }
+
 }

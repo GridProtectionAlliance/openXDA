@@ -418,7 +418,7 @@ namespace FaultData.DataAnalysis
         // Static Methods
         private static Series GetSeriesInfo(Meter meter, DataGroup dataGroup, string measurementTypeName, string phaseName)
         {
-            int lineID = dataGroup.Line.ID;
+            int assetID = dataGroup.Asset.ID;
             string measurementCharacteristicName = "Instantaneous";
             string seriesTypeName = "Values";
 
@@ -426,7 +426,7 @@ namespace FaultData.DataAnalysis
             string phaseDesignation = (phaseName == "RES") ? "R" : phaseName.TrimEnd('N');
             string channelName = string.Concat(typeDesignation, phaseDesignation);
 
-            ChannelKey channelKey = new ChannelKey(lineID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
+            ChannelKey channelKey = new ChannelKey(assetID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
             SeriesKey seriesKey = new SeriesKey(channelKey, seriesTypeName);
 
             Series dbSeries = meter.Channels
@@ -447,7 +447,7 @@ namespace FaultData.DataAnalysis
                     dbChannel = new Channel()
                     {
                         MeterID = meter.ID,
-                        LineID = lineID,
+                        AssetID = assetID,
                         MeasurementTypeID = measurementType.ID,
                         MeasurementCharacteristicID = measurementCharacteristic.ID,
                         PhaseID = phase.ID,
@@ -457,7 +457,7 @@ namespace FaultData.DataAnalysis
                         Enabled = true,
 
                         Meter = meter,
-                        Line = dataGroup.Line,
+                        Asset = dataGroup.Asset,
                         MeasurementType = measurementType,
                         MeasurementCharacteristic = measurementCharacteristic,
                         Phase = phase,

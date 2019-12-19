@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/29/2017 - Billy Ernest
 //       Generated original version of source code.
+//  12/13/2019 - Christoph Lackner
+//       Moved Base functionality to Asset.
 //
 //******************************************************************************************************
 
@@ -31,241 +33,102 @@ using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    public class Line
+    [MetadataType(typeof(Asset))]
+    public class Line: Asset
     {
         #region [ Members ]
-
-        // Fields
-        private List<MeterLocationLine> m_meterLocationLines;
-        private List<MeterLine> m_meterLines;
-        private List<Channel> m_channels;
-        private LineImpedance m_lineImpedance;
+       
+        private List<LineSegment> m_lineSegment;
 
         #endregion
 
         #region [ Properties ]
 
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        [Searchable]
-        public string AssetKey { get; set; }
-
-        [Required]
-        public double VoltageKV { get; set; }
-
-        [Required]
-        public double ThermalRating { get; set; }
-
-        [Required]
-        public double Length { get; set; }
-
         public double? MaxFaultDistance { get; set; }
 
         public double? MinFaultDistance { get; set; }
 
-        public string Description { get; set; }
-
         [JsonIgnore]
         [NonRecordField]
-        public List<MeterLocationLine> MeterLocationLines
+        public List<LineSegment> Segments
         {
             get
             {
-                return m_meterLocationLines ?? (m_meterLocationLines = QueryMeterLocationLines());
+                return m_lineSegment ?? (m_lineSegment = QuerySegments());
             }
             set
             {
-                m_meterLocationLines = value;
+                m_lineSegment = value;
             }
         }
-
-        [JsonIgnore]
-        [NonRecordField]
-        public List<MeterLine> MeterLines
-        {
-            get
-            {
-                return m_meterLines ?? (m_meterLines = QueryMeterLines());
-            }
-            set
-            {
-                m_meterLines = value;
-            }
-        }
-
-        [JsonIgnore]
-        [NonRecordField]
-        public List<Channel> Channels
-        {
-            get
-            {
-                return m_channels ?? (m_channels = QueryChannels());
-            }
-            set
-            {
-                m_channels = value;
-            }
-        }
-
-        [JsonIgnore]
-        [NonRecordField]
-        public LineImpedance LineImpedance
-        {
-            get
-            {
-                return m_lineImpedance ?? (m_lineImpedance ?? QueryLineImpedance());
-            }
-            set
-            {
-                m_lineImpedance = value;
-            }
-        }
-
-        [JsonIgnore]
-        [NonRecordField]
-        public Func<AdoDataConnection> ConnectionFactory
-        {
-            get
-            {
-                return LazyContext.ConnectionFactory;
-            }
-            set
-            {
-                LazyContext.ConnectionFactory = value;
-            }
-        }
-
-        [JsonIgnore]
-        [NonRecordField]
-        internal LazyContext LazyContext { get; set; } = new LazyContext();
 
         #endregion
 
         #region [ Methods ]
 
-        public IEnumerable<MeterLocationLine> GetMeterLocationLines(AdoDataConnection connection)
+        public IEnumerable<LineSegment> GetSegments(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<MeterLocationLine> meterLocationLineTable = new TableOperations<MeterLocationLine>(connection);
-            return meterLocationLineTable.QueryRecordsWhere("LineID = {0}", ID);
+            List<AssetConnection> connections = GetConnection(connection).ToList();
+            List<LineSegment> result = new List<LineSegment>();
+
+            foreach (AssetConnection assetConnection in connections)
+            {
+                Asset remoteAsset = assetConnection.Child;
+                if (assetConnection.ChildID == ID)
+                    remoteAsset = assetConnection.Parent;
+
+                if (remoteAsset.AssetTypeID == (int)AssetType.LineSegement)
+                    result.Add(LineSegment.DetailedLineSegment(remoteAsset, connection));
+            }
+
+            return result.AsEnumerable();
         }
 
-        public IEnumerable<MeterLine> GetMeterLines(AdoDataConnection connection)
+        private List<LineSegment> QuerySegments()
         {
-            if ((object)connection == null)
-                return null;
-
-            TableOperations<MeterLine> meterLineTable = new TableOperations<MeterLine>(connection);
-            return meterLineTable.QueryRecordsWhere("LineID = {0}", ID);
-        }
-
-        public IEnumerable<Channel> GetChannel(AdoDataConnection connection)
-        {
-            if ((object)connection == null)
-                return null;
-
-            TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
-            return channelTable.QueryRecordsWhere("LineID = {0}", ID);
-        }
-
-        public LineImpedance GetLineImpedance(AdoDataConnection connection)
-        {
-            if ((object)connection == null)
-                return null;
-
-            TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
-            return lineImpedanceTable.QueryRecordWhere("LineID = {0}", ID);
-        }
-
-        private List<MeterLocationLine> QueryMeterLocationLines()
-        {
-            List<MeterLocationLine> meterLocationLines;
+            List<LineSegment> lineSegements;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                meterLocationLines = GetMeterLocationLines(connection)?
-                    .Select(LazyContext.GetMeterLocationLine)
+                lineSegements = GetSegments(connection)?
+                    .Select(LazyContext.GetLineSegment)
                     .ToList();
             }
 
-            if ((object)meterLocationLines != null)
+            if ((object)lineSegements != null)
             {
-                foreach (MeterLocationLine meterLocationLine in meterLocationLines)
+                foreach (LineSegment segment in lineSegements)
                 {
-                    meterLocationLine.Line = this;
-                    meterLocationLine.LazyContext = LazyContext;
+                    segment.Line = this;
+                    segment.LazyContext = LazyContext;
                 }
             }
 
-            return meterLocationLines;
+            return lineSegements;
         }
 
-        private List<MeterLine> QueryMeterLines()
+
+        public static Line DetailedLine(Asset asset, AdoDataConnection connection)
         {
-            List<MeterLine> meterLines;
+           
+            if ((object)connection == null)
+                return null;
 
-            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
-            {
-                meterLines = GetMeterLines(connection)?
-                    .Select(LazyContext.GetMeterLine)
-                    .ToList();
-            }
+            TableOperations<Line> lineTable = new TableOperations<Line>(connection);
+            Line line = lineTable.QueryRecordWhere("ID = {0}", asset.ID);
+            line.LazyContext = asset.LazyContext;
+            line.ConnectionFactory = asset.ConnectionFactory;
 
-            if ((object)meterLines != null)
-            {
-                foreach (MeterLine meterLine in meterLines)
-                {
-                    meterLine.Line = this;
-                    meterLine.LazyContext = LazyContext;
-                }
-            }
-
-            return meterLines;
+            return line;
         }
 
-        private List<Channel> QueryChannels()
+        public static Line DetailedLine(Asset asset)
         {
-            List<Channel> channels;
-
-            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
-            {
-                channels = GetChannel(connection)?
-                    .Select(LazyContext.GetChannel)
-                    .ToList();
-            }
-
-            if ((object)channels != null)
-            {
-                foreach (Channel channel in channels)
-                {
-                    channel.Line = this;
-                    channel.LazyContext = LazyContext;
-                }
-            }
-
-            return channels;
+            return DetailedLine(asset, asset.ConnectionFactory.Invoke());
         }
-
-        private LineImpedance QueryLineImpedance()
-        {
-            LineImpedance lineImpedance;
-
-            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
-            {
-                lineImpedance = GetLineImpedance(connection);
-            }
-
-            if ((object)lineImpedance != null)
-                lineImpedance.LazyContext = LazyContext;
-
-            return LazyContext.GetLineImpedance(lineImpedance);
-        }
-
         #endregion
     }
 }

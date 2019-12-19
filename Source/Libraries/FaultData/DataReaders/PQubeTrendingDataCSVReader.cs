@@ -91,10 +91,10 @@ namespace FaultData.DataReaders
         public void Parse(string filePath)
         {
             Meter meter = new Meter();
-            meter.MeterLocation = new MeterLocation();
+            meter.Location = new Location();
             meter.Channels = new List<Channel>();
 
-            MeterLocation meterLocation = meter.MeterLocation;
+            Location meterLocation = meter.Location;
             meterLocation.Meters = new List<Meter>() { meter };      
 
             try

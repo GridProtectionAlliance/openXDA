@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ChannelData.cs - Gbtc
+//  Breaker.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,44 +16,56 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  12/12/2019 - C. Lackner
-//       Generated original version of source code.
+//  12/13/2019 - Christoph Lackner
+//      Generated original version of source code.
 //
 //******************************************************************************************************
 
-
-using GSF.Data.Model;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using GSF.Data;
+using GSF.Data.Model;
+using Newtonsoft.Json;
 
-namespace openXDA.Model.Channels
+namespace openXDA.Model
 {
-    [TableName("ChannelData")]
-    class ChannelData
+    [MetadataType(typeof(Asset))]
+    public class Breaker: Asset
     {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
+        #region [ Members ]
+       
+        #endregion
 
-        public int FileGroupID { get; set; }
+        #region [ Properties ]
+        
+        public double ThermalRating { get; set; }
 
-        public int RunTimeID { get; set; }
+        public double Speed { get; set; }
 
-        public byte[] TimeDomainData { get; set; }
+        #endregion
 
-        // Not sure we need this but it was in EventData
-        public int MarkedForDeletion { get; set; }
+        #region [ Methods ]
 
-        public int SeriesID { get; set; }
+        public static Breaker DetailedBreaker(Asset asset, AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
 
-        public int EventID { get; set; }
+            TableOperations<Breaker> breakerTable = new TableOperations<Breaker>(connection);
+            Breaker breaker = breakerTable.QueryRecordWhere("ID = {0}", asset.ID);
 
-        // This is for backwards compatibility so we can point to data that is still in a EventDataBlob.
-        // As we pull up the data it will be moved out but if this is the first time Calling the ChannelData Blob
-        // it just points back to the eventdata Blob.
-        public int? EventDataID {get; set;}
+            breaker.LazyContext = asset.LazyContext;
+            breaker.ConnectionFactory = asset.ConnectionFactory;
 
-    }
+            return breaker;
+        }
+
+        public static Breaker DetailedBreaker(Asset asset)
+        {
+            return DetailedBreaker(asset, asset.ConnectionFactory.Invoke());
+        }
+            #endregion
+        }
 }

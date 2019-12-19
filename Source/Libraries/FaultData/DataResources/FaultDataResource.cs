@@ -73,24 +73,23 @@ namespace FaultData.DataResources
 
             public bool TryExtractImpedances()
             {
-                LineImpedance lineImpedance = Line.LineImpedance;
-
-                if (lineImpedance != null)
+                if (Line.Segments != null)
                 {
-                    if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
+                    if (Line.Segments.Select(item => item.R0).Sum() == 0.0D && Line.Segments.Select(item => item.X0).Sum() == 0.0D &&
+                        Line.Segments.Select(item => item.R1).Sum() == 0.0D && Line.Segments.Select(item => item.X1).Sum() == 0.0D)
                         return false;
 
-                    FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
-                    FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
+                    FaultLocationDataSet.Z0 = new ComplexNumber(Line.Segments.Select(item => item.R0).Sum(), Line.Segments.Select(item => item.X0).Sum());
+                    FaultLocationDataSet.Z1 = new ComplexNumber(Line.Segments.Select(item => item.R1).Sum(), Line.Segments.Select(item => item.X1).Sum());
 
-                    SourceImpedance localImpedance = Line.MeterLocationLines
-                        .Where(link => link.MeterLocation == Meter.MeterLocation)
+                    SourceImpedance localImpedance = Line.AssetLocations
+                        .Where(link => link.Location == Meter.Location)
                         .Where(link => link.SourceImpedance != null)
                         .Select(link => link.SourceImpedance)
                         .FirstOrDefault();
 
-                    List<SourceImpedance> remoteImpedances = Line.MeterLocationLines
-                        .Where(link => link.MeterLocation != Meter.MeterLocation)
+                    List<SourceImpedance> remoteImpedances = Line.AssetLocations
+                        .Where(link => link.Location != Meter.Location)
                         .Where(link => link.SourceImpedance != null)
                         .Select(link => link.SourceImpedance)
                         .ToList();
@@ -286,7 +285,7 @@ namespace FaultData.DataResources
             }
         }
 
-        private Func<Line, DateTime, bool> AskSCADAIfBreakerOpened { get; set; }
+        private Func<Asset, DateTime, bool> AskSCADAIfBreakerOpened { get; set; }
 
         #endregion
 
@@ -330,6 +329,14 @@ namespace FaultData.DataResources
                     continue;
                 }
 
+                //Make Sure it is actually a Line
+                Log.Debug("Checking whether Asset is a Line...");
+                if (dataGroup.Asset.AssetTypeID != (int) AssetType.Line)
+                {
+                    Log.Debug($"Asset: {dataGroup.Asset.AssetKey} is not a Line.");
+                    continue;
+                }
+
                 // Engineering reasonableness checks
                 Log.Debug("Checking for engineering reasonableness...");
 
@@ -349,8 +356,10 @@ namespace FaultData.DataResources
 
                 // Create the fault location data set and begin populating
                 // the properties necessary for calculating fault location
+                Line line = Line.DetailedLine(dataGroup.Asset);
+
                 FaultLocationDataSet faultLocationDataSet = new FaultLocationDataSet();
-                faultLocationDataSet.LineDistance = dataGroup.Line.Length;
+                faultLocationDataSet.LineDistance = line.Segments.Select(item => item.Length).Sum();
                 faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
 
                 // Extract impedances from the database
@@ -358,7 +367,7 @@ namespace FaultData.DataResources
                 ImpedanceExtractor impedanceExtractor = new ImpedanceExtractor();
                 impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
                 impedanceExtractor.Meter = meterDataSet.Meter;
-                impedanceExtractor.Line = dataGroup.Line;
+                impedanceExtractor.Line = line;
 
                 if (!impedanceExtractor.TryExtractImpedances())
                 {
@@ -449,8 +458,8 @@ namespace FaultData.DataResources
 
             // Find MeterLine record corresponding to the meter that produced
             // the data and the line associated with the data group
-            meterLineID = meterDataSet.Meter.MeterLines
-                .Where(meterLine => meterLine.LineID == dataGroup.Line.ID)
+            meterLineID = meterDataSet.Meter.MeterAssets
+                .Where(meterLine => meterLine.AssetID == dataGroup.Asset.ID)
                 .Select(meterLine => (int?)meterLine.ID)
                 .FirstOrDefault() ?? -1;
 
@@ -473,7 +482,7 @@ namespace FaultData.DataResources
                 if ((object)expressionText == null)
                 {
                     if (FaultLocationSettings.WarnMissingDetectionLogic)
-                        throw new Exception($"Expression text is not defined for line '{dataGroup.Line.AssetKey}'.");
+                        throw new Exception($"Expression text is not defined for line '{dataGroup.Asset.AssetKey}'.");
 
                     return null;
                 }
@@ -574,7 +583,7 @@ namespace FaultData.DataResources
         private bool IsReasonable(DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             // Get the line-to-neutral nominal voltage in volts
-            double nominalVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
+            double nominalVoltage = dataGroup.Asset.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
 
             DataSeries[] voltages =
             {
@@ -987,7 +996,7 @@ namespace FaultData.DataResources
             fault.IsSuppressed =
                 (double.IsNaN(postfaultPeak) && viDataGroup.DefinedCurrents > 1) ||
                 (!double.IsNaN(postfaultPeak) && postfaultPeak > BreakerSettings.OpenBreakerThreshold) ||
-                !AskSCADAIfBreakerOpened(dataGroup.Line, fault.ClearingTime);
+                !AskSCADAIfBreakerOpened(dataGroup.Asset, fault.ClearingTime);
 
             fault.IsReclose =
                 !double.IsNaN(prefaultPeak) &&
@@ -1064,15 +1073,15 @@ namespace FaultData.DataResources
 
         private bool IsValid(double faultDistance, DataGroup dataGroup)
         {
-            Line line = dataGroup.Line;
+            Line line = Line.DetailedLine(dataGroup.Asset);
             double maxFaultDistanceMultiplier = FaultLocationSettings.MaxFaultDistanceMultiplier;
             double minFaultDistanceMultiplier = FaultLocationSettings.MinFaultDistanceMultiplier;
 
             double maxDistance = line.MaxFaultDistance
-                ?? maxFaultDistanceMultiplier * line.Length;
+                ?? maxFaultDistanceMultiplier * line.Segments.Select(item => item.Length).Sum();
 
             double minDistance = line.MinFaultDistance
-                ?? minFaultDistanceMultiplier * line.Length;
+                ?? minFaultDistanceMultiplier * line.Segments.Select(item => item.Length).Sum();
 
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
@@ -1462,13 +1471,13 @@ namespace FaultData.DataResources
             ComplexNumber faultCurrent = ToComplexNumber(faultedCurrent, fault.CalculationCycle);
             ComplexNumber faultImpedance = faultVoltage / faultCurrent;
 
-            LineImpedance lineImpedance = dataGroup.Line.LineImpedance;
+            Line line = Line.DetailedLine(dataGroup.Asset);
 
-            if (lineImpedance == null)
+            if (line == null)
                 return double.NaN;
 
-            ComplexNumber z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
-            ComplexNumber z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
+            ComplexNumber z0 = new ComplexNumber(line.Segments.Select(item => item.R0).Sum(), line.Segments.Select(item => item.X0).Sum());
+            ComplexNumber z1 = new ComplexNumber(line.Segments.Select(item => item.R1).Sum(), line.Segments.Select(item => item.X1).Sum());
             ComplexNumber loopImpedance = (z0 + 2.0D * z1) / 3.0D;
 
             double zf = faultImpedance.Magnitude;
@@ -1852,7 +1861,7 @@ namespace FaultData.DataResources
             DataSeries vaRMS = ToPerUnit(viCycleDataGroup.VA.RMS);
             DataSeries vbRMS = ToPerUnit(viCycleDataGroup.VB.RMS);
             DataSeries vcRMS = ToPerUnit(viCycleDataGroup.VC.RMS);
-            double nominalLineVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
+            double nominalLineVoltage = dataGroup.Asset.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
 
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup[0], SystemFrequency);
             int samplesPerHalfCycle = samplesPerCycle / 2;
@@ -1926,7 +1935,7 @@ namespace FaultData.DataResources
         private DataSeries ToPerUnit(DataSeries voltageRMS)
         {
             double? perUnitValue = voltageRMS.SeriesInfo.Channel.PerUnitValue;
-            double lineVoltage = voltageRMS.SeriesInfo.Channel.Line.VoltageKV * 1000.0D;
+            double lineVoltage = voltageRMS.SeriesInfo.Channel.Asset.VoltageKV * 1000.0D;
             string phase = voltageRMS.SeriesInfo.Channel.Phase.Name;
 
             if (new[] { "AN", "BN", "CN" }.Contains(phase))

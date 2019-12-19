@@ -523,7 +523,7 @@ namespace openXDA.Adapters
 
                     Channel channel = new Channel();
                     channel.MeterID = record["MeterID"].Value<int>();
-                    channel.LineID = record["LineID"].Value<int>();
+                    channel.AssetID = record["AssetID"].Value<int>();
                     channel.MeasurementTypeID = measurementTypeID;
                     channel.MeasurementCharacteristicID = measurementCharacteristicID;
                     channel.PhaseID = phaseID;

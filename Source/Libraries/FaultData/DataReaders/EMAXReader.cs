@@ -146,15 +146,15 @@ namespace FaultData.DataReaders
             string deviceName = identityString.Substring(0, IndexOf(identityString, "\r\n", "\n", "\r"));
 
             Meter meter = new Meter();
-            meter.MeterLocation = new MeterLocation();
+            meter.Location = new Location();
             meter.Channels = new List<Channel>();
             meter.AssetKey = deviceName;
             meter.Name = deviceName;
             meter.ShortName = deviceName.Substring(0, Math.Min(deviceName.Length, 50));
 
-            MeterLocation meterLocation = meter.MeterLocation;
+            Location meterLocation = meter.Location;
             meterLocation.Meters = new List<Meter>() { meter };
-            meterLocation.AssetKey = deviceName;
+            meterLocation.LocationKey = deviceName;
             meterLocation.Name = deviceName;
             meterLocation.ShortName = meter.ShortName;
             meterLocation.Description = deviceName;
