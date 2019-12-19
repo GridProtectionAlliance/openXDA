@@ -43,7 +43,7 @@ BEGIN
 
     SELECT
         @startTime = Event.StartTime,
-        @meterLocationID = Meter.MeterLocationID
+        @meterLocationID = Meter.LocationID
     FROM
         Event JOIN
         Meter ON Event.MeterID = Meter.ID
@@ -59,7 +59,7 @@ BEGIN
             WHERE
                 Event.ID < @EventID AND
                 StartTime = @startTime AND
-                MeterLocationID = @meterLocationID
+                LocationID = @meterLocationID
         ),
         (
             SELECT MAX(Event.ID)
@@ -67,8 +67,8 @@ BEGIN
                 Event JOIN
                 Meter ON Event.MeterID = Meter.ID
             WHERE
-                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime AND MeterLocationID = @meterLocationID) AND
-                MeterLocationID = @meterLocationID
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime AND LocationID = @meterLocationID) AND
+                LocationID = @meterLocationID
         )
     )
 
@@ -82,7 +82,7 @@ BEGIN
             WHERE
                 Event.ID > @EventID AND
                 StartTime = @startTime AND
-                MeterLocationID = @meterLocationID
+                LocationID = @meterLocationID
         ),
         (
             SELECT MIN(Event.ID)
@@ -90,8 +90,8 @@ BEGIN
                 Event JOIN
                 Meter ON Event.MeterID = Meter.ID
             WHERE
-                StartTime = (SELECT MIN(StartTime) FROM Event WHERE StartTime > @startTime AND MeterLocationID = @meterLocationID) AND
-                MeterLocationID = @meterLocationID
+                StartTime = (SELECT MIN(StartTime) FROM Event WHERE StartTime > @startTime AND LocationID = @meterLocationID) AND
+                LocationID = @meterLocationID
         )
     )
 
@@ -175,7 +175,7 @@ BEGIN
 
     SELECT
         @startTime = Event.StartTime,
-        @lineID = Event.LineID
+        @lineID = Event.AssetID
     FROM Event
     WHERE Event.ID = @EventID
 
@@ -187,14 +187,14 @@ BEGIN
             WHERE
                 Event.ID < @EventID AND
                 StartTime = @startTime AND
-                LineID = @lineID
+                AssetID = @lineID
         ),
         (
             SELECT MAX(Event.ID)
             FROM Event
             WHERE
-                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime AND LineID = @lineID) AND
-                LineID = @lineID
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime AND AssetID = @lineID) AND
+                AssetID = @lineID
         )
     )
 
@@ -206,14 +206,14 @@ BEGIN
             WHERE
                 Event.ID > @EventID AND
                 StartTime = @startTime AND
-                LineID = @lineID
+                AssetID = @lineID
         ),
         (
             SELECT MIN(Event.ID)
             FROM Event
             WHERE
-                StartTime = (SELECT MIN(StartTime) FROM Event WHERE StartTime > @startTime AND LineID = @lineID) AND
-                LineID = @lineID
+                StartTime = (SELECT MIN(StartTime) FROM Event WHERE StartTime > @startTime AND AssetID = @lineID) AND
+                AssetID = @lineID
         )
     )
 
@@ -1050,9 +1050,8 @@ BEGIN
 
     set @theDate = CAST(@EventDate as Date)
 
-  SELECT [dbo].[Event].[ID] as value, [dbo].[Event].[StartTime] as text, [dbo].[MeterLine].[LineName] as linename FROM [dbo].[Event]
-  join [dbo].[Line] on [dbo].[Event].[LineID] = [dbo].[Line].[ID]
-  join [dbo].[MeterLine] on [dbo].[MeterLine].[LineID] = [dbo].[Line].[ID] and [dbo].[MeterLine].[MeterID] = [dbo].[Event].[MeterID]
+  SELECT [dbo].[Event].[ID] as value, [dbo].[Event].[StartTime] as text, [dbo].[Asset].[AssetName] as linename FROM [dbo].[Event]
+  join [dbo].[Asset] on [dbo].[Event].[AssetID] = [dbo].[Asset].[ID]
   where (CAST([dbo].[Event].[StartTime] as Date) = @theDate) and
   [dbo].[Event].[EventTypeID] = @Type and
   [dbo].[Event].[MeterID] = @MeterID
@@ -1112,7 +1111,7 @@ BEGIN
   SELECT [dbo].[Event].[ID] as value, [dbo].[Event].[StartTime] as text , [dbo].[EventType].[Name] as type FROM [dbo].[Event]
   join [dbo].[EventType] on [dbo].[EventType].[ID] = [dbo].[Event].[EventTypeID]
   where (CAST([dbo].[Event].[StartTime] as Date) = @theDate) and
-  [dbo].[Event].[LineID] = @LineID --and
+  [dbo].[Event].[AssetID] = @LineID --and
   --[dbo].[Event].[MeterID] = @MeterID
   order by [dbo].[Event].[EventTypeID] , [dbo].[Event].[StartTime]
 
@@ -1417,10 +1416,10 @@ declare @test2 as float
 
 Select
   (SELECT count ([FaultSummary].[ID])  FROM [FaultSummary] join [Event] on [Event].[ID] = [FaultSummary].[EventID]
-  where [IsSelectedAlgorithm] = 1 and [IsValid] = 1 and [IsSuppressed] = 0 and [LineID] = @LineID) total,
+  where [IsSelectedAlgorithm] = 1 and [IsValid] = 1 and [IsSuppressed] = 0 and [AssetID] = @LineID) total,
 
   (SELECT count ([FaultSummary].[ID]) FROM [FaultSummary] join [Event] on [Event].[ID] = [FaultSummary].[EventID]
-  where [IsSelectedAlgorithm] = 1 and [IsValid] = 1 and [IsSuppressed] = 0 and [LineID] = @LineID and [FaultType] = @FaultType) as faultcount
+  where [IsSelectedAlgorithm] = 1 and [IsValid] = 1 and [IsSuppressed] = 0 and [AssetID] = @LineID and [FaultType] = @FaultType) as faultcount
 
 END
 GO
@@ -1808,10 +1807,8 @@ BEGIN
     set @theDate = CAST(@EventDate as Date)
 
   -- EventType
-  SELECT distinct [dbo].[Event].[LineID] as value, [dbo].[MeterLine].[LineName] as text, [dbo].[Event].[StartTime] from [dbo].[Event]
-
-  join [dbo].[Line] on [dbo].[Event].[LineID] = [dbo].[Line].[ID] and CAST([dbo].[Event].[StartTime] as Date) = @theDate
-  join [dbo].[MeterLine] on [dbo].[MeterLine].[LineID] = [dbo].[Event].[LineID]
+  SELECT distinct [dbo].[Event].[AssetID] as value, [dbo].[Asset].[AssetName] as text, [dbo].[Event].[StartTime] from [dbo].[Event]
+  join [dbo].[Asset] on [dbo].[Event].[AssetID] = [dbo].[Asset].[ID] and CAST([dbo].[Event].[StartTime] as Date) = @theDate
   order by [dbo].[Event].[StartTime]
 
 END
@@ -2902,8 +2899,8 @@ BEGIN
 
     SET NOCOUNT ON;
 
-select distinct VoltageKV as class from [dbo].[Line]
-join Channel on Line.ID = Channel.LineID
+select distinct VoltageKV as class from [dbo].[Asset]
+join Channel on Asset.ID = Channel.AssetID
 join Meter on Channel.MeterID = Meter.ID
 
 order by VoltageKV Desc
@@ -3078,12 +3075,12 @@ BEGIN
     ; WITH cte AS
     (
         SELECT
-            Event.LineID AS thelineid,
+            Event.AssetID AS thelineid,
             Event.ID AS theeventid,
             EventType.Name AS theeventtype,
             CAST(Event.StartTime AS VARCHAR(26)) AS theinceptiontime,
-            MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
-            Line.VoltageKV AS voltage,
+            Asset.AssetName AS thelinename,
+            Asset.VoltageKV AS voltage,
             COALESCE(FaultSummary.FaultType, Phase.Name, '') AS thefaulttype,
             CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultSummary.Distance AS DECIMAL(16, 4)) AS NVARCHAR(19)), '') END AS thecurrentdistance,
             dbo.EventHasImpactedComponents(Event.ID) AS pqiexists,
@@ -3097,7 +3094,7 @@ BEGIN
             END AS RowPriority,
             (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.StartTime BETWEEN DateAdd(SECOND, -5, Event.StartTime) and  DateAdd(SECOND, 5, Event.StartTime)) as SimultaneousCount,
             (SELECT COUNT(*) FROM Event as EventCount WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name = 'Sag' OR Name = 'Fault') AND EventCount.StartTime BETWEEN DateAdd(SECOND, -@timeWindow, Event.StartTime) and  DateAdd(SECOND, @timeWindow, Event.StartTime)) as SimultaneousFAndSCount,
-            (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.LineID = Event.LineID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
+            (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.AssetID = Event.AssetID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
             Event.UpdatedBy,
             (SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as Note
         FROM
@@ -3107,8 +3104,8 @@ BEGIN
             FaultSummary ON FaultSummary.EventID = Event.ID  LEFT OUTER JOIN
             Phase ON Disturbance.PhaseID = Phase.ID JOIN
             Meter ON Meter.ID = @MeterID JOIN
-            Line ON Event.LineID = Line.ID JOIN
-            MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
+            Asset ON Event.AssetID = Asset.ID JOIN
+            MeterAsset ON MeterAsset.MeterID = @MeterID AND MeterAsset.AssetID = Asset.ID
         WHERE
             Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
             Event.MeterID = @localMeterID AND
@@ -3202,7 +3199,7 @@ BEGIN
     DECLARE @voltageEnvelope varchar(max) = (SELECT TOP 1 Value FROM Setting WHERE Name = 'DefaultVoltageEnvelope')
 
     SELECT
-        Event.LineID AS thelineid,
+        Event.AssetID AS thelineid,
         Event.ID AS theeventid,
         Disturbance.ID as disturbanceid,
         EventType.Name AS disturbancetype,
@@ -3219,8 +3216,8 @@ BEGIN
         dbo.DateDiffTicks('1970-01-01', Disturbance.StartTime) / 10000.0 AS startmillis,
         dbo.DateDiffTicks('1970-01-01', Disturbance.EndTime) / 10000.0 AS endmillis,
         DisturbanceSeverity.SeverityCode,
-        MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
-        Line.VoltageKV AS voltage,
+        Asset.AssetName AS thelinename,
+        Asset.VoltageKV AS voltage,
         (SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as notes
     FROM
         Event JOIN
@@ -3233,8 +3230,8 @@ BEGIN
         Phase ON Disturbance.PhaseID = Phase.ID JOIN
         DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
         Meter ON Meter.ID = @MeterID JOIN
-        Line ON Event.LineID = Line.ID JOIN
-        MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID JOIN
+        Asset ON Event.AssetID = Asset.ID JOIN
+        MeterAsset ON MeterAsset.MeterID = @MeterID AND MeterAsset.AssetID = Asset.ID JOIN
         VoltageEnvelope ON VoltageEnvelope.ID = DisturbanceSeverity.VoltageEnvelopeID
     WHERE
         Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
@@ -3412,7 +3409,7 @@ BEGIN
         BreakerOperation.ID AS breakeroperationid,
         CAST(CAST(BreakerOperation.TripCoilEnergized AS TIME) AS NVARCHAR(100)) AS energized,
         BreakerOperation.BreakerNumber AS breakernumber,
-        MeterLine.LineName AS linename,
+        Asset.AssetName AS linename,
         Phase.Name AS phasename,
         CAST(BreakerOperation.BreakerTiming AS DECIMAL(16,5)) AS timing,
         CAST(BreakerOperation.StatusTiming AS DECIMAL(16,5)) AS statustiming,
@@ -3426,8 +3423,8 @@ BEGIN
         Event ON BreakerOperation.EventID = Event.ID JOIN
         EventType ON EventType.ID = Event.EventTypeID JOIN
         Meter ON Meter.ID = Event.MeterID JOIN
-        Line ON Line.ID = Event.LineID JOIN
-        MeterLine ON MeterLine.LineID = Event.LineID AND MeterLine.MeterID = Meter.ID JOIN
+        Asset ON Asset.ID = Event.AssetID JOIN
+        MeterAsset ON MeterAsset.AssetID = Event.AssetID AND MeterAsset.MeterID = Meter.ID JOIN
         BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
         Phase ON BreakerOperation.PhaseID = Phase.ID
     WHERE

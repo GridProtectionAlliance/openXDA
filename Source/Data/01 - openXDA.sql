@@ -310,7 +310,7 @@ BEGIN
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			MinFaultDistance AS MinFaultDistance,
-			MaxFaultDistance AS MaxFaultDistance,
+			MaxFaultDistance AS MaxFaultDistance
 	FROM INSERTED
 
 END
@@ -332,7 +332,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 		INNER JOIN
 			INSERTED
 		ON 
-			INSERTED.AssetID = ASSET.ID;
+			INSERTED.ID = ASSET.ID;
 	END
 	UPDATE LineAttributes
 		SET
@@ -343,7 +343,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 	INNER JOIN
 		INSERTED
 	ON 
-		INSERTED.AssetID = LineAttributes.AssetID;
+		INSERTED.ID = LineAttributes.AssetID;
 END
 GO
 
@@ -395,7 +395,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 		INNER JOIN
 			INSERTED
 		ON 
-			INSERTED.AssetID = ASSET.ID;
+			INSERTED.ID = ASSET.ID;
 	END
 END
 GO
@@ -426,7 +426,7 @@ BEGIN
 			AssetName AS AssetName
 	FROM INSERTED
 
-	INSERT INTO BreakerAttributes (AssetID, VoltageKV, ThermalRating, Speed)
+	INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			ThermalRating AS ThermalRating,
@@ -452,7 +452,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 		INNER JOIN
 			INSERTED
 		ON 
-			INSERTED.AssetID = ASSET.ID;
+			INSERTED.ID = ASSET.ID;
 	END
 	UPDATE BreakerAttributes
 		SET
@@ -463,7 +463,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 	INNER JOIN
 		INSERTED
 	ON 
-		INSERTED.AssetID = BreakerAttributes.AssetID;
+		INSERTED.ID = BreakerAttributes.AssetID;
 END
 GO
 
@@ -494,7 +494,7 @@ BEGIN
 			VoltageKV AS VoltageKV
 	FROM INSERTED
 
-	INSERT INTO CapacitorBankAttributes (AssetID, VoltageKV, NumberOfBanks, CansPerBank, CapacitancePerBank)
+	INSERT INTO CapacitorBankAttributes (AssetID, NumberOfBanks, CansPerBank, CapacitancePerBank)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			NumberOfBanks AS NumberOfBanks,
@@ -521,7 +521,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 		INNER JOIN
 			INSERTED
 		ON 
-			INSERTED.AssetID = ASSET.ID;
+			INSERTED.ID = ASSET.ID;
 	END
 	UPDATE CapacitorBankAttributes
 		SET
@@ -533,7 +533,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 	INNER JOIN
 		INSERTED
 	ON 
-		INSERTED.AssetID = CapacitorBankAttributes.AssetID;
+		INSERTED.ID = CapacitorBankAttributes.AssetID;
 END
 GO
 
@@ -550,14 +550,15 @@ CREATE VIEW LineSegment AS
 		X1,
 		ThermalRating,
 		Description,
-		AssetName
+		AssetName,
+		VoltageKV
 	FROM Asset JOIN LineSegmentAttributes ON Asset.ID = LineSegmentAttributes.AssetID
 GO
 
 CREATE TRIGGER TR_INSERT_LineSegment ON LineSegment
 INSTEAD OF INSERT AS 
 BEGIN
-	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName)
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
 		SELECT 
 			AssetKey AS AssetKey,
 			(SELECT ID FROM AssetType WHERE Name = 'LineSegment') AS AssetTypeID,
@@ -596,7 +597,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 		INNER JOIN
 			INSERTED
 		ON 
-			INSERTED.AssetID = ASSET.ID;
+			INSERTED.ID = ASSET.ID;
 	END
 	UPDATE LineSegmentAttributes
 		SET
@@ -610,7 +611,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 	INNER JOIN
 		INSERTED
 	ON 
-		INSERTED.AssetID = LineSegmentAttributes.AssetID;
+		INSERTED.ID = LineSegmentAttributes.AssetID;
 END
 GO
 
@@ -629,11 +630,12 @@ CREATE VIEW Transformer AS
 		PrimaryVoltageKV,
 		TAP,
 		Description,
-		AssetName
+		AssetName,
+		VoltageKV
 	FROM Asset JOIN TransformerAttributes ON Asset.ID = TransformerAttributes.AssetID
 GO
 
-CREATE TRIGGER TR_INSERT_Tranformer ON Tranformer
+CREATE TRIGGER TR_INSERT_Tranformer ON Transformer
 INSTEAD OF INSERT AS 
 BEGIN
 	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
@@ -645,10 +647,9 @@ BEGIN
 			VoltageKV AS VoltageKV
 	FROM INSERTED
 
-	INSERT INTO TransformerAttributes (AssetID, Length, R0, X0, R1, X1, ThermalRating, SecondaryVoltageKV, PrimaryVoltageKV, Tap )
+	INSERT INTO TransformerAttributes (AssetID, R0, X0, R1, X1, ThermalRating, SecondaryVoltageKV, PrimaryVoltageKV, Tap )
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
-			Length AS Length,
 			R0 AS R0,
 			X0 AS X0,
 			R1 AS R1,
@@ -679,7 +680,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 		INNER JOIN
 			INSERTED
 		ON 
-			INSERTED.AssetID = ASSET.ID;
+			INSERTED.ID = ASSET.ID;
 	END
 	UPDATE TransformerAttributes
 		SET
@@ -696,7 +697,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 	INNER JOIN
 		INSERTED
 	ON 
-		INSERTED.AssetID = TransformerAttributes.AssetID;
+		INSERTED.ID = TransformerAttributes.AssetID;
 END
 GO
 
@@ -757,6 +758,7 @@ CREATE TABLE Channel
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
+	AssetID INT NOT NULL REFERENCES Asset(ID),
     MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
