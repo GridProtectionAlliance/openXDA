@@ -47,7 +47,7 @@
     string postedmeasurementtype = dataContext.Connection.ExecuteScalar<string>("Select Name FROM MeasurementType WHERE ID = {0}", channel.MeasurementTypeID);
     string postedcharacteristic = dataContext.Connection.ExecuteScalar<string>("Select Name FROM MeasurementCharacteristic WHERE ID = {0}", channel.MeasurementCharacteristicID);
     string postedphasename = dataContext.Connection.ExecuteScalar<string>("Select Name FROM Phase WHERE ID = {0}", channel.PhaseID);
-    string postedlinename = dataContext.Connection.ExecuteScalar<string>("Select AssetKey FROM Line WHERE ID = {0}", channel.LineID);
+    string postedlinename = dataContext.Connection.ExecuteScalar<string>("Select AssetKey FROM Asset WHERE ID = {0}", channel.AssetID);
     string postedmetername = dataContext.Connection.ExecuteScalar<string>("Select Name FROM Meter WHERE ID = {0}", channel.MeterID);
 
 
