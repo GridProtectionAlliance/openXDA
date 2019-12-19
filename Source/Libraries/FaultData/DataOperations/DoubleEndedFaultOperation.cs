@@ -288,7 +288,7 @@ namespace FaultData.DataOperations
                     foreach (IGrouping<int, Event> lineGrouping in dbSystemEvent.GroupBy(evt => evt.AssetID))
                     {
                         // Make sure this line connects two known meter locations
-                        int meterLocationCount = meterLocationLineTable.QueryRecordCountWhere("LineID = {0}", lineGrouping.Key);
+                        int meterLocationCount = meterLocationLineTable.QueryRecordCountWhere("AssetID = {0}", lineGrouping.Key);
 
                         if (meterLocationCount != 2)
                             continue;
