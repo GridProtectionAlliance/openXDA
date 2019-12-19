@@ -37,11 +37,6 @@ namespace openXDA.Model
 
         public int PhaseID { get; set; }
 
-        public int Sample { get; set; }
-
-        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
-        public DateTime Timestamp { get; set; }
-
         public int InitialExtinguishSample { get; set; }
 
         [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]

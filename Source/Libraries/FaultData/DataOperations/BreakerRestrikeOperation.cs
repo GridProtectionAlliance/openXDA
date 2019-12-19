@@ -58,8 +58,8 @@ namespace FaultData.DataOperations
                         BreakerRestrike breakerRestrike = new BreakerRestrike();
                         breakerRestrike.EventID = evt.ID;
                         breakerRestrike.PhaseID = phase.ID;
-                        breakerRestrike.Sample = restrike.Sample;
-                        breakerRestrike.Timestamp = restrike.Timestamp;
+                        breakerRestrike.RestrikeSample = restrike.Sample;
+                        breakerRestrike.RestrikeTime = restrike.Timestamp;
                         breakerRestrikeTable.AddNewRecord(breakerRestrike);
                     }
                 }
