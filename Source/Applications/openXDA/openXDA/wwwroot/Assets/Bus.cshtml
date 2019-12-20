@@ -1,0 +1,135 @@
+﻿@*******************************************************************************************************
+    //  Bus.cshtml - Gbtc
+    //
+    //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+    //
+    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+    //  file except in compliance with the License. You may obtain a copy of the License at:
+    //
+    //      http://opensource.org/licenses/MIT
+    //
+    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+    //  License for the specific language governing permissions and limitations.
+    //
+    //  Code Modification History:
+    //  ----------------------------------------------------------------------------------------------------
+    //  12/20/2019 - C. Lackner
+    //       Generated original version of source code.
+    //
+    //*****************************************************************************************************@
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.RegularExpressions
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@using RazorEngine.Templating
+@using openXDA.Hubs
+
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Assets/Layout.cshtml";
+    ViewBag.Title = "Bus";
+
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    if (parameters.ContainsKey("Bus"))
+    {
+        ViewBag.Asset = parameters["Bus"];
+    }
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+new[] { "AssetKey", "Key", "text-Left" },
+new[] { "AssetName", "Asset Name", "text-left" },
+new[] { "VoltageKV", "Voltage", "text-left"},
+
+};
+
+    ViewBag.AddNewEditTitle = "Asset";
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+}
+@helper AssetFilter()
+{
+    <div class='row'>
+        <div class='col-md-12'>
+            <div class='form-group'>
+                <label for='linefilter'>Asset Key Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='linefilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@helper BodyRows()
+{
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: AssetName"></td>
+    <td width="15%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?LineID=' + ID + '&MeterID=-1&Title=' + AssetKey }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<Bus>("AssetKey", fieldLabel: "Key"))
+        @Raw(dataContext.AddInputField<Bus>("AssetName", fieldLabel: "Name"))
+        @Raw(dataContext.AddInputField<Bus>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
+        @Raw(dataContext.AddTextAreaField<Bus>("Description"))
+    </div>
+   
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@section Scripts
+{
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<Bus, DataHub>(ViewBag))
+
+        $(function () {
+            $("#pageHeader").append("@Raw(Regex.Replace(AssetFilter().ToString(), @"\r|\n", ""))");
+
+            $('#linefilter').on('keyup', function (e) {
+                if ($('#linefilter').val().length == 0) {
+                    viewModel.filterText = '';
+                    viewModel.queryPageRecords();
+                } else {
+                    viewModel.filterText = $('#linefilter').val();
+                    viewModel.queryPageRecords();
+                }
+            });
+            $('#linefilter').val('@ViewBag.Asset');
+            $('#linefilter').trigger('keyup');
+        });
+
+        function getMeterCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryMeterLineCount(sourceID,-1, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+
+        function openMeters(record) {
+            location.href = "/MeterLine.cshtml?LineID=" + record.ID + "&MeterID=-1" + "&Title=" + record.AssetKey;
+        }
+
+
+
+    </script>
+}

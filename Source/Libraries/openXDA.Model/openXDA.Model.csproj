@@ -108,6 +108,7 @@
     <Compile Include="System\ConfigurationLoader.cs" />
     <Compile Include="System\DataReader.cs" />
     <Compile Include="TransmissionElements\Asset.cs" />
+    <Compile Include="TransmissionElements\AssetView.cs" />
     <Compile Include="TransmissionElements\CapBank.cs" />
     <Compile Include="TransmissionElements\Bus.cs" />
     <Compile Include="TransmissionElements\BreakerOperation.cs" />

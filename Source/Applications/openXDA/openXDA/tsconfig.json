@@ -11,7 +11,7 @@
     "target": "es5",
     "typeRoots": [ "node_modules/@types" ]
   },
-  "include": [ "wwwroot/Scripts/TSX", "wwwroot/Scripts/TS/*" ],
+  "include": [ "wwwroot/Scripts/TSX", "wwwroot/Scripts/TS/*", "wwwroot/Assets/Asset.cshtml", "wwwroot/Assets/Transformer.cshtml", "../../../Libraries/openXDA.Model/TransmissionElements/Asset.cs", "../../../Libraries/openXDA.Model/TransmissionElements/AssetView.cs" ],
   "exclude": [
     "node_modules"
   ]

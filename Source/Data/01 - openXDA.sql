@@ -295,6 +295,20 @@ CREATE VIEW Line AS
 	FROM Asset JOIN LineAttributes ON Asset.ID = LineAttributes.AssetID
 GO
 
+CREATE VIEW AssetView AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		Asset.Description,
+		AssetName,
+		AssetType.Name AS AssetType
+	FROM Asset JOIN LineAttributes ON Asset.ID = LineAttributes.AssetID JOIN
+	AssetType ON AssetType.ID = Asset.AssetTypeID
+
+
+GO
+
 CREATE TRIGGER TR_INSERT_Line ON Line
 INSTEAD OF INSERT AS 
 BEGIN

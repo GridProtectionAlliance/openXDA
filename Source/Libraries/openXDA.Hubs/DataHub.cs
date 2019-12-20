@@ -3076,6 +3076,129 @@ namespace openXDA.Hubs
 
         #region [Assets Operations]
 
+        // Note that New Models Currently can't be Delected since the SQL has no DELETE Trigger yet
+
+        #region [Asset Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Asset), RecordOperation.QueryRecordCount)]
+        public int QueryAssetCount(int locationID, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                RecordRestriction restriction;
+                TableOperations<Asset> tableOperations = new TableOperations<Asset>(connection);
+                if (locationID > 0)
+                    restriction = tableOperations.GetSearchRestriction(filterString) + AssetLocationRestriction(locationID,connection);
+                else
+                    restriction = tableOperations.GetSearchRestriction(filterString);
+
+                return tableOperations.QueryRecordCount(restriction);
+            }
+        }
+
+        private RecordRestriction AssetLocationRestriction(int locationID, AdoDataConnection connection)
+        {
+            List<int> assetIds = new TableOperations<AssetLocation>(connection).QueryRecordsWhere("LocationID = {0}",locationID).Select(item => item.AssetID).ToList();
+
+            return new RecordRestriction("ID in ({0})", string.Join(",", assetIds.Select(item => item.ToString())));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Asset), RecordOperation.QueryRecords)]
+        public IEnumerable<Asset> QueryAssets(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Asset>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Asset), RecordOperation.UpdateRecord)]
+        public void UpdateAsset(Asset record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<Asset>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        public int QueryAssetCountByLocation(int locationID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<AssetLocation> tableOperations = new TableOperations<AssetLocation>(connection);
+
+                return tableOperations.QueryRecordCountWhere("LocationID = {0}", locationID);
+            }
+        }
+        
+        #endregion
+
+        #region [Breaker Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Breaker), RecordOperation.QueryRecordCount)]
+        public int QueryBreakerCount(string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Breaker>(connection).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Breaker), RecordOperation.QueryRecords)]
+        public IEnumerable<Breaker> QueryBreaker(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Breaker>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Breaker), RecordOperation.CreateNewRecord)]
+        public Breaker NewBreaker()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Breaker>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Breaker), RecordOperation.AddNewRecord)]
+        public void AddNewBreaker(Breaker record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<Breaker>(connection).AddNewRecord(record);
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+                }
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Breaker), RecordOperation.UpdateRecord)]
+        public void UpdateBreaker(Breaker record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<Breaker>(connection).UpdateRecord(record);
+            }
+        }
+
+        #endregion
+
+
+        /* New Models above */
+
         #region [ Meter Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
@@ -3087,7 +3210,7 @@ namespace openXDA.Hubs
                 TableOperations<MeterDetail> tableOperations = new TableOperations<MeterDetail>(connection);
                 RecordRestriction restriction;
                 if (meterLocationID > 0)
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
+                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LocationID = {0}", meterLocationID);
                 else
                     restriction = tableOperations.GetSearchRestriction(filterString);
 

@@ -175,7 +175,21 @@
                         <li @Raw(pageTitle == "Home" ? "class=\"active\"" : "")><a href="Index.cshtml">Home</a></li>
                         <li><a href="Sites.cshtml">Sites</a></li>
                         <li><a href="Meters.cshtml">Meters</a></li>
-                        <li><a href="Lines.cshtml">Lines</a></li>
+
+                        <li class="dropdown">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                Assets
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="Asset.cshtml">Asset Overview</a></li>
+                                <li><a href="Lines.cshtml">Lines</a></li>
+                                <li><a href="Breaker.cshtml">Breakers</a></li>
+                                <li><a href="Bus.cshtml">Buses</a></li>
+                                <li><a href="CapBank.cshtml">Capacitor Banks</a></li>
+                                <li><a href="Transformer.cshtml">Transformer</a></li>
+                            </ul>
+                        </li>
                     </ul>
                     <p class="nav navbar-text navbar-right">
                     <button id="logoutButton"type="button" class="btn btn-sm btn-info" style="display:none">Log Out</button>

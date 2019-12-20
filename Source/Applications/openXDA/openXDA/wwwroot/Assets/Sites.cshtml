@@ -77,10 +77,11 @@
 }
 @helper BodyRows()
 {
-    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: Latitude"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: Longitude"></td>
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="15%" class="text-left valign-middle" data-bind="text: Latitude"></td>
+    <td width="15%" class="text-left valign-middle" data-bind="text: Longitude"></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/Meters.cshtml?LocationID=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/Assets.cshtml?LocationID=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Assets&nbsp;&nbsp;<span class="badge" data-bind="text: getAssetCount(ID, $($element)), attr: {id: 'assetCount' + ID}">0</span></a></td>
     <td width="10%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -89,23 +90,23 @@
 @helper AddNewEditDialog(DataContext dataContext)
 {
     <div class="col-md-6">
-        @Raw(dataContext.AddInputField<MeterLocation>("Name"))
-        @Raw(dataContext.AddInputField<MeterLocation>("AssetKey", fieldLabel: "Asset Key"))
-        @Raw(dataContext.AddInputField<MeterLocation>("ShortName", fieldLabel: "Short Name"))
-        @Raw(dataContext.AddInputField<MeterLocation>("Alias"))
+        @Raw(dataContext.AddInputField<Location>("Name"))
+        @Raw(dataContext.AddInputField<Location>("LocationKey", fieldLabel: "Location Key"))
+        @Raw(dataContext.AddInputField<Location>("ShortName", fieldLabel: "Short Name"))
+        @Raw(dataContext.AddInputField<Location>("Alias"))
     </div>
 
     <div class="col-md-6">
-        @Raw(dataContext.AddInputField<MeterLocation>("Latitude"))
-        @Raw(dataContext.AddInputField<MeterLocation>("Longitude"))
-        @Raw(dataContext.AddTextAreaField<MeterLocation>("Description"))
+        @Raw(dataContext.AddInputField<Location>("Latitude"))
+        @Raw(dataContext.AddInputField<Location>("Longitude"))
+        @Raw(dataContext.AddTextAreaField<Location>("Description"))
     </div>
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MeterLocation, DataHub>(ViewBag))       
+        @Raw(dataContext.RenderViewModelConfiguration<Location, DataHub>(ViewBag))       
         
         $(function () {
             $("#pageHeader").append("@Raw(Regex.Replace(SiteFilter().ToString(), @"\r|\n", ""))");
@@ -129,6 +130,16 @@
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryMeterCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+
+        function getAssetCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryAssetCount(sourceID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }
