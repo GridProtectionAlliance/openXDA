@@ -51,8 +51,9 @@ namespace openXDA.Model
 
             TableOperations<Bus> busTable = new TableOperations<Bus>(connection);
             Bus bus = busTable.QueryRecordWhere("ID = {0}", asset.ID);
-            bus.LazyContext = asset.LazyContext;
-            bus.ConnectionFactory = asset.ConnectionFactory;
+
+            if (bus != null)
+                bus.LazyContext = asset.LazyContext;
 
             return bus;
         }
