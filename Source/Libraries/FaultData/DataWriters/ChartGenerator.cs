@@ -221,8 +221,9 @@ namespace FaultData.DataWriters
 
             Event evt = eventTable.QueryRecordWhere("ID = {0}", m_eventID);
             Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);
-            byte[] timeDomainData = m_connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
+            List<byte[]> timeDomainData = ChannelData.DataFromEvent(evt.ID, m_connection);
 
+            //This Should start by getting multiple datasets
             meter.ConnectionFactory = () => new AdoDataConnection(m_connection.Connection, m_connection.AdapterType, false);
 
             DataGroup dataGroup = new DataGroup();
@@ -243,7 +244,7 @@ namespace FaultData.DataWriters
             Func<FaultCurve, DataSeries> toDataSeries = faultCurve =>
             {
                 DataGroup dataGroup = new DataGroup();
-                dataGroup.FromData(faultCurve.Data);
+                dataGroup.FromData(new List<byte[]>() { faultCurve.Data });
                 return dataGroup[0];
             };
 

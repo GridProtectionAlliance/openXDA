@@ -282,7 +282,7 @@ namespace FaultData.DataOperations
             {
                 DataGroup group = new DataGroup();
                 group.Add(series);
-                return group.ToData();
+                return group.ToData()[series.SeriesInfo.ID];
             }
 
             #endregion

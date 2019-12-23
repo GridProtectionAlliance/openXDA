@@ -296,7 +296,12 @@ namespace FaultData.DataOperations
                         // Determine the length of the line
                         double lineLength = lineTable
                             .QueryRecordsWhere("ID = {0}", lineGrouping.Key)
-                            .Select(line => line.Segments.Select(item => item.Length).Sum())
+                            .Select(line =>
+                            {
+                                line.ConnectionFactory = meterDataSet.CreateDbConnection;
+
+                                return line.Segments.Select(item => item.Length).Sum();
+                            })
                             .DefaultIfEmpty(double.NaN)
                             .First();
 
@@ -305,8 +310,16 @@ namespace FaultData.DataOperations
 
                         // Determine the nominal impedance of the line
                         ComplexNumber nominalImpedance = new ComplexNumber(
-                            lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line => line.Segments.Select(item => item.R1).Sum()).FirstOrDefault(),
-                            lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line => line.Segments.Select(item => item.X1).Sum()).FirstOrDefault());
+                            lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line =>
+                            {
+                                line.ConnectionFactory = meterDataSet.CreateDbConnection;
+                                return line.Segments.Select(item => item.R1).Sum();
+                            }).FirstOrDefault(),
+                            lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line =>
+                            {
+                                line.ConnectionFactory = meterDataSet.CreateDbConnection;
+                                return line.Segments.Select(item => item.X1).Sum();
+                            }).FirstOrDefault());
 
                            
                         if (!nominalImpedance.AllAssigned)
@@ -479,7 +492,7 @@ namespace FaultData.DataOperations
             {
                 EventID = grouping.Key,
                 Algorithm = "DoubleEnded",
-                Data = faultCurveGroup.ToData()
+                Data = faultCurveGroup.ToData()[faultCurveGroup.DataSeries[0].SeriesInfo.ID]
             };
         }
 
@@ -544,10 +557,8 @@ namespace FaultData.DataOperations
             if ((object)evt == null)
                 return null;
 
-            byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
-
-            if ((object)timeDomainData == null)
-                return null;
+            List<byte[]> timeDomainData = ChannelData.DataFromEvent(eventID, connection);
+                        
 
             TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
             Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);

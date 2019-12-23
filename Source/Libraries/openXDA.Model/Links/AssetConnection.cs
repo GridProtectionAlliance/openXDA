@@ -107,7 +107,8 @@ namespace openXDA.Model
                 return null;
 
             TableOperations<Asset> assetTable = new TableOperations<Asset>(connection);
-            return assetTable.QueryRecordWhere("ID = {0}", ParentID);
+            Asset parent = assetTable.QueryRecordWhere("ID = {0}", ParentID);
+            return parent;
         }
 
         public Asset GetChild(AdoDataConnection connection)
@@ -116,7 +117,9 @@ namespace openXDA.Model
                 return null;
 
             TableOperations<Asset> assetTable = new TableOperations<Asset>(connection);
-            return assetTable.QueryRecordWhere("ID = {0}", ChildID);
+            Asset child = assetTable.QueryRecordWhere("ID = {0}", ChildID);
+
+            return child;
         }
 
         public Asset QueryParent()

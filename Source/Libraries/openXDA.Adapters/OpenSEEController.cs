@@ -523,7 +523,7 @@ namespace openXDA.Adapters
             {
                 FaultCurve faultCurve = new TableOperations<FaultCurve>(connection).QueryRecordWhere("ID = {0}", faultCurveID);
                 DataGroup dataGroup = new DataGroup();
-                dataGroup.FromData(meter, faultCurve.Data);
+                dataGroup.FromData(meter, new List<byte[]>() { faultCurve.Data });
                 FlotSeries flotSeries = new FlotSeries()
                 {
                     ChannelID = 0,
@@ -553,10 +553,10 @@ namespace openXDA.Adapters
 
             Task<DataGroup> dataGroupTask = new Task<DataGroup>(() =>
             {
+
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    byte[] frequencyDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = (SELECT EventDataID FROM Event WHERE ID = {0})", eventID);
-                    return ToDataGroup(meter, frequencyDomainData);
+                   return ToDataGroup(meter, ChannelData.DataFromEvent(eventID,connection));
                 }
             });
 
@@ -590,7 +590,7 @@ namespace openXDA.Adapters
             return viCycleDataGroupTask.Result;
         }
 
-        private DataGroup ToDataGroup(Meter meter, byte[] data)
+        private DataGroup ToDataGroup(Meter meter, List<byte[]> data)
         {
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(meter, data);

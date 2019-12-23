@@ -170,13 +170,18 @@ namespace FaultData.DataOperations
 
                 if (dataGroup.Samples > 0)
                 {
-                    evt.EventData = new EventData()
-                    {
-                        FileGroupID = meterDataSet.FileGroup.ID,
-                        RunTimeID = i,
-                        TimeDomainData = dataGroup.ToData(),
-                        MarkedForDeletion = 0
-                    };
+                    evt.EventData = dataGroup.ToData().Select(item =>
+                   {
+                       return new ChannelData()
+                       {
+                           FileGroupID = meterDataSet.FileGroup.ID,
+                           RunTimeID = i,
+                           TimeDomainData = item.Value,
+                           MarkedForDeletion = 0,
+                           SeriesID = item.Key,
+                           EventID = evt.ID
+                       };
+                   }).ToList();
 
                     evt.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
                     evt.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
@@ -195,7 +200,7 @@ namespace FaultData.DataOperations
         private void LoadEvents(AdoDataConnection connection, List<Event> events, MeterDataSet meterDataSet)
         {
             TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-            TableOperations<EventData> eventDataTable = new TableOperations<EventData>(connection);
+            TableOperations<ChannelData> eventDataTable = new TableOperations<ChannelData>(connection);
             TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
 
             foreach (Event evt in events)
@@ -206,17 +211,26 @@ namespace FaultData.DataOperations
                 if (eventTable.QueryRecordsWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND AssetID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.AssetID).Any())
                     continue;
 
-                EventData eventData = evt.EventData;
+
+                
+                eventTable.AddNewRecord(evt);
+                evt.ID = eventTable.QueryRecordWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND AssetID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.AssetID).ID;
+
+                List<ChannelData> eventData = evt.EventData;
 
                 if ((object)eventData != null)
                 {
-                    eventDataTable.AddNewRecord(eventData);
-                    eventData.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-                    evt.EventDataID = eventData.ID;
-                }
+                    foreach (ChannelData channelData in eventData)
+                    {
 
-                eventTable.AddNewRecord(evt);
-                evt.ID = eventTable.QueryRecordWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND AssetID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.AssetID).ID;
+                        if ((object)channelData != null)
+                        {
+                            channelData.EventID = evt.ID;
+                            eventDataTable.AddNewRecord(channelData);
+                            channelData.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                        }
+                    }
+                }
 
                 foreach (DbDisturbance disturbance in evt.Disturbances)
                 {

@@ -63,7 +63,8 @@ namespace FaultData.DataSets
                 FilePath = (new TableOperations<DataFile>(connection)).QueryRecordWhere("FileGroupID = {0}", evt.FileGroupID).FilePath;
                 FileGroup = (new TableOperations<FileGroup>(connection)).QueryRecordWhere("ID = {0}", evt.FileGroupID);
                 
-                DataGroup dataGroup = ToDataGroup((new TableOperations<EventData>(connection)).QueryRecordWhere("ID = {0}", evt.EventDataID).TimeDomainData);
+
+                DataGroup dataGroup = ToDataGroup(ChannelData.DataFromEvent(evt.ID,connection));
                 DataSeries = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name != "Digital").ToList();
                 Digitals = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name == "Digital").ToList();
             }
@@ -118,7 +119,7 @@ namespace FaultData.DataSets
             return resource;
         }
 
-        private DataGroup ToDataGroup(byte[] data)
+        private DataGroup ToDataGroup(List<byte[]> data)
         {
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(Meter, data);

@@ -73,7 +73,7 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
-        public EventData EventData { get; set; }
+        public List<ChannelData> EventData { get; set; }
 
         [JsonIgnore]
         [NonRecordField]

@@ -22,18 +22,32 @@
 //******************************************************************************************************
 
 
+using GSF;
+using GSF.Data;
 using GSF.Data.Model;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using Ionic.Zlib;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace openXDA.Model.Channels
+namespace openXDA.Model
 {
     [TableName("ChannelData")]
-    class ChannelData
+    public class ChannelData
     {
+        #region [Private Class]
+        private class DataPoint
+        {
+            public DateTime Time;
+            public double Value;
+        }
+
+        #endregion
+ 
+        #region [Properties]
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -46,6 +60,7 @@ namespace openXDA.Model.Channels
         // Not sure we need this but it was in EventData
         public int MarkedForDeletion { get; set; }
 
+        //This should be ChannelID not really....
         public int SeriesID { get; set; }
 
         public int EventID { get; set; }
@@ -53,7 +68,265 @@ namespace openXDA.Model.Channels
         // This is for backwards compatibility so we can point to data that is still in a EventDataBlob.
         // As we pull up the data it will be moved out but if this is the first time Calling the ChannelData Blob
         // it just points back to the eventdata Blob.
-        public int? EventDataID {get; set;}
+        public int? EventDataID { get; set; }
+
+        #endregion
+
+        #region [Statics]
+
+        // This is going through this function to migtrate all EventdataBlobs over to ChannelDataBlobs as they are read eventually removing the legacy table (eventData)
+        public static List<byte[]> DataFromEvent(int eventID, AdoDataConnection connection)
+        {
+            List<byte[]> result = new List<byte[]>();
+
+            //This Should start by getting multiple datasets
+            using (IDataReader reader = connection.ExecuteReader("SELECT ID FROM Series WHERE EventID = {0}", eventID))
+            {
+
+                while (reader.Read())
+                {
+                    int seriesID = (int)reader.GetValue(0);
+                    byte[] singleSeriesData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}"
+                        , seriesID, eventID);
+
+                    //This will have to change For Legacy Reasons
+                    if (singleSeriesData == null)
+                    {
+                        int eventDataID = connection.ExecuteScalar<int>("SELECT TimeDomainData FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", seriesID, eventID);
+                        singleSeriesData = ProcessLegacyBlob(eventID, seriesID, connection);
+                    }
+
+                    result.Add(singleSeriesData);
+
+                }
+            }
+
+            return result;
+        }
+
+        
+        // from new EvendData Blob format
+        private static byte[] ProcessLegacyBlob(int eventID, int requestedSeriesID, AdoDataConnection connection)
+        {
+            int eventDataID = connection.ExecuteScalar<int>("SELECT EventDataID FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", requestedSeriesID, eventID);
+
+            byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", eventDataID);
+            byte[] resultData = null;
+
+            // If the blob contains the GZip header,
+            // use the legacy deserialization algorithm
+            if (timeDomainData[0] == 0x1F && timeDomainData[1] == 0x8B)
+            {
+                return FromData_Legacy(timeDomainData, requestedSeriesID, eventID, connection);
+            }
+
+            // Restore the GZip header before uncompressing
+            timeDomainData[0] = 0x1F;
+            timeDomainData[1] = 0x8B;
+
+            byte[] uncompressedData = GZipStream.UncompressBuffer(timeDomainData);
+            int offset = 0;
+
+            int m_samples = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            List<DateTime> times = new List<DateTime>();
+
+            while (times.Count < m_samples)
+            {
+                int timeValues = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+                long currentValue = LittleEndian.ToInt64(uncompressedData, offset);
+                offset += sizeof(long);
+                times.Add(new DateTime(currentValue));
+
+                for (int i = 1; i < timeValues; i++)
+                {
+                    currentValue += LittleEndian.ToUInt16(uncompressedData, offset);
+                    offset += sizeof(ushort);
+                    times.Add(new DateTime(currentValue));
+                }
+            }
+
+            while (offset < uncompressedData.Length)
+            {
+                List<DataPoint> dataSeries = new List<DataPoint>();
+                int seriesID = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+                
+                const ushort NaNValue = ushort.MaxValue;
+                double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
+                double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
+                offset += 2 * sizeof(double);
+
+                for (int i = 0; i < m_samples; i++)
+                {
+                    ushort compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
+                    offset += sizeof(ushort);
+
+                    double decompressedValue = decompressionScale * compressedValue + decompressionOffset;
+
+                    if (compressedValue == NaNValue)
+                        decompressedValue = double.NaN;
+
+                    dataSeries.Add(new DataPoint()
+                    {
+                        Time = times[i],
+                        Value = decompressedValue
+                    });
+                }
+                if (seriesID == requestedSeriesID)
+                {
+                    resultData = ToData(dataSeries, seriesID, m_samples);
+                }
+
+                // Insert into correct ChannelData.....
+                connection.ExecuteNonQuery("UPDATE ChannelData SET TimeDomainData = {0} WHERE SeriesID = {1} AND EventID = {2}", ToData(dataSeries, seriesID, m_samples), seriesID, eventID);
+
+            }
+
+            connection.ExecuteNonQuery("DELETE FROM EventData WHERE ID = {0}", eventDataID);
+
+            return resultData;
+        }
+
+        // From old EventDataBlob format
+        private static byte[] FromData_Legacy(byte[] data, int requestedSeriesID, int eventID, AdoDataConnection connection)
+        {
+            byte[] resultData = null;
+            byte[] uncompressedData;
+            int offset;
+            DateTime[] times;
+            int seriesID;
+
+            uncompressedData = GZipStream.UncompressBuffer(data);
+            offset = 0;
+
+            int m_samples = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            times = new DateTime[m_samples];
+
+            for (int i = 0; i < m_samples; i++)
+            {
+                times[i] = new DateTime(LittleEndian.ToInt64(uncompressedData, offset));
+                offset += sizeof(long);
+            }
+
+            while (offset < uncompressedData.Length)
+            {
+                seriesID = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+                List<DataPoint> points = new List<DataPoint>();
+
+                for (int i = 0; i < m_samples; i++)
+                {
+                    points.Add(new DataPoint()
+                    {
+                        Time = times[i],
+                        Value = LittleEndian.ToDouble(uncompressedData, offset)
+                    });
+
+                    offset += sizeof(double);
+                }
+
+                if (seriesID == requestedSeriesID)
+                {
+                    resultData = ToData(points, seriesID, m_samples);
+                }
+
+                // Insert into correct ChannelData.....
+                connection.ExecuteNonQuery("UPDATE ChannelData SET TimeDomainData = {0} WHERE SeriesID = {1} AND EventID = {2}", ToData(points, seriesID, m_samples), seriesID, eventID);
+                
+            }
+
+            //Remove EventData
+            int eventDataID = connection.ExecuteScalar<int>("SELECT EventDataID FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", requestedSeriesID, eventID);
+            connection.ExecuteNonQuery("DELETE FROM EventData WHERE ID = {0}", eventDataID);
+
+            return resultData;
+        }
+
+        private static byte[] ToData(List<DataPoint> data, int seriesID, int samples)
+        {
+
+            var timeSeries = data.Select(dataPoint => new { Time = dataPoint.Time.Ticks, Compressed = false }).ToList();
+
+            for (int i = 1; i < timeSeries.Count; i++)
+            {
+                long previousTimestamp = data[i - 1].Time.Ticks;
+                long timestamp = timeSeries[i].Time;
+                long diff = timestamp - previousTimestamp;
+
+                if (diff >= 0 && diff <= ushort.MaxValue)
+                    timeSeries[i] = new { Time = diff, Compressed = true };
+
+
+            }
+
+            int timeSeriesByteLength = timeSeries.Sum(obj => obj.Compressed ? sizeof(ushort) : sizeof(int) + sizeof(long));
+            int dataSeriesByteLength = sizeof(int) + (2 * sizeof(double)) + (samples * sizeof(ushort));
+            int totalByteLength = sizeof(int) + timeSeriesByteLength + dataSeriesByteLength;
+
+           
+            byte[] result = new byte[totalByteLength];
+            int offset = 0;
+
+            offset += LittleEndian.CopyBytes(samples, result, offset);
+
+            List<int> uncompressedIndexes = timeSeries
+                .Select((obj, Index) => new { obj.Compressed, Index })
+                .Where(obj => !obj.Compressed)
+                .Select(obj => obj.Index)
+                .ToList();
+
+            for (int i = 0; i < uncompressedIndexes.Count; i++)
+            {
+                int index = uncompressedIndexes[i];
+                int nextIndex = (i + 1 < uncompressedIndexes.Count) ? uncompressedIndexes[i + 1] : timeSeries.Count;
+
+                offset += LittleEndian.CopyBytes(nextIndex - index, result, offset);
+                offset += LittleEndian.CopyBytes(timeSeries[index].Time, result, offset);
+
+                for (int j = index + 1; j < nextIndex; j++)
+                    offset += LittleEndian.CopyBytes((ushort)timeSeries[j].Time, result, offset);
+            }
+
+            const ushort NaNValue = ushort.MaxValue;
+            const ushort MaxCompressedValue = ushort.MaxValue - 1;
+            double range = data.Select(item => item.Value).Max() - data.Select(item => item.Value).Min();
+            double decompressionOffset = data.Select(item => item.Value).Min();
+            double decompressionScale = range / MaxCompressedValue;
+            double compressionScale = (decompressionScale != 0.0D) ? 1.0D / decompressionScale : 0.0D;
+
+            offset += LittleEndian.CopyBytes(seriesID, result, offset);
+            offset += LittleEndian.CopyBytes(decompressionOffset, result, offset);
+            offset += LittleEndian.CopyBytes(decompressionScale, result, offset);
+
+            foreach (DataPoint dataPoint in data)
+            {
+                ushort compressedValue = (ushort)Math.Round((dataPoint.Value - decompressionOffset) * compressionScale);
+
+                if (compressedValue == NaNValue)
+                    compressedValue--;
+
+                if (double.IsNaN(dataPoint.Value))
+                    compressedValue = NaNValue;
+
+                offset += LittleEndian.CopyBytes(compressedValue, result, offset);
+            }
+
+            byte[] returnArray = GZipStream.CompressBuffer(result);
+            returnArray[0] = 0x44;
+            returnArray[1] = 0x33;
+
+            return returnArray;
+        }
+
+        #endregion
 
     }
 }

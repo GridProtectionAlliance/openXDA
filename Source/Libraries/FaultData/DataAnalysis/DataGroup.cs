@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  05/19/2014 - Stephen C. Wills
 //       Generated original version of source code.
+//  12/23/2019 - C. Lackner
+//       Adjusted to read data from blob for each dataseries.
 //
 //******************************************************************************************************
 
@@ -409,9 +411,13 @@ namespace FaultData.DataAnalysis
 
             return subGroup;
         }
-
-        public byte[] ToData()
+        
+        // Overwrite To Data to save Data into ChannelBlob instead of File Blob
+        // This needs to be done to avoid data duplication
+        public Dictionary<int,byte[]> ToData()
         {
+            Dictionary<int, byte[]> result = new Dictionary<int, byte[]>();
+
             var timeSeries = m_dataSeries[0].DataPoints
                 .Select(dataPoint => new { Time = dataPoint.Time.Ticks, Compressed = false })
                 .ToList();
@@ -424,37 +430,40 @@ namespace FaultData.DataAnalysis
 
                 if (diff >= 0 && diff <= ushort.MaxValue)
                     timeSeries[i] = new { Time = diff, Compressed = true };
+
+
             }
 
             int timeSeriesByteLength = timeSeries.Sum(obj => obj.Compressed ? sizeof(ushort) : sizeof(int) + sizeof(long));
             int dataSeriesByteLength = sizeof(int) + (2 * sizeof(double)) + (m_samples * sizeof(ushort));
-            int totalByteLength = sizeof(int) + timeSeriesByteLength + (dataSeriesByteLength * m_dataSeries.Count);
-
-            byte[] data = new byte[totalByteLength];
-            int offset = 0;
-
-            offset += LittleEndian.CopyBytes(m_samples, data, offset);
-
-            List<int> uncompressedIndexes = timeSeries
-                .Select((obj, Index) => new { obj.Compressed, Index })
-                .Where(obj => !obj.Compressed)
-                .Select(obj => obj.Index)
-                .ToList();
-
-            for (int i = 0; i < uncompressedIndexes.Count; i++)
-            {
-                int index = uncompressedIndexes[i];
-                int nextIndex = (i + 1 < uncompressedIndexes.Count) ? uncompressedIndexes[i + 1] : timeSeries.Count;
-
-                offset += LittleEndian.CopyBytes(nextIndex - index, data, offset);
-                offset += LittleEndian.CopyBytes(timeSeries[index].Time, data, offset);
-
-                for (int j = index + 1; j < nextIndex; j++)
-                    offset += LittleEndian.CopyBytes((ushort)timeSeries[j].Time, data, offset);
-            }
+            int totalByteLength = sizeof(int) + timeSeriesByteLength + dataSeriesByteLength;
 
             foreach (DataSeries dataSeries in m_dataSeries)
             {
+                byte[] data = new byte[totalByteLength];
+                int offset = 0;
+
+                offset += LittleEndian.CopyBytes(m_samples, data, offset);
+
+                List<int> uncompressedIndexes = timeSeries
+                    .Select((obj, Index) => new { obj.Compressed, Index })
+                    .Where(obj => !obj.Compressed)
+                    .Select(obj => obj.Index)
+                    .ToList();
+
+                for (int i = 0; i < uncompressedIndexes.Count; i++)
+                {
+                    int index = uncompressedIndexes[i];
+                    int nextIndex = (i + 1 < uncompressedIndexes.Count) ? uncompressedIndexes[i + 1] : timeSeries.Count;
+
+                    offset += LittleEndian.CopyBytes(nextIndex - index, data, offset);
+                    offset += LittleEndian.CopyBytes(timeSeries[index].Time, data, offset);
+
+                    for (int j = index + 1; j < nextIndex; j++)
+                        offset += LittleEndian.CopyBytes((ushort)timeSeries[j].Time, data, offset);
+                }
+
+            
                 if (dataSeries.Calculated) continue;
 
                 const ushort NaNValue = ushort.MaxValue;
@@ -481,61 +490,63 @@ namespace FaultData.DataAnalysis
 
                     offset += LittleEndian.CopyBytes(compressedValue, data, offset);
                 }
+                byte[] returnArray = GZipStream.CompressBuffer(data);
+                returnArray[0] = 0x44;
+                returnArray[1] = 0x33;
+
+                result[dataSeries.SeriesInfo.ID] = returnArray;
             }
 
-            byte[] returnArray = GZipStream.CompressBuffer(data);
-            returnArray[0] = 0x44;
-            returnArray[1] = 0x33;
-
-            return returnArray;
+            return result ;
         }
-
-        public void FromData(byte[] data)
+        
+        public void FromData(List<byte[]> data)
         {
             FromData(null, data);
         }
 
-        public void FromData(Meter meter, byte[] data)
+        public void FromData(Meter meter, List<byte[]> dataList)
         {
-            // If the blob contains the GZip header,
-            // use the legacy deserialization algorithm
-            if (data[0] == 0x1F && data[1] == 0x8B)
+
+            foreach (byte[] data in dataList)
             {
-                FromData_Legacy(meter, data);
-                return;
-            }
+                // If the blob contains the GZip header,
+                // use the legacy deserialization algorithm
+                if (data[0] == 0x1F && data[1] == 0x8B)
+                {
+                    FromData_Legacy(meter, data);
+                    return;
+                }
 
-            // Restore the GZip header before uncompressing
-            data[0] = 0x1F;
-            data[1] = 0x8B;
+                // Restore the GZip header before uncompressing
+                data[0] = 0x1F;
+                data[1] = 0x8B;
 
-            byte[] uncompressedData = GZipStream.UncompressBuffer(data);
-            int offset = 0;
+                byte[] uncompressedData = GZipStream.UncompressBuffer(data);
+                int offset = 0;
 
-            m_samples = LittleEndian.ToInt32(uncompressedData, offset);
-            offset += sizeof(int);
-
-            List<DateTime> times = new List<DateTime>();
-
-            while (times.Count < m_samples)
-            {
-                int timeValues = LittleEndian.ToInt32(uncompressedData, offset);
+                m_samples = LittleEndian.ToInt32(uncompressedData, offset);
                 offset += sizeof(int);
 
-                long currentValue = LittleEndian.ToInt64(uncompressedData, offset);
-                offset += sizeof(long);
-                times.Add(new DateTime(currentValue));
+                List<DateTime> times = new List<DateTime>();
 
-                for (int i = 1; i < timeValues; i++)
+                while (times.Count < m_samples)
                 {
-                    currentValue += LittleEndian.ToUInt16(uncompressedData, offset);
-                    offset += sizeof(ushort);
-                    times.Add(new DateTime(currentValue));
-                }
-            }
+                    int timeValues = LittleEndian.ToInt32(uncompressedData, offset);
+                    offset += sizeof(int);
 
-            while (offset < uncompressedData.Length)
-            {
+                    long currentValue = LittleEndian.ToInt64(uncompressedData, offset);
+                    offset += sizeof(long);
+                    times.Add(new DateTime(currentValue));
+
+                    for (int i = 1; i < timeValues; i++)
+                    {
+                        currentValue += LittleEndian.ToUInt16(uncompressedData, offset);
+                        offset += sizeof(ushort);
+                        times.Add(new DateTime(currentValue));
+                    }
+                }
+
                 DataSeries dataSeries = new DataSeries();
                 int seriesID = LittleEndian.ToInt32(uncompressedData, offset);
                 offset += sizeof(int);
@@ -565,7 +576,8 @@ namespace FaultData.DataAnalysis
                     });
                 }
 
-                Add(dataSeries);
+                    Add(dataSeries);
+                
             }
         }
 

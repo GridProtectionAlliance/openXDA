@@ -285,7 +285,7 @@ namespace openXDA.Hubs
                 List<FlotSeries> flotInfo = GetFlotInfo(eventID);
                 DateTime epoch = new DateTime(1970, 1, 1);
 
-                byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
+                List<byte[]> timeDomainData = ChannelData.DataFromEvent(evt.ID,connection);
 
                 Lazy<DataGroup> dataGroup = new Lazy<DataGroup>(() => ToDataGroup(meter, timeDomainData));
                 Dictionary<int, DataSeries> waveformData = dataGroup.Value.DataSeries.ToDictionary(dataSeries => dataSeries.SeriesInfo.ID);
@@ -300,7 +300,7 @@ namespace openXDA.Hubs
                         .Select(faultCurve => new
                         {
                             Algorithm = faultCurve.Algorithm,
-                            DataGroup = ToDataGroup(meter, faultCurve.Data)
+                            DataGroup = ToDataGroup(meter, new List<byte[]>() { faultCurve.Data })
                         })
                         .Where(obj => obj.DataGroup.DataSeries.Count > 0)
                         .ToDictionary(obj => obj.Algorithm, obj => obj.DataGroup[0]);
@@ -357,7 +357,7 @@ namespace openXDA.Hubs
             return flotSeriesList;
         }
 
-        public DataGroup ToDataGroup(Meter meter, byte[] data)
+        public DataGroup ToDataGroup(Meter meter, List<byte[]> data)
         {
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(meter, data);

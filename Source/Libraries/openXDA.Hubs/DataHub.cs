@@ -4226,7 +4226,7 @@ namespace openXDA.Hubs
                     DataGroup dataFaultAlgo = new DataGroup();
 
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", record.MeterID);
-                    byte[] timeSeries = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    List<byte[]> timeSeries = ChannelData.DataFromEvent(record.ID, connection);
                     byte[] faultCurve = connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
 
                     meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
@@ -4244,14 +4244,17 @@ namespace openXDA.Hubs
                                 }
                             }
 
-
-                            byte[] newTimeData = dataTimeGroup.ToData();
-                            connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0} WHERE ID = {1}", newTimeData, record.EventDataID);
+                            foreach (int channelID in dataTimeGroup.ToData().Keys)
+                            {
+                                connection.ExecuteNonQuery("Update ChannelData SET TimeDomainData = {0} WHERE ChannelID = {1} AND EventID = {2}", 
+                                    dataTimeGroup.ToData()[channelID], channelID, record.EventDataID);
+                            }
+                            
                         }
 
                         if (faultCurve != null)
                         {
-                            dataFaultAlgo.FromData(meter, faultCurve);
+                            dataFaultAlgo.FromData(meter, new List<byte[]>() { faultCurve });
                             foreach (var dataSeries in dataFaultAlgo.DataSeries)
                             {
                                 foreach (var dataPoint in dataSeries.DataPoints)
@@ -4260,7 +4263,7 @@ namespace openXDA.Hubs
                                 }
                             }
 
-                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
+                            byte[] newFaultAlgo = dataFaultAlgo.ToData()[dataFaultAlgo.DataSeries[0].SeriesInfo.ChannelID];
 
                             connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                         }
