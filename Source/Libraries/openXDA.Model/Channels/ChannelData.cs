@@ -78,6 +78,7 @@ namespace openXDA.Model
         public static List<byte[]> DataFromEvent(int eventID, AdoDataConnection connection)
         {
             List<byte[]> result = new List<byte[]>();
+            List<int> directChannelIDs = new List<int>();
 
             //This Should start by getting multiple datasets
             using (IDataReader reader = connection.ExecuteReader("SELECT ID FROM Series WHERE EventID = {0}", eventID))
@@ -92,19 +93,61 @@ namespace openXDA.Model
                     //This will have to change For Legacy Reasons
                     if (singleSeriesData == null)
                     {
-                        int eventDataID = connection.ExecuteScalar<int>("SELECT TimeDomainData FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", seriesID, eventID);
                         singleSeriesData = ProcessLegacyBlob(eventID, seriesID, connection);
                     }
 
+                    directChannelIDs.Add(connection.ExecuteScalar<int>("SELECT ChannelID FROM Series WHERE ID = {0}", seriesID));
                     result.Add(singleSeriesData);
 
                 }
             }
 
+            //This Will get the extended Data (throught connections)....
+            Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT AssetID FROM Event WHERE EventID = {0})", eventID);
+            asset.ConnectionFactory = () => { return connection; };
+            List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
+
+            foreach (int channelID in channelIDs)
+            {
+                if (directChannelIDs.Contains(channelID))
+                    continue;
+
+                //Find any Series where Event happens at the same time and ChannelID is ChannelID 
+                //-> note that this assumes any Channel is only associated with a single event at a time
+                
+                int channelDataID = connection.ExecuteScalar<int>("SELECT COUNT(ChannelData.ID) FROM ChannelData LEFT JOIN Event ON ChannelData.EventID = Event.ID " +
+                    "LEFT JOIN Series ON ChannelData.SeriesID = Series.ID " + 
+                    "WHERE(Series.ChannelID = {0}) AND(Event.MeterID = (SELECT EV.MeterID FROM Event EV WHERE EV.ID = {1})) AND " +
+                    "(Event.StartTime <= (SELECT EV.EndTime FROM Event EV WHERE EV.ID = {1})) AND " +
+                    "(Event.EndTime >= (SELECT EV.StartTime FROM Event EV WHERE EV.ID = {1}))", channelID, eventID);
+
+                if (channelDataID == 0)
+                    continue;
+
+                channelDataID = connection.ExecuteScalar<int>("SELECT ChannelData.ID FROM ChannelData LEFT JOIN Event ON ChannelData.EventID = Event.ID " +
+                    "LEFT JOIN Series ON ChannelData.SeriesID = Series.ID " +
+                    "WHERE(Series.ChannelID = {0}) AND(Event.MeterID = (SELECT EV.MeterID FROM Event EV WHERE EV.ID = {1})) AND " +
+                    "(Event.StartTime <= (SELECT EV.EndTime FROM Event EV WHERE EV.ID = {1})) AND " +
+                    "(Event.EndTime >= (SELECT EV.StartTime FROM Event EV WHERE EV.ID = {1}))", channelID, eventID);
+
+                byte[] singleSeriesData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM ChannelData WHERE ID = {0}"
+                        , channelDataID);
+
+                if (singleSeriesData == null)
+                {
+                    ChannelData channelData = new TableOperations<ChannelData>(connection).QueryRecordWhere("ID = {0}", channelDataID); 
+                    singleSeriesData = ProcessLegacyBlob(channelData.EventID, channelData.SeriesID, connection);
+                }
+
+                result.Add(singleSeriesData);
+
+
+            }
+        
+
             return result;
         }
 
-        
         // from new EvendData Blob format
         private static byte[] ProcessLegacyBlob(int eventID, int requestedSeriesID, AdoDataConnection connection)
         {
