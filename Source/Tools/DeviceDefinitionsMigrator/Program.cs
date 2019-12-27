@@ -262,7 +262,6 @@ namespace DeviceDefinitionsMigrator
             XDocument document = XDocument.Load(deviceDefinitionsFile);
             List<XElement> deviceElements = document.Elements().Elements("device").ToList();
             XElement deviceAttributes;
-            XElement impedancesElement;
 
             List<Tuple<AssetLocation, SourceImpedance>> sourceImpedances = new List<Tuple<AssetLocation, SourceImpedance>>();
             List<Tuple<Series, OutputChannel>> outputChannels = new List<Tuple<Series, OutputChannel>>();

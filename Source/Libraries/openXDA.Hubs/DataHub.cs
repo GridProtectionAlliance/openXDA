@@ -3100,8 +3100,8 @@ namespace openXDA.Hubs
         private RecordRestriction AssetLocationRestriction(int locationID, AdoDataConnection connection)
         {
             List<int> assetIds = new TableOperations<AssetLocation>(connection).QueryRecordsWhere("LocationID = {0}",locationID).Select(item => item.AssetID).ToList();
-
-            return new RecordRestriction("ID in ({0})", string.Join(",", assetIds.Select(item => item.ToString())));
+            string restriction = string.Join(",", assetIds.Select(item => item.ToString()));
+            return new RecordRestriction("ID in (" + restriction + ")");
         }
 
         [AuthorizeHubRole("Administrator")]
