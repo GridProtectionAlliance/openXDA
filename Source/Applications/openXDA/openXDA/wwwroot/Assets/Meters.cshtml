@@ -56,7 +56,7 @@
     if (parameters.ContainsKey("LocationID"))
     {
         ViewBag.MeterLocationID = int.Parse(parameters["LocationID"] ?? "-1");
-        meterLocationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", ViewBag.MeterLocationID);
+        meterLocationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM Location WHERE ID = {0}", ViewBag.MeterLocationID);
         ViewBag.CustomHeader = "Meters at <a href=\"/Assets/Sites.cshtml?Site=" + meterLocationName + "\">" + meterLocationName + "</a>";
         ViewBag.Title = "Meters at " + meterLocationName;
     }
@@ -85,7 +85,7 @@
     <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: Location, attr: { href: '/Assets/Sites.cshtml?Site=' + Location }"></a></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Make"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Model"></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?LineID=-1&MeterID=' + ID + '&Title=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?AssetID=-1&MeterID=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Assets&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.showMaintenanceWindowDialog, enable: $parent.canEdit(), style: { color: $parent.getMaintenanceWindowColor($data) }, attr: { title: $parent.getMaintenanceWindowTooltip($data) }"><span class="glyphicon glyphicon-time"></span></button>
@@ -96,7 +96,7 @@
 {
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Meter>("Name"))
-        @Raw(dataContext.AddSelectField<Meter, MeterLocation>("MeterLocationID", "ID", "AssetKey", fieldLabel: "Site"))
+        @Raw(dataContext.AddSelectField<Meter, Location>("LocationID", "ID", "LocationKey", fieldLabel: "Site"))
         @Raw(dataContext.AddInputField<Meter>("AssetKey", fieldLabel: "Asset Key"))
         @Raw(dataContext.AddInputField<Meter>("ShortName", fieldLabel: "Short Name"))
     </div>
@@ -307,7 +307,7 @@
 
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryMeterLineCount(-1, sourceID, null).done(function (count) {
+                dataHub.queryMeterAssetCount(-1, sourceID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }

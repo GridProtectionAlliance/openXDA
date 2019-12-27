@@ -1,5 +1,5 @@
 ﻿@*******************************************************************************************************
-    //  Settings.cshtml - Gbtc
+    //  MeterLines.cshtml - Gbtc
     //
     //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
     //
@@ -18,6 +18,8 @@
     //  ----------------------------------------------------------------------------------------------------
     //  01/15/2016 - J. Ritchie Carroll
     //       Generated original version of source code.
+    //  12/24/2019 - C. Lackner
+    //       Updated To account for Model changes whn moving to Assets.
     //
     //*****************************************************************************************************@
 @using System
@@ -38,78 +40,83 @@
     Dictionary<string, string> parameters = request.QueryParameters();
 
     ViewBag.meterID = int.Parse(parameters["MeterID"] ?? "-1");
-    ViewBag.lineID = int.Parse(parameters["LineID"] ?? "-1");
+    ViewBag.assetID = int.Parse(parameters["AssetID"] ?? "-1");
 
     Layout = "Assets/Layout.cshtml";
 
     if (ViewBag.meterID != -1)
     {
-        string meterName = parameters["Title"];
+        string meterName = dataContext.Connection.ExecuteScalar<string>("SELECT AssetKey FROM Meter WHERE ID = {0}", ViewBag.meterID);
         ViewBag.Title = "Lines monitored by " + meterName;
         ViewBag.CustomHeader = "Lines monitored by <a href=\"/Assets/Meters.cshtml?Meter=" + meterName + "\">" + meterName + "</a>";
 
         // Define column headers, use null for field name to make column non-sortable
         ViewBag.HeaderColumns = new[]
         {   //    { "Field", "Label", "Classes" }
-new[] { "MeterID", "Meter", "text-left"},
-new[] { "LineID", "Line", "text-left" },
-new[] { "LineName", "Line Name", "text-left"},
-            new[] { "FaultDetectionLogic", "Logic", "text-left"},
-new[] { null, "Channel", "text-center valign-middle"},
-new[] { null, "Alarms", "text-center valign-middle"},
-
+    new[] { "MeterKey", "Meter", "text-left"},
+    new[] { "AssetKey", "Asset", "text-left" },
+    new[] { "AssetKey", "", "text-left" },
+    new[] { "AssetType", "Asset Type", "text-left" },
+    new[] { "FaultDetectionLogic", "Logic", "text-left"},
+    new[] { null, "Channel", "text-center valign-middle"},
+    new[] { null, "Alarms", "text-center valign-middle"},
 };
     }
     else
     {
-        string lineKey = parameters["Title"];
+        string lineKey = dataContext.Connection.ExecuteScalar<string>("SELECT AssetKey FROM Asset WHERE ID = {0}", ViewBag.assetID);
         ViewBag.Title = "Meters monitoring " + lineKey;
-        ViewBag.CustomHeader = "Meters monitoring <a href=\"/Assets/Lines.cshtml?LineID=" + ViewBag.lineID + "\">" + lineKey + "</a>";
+        ViewBag.CustomHeader = "Meters monitoring <a href=\"/Assets/Asset.cshtml?Asset=" + lineKey + "\">" + lineKey + "</a>";
 
         // Define column headers, use null for field name to make column non-sortable
         ViewBag.HeaderColumns = new[]
         {   //    { "Field", "Label", "Classes" }
-            new[] { "LineID", "Line", "text-left" },
-            new[] { "MeterID", "Meter", "text-left"},
-            new[] { "LineName", "Line Name", "text-left"},
-            new[] { "FaultDetectionLogic", "Logic", "text-left"},
-            new[] { null, "Channels", "text-center valign-middle"},
-            new[] { null, "Alarms", "text-center valign-middle"},
-        };
+    new[] { "AssetKey", "Asset", "text-left" },
+    new[] { "AssetKey", "", "text-left" },
+    new[] { "AssetType", "Asset Type", "text-left" },
+    new[] { "MeterKey", "Meter", "text-left"},
+    new[] { "FaultDetectionLogic", "Logic", "text-left"},
+    new[] { null, "Channel", "text-center valign-middle"},
+    new[] { null, "Alarms", "text-center valign-middle"},
+};
     }
 
-    ViewBag.ParentKeys = ViewBag.meterID + "," + ViewBag.lineID;
+    ViewBag.ParentKeys = ViewBag.meterID + "," + ViewBag.assetID;
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.ShowSearchFilter = true;
 }
 @helper BodyRows()
+{
+    if (ViewBag.meterID != -1)
     {
-        if (ViewBag.meterID != -1)
-        {
-            <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Assets/Meters.cshtml?Meter=' + MeterName }"></a></td>
-            <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Assets/Lines.cshtml?Line=' + LineKey }"></a></td>
-        }
-        else
-        {
-            <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Assets/Lines.cshtml?Line=' + LineKey }"></a></td>
-            <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Assets/Meters.cshtml?Meter=' + MeterName }"></a></td>
-        }
-        <td width="20%" class="text-left valign-middle" data-bind="text: LineName"></td>
-        <td width="20%" class="text-left valign-middle" data-bind="text: FaultDetectionLogic"></td>
-        <td width="5%" class="text-center valign-middle"><a id="newWindow" data-bind="attr: { href: '/Assets/Channels.cshtml?LineID=' + LineID + '&MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(MeterID, LineID, $($element)), attr: {id: 'channelCount' + ID}">0</span></a></td>
-        <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/ChannelsWithNormalLimits.cshtml?MeterID=' + MeterID + '&Name=' + LineName}, enable: $parent.dataHubIsConnected" target="_blank" class="btn btn-default  form-control">Alarms&nbsp;&nbsp;<span class="badge" data-bind="text: getAlarmCount(MeterID, LineID, $($element)), attr: {id: 'alarmCount' + ID}">0</span></a></td>
-        <td width="5%" class="text-center valign-middle" nowrap>
-            <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
-            <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
-        </td>
+        <td width="15%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterKey, attr: { href: '/Assets/Meters.cshtml?Meter=' + MeterKey }"></a></td>
+        <td width="15%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: AssetKey, attr: { href: '/Assets/Asset.cshtml?Asset=' + AssetKey }"></a></td>
+        <td width="20%" class="text-left valign-middle" data-bind="text: AssetName"></td>
+        <td width="15%" class="text-left valign-middle" data-bind="text: AssetType"></td>
+    }
+    else
+    {
+        <td width="15%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: AssetKey, attr: { href: '/Assets/Asset.cshtml?Asset=' + AssetKey }"></a></td>
+        <td width="20%" class="text-left valign-middle" data-bind="text: AssetName"></td>
+        <td width="15%" class="text-left valign-middle" data-bind="text: AssetType"></td>
+        <td width="15%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterKey, attr: { href: '/Assets/Meters.cshtml?Meter=' + MeterKey }"></a></td>
+
+    }
+
+    <td width="20%" class="text-left valign-middle" data-bind="text: FaultDetectionLogic"></td>
+    <td width="5%" class="text-center valign-middle"><a id="newWindow" data-bind="attr: { href: '/Assets/Channels.cshtml?AssetID=' + AssetID + '&MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(MeterID, AssetID, $($element)), attr: {id: 'channelCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/ChannelsWithNormalLimits.cshtml?MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" target="_blank" class="btn btn-default  form-control">Alarms&nbsp;&nbsp;<span class="badge" data-bind="text: getAlarmCount(MeterID, AssetID, $($element)), attr: {id: 'alarmCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddSelectField<MeterLineDetail, Line>("LineID", "ID", "AssetKey", fieldLabel: "Line Key"))
-    @Raw(dataContext.AddSelectField<MeterLineDetail, Meter>("MeterID", "ID", "AssetKey", fieldLabel: "Meter Name"))
-    @Raw(dataContext.AddInputField<MeterLineDetail>("LineName"))
-    @Raw(dataContext.AddInputField<MeterLineDetail>("FaultDetectionLogic", fieldLabel: "Detection Logic"))
+    @Raw(dataContext.AddSelectField<MeterAssetDetail, Asset>("AssetID", "ID", "AssetKey", fieldLabel: "Asset Key"))
+    @Raw(dataContext.AddSelectField<MeterAssetDetail, Meter>("MeterID", "ID", "AssetKey", fieldLabel: "Meter Name"))
+    @Raw(dataContext.AddInputField<MeterAssetDetail>("FaultDetectionLogic", fieldLabel: "Detection Logic"))
 
 }
 <div id="channelsDialog" class="modal modal-wide fade" role="dialog">
@@ -126,27 +133,26 @@ new[] { null, "Alarms", "text-center valign-middle"},
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
 {
-    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MeterLine, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
+        @Raw(dataContext.RenderViewModelConfiguration<MeterAsset, DataHub>(ViewBag, "ID", null, ViewBag.assetID, ViewBag.meterID))
 
         $(viewModel).on("beforeSave", function (event, observableRecord) {
-            if (@ViewBag.lineID !== -1)
-                observableRecord.LineID = @ViewBag.lineID;
+            if (@ViewBag.assetID !== -1)
+                observableRecord.AssetID = @ViewBag.assetID;
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
         });
 
         $(viewModel).on("newRecord", function (event, observableRecord) {
-            if (@ViewBag.lineID !== -1)
-                observableRecord.LineID = @ViewBag.lineID;
+            if (@ViewBag.assetID !== -1)
+                observableRecord.AssetID = @ViewBag.assetID;
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
         });
 
-        function getChannelCount(meterID, lineID, element) {
+            function getChannelCount(meterID, assetID, element) {
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryChannelCount(meterID, lineID, null).done(function (count) {
+                dataHub.queryChannelCount(meterID, assetID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }
@@ -154,9 +160,9 @@ new[] { null, "Alarms", "text-center valign-middle"},
             return element.text();
         }
 
-        function getAlarmCount(meterID, lineID, element){
+            function getAlarmCount(meterID, assetID, element){
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryAlarmRangeLimitViewCount(meterID, lineID, '%').done(function (count) {
+                dataHub.queryAlarmRangeLimitViewCount(meterID, assetID, '%').done(function (count) {
                     $(element).text(count.toString());
                 });
             }

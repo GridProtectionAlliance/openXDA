@@ -434,9 +434,9 @@ namespace openXDA.Model
     {
         public string MeterName { get; set; }
 
-        public string LineKey { get; set; }
+        public string AssetKey { get; set; }
 
-        public string LineName { get; set; }
+        public string AssetName { get; set; }
 
         [Searchable]
         public new string MeasurementType { get; set; }

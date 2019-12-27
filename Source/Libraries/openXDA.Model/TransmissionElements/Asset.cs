@@ -34,16 +34,7 @@ using System.Threading.Tasks;
 
 namespace openXDA.Model
 {
-    public enum AssetType
-    {
-        Line = 1,
-        Bus = 2,
-        Breaker = 3,
-        CapacitorBank = 4,
-        LineSegement = 5,
-        Transformer = 6
-    }
-
+   
     public class Asset
     {
         #region [ Members ]

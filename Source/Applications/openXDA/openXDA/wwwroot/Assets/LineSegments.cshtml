@@ -1,5 +1,5 @@
 ﻿@*******************************************************************************************************
-    //  Breaker.cshtml - Gbtc
+    //  LineSegments.cshtml - Gbtc
     //
     //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
     //
@@ -16,8 +16,12 @@
     //
     //  Code Modification History:
     //  ----------------------------------------------------------------------------------------------------
-    //  12/20/2019 - C. Lackner
+    //  01/15/2016 - J. Ritchie Carroll
     //       Generated original version of source code.
+    //  08/23/2019 - Christoph Lackner
+    //       Added Relay Alert Settings.
+    //  12/20/2019 - Christoph Lackner
+    //       Changed to point to Asset Model and removed Line specific attributes.
     //
     //*****************************************************************************************************@
 @using System.Collections.Generic
@@ -34,29 +38,44 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Assets/Layout.cshtml";
-    ViewBag.Title = "Breaker";
-
+    ViewBag.Title = "Line Segments";
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
 
-    if (parameters.ContainsKey("Breaker"))
+    ViewBag.LineID = -1;
+    ViewBag.lengthUnits = dataContext.Connection.ExecuteScalar<string>("Select Value From [Setting] WHERE Name = 'LengthUnits'");
+
+    string LineName = null;
+
+    if (parameters.ContainsKey("Asset"))
     {
-        ViewBag.Breaker = parameters["Breaker"];
+        ViewBag.Asset = parameters["Asset"];
     }
+
+    if (parameters.ContainsKey("LineID"))
+    {
+        ViewBag.LineID = int.Parse(parameters["LineID"] ?? "-1");
+        LineName = dataContext.Connection.ExecuteScalar<string>("SELECT AssetKey FROM Line WHERE ID = {0}", ViewBag.LineID);
+        ViewBag.CustomHeader = "Segments of <a href=\"/Assets/Lines.cshtml?Asset=" + LineName + "\">" + LineName + "</a>";
+        ViewBag.Title = "Segments of " + LineName;
+    }
+
+    ViewBag.ParentKeys = ViewBag.LineID;
+
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
 new[] { "AssetKey", "Key", "text-Left" },
 new[] { "AssetName", "Asset Name", "text-left" },
-new[] { "VoltageKV", "Voltage", "text-left"},
+new[] { "Length", "Length", "text-left" },
 new[] { "ThermalRating", "Thermal Rating", "text-left"},
-new[] { "Speed", "Speed", "text-left"},
 };
 
-    ViewBag.AddNewEditTitle = "Breaker";
+    ViewBag.AddNewEditTitle = "Segment";
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.lengthUnits = dataContext.Connection.ExecuteScalar<string>("Select Value From [Setting] WHERE Name = 'LengthUnits'");
 }
 @helper AssetFilter()
 {
@@ -76,11 +95,8 @@ new[] { "Speed", "Speed", "text-left"},
 {
     <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
     <td width="25%" class="text-left valign-middle" data-bind="text: AssetName"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
-    <td width="15%" class="text-left valign-middle" data-bind="text: ThermalRating"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: Speed"></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?LineID=' + ID + '&MeterID=-1&Title=' + AssetKey }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
-
+    <td width="25%" class="text-left valign-middle" data-bind="text: Length"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: ThermalRating"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -88,23 +104,31 @@ new[] { "Speed", "Speed", "text-left"},
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    <div class="col-md-6">
-        @Raw(dataContext.AddInputField<Breaker>("AssetKey", fieldLabel: "Key"))
-        @Raw(dataContext.AddInputField<Breaker>("AssetName", fieldLabel: "Name"))
-        @Raw(dataContext.AddInputField<Breaker>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
-        @Raw(dataContext.AddTextAreaField<Breaker>("Description"))
+    <div class="col-md-4">
+        @Raw(dataContext.AddInputField<LineSegment>("AssetKey", fieldLabel: "Key"))
+        @Raw(dataContext.AddInputField<LineSegment>("AssetName", fieldLabel: "Name"))
+        @Raw(dataContext.AddInputField<LineSegment>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (kV)"))
+        @Raw(dataContext.AddTextAreaField<LineSegment>("Description"))
     </div>
-    <div class="col-md-6">
-        @Raw(dataContext.AddInputField<Breaker>("ThermalRating", fieldLabel: "Thermal Rating (A)"))
-        @Raw(dataContext.AddInputField<Breaker>("Speed", fieldLabel: "Speed "))
+    <div class="col-md-4">
+
+
+        @Raw(dataContext.AddInputField<LineSegment>("R0", fieldLabel: "R0 (p.u.)"))
+        @Raw(dataContext.AddInputField<LineSegment>("X0", fieldLabel: "X0 (p.u.)"))
+        @Raw(dataContext.AddInputField<LineSegment>("R1", fieldLabel: "R1 (p.u.)"))
+        @Raw(dataContext.AddInputField<LineSegment>("X1", fieldLabel: "X1 (p.u.)"))
+    </div>
+    <div class="col-md-4">
+        @Raw(dataContext.AddInputField<LineSegment>("ThermalRating", fieldLabel: "ThermalRating (A)"))
+        @Raw(dataContext.AddInputField<LineSegment>("Length", fieldLabel: "Length (" + ViewBag.lengthUnits + ")"))
     </div>
 
-}
-@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
-@section Scripts
+    }
+    @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+    @section Scripts
 {
-    <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Breaker, DataHub>(ViewBag))
+                <script>
+        @Raw(dataContext.RenderViewModelConfiguration<LineSegment, DataHub>(ViewBag,null,null,ViewBag.LineID))
 
         $(function () {
             $("#pageHeader").append("@Raw(Regex.Replace(AssetFilter().ToString(), @"\r|\n", ""))");
@@ -122,21 +146,5 @@ new[] { "Speed", "Speed", "text-left"},
             $('#linefilter').trigger('keyup');
         });
 
-        function getMeterCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryMeterLineCount(sourceID,-1, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
+                </script>
             }
-
-            return element.text();
-        }
-
-        function openMeters(record) {
-            location.href = "/MeterLine.cshtml?LineID=" + record.ID + "&MeterID=-1" + "&Title=" + record.AssetKey;
-        }
-
-
-
-    </script>
-}

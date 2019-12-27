@@ -226,8 +226,8 @@ CREATE TABLE BreakerAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
-	ThermalRating FLOAT NOT NULL,
-	Speed FLOAT NOT NULL
+	ThermalRating FLOAT NOT NULL DEFAULT(0),
+	Speed FLOAT NOT NULL DEFAULT(0)
 
 )
 GO
@@ -236,9 +236,9 @@ CREATE TABLE CapacitorBankAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
-    NumberOfBanks INT NOT NULL,
-    CansPerBank INT NOT NULL,
-    CapacitancePerBank INT NOT NULL
+    NumberOfBanks INT NOT NULL DEFAULT(1),
+    CansPerBank INT NOT NULL DEFAULT(1),
+    CapacitancePerBank INT NOT NULL DEFAULT(0)
 )
 GO
 
@@ -268,10 +268,10 @@ CREATE TABLE TransformerAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
-    R0 FLOAT NOT NULL,
-    X0 FLOAT NOT NULL,
-    R1 FLOAT NOT NULL,
-    X1 FLOAT NOT NULL,
+    R0 FLOAT NOT NULL DEFAULT(0),
+    X0 FLOAT NOT NULL DEFAULT(0),
+    R1 FLOAT NOT NULL DEFAULT(0),
+    X1 FLOAT NOT NULL DEFAULT(0),
 	ThermalRating FLOAT NOT NULL,
 	SecondaryVoltageKV FLOAT NULL,
 	PrimaryVoltageKV FLOAT NULL,
@@ -297,14 +297,13 @@ GO
 
 CREATE VIEW AssetView AS
 	SELECT 
-		AssetID AS ID,
+		Asset.ID AS ID,
 		AssetKey,
 		VoltageKV,
 		Asset.Description,
 		AssetName,
 		AssetType.Name AS AssetType
-	FROM Asset JOIN LineAttributes ON Asset.ID = LineAttributes.AssetID JOIN
-	AssetType ON AssetType.ID = Asset.AssetTypeID
+	FROM Asset JOIN	AssetType ON AssetType.ID = Asset.AssetTypeID WHERE AssetType.ID != 5  
 
 
 GO
@@ -3610,98 +3609,99 @@ FROM    Meter INNER JOIN
 
 GO
 
--- CREATE VIEW LineView
--- AS
--- SELECT
---     Line.ID,
---     Line.AssetKey,
---     Line.VoltageKV,
---     Line.ThermalRating,
---     Line.Length,
---     COALESCE(Line.MaxFaultDistance, Line.Length * MaxFaultDistanceMultiplier.Value) MaxFaultDistance,
---     COALESCE(Line.MinFaultDistance, Line.Length * MinFaultDistanceMultiplier.Value) MinFaultDistance,
---     Line.Description,
---     (
---         SELECT TOP 1 LineName
---         FROM MeterLine
---         WHERE LineID = Line.ID
---     ) AS TopName,
---     LineImpedance.R0,
---     LineImpedance.X0,
---     LineImpedance.R1,
---     LineImpedance.X1,
---     LineImpedance.ID AS LineImpedanceID,
--- 	RelayAlertSetting.TripTime,
--- 	RelayAlertSetting.PickupTime,
--- 	RelayAlertSetting.TripCoilCondition,
--- 	RelayAlertSetting.ID AS RelayAlertSettingID
--- FROM
---     Line LEFT OUTER JOIN
---     LineImpedance ON Line.ID = LineImpedance.LineID LEFT OUTER JOIN
--- 	RelayAlertSetting ON Line.ID = RelayAlertSetting.LineID CROSS JOIN
---     (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MaxFaultDistanceMultiplier'), 1.05) Value) MaxFaultDistanceMultiplier CROSS JOIN
---     (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MinFaultDistanceMultiplier'), 1.05) Value) MinFaultDistanceMultiplier
--- 
--- GO
+CREATE VIEW LineView
+AS
+SELECT	Line.ID,
+		MaxFaultDistance,
+		MinFaultDistance,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		ISNULL((SELECT Sum(LineSegment.Length) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		+ ISNULL((SELECT Sum(LineSegment.Length) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		AS Length
+	FROM LINE
+GO
 
--- CREATE VIEW MeterLineDetail
--- AS
--- SELECT
---     MeterLine.ID,
---     MeterLine.MeterID,
---     Meter.AssetKey AS MeterKey,
---     Meter.Name AS MeterName,
---     MeterLine.LineID,
---     Line.AssetKey AS LineKey,
---     MeterLine.LineName,
---     FaultDetectionLogic.Expression as FaultDetectionLogic
--- FROM
---     MeterLine JOIN
---     Meter ON MeterLine.MeterID = Meter.ID JOIN
---     Line ON MeterLIne.LineID = Line.ID LEFT JOIN
---     FaultDetectionLogic ON FaultDetectionLogic.MeterLineID = MeterLine.ID
--- GO
+CREATE VIEW MeterAssetDetail AS
+	SELECT 
+		MeterAsset.ID,
+		MeterAsset.AssetID,
+		MeterAsset.MeterID,
+		Meter.AssetKey AS MeterKey,
+		Asset.AssetKey AS AssetKey,
+		AssetType.Name AS AssetType,
+		FaultDetectionLogic.Expression AS FaultDetectionLogic,
+		Asset.AssetName AS AssetName
+	FROM
+		MeterAsset LEFT JOIN Meter ON MeterAsset.MeterID = Meter.ID LEFT JOIN
+		ASSET ON MeterAsset.AssetID = Asset.ID LEFT JOIN 
+		AssetType ON Asset.AssetTypeID = AssetType.ID LEFT JOIN
+		FaultDetectionLogic ON FaultDetectionLogic.MeterAssetID = MeterAsset.ID
+GO
 
--- CREATE VIEW ChannelDetail
--- AS
--- SELECT
---     Channel.ID,
---     Channel.MeterID,
---     Meter.AssetKey AS MeterKey,
---     Meter.Name AS MeterName,
---     Channel.LineID,
---     Line.AssetKey AS LineKey,
---     MeterLine.LineName,
---     Channel.MeasurementTypeID,
---     MeasurementType.Name AS MeasurementType,
---     Channel.MeasurementCharacteristicID,
---     MeasurementCharacteristic.Name AS MeasurementCharacteristic,
---     Channel.PhaseID,
---     Phase.Name AS Phase,
---     Channel.Name,
---     Channel.SamplesPerHour,
---     Channel.PerUnitValue,
---     Channel.HarmonicGroup,
---     Series.SourceIndexes AS Mapping,
---     Channel.Description,
---     Channel.Enabled,
---     Series.SeriesTypeID,
---     SeriesType.Name AS SeriesType
--- FROM
---     Channel JOIN
---     Meter ON Channel.MeterID = Meter.ID JOIN
---     Line ON Channel.LineID = Line.ID JOIN
---     MeterLine ON
---         MeterLine.MeterID = Meter.ID AND
---         MeterLine.LineID = Line.ID JOIN
---     MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
---     MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
---     Phase ON Channel.PhaseID = Phase.ID LEFT OUTER JOIN
---     Series ON
---         Series.ChannelID = Channel.ID AND
---         Series.SourceIndexes <> '' LEFT OUTER JOIN
---     SeriesType ON dbo.Series.SeriesTypeID = dbo.SeriesType.ID
--- GO
+CREATE VIEW AssetConnectionDetail AS
+SELECT
+	AssetRelationship.ID,
+	AssetRelationship.ChildID,
+	Asset1.AssetKey AS ChildKey,
+	AssetRelationship.ParentID,
+	Asset2.AssetKey AS ParentKey,
+	AssetRelationship.AssetRelationshipTypeID,
+	AssetRelationshipType.Name AS AssetRelationshipType
+FROM
+	AssetRelationship LEFT JOIN Asset Asset1 ON Asset1.ID = AssetRelationship.ChildID LEFT JOIN
+	Asset Asset2 ON Asset2.ID = AssetRelationship.ParentID LEFT JOIN
+	AssetRelationshipType ON AssetRelationship.AssetRelationshipTypeID = AssetRelationshipType.ID
+GO
+
+
+CREATE VIEW ChannelDetail
+AS
+SELECT
+    Channel.ID,
+     Channel.MeterID,
+     Meter.AssetKey AS MeterKey,
+     Meter.Name AS MeterName,
+     Channel.AssetID,
+     Asset.AssetKey AS AssetKey,
+     Asset.AssetName,
+     Channel.MeasurementTypeID,
+     MeasurementType.Name AS MeasurementType,
+     Channel.MeasurementCharacteristicID,
+     MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+     Channel.PhaseID,
+     Phase.Name AS Phase,
+     Channel.Name,
+     Channel.SamplesPerHour,
+     Channel.PerUnitValue,
+     Channel.HarmonicGroup,
+     Series.SourceIndexes AS Mapping,
+     Channel.Description,
+     Channel.Enabled,
+     Series.SeriesTypeID,
+     SeriesType.Name AS SeriesType
+ FROM
+     Channel JOIN
+     Meter ON Channel.MeterID = Meter.ID JOIN
+     Asset ON Channel.AssetID = Asset.ID JOIN
+     MeterAsset ON
+         MeterAsset.MeterID = Meter.ID AND
+         MeterAsset.AssetID = Asset.ID JOIN
+     MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+     MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+     Phase ON Channel.PhaseID = Phase.ID LEFT OUTER JOIN
+     Series ON
+         Series.ChannelID = Channel.ID AND
+         Series.SourceIndexes <> '' LEFT OUTER JOIN
+     SeriesType ON dbo.Series.SeriesTypeID = dbo.SeriesType.ID
+GO
+
 
 CREATE VIEW DefaultAlarmRangeLimitView
 AS

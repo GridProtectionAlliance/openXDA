@@ -111,6 +111,7 @@
     <Compile Include="System\AuditLog.cs" />
     <Compile Include="System\ConfigurationLoader.cs" />
     <Compile Include="System\DataReader.cs" />
+    <Compile Include="TransmissionElements\AssetTypes.cs" />
     <Compile Include="TransmissionElements\Asset.cs" />
     <Compile Include="TransmissionElements\AssetView.cs" />
     <Compile Include="TransmissionElements\CapBank.cs" />

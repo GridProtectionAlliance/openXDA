@@ -152,13 +152,26 @@ namespace openXDA.Model
         #endregion
     }
 
-    public class MeterLineDetail : MeterAsset
+    public class MeterAssetDetail
     {
-        [Searchable]
-        public string MeterName { get; set; }
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        public int MeterID { get; set; }
+
+        public int AssetID { get; set; }
 
         [Searchable]
-        public string LineKey { get; set; }
+        public string MeterKey { get; set; }
+
+        [Searchable]
+        public string AssetKey { get; set; }
+
+        [Searchable]
+        public string AssetName { get; set; }
+
+        [Searchable]
+        public string AssetType { get; set; }
 
         public string FaultDetectionLogic { get; set; }
     }

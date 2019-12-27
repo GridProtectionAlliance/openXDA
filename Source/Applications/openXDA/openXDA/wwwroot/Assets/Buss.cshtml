@@ -39,21 +39,22 @@
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
 
-    if (parameters.ContainsKey("Bus"))
+    if (parameters.ContainsKey("Asset"))
     {
-        ViewBag.Asset = parameters["Bus"];
+        ViewBag.Asset = parameters["Asset"];
     }
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
-new[] { "AssetKey", "Key", "text-Left" },
-new[] { "AssetName", "Asset Name", "text-left" },
-new[] { "VoltageKV", "Voltage", "text-left"},
+        new[] { "AssetKey", "Key", "text-Left" },
+        new[] { "AssetName", "Name", "text-left" },
+        new[] { "VoltageKV", "Voltage", "text-left"},
+        new[] { null, "Asset Connections", "text-left"},
+        new[] { null, "Meters", "text-left"},
+        };
 
-};
-
-    ViewBag.AddNewEditTitle = "Asset";
+    ViewBag.AddNewEditTitle = "Bus";
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }
@@ -73,11 +74,11 @@ new[] { "VoltageKV", "Voltage", "text-left"},
 }
 @helper BodyRows()
 {
-    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
-    <td width="25%" class="text-left valign-middle" data-bind="text: AssetName"></td>
-    <td width="15%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?LineID=' + ID + '&MeterID=-1&Title=' + AssetKey }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
-
+    <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
+    <td width="30%" class="text-left valign-middle" data-bind="text: AssetName"></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/AssetConnections.cshtml?AssetID=' + ID  }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Connections&nbsp;&nbsp;<span class="badge" data-bind="text: getConnectionCount(ID, $($element)), attr: {id: 'connectionCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?AssetID=' + ID + '&MeterID=-1' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -85,13 +86,13 @@ new[] { "VoltageKV", "Voltage", "text-left"},
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    <div class="col-md-6">
+    <div class="col-md-12">
         @Raw(dataContext.AddInputField<Bus>("AssetKey", fieldLabel: "Key"))
         @Raw(dataContext.AddInputField<Bus>("AssetName", fieldLabel: "Name"))
         @Raw(dataContext.AddInputField<Bus>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
         @Raw(dataContext.AddTextAreaField<Bus>("Description"))
     </div>
-   
+
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
@@ -115,9 +116,9 @@ new[] { "VoltageKV", "Voltage", "text-left"},
             $('#linefilter').trigger('keyup');
         });
 
-        function getMeterCount(sourceID, element) {
+        function getConnectionCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryMeterLineCount(sourceID,-1, null).done(function (count) {
+                dataHub.queryAssetConnectionCount(sourceID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }
@@ -125,10 +126,15 @@ new[] { "VoltageKV", "Voltage", "text-left"},
             return element.text();
         }
 
-        function openMeters(record) {
-            location.href = "/MeterLine.cshtml?LineID=" + record.ID + "&MeterID=-1" + "&Title=" + record.AssetKey;
-        }
+        function getMeterCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryMeterAssetCount(sourceID, -1, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
 
+            return element.text();
+        }    
 
 
     </script>

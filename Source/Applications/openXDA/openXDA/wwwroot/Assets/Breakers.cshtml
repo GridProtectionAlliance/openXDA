@@ -1,5 +1,5 @@
 ﻿@*******************************************************************************************************
-    //  Asset.cshtml - Gbtc
+    //  Breaker.cshtml - Gbtc
     //
     //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
     //
@@ -16,12 +16,8 @@
     //
     //  Code Modification History:
     //  ----------------------------------------------------------------------------------------------------
-    //  01/15/2016 - J. Ritchie Carroll
+    //  12/20/2019 - C. Lackner
     //       Generated original version of source code.
-    //  08/23/2019 - Christoph Lackner
-    //       Added Relay Alert Settings.
-    //  12/20/2019 - Christoph Lackner
-    //       Changed to point to Asset Model and removed Line specific attributes.
     //
     //*****************************************************************************************************@
 @using System.Collections.Generic
@@ -38,41 +34,30 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Assets/Layout.cshtml";
-    ViewBag.Title = "Assets";
+    ViewBag.Title = "Breaker";
+
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
-
-    ViewBag.LocationID = -1;
-    string locationName = null;
 
     if (parameters.ContainsKey("Asset"))
     {
         ViewBag.Asset = parameters["Asset"];
     }
 
-    if (parameters.ContainsKey("LocationID"))
-    {
-        ViewBag.LocationID = int.Parse(parameters["LocationID"] ?? "-1");
-        locationName = dataContext.Connection.ExecuteScalar<string>("SELECT LocationKey FROM Location WHERE ID = {0}", ViewBag.LocationID);
-        ViewBag.CustomHeader = "Assets at <a href=\"/Assets/Sites.cshtml?Site=" + locationName + "\">" + locationName + "</a>";
-        ViewBag.Title = "Assets at " + locationName;
-    }
-
-    ViewBag.ParentKeys = ViewBag.LocationID;
-
-
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
 new[] { "AssetKey", "Key", "text-Left" },
 new[] { "AssetName", "Asset Name", "text-left" },
-new[] { "AssetType", "Asset Type", "text-left"},
 new[] { "VoltageKV", "Voltage", "text-left"},
+new[] { "ThermalRating", "Thermal Rating", "text-left"},
+new[] { "Speed", "Speed", "text-left"},
+new[] { null, "EDNA Breaker", "text-center valign-middle"},
 new[] { null, "Asset Connections", "text-left"},
 new[] { null, "Meters", "text-left"},
 };
 
-    ViewBag.AddNewEditTitle = "Asset";
+    ViewBag.AddNewEditTitle = "Breaker";
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }
@@ -92,10 +77,12 @@ new[] { null, "Meters", "text-left"},
 }
 @helper BodyRows()
 {
-    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
-    <td width="25%" class="text-left valign-middle" data-bind="text: AssetName"></td>
-    <td width="20%" class="text-left valign-middle" nowrap><a data-bind="attr: { href: '/Assets/' + AssetType +  's.cshtml?Asset=' + AssetKey }" }><span data-bind="text: AssetType"/> </a></td>
+    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: AssetName"></td>
     <td width="15%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
+    <td width="15%" class="text-left valign-middle" data-bind="text: ThermalRating"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: Speed"></td>
+    <td width="5%" class="text-center valign-middle"><button data-bind="click: function() {openBreakerModal(ID)}, enable: $parent.dataHubIsConnected" data-toggle="modal" data-target="#breakerModal" class="btn btn-default form-control">Breakers&nbsp;&nbsp;<span class="badge" data-bind="text: getBreakerCount(ID, $($element)), attr: {id: 'breakerCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/AssetConnections.cshtml?AssetID=' + ID  }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Connections&nbsp;&nbsp;<span class="badge" data-bind="text: getConnectionCount(ID, $($element)), attr: {id: 'connectionCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?AssetID=' + ID + '&MeterID=-1' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
@@ -105,12 +92,15 @@ new[] { null, "Meters", "text-left"},
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    <div class="col-md-12">
-        @Raw(dataContext.AddInputField<AssetView>("AssetKey", fieldLabel: "Key"))
-        @Raw(dataContext.AddInputField<AssetView>("AssetName", fieldLabel: "Name"))
-        @Raw(dataContext.AddSelectField<AssetView, AssetTypes>("AssetType", "Name", "Name", fieldLabel: "Type"))
-        @Raw(dataContext.AddInputField<AssetView>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
-        @Raw(dataContext.AddTextAreaField<AssetView>("Description"))
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<Breaker>("AssetKey", fieldLabel: "Key"))
+        @Raw(dataContext.AddInputField<Breaker>("AssetName", fieldLabel: "Name"))
+        @Raw(dataContext.AddInputField<Breaker>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
+        @Raw(dataContext.AddTextAreaField<Breaker>("Description"))
+    </div>
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<Breaker>("ThermalRating", fieldLabel: "Thermal Rating (A)"))
+        @Raw(dataContext.AddInputField<Breaker>("Speed", fieldLabel: "Speed "))
     </div>
 
 }
@@ -118,7 +108,7 @@ new[] { null, "Meters", "text-left"},
 @section Scripts
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<AssetView, DataHub>(ViewBag,null,null,ViewBag.LocationID))
+        @Raw(dataContext.RenderViewModelConfiguration<Breaker, DataHub>(ViewBag))
 
         $(function () {
             $("#pageHeader").append("@Raw(Regex.Replace(AssetFilter().ToString(), @"\r|\n", ""))");
@@ -136,9 +126,58 @@ new[] { null, "Meters", "text-left"},
             $('#linefilter').trigger('keyup');
         });
 
+        function getBreakerCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryLineBreakersCount(sourceID).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+
+
+        function openBreakerModal(id) {
+            if (viewModel.dataHubIsConnected()) {
+                $('#breakerModal .modal-content .modal-body').children().remove();
+                dataHub.queryLineBreakers(id).done(function (breakers) {
+                    $('#breakerModal .modal-content .modal-body').append(
+                        '<table class="table"> ' +
+                        '<th>Breaker</th><th></th>' +
+                        breakers.map(function (a) { return '<tr id=' + a.ID + '><td>' + a.Point + '</td><td><button type="button" class="btn btn-xs" onclick="removeBreaker(' + a.ID + ')" ' + (viewModel.canDelete() && viewModel.dataHubIsConnected() ? '' : 'disabled') + '><span class="glyphicon glyphicon-remove"></span></button></td></tr>' }).join('') +
+                        '</table><hr/>' +
+                        '<input id="breakerNumber" type="text" style="height:34px"/><button class="btn btn-primary" onclick="addBreaker(' + id + ')">Add</button>'
+                    );
+                });
+            }
+
+        }
+
+        function removeBreaker(id) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.deleteLineBreaker(id).done(function () {
+                    $('#breakerModal .modal-content .modal-body table #' + id).remove();
+                });
+            }
+
+        }
+
+        function addBreaker(lineID) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.addNewLineBreaker({ LineID: lineID, Point: $('#breakerNumber').val() }).done(function (record) {
+                    $('#breakerNumber').val('')
+                    $('#breakerModal .modal-content .modal-body table').append('<tr id=' + record.ID + '><td>' + record.Point + '</td><td><button type="button" class="btn btn-xs" onclick="removeBreaker(' + record.ID + ')" ' + (viewModel.canDelete() && viewModel.dataHubIsConnected() ? '' : 'disabled') + '><span class="glyphicon glyphicon-remove"></span></button></td></tr>');
+                });
+            }
+
+        }
+
+        $('#breakerModal').on('hidden.bs.modal', function (event) {
+            viewModel.queryPageRecords();
+        })
+
         function getConnectionCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
-                console.log("here");
                 dataHub.queryAssetConnectionCount(sourceID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
@@ -158,4 +197,25 @@ new[] { null, "Meters", "text-left"},
         }    
 
     </script>
+
+    <div id="breakerModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Manage EDNA Breakers</h4>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 }

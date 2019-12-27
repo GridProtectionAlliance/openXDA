@@ -155,5 +155,21 @@ namespace openXDA.Model
         #endregion
     }
 
-   
+    public class AssetConnectionDetail
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        public int AssetRelationshipTypeID { get; set; }
+
+        public int ParentID { get; set; }
+
+        public int ChildID { get; set; }
+
+        public string ChildKey { get; set; }
+
+        public string ParentKey { get; set; }
+
+        public string AssetRelationshipType { get; set; }
+    }
 }

@@ -344,16 +344,19 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="wwwroot\Assets\Breaker.cshtml">
+    <Content Include="wwwroot\Assets\Breakers.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="wwwroot\Assets\Bus.cshtml">
+    <Content Include="wwwroot\Assets\Buss.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="wwwroot\Assets\Transformer.cshtml">
+    <Content Include="wwwroot\Assets\Transformers.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="wwwroot\Assets\CapBank.cshtml">
+    <Content Include="wwwroot\Assets\CapacitorBanks.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\Assets\LineSegments.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="wwwroot\Assets\Channels.cshtml">
@@ -374,6 +377,9 @@
     <None Include="wwwroot\Assets\Lines.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="wwwroot\Assets\AssetConnections.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="wwwroot\Assets\MeterLines.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

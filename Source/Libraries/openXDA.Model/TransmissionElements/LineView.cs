@@ -41,7 +41,6 @@ namespace openXDA.Model
 
         public float VoltageKV { get; set; }
 
-        public float ThermalRating { get; set; }
 
         public float Length { get; set; }
 
@@ -52,25 +51,6 @@ namespace openXDA.Model
         public string Description { get; set; }
 
         [Searchable]
-        public string TopName { get; set; }
-
-        public int LineImpedanceID { get; set; }
-
-        public float R0 { get; set; }
-
-        public float R1 { get; set; }
-
-        public float X0 { get; set; }
-
-        public float X1 { get; set; }
-
-        public int RelayAlertSettingID { get; set; }
-
-        public int PickupTime { get; set; }
-
-        public int TripTime { get; set; }
-
-        public float TripCoilCondition { get; set; }
-
+        public string AssetName { get; set; }
     }
 }
