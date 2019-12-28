@@ -95,12 +95,15 @@ new[] { null, "Meters", "text-left"},
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Breaker>("AssetKey", fieldLabel: "Key"))
         @Raw(dataContext.AddInputField<Breaker>("AssetName", fieldLabel: "Name"))
-        @Raw(dataContext.AddInputField<Breaker>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
+        @Raw(dataContext.AddInputField<Breaker>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (kV)"))
         @Raw(dataContext.AddTextAreaField<Breaker>("Description"))
     </div>
     <div class="col-md-6">
-        @Raw(dataContext.AddInputField<Breaker>("ThermalRating", fieldLabel: "Thermal Rating (A)"))
+        @Raw(dataContext.AddInputField<Breaker>("ThermalRating", fieldLabel: "Thermal Rating (kA)"))
         @Raw(dataContext.AddInputField<Breaker>("Speed", fieldLabel: "Speed "))
+        @Raw(dataContext.AddInputField<Breaker>("TripTime", fieldLabel: "Trip Time Alert (micros) "))
+        @Raw(dataContext.AddInputField<Breaker>("PickupTime", fieldLabel: "Pickup Time Alert (micros) "))
+        @Raw(dataContext.AddInputField<Breaker>("TripCoilCondition", fieldLabel: "Tripcoil Condition Alert (A/s) "))
     </div>
 
 }

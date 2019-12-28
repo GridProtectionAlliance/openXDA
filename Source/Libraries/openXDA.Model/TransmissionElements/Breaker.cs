@@ -44,6 +44,12 @@ namespace openXDA.Model
 
         public double Speed { get; set; }
 
+        public int? TripTime { get; set; }
+            
+        public int? PickupTime { get; set; }
+            
+        public double? TipCoilCondition { get; set; } 
+
         #endregion
 
         #region [ Methods ]

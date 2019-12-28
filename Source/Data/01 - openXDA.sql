@@ -227,8 +227,10 @@ CREATE TABLE BreakerAttributes
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
 	ThermalRating FLOAT NOT NULL DEFAULT(0),
-	Speed FLOAT NOT NULL DEFAULT(0)
-
+	Speed FLOAT NOT NULL DEFAULT(0),
+	TripTime INT NULL DEFAULT(0),
+	PickupTime INT NULL DEFAULT(0),
+	TripCoilCondition FLOAT NULL DEFAULT(0)
 )
 GO
 
@@ -426,7 +428,10 @@ CREATE VIEW Breaker AS
 		Speed,
 		Description,
 		AssetName,
-		AssetTypeID
+		AssetTypeID,
+		TripTime,
+		PickupTime,
+		TripCoilCondition
 	FROM Asset JOIN BreakerAttributes ON Asset.ID = BreakerAttributes.AssetID
 GO
 
@@ -442,11 +447,14 @@ BEGIN
 			AssetName AS AssetName
 	FROM INSERTED
 
-	INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed)
+	INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed, TripTime, PickupTime, TripCoilCondition)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			ThermalRating AS ThermalRating,
-			Speed AS Speed
+			Speed AS Speed,
+			TripTime AS TripTime,
+			PickupTime AS PickupTime,
+			TripCoilCondition AS TripCoilCondition
 	FROM INSERTED
 
 END
@@ -473,7 +481,10 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 	UPDATE BreakerAttributes
 		SET
 			BreakerAttributes.ThermalRating = INSERTED.ThermalRating,
-			BreakerAttributes.Speed = INSERTED.Speed
+			BreakerAttributes.Speed = INSERTED.Speed,
+			BreakerAttributes.TripTime = INSERTED.TripTime,
+			BreakerAttributes.PickupTime = INSERTED.PickupTime,
+			BreakerAttributes.TripCoilCondition = INSERTED.TripCoilCondition
 		FROM
 			BreakerAttributes 
 	INNER JOIN
@@ -2967,15 +2978,6 @@ ALTER TABLE FileGroupLocalToRemote WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
 REFERENCES FileGroup(ID)
 GO
 
-CREATE TABLE RelayAlertSetting
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    BreakerID INT NOT NULL REFERENCES Asset(ID),
-	TripTime INT NULL,
-	PickupTime INT NULL,
-	TripCoilCondition FLOAT NULL,
-)
-GO
 
 -- ------------ --
 -- PQ Dashboard --
@@ -3561,7 +3563,7 @@ GO
 
 CREATE VIEW BreakerHistory
 AS
-SELECT  Asset.ID AS BreakerID,
+SELECT  Breaker.ID AS BreakerID,
 		RelayPerformance.EventID AS EventID,
         RelayPerformance.Imax1,
 		RelayPerformance.Imax2,
@@ -3569,18 +3571,14 @@ SELECT  Asset.ID AS BreakerID,
 		RelayPerformance.TripTime / 10 AS TripTime,
 		RelayPerformance.PickupTime / 10 AS PickupTime,
 		RelayPerformance.TripCoilCondition,
-		RelayAlertSetting.TripCoilCondition AS TripCoilConditionAlert,
-		RelayAlertSetting.TripTime AS TripTimeAlert,
-		RelayAlertSetting.PickupTime AS PickupTimeAlert,
+		Breaker.TripCoilCondition AS TripCoilConditionAlert,
+		Breaker.TripTime AS TripTimeAlert,
+		Breaker.PickupTime AS PickupTimeAlert,
 		RelayPerformance.ChannelID AS TripCoilChannelID
 FROM    RelayPerformance LEFT OUTER JOIN
         Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
-        AssetChannel ON AssetChannel.ChannelID = Channel.ID JOIN
-        AssetType ON AssetType.Name = 'Breaker' LEFT OUTER JOIN
-        Asset ON
-            AssetChannel.AssetID = Asset.ID AND
-            Asset.AssetTypeID = AssetType.ID LEFT OUTER JOIN 
-		RelayAlertSetting ON RelayAlertSetting.BreakerID = Asset.ID
+        AssetChannel ON AssetChannel.ChannelID = Channel.ID LEFT JOIN
+        Breaker ON Breaker.ID = AssetChannel.AssetID
 GO
 
 

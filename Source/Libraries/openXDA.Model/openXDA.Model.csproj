@@ -130,7 +130,6 @@
     <Compile Include="TransmissionElements\Transformer.cs" />
     <Compile Include="TransmissionElements\LineSegment.cs" />
     <Compile Include="TransmissionElements\Structure.cs" />
-    <Compile Include="TransmissionElements\RelayAlertSetting.cs" />
     <Compile Include="Trending\DailyTrendingSummary.cs" />
     <Compile Include="Alarms\DefaultAlarmRangeLimit.cs" />
     <Compile Include="Events\Disturbances\Disturbance.cs" />

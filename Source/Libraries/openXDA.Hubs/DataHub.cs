@@ -51,7 +51,6 @@ using Disturbance = openXDA.Model.Disturbance;
 using Event = openXDA.Model.Event;
 using Fault = openXDA.Model.Fault;
 using Asset = openXDA.Model.Asset;
-using RelayAlertSetting = openXDA.Model.RelayAlertSetting;
 using Meter = openXDA.Model.Meter;
 using MeterDetail = openXDA.Model.MeterDetail;
 using MeterAsset = openXDA.Model.MeterAsset;
