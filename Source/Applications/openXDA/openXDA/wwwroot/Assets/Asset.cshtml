@@ -106,11 +106,11 @@ new[] { null, "Meters", "text-left"},
 @helper AddNewEditDialog(DataContext dataContext)
 {
     <div class="col-md-12">
-        @Raw(dataContext.AddInputField<AssetView>("AssetKey", fieldLabel: "Key"))
-        @Raw(dataContext.AddInputField<AssetView>("AssetName", fieldLabel: "Name"))
-        @Raw(dataContext.AddSelectField<AssetView, AssetTypes>("AssetType", "Name", "Name", fieldLabel: "Type"))
-        @Raw(dataContext.AddInputField<AssetView>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
-        @Raw(dataContext.AddTextAreaField<AssetView>("Description"))
+        @Raw(dataContext.AddInputField<Asset>("AssetKey", fieldLabel: "Key"))
+        @Raw(dataContext.AddInputField<Asset>("AssetName", fieldLabel: "Name"))
+        @Raw(dataContext.AddSelectField<Asset, AssetTypes>("AssetTypeID", "ID", "Name", fieldLabel: "Type"))
+        @Raw(dataContext.AddInputField<Asset>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
+        @Raw(dataContext.AddTextAreaField<Asset>("Description"))
     </div>
 
 }
@@ -118,7 +118,7 @@ new[] { null, "Meters", "text-left"},
 @section Scripts
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<AssetView, DataHub>(ViewBag,null,null,ViewBag.LocationID))
+        @Raw(dataContext.RenderViewModelConfiguration<Asset, DataHub>(ViewBag,null,null,ViewBag.LocationID))
 
         $(function () {
             $("#pageHeader").append("@Raw(Regex.Replace(AssetFilter().ToString(), @"\r|\n", ""))");

@@ -43,6 +43,8 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        public int AssetTypeID { get; set; }
+
         [Required]
         public double VoltageKV { get; set; }
 

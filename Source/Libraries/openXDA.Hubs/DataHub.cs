@@ -3075,12 +3075,11 @@ namespace openXDA.Hubs
 
         #region [Assets Operations]
 
-        // Note that New Models Currently can't be Delected since the SQL has no DELETE Trigger yet
 
         #region [Asset Overview]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(AssetView), RecordOperation.QueryRecordCount)]
+        [RecordOperation(typeof(Asset), RecordOperation.QueryRecordCount)]
         public int QueryAssetCount(int locationID, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -3104,7 +3103,7 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(AssetView), RecordOperation.QueryRecords)]
+        [RecordOperation(typeof(Asset), RecordOperation.QueryRecords)]
         public IEnumerable<AssetView> QueryAssets(int locationID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -3122,7 +3121,7 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(AssetView), RecordOperation.UpdateRecord)]
+        [RecordOperation(typeof(Asset), RecordOperation.UpdateRecord)]
         public void UpdateAsset(AssetView record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -3151,7 +3150,7 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(AssetView), RecordOperation.AddNewRecord)]
+        [RecordOperation(typeof(Asset), RecordOperation.AddNewRecord)]
         public void AddNewAssetView(AssetView record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -3186,15 +3185,14 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(AssetView), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(Asset), RecordOperation.DeleteRecord)]
         public void DeleteAsset(int id)
         {
             CascadeDelete("Asset", $"ID = {id}");
         }
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Asset), RecordOperation.CreateNewRecord)]
-        public Asset NewAsset()
+        
+        private Asset NewAsset()
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
@@ -3204,7 +3202,7 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(AssetView), RecordOperation.CreateNewRecord)]
+        [RecordOperation(typeof(Asset), RecordOperation.CreateNewRecord)]
         public AssetView NewAssetView()
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))

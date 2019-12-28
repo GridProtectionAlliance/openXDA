@@ -636,7 +636,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/EventEmailConfiguration.cshtml", new Tuple<Type, Type>(typeof(EventEmailParameters), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/ExternalLinks/PQViewDataLoader.cshtml", new Tuple<Type, Type>(typeof(PQViewSite), typeof(DataHub)));
 
-                webServer.PagedViewModelTypes.TryAdd("Assets/Asset.cshtml", new Tuple<Type, Type>(typeof(AssetView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Assets/Asset.cshtml", new Tuple<Type, Type>(typeof(Asset), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Sites.cshtml", new Tuple<Type, Type>(typeof(Location), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/LineSegments.cshtml", new Tuple<Type, Type>(typeof(LineSegment), typeof(DataHub)));

@@ -304,7 +304,8 @@ CREATE VIEW AssetView AS
 		VoltageKV,
 		Asset.Description,
 		AssetName,
-		AssetType.Name AS AssetType
+		AssetType.Name AS AssetType,
+		AssetTypeID
 	FROM Asset JOIN	AssetType ON AssetType.ID = Asset.AssetTypeID WHERE AssetType.ID != 5  
 
 
