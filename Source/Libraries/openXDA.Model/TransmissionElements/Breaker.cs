@@ -48,7 +48,7 @@ namespace openXDA.Model
             
         public int? PickupTime { get; set; }
             
-        public double? TipCoilCondition { get; set; } 
+        public double? TripCoilCondition { get; set; } 
 
         #endregion
 
@@ -61,6 +61,8 @@ namespace openXDA.Model
 
             TableOperations<Breaker> breakerTable = new TableOperations<Breaker>(connection);
             Breaker breaker = breakerTable.QueryRecordWhere("ID = {0}", asset.ID);
+            if (breaker == null)
+                return null;
 
             breaker.LazyContext = asset.LazyContext;
             breaker.ConnectionFactory = asset.ConnectionFactory;

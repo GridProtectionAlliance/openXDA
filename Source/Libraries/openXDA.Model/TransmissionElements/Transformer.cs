@@ -74,6 +74,10 @@ namespace openXDA.Model
 
             TableOperations<Transformer> xfTable = new TableOperations<Transformer>(connection);
             Transformer xf = xfTable.QueryRecordWhere("ID = {0}", asset.ID);
+
+            if (xf == null)
+                return null;
+
             xf.LazyContext = asset.LazyContext;
             xf.ConnectionFactory = asset.ConnectionFactory;
 

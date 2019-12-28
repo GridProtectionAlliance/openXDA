@@ -672,7 +672,7 @@ BEGIN
 	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
 		SELECT 
 			AssetKey AS AssetKey,
-			(SELECT ID FROM AssetType WHERE Name = 'Tranformer') AS AssetTypeID,
+			(SELECT ID FROM AssetType WHERE Name = 'Transformer') AS AssetTypeID,
 			Description AS Description,
 			AssetName AS AssetName,
 			VoltageKV AS VoltageKV
