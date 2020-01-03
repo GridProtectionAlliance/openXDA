@@ -81,7 +81,7 @@ namespace openXDA.Model
             List<int> directChannelIDs = new List<int>();
 
             //This Should start by getting multiple datasets
-            using (IDataReader reader = connection.ExecuteReader("SELECT ID FROM Series WHERE EventID = {0}", eventID))
+            using (IDataReader reader = connection.ExecuteReader("SELECT SeriesID FROM ChannelData WHERE EventID = {0}", eventID))
             {
 
                 while (reader.Read())
