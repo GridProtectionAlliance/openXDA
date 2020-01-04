@@ -135,7 +135,7 @@ namespace openXDA.Model
         {
             get
             {
-                return m_connectedChannels ?? (m_connectedChannels = QueryChannels());
+                return m_connectedChannels ?? (m_connectedChannels = QueryConnectedChannels());
             }
             set
             {
@@ -239,6 +239,28 @@ namespace openXDA.Model
             return channels;
         }
 
+        private List<Channel> QueryConnectedChannels()
+        {
+            List<Channel> channels;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                channels = GetConnectedChannel(connection)?
+                    .Select(LazyContext.GetChannel)
+                    .ToList();
+            }
+
+            if ((object)channels != null)
+            {
+                foreach (Channel channel in channels)
+                {
+                    channel.LazyContext = LazyContext;
+                }
+            }
+
+            return channels;
+        }
+
         private List<AssetConnection> QueryConnections()
         {
             List<AssetConnection> connections;
@@ -299,7 +321,7 @@ namespace openXDA.Model
 
             ignoredAssets.Add(this);
 
-            foreach (AssetConnection assetconnection in GetConnection(connection))
+            foreach (AssetConnection assetconnection in QueryConnections())
             {
                 Asset remoteAsset = assetconnection.Child;
                 if (assetconnection.ChildID == ID)

@@ -81,30 +81,26 @@ namespace openXDA.Model
             List<int> directChannelIDs = new List<int>();
 
             //This Should start by getting multiple datasets
-            using (IDataReader reader = connection.ExecuteReader("SELECT SeriesID FROM ChannelData WHERE EventID = {0}", eventID))
-            {
+            string query = "SELECT SeriesID FROM ChannelData WHERE EventID = {0}";
+            DataTable table = connection.RetrieveData(query, eventID);
 
-                while (reader.Read())
+            result.AddRange(table.Rows.Cast<DataRow>().Select(row =>
                 {
-                    int seriesID = (int)reader.GetValue(0);
+                    int seriesID = row.Field<int>("SeriesID");
                     byte[] singleSeriesData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}"
                         , seriesID, eventID);
-
-                    //This will have to change For Legacy Reasons
                     if (singleSeriesData == null)
                     {
                         singleSeriesData = ProcessLegacyBlob(eventID, seriesID, connection);
                     }
-
                     directChannelIDs.Add(connection.ExecuteScalar<int>("SELECT ChannelID FROM Series WHERE ID = {0}", seriesID));
-                    result.Add(singleSeriesData);
-
+                    return singleSeriesData;
                 }
-            }
+            ));
 
             //This Will get the extended Data (throught connections)....
-            Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT AssetID FROM Event WHERE EventID = {0})", eventID);
-            asset.ConnectionFactory = () => { return connection; };
+            Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT AssetID FROM Event WHERE ID = {0})", eventID);
+            asset.ConnectionFactory = () => { return new AdoDataConnection("systemSettings"); };
             List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
 
             foreach (int channelID in channelIDs)

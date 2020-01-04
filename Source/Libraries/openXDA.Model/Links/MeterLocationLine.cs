@@ -120,7 +120,15 @@ namespace openXDA.Model
                 return null;
 
             TableOperations<Location> locationTable = new TableOperations<Location>(connection);
-            return locationTable.QueryRecordWhere("ID = {0}", LocationID);
+
+            try
+            {
+                return locationTable.QueryRecordWhere("ID = {0}", LocationID);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         public Asset GetAsset(AdoDataConnection connection)
