@@ -4146,152 +4146,152 @@ FROM
 GO
 
 -- Each user can update this to create their own scalar stat view in openSEE
--- CREATE VIEW OpenSEEScalarStatView AS
--- SELECT
---     Event.ID AS EventID,
---     MeterLocation.Name AS Station,
---     Meter.Name AS Meter,
---     Line.AssetKey AS LineKey,
---     MeterLine.LineName,
---     EventType.Name AS [Event Type],
---     FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) / 1000.0, '0.###') AS [File Duration (seconds)],
---     FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) * System.Frequency / 1000.0, '0.##') AS [File Duration (cycles)],
---     FORMAT(FaultSummary.Distance, '0.##') AS [Fault Distance (mi)],
---     FORMAT(FaultSummary.DurationSeconds * 1000.0, '0') AS [Fault Duration (ms)],
---     FORMAT(FaultSummary.DurationCycles, '0.##') AS [Fault Duration (cycles)],
---     FORMAT(Sag.MagnitudePercent, '0.0') AS [Sag Magnitude (%)],
---     FORMAT(Sag.MagnitudeVolts, '0') AS [Sag Magnitude (RMS volts)],
---     FaultSummary.Algorithm,
---     FORMAT(EventStat.VPeak, '0') AS [Voltage Peak (volts)],
---     FORMAT(EventStat.VAMax, '0') AS [VA Maximum (RMS volts)],
---     FORMAT(EventStat.VBMax, '0') AS [VB Maximum (RMS volts)],
---     FORMAT(EventStat.VCMax, '0') AS [VC Maximum (RMS volts)],
---     FORMAT(EventStat.VABMax, '0') AS [VAB Maximum (RMS volts)],
---     FORMAT(EventStat.VBCMax, '0') AS [VBC Maximum (RMS volts)],
---     FORMAT(EventStat.VCAMax, '0') AS [VCA Maximum (RMS volts)],
---     FORMAT(EventStat.VAMin, '0') AS [VA Minimum (RMS volts)],
---     FORMAT(EventStat.VBMin, '0') AS [VB Minimum (RMS volts)],
---     FORMAT(EventStat.VCMin, '0') AS [VC Minimum (RMS volts)],
---     FORMAT(EventStat.VABMin, '0') AS [VAB Minimum (RMS volts)],
---     FORMAT(EventStat.VBCMin, '0') AS [VBC Minimum (RMS volts)],
---     FORMAT(EventStat.VCAMin, '0') AS [VCA Minimum (RMS volts)],
---     FORMAT(EventStat.IPeak, '0') AS [Current Peak (Amps)],
---     FORMAT(EventStat.IAMax, '0') AS [IA Maximum (RMS Amps)],
---     FORMAT(EventStat.IBMax, '0') AS [IB Maximum (RMS Amps)],
---     FORMAT(EventStat.ICMax, '0') AS [IC Maximum (RMS Amps)],
---     FORMAT(EventStat.IA2t, '0') AS [IA I2t (A2s)],
---     FORMAT(EventStat.IB2t, '0') AS [IB I2t (A2s)],
---     FORMAT(EventStat.IC2t, '0') AS [IC I2t (A2s)],
---     VAN.Mapping AS [VAN Channel],
---     VBN.Mapping AS [VBN Channel],
---     VCN.Mapping AS [VCN Channel],
---     IAN.Mapping AS [IAN Channel],
---     IBN.Mapping AS [IBN Channel],
---     ICN.Mapping AS [ICN Channel],
---     IR.Mapping AS [IR Channel],
--- 	FORMAT(RP.Imax1, '0.000') AS [Lmax 1],
--- 	FORMAT(RP.Imax2, '0.000') AS [Lmax 2],
--- 	FORMAT(RP.TripInitiate,'HH:mm:ss.fff') AS [Trip Initiation],
--- 	(RP.TripTime / 10) AS [Trip Time (microsec)],
--- 	(RP.PickupTime / 10) AS [Pickup Time (microsec)],
--- 	FORMAT(RP.TripCoilCondition, '0.000') AS [Trip Coil Condition (Aps)]
--- FROM
---     Event JOIN
---     MeterLine ON
---         Event.MeterID = MeterLine.MeterID AND
---         Event.LineID = MeterLine.LineID JOIN
---     Meter ON Event.MeterID = Meter.ID JOIN
---     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
---     Line ON Event.LineID = Line.ID JOIN
---     EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
---     FaultSummary ON
---         Event.ID = FaultSummary.EventID AND
---         FaultSummary.IsSelectedAlgorithm <> 0 AND
---         FaultSummary.FaultNumber = 1 LEFT OUTER JOIN
---     EventStat ON Event.ID = EventStat.EventID LEFT OUTER JOIN
---     ChannelDetail VAN ON
---         Event.MeterID = VAN.MeterID AND
---         Event.LineID = VAN.LineID AND
---         VAN.MeasurementType = 'Voltage' AND
---         VAN.Phase = 'AN' AND
---         VAN.MeasurementCharacteristic = 'Instantaneous' AND
---         VAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
---     ChannelDetail VBN ON
---         Event.MeterID = VBN.MeterID AND
---         Event.LineID = VBN.LineID AND
---         VBN.MeasurementType = 'Voltage' AND
---         VBN.Phase = 'BN' AND
---         VBN.MeasurementCharacteristic = 'Instantaneous' AND
---         VBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
---     ChannelDetail VCN ON
---         Event.MeterID = VCN.MeterID AND
---         Event.LineID = VCN.LineID AND
---         VCN.MeasurementType = 'Voltage' AND
---         VCN.Phase = 'CN' AND
---         VCN.MeasurementCharacteristic = 'Instantaneous' AND
---         VCN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
---     ChannelDetail IAN ON
---         Event.MeterID = IAN.MeterID AND
---         Event.LineID = IAN.LineID AND
---         IAN.MeasurementType = 'Current' AND
---         IAN.Phase = 'AN' AND
---         IAN.MeasurementCharacteristic = 'Instantaneous' AND
---         IAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
---     ChannelDetail IBN ON
---         Event.MeterID = IBN.MeterID AND
---         Event.LineID = IBN.LineID AND
---         IBN.MeasurementType = 'Current' AND
---         IBN.Phase = 'BN' AND
---         IBN.MeasurementCharacteristic = 'Instantaneous' AND
---         IBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
---     ChannelDetail ICN ON
---         Event.MeterID = ICN.MeterID AND
---         Event.LineID = ICN.LineID AND
---         ICN.MeasurementType = 'Current' AND
---         ICN.Phase = 'CN' AND
---         ICN.MeasurementCharacteristic = 'Instantaneous' AND
---         ICN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
---     ChannelDetail IR ON
---         Event.MeterID = IR.MeterID AND
---         Event.LineID = IR.LineID AND
---         IR.MeasurementType = 'Current' AND
---         IR.Phase = 'RES' AND
---         IR.MeasurementCharacteristic = 'Instantaneous' AND
---         IR.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
--- 	RelayPerformance RP ON
--- 		Event.ID = RP.EventID AND
--- 		RP.ChannelID IN 
--- 		(
--- 			SELECT ID fROM ChannelDetail RPD WHERE 
--- 				Event.MeterID = RPD.MeterID AND
--- 				Event.LineID = RPD.LineID
--- 		) CROSS JOIN
---     (
---         SELECT COALESCE(CONVERT(FLOAT,
---         (
---             SELECT TOP 1 Value
---             FROM Setting
---             WHERE Name = 'SystemFrequency'
---         )), 60.0) AS Frequency
---     ) System OUTER APPLY
---     (
---         SELECT TOP 1
---             Disturbance.PerUnitMagnitude * 100 AS MagnitudePercent,
---             Disturbance.Magnitude AS MagnitudeVolts
---         FROM
---             Disturbance JOIN
---             EventType ON
---                 Disturbance.EventTypeID = EventType.ID AND
---                 EventType.Name = 'Sag' JOIN
---             Phase ON
---                 Disturbance.PhaseID = Phase.ID AND
---                 Phase.Name = 'Worst'
---         WHERE
---             Disturbance.EventID = Event.ID AND
---             Disturbance.StartTime <= dbo.AdjustDateTime2(FaultSummary.Inception, FaultSummary.DurationSeconds) AND
---             Disturbance.EndTime >= FaultSummary.Inception
---     ) Sag
--- GO
+CREATE VIEW OpenSEEScalarStatView AS
+	SELECT
+    Event.ID AS EventID,
+    Location.Name AS Station,
+    Meter.Name AS Meter,
+    Asset.AssetKey AS AssetKey,
+	Asset.AssetName,
+    EventType.Name AS [Event Type],
+    FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) / 1000.0, '0.###') AS [File Duration (seconds)],
+    FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) * System.Frequency / 1000.0, '0.##') AS [File Duration (cycles)],
+    FORMAT(FaultSummary.Distance, '0.##') AS [Fault Distance (mi)],
+    FORMAT(FaultSummary.DurationSeconds * 1000.0, '0') AS [Fault Duration (ms)],
+    FORMAT(FaultSummary.DurationCycles, '0.##') AS [Fault Duration (cycles)],
+    FORMAT(Sag.MagnitudePercent, '0.0') AS [Sag Magnitude (%)],
+    FORMAT(Sag.MagnitudeVolts, '0') AS [Sag Magnitude (RMS volts)],
+    FaultSummary.Algorithm,
+    FORMAT(EventStat.VPeak, '0') AS [Voltage Peak (volts)],
+    FORMAT(EventStat.VAMax, '0') AS [VA Maximum (RMS volts)],
+    FORMAT(EventStat.VBMax, '0') AS [VB Maximum (RMS volts)],
+    FORMAT(EventStat.VCMax, '0') AS [VC Maximum (RMS volts)],
+    FORMAT(EventStat.VABMax, '0') AS [VAB Maximum (RMS volts)],
+    FORMAT(EventStat.VBCMax, '0') AS [VBC Maximum (RMS volts)],
+    FORMAT(EventStat.VCAMax, '0') AS [VCA Maximum (RMS volts)],
+    FORMAT(EventStat.VAMin, '0') AS [VA Minimum (RMS volts)],
+    FORMAT(EventStat.VBMin, '0') AS [VB Minimum (RMS volts)],
+    FORMAT(EventStat.VCMin, '0') AS [VC Minimum (RMS volts)],
+    FORMAT(EventStat.VABMin, '0') AS [VAB Minimum (RMS volts)],
+    FORMAT(EventStat.VBCMin, '0') AS [VBC Minimum (RMS volts)],
+    FORMAT(EventStat.VCAMin, '0') AS [VCA Minimum (RMS volts)],
+    FORMAT(EventStat.IPeak, '0') AS [Current Peak (Amps)],
+    FORMAT(EventStat.IAMax, '0') AS [IA Maximum (RMS Amps)],
+    FORMAT(EventStat.IBMax, '0') AS [IB Maximum (RMS Amps)],
+    FORMAT(EventStat.ICMax, '0') AS [IC Maximum (RMS Amps)],
+    FORMAT(EventStat.IA2t, '0') AS [IA I2t (A2s)],
+    FORMAT(EventStat.IB2t, '0') AS [IB I2t (A2s)],
+    FORMAT(EventStat.IC2t, '0') AS [IC I2t (A2s)],
+    VAN.Mapping AS [VAN Channel],
+    VBN.Mapping AS [VBN Channel],
+    VCN.Mapping AS [VCN Channel],
+    IAN.Mapping AS [IAN Channel],
+    IBN.Mapping AS [IBN Channel],
+    ICN.Mapping AS [ICN Channel],
+    IR.Mapping AS [IR Channel],
+ 	FORMAT(RP.Imax1, '0.000') AS [Lmax 1],
+	FORMAT(RP.Imax2, '0.000') AS [Lmax 2],
+ 	FORMAT(RP.TripInitiate,'HH:mm:ss.fff') AS [Trip Initiation],
+ 	(RP.TripTime / 10) AS [Trip Time (microsec)],
+ 	(RP.PickupTime / 10) AS [Pickup Time (microsec)],
+ 	FORMAT(RP.TripCoilCondition, '0.000') AS [Trip Coil Condition (Aps)]
+FROM
+     Event JOIN
+     MeterAsset ON
+         Event.MeterID = MeterAsset.MeterID AND
+         Event.AssetID = MeterAsset.AssetID JOIN
+     Meter ON Event.MeterID = Meter.ID JOIN
+     Location ON Meter.LocationID = Location.ID JOIN
+     Asset ON Event.AssetID = Asset.ID JOIN
+     EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
+     FaultSummary ON
+         Event.ID = FaultSummary.EventID AND
+         FaultSummary.IsSelectedAlgorithm <> 0 AND
+         FaultSummary.FaultNumber = 1 LEFT OUTER JOIN
+     EventStat ON Event.ID = EventStat.EventID LEFT OUTER JOIN
+     ChannelDetail VAN ON
+         Event.MeterID = VAN.MeterID AND
+         Event.AssetID = VAN.AssetID AND
+         VAN.MeasurementType = 'Voltage' AND
+         VAN.Phase = 'AN' AND
+         VAN.MeasurementCharacteristic = 'Instantaneous' AND
+         VAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail VBN ON
+         Event.MeterID = VBN.MeterID AND
+         Event.AssetID = VBN.AssetID AND
+         VBN.MeasurementType = 'Voltage' AND
+         VBN.Phase = 'BN' AND
+         VBN.MeasurementCharacteristic = 'Instantaneous' AND
+         VBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail VCN ON
+         Event.MeterID = VCN.MeterID AND
+         Event.AssetID = VCN.AssetID AND
+         VCN.MeasurementType = 'Voltage' AND
+         VCN.Phase = 'CN' AND
+         VCN.MeasurementCharacteristic = 'Instantaneous' AND
+         VCN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail IAN ON
+         Event.MeterID = IAN.MeterID AND
+         Event.AssetID = IAN.AssetID AND
+         IAN.MeasurementType = 'Current' AND
+         IAN.Phase = 'AN' AND
+         IAN.MeasurementCharacteristic = 'Instantaneous' AND
+         IAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail IBN ON
+         Event.MeterID = IBN.MeterID AND
+         Event.AssetID = IBN.AssetID AND
+         IBN.MeasurementType = 'Current' AND
+         IBN.Phase = 'BN' AND
+         IBN.MeasurementCharacteristic = 'Instantaneous' AND
+         IBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail ICN ON
+        Event.MeterID = ICN.MeterID AND
+         Event.AssetID = ICN.AssetID AND
+         ICN.MeasurementType = 'Current' AND
+         ICN.Phase = 'CN' AND
+         ICN.MeasurementCharacteristic = 'Instantaneous' AND
+         ICN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail IR ON
+         Event.MeterID = IR.MeterID AND
+         Event.AssetID = IR.AssetID AND
+         IR.MeasurementType = 'Current' AND
+         IR.Phase = 'RES' AND
+         IR.MeasurementCharacteristic = 'Instantaneous' AND
+         IR.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+ 	RelayPerformance RP ON
+ 		Event.ID = RP.EventID AND
+ 		RP.ChannelID IN 
+ 		(
+ 			SELECT ID fROM ChannelDetail RPD WHERE 
+ 				Event.MeterID = RPD.MeterID AND
+ 				Event.AssetID = RPD.AssetID
+ 		) CROSS JOIN
+     (
+         SELECT COALESCE(CONVERT(FLOAT,
+         (
+             SELECT TOP 1 Value
+             FROM Setting
+             WHERE Name = 'SystemFrequency'
+         )), 60.0) AS Frequency
+     ) System OUTER APPLY
+     (
+         SELECT TOP 1
+             Disturbance.PerUnitMagnitude * 100 AS MagnitudePercent,
+             Disturbance.Magnitude AS MagnitudeVolts
+         FROM
+             Disturbance JOIN
+             EventType ON
+                 Disturbance.EventTypeID = EventType.ID AND
+                 EventType.Name = 'Sag' JOIN
+             Phase ON
+                 Disturbance.PhaseID = Phase.ID AND
+                 Phase.Name = 'Worst'
+         WHERE
+             Disturbance.EventID = Event.ID AND
+             Disturbance.StartTime <= dbo.AdjustDateTime2(FaultSummary.Inception, FaultSummary.DurationSeconds) AND
+             Disturbance.EndTime >= FaultSummary.Inception
+     ) Sag
+ GO
 
 
 CREATE FUNCTION RecursiveMeterSearch(@assetGroupID int)
