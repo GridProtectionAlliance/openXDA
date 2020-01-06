@@ -3855,39 +3855,38 @@ FROM
         Channel.HarmonicGroup = ContourChannelType.HarmonicGroup
 GO
 
--- CREATE VIEW EventView
--- AS
--- SELECT
---     Event.ID,
---     Event.FileGroupID,
---     Event.MeterID,
---     Event.LineID,
---     Event.EventTypeID,
---     Event.EventDataID,
---     Event.Name,
---     Event.Alias,
---     Event.ShortName,
---     Event.StartTime,
---     Event.EndTime,
---     Event.Samples,
---     Event.TimeZoneOffset,
---     Event.SamplesPerSecond,
---     Event.SamplesPerCycle,
---     Event.Description,
---     Event.UpdatedBy,
---     MeterLine.LineName,
---     Meter.Name AS MeterName,
---     MeterLocation.Name AS StationName,
---     Line.Length,
---     EventType.Name AS EventTypeName
--- FROM
---     Event JOIN
---     Meter ON Event.MeterID = Meter.ID JOIN
---     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
---     Line ON Event.LineID = Line.ID JOIN
---     MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID JOIN
---     EventType ON Event.EventTypeID = EventType.ID
--- GO
+ CREATE VIEW EventView
+ AS
+ SELECT
+     Event.ID,
+     Event.FileGroupID,
+     Event.MeterID,
+     Event.AssetID,
+     Event.EventTypeID,
+     Event.EventDataID,
+     Event.Name,
+     Event.Alias,
+     Event.ShortName,
+     Event.StartTime,
+     Event.EndTime,
+     Event.Samples,
+     Event.TimeZoneOffset,
+     Event.SamplesPerSecond,
+     Event.SamplesPerCycle,
+     Event.Description,
+     Event.UpdatedBy,
+     Asset.AssetName,
+     Meter.Name AS MeterName,
+     Location.Name AS StationName,
+     EventType.Name AS EventTypeName
+ FROM
+     Event JOIN
+     Meter ON Event.MeterID = Meter.ID JOIN
+     Location ON Meter.LocationID = Location.ID JOIN
+     Asset ON Event.AssetID = Asset.ID JOIN
+     MeterAsset ON MeterAsset.MeterID = Meter.ID AND MeterAsset.AssetID = Asset.ID JOIN
+     EventType ON Event.EventTypeID = EventType.ID
+GO
 
 -- CREATE VIEW DisturbanceView
 -- AS

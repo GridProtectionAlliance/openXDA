@@ -707,8 +707,8 @@ namespace openXDA.Adapters
                 returnDict.Add("postedStationName", theEvent.StationName);
                 returnDict.Add("postedMeterId", theEvent.MeterID.ToString());
                 returnDict.Add("postedMeterName", theEvent.MeterName);
-                returnDict.Add("postedLineName", theEvent.LineName);
-                returnDict.Add("postedLineLength", theEvent.Length.ToString());
+                //returnDict.Add("postedLineName", theEvent.LineName);
+                //returnDict.Add("postedLineLength", theEvent.Length.ToString());
 
                 returnDict.Add("postedEventName", theEvent.EventTypeName);
                 returnDict.Add("postedEventDate", theEvent.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
