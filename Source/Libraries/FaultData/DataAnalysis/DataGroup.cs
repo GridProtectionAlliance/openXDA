@@ -292,7 +292,8 @@ namespace FaultData.DataAnalysis
             }
             
             // If the data being added matches the parameters for this data group, add the data to the data group
-            if (asset == m_asset && startTime == m_startTime && endTime == m_endTime && samples == m_samples)
+            // Note that it does not have to match Asset
+            if (startTime == m_startTime && endTime == m_endTime && samples == m_samples)
             {
                 m_dataSeries.Add(dataSeries);
                 return true;
