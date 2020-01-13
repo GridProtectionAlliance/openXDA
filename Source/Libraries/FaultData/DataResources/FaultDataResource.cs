@@ -478,7 +478,7 @@ namespace FaultData.DataResources
 
                     // Find fault detection logic defined for the meter and line
                     expressionText = faultDetectionLogicTable
-                        .QueryRecordsWhere("MeterLineID = {0}", meterLineID)
+                        .QueryRecordsWhere("MeterAssetID = {0}", meterLineID)
                         .Select(logic => logic.Expression)
                         .FirstOrDefault();
                 }
