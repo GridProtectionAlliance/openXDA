@@ -495,7 +495,8 @@ namespace FaultData.DataAnalysis
                 returnArray[0] = 0x44;
                 returnArray[1] = 0x33;
 
-                result[dataSeries.SeriesInfo.ID] = returnArray;
+                int dataSeriesID = dataSeries.SeriesInfo?.ID ?? 0;
+                result.Add(dataSeriesID, returnArray);
             }
 
             return result ;
