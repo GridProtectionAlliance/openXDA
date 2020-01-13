@@ -1425,8 +1425,7 @@ CREATE TABLE EventType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NOT NULL UNIQUE,
-    Description VARCHAR(MAX) NULL,
-	AssetCheck VARCHAR(MAX) NOT NULL DEFAULT('SELECT 1')
+    Description VARCHAR(MAX) NULL
 )
 GO
 
@@ -1689,34 +1688,34 @@ CREATE NONCLUSTERED INDEX IX_SnapshotHarmonics_EventID
 ON SnapshotHarmonics(EventID ASC)
 GO
 
-INSERT INTO EventType(Name, Description, AssetCheck) VALUES ('Fault', 'Fault', 'SELECT (CASE WHEN ({0} = 1 OR {0} = 6) THEN 1 ELSE 0 END)')
+INSERT INTO EventType(Name, Description) VALUES ('Fault', 'Fault')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('RecloseIntoFault', 'Reclose Into Fault', 'SELECT (CASE WHEN ({0} = 1 OR {0} = 6) THEN 1 ELSE 0 END)')
+INSERT INTO EventType(Name, Description) VALUES ('RecloseIntoFault', 'Reclose Into Fault')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('BreakerOpen', 'Breaker Opening - Nonfault', 'SELECT (CASE WHEN ({0} = 3) THEN 1 ELSE 0 END)')
+INSERT INTO EventType(Name, Description) VALUES ('BreakerOpen', 'Breaker Opening - Nonfault')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('Interruption', 'Interruption', 'SELECT (CASE WHEN ({0} = 2 OR {0} = 4) THEN 1 ELSE 0 END)')
+INSERT INTO EventType(Name, Description) VALUES ('Interruption', 'Interruption')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('Sag', 'Sag', 'SELECT (CASE WHEN ({0} = 2 OR {0} = 4) THEN 1 ELSE 0 END)')
+INSERT INTO EventType(Name, Description) VALUES ('Sag', 'Sag')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('Swell', 'Swell', 'SELECT (CASE WHEN ({0} = 2 OR {0} = 4) THEN 1 ELSE 0 END)')
+INSERT INTO EventType(Name, Description) VALUES ('Swell', 'Swell')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('Transient', 'Transient', 'SELECT (CASE WHEN ({0} = 2 OR {0} = 4) THEN 1 ELSE 0 END)')
+INSERT INTO EventType(Name, Description) VALUES ('Transient', 'Transient')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('Other', 'Other','SELECT 1')
+INSERT INTO EventType(Name, Description) VALUES ('Other', 'Other')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('Test', 'Test','SELECT 1')
+INSERT INTO EventType(Name, Description) VALUES ('Test', 'Test')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('Snapshot', 'Snapshot','SELECT 1')
+INSERT INTO EventType(Name, Description) VALUES ('Snapshot', 'Snapshot')
 GO
 
 INSERT INTO VoltageEnvelope(Name, Description) VALUES ('ITIC', 'ITI (CBEMA) Power Acceptability Curves - Tolerance curves for 120 V computer equipment')
