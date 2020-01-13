@@ -67,7 +67,7 @@ namespace FaultData.DataResources
                         {
                             DataGroup dataGroup = new DataGroup();
 
-                            foreach (DataSeries dataSeries in sampleCountGroup)
+                            foreach (DataSeries dataSeries in assetGroup)
                                 dataGroup.Add(dataSeries);
 
                             foreach (DataSeries dataSeries in GetConnectedSeries(sampleCountGroup,assetGroup.Key))
