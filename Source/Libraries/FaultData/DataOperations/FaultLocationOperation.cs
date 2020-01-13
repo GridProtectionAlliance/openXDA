@@ -264,7 +264,8 @@ namespace FaultData.DataOperations
                 {
                     EventID = eventID,
                     Algorithm = FaultGroup.Faults[0].Curves[curveIndex].Algorithm,
-                    Data = Serialize(series)
+                    Data = Serialize(series),
+                    AngleData = new byte[0]
                 };
             }
 

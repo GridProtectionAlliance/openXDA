@@ -475,16 +475,17 @@ namespace FaultData.DataOperations
         {
             VICycleDataGroup viCycleDataGroup = GetCycleData(connection, grouping.Key);
             DataGroup faultCurveGroup = new DataGroup();
+            DataGroup faultCurveAngleGroup = new DataGroup();
 
             faultCurveGroup.Add(viCycleDataGroup.VA.RMS.Multiply(double.NaN));
-            faultCurveGroup.Add(faultCurveGroup[0].Copy());
+            faultCurveAngleGroup.Add(faultCurveGroup[0].Copy());
 
             foreach (MappingNode node in grouping)
             {
                 for (int i = node.StartSample; node.DistanceCurve.HasData(i); i++)
                 {
                     faultCurveGroup[0][i].Value = node.DistanceCurve[i].Value;
-                    faultCurveGroup[1][i].Value = node.AngleCurve[i].Value;
+                    faultCurveAngleGroup[0][i].Value = node.AngleCurve[i].Value;
                 }
             }
 
@@ -492,7 +493,8 @@ namespace FaultData.DataOperations
             {
                 EventID = grouping.Key,
                 Algorithm = "DoubleEnded",
-                Data = faultCurveGroup.ToData()[faultCurveGroup.DataSeries[0].SeriesInfo.ID]
+                Data = faultCurveGroup.ToData()[0],
+                AngleData = faultCurveAngleGroup.ToData()[0]
             };
         }
 
