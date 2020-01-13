@@ -57,17 +57,20 @@ namespace FaultData.DataResources
         {
             List<DataGroup> dataGroups = new List<DataGroup>();
 
-            foreach (IGrouping<Asset, DataSeries> lineGroup in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(GetAsset))
+            foreach (IGrouping<DateTime, DataSeries> startTimeGroup in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(dataSeries => dataSeries.DataPoints[0].Time))
             {
-                foreach (IGrouping<DateTime, DataSeries> startTimeGroup in lineGroup.GroupBy(dataSeries => dataSeries.DataPoints[0].Time))
+                foreach (IGrouping<DateTime, DataSeries> endTimeGroup in startTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints[dataSeries.DataPoints.Count - 1].Time))
                 {
-                    foreach (IGrouping<DateTime, DataSeries> endTimeGroup in startTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints[dataSeries.DataPoints.Count - 1].Time))
+                    foreach (IGrouping<int, DataSeries> sampleCountGroup in endTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints.Count))
                     {
-                        foreach (IGrouping<int, DataSeries> sampleCountGroup in endTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints.Count))
+                        foreach (IGrouping<Asset, DataSeries> assetGroup in sampleCountGroup.GroupBy(GetAsset))
                         {
                             DataGroup dataGroup = new DataGroup();
 
                             foreach (DataSeries dataSeries in sampleCountGroup)
+                                dataGroup.Add(dataSeries);
+
+                            foreach (DataSeries dataSeries in GetConnectedSeries(sampleCountGroup,assetGroup.Key))
                                 dataGroup.Add(dataSeries);
 
                             dataGroups.Add(dataGroup);
@@ -102,6 +105,19 @@ namespace FaultData.DataResources
             return null;
         }
 
+        private List<DataSeries> GetConnectedSeries(IGrouping<int, DataSeries> groupedSeries, Asset asset)
+        {
+            List<DataSeries> result = new List<DataSeries>();
+            List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
+
+            foreach (DataSeries ds in groupedSeries)
+            {
+                if (channelIDs.Contains(ds.SeriesInfo.ChannelID))
+                    result.Add(ds);
+            }
+
+            return result;
+        }
         #endregion
     }
 }
