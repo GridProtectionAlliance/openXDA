@@ -356,6 +356,13 @@ namespace FaultData.DataResources
 
                 // Create the fault location data set and begin populating
                 // the properties necessary for calculating fault location
+
+                if (!((AssetType)dataGroup.Asset.AssetTypeID == AssetType.Line || (AssetType)dataGroup.Asset.AssetTypeID == AssetType.Transformer))
+                {
+                    Log.Debug("Not a Line; skipping fault analysis.");
+                    continue;
+                }
+
                 Line line = Line.DetailedLine(dataGroup.Asset);
 
                 FaultLocationDataSet faultLocationDataSet = new FaultLocationDataSet();

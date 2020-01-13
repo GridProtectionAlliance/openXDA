@@ -146,7 +146,7 @@ namespace openXDA.Model
                 return null;
 
             TableOperations<SourceImpedance> sourceImpedanceTable = new TableOperations<SourceImpedance>(connection);
-            return sourceImpedanceTable.QueryRecordWhere("MeterLocationLineID = {0}", ID);
+            return sourceImpedanceTable.QueryRecordWhere("AssetLocationID = {0}", ID);
         }
 
         private Location QueryLocation()
