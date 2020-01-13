@@ -34,6 +34,8 @@ namespace openXDA.Model
         public string Name { get; set; }
 
         public string Description { get; set; }
+
+        public string AssetCheck { get; set; }
     }
 
     public static partial class TableOperationsExtensions
