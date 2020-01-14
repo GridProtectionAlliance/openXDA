@@ -68,6 +68,8 @@ namespace openXDA.Model
         [Required]
         public int AssetTypeID {get; set; }
 
+        public bool Spare { get; set; }
+
         [JsonIgnore]
         [NonRecordField]
         internal LazyContext LazyContext { get; set; } = new LazyContext();

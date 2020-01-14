@@ -191,9 +191,20 @@ CREATE TABLE Asset
     AssetKey VARCHAR(50) NOT NULL UNIQUE,
     Description VARCHAR(MAX) NULL,
 	AssetName VARCHAR(200) NOT NULL,
-	VoltageKV FLOAT NOT NULL
+	VoltageKV FLOAT NOT NULL,
+	Spare Bit NOT NULL Default 0
 )
 GO
+
+CREATE TABLE AssetSpare
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+    SpareAssetID INT NOT NULL REFERENCES Asset(ID)
+)
+GO
+
+
 
 CREATE TABLE Customer
 (
@@ -230,6 +241,58 @@ CREATE TABLE AssetRelationship
     ChildID INT NOT NULL REFERENCES Asset(ID)
 )
 GO
+
+/* View with Procedures Due To Spare Logic */
+
+CREATE VIEW AssetConnection AS 
+SELECT
+	AssetRelationship.ID AS ID,
+	AssetRelationship.AssetRelationshipTypeID AS AssetRelationshipTypeID,
+	(SELECT (CASE WHEN Child.Spare = 1 THEN SpareChild.SpareAssetID ELSE AssetRelationship.ChildID END)) AS ChildID,
+	(SELECT (CASE WHEN Parent.Spare = 1 THEN SpareParent.SpareAssetID ELSE AssetRelationship.ParentID END)) AS ParentID
+FROM
+	AssetRelationship JOIN ASSET CHILD ON AssetRelationship.ChildID = Child.ID JOIN
+	Asset Parent ON AssetRelationship.ParentID = Parent.ID LEFT JOIN
+	AssetSpare SpareChild ON Child.ID = SpareChild.AssetID LEFT JOIN
+	AssetSpare SpareParent ON Parent.ID = SpareParent.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_AssetConnection ON AssetConnection
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO AssetRelationship (ChildID, ParentID, AssetRelationshipTypeID)
+		SELECT 
+			ChildID AS ChildID,
+			ParentID AS ParentID,
+			AssetRelationshipTypeID AS AssetRelationshipTypeID
+	FROM INSERTED
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_AssetConnection ON AssetConnection
+INSTEAD OF UPDATE AS
+BEGIN
+
+		UPDATE AssetRelationship
+		SET
+			AssetRelationship.ChildID = AssetRelationship.ChildID,
+			AssetRelationship.ParentID = AssetRelationship.ParentID,
+			AssetRelationship.AssetRelationshipTypeID = AssetRelationship.AssetRelationshipTypeID
+		FROM
+			AssetRelationship INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = AssetRelationship.ID;
+END
+GO
+
+CREATE TRIGGER TR_DELETE_AssetConnection ON AssetConnection
+INSTEAD OF DELETE AS 
+BEGIN
+	DELETE FROM AssetRelationship WHERE ID IN (SELECT DELETED.ID FROM DELETED)
+END
+GO
+/* End Spare Logic */
 
 CREATE TABLE BusAttributes
 (
@@ -309,7 +372,8 @@ CREATE VIEW Line AS
 		VoltageKV,
 		Description,
 		AssetName,
-		AssetTypeID
+		AssetTypeID,
+		Spare
 	FROM Asset JOIN LineAttributes ON Asset.ID = LineAttributes.AssetID
 GO
 
@@ -321,7 +385,8 @@ CREATE VIEW AssetView AS
 		Asset.Description,
 		AssetName,
 		AssetType.Name AS AssetType,
-		AssetTypeID
+		AssetTypeID,
+		Spare
 	FROM Asset JOIN	AssetType ON AssetType.ID = Asset.AssetTypeID WHERE AssetType.ID != 5  
 
 
@@ -330,13 +395,14 @@ GO
 CREATE TRIGGER TR_INSERT_Line ON Line
 INSTEAD OF INSERT AS 
 BEGIN
-	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName,VoltageKV)
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName,VoltageKV, Spare)
 		SELECT 
 			AssetKey AS AssetKey,
 			(SELECT ID FROM AssetType WHERE Name = 'Line') AS AssetTypeID,
 			Description AS Description,
 			AssetName AS AssetName,
-			VoltageKV AS VoltageKV
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
 	FROM INSERTED
 
 	INSERT INTO LineAttributes (AssetID, MinFaultDistance, MaxFaultDistance)
@@ -352,14 +418,15 @@ GO
 CREATE TRIGGER TR_UPDATE_Line ON Line
 INSTEAD OF UPDATE AS
 BEGIN
-IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV))
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV) OR UPDATE(Spare))
 	BEGIN
 		UPDATE Asset
 		SET
 			Asset.AssetKey = INSERTED.AssetKey,
 			Asset.Description = INSERTED.Description,
 			Asset.AssetName = INSERTED.AssetName,
-			Asset.VoltageKV = INSERTED.VoltageKV
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
 		FROM
 			ASSET 
 		INNER JOIN
@@ -389,20 +456,22 @@ CREATE VIEW Bus AS
 		VoltageKV,
 		Description,
 		AssetName,
-		AssetTypeID
+		AssetTypeID,
+		Spare
 	FROM Asset JOIN BusAttributes ON Asset.ID = BusAttributes.AssetID
 GO
 
 CREATE TRIGGER TR_INSERT_Bus ON BUS
 INSTEAD OF INSERT AS 
 BEGIN
-	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
 		SELECT 
 			AssetKey AS AssetKey,
 			(SELECT ID FROM AssetType WHERE Name = 'Bus') AS AssetTypeID,
 			Description AS Description,
 			AssetName AS AssetName,
-			VoltageKV AS VoltageKV
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
 	FROM INSERTED
 
 	INSERT INTO BusAttributes (AssetID)
@@ -416,14 +485,15 @@ GO
 CREATE TRIGGER TR_UPDATE_Bus ON BUS
 INSTEAD OF UPDATE AS
 BEGIN
-IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV))
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV) OR UPDATE(Spare))
 	BEGIN
 		UPDATE Asset
 		SET
 			Asset.AssetKey = INSERTED.AssetKey,
 			Asset.Description = INSERTED.Description,
 			Asset.AssetName = INSERTED.AssetName,
-			Asset.VoltageKV = INSERTED.VoltageKV
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
 		FROM
 			ASSET 
 		INNER JOIN
@@ -448,20 +518,22 @@ CREATE VIEW Breaker AS
 		AssetTypeID,
 		TripTime,
 		PickupTime,
-		TripCoilCondition
+		TripCoilCondition,
+		Spare
 	FROM Asset JOIN BreakerAttributes ON Asset.ID = BreakerAttributes.AssetID
 GO
 
 CREATE TRIGGER TR_INSERT_Breaker ON Breaker
 INSTEAD OF INSERT AS 
 BEGIN
-	INSERT INTO Asset (AssetKey, AssetTypeID, Description, VoltageKV, AssetName)
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, VoltageKV, AssetName, Spare)
 		SELECT 
 			AssetKey AS AssetKey,
 			(SELECT ID FROM AssetType WHERE Name = 'Breaker') AS AssetTypeID,
 			Description AS Description,
 			VoltageKV AS VoltageKV,
-			AssetName AS AssetName
+			AssetName AS AssetName,
+			Spare AS Spare
 	FROM INSERTED
 
 	INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed, TripTime, PickupTime, TripCoilCondition)
@@ -480,14 +552,15 @@ GO
 CREATE TRIGGER TR_UPDATE_Breaker ON Breaker
 INSTEAD OF UPDATE AS
 BEGIN
-IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV))
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV) OR UPDATE(Spare))
 	BEGIN
 		UPDATE Asset
 		SET
 			Asset.AssetKey = INSERTED.AssetKey,
 			Asset.Description = INSERTED.Description,
 			Asset.AssetName = INSERTED.AssetName,
-			Asset.VoltageKV = INSERTED.VoltageKV
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
 		FROM
 			ASSET 
 		INNER JOIN
@@ -523,20 +596,22 @@ CREATE VIEW CapBank AS
 		CapacitancePerBank,
 		Description,
 		AssetName,
-		AssetTypeID
+		AssetTypeID,
+		Spare
 	FROM Asset JOIN CapacitorBankAttributes ON Asset.ID = CapacitorBankAttributes.AssetID
 GO
 
 CREATE TRIGGER TR_INSERT_CapBank ON CapBank
 INSTEAD OF INSERT AS 
 BEGIN
-	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
 		SELECT 
 			AssetKey AS AssetKey,
 			(SELECT ID FROM AssetType WHERE Name = 'CapacitorBank') AS AssetTypeID,
 			Description AS Description,
 			AssetName AS AssetName,
-			VoltageKV AS VoltageKV
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
 	FROM INSERTED
 
 	INSERT INTO CapacitorBankAttributes (AssetID, NumberOfBanks, CansPerBank, CapacitancePerBank)
@@ -553,14 +628,15 @@ GO
 CREATE TRIGGER TR_UPDATE_CapBank ON CapBank
 INSTEAD OF UPDATE AS
 BEGIN
-IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) )
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR Update(Spare) )
 	BEGIN
 		UPDATE Asset
 		SET
 			Asset.AssetKey = INSERTED.AssetKey,
 			Asset.Description = INSERTED.Description,
 			Asset.AssetName = INSERTED.AssetName,
-			Asset.VoltageKV = INSERTED.VoltageKV
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
 		FROM
 			ASSET 
 		INNER JOIN
@@ -597,20 +673,22 @@ CREATE VIEW LineSegment AS
 		Description,
 		AssetName,
 		VoltageKV,
-		AssetTypeID
+		AssetTypeID,
+		Spare
 	FROM Asset JOIN LineSegmentAttributes ON Asset.ID = LineSegmentAttributes.AssetID
 GO
 
 CREATE TRIGGER TR_INSERT_LineSegment ON LineSegment
 INSTEAD OF INSERT AS 
 BEGIN
-	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
 		SELECT 
 			AssetKey AS AssetKey,
 			(SELECT ID FROM AssetType WHERE Name = 'LineSegment') AS AssetTypeID,
 			Description AS Description,
 			AssetName AS AssetName,
-			VoltageKV AS VoltageKV
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
 	FROM INSERTED
 
 	INSERT INTO LineSegmentAttributes (AssetID, Length, R0, X0, R1, X1, ThermalRating)
@@ -630,14 +708,15 @@ GO
 CREATE TRIGGER TR_UPDATE_LineSegment ON LineSegment
 INSTEAD OF UPDATE AS
 BEGIN
-IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV))
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR Update(Spare))
 	BEGIN
 		UPDATE Asset
 		SET
 			Asset.AssetKey = INSERTED.AssetKey,
 			Asset.Description = INSERTED.Description,
 			Asset.AssetName = INSERTED.AssetName,
-			Asset.VoltageKV  = INSERTED.VoltageKV
+			Asset.VoltageKV  = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
 		FROM
 			ASSET 
 		INNER JOIN
@@ -678,20 +757,22 @@ CREATE VIEW Transformer AS
 		Description,
 		AssetName,
 		VoltageKV,
-		AssetTypeID
+		AssetTypeID,
+		Spare
 	FROM Asset JOIN TransformerAttributes ON Asset.ID = TransformerAttributes.AssetID
 GO
 
 CREATE TRIGGER TR_INSERT_Tranformer ON Transformer
 INSTEAD OF INSERT AS 
 BEGIN
-	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV)
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
 		SELECT 
 			AssetKey AS AssetKey,
 			(SELECT ID FROM AssetType WHERE Name = 'Transformer') AS AssetTypeID,
 			Description AS Description,
 			AssetName AS AssetName,
-			VoltageKV AS VoltageKV
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
 	FROM INSERTED
 
 	INSERT INTO TransformerAttributes (AssetID, R0, X0, R1, X1, ThermalRating, SecondaryVoltageKV, PrimaryVoltageKV, Tap )
@@ -714,14 +795,15 @@ GO
 CREATE TRIGGER TR_UPDATE_Tranformer ON Transformer
 INSTEAD OF UPDATE AS
 BEGIN
-IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV))
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR UPDATE(Spare))
 	BEGIN
 		UPDATE Asset
 		SET
 			Asset.AssetKey = INSERTED.AssetKey,
 			Asset.Description = INSERTED.Description,
 			Asset.AssetName = INSERTED.AssetName,
-			Asset.VoltageKV = INSERTED.VoltageKV
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
 		FROM
 			ASSET 
 		INNER JOIN
