@@ -3940,50 +3940,51 @@ GO
 --     Phase ON BreakerOperation.PhaseID = Phase.ID
 -- GO
 
--- CREATE VIEW FaultView
--- AS
--- SELECT
---     FaultSummary.ID AS ID,
---     FaultSummary.EventID,
---     FaultSummary.Algorithm,
---     FaultSummary.FaultNumber,
---     FaultSummary.CalculationCycle,
---     FaultSummary.Distance,
---     FaultSummary.CurrentMagnitude,
---     FaultSummary.CurrentLag,
---     FaultSummary.PrefaultCurrent,
---     FaultSummary.PostfaultCurrent,
---     FaultSummary.Inception,
---     FaultSummary.DurationSeconds,
---     FaultSummary.DurationCycles,
---     FaultSummary.FaultType,
---     FaultSummary.IsSelectedAlgorithm,
---     FaultSummary.IsValid,
---     FaultSummary.IsSuppressed,
---     Meter.Name AS MeterName,
---     Meter.ShortName AS ShortName,
---     MeterLocation.ShortName AS LocationName,
---     Meter.ID AS MeterID,
---     Line.ID AS LineID,
---     MeterLine.LineName AS LineName,
---     Line.VoltageKV AS Voltage,
---     Event.StartTime AS InceptionTime,
---     CASE WHEN FaultSummary.Distance = '-1E308'
---         THEN 'NaN'
---         ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19))
---     END AS CurrentDistance,
---     ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY FaultSummary.IsSuppressed, FaultSummary.IsSelectedAlgorithm DESC, FaultSummary.Inception) AS RK
--- FROM
---     FaultSummary JOIN
---     Event ON FaultSummary.EventID = Event.ID JOIN
---     EventType ON Event.EventTypeID = EventType.ID JOIN
---     Meter ON Event.MeterID = Meter.ID JOIN
---     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
---     Line ON Event.LineID = Line.ID JOIN
---     MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID
--- WHERE
---     EventType.Name = 'Fault'
--- GO
+CREATE VIEW FaultView
+AS
+SELECT
+     FaultSummary.ID AS ID,
+     FaultSummary.EventID,
+     FaultSummary.Algorithm,
+     FaultSummary.FaultNumber,
+     FaultSummary.CalculationCycle,
+     FaultSummary.Distance,
+     FaultSummary.CurrentMagnitude,
+     FaultSummary.CurrentLag,
+     FaultSummary.PrefaultCurrent,
+     FaultSummary.PostfaultCurrent,
+     FaultSummary.Inception,
+     FaultSummary.DurationSeconds,
+     FaultSummary.DurationCycles,
+     FaultSummary.FaultType,
+     FaultSummary.IsSelectedAlgorithm,
+     FaultSummary.IsValid,
+     FaultSummary.IsSuppressed,
+     Meter.Name AS MeterName,
+     Meter.ShortName AS ShortName,
+     Location.ShortName AS LocationName,
+     Meter.ID AS MeterID,
+     Asset.ID AS AssetID,
+     Asset.AssetName AS AssetName,
+     Asset.VoltageKV AS Voltage,
+     Event.StartTime AS InceptionTime,
+     CASE WHEN FaultSummary.Distance = '-1E308'
+         THEN 'NaN'
+         ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19))
+     END AS CurrentDistance,
+     ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY FaultSummary.IsSuppressed, FaultSummary.IsSelectedAlgorithm DESC, FaultSummary.Inception) AS RK
+ FROM
+     FaultSummary JOIN
+     Event ON FaultSummary.EventID = Event.ID JOIN
+     EventType ON Event.EventTypeID = EventType.ID JOIN
+     Meter ON Event.MeterID = Meter.ID JOIN
+     Location ON Meter.LocationID = Location.ID JOIN
+     Asset ON Event.AssetID = Asset.ID     
+ WHERE
+     EventType.Name = 'Fault'
+ GO
+
+
 
 CREATE VIEW WorkbenchVoltageCurveView
 AS
