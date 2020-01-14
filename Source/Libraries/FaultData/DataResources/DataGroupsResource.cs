@@ -63,8 +63,11 @@ namespace FaultData.DataResources
                 {
                     foreach (IGrouping<int, DataSeries> sampleCountGroup in endTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints.Count))
                     {
+                        List<int> completedAsset = new List<int>();
                         foreach (IGrouping<Asset, DataSeries> assetGroup in sampleCountGroup.GroupBy(GetAsset))
                         {
+                            completedAsset.Add(assetGroup.Key.ID);
+
                             DataGroup dataGroup = new DataGroup();
 
                             foreach (DataSeries dataSeries in assetGroup)
@@ -75,9 +78,25 @@ namespace FaultData.DataResources
 
                             dataGroups.Add(dataGroup);
                         }
+
+                        //Add Any Datagroups for Assets that have no directly connected Assets
+                        foreach (Asset asset in meterDataSet.Meter.MeterAssets.Select(item => item.Asset))
+                        {
+                            if (completedAsset.Contains(asset.ID))
+                                continue;
+
+                            DataGroup dataGroup = new DataGroup(asset);
+                            foreach (DataSeries dataSeries in GetConnectedSeries(sampleCountGroup, asset))
+                                dataGroup.Add(dataSeries);
+
+                            dataGroups.Add(dataGroup);
+                        }
                     }
                 }
             }
+
+            
+
 
             if (meterDataSet.Meter.MeterAssets.Count == 1)
             {

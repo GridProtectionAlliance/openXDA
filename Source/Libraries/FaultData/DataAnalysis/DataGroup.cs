@@ -76,6 +76,19 @@ namespace FaultData.DataAnalysis
             m_dataSeries = new List<DataSeries>();
             m_disturbances = new List<ReportedDisturbance>();
             m_classification = DataClassification.Unknown;
+            m_asset = null;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="DataGroup"/> class.
+        /// </summary>
+        /// <param name="asset"/> Asset associated with this datagroup </param>
+        public DataGroup(Asset asset)
+        {
+            m_dataSeries = new List<DataSeries>();
+            m_disturbances = new List<ReportedDisturbance>();
+            m_classification = DataClassification.Unknown;
+            m_asset = asset;
         }
 
         /// <summary>
@@ -84,6 +97,18 @@ namespace FaultData.DataAnalysis
         /// <param name="dataSeries">Collection of data series to be added to the data group.</param>
         public DataGroup(IEnumerable<DataSeries> dataSeries)
             : this()
+        {
+            foreach (DataSeries series in dataSeries)
+                Add(series);
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="DataGroup"/> class.
+        /// </summary>
+        /// <param name="dataSeries">Collection of data series to be added to the data group.</param>
+        /// <param name="asset"/> Asset associated with this datagroup </param>
+        public DataGroup(IEnumerable<DataSeries> dataSeries, Asset asset)
+            : this(asset)
         {
             foreach (DataSeries series in dataSeries)
                 Add(series);
@@ -280,7 +305,10 @@ namespace FaultData.DataAnalysis
             // group, add the data as the first series in the data group
             if (m_dataSeries.Count == 0)
             {
-                m_asset = asset;
+                if (m_asset == null)
+                {
+                    m_asset = asset;
+                }
                 m_startTime = startTime;
                 m_endTime = endTime;
                 m_samples = samples;

@@ -57,7 +57,7 @@ namespace FaultData.DataAnalysis
                 .GroupBy(obj => obj.Index / 4)
                 .Where(grouping => grouping.Count() >= 4)
                 .Select(grouping => grouping.Select(obj => obj.DataSeries))
-                .Select(grouping => new CycleDataGroup(new DataGroup(grouping)))
+                .Select(grouping => new CycleDataGroup(new DataGroup(grouping, dataGroup.Asset)))
                 .ToList();
 
             MapIndexes();

@@ -69,7 +69,7 @@ namespace FaultData.DataAnalysis
             m_irIndex = -1;
 
             // Initialize the data group
-            m_dataGroup = new DataGroup(dataGroup.DataSeries);
+            m_dataGroup = new DataGroup(dataGroup.DataSeries, dataGroup.Asset);
 
             // List of Indices matching channel type
             List<int> vaIndices = new List<int>();
@@ -443,7 +443,7 @@ namespace FaultData.DataAnalysis
 
         public DataGroup ToDataGroup()
         {
-            return new DataGroup(m_dataGroup.DataSeries);
+            return new DataGroup(m_dataGroup.DataSeries, m_dataGroup.Asset);
         }
 
         public VIDataGroup ToSubGroup(int startIndex, int endIndex)
