@@ -54,7 +54,6 @@ namespace FaultData.DataAnalysis
 
         public VIDataGroup(DataGroup dataGroup)
         {
-            string[] instantaneousSeriesTypes = { "Values", "Instantaneous" };
 
             // Initialize each of
             // the indexes to -1
@@ -72,44 +71,120 @@ namespace FaultData.DataAnalysis
             // Initialize the data group
             m_dataGroup = new DataGroup(dataGroup.DataSeries);
 
+            // List of Indices matching channel type
+            List<int> vaIndices = new List<int>();
+            List<int> vbIndices = new List<int>();
+            List<int> vcIndices = new List<int>();
+            List<int> vabIndices = new List<int>();
+            List<int> vbcIndices = new List<int>();
+            List<int> vcaIndices = new List<int>();
+
+            List<int> iaIndices = new List<int>();
+            List<int> ibIndices = new List<int>();
+            List<int> icIndices = new List<int>();
+            List<int> iresIndices = new List<int>();
+
             for (int i = 0; i < dataGroup.DataSeries.Count; i++)
             {
-                string measurementType = dataGroup[i].SeriesInfo.Channel.MeasurementType.Name;
-                string measurementCharacteristic = dataGroup[i].SeriesInfo.Channel.MeasurementCharacteristic.Name;
-                string seriesType = dataGroup[i].SeriesInfo.SeriesType.Name;
-                string phase = dataGroup[i].SeriesInfo.Channel.Phase.Name;
-
-                // If the data group is not instantaneous, do not use it in the VIDataGroup
-                if (measurementCharacteristic != "Instantaneous")
-                    continue;
-
-                // If the data group is not instantaneous, do not use it in the VIDataGroup
-                if (!instantaneousSeriesTypes.Contains(seriesType))
-                    continue;
-
-                // Assign the proper indexes for the seven VIDataGroup
-                // channels by checking the name of the channel
-                if (measurementType == "Voltage" && phase == "AN")
-                    m_vaIndex = i;
-                else if (measurementType == "Voltage" && phase == "BN")
-                    m_vbIndex = i;
-                else if (measurementType == "Voltage" && phase == "CN")
-                    m_vcIndex = i;
-                else if (measurementType == "Voltage" && phase == "AB")
-                    m_vabIndex = i;
-                else if (measurementType == "Voltage" && phase == "BC")
-                    m_vbcIndex = i;
-                else if (measurementType == "Voltage" && phase == "CA")
-                    m_vcaIndex = i;
-                else if (measurementType == "Current" && phase == "AN")
-                    m_iaIndex = i;
-                else if (measurementType == "Current" && phase == "BN")
-                    m_ibIndex = i;
-                else if (measurementType == "Current" && phase == "CN")
-                    m_icIndex = i;
-                else if (measurementType == "Current" && phase == "RES")
-                    m_irIndex = i;
+                if (isVoltage("AN", dataGroup[i]))
+                    vaIndices.Add(i);
+                else if (isVoltage("BN", dataGroup[i]))
+                    vbIndices.Add(i);
+                else if (isVoltage("CN", dataGroup[i]))
+                    vcIndices.Add(i);
+                else if (isVoltage("AB", dataGroup[i]))
+                    vabIndices.Add(i);
+                else if (isVoltage("BC", dataGroup[i]))
+                    vbcIndices.Add(i);
+                else if (isVoltage("CA", dataGroup[i]))
+                    vcaIndices.Add(i);
+                else if (isCurrent("AN", dataGroup[i]))
+                    iaIndices.Add(i);
+                else if (isCurrent("BN", dataGroup[i]))
+                    ibIndices.Add(i);
+                else if (isCurrent("CN", dataGroup[i]))
+                    icIndices.Add(i);
+                else if (isCurrent("RES", dataGroup[i]))
+                    iresIndices.Add(i);
             }
+
+            //Check if a voltage and current channnel exist on this asset
+            if (vaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_vaIndex = vaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+            if (vbIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_vbIndex = vbIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+            if (vcIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_vcIndex = vcIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+
+            if (vabIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_vabIndex = vabIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+            if (vbcIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_vbcIndex = vbcIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+            if (vcaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_vcaIndex = vcaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+
+            if (iaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_iaIndex = iaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+            if (ibIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_ibIndex = ibIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+            if (icIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_icIndex = icIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+
+            if (iresIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_irIndex = iresIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+
+            // use one of the connected Assets
+            List<int> connectedAssets = dataGroup.Asset.ConnectedAssets.Select(item => item.ID).ToList();
+
+            if (m_vaIndex == -1 && vaIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_vaIndex = vaIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+            if (m_vbIndex == -1 && vbIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_vbIndex = vbIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+            if (m_vcIndex == -1 && vcIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_vcIndex = vcIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+
+            if (m_vabIndex == -1 && vabIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_vabIndex = vabIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+            if (m_vbcIndex == -1 && vbcIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_vbcIndex = vbcIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+            if (m_vcaIndex == -1 && vcaIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_vcaIndex = vcaIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+
+            if (m_iaIndex == -1 && iaIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_iaIndex = iaIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+            if (m_ibIndex == -1 && ibIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_ibIndex = ibIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+            if (m_icIndex == -1 && icIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_icIndex = icIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+
+            if (m_irIndex == -1 && iresIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_irIndex = iresIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+
+            // use any assets more than one hop away last
+            if (m_vaIndex == -1 && vaIndices.Count() > 0)
+                m_vaIndex = vaIndices.First();
+            if (m_vbIndex == -1 && vbIndices.Count() > 0)
+                m_vbIndex = vbIndices.First();
+            if (m_vcIndex == -1 && vcIndices.Count() > 0)
+                m_vcIndex = vcIndices.First();
+
+            if (m_vabIndex == -1 && vabIndices.Count() > 0)
+                m_vabIndex = vabIndices.First();
+            if (m_vbcIndex == -1 && vbcIndices.Count() > 0)
+                m_vbcIndex = vbcIndices.First();
+            if (m_vcaIndex == -1 && vcaIndices.Count() > 0)
+                m_vcaIndex = vcaIndices.First();
+
+            if (m_iaIndex == -1 && iaIndices.Count() > 0)
+                m_iaIndex = iaIndices.First();
+            if (m_ibIndex == -1 && ibIndices.Count() > 0)
+                m_ibIndex = ibIndices.First();
+            if (m_ibIndex == -1 && ibIndices.Count() > 0)
+                m_ibIndex = icIndices.First();
+
+            if (m_irIndex == -1 && iresIndices.Count() > 0)
+                m_irIndex = iresIndices.First();
+
 
             CalculateMissingCurrentChannel();
             CalculateMissingLLVoltageChannels();
@@ -483,6 +558,56 @@ namespace FaultData.DataAnalysis
             }
 
             return dbSeries;
+        }
+
+        private static bool isVoltage(string phase, DataSeries dataSeries)
+        {
+            string[] instantaneousSeriesTypes = { "Values", "Instantaneous" };
+
+            string measurementType = dataSeries.SeriesInfo.Channel.MeasurementType.Name;
+            string measurementCharacteristic = dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name;
+            string seriesType = dataSeries.SeriesInfo.SeriesType.Name;
+            string seriesPhase = dataSeries.SeriesInfo.Channel.Phase.Name;
+
+            if (measurementCharacteristic != "Instantaneous")
+                return false;
+
+            if (!instantaneousSeriesTypes.Contains(seriesType))
+                return false;
+
+            if (measurementType != "Voltage")
+                return false;
+
+            if (seriesPhase != phase)
+                return false;
+
+            return true;
+
+        }
+
+        private static bool isCurrent(string phase, DataSeries dataSeries)
+        {
+            string[] instantaneousSeriesTypes = { "Values", "Instantaneous" };
+
+            string measurementType = dataSeries.SeriesInfo.Channel.MeasurementType.Name;
+            string measurementCharacteristic = dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name;
+            string seriesType = dataSeries.SeriesInfo.SeriesType.Name;
+            string seriesPhase = dataSeries.SeriesInfo.Channel.Phase.Name;
+
+            if (measurementCharacteristic != "Instantaneous")
+                return false;
+
+            if (!instantaneousSeriesTypes.Contains(seriesType))
+                return false;
+
+            if (measurementType != "Current")
+                return false;
+
+            if (seriesPhase != phase)
+                return false;
+
+            return true;
+
         }
 
         #endregion
