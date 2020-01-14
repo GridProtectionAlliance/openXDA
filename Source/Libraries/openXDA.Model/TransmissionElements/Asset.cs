@@ -145,6 +145,18 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
+        public List<Asset> ConnectedAssets
+        {
+            get
+            {
+                return Connections.Where(item => item.ChildID == ID).Select(item => item.Parent).Concat(
+                    Connections.Where(item => item.ParentID == ID).Select(item => item.Child)).ToList();
+            }
+            
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
         public Func<AdoDataConnection> ConnectionFactory
         {
             get
