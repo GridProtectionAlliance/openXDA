@@ -222,6 +222,23 @@ CREATE TABLE CustomerAsset
 )
 GO
 
+Create View CustomerAssetDetail AS
+SELECT 
+	CustomerAsset.ID AS ID,
+	Customer.CustomerKey AS CustomerKey,
+	Customer.Name AS CustomerName,
+	Asset.AssetKey AS AssetKey,
+	Asset.AssetName AS AssetName,
+	AssetType.Name AS AssetType,
+	Customer.ID AS CustomerID,
+	Asset.ID AS AssetID
+FROM
+	CustomerAsset LEFT JOIN Asset ON Asset.ID = CustomerAsset.AssetID LEFT JOIN
+	Customer ON Customer.ID = CustomerAsset.CustomerID LEFT JOIN
+	AssetType ON Asset.AssetTypeID = AssetType.ID
+GO
+
+
 CREATE TABLE AssetRelationshipType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

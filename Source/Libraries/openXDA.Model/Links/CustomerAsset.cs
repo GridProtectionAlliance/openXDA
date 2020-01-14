@@ -56,4 +56,38 @@ namespace openXDA.Model
 
         #endregion
     }
+
+    public class CustomerAssetDetail
+    {
+        #region [ Members ]
+
+        #endregion
+
+        #region [ Properties ]
+
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        [Searchable]
+        public string CustomerKey { get; set; }
+
+        public string CustomerName { get; set; }
+
+        [Searchable]
+        public string AssetKey { get; set; }
+
+        public string AssetName { get; set; }
+
+        public string AssetType { get; set; }
+
+        public int AssetID { get; set; }
+
+        public int CustomerID { get; set; }
+
+        #endregion
+
+        #region [ Methods ]      
+
+        #endregion
+    }
 }

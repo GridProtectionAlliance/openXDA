@@ -4088,11 +4088,178 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region[Customer Table Operations]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Customer), RecordOperation.QueryRecordCount)]
+        public int QueryCustomerCount(string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return (new TableOperations<Customer>(connection)).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Customer), RecordOperation.QueryRecords)]
+        public IEnumerable<Customer> QueryCustomer(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Customer>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Customer), RecordOperation.DeleteRecord)]
+        public void DeleteCustomer(int id)
+        {
+            CascadeDelete("Customer", $"ID = {id}");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Customer), RecordOperation.CreateNewRecord)]
+        public Customer NewCustomer()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Customer>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Customer), RecordOperation.AddNewRecord)]
+        public void AddNewCustomer(Customer record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<Customer>(connection).AddNewRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Customer), RecordOperation.UpdateRecord)]
+        public void UpdateCustomer(Customer record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<Customer>(connection).UpdateRecord(record);
+            }
+        }
+
+        #endregion
+
+        #region[CustomerAsset Table Operations]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.QueryRecordCount)]
+        public int QueryCustomerAssetCount(int customerID, int assetID, string filterString)
+        {
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                RecordRestriction restriction;
+                TableOperations<CustomerAsset> tableOperations = new TableOperations<CustomerAsset>(connection);
+
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (customerID > 0)
+                    restriction = restriction + new RecordRestriction("CustomerID = {0}", customerID);
+                if (assetID > 0)
+                    restriction = restriction + new RecordRestriction("AssetID = {0}", assetID);
+                
+                return (new TableOperations<CustomerAsset>(connection)).QueryRecordCount(restriction);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.QueryRecords)]
+        public IEnumerable<CustomerAssetDetail> QueryCustomerAsset(int customerID, int assetID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                RecordRestriction restriction;
+                TableOperations<CustomerAssetDetail> tableOperations = new TableOperations<CustomerAssetDetail>(connection);
+
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (customerID > 0)
+                    restriction = restriction + new RecordRestriction("CustomerID = {0}", customerID);
+                if (assetID > 0)
+                    restriction = restriction + new RecordRestriction("AssetID = {0}", assetID);
+
+                return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.UpdateRecord)]
+        public void UpdateCustomerAsset(CustomerAssetDetail record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                new TableOperations<CustomerAsset>(connection).UpdateRecord(CreateCustomerAsset(record));
+            }
+        }
+
+        private CustomerAsset CreateCustomerAsset(CustomerAssetDetail record)
+        {
+            CustomerAsset customerAsset = NewCustomerAsset();
+            customerAsset.ID = record.ID;
+            customerAsset.AssetID = record.AssetID;
+            customerAsset.CustomerID = record.CustomerID;
+
+            return customerAsset;
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.AddNewRecord)]
+        public void AddNewCustomerAsset(CustomerAssetDetail record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<CustomerAsset>(connection).AddNewRecord(CreateCustomerAsset(record));
+                
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.DeleteRecord)]
+        public void DeleteCustomerAsset(int id)
+        {
+            CascadeDelete("CustomerAsset", $"ID = {id}");
+        }
+
+
+        private CustomerAsset NewCustomerAsset()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<CustomerAsset>(connection).NewRecord();
+            }
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.CreateNewRecord)]
+        public CustomerAssetDetail NewCustomerAssetView()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<CustomerAssetDetail>(connection).NewRecord();
+            }
+
+        }
+
+        
+        #endregion
+
         // Legacy Line Table Operations
         // I am not sure these are necesarry but don't want to remove them
         // until checking with Steven
         #region [ Lines Table Operations ]
-        
+
 
         [AuthorizeHubRole("Administrator")]
         public Dictionary<string,string> SearchLines(string searchText, int limit = -1)
