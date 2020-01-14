@@ -2978,6 +2978,9 @@ INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Meter', 'Meter')
 GO
 INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Event', 'Event')
 GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Asset', 'Asset')
+GO
+
 
 CREATE TABLE Note (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
