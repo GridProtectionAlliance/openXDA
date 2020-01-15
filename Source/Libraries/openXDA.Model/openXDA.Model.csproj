@@ -94,6 +94,8 @@
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="Meters\MeterConfiguration.cs" />
+    <Compile Include="Note.cs" />
+    <Compile Include="NoteType.cs" />
     <Compile Include="Settings\BreakerReportsSettings.cs" />
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
