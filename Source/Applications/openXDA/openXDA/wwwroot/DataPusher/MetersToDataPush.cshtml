@@ -170,26 +170,87 @@
         });
 
         function syncConfiguration(record) {
+            var ajaxHandle = null;
+
             $('#notify').puinotify('show', '<div class="progress">' +
                                                 '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
                                                         ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>' +
                                             '</div>');
 
-            dataHub.syncMeterConfigurationForInstance(@ViewBag.XDAInstance, record.ID)
-                .done(function(){ $('#notify').puinotify('hide'); viewModel.queryPageRecords();})
-                .fail(function(msg){ $('#notify').puinotify('update','<span>Sync Failed - : '+ msg.message+'</span>')});
+            dataHub.getConnectionID().done(function (connectionId) {
+                ajaxHandle = $.ajax({
+                    type: "GET",
+                    url: '@Url.Content("~/")' + "api/DataPusher/SyncMeterConfig/" + connectionId + "/" + @ViewBag.XDAInstance + "/" + record.ID,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: 'json',
+                    cache: false,
+                    async: true
+
+                }).done(function () {
+                    $('#notify').puinotify('hide');
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+                    viewModel.queryPageRecords();
+                }).fail(function (msg) {
+                    $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>')
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+
+                });
+
+
+            });
+
+            $('.ui-notify-close').on('click', function (event) {
+                if (ajaxHandle != null && ajaxHandle.abort != null) ajaxHandle.abort();
+            });
+
         }
 
         function syncFiles(record) {
+            var ajaxHandle = null;
+
             $('#notify').puinotify('show', '<div class="progress">' +
                                     '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
                                             ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>' +
                                 '</div>');
 
-            dataHub.syncMeterFilesForInstance(@ViewBag.XDAInstance, record.ID)                
-                .done(function(){ $('#notify').puinotify('hide'); viewModel.queryPageRecords();})
-                .fail(function(msg){ $('#notify').puinotify('update','<span>Sync Failed - : '+ msg.message+'</span>')});
-            ;
+            dataHub.getConnectionID().done(function (connectionId) {
+                ajaxHandle = $.ajax({
+                    type: "GET",
+                    url: '@Url.Content("~/")' + "api/DataPusher/SyncMeterFiles/" + connectionId + "/" + @ViewBag.XDAInstance + "/" + record.ID,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: 'json',
+                    cache: false,
+                    async: true
+
+                }).done(function () {
+                    $('#notify').puinotify('hide');
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+                    viewModel.queryPageRecords();
+                }).fail(function (msg) {
+                    $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>')
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+
+                });
+
+
+            });
+
+            $('.ui-notify-close').on('click', function (event) {
+                if (ajaxHandle != null && ajaxHandle.abort != null) ajaxHandle.abort();
+            });
+
         }
 
 

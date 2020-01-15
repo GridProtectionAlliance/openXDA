@@ -59,8 +59,10 @@
 <div id="template" tabindex="0"></div>
 <div>
     <button class="btn btn-primary" onclick="processQuery()">Execute<span id="executeSpinner"></span></button>
+    <button class="btn btn-primary" onclick="processQueryToCSV()">Execute To CSV<span id="executeSpinner"></span></button>
     <button class="btn btn-primary" onclick="cancelQuery()">Cancel</button>
-    <button class="btn btn-primary" onclick="clearQuery()">Clear</button>
+    <button class="btn btn-primary" onclick="clearQuery()">Clear Query Window</button>
+    <button class="btn btn-primary" onclick="clearResult()">Clear Result Window</button>
 </div>
 <div id="result" class="well" style="overflow-y: auto">
     All querys truncated to top 100 Rows to not crash web page.
@@ -73,7 +75,10 @@
         var ajaxHandle = null;
 
         $('#pageHeader').hide();
+
         $(function () {
+            $('#bodyContainer').removeClass('container');
+
             document.addEventListener('keydown', function (event) {
                 if (event.keyCode == 116) {
                     event.preventDefault();
@@ -144,6 +149,37 @@
 
         }
 
+        function processQueryToCSV() {
+            var query = ace.edit('template').getValue();
+
+            $('#executeSpinner').addClass('fa fa-spinner')
+            ajaxHandle = $.post('@Url.Content("~/api/Config/Query/CSV")', { Query: query, SettingsCategory: $('#select').val() }, function (data) {
+                ajaxHandle = null;
+                $('#result').append('<hr/><span>Query: ' + query + '</span><br>');
+
+                if (data.length == 0) {
+                    $('#result').append("<span>No results found...</span>"+ '<br>');
+                    return;
+                }
+
+                exportToCsv(data);
+
+                $('#result').append('<hr/><span>Exported query to csv file...</span><br>');
+                $('#result').scrollTop($('#result')[0].scrollHeight);
+                $('#executeSpinner').removeClass('fa fa-spinner')
+
+            }).fail(function(msg) { 
+                $('#result').append('<hr/>Query: ' + query + '<br>');
+                $('#result').append(msg.responseText + '<br>');
+                $('#result').scrollTop($('#result')[0].scrollHeight);
+                $('#executeSpinner').removeClass('fa fa-spinner')
+            });
+            $('.ace_text-input').focus();
+
+
+        }
+
+
         function clearQuery() {
             ace.edit('template').setValue('');
             $('.ace_text-input').focus();
@@ -155,5 +191,30 @@
                 ajaxHandle.abort();
             }
         }
+        function clearResult() {
+            $('#result').children().remove();
+        }
+
+        function exportToCsv(csvFile) {
+            var filename = "Query.csv";
+
+            var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+            if (navigator.msSaveBlob) { // IE 10+
+                navigator.msSaveBlob(blob, filename);
+            } else {
+                var link = document.createElement("a");
+                if (link.download !== undefined) { // feature detection
+                    // Browsers that support HTML5 download attribute
+                    var url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", filename);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+        }
+
     </script>
 }

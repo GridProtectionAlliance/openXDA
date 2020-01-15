@@ -261,7 +261,9 @@ namespace openXDA.DataPusher
                     // Get local meter record
                     Meter localMeterRecord = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
                     // get local MeterLine table 
+
                     IEnumerable<MeterAsset> localMeterLines = new TableOperations<MeterAsset>(connection).QueryRecordsWhere("MeterID = {0}", localMeterRecord.ID);
+
 
                     // update progress
                     int progressTotal = localMeterLines.Count() + 2;
@@ -272,6 +274,7 @@ namespace openXDA.DataPusher
 
                     // Add or Update remote meter location
                     Location remoteMeterLocation = AddOrGetRemoteMeterLocation(instance.Address, meterToDataPush, localMeterRecord, userAccount);
+
 
                     // update progress
                     OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (progressCount) / progressTotal));
@@ -301,6 +304,7 @@ namespace openXDA.DataPusher
 
                         // if MeterLine association has not been previously made, make it
                         MeterAsset remoteMeterLine = AddMeterLine(instance.Address, meterToDataPush, remoteLine, userAccount, localMeterLine);
+
 
                         // Add MeterLocationLine Record for double ended fault location to work
                         //AddMeterLocationLine(instance.Address, userAccount, remoteMeterLocation.ID, remoteLine.ID);
@@ -364,6 +368,7 @@ namespace openXDA.DataPusher
                         remoteMeterLocation = new Location()
                         {
                             LocationKey = meterToDataPush.RemoteXDAAssetKey,
+
                             Name = meterToDataPush.RemoteXDAAssetKey,
                             Alias = meterToDataPush.RemoteXDAAssetKey,
                             ShortName = "",
@@ -549,11 +554,13 @@ namespace openXDA.DataPusher
                             RemoteXDAAssetKey = (obsfucate ? Guid.NewGuid().ToString() : localAsset.AssetKey),
                             RemoteAssetCreatedByDataPusher = true
 
+
                         };
 
                     }
                     else
                     {
+<<<<<<< HEAD
                         assetToDataPush = new AssetsToDataPush()
                         {
                             LocalXDAAssetID = localAsset.ID,
@@ -616,7 +623,6 @@ namespace openXDA.DataPusher
             // if MeterLineLine association has not been previously made, make it
             if (remoteMeterLocationLine == null)
                 WebAPIHub.CreateRecord<AssetLocation>(address, new AssetLocation() { LocationID = meterLocationID, AssetID = lineID }, userAccount);
-
         }
 
         private MeterAsset AddMeterLine(string address, MetersToDataPush meter, Asset remoteLine, UserAccount userAccount, MeterAsset localMeterLine)
@@ -681,6 +687,7 @@ namespace openXDA.DataPusher
         {
             // add line to meterlocationline table
             AssetLocation remoteMeterLocationLine = WebAPIHub.GetRecordWhere<AssetLocation>(address, $"LocationID = {remoteMeterLocation.ID} AND AssetID = {remoteLine.ID}", userAccount);
+
             if (remoteMeterLocationLine == null)
             {
                 remoteMeterLocationLine = new AssetLocation();
@@ -818,6 +825,7 @@ namespace openXDA.DataPusher
         {
             try
             {
+                
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
 
@@ -861,6 +869,7 @@ namespace openXDA.DataPusher
                             int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, fg, userAccount);
                             fileGroupLocalToRemote = new FileGroupLocalToRemote()
                             {
+                                RemoteXDAInstanceID = instance.ID,
                                 LocalFileGroupID = fileGroup.ID,
                                 RemoteFileGroupID = remoteFileGroupId
                             };
@@ -1002,7 +1011,6 @@ namespace openXDA.DataPusher
                         if (remoteFileBlob == null)
                         {
                             FileBlob localFileBlob = new TableOperations<FileBlob>(connection).QueryRecordWhere("DataFileID = {0}", localDataFile.ID);
-
                             try
                             {
                                 if (localFileBlob == null)
@@ -1018,7 +1026,6 @@ namespace openXDA.DataPusher
                             }
                             localFileBlob.DataFileID = remoteDataFileId;
                             WebAPIHub.CreateRecord(instance.Address, new FileBlob() { DataFileID = remoteDataFileId, Blob = localFileBlob.Blob }, userAccount);
-
                         }
                     }
 

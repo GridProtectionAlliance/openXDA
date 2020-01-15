@@ -3097,6 +3097,7 @@ GO
 CREATE TABLE FileGroupLocalToRemote
 (
     ID INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+	RemoteXDAInstanceID int NOT NULL REFERENCES RemoteXDAInstance(ID),
     LocalFileGroupID INT NOT NULL,
     RemoteFileGroupID INT NOT NULL
 )

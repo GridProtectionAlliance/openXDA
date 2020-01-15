@@ -876,6 +876,7 @@ namespace openXDAFileWatcher
                 fileBlob.DataFileID = dataFile.ID;
                 fileBlob.Blob = File.ReadAllBytes(dataFile.FilePath);
                 WebAPIHub.CreateRecord(xdaAddress, fileBlob, userAccount);
+
             }
         }
 

@@ -32,9 +32,11 @@ using openHistorian.XDALink;
 using openXDA.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -93,5 +95,72 @@ namespace openXDA.Controllers
                 return Request.CreateResponse(HttpStatusCode.BadRequest, ex.InnerException.Message);
             }
         }
+
+        [Route("CSV"), HttpPost]
+        public HttpResponseMessage PostCSV(PostQueryForm form, CancellationToken token)
+        {
+            if (!AppModel.ValidateAdminRequestForRole("Developer", User.Identity.Name)) return Request.CreateResponse(HttpStatusCode.Unauthorized);
+            try
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(form.SettingsCategory))
+                using (IDbCommand command = connection.Connection.CreateCommand())
+                {
+                    var response = Request.CreateResponse(HttpStatusCode.OK);
+
+                    var task = Task.Run(() =>
+                    {
+
+                        command.CommandTimeout = 180;
+                        // I know... And I like it...
+                        command.CommandText = form.Query;
+                        IDataAdapter dataAdapter = (IDataAdapter)Activator.CreateInstance(connection.AdapterType, command);
+                        DataSet data = new DataSet("Temp");
+                        dataAdapter.Fill(data);
+
+                        response.Content = new PushStreamContent((stream, httpContent, transportContext) => {
+                            using (StreamWriter writer = new StreamWriter(stream))
+                            {
+                                DataTable table = data.Tables[0];
+
+                                if (table == null) return;
+
+                                List<string> columns = table.Columns.Cast<DataColumn>().Select(x => x.ColumnName).ToList();
+                                // Write the CSV header to the file
+                                writer.WriteLine(string.Join(",", columns));
+
+                                // Write data to the file
+                                foreach (DataRow row in table.Rows)
+                                {
+                                    List<string> columnValues = new List<string>();
+                                    foreach (string column in columns)
+                                    {
+                                        columnValues.Add(row[column].ToString().Replace(",", " ").Replace("\"", "\"\"").Replace("\r\n", ""));
+                                    }
+                                    writer.WriteLine(string.Join(",", columnValues));
+
+                                }
+                            }
+                        });
+
+                    });
+
+
+                    while (!task.Wait(100))
+                    {
+                        if (token.IsCancellationRequested)
+                        {
+                            command.Cancel();
+                            return Request.CreateResponse(HttpStatusCode.OK, "Query canceled by you.");
+                        }
+                    }
+                    return response;
+                }
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateResponse(HttpStatusCode.BadRequest, ex.InnerException.Message);
+            }
+        }
+
     }
 }
