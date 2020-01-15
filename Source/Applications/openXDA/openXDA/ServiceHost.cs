@@ -651,6 +651,7 @@ namespace openXDA
 
                 webServer.PagedViewModelTypes.TryAdd("Assets/Customer.cshtml", new Tuple<Type, Type>(typeof(Customer), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/CustomerAsset.cshtml", new Tuple<Type, Type>(typeof(CustomerAsset), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Assets/SpareAsset.cshtml", new Tuple<Type, Type>(typeof(AssetSpare), typeof(DataHub)));
 
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Filters.cshtml", new Tuple<Type, Type>(typeof(WorkbenchFilter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Events.cshtml", new Tuple<Type, Type>(typeof(Event), typeof(DataHub)));

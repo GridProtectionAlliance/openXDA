@@ -4253,7 +4253,94 @@ namespace openXDA.Hubs
 
         }
 
-        
+
+        #endregion
+
+        #region[AssetSpare Table Operations]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.QueryRecordCount)]
+        public int QueryAssetSpareCount(string filterString)
+        {
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return (new TableOperations<AssetSpare>(connection)).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.QueryRecords)]
+        public IEnumerable<AssetSpareView> QueryAssetSpare(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+    
+                return (new TableOperations<AssetSpareView>(connection)).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.UpdateRecord)]
+        public void UpdateAssetSpare(AssetSpareView record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                new TableOperations<AssetSpare>(connection).UpdateRecord(CreateAssetSpare(record));
+            }
+        }
+
+        private AssetSpare CreateAssetSpare(AssetSpareView record)
+        {
+            AssetSpare customerAsset = NewAssetSpare();
+            customerAsset.ID = record.ID;
+            customerAsset.AssetID = record.AssetID;
+            customerAsset.SpareAssetID = record.SpareAssetID;
+
+            return customerAsset;
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.AddNewRecord)]
+        public void AddNewAssetSpare(AssetSpareView record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<AssetSpare>(connection).AddNewRecord(CreateAssetSpare(record));
+
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.DeleteRecord)]
+        public void DeleteAssetSpare(int id)
+        {
+            CascadeDelete("AsssetSpare", $"ID = {id}");
+        }
+
+
+        private AssetSpare NewAssetSpare()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<AssetSpare>(connection).NewRecord();
+            }
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.CreateNewRecord)]
+        public AssetSpareView NewAssetSpareView()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<AssetSpareView>(connection).NewRecord();
+            }
+
+        }
+
+
         #endregion
 
         // Legacy Line Table Operations

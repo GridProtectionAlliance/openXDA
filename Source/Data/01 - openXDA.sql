@@ -204,7 +204,21 @@ CREATE TABLE AssetSpare
 )
 GO
 
-
+CREATE VIEW AssetSpareView AS
+	SELECT 
+	AssetSpare.ID AS ID,
+	AssetSpare.AssetID AS AssetID,
+	AssetSpare.SpareAssetID AS SpareAssetID,
+	Parent.AssetName AS Assetname,
+	Parent.AssetKey AS AssetKey,
+	Child.AssetName AS SpareName,
+	Child.AssetKey AS SpareKey,
+	AssetType.Name AS AssetType
+FROM
+	AssetSpare LEFT JOIN Asset Child ON Child.ID = AssetSpare.SpareAssetID LEFT JOIN
+	Asset Parent ON Parent.ID = AssetSpare.AssetID LEFT JOIN
+	AssetType ON Parent.AssetTypeID = AssetType.ID
+GO
 
 CREATE TABLE Customer
 (

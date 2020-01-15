@@ -51,4 +51,35 @@ namespace openXDA.Model
         #endregion
     }
 
+    public class AssetSpareView
+    {
+        #region [ Members ]
+
+        #endregion
+
+        #region [ Properties ]
+
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        public int AssetID { get; set; }
+
+        public int SpareAssetID { get; set; }
+
+        public string AssetKey { get; set; }
+
+        public string AssetName { get; set; }
+
+        public string SpareKey { get; set; }
+
+        public string SpareName { get; set; }
+
+        public string AssetType { get; set; }
+        #endregion
+
+        #region [ Methods ]
+
+        #endregion
+    }
+
 }
