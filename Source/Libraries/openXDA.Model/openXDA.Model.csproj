@@ -64,6 +64,7 @@
     <Compile Include="Alarms\MetersWithNormalLimits.cs" />
     <Compile Include="Channels\ChannelData.cs" />
     <Compile Include="Dashboard\ContourClasses.cs" />
+    <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
@@ -165,7 +166,6 @@
     <Compile Include="EAS\ICFResult.cs" />
     <Compile Include="TransmissionElements\Line.cs" />
     <Compile Include="Links\LineAssetGroup.cs" />
-    <Compile Include="LinesToDataPush.cs" />
     <Compile Include="TransmissionElements\LineView.cs" />
     <Compile Include="Channels\MeasurementCharacteristic.cs" />
     <Compile Include="Channels\MeasurementType.cs" />
@@ -180,7 +180,7 @@
     <Compile Include="Meters\MeterLocation.cs" />
     <Compile Include="Links\MeterLocationLine.cs" />
     <Compile Include="Links\MeterAssetGroup.cs" />
-    <Compile Include="MetersToDataPush.cs" />
+    <Compile Include="DataPush\MetersToDataPush.cs" />
     <Compile Include="Channels\OutputChannel.cs" />
     <Compile Include="Channels\Phase.cs" />
     <Compile Include="PQMarkAggregate.cs" />

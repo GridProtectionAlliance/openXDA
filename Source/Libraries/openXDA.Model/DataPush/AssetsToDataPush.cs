@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  LinesToDataPush.cs - Gbtc
+//  AssetsToDataPush.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/30/2017 - Billy Ernest
+//  01/15/2020 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -27,19 +27,19 @@ using System.ComponentModel.DataAnnotations;
 
 namespace openXDA.Model
 {
-    public class LinesToDataPush
+    public class AssetsToDataPush
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int LocalXDALineID { get; set; }
-        public int RemoteXDALineID { get; set; }
+        public int LocalXDAAssetID { get; set; }
+        public int RemoteXDAAssetID { get; set; }
 
         [StringLength(200)]
         public string LocalXDAAssetKey { get; set; }
         [StringLength(200)]
         public string RemoteXDAAssetKey { get; set; }
 
-        public bool RemoteLineCreatedByDataPusher { get; set; }
+        public bool RemoteAssetCreatedByDataPusher { get; set; }
 
     }
 }

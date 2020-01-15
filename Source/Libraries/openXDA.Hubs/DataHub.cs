@@ -7691,7 +7691,10 @@ namespace openXDA.Hubs
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, userAccount);
+                    CancellationTokenSource source = new CancellationTokenSource();
+                    CancellationToken token = source.Token;
+
+                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, userAccount, token);
                 }
                 catch (Exception ex)
                 {
@@ -7713,7 +7716,11 @@ namespace openXDA.Hubs
                     // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                     DataPusherEngine engine = new DataPusherEngine();
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    engine.SyncMeterFilesForInstance(clientId, instance, meterId);
+
+                    CancellationTokenSource source = new CancellationTokenSource();
+                    CancellationToken token = source.Token;
+
+                    engine.SyncMeterFilesForInstance(clientId, instance, meterId, token);
                 }
                 catch (Exception ex)
                 {
@@ -7791,7 +7798,11 @@ namespace openXDA.Hubs
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
-            engine.SyncInstanceConfiguration(Context.ConnectionId, instanceId);
+            // Define the cancellation token.
+            CancellationTokenSource source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+
+            engine.SyncInstanceConfiguration(Context.ConnectionId, instanceId, token);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -7803,7 +7814,11 @@ namespace openXDA.Hubs
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine();
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                engine.SyncInstanceFiles(Context.ConnectionId, instance);
+
+                CancellationTokenSource source = new CancellationTokenSource();
+                CancellationToken token = source.Token;
+
+                engine.SyncInstanceFiles(Context.ConnectionId, instance, token);
             }
         }
 
