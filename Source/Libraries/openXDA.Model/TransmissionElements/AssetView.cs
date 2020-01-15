@@ -28,6 +28,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -60,6 +61,9 @@ namespace openXDA.Model
         [Required]
         public string AssetType {get; set; }
        
+        [DefaultValue(true)]
+        public bool Spare { get; set; }
+
         #endregion
 
         #region [ Methods ]

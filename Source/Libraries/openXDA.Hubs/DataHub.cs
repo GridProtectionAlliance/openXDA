@@ -3137,6 +3137,7 @@ namespace openXDA.Hubs
             asset.ID = record.ID;
             asset.AssetKey = record.AssetKey;
             asset.Description = record.Description;
+            asset.Spare = record.Spare;
 
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
