@@ -70,6 +70,7 @@ new[] { "AssetType", "Asset Type", "text-left"},
 new[] { "VoltageKV", "Voltage", "text-left"},
 new[] { null, "Asset Connections", "text-left"},
 new[] { null, "Meters", "text-left"},
+new[] { null, "Affected Customer", "text-left"},
 };
 
     ViewBag.AddNewEditTitle = "Asset";
@@ -95,9 +96,10 @@ new[] { null, "Meters", "text-left"},
     <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
     <td width="25%" class="text-left valign-middle" data-bind="text: AssetName"></td>
     <td width="20%" class="text-left valign-middle" nowrap><a data-bind="attr: { href: '/Assets/' + AssetType +  's.cshtml?Asset=' + AssetKey }" }><span data-bind="text: AssetType"/> </a></td>
-    <td width="15%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/AssetConnections.cshtml?AssetID=' + ID  }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Connections&nbsp;&nbsp;<span class="badge" data-bind="text: getConnectionCount(ID, $($element)), attr: {id: 'connectionCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?AssetID=' + ID + '&MeterID=-1' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/CustomerAssets.cshtml?AssetID=' + ID + '&CustomerID=-1' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Customers&nbsp;&nbsp;<span class="badge" data-bind="text: getCustomerCount(ID, $($element)), attr: {id: 'customerCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -150,6 +152,26 @@ new[] { null, "Meters", "text-left"},
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryMeterAssetCount(sourceID, -1, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }    
+
+        function getAssetCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryCustomerAssetCount(sourceID, -1, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }    
+
+        function getCustomerCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryCustomerAssetCount(-1, sourceID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }
