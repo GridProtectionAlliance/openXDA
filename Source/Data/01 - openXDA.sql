@@ -192,7 +192,7 @@ CREATE TABLE Asset
     Description VARCHAR(MAX) NULL,
 	AssetName VARCHAR(200) NOT NULL,
 	VoltageKV FLOAT NOT NULL,
-	Spare Bit NOT NULL Default 0
+	Spare Bit NULL Default 0
 )
 GO
 
