@@ -3308,7 +3308,7 @@ namespace openXDA.Hubs
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
                     new TableOperations<EDNAPoint>(connection).AddNewRecord(record);
-                    return new TableOperations<EDNAPoint>(connection).QueryRecordWhere("LineID = {0} AND Point = {1}", record.LineID, record.Point);
+                    return new TableOperations<EDNAPoint>(connection).QueryRecordWhere("BreakerID = {0} AND Point = {1}", record.BreakerID, record.Point);
                 }
             }
 
