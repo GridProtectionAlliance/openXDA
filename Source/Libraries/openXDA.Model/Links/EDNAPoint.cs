@@ -29,7 +29,7 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int LineID { get; set; }
+        public int BreakerID { get; set; }
         public string Point { get; set; }
     }
 }
