@@ -997,7 +997,8 @@ CREATE TABLE MeterConfiguration
     MeterID INT NOT NULL REFERENCES Meter(ID),
     DiffID INT NULL REFERENCES MeterConfiguration(ID),
     ConfigKey VARCHAR(50) NOT NULL,
-    ConfigText VARCHAR(MAX) NOT NULL
+    ConfigText VARCHAR(MAX) NOT NULL,
+    Revision varchar(10) NULL DEFAULT('0')
 )
 GO
 
