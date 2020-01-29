@@ -43,7 +43,9 @@ namespace openXDA.Model
 
         public string ConfigText { get; set; }
 
-        public string Revision { get; set; }
+        public int RevisionMajor { get; set; }
+        public int RevisionMinor { get; set; }
+
     }
 
     public static partial class TableOperationsExtensions
@@ -79,7 +81,8 @@ namespace openXDA.Model
                 newConfiguration.MeterID = meterConfiguration.MeterID;
                 newConfiguration.ConfigKey = meterConfiguration.ConfigKey;
                 newConfiguration.ConfigText = newConfigText;
-                newConfiguration.Revision = ((int)double.Parse(meterConfiguration.Revision) + 1).ToString();
+                newConfiguration.RevisionMajor = newConfiguration.RevisionMajor + 1;
+                newConfiguration.RevisionMinor = 0;
                 meterConfigurationTable.AddNewRecord(newConfiguration);
 
                 meterConfiguration.DiffID = meterConfigurationTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
@@ -93,10 +96,9 @@ namespace openXDA.Model
             RecordRestriction latestConfigurationQueryRestriction =
                 new RecordRestriction("MeterID = {0}", meter.ID) &
                 new RecordRestriction("ConfigKey = {0}", configKey) &
-                new RecordRestriction("DiffID IS NULL") &
-                new RecordRestriction("Revision NOT LIKE '%.%'");
+                new RecordRestriction("DiffID IS NULL");
 
-            MeterConfiguration latestConfiguration = meterConfigurationTable.QueryRecord("ID DESC", latestConfigurationQueryRestriction);
+            MeterConfiguration latestConfiguration = meterConfigurationTable.QueryRecord("RevisionMajor DESC, RevisionMinor DESC", latestConfigurationQueryRestriction);
 
             if (latestConfiguration == null)
             {
@@ -104,7 +106,8 @@ namespace openXDA.Model
                 newConfiguration.MeterID = meter.ID;
                 newConfiguration.ConfigKey = configKey;
                 newConfiguration.ConfigText = newConfigText;
-                newConfiguration.Revision = "0";
+                newConfiguration.RevisionMajor = 0;
+                newConfiguration.RevisionMinor = 0;
                 meterConfigurationTable.AddNewRecord(newConfiguration);
                 return;
             }
