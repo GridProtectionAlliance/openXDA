@@ -999,7 +999,8 @@ CREATE TABLE MeterConfiguration
     ConfigKey VARCHAR(50) NOT NULL,
     ConfigText VARCHAR(MAX) NOT NULL,
     RevisionMajor INT NULL DEFAULT(0),
-    RevisionMinor INT NULL DEFAULT(0)
+    RevisionMinor INT NULL DEFAULT(0),
+    CONSTRAINT UC_MeterConfiguration UNIQUE(MeterID, RevisionMajor, RevisionMinor)
 )
 GO
 
