@@ -3427,39 +3427,6 @@ GO
 
 ----- FUNCTIONS -----
 
-CREATE FUNCTION ComputeHash
-(
-    @eventID INT,
-    @templateID INT
-)
-RETURNS BIGINT
-BEGIN
-    DECLARE @md5Hash BINARY(16)
-
-    DECLARE @eventDetailSQL VARCHAR(MAX) =
-    (
-        SELECT EventDetailSQL
-        FROM
-            EmailType JOIN
-            EventEmailParameters ON EventEmailParameters.EmailTypeID = EmailType.ID
-        WHERE EmailType.XSLTemplateID = @templateID
-    )
-
-    DECLARE @eventDetail VARCHAR(MAX)
-    EXEC sp_executesql @eventDetailSQL, @eventID, @eventDetail OUT
-
-    SELECT @md5Hash = master.sys.fn_repl_hash_binary(CONVERT(VARBINARY(MAX), @eventDetail))
-    FROM EventDetail
-    WHERE EventID = @eventID
-
-    SELECT @md5Hash = master.sys.fn_repl_hash_binary(@md5Hash + CONVERT(VARBINARY(MAX), Template))
-    FROM XSLTemplate
-    WHERE ID = @templateID
-
-    RETURN CONVERT(BIGINT, SUBSTRING(@md5Hash, 0, 8)) ^ CONVERT(BIGINT, SUBSTRING(@md5Hash, 8, 8))
-END
-GO
-
 CREATE FUNCTION AdjustDateTime2
 (
     @dateTime2 DATETIME2,
