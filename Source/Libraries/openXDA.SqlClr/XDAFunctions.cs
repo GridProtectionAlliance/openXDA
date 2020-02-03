@@ -61,13 +61,8 @@ namespace openXDA.SqlClr
         {
             const string Query =
                 "SELECT TimeDomainData " +
-                "FROM EventData " +
-                "WHERE ID = " +
-                "(" +
-                "    SELECT EventDataID " +
-                "    FROM Event " +
-                "    WHERE ID = @id " +
-                ")";
+                "FROM ChannelData " +
+                "WHERE EventID = @id";
 
             DataSet eventDataSet = new DataSet();
 
@@ -80,9 +75,11 @@ namespace openXDA.SqlClr
                 adapter.Fill(eventDataSet);
             }
 
-            DataRow row = eventDataSet.Tables[0].Rows[0];
+            List<DataPoint> waveformData = eventDataSet.Tables[0].Rows
+                .Cast<DataRow>()
+                .SelectMany(row => ReadFrom((byte[])row["TimeDomainData"]))
+                .ToList();
 
-            List<DataPoint> waveformData = ReadFrom((byte[])row["TimeDomainData"]).ToList();
             List<DataPoint> cycleData = CalculateCycleData(waveformData).ToList();
             return waveformData.Concat(cycleData).ToArray();
         }
