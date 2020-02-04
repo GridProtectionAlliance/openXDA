@@ -3016,6 +3016,8 @@ INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Asset', 'Asset')
 GO
 INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Location', 'Location')
 GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Customer', 'Customer')
+GO
 
 
 CREATE TABLE Note (
