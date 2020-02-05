@@ -765,6 +765,7 @@ namespace DeviceDefinitionsMigrator
                 AssetKey = assetkey,
                 AssetName = asset.AssetName,
                 AssetTypeID = (int)AssetType.LineSegement,
+                Length = Convert.ToDouble((string)lineElement.Element("length") ?? "0"),
                 VoltageKV = asset.VoltageKV
             };
 
