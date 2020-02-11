@@ -32,6 +32,15 @@
 
 ----- TABLES -----
 
+CREATE TABLE AccessLog(
+    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    UserName varchar(200) NOT NULL,
+    AccessGranted bit NOT NULL,
+    CreatedOn datetime NOT NULL CONSTRAINT [DF_AccessLog_Timestamp]  DEFAULT (getutcdate())
+)
+GO
+
+
 CREATE TABLE Setting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
