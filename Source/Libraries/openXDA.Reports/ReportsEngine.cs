@@ -91,9 +91,9 @@ namespace openXDA.Reports
             DateTime firstOfMonth = month.AddDays(1 - month.Day);
             DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                ProcessMonthlyReport(meter, firstOfMonth, endOfMonth, dataContext);
+                ProcessMonthlyReport(meter, firstOfMonth, endOfMonth, connection);
             }
         }
 
