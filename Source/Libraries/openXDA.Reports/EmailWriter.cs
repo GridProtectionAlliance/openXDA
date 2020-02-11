@@ -49,12 +49,10 @@ namespace openXDA.Reports
 
         #region [ Constructors ]
 
-        public EmailWriter(DataContext dataContext, PQReportsSettings reportsSettings, EmailSettings emailSettings)
+        public EmailWriter(PQReportsSettings reportsSettings, EmailSettings emailSettings)
         {
             ReportSettings = reportsSettings;
-            DataContext = dataContext;
             EmailSettings = emailSettings;
-            XDATimeZone = TimeZoneInfo.FindSystemTimeZoneById(dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'XDATimeZone'"));
         }
 
         #endregion
@@ -63,8 +61,6 @@ namespace openXDA.Reports
 
         public EmailSettings EmailSettings { get; }
         public PQReportsSettings ReportSettings { get; }
-        public DataContext DataContext { get; }
-        public TimeZoneInfo XDATimeZone { get; }
 
         #endregion
 
@@ -77,54 +73,59 @@ namespace openXDA.Reports
 
         private void GenerateEmail(int month, int year)
         {
-            string sql = $"SELECT Email FROM UserAccount WHERE Email IS NOT NULL AND Email <> '' AND ID IN (SELECT UserAccountID FROM EmailGroupUserAccount WHERE EmailGroupID IN (SELECT EmailGroupID FROM EmailGroupType WHERE EmailTypeID IN (SELECT ID FROM EmailType WHERE  EmailCategoryID = (SELECT ID FROM EmailCategory WHERE Name = 'PQReport'))))";
-            DataTable emailTable = DataContext.Connection.RetrieveData(sql);
-            List<string> recipients = emailTable.Select().Select(row => row.ConvertField<string>("Email")).ToList();
-            string template = DataContext.Connection.ExecuteScalar<string>("SELECT Template FROM XSLTemplate WHERE Name = 'PQReport'");
-            string data = DataContext.Connection.ExecuteScalar<string>(@"
-            SELECT
-	            {0} as [Month],
-	            {1} as [Year],
-	            (select value from DashSettings where Name = 'System.XDAInstance') as [XDALink],
-	            (SELECT
-		            Meter.AssetKey as [Meter],
-		            Report.Results as [Result],
-		            Report.ID as [ReportID]
-	            FROM 
-		            Report JOIN
-		            Meter ON Report.MeterID = Meter.ID
-	            WHERE 
-		            Month = {0} AND
-		            Year = {1}
-	            FOR XML RAW('Report') ,TYPE, ELEMENTS) as [Reports]
-	            FOR XML RAW ('PQReport'),TYPE, ELEMENTS
-            ", month, year);
-
-            XDocument htmlDocument = XDocument.Parse(data.ApplyXSLTransform(template), LoadOptions.PreserveWhitespace);
-
-            try
+            using(AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                string subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
-                string html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
+                string sql = $"SELECT Email FROM UserAccount WHERE Email IS NOT NULL AND Email <> '' AND ID IN (SELECT UserAccountID FROM EmailGroupUserAccount WHERE EmailGroupID IN (SELECT EmailGroupID FROM EmailGroupType WHERE EmailTypeID IN (SELECT ID FROM EmailType WHERE  EmailCategoryID = (SELECT ID FROM EmailCategory WHERE Name = 'PQReport'))))";
+                DataTable emailTable = connection.RetrieveData(sql);
+                List<string> recipients = emailTable.Select().Select(row => row.ConvertField<string>("Email")).ToList();
+                string template = connection.ExecuteScalar<string>("SELECT Template FROM XSLTemplate WHERE Name = 'PQReport'");
+                string data = connection.ExecuteScalar<string>(@"
+                    SELECT
+	                    {0} as [Month],
+	                    {1} as [Year],
+	                    (select value from DashSettings where Name = 'System.XDAInstance') as [XDALink],
+	                    (SELECT
+		                    Meter.AssetKey as [Meter],
+		                    Report.Results as [Result],
+		                    Report.ID as [ReportID]
+	                    FROM 
+		                    Report JOIN
+		                    Meter ON Report.MeterID = Meter.ID
+	                    WHERE 
+		                    Month = {0} AND
+		                    Year = {1}
+	                    FOR XML RAW('Report') ,TYPE, ELEMENTS) as [Reports]
+	                    FOR XML RAW ('PQReport'),TYPE, ELEMENTS
+                    ", month, year);
+
+                XDocument htmlDocument = XDocument.Parse(data.ApplyXSLTransform(template), LoadOptions.PreserveWhitespace);
+
+                try
+                {
+                    string subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
+                    string html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
 
 
-                SendEmail(recipients, subject, html);
-                LoadSentEmail(recipients, subject, html);
+                    SendEmail(recipients, subject, html);
+                    LoadSentEmail(connection, recipients, subject, html);
 
-            }
-            catch(Exception ex)
-            {
-                Log.Error(ex.ToString());
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.ToString());
+                }
+
             }
         }
 
 
-        private int LoadSentEmail(List<string> recipients, string subject, string body)
+        private int LoadSentEmail(AdoDataConnection connection, List<string> recipients, string subject, string body)
         {
-            DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, XDATimeZone);
+            TimeZoneInfo xDATimeZone = TimeZoneInfo.FindSystemTimeZoneById(connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'XDATimeZone'"));
+            DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xDATimeZone);
             string toLine = string.Join("; ", recipients.Select(recipient => recipient.Trim()));
-            DataContext.Connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3})", now, toLine, subject, body);
-            return DataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+            connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3})", now, toLine, subject, body);
+            return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
         }
 
         private void SendEmail(List<string> recipients, string subject, string body)
