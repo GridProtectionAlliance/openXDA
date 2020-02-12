@@ -386,6 +386,32 @@ namespace openXDA.Model
             return result;
         }
 
+        // Logic to find distance between two Assets
+        public int DistanceToAsset(int assetID, IEnumerable<int> ignoreAssets = null)
+        {
+            ignoreAssets = (ignoreAssets == null) ? new List<int>() : ignoreAssets;
+            if (ConnectedAssets.Select(item => item.ID).Contains(assetID))
+                return 1;
+
+            List<int> paths = new List<int>();
+
+            foreach (Asset connectedAsset in ConnectedAssets)
+            {
+                if (ignoreAssets.Contains(connectedAsset.ID))
+                {
+                    continue;
+                }
+                int d = connectedAsset.DistanceToAsset(assetID, ignoreAssets.Concat(new List<int> { ID }));
+
+                if (d > 0)
+                    paths.Add(d);
+            }
+
+            if (paths.Count > 0)
+                return (paths.Min() + 1);
+            return -1;
+        }
+
         #endregion
     }
 }
