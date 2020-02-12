@@ -203,6 +203,7 @@ namespace FaultData.DataAnalysis
                     set.distance = dataGroup.Asset.DistanceToAsset(assetID);
                 }
 
+                m_vIndices.Add(set);
             }
             
             // Start by matching 
@@ -260,9 +261,6 @@ namespace FaultData.DataAnalysis
                         return -1;
                     return a.distance.CompareTo(b.distance);
                 });
-
-            
-
         }
 
         private VIDataGroup()
