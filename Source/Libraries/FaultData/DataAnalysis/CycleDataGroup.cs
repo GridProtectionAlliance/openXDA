@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using openXDA.Model;
 using System;
 
 namespace FaultData.DataAnalysis
@@ -34,7 +35,7 @@ namespace FaultData.DataAnalysis
         private const int PhaseIndex = 1;
         private const int PeakIndex = 2;
         private const int ErrorIndex = 3;
-
+        private Asset m_asset;
         // Fields
         private DataGroup m_dataGroup;
 
@@ -42,9 +43,10 @@ namespace FaultData.DataAnalysis
 
         #region [ Constructors ]
 
-        public CycleDataGroup(DataGroup dataGroup)
+        public CycleDataGroup(DataGroup dataGroup, Asset asset)
         {
             m_dataGroup = dataGroup;
+            m_asset = asset;
         }
 
         #endregion
@@ -83,6 +85,13 @@ namespace FaultData.DataAnalysis
             }
         }
 
+        public Asset Asset
+        {
+            get
+            {
+                return m_asset;
+            }
+        }
         #endregion
 
         #region [ Methods ]
@@ -94,12 +103,12 @@ namespace FaultData.DataAnalysis
 
         public CycleDataGroup ToSubGroup(int startIndex, int endIndex)
         {
-            return new CycleDataGroup(m_dataGroup.ToSubGroup(startIndex, endIndex));
+            return new CycleDataGroup(m_dataGroup.ToSubGroup(startIndex, endIndex), m_asset);
         }
 
         public CycleDataGroup ToSubGroup(DateTime startTime, DateTime endTime)
         {
-            return new CycleDataGroup(m_dataGroup.ToSubGroup(startTime, endTime));
+            return new CycleDataGroup(m_dataGroup.ToSubGroup(startTime, endTime), m_asset);
         }
 
         #endregion

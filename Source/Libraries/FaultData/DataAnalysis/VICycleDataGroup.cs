@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultAlgorithms;
+using openXDA.Model;
 
 namespace FaultData.DataAnalysis
 {
@@ -33,12 +34,9 @@ namespace FaultData.DataAnalysis
         #region [ Members ]
 
         // Fields
-        private int m_vaIndex;
-        private int m_vbIndex;
-        private int m_vcIndex;
-        private int m_vabIndex;
-        private int m_vbcIndex;
-        private int m_vcaIndex;
+        private List<VIndices> m_vIndices;
+        private Asset m_asset;
+
         private int m_iaIndex;
         private int m_ibIndex;
         private int m_icIndex;
@@ -46,26 +44,82 @@ namespace FaultData.DataAnalysis
 
         private List<CycleDataGroup> m_cycleDataGroups;
 
+        private class VIndices
+        {
+            public int Va;
+            public int Vb;
+            public int Vc;
+
+            public int Vab;
+            public int Vbc;
+            public int Vca;
+
+            public int distance;
+            public VIndices()
+            {
+                Va = -1;
+                Vb = -1;
+                Vc = -1;
+                Vab = -1;
+                Vbc = -1;
+                Vca = -1;
+
+                distance = -1;
+            }
+
+            public int DefinedNeutralVoltages
+            {
+                get
+                {
+                    return ((Va > -1) ? 1 : 0) + ((Vb > -1) ? 1 : 0) + ((Vc > -1) ? 1 : 0);
+                }
+            }
+
+            public int DefinedLineVoltages
+            {
+                get
+                {
+                    return ((Vab > -1) ? 1 : 0) + ((Vbc > -1) ? 1 : 0) + ((Vca > -1) ? 1 : 0);
+                }
+            }
+
+            public bool allVoltagesDefined
+            {
+                get
+                {
+                    return ((Vab > -1) && (Vbc > -1) && (Vca > -1) &&
+                        (Va > -1) && (Vb > -1) && (Vc > -1));
+                }
+            }
+
+        }
+
+
         #endregion
 
         #region [ Constructors ]
 
         public VICycleDataGroup(DataGroup dataGroup)
         {
+            m_vIndices = new List<VIndices>();
+            m_asset = dataGroup.Asset;
+
             m_cycleDataGroups = dataGroup.DataSeries
                 .Select((dataSeries, index) => new { DataSeries = dataSeries, Index = index })
                 .GroupBy(obj => obj.Index / 4)
                 .Where(grouping => grouping.Count() >= 4)
                 .Select(grouping => grouping.Select(obj => obj.DataSeries))
-                .Select(grouping => new CycleDataGroup(new DataGroup(grouping, dataGroup.Asset)))
+                .Select(grouping => new CycleDataGroup(new DataGroup(grouping, dataGroup.Asset), dataGroup.Asset))
                 .ToList();
 
             MapIndexes();
         }
 
-        public VICycleDataGroup(List<CycleDataGroup> cycleDataGroups)
+        public VICycleDataGroup(List<CycleDataGroup> cycleDataGroups, Asset asset)
         {
+            m_vIndices = new List<VIndices>();
             m_cycleDataGroups = new List<CycleDataGroup>(cycleDataGroups);
+            m_asset = asset;
             MapIndexes();
         }
 
@@ -77,7 +131,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vaIndex >= 0) ? m_cycleDataGroups[m_vaIndex] : null;
+                return (m_vIndices[0].Va >= 0) ? m_cycleDataGroups[m_vIndices[0].Va] : null;
             }
         }
 
@@ -85,7 +139,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vbIndex >= 0) ? m_cycleDataGroups[m_vbIndex] : null;
+                return (m_vIndices[0].Vb >= 0) ? m_cycleDataGroups[m_vIndices[0].Vb] : null;
             }
         }
 
@@ -93,7 +147,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vcIndex >= 0) ? m_cycleDataGroups[m_vcIndex] : null;
+                return (m_vIndices[0].Vc >= 0) ? m_cycleDataGroups[m_vIndices[0].Vc] : null;
             }
         }
 
@@ -101,7 +155,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vabIndex >= 0) ? m_cycleDataGroups[m_vabIndex] : null;
+                return (m_vIndices[0].Vab >= 0) ? m_cycleDataGroups[m_vIndices[0].Vab] : null;
             }
         }
 
@@ -109,7 +163,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vbcIndex >= 0) ? m_cycleDataGroups[m_vbcIndex] : null;
+                return (m_vIndices[0].Vbc >= 0) ? m_cycleDataGroups[m_vIndices[0].Vbc] : null;
             }
         }
 
@@ -117,7 +171,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vcaIndex >= 0) ? m_cycleDataGroups[m_vcaIndex] : null;
+                return (m_vIndices[0].Vca >= 0) ? m_cycleDataGroups[m_vIndices[0].Vca] : null;
             }
         }
 
@@ -174,19 +228,19 @@ namespace FaultData.DataAnalysis
         {
             return new VICycleDataGroup(m_cycleDataGroups
                 .Select(cycleDataGroup => cycleDataGroup.ToSubGroup(startIndex, endIndex))
-                .ToList());
+                .ToList(), m_asset);
         }
 
         public VICycleDataGroup ToSubSet(DateTime startTime, DateTime endTime)
         {
             return new VICycleDataGroup(m_cycleDataGroups
                 .Select(cycleDataGroup => cycleDataGroup.ToSubGroup(startTime, endTime))
-                .ToList());
+                .ToList(), m_asset);
         }
 
         public void PushDataTo(CycleDataSet cycleDataSet)
         {
-            CycleData cycleData;
+            FaultAlgorithms.CycleData cycleData;
             Cycle[] cycles;
             CycleDataGroup[] cycleDataGroups;
 
@@ -195,7 +249,7 @@ namespace FaultData.DataAnalysis
 
             for (int i = 0; i < VA.ToDataGroup().Samples; i++)
             {
-                cycleData = new CycleData();
+                cycleData = new FaultAlgorithms.CycleData();
 
                 cycles[0] = cycleData.AN.V;
                 cycles[1] = cycleData.BN.V;
@@ -221,35 +275,100 @@ namespace FaultData.DataAnalysis
 
         private void MapIndexes()
         {
-            m_vaIndex = -1;
-            m_vbIndex = -1;
-            m_vcIndex = -1;
-            m_vabIndex = -1;
-            m_vbcIndex = -1;
-            m_vcaIndex = -1;
+            
             m_iaIndex = -1;
             m_ibIndex = -1;
             m_icIndex = -1;
             m_irIndex = -1;
+
+            List<int> vaIndices = new List<int>();
+            List<int> vbIndices = new List<int>();
+            List<int> vcIndices = new List<int>();
+            List<int> vabIndices = new List<int>();
+            List<int> vbcIndices = new List<int>();
+            List<int> vcaIndices = new List<int>();
+
+            for (int i = 0; i < m_cycleDataGroups.Count; i++)
+            {
+                if (isVoltage("AN", m_cycleDataGroups[i]))
+                    vaIndices.Add(i);
+                else if (isVoltage("BN", m_cycleDataGroups[i]))
+                    vbIndices.Add(i);
+                else if (isVoltage("CN", m_cycleDataGroups[i]))
+                    vcIndices.Add(i);
+                else if (isVoltage("AB", m_cycleDataGroups[i]))
+                    vabIndices.Add(i);
+                else if (isVoltage("BC", m_cycleDataGroups[i]))
+                    vbcIndices.Add(i);
+                else if (isVoltage("CA", m_cycleDataGroups[i]))
+                    vcaIndices.Add(i);
+                
+            }
+
+            //Walk through all Va and try to get corresponding Vb and Vc...
+            List<int?> ProcessedIndices = new List<int?>();
+            foreach (int? VaIndex in vaIndices)
+            {
+                int assetID = m_cycleDataGroups[(int)VaIndex].Asset.ID;
+
+                int VbIndex = vbIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VcIndex = vcIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VabIndex = vabIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VbcIndex = vbcIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VcaIndex = vcaIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+
+                VIndices set = new VIndices();
+                ProcessedIndices.Add(VaIndex);
+                set.Va = (int)VaIndex;
+
+                if (VbIndex > -1)
+                {
+                    ProcessedIndices.Add(VbIndex);
+                    set.Vb = VbIndex;
+                }
+                if (VcIndex > -1)
+                {
+                    ProcessedIndices.Add(VcIndex);
+                    set.Vc = VcIndex;
+                }
+
+                if (VabIndex > -1)
+                {
+                    ProcessedIndices.Add(VabIndex);
+                    set.Vab = VabIndex;
+                }
+                if (VbcIndex > -1)
+                {
+                    ProcessedIndices.Add(VbcIndex);
+                    set.Vbc = VbcIndex;
+                }
+                if (VcaIndex > -1)
+                {
+                    ProcessedIndices.Add(VcaIndex);
+                    set.Vca = VcaIndex;
+                }
+
+
+                if (assetID == m_asset.ID)
+                {
+                    set.distance = 0;
+                }
+                else
+                {
+                    set.distance = m_asset.DistanceToAsset(assetID);
+                }
+
+                m_vIndices.Add(set);
+            }
+
 
             for (int i = 0; i < m_cycleDataGroups.Count; i++)
             {
                 string measurementType = m_cycleDataGroups[i].RMS.SeriesInfo.Channel.MeasurementType.Name;
                 string phase = m_cycleDataGroups[i].RMS.SeriesInfo.Channel.Phase.Name;
 
-                if (measurementType == "Voltage" && phase == "AN")
-                    m_vaIndex = i;
-                else if (measurementType == "Voltage" && phase == "BN")
-                    m_vbIndex = i;
-                else if (measurementType == "Voltage" && phase == "CN")
-                    m_vcIndex = i;
-                else if (measurementType == "Voltage" && phase == "AB")
-                    m_vabIndex = i;
-                else if (measurementType == "Voltage" && phase == "BC")
-                    m_vbcIndex = i;
-                else if (measurementType == "Voltage" && phase == "CA")
-                    m_vcaIndex = i;
-                else if (measurementType == "Current" && phase == "AN")
+                
+                if (measurementType == "Current" && phase == "AN")
                     m_iaIndex = i;
                 else if (measurementType == "Current" && phase == "BN")
                     m_ibIndex = i;
@@ -261,5 +380,43 @@ namespace FaultData.DataAnalysis
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        
+        private static bool isVoltage(string phase, CycleDataGroup dataGroup)
+        {
+
+            string measurementType = dataGroup.RMS.SeriesInfo.Channel.MeasurementType.Name;
+            string seriesPhase = dataGroup.RMS.SeriesInfo.Channel.Phase.Name;
+
+            if (measurementType != "Voltage")
+                return false;
+
+            if (seriesPhase != phase)
+                return false;
+
+            return true;
+
+        }
+
+        private static bool isCurrent(string phase, CycleDataGroup dataGroup)
+        {
+            string measurementType = dataGroup.RMS.SeriesInfo.Channel.MeasurementType.Name;
+            string seriesPhase = dataGroup.RMS.SeriesInfo.Channel.Phase.Name;
+
+            if (measurementType != "Current")
+                return false;
+
+            if (seriesPhase != phase)
+                return false;
+
+            return true;
+
+        }
+
+        #endregion
+
     }
 }

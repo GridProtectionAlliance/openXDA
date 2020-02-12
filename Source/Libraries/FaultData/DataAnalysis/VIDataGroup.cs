@@ -384,8 +384,6 @@ namespace FaultData.DataAnalysis
             }
         }
 
-        
-
         private int[] CurrentIndexes
         {
             get
@@ -394,8 +392,51 @@ namespace FaultData.DataAnalysis
             }
         }
 
+        public Asset Asset
+        {
+            get
+            {
+                return m_dataGroup.Asset;
+            }
+        }
         #endregion
 
+        public DataSeries[] Data
+        {
+            get
+            {
+                List<DataSeries> result = new List<DataSeries>();
+                foreach (VIndices Vindex in m_vIndices)
+                {
+                    if (Vindex.Va > -1)
+                        result.Add(m_dataGroup[Vindex.Va]);
+                    if (Vindex.Vb > -1)
+                        result.Add(m_dataGroup[Vindex.Vb]);
+                    if (Vindex.Vc > -1)
+                        result.Add(m_dataGroup[Vindex.Vc]);
+
+                    if (Vindex.Vab > -1)
+                        result.Add(m_dataGroup[Vindex.Vab]);
+                    if (Vindex.Vbc > -1)
+                        result.Add(m_dataGroup[Vindex.Vbc]);
+                    if (Vindex.Vca > -1)
+                        result.Add(m_dataGroup[Vindex.Vca]);
+
+
+                }
+                
+                if (m_iaIndex > -1)
+                    result.Add(m_dataGroup[m_iaIndex]);
+                if (m_ibIndex > -1)
+                    result.Add(m_dataGroup[m_ibIndex]);
+                if (m_icIndex > -1)
+                    result.Add(m_dataGroup[m_icIndex]);
+                if (m_irIndex > -1)
+                    result.Add(m_dataGroup[m_irIndex]);
+                return result.ToArray();
+
+            }
+        }
         #region [ Methods ]
 
         /// <summary>
