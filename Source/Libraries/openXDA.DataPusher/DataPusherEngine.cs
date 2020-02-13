@@ -53,22 +53,16 @@ namespace openXDA.DataPusher
         #endregion
 
         #region [ Constructors ]
+
         public DataPusherEngine()
         {
-            using(AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                m_dataPusherSettings = new DataPusherSettings();
-                m_dataPusherSettings.Enabled = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.Enabled'") ?? false;
-                m_dataPusherSettings.OnlyValidFaults = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.OnlyValidFaults'") ?? true;
-                m_dataPusherSettings.TimeWindow = connection.ExecuteScalar<int?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.TimeWindow'") ?? 0;
-
-            }
         }
 
         public DataPusherEngine(DataPusherSettings settings)
         {
             m_dataPusherSettings = settings;
         }
+
         #endregion
 
         #region [ Properties ]
@@ -121,6 +115,18 @@ namespace openXDA.DataPusher
         #region [ Methods ]
 
         #region [ Class Functions ]
+
+        public void Initialize()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                m_dataPusherSettings = new DataPusherSettings();
+                m_dataPusherSettings.Enabled = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.Enabled'") ?? false;
+                m_dataPusherSettings.OnlyValidFaults = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.OnlyValidFaults'") ?? true;
+                m_dataPusherSettings.TimeWindow = connection.ExecuteScalar<int?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.TimeWindow'") ?? 0;
+            }
+        }
+
         public void Dispose()
         {
             if (!m_disposed)
