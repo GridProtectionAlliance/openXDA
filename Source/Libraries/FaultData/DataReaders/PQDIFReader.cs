@@ -27,6 +27,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
+using FaultData.DataReaders.PQube;
 using FaultData.DataSets;
 using GSF;
 using GSF.PQDIF.Logical;
@@ -281,6 +282,9 @@ namespace FaultData.DataReaders
                 meter.Channels.Add(ParseSeries(seriesDefinition));
 
             m_meterDataSet.Meter = meter;
+
+            // Parse triggers from PQube data
+            m_meterDataSet.Triggers = PQubeReader.GetTriggers(observationRecords);
         }
 
         public void Dispose()

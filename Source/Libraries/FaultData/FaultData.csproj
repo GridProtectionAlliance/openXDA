@@ -114,6 +114,7 @@
     <Compile Include="DataOperations\DataPusherOperation.cs" />
     <Compile Include="DataOperations\DataQualityOperation.cs" />
     <Compile Include="DataOperations\LightningDataOperation.cs" />
+    <Compile Include="DataOperations\PQube\PQubeClassificationOverride.cs" />
     <Compile Include="DataOperations\RelayEnergization.cs" />
     <Compile Include="DataOperations\StatisticOperation.cs" />
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
@@ -123,6 +124,7 @@
     <Compile Include="DataOperations\TVA\StructureQueryOperation.cs" />
     <Compile Include="DataReaders\PQubeTrendingDataCSVReader.cs" />
     <Compile Include="DataReaders\IGridPQDIFReader.cs" />
+    <Compile Include="DataReaders\PQube\PQubeReader.cs" />
     <Compile Include="DataReaders\PQViewDIFReader.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />
     <Compile Include="DataResources\BreakerDataResource.cs" />

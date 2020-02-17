@@ -46,6 +46,7 @@ namespace FaultData.DataSets
             DataSeries = new List<DataSeries>();
             Digitals = new List<DataSeries>();
             ReportedDisturbances = new List<ReportedDisturbance>();
+            Triggers = new List<string>();
         }
 
         public MeterDataSet(Event evt)
@@ -90,6 +91,7 @@ namespace FaultData.DataSets
         public List<DataSeries> DataSeries { get; set; }
         public List<DataSeries> Digitals { get; set; }
         public List<ReportedDisturbance> ReportedDisturbances { get; set; }
+        public List<string> Triggers { get; set; }
 
         private Dictionary<Type, object> Resources { get; set; }
 
