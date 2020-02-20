@@ -62,6 +62,7 @@ using Setting = openXDA.Model.Setting;
 using GSF.Security;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
+using System.Collections;
 
 namespace openXDA.Hubs
 {
@@ -3098,7 +3099,7 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
-        public IEnumerable<JObject> QueryMeters(int meterLocationID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable QueryMeters(int meterLocationID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
@@ -3109,8 +3110,12 @@ namespace openXDA.Hubs
                 else
                     restriction = tableOperations.GetSearchRestriction(filterString);
 
-                List<JObject> meters = tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).Select(meter => JObject.FromObject(meter)).ToList();
+                IEnumerable<MeterDetail> meters = tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
 
+                if (pageSize > 25)
+                    return meters.ToList();
+
+                List<JObject> jMeters = meters.Select(meter => JObject.FromObject(meter)).ToList();
                 TableOperations<MaintenanceWindow> maintenanceWindowTable = new TableOperations<MaintenanceWindow>(connection);
 
                 Dictionary<int, MaintenanceWindow> maintenanceWindows = maintenanceWindowTable
@@ -3118,7 +3123,7 @@ namespace openXDA.Hubs
                     .GroupBy(window => window.MeterID)
                     .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
 
-                foreach (dynamic meter in meters)
+                foreach (dynamic meter in jMeters)
                 {
                     int meterID = meter.ID;
 
@@ -3126,7 +3131,7 @@ namespace openXDA.Hubs
                         meter.MaintenanceWindow = JObject.FromObject(window);
                 }
 
-                return meters;
+                return jMeters;
             }
         }
 
