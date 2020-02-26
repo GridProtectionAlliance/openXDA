@@ -47,39 +47,29 @@ namespace FaultData.DataOperations
         // Constants
         private const double Sqrt3 = 1.7320508075688772935274463415059D;
 
-        // Fields
-        private double m_systemFrequency;
-        private TimeZoneInfo m_timeZone;
-
         #endregion
 
         #region [ Properties ]
 
         [Setting]
-        public double SystemFrequency
+        public double MaxEventDuration
         {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
+            get => MaxEventDurationSpan.TotalSeconds;
+            set => MaxEventDurationSpan = TimeSpan.FromSeconds(value);
         }
+
+        [Setting]
+        public double SystemFrequency { get; set; }
 
         [Setting]
         public string XDATimeZone
         {
-            get
-            {
-                return m_timeZone.Id;
-            }
-            set
-            {
-                m_timeZone = TimeZoneInfo.FindSystemTimeZoneById(value);
-            }
+            get => TimeZone.Id;
+            set => TimeZone = TimeZoneInfo.FindSystemTimeZoneById(value);
         }
+
+        private TimeSpan MaxEventDurationSpan { get; set; }
+        private TimeZoneInfo TimeZone { get; set; }
 
         #endregion
 
@@ -126,7 +116,10 @@ namespace FaultData.DataOperations
             for (int i = 0; i < dataGroups.Count; i++)
             {
                 DataGroup dataGroup = dataGroups[i];
-                EventClassification eventClassification;
+                TimeSpan duration = TimeSpan.FromSeconds(dataGroup.Duration);
+
+                if (MaxEventDurationSpan > TimeSpan.Zero && duration > MaxEventDurationSpan)
+                    continue;
 
                 if (dataGroup.Classification == DataClassification.Trend)
                     continue;
@@ -134,7 +127,7 @@ namespace FaultData.DataOperations
                 if (dataGroup.Classification == DataClassification.Unknown)
                     continue;
 
-                if (!eventClassifications.TryGetValue(dataGroup, out eventClassification))
+                if (!eventClassifications.TryGetValue(dataGroup, out EventClassification eventClassification))
                     continue;
 
                 if ((object)dataGroup.Line == null && meterDataSet.Meter.MeterLocation.MeterLocationLines.Count != 1)
@@ -163,7 +156,7 @@ namespace FaultData.DataOperations
                     StartTime = dataGroup.StartTime,
                     EndTime = dataGroup.EndTime,
                     Samples = dataGroup.Samples,
-                    TimeZoneOffset = (int)m_timeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes,
+                    TimeZoneOffset = (int)TimeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes,
                     SamplesPerSecond = 0,
                     SamplesPerCycle = 0
                 };
@@ -179,7 +172,7 @@ namespace FaultData.DataOperations
                     };
 
                     evt.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
-                    evt.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
+                    evt.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
                 }
 
                 evt.Disturbances.AddRange(GetDisturbances(connection, meterDataSet, dataGroup));
@@ -296,7 +289,7 @@ namespace FaultData.DataOperations
             dbDisturbance.StartTime = disturbance.StartTime;
             dbDisturbance.EndTime = disturbance.EndTime;
             dbDisturbance.DurationSeconds = disturbance.DurationSeconds;
-            dbDisturbance.DurationCycles = disturbance.GetDurationCycles(m_systemFrequency);
+            dbDisturbance.DurationCycles = disturbance.GetDurationCycles(SystemFrequency);
             dbDisturbance.StartIndex = disturbance.StartIndex;
             dbDisturbance.EndIndex = disturbance.EndIndex;
 

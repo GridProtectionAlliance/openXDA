@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
@@ -33,54 +34,23 @@ namespace FaultData.DataResources
 {
     public class CycleDataResource : DataResourceBase<MeterDataSet>
     {
-        #region [ Members ]
-
-        // Fields
-        private double m_systemFrequency;
-        private List<DataGroup> m_dataGroups;
-        private List<VIDataGroup> m_viDataGroups;
-        private List<VICycleDataGroup> m_viCycleDataGroups;
-
-        #endregion
-
         #region [ Properties ]
 
         [Setting]
-        public double SystemFrequency
+        public double MaxEventDuration
         {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
+            get => MaxEventDurationSpan.TotalSeconds;
+            set => MaxEventDurationSpan = TimeSpan.FromSeconds(value);
         }
 
-        public List<DataGroup> DataGroups
-        {
-            get
-            {
-                return m_dataGroups;
-            }
-        }
+        [Setting]
+        public double SystemFrequency { get; set; }
 
-        public List<VIDataGroup> VIDataGroups
-        {
-            get
-            {
-                return m_viDataGroups;
-            }
-        }
+        public List<DataGroup> DataGroups { get; private set; }
+        public List<VIDataGroup> VIDataGroups { get; private set; }
+        public List<VICycleDataGroup> VICycleDataGroups { get; private set; }
 
-        public List<VICycleDataGroup> VICycleDataGroups
-        {
-            get
-            {
-                return m_viCycleDataGroups;
-            }
-        }
+        private TimeSpan MaxEventDurationSpan { get; set; }
 
         #endregion
 
@@ -91,23 +61,24 @@ namespace FaultData.DataResources
             DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
             Stopwatch stopwatch = new Stopwatch();
 
-            m_dataGroups = dataGroupsResource.DataGroups
+            DataGroups = dataGroupsResource.DataGroups
                 .Where(dataGroup => dataGroup.Classification == DataClassification.Event)
-                .Where(dataGroup => dataGroup.SamplesPerSecond / m_systemFrequency >= 3.999D)
+                .Where(dataGroup => dataGroup.SamplesPerSecond / SystemFrequency >= 3.999D)
+                .Where(dataGroup => MaxEventDurationSpan <= TimeSpan.Zero || TimeSpan.FromSeconds(dataGroup.Duration) <= MaxEventDurationSpan)
                 .ToList();
 
-            Log.Info(string.Format("Found data for {0} events.", m_dataGroups.Count));
+            Log.Info(string.Format("Found data for {0} events.", DataGroups.Count));
 
-            m_viDataGroups = m_dataGroups
+            VIDataGroups = DataGroups
                 .Select(dataGroup => new VIDataGroup(dataGroup))
                 .ToList();
 
-            Log.Info(string.Format("Calculating cycle data for all {0} events.", m_dataGroups.Count));
+            Log.Info(string.Format("Calculating cycle data for all {0} events.", DataGroups.Count));
 
             stopwatch.Start();
 
-            m_viCycleDataGroups = m_viDataGroups
-                .Select(viDataGroup => Transform.ToVICycleDataGroup(viDataGroup, m_systemFrequency))
+            VICycleDataGroups = VIDataGroups
+                .Select(viDataGroup => Transform.ToVICycleDataGroup(viDataGroup, SystemFrequency))
                 .ToList();
 
             Log.Debug(string.Format("Cycle data calculated in {0}.", stopwatch.Elapsed));
