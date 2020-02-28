@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Net;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
@@ -177,7 +178,14 @@ namespace FaultData.DataOperations.TVA
 
         private static string GetStructureInfo(string url)
         {
+            bool HandlePreRequest(HttpWebRequest request)
+            {
+                request.UseDefaultCredentials = true;
+                return true;
+            }
+
             HtmlWeb webClient = new HtmlWeb();
+            webClient.PreRequest += HandlePreRequest;
             HtmlDocument doc = webClient.Load(url);
             return doc.DocumentNode.InnerText.Trim();
         }
