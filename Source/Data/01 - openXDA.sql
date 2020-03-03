@@ -2459,7 +2459,8 @@ CREATE TABLE NearestStructure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FaultSummaryID INT NOT NULL REFERENCES FaultSummary(ID),
-    StructureID INT NOT NULL REFERENCES Structure(ID)
+    StructureID INT NOT NULL REFERENCES Structure(ID),
+    Deviation FLOAT NULL
 )
 GO
 
@@ -2532,6 +2533,20 @@ GO
 
 INSERT INTO SegmentType(Name, Description) VALUES('Postfault', 'After the fault ends')
 GO
+
+CREATE TABLE LightningStrike(
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	EventID int NOT NULL FOREIGN KEY REFERENCES Event(ID),
+	Service varchar(50) NOT NULL,
+	UTCTime datetime2(7) NOT NULL,
+	DisplayTime varchar(50) NOT NULL,
+	Amplitude float NOT NULL,
+	Latitude float NOT NULL,
+	Longitude float NOT NULL
+)
+
+GO
+
 
 -- -------- --
 -- Trending --

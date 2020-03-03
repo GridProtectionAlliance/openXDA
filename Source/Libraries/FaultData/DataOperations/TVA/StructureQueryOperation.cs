@@ -155,7 +155,7 @@ namespace FaultData.DataOperations.TVA
                             Structure structure = structureTable.QueryRecordWhere("AssetKey = {0}", assetKey)
                                 ?? new Structure() { AssetKey = assetKey };
 
-                            structure.LineID = dataGroup.Asset.ID;
+                            structure.AssetID = dataGroup.Asset.ID;
 
                             if (double.TryParse(latitude, out double lat))
                                 structure.Latitude = lat;

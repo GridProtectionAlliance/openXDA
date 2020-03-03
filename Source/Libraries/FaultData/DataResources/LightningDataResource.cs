@@ -50,6 +50,10 @@ namespace FaultData.DataResources
         [Setting]
         [DefaultValue("")]
         public string DataProviderType { get; set; }
+
+        [Setting]
+        [DefaultValue(2.0D)]
+        public double DataProviderTimeWindow { get; set; }
     }
 
     public interface ILightningStrike
@@ -90,8 +94,8 @@ namespace FaultData.DataResources
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)
             {
                 string lineKey = dataGroup.Asset.AssetKey;
-                DateTime start = dataGroup.StartTime.AddSeconds(-2.0D);
-                DateTime end = dataGroup.EndTime.AddSeconds(2.0D);
+                DateTime start = dataGroup.StartTime.AddSeconds(-LightningDataSettings.DataProviderTimeWindow);
+                DateTime end = dataGroup.EndTime.AddSeconds(LightningDataSettings.DataProviderTimeWindow);
 
                 List<ILightningStrike> lightningStrikes = dataProvider
                     .GetLightningStrikes(lineKey, start, end)
