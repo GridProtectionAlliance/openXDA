@@ -32,6 +32,7 @@ using Ionic.Zlib;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.SqlClient;
 
 namespace openXDA.Model
 {
@@ -100,7 +101,7 @@ namespace openXDA.Model
 
             //This Will get the extended Data (throught connections)....
             Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT AssetID FROM Event WHERE ID = {0})", eventID);
-            asset.ConnectionFactory = () => { return new AdoDataConnection("systemSettings"); };
+            asset.ConnectionFactory = () => { return new AdoDataConnection(connection.Connection.ConnectionString, typeof(SqlConnection), typeof(SqlDataAdapter)); };
             List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
 
             foreach (int channelID in channelIDs)

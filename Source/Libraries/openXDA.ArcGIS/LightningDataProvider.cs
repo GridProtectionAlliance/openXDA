@@ -42,7 +42,7 @@ namespace openXDA.ArcGIS
         public const string CategoryName = "Lightning";
 
         private const string ServiceKey = "Service";
-        private const string URLKey = "Service";
+        private const string URLKey = "URL";
         private const string LightningMapServerPattern = @"\[(?<" + ServiceKey + @">[^]]+)\]\((?<" + URLKey + @">[^)]+)\)";
 
         [Setting]
