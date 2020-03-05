@@ -454,7 +454,6 @@ namespace FaultData.DataOperations
                     Right = meterGrouping2
                 }))
                 .Where(mapping => mapping.Left.Meter.MeterLocationID < mapping.Right.Meter.MeterLocationID)
-                .Where(mapping => mapping.Left.Faults.Count == mapping.Right.Faults.Count)
                 .SelectMany(mapping => mapping.Left.Faults.Zip(mapping.Right.Faults, (left, right) => new Mapping(left, right)))
                 .ToList();
         }
