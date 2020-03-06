@@ -77,22 +77,24 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
-            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            EventClassificationResource eventClassificationResource = meterDataSet.GetResource<EventClassificationResource>();
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                List<DataGroup> dataGroups = new List<DataGroup>(cycleDataResource.DataGroups);
-                dataGroups.AddRange(dataGroupsResource.DataGroups.Where(dataGroup => dataGroup.DataSeries.Count == 0));
-
-                List<Event> events = GetEvents(connection, meterDataSet, dataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
+                List<Event> events = GetEvents(connection, meterDataSet);
                 LoadEvents(connection, events, meterDataSet);
             }
         }
 
-        private List<Event> GetEvents(AdoDataConnection connection, MeterDataSet meterDataSet, List<DataGroup> dataGroups, List<VICycleDataGroup> viCycleDataGroups, Dictionary<DataGroup, EventClassification> eventClassifications)
+        private List<Event> GetEvents(AdoDataConnection connection, MeterDataSet meterDataSet)
         {
+            DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            List<DataGroup> dataGroups = new List<DataGroup>(cycleDataResource.DataGroups);
+            dataGroups.AddRange(dataGroupsResource.DataGroups.Where(dataGroup => dataGroup.DataSeries.Count == 0));
+
+            EventClassificationResource eventClassificationResource = meterDataSet.GetResource<EventClassificationResource>();
+            Dictionary<DataGroup, EventClassification> eventClassifications = eventClassificationResource.Classifications;
+
             int count = dataGroups
                 .Where(dataGroup => dataGroup.Classification != DataClassification.Trend)
                 .Where(dataGroup => dataGroup.Classification != DataClassification.Unknown)
@@ -163,11 +165,19 @@ namespace FaultData.DataOperations
 
                 if (dataGroup.Samples > 0)
                 {
+                    FastRMSDataResource fastRMSDataResource = meterDataSet.GetResource<FastRMSDataResource>();
+                    Dictionary<DataGroup, DataGroup> fastRMSLookup = fastRMSDataResource.FastRMSLookup;
+                    byte[] cycleData = new byte[0];
+
+                    if (fastRMSLookup.TryGetValue(dataGroup, out DataGroup fastRMS))
+                        cycleData = fastRMS.ToData();
+
                     evt.EventData = new EventData()
                     {
                         FileGroupID = meterDataSet.FileGroup.ID,
                         RunTimeID = i,
                         TimeDomainData = dataGroup.ToData(),
+                        CycleData = cycleData,
                         MarkedForDeletion = 0
                     };
 

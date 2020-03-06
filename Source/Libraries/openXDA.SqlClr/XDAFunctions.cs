@@ -86,7 +86,7 @@ namespace openXDA.SqlClr
             List<DataPoint> cycleData = CalculateCycleData(waveformData).ToList();
             return waveformData.Concat(cycleData).ToArray();
         }
-        
+
         public static void GetEventData_FillRow(object source, out SqlInt32 seriesID, out SqlString characteristic, out DateTime time, out SqlDouble value)
         {
             DataPoint dataPoint = source as DataPoint;
@@ -96,6 +96,52 @@ namespace openXDA.SqlClr
 
             seriesID = dataPoint.SeriesID;
             characteristic = dataPoint.Characteristic;
+            time = dataPoint.Time;
+            value = ToSqlDouble(dataPoint.Value);
+        }
+
+        [SqlFunction(
+            DataAccess = DataAccessKind.Read,
+            FillRowMethodName = "GetCycleData_FillRow",
+            TableDefinition = "[SeriesID] INT, [Time] DATETIME2, [Value] FLOAT")
+        ]
+        public static IEnumerable GetCycleData(SqlInt32 eventID)
+        {
+            const string Query =
+                "SELECT CycleData " +
+                "FROM EventData " +
+                "WHERE ID = " +
+                "(" +
+                "    SELECT EventDataID " +
+                "    FROM Event " +
+                "    WHERE ID = @id " +
+                ")";
+
+            DataSet eventDataSet = new DataSet();
+
+            using (SqlConnection connection = new SqlConnection("context connection=true"))
+            using (SqlCommand command = new SqlCommand(Query, connection))
+            using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+            {
+                connection.Open();
+                command.Parameters.AddWithValue("@id", eventID);
+                adapter.Fill(eventDataSet);
+            }
+
+            DataRow row = eventDataSet.Tables[0].Rows[0];
+
+            List<DataPoint> waveformData = ReadFrom((byte[])row["CycleData"]).ToList();
+            return waveformData.ToArray();
+        }
+
+        public static void GetCycleData_FillRow(object source, out SqlInt32 seriesID, out DateTime time, out SqlDouble value)
+        {
+            DataPoint dataPoint = source as DataPoint;
+
+            if ((object)dataPoint == null)
+                throw new InvalidOperationException("FillRow source is not a DataPoint");
+
+            seriesID = dataPoint.SeriesID;
             time = dataPoint.Time;
             value = ToSqlDouble(dataPoint.Value);
         }

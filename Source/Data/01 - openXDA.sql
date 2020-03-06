@@ -823,6 +823,7 @@ CREATE TABLE EventData
     FileGroupID INT NOT NULL,
     RuntimeID INT NOT NULL,
     TimeDomainData VARBINARY(MAX) NOT NULL,
+    CycleData VARBINARY(MAX) NOT NULL,
     MarkedForDeletion INT NOT NULL
 )
 GO

@@ -109,10 +109,12 @@ namespace FaultData.DataAnalysis
             {
                 DataGroup dataGroup = cycleDataResource.DataGroups[i];
                 VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
-                Range<DateTime> eventDateRange = new Range<DateTime>(dataGroup.StartTime, dataGroup.EndTime);
+                FastRMSDataResource fastRMSDataResource = meterDataSet.GetResource<FastRMSDataResource>();
 
                 if (lineCount == 1 && dataGroup.Disturbances.Count > 0)
                     ProcessReportedDisturbances(meterDataSet.Meter, dataGroup);
+                else if (fastRMSDataResource.FastRMSLookup.TryGetValue(dataGroup, out DataGroup fastRMS))
+                    DetectDisturbances(dataGroup, fastRMS);
                 else
                     DetectDisturbances(dataGroup, viCycleDataGroup);
             }
@@ -188,19 +190,56 @@ namespace FaultData.DataAnalysis
 
         private void DetectDisturbances(DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            List<Range<int>> aPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(viCycleDataGroup.VA?.RMS));
-            List<Range<int>> bPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(viCycleDataGroup.VB?.RMS));
-            List<Range<int>> cPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(viCycleDataGroup.VC?.RMS));
-            List<Range<int>> abPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(viCycleDataGroup.VAB?.RMS));
-            List<Range<int>> bcPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(viCycleDataGroup.VBC?.RMS));
-            List<Range<int>> caPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(viCycleDataGroup.VCA?.RMS));
+            DataSeries va = viCycleDataGroup.VA?.RMS;
+            DataSeries vb = viCycleDataGroup.VB?.RMS;
+            DataSeries vc = viCycleDataGroup.VC?.RMS;
+            DataSeries vab = viCycleDataGroup.VAB?.RMS;
+            DataSeries vbc = viCycleDataGroup.VBC?.RMS;
+            DataSeries vca = viCycleDataGroup.VCA?.RMS;
 
-            List<Disturbance> disturbanceList = aPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VA.RMS, range, Phase.AN))
-                .Concat(bPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VB.RMS, range, Phase.BN)))
-                .Concat(cPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VC.RMS, range, Phase.CN)))
-                .Concat(abPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VAB.RMS, range, Phase.AB)))
-                .Concat(bcPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VBC.RMS, range, Phase.BC)))
-                .Concat(caPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VCA.RMS, range, Phase.CA)))
+            List<Disturbance> disturbanceList = GetDisturbanceList(va, vb, vc, vab, vbc, vca);
+
+            if (disturbanceList.Any())
+                m_disturbances.Add(dataGroup, disturbanceList);
+        }
+
+        private void DetectDisturbances(DataGroup dataGroup, DataGroup fastRMS)
+        {
+            DataSeries GetVoltageRMS(string phase) => fastRMS.DataSeries
+                .Where(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementType.Name == "Voltage")
+                .Where(dataSeries => dataSeries.SeriesInfo.Channel.Phase.Name == phase)
+                .Where(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name == "RMS")
+                .Where(dataSeries => new[] { "Values", "Instantaneous" }.Contains(dataSeries.SeriesInfo.SeriesType.Name))
+                .FirstOrDefault();
+
+            DataSeries va = GetVoltageRMS("AN");
+            DataSeries vb = GetVoltageRMS("BN");
+            DataSeries vc = GetVoltageRMS("CN");
+            DataSeries vab = GetVoltageRMS("AB");
+            DataSeries vbc = GetVoltageRMS("BC");
+            DataSeries vca = GetVoltageRMS("CA");
+
+            List<Disturbance> disturbanceList = GetDisturbanceList(va, vb, vc, vab, vbc, vca);
+
+            if (disturbanceList.Any())
+                m_disturbances.Add(dataGroup, disturbanceList);
+        }
+
+        private List<Disturbance> GetDisturbanceList(DataSeries va, DataSeries vb, DataSeries vc, DataSeries vab, DataSeries vbc, DataSeries vca)
+        {
+            List<Range<int>> aPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(va));
+            List<Range<int>> bPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(vb));
+            List<Range<int>> cPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(vc));
+            List<Range<int>> abPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(vab));
+            List<Range<int>> bcPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(vbc));
+            List<Range<int>> caPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(vca));
+
+            List<Disturbance> disturbanceList = aPhaseDisturbanceRanges.Select(range => ToDisturbance(va, range, Phase.AN))
+                .Concat(bPhaseDisturbanceRanges.Select(range => ToDisturbance(vb, range, Phase.BN)))
+                .Concat(cPhaseDisturbanceRanges.Select(range => ToDisturbance(vc, range, Phase.CN)))
+                .Concat(abPhaseDisturbanceRanges.Select(range => ToDisturbance(vab, range, Phase.AB)))
+                .Concat(bcPhaseDisturbanceRanges.Select(range => ToDisturbance(vbc, range, Phase.BC)))
+                .Concat(caPhaseDisturbanceRanges.Select(range => ToDisturbance(vca, range, Phase.CA)))
                 .ToList();
 
             IEnumerable<Range<int>> allDisturbanceRanges = aPhaseDisturbanceRanges
@@ -228,8 +267,7 @@ namespace FaultData.DataAnalysis
 
             disturbanceList.AddRange(worstDisturbances);
 
-            if (disturbanceList.Any())
-                m_disturbances.Add(dataGroup, disturbanceList);
+            return disturbanceList;
         }
 
         private DataSeries ToPerUnit(DataSeries rms)
