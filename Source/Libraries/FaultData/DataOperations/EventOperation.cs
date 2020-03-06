@@ -212,16 +212,26 @@ namespace FaultData.DataOperations
 
                 if (dataGroup.Samples > 0)
                 {
-                    evt.EventData = dataGroup.ToData().Select(item =>
-                   {
-                       return new ChannelData()
-                       {
-                           SeriesID = item.Key,
-                           EventID = evt.ID,
-                           TimeDomainData = item.Value,
-                           MarkedForDeletion = 0
-                       };
-                   }).ToList();
+                    FastRMSDataResource fastRMSDataResource = meterDataSet.GetResource<FastRMSDataResource>();
+                    Dictionary<DataGroup, DataGroup> fastRMSLookup = fastRMSDataResource.FastRMSLookup;
+
+                    IEnumerable<KeyValuePair<int, byte[]>> fastRMSEventData =
+                        fastRMSLookup.TryGetValue(dataGroup, out DataGroup fastRMS)
+                            ? fastRMS.ToData()
+                            : Enumerable.Empty<KeyValuePair<int, byte[]>>();
+
+                    ChannelData ToChannelData(KeyValuePair<int, byte[]> kvp) => new ChannelData()
+                    {
+                        SeriesID = kvp.Key,
+                        EventID = evt.ID,
+                        TimeDomainData = kvp.Value,
+                        MarkedForDeletion = 0
+                    };
+
+                    evt.EventData = dataGroup.ToData()
+                        .Concat(fastRMSEventData)
+                        .Select(ToChannelData)
+                        .ToList();
 
                     evt.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
                     evt.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);

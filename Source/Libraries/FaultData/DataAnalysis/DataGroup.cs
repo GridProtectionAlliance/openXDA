@@ -40,6 +40,7 @@ namespace FaultData.DataAnalysis
     {
         Trend,
         Event,
+        FastRMS,
         Unknown
     }
 
@@ -48,7 +49,7 @@ namespace FaultData.DataAnalysis
         #region [ Members ]
 
         // Constants
-        
+
         /// <summary>
         /// Maximum sample rate, in samples per minute, of data classified as <see cref="DataClassification.Trend"/>.
         /// </summary>
@@ -318,7 +319,7 @@ namespace FaultData.DataAnalysis
 
                 return true;
             }
-            
+
             // If the data being added matches the parameters for this data group, add the data to the data group
             // Note that it does not have to match Asset
             if (startTime == m_startTime && endTime == m_endTime && samples == m_samples)
@@ -665,6 +666,8 @@ namespace FaultData.DataAnalysis
                 m_classification = DataClassification.Trend;
             else if (IsEvent())
                 m_classification = DataClassification.Event;
+            else if (IsFastRMS())
+                m_classification = DataClassification.FastRMS;
             else
                 m_classification = DataClassification.Unknown;
         }
@@ -696,6 +699,23 @@ namespace FaultData.DataAnalysis
             string seriesTypeName = dataSeries.SeriesInfo.SeriesType.Name;
 
             return (characteristicName == "Instantaneous") &&
+                   (seriesTypeName == "Values" || seriesTypeName == "Instantaneous");
+        }
+
+        private bool IsFastRMS()
+        {
+            return m_dataSeries
+                .Where(dataSeries => (object)dataSeries.SeriesInfo != null)
+                .Where(IsRMS)
+                .Any();
+        }
+
+        private bool IsRMS(DataSeries dataSeries)
+        {
+            string characteristicName = dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name;
+            string seriesTypeName = dataSeries.SeriesInfo.SeriesType.Name;
+
+            return (characteristicName == "RMS") &&
                    (seriesTypeName == "Values" || seriesTypeName == "Instantaneous");
         }
 
