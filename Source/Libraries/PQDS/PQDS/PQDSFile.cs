@@ -286,9 +286,9 @@ namespace PQDS
         /// <summary>
         /// Writes the content to a .csv file.
         /// </summary>
-        /// <param name="file"> file name </param>
+        /// <param name="stream"> The <see cref="StreamWriter"/> to write the data to. </param>
         /// <param name="progress"> <see cref="IProgress"/> Progress Token</param>
-        public void WriteToFile(string file, IProgress<double> progress)
+        public void WriteToStream(StreamWriter stream, IProgress<double> progress)
         {
             int n_data = this.Data.Select((item) => item.Length).Max();
             int n_total = n_data + n_data + this.m_metaData.Count() + 1;
@@ -299,20 +299,29 @@ namespace PQDS
 
             lines.AddRange(DataLines(n_total, progress));
 
-
-            // Open the file and write in each line
-            using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(file)))
+            for (int i = 0; i < lines.Count(); i++)
             {
-                for (int i = 0; i < lines.Count(); i++)
-                {
-                    fileWriter.WriteLine(lines[i]);
-                    progress.Report((double)(n_data + i) / n_total);
-                }
+                stream.WriteLine(lines[i]);
+                progress.Report((double)(n_data + i) / n_total);
             }
-
+            
 
         }
 
+        /// <summary>
+        /// Writes the content to a .csv file.
+        /// </summary>
+        /// <param name="file"> file name </param>
+        /// <param name="progress"> <see cref="IProgress"/> Progress Token</param>
+        public void WriteToFile(string file, IProgress<double> progress)
+        {
+            // Open the file and write in each line
+            using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(file)))
+            {
+                WriteToStream(fileWriter, progress);
+            }
+
+        }
         /// <summary>
         /// Writes the content to a .csv file.
         /// </summary>
@@ -322,6 +331,18 @@ namespace PQDS
             Progress<double> prog = new Progress<double>();
             WriteToFile(file, prog);
         }
+
+        /// <summary>
+        /// Writes the content to an output Stream.
+        /// </summary>
+        /// <param name="stream"> The <see cref="StreamWriter"/> to write the data to. </param>
+        public void WriteToStream(StreamWriter stream)
+        {
+            Progress<double> prog = new Progress<double>();
+            WriteToStream(stream, prog);
+        }
+
+
 
         /// <summary>
         /// Reads the content from a PQDS File.
