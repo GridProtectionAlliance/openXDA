@@ -3749,8 +3749,37 @@ SELECT	Line.ID,
 		+ ISNULL((SELECT Sum(LineSegment.Length) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
 			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
-		AS Length
+		AS Length,
+		ISNULL((SELECT Sum(LineSegment.R0) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		+ ISNULL((SELECT Sum(LineSegment.R0) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		AS R0,
+		ISNULL((SELECT Sum(LineSegment.R1) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		+ ISNULL((SELECT Sum(LineSegment.R1) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		AS R1,
+			ISNULL((SELECT Sum(LineSegment.X0) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		+ ISNULL((SELECT Sum(LineSegment.X0) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		AS X0,
+		ISNULL((SELECT Sum(LineSegment.X1) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		+ ISNULL((SELECT Sum(LineSegment.X1) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+		AS X1
 	FROM LINE
+
 GO
 
 CREATE VIEW MeterAssetDetail AS
