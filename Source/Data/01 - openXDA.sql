@@ -3745,38 +3745,38 @@ SELECT	Line.ID,
 		AssetName,
 		ISNULL((SELECT Sum(LineSegment.Length) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
-			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
 		+ ISNULL((SELECT Sum(LineSegment.Length) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
-			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment')),0)
 		AS Length,
 		ISNULL((SELECT Sum(LineSegment.R0) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
-			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
 		+ ISNULL((SELECT Sum(LineSegment.R0) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
-			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
 		AS R0,
 		ISNULL((SELECT Sum(LineSegment.R1) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
-			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
 		+ ISNULL((SELECT Sum(LineSegment.R1) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
-			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
 		AS R1,
 			ISNULL((SELECT Sum(LineSegment.X0) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
-			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
 		+ ISNULL((SELECT Sum(LineSegment.X0) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
-			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment')),0)
 		AS X0,
 		ISNULL((SELECT Sum(LineSegment.X1) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
-			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment')),0)
 		+ ISNULL((SELECT Sum(LineSegment.X1) FROM AssetRelationship LEFT JOIN 
 			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
-			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = 1 ),0)
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment')),0)
 		AS X1
 	FROM LINE
 
