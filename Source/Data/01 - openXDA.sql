@@ -4532,7 +4532,7 @@ AS BEGIN
     DECLARE @facilityID INT
     DECLARE @magnitude FLOAT
     DECLARE @duration FLOAT
-
+    DECLARE @subeventid INT
     CREATE TABLE #temp
     (
         Facility VARCHAR(64),
@@ -4542,14 +4542,16 @@ AS BEGIN
         ComponentModel VARCHAR(64),
         ManufacturerName VARCHAR(64),
         SeriesName VARCHAR(64),
-        ComponentTypeName VARCHAR(32)
+        ComponentTypeName VARCHAR(32),
+		EventID int
     )
 
     DECLARE dbCursor CURSOR FOR
     SELECT
         FacilityID,
         PerUnitMagnitude,
-        DurationSeconds
+        DurationSeconds,
+        Event.ID as EventID
     FROM
         Disturbance JOIN
         Event ON Disturbance.EventID = Event.ID JOIN
@@ -4558,14 +4560,14 @@ AS BEGIN
         EventID = @eventID
 
     OPEN dbCursor
-    FETCH NEXT FROM dbCursor INTO @facilityID, @magnitude, @duration
+    FETCH NEXT FROM dbCursor INTO @facilityID, @magnitude, @duration, @subeventid
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
         INSERT INTO #temp
-        EXEC GetImpactedComponents @facilityID, @magnitude, @duration
+        EXEC GetImpactedComponents @facilityID, @magnitude, @duration, @subeventid
 
-        FETCH NEXT FROM dbCursor INTO @facilityID, @magnitude, @duration
+        FETCH NEXT FROM dbCursor INTO @facilityID, @magnitude, @duration, @subeventid
     END
 
     CLOSE dbCursor
