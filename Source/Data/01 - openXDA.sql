@@ -3879,38 +3879,38 @@ FROM
     MeasurementType ON DefaultAlarmRangeLimit.MeasurementTypeID = MeasurementType.ID
 GO
 
--- CREATE VIEW AlarmRangeLimitView
--- AS
--- SELECT
---     AlarmRangeLimit.ID,
---     AlarmRangeLimit.ChannelID,
---     Channel.MeterID,
---     Channel.LineID,
---     Channel.Name,
---     AlarmRangeLimit.AlarmTypeID,
---     AlarmRangeLimit.Severity,
---     AlarmRangeLimit.High,
---     AlarmRangeLimit.Low,
---     AlarmRangeLimit.RangeInclusive,
---     AlarmRangeLimit.PerUnit,
---     AlarmRangeLimit.Enabled,
---     MeasurementType.Name AS MeasurementType,
---     MeasurementCharacteristic.Name AS MeasurementCharacteristic,
---     Phase.Name AS Phase,
---     Channel.HarmonicGroup,
---     Channel.MeasurementTypeID,
---     Channel.MeasurementCharacteristicID,
---     Channel.PhaseID,
---     AlarmRangeLimit.IsDefault,
---     Meter.Name AS MeterName
--- FROM
---     AlarmRangeLimit JOIN
---     Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
---     MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
---     MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
---     Phase ON Channel.PhaseID = Phase.ID JOIN
---     Meter ON Channel.MeterID = Meter.ID
--- GO
+ CREATE VIEW AlarmRangeLimitView
+ AS
+ SELECT
+     AlarmRangeLimit.ID,
+     AlarmRangeLimit.ChannelID,
+     Channel.MeterID,
+     Channel.AssetID,
+     Channel.Name,
+     AlarmRangeLimit.AlarmTypeID,
+     AlarmRangeLimit.Severity,
+     AlarmRangeLimit.High,
+     AlarmRangeLimit.Low,
+     AlarmRangeLimit.RangeInclusive,
+     AlarmRangeLimit.PerUnit,
+     AlarmRangeLimit.Enabled,
+     MeasurementType.Name AS MeasurementType,
+     MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+     Phase.Name AS Phase,
+     Channel.HarmonicGroup,
+     Channel.MeasurementTypeID,
+     Channel.MeasurementCharacteristicID,
+     Channel.PhaseID,
+     AlarmRangeLimit.IsDefault,
+     Meter.Name AS MeterName
+ FROM
+     AlarmRangeLimit JOIN
+     Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
+     MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+     MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+     Phase ON Channel.PhaseID = Phase.ID JOIN
+     Meter ON Channel.MeterID = Meter.ID
+ GO
 
 CREATE VIEW MeterAssetGroupView
 AS
