@@ -1536,7 +1536,7 @@ CREATE TABLE ChannelData
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FileGroupID INT NOT NULL,
     RuntimeID INT NOT NULL,
-    TimeDomainData VARBINARY(MAX) NOT NULL,
+    TimeDomainData VARBINARY(MAX) NULL,
     MarkedForDeletion INT NOT NULL,
 	SeriesID INT NOT NULL,
 	EventID INT NOT NULL,
