@@ -54,16 +54,25 @@ namespace FaultData.DataResources
 
         public class Restrike
         {
-            public Restrike(Phase phase, int sample, DateTime timestamp)
+            public Restrike(Phase phase, int initial )
             {
                 Phase = phase;
-                Sample = sample;
-                Timestamp = timestamp;
+                initialExtinction = initial;
+                restrike = initial;
+                currentMaximum = initial;
+                maximumVoltageSurpression = initial;
+                transientOverVoltage = initial;
+                finalExtinction = initial;
+
             }
 
             public Phase Phase { get; }
-            public int Sample { get; }
-            public DateTime Timestamp { get; }
+            public int initialExtinction { get; }
+            public int restrike { get; }
+            public int currentMaximum { get; }
+            public int maximumVoltageSurpression { get; }
+            public int transientOverVoltage { get; }
+            public int finalExtinction { get; }
         }
 
         #endregion
@@ -143,13 +152,13 @@ namespace FaultData.DataResources
                 DataSeries ic = viDataGroup.IC;
 
                 IEnumerable<Restrike> iaRestrikes = FindRestrikes(ia)
-                    .Select(index => new Restrike(Phase.AN, index, ia[index].Time));
+                    .Select(index => new Restrike(Phase.AN, index));
 
                 IEnumerable<Restrike> ibRestrikes = FindRestrikes(ib)
-                    .Select(index => new Restrike(Phase.BN, index, ib[index].Time));
+                    .Select(index => new Restrike(Phase.BN, index));
 
                 IEnumerable<Restrike> icRestrikes = FindRestrikes(ic)
-                    .Select(index => new Restrike(Phase.CN, index, ic[index].Time));
+                    .Select(index => new Restrike(Phase.CN, index));
 
                 List<Restrike> allRestrikes = Enumerable.Empty<Restrike>()
                     .Concat(iaRestrikes)
