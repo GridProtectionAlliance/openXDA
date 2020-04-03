@@ -37,6 +37,11 @@ namespace FaultData.DataOperations
     {
         public override void Execute(MeterDataSet meterDataSet)
         {
+            LoadGTCRestrikeData(meterDataSet);
+        }
+
+        private void LoadRestrikeAnalysis(MeterDataSet meterDataSet)
+        {
             BreakerDataResource breakerDataResource = meterDataSet.GetResource<BreakerDataResource>();
 
             foreach (var kvp in breakerDataResource.RestrikeLookup)
@@ -64,8 +69,6 @@ namespace FaultData.DataOperations
                     }
                 }
             }
-
-            LoadGTCRestrikeData(meterDataSet);
         }
 
         private void LoadGTCRestrikeData(MeterDataSet meterDataSet)
