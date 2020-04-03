@@ -62,6 +62,7 @@ namespace FaultData.DataResources
         private double m_sagThreshold;
         private double m_swellThreshold;
         private double m_interruptionThreshold;
+        private BreakerSettings m_breakerSettings;
         private FaultLocationSettings m_faultLocationSettings;
 
         #endregion
@@ -71,6 +72,7 @@ namespace FaultData.DataResources
         public EventClassificationResource()
         {
             m_classifications = new Dictionary<DataGroup, EventClassification>();
+            m_breakerSettings = new BreakerSettings();
             m_faultLocationSettings = new FaultLocationSettings();
         }
 
@@ -135,6 +137,16 @@ namespace FaultData.DataResources
             set
             {
                 m_interruptionThreshold = value;
+            }
+        }
+
+        [Category]
+        [SettingName(BreakerSettings.CategoryName)]
+        public BreakerSettings BreakerSettings
+        {
+            get
+            {
+                return m_breakerSettings;
             }
         }
 
@@ -206,10 +218,13 @@ namespace FaultData.DataResources
                 }
             }
 
-            BreakerDataResource breakerOpenResource = meterDataSet.GetResource<BreakerDataResource>();
+            if (BreakerSettings.BreakerOpenEventTypeEnabled)
+            {
+                BreakerDataResource breakerOpenResource = meterDataSet.GetResource<BreakerDataResource>();
 
-            if (breakerOpenResource.TripLookup.TryGetValue(dataGroup, out List<BreakerDataResource.Trip> trips))
-                return EventClassification.BreakerOpen;
+                if (breakerOpenResource.TripLookup.TryGetValue(dataGroup, out List<BreakerDataResource.Trip> trips))
+                    return EventClassification.BreakerOpen;
+            }
 
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
