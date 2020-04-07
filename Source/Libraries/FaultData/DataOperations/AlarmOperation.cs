@@ -119,7 +119,10 @@ namespace FaultData.DataOperations
             {
                 TableOperations<ChannelAlarmSummary> channelAlarmSummaryTable = new TableOperations<ChannelAlarmSummary>(connection);
                 TableOperations<MeterAlarmSummary> meterAlarmSummaryTable = new TableOperations<MeterAlarmSummary>(connection);
-                Dictionary<int, Channel> channelLookup = meterDataSet.Meter.Channels.ToDictionary(channel => channel.ID);
+
+                Dictionary<int, Channel> channelLookup = meterDataSet.Meter.Channels
+                    .Where(channel => channel.ID > 0)
+                    .ToDictionary(channel => channel.ID);
 
                 for (int i = 0; i < days; i++)
                 {
