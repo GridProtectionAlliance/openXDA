@@ -505,8 +505,8 @@
   <Component Id="wwwroot_Images_dDAssetolds_png">
     <File Id="wwwroot_Images_dDAssetolds.png" Name="dD Assetolds.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assetolds.png" />
   </Component>
-  <Component Id="wwwroot_Images_ddAssets_png">
-    <File Id="wwwroot_Images_ddAssets.png" Name="dd Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dd Assets.png" />
+  <Component Id="wwwroot_Images_dDAssets_png">
+    <File Id="wwwroot_Images_dDAssets.png" Name="dD Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assets.png" />
   </Component>
   <Component Id="wwwroot_Images_dDConfigold_png">
     <File Id="wwwroot_Images_dDConfigold.png" Name="dD Config old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Config old.png" />
