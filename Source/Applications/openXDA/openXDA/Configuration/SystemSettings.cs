@@ -194,6 +194,14 @@ namespace openXDA.Configuration
         public double MaxFileDuration { get; set; }
 
         /// <summary>
+        /// Gets or sets the maximum duration, in seconds,
+        /// of the events processed by openXDA.
+        /// </summary>
+        [Setting]
+        [DefaultValue(0.0D)]
+        public double MaxEventDuration { get; set; }
+
+        /// <summary>
         /// Gets or sets the maximum file size, in MB,
         /// of the files processed by openXDA.
         /// </summary>

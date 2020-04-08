@@ -27,6 +27,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
+using FaultData.DataReaders.PQube;
 using FaultData.DataSets;
 using GSF;
 using GSF.PQDIF.Logical;
@@ -281,6 +282,9 @@ namespace FaultData.DataReaders
                 meter.Channels.Add(ParseSeries(seriesDefinition));
 
             m_meterDataSet.Meter = meter;
+
+            // Parse triggers from PQube data
+            m_meterDataSet.Triggers = PQubeReader.GetTriggers(observationRecords);
         }
 
         public void Dispose()
@@ -359,8 +363,6 @@ namespace FaultData.DataReaders
         private static Channel ParseSeries(SeriesDefinition seriesDefinition)
         {
             ChannelDefinition channelDefinition = seriesDefinition.ChannelDefinition;
-            QuantityMeasured quantityMeasured = channelDefinition.QuantityMeasured;
-            Phase phase = channelDefinition.Phase;
 
             // Populate series properties
             Series series = new Series();
@@ -382,13 +384,22 @@ namespace FaultData.DataReaders
                 channel.PerUnitValue = seriesDefinition.SeriesNominalQuantity;
 
             // Populate measurement type properties
+            QuantityMeasured quantityMeasured = channelDefinition.QuantityMeasured;
             channel.MeasurementType.Name = quantityMeasured.ToString();
 
             // Populate characteristic properties
-            channel.MeasurementCharacteristic.Name = QuantityCharacteristic.ToName(seriesDefinition.QuantityCharacteristicID) ?? seriesDefinition.QuantityCharacteristicID.ToString();
-            channel.MeasurementCharacteristic.Description = QuantityCharacteristic.ToString(seriesDefinition.QuantityCharacteristicID);
+            Guid quantityTypeID = channelDefinition.QuantityTypeID;
+            Guid quantityCharacteristicID = seriesDefinition.QuantityCharacteristicID;
+
+            // Workaround for bad quantity characteristic in files produced by PQube Classic
+            if (quantityTypeID == QuantityType.Phasor && quantityCharacteristicID == QuantityCharacteristic.Instantaneous)
+                quantityCharacteristicID = QuantityCharacteristic.RMS;
+
+            channel.MeasurementCharacteristic.Name = QuantityCharacteristic.ToName(quantityCharacteristicID) ?? quantityCharacteristicID.ToString();
+            channel.MeasurementCharacteristic.Description = QuantityCharacteristic.ToString(quantityCharacteristicID);
 
             // Popuplate phase properties
+            Phase phase = channelDefinition.Phase;
             channel.Phase.Name = phase.ToString();
 
             // Populate series type properties

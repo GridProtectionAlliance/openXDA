@@ -106,6 +106,14 @@ namespace FaultData.Configuration
         [DefaultValue(70.0D)]
         public double MaxCyclesBeforeRestrike { get; set; }
 
+        /// <summary>
+        /// Gets or sets the flag that determines whether the system should apply the
+        /// BreakerOpen event type to events.
+        /// </summary>
+        [Setting]
+        [DefaultValue(true)]
+        public bool BreakerOpenEventTypeEnabled { get; set; }
+
         #endregion
     }
 }

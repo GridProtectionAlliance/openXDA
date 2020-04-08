@@ -3072,64 +3072,72 @@ BEGIN
     DECLARE @localMeterID INT = CAST(@MeterID AS INT)
     DECLARE @timeWindow int = (SELECT Value FROM DashSettings WHERE Name = 'System.TimeWindow')
 
-    ; WITH cte AS
-    (
-        SELECT
-            Event.AssetID AS thelineid,
-            Event.ID AS theeventid,
-            EventType.Name AS theeventtype,
-            CAST(Event.StartTime AS VARCHAR(26)) AS theinceptiontime,
-            Asset.AssetName AS thelinename,
-            Asset.VoltageKV AS voltage,
-            COALESCE(FaultSummary.FaultType, Phase.Name, '') AS thefaulttype,
-            CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultSummary.Distance AS DECIMAL(16, 4)) AS NVARCHAR(19)), '') END AS thecurrentdistance,
-            dbo.EventHasImpactedComponents(Event.ID) AS pqiexists,
-            Event.StartTime,
-            CASE EventType.Name
-                WHEN 'Sag' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
-                WHEN 'Interruption' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
-                WHEN 'Swell' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude DESC, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
-                WHEN 'Fault' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY IsSelectedAlgorithm DESC, IsSuppressed, IsValid DESC, Inception)
-                ELSE ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Event.ID)
-            END AS RowPriority,
-            (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.StartTime BETWEEN DateAdd(SECOND, -5, Event.StartTime) and  DateAdd(SECOND, 5, Event.StartTime)) as SimultaneousCount,
-            (SELECT COUNT(*) FROM Event as EventCount WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name = 'Sag' OR Name = 'Fault') AND EventCount.StartTime BETWEEN DateAdd(SECOND, -@timeWindow, Event.StartTime) and  DateAdd(SECOND, @timeWindow, Event.StartTime)) as SimultaneousFAndSCount,
-            (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.AssetID = Event.AssetID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
-            Event.UpdatedBy,
-            (SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as Note
-        FROM
-            Event JOIN
-            EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
-            Disturbance ON Disturbance.EventID = Event.ID LEFT OUTER JOIN
-            FaultSummary ON FaultSummary.EventID = Event.ID  LEFT OUTER JOIN
-            Phase ON Disturbance.PhaseID = Phase.ID JOIN
-            Meter ON Meter.ID = @MeterID JOIN
-            Asset ON Event.AssetID = Asset.ID JOIN
-            MeterAsset ON MeterAsset.MeterID = @MeterID AND MeterAsset.AssetID = Asset.ID
-        WHERE
-            Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
-            Event.MeterID = @localMeterID AND
-            (Phase.ID IS NULL OR Phase.Name <> 'Worst')
-    )
-    SELECT
-        thelineid,
-        theeventid,
-        theeventtype,
-        theinceptiontime,
-        thelinename,
-        voltage,
-        thefaulttype,
-        thecurrentdistance,
-        pqiexists,
-        SimultaneousCount,
-        SimultaneousFAndSCount,
-        SixtyDayCount,
+	SELECT
+		Event.ID,
+		Event.LineID,
+		EventType.Name AS EventType,
+		Event.StartTime,
+		MeterLine.LineName,
+		Line.AssetKey AS LineKey,
+		Line.VoltageKV AS LineVoltage,
+		FaultSummary.FaultType,
+		Disturbance.Type AS DisturbanceType,
+		FaultSummary.Distance AS FaultDistance,
+		Event.UpdatedBy
+	INTO #event
+    FROM
+        Event JOIN
+        EventType ON Event.EventTypeID = EventType.ID OUTER APPLY
+		(
+			SELECT TOP 1
+				Disturbance.*,
+				Phase.Name AS Type
+			FROM
+				Disturbance JOIN
+				Phase ON Disturbance.PhaseID = Phase.ID
+			WHERE
+				EventID = Event.ID AND
+				Phase.Name <> 'Worst'
+			ORDER BY
+				CASE EventType.Name
+					WHEN 'Sag' THEN PerUnitMagnitude
+					WHEN 'Swell' THEN -PerUnitMagnitude
+					WHEN 'Interruption' THEN PerUnitMagnitude
+					WHEN 'Transient' THEN -PerUnitMagnitude
+				END,
+				StartTime
+		) Disturbance OUTER APPLY
+		(
+			SELECT TOP 1 *
+			FROM FaultSummary
+			WHERE EventID = Event.ID
+			ORDER BY IsSelectedAlgorithm DESC, IsSuppressed, IsValid DESC, Inception
+		) FaultSummary JOIN
+        Meter ON Meter.ID = @MeterID JOIN
+        Line ON Event.LineID = Line.ID JOIN
+        MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
+    WHERE
+        Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
+        Event.MeterID = @localMeterID
+
+	SELECT
+        LineID AS thelineid,
+        ID AS theeventid,
+        EventType AS theeventtype,
+        CAST(StartTime AS VARCHAR(26)) AS theinceptiontime,
+        LineName + ' ' + LineKey AS thelinename,
+        LineVoltage AS voltage,
+        COALESCE(FaultType, DisturbanceType, '') AS thefaulttype,
+        CASE WHEN FaultDistance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultDistance AS DECIMAL(16, 4)) AS NVARCHAR(19)), '') END AS thecurrentdistance,
+        dbo.EventHasImpactedComponents(ID) AS pqiexists,
+        StartTime,
+        (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.StartTime BETWEEN DateAdd(SECOND, -5, Event.StartTime) and  DateAdd(SECOND, 5, Event.StartTime)) as SimultaneousCount,
+        (SELECT COUNT(*) FROM Event as EventCount WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name = 'Sag' OR Name = 'Fault') AND EventCount.StartTime BETWEEN DateAdd(SECOND, -@timeWindow, Event.StartTime) and  DateAdd(SECOND, @timeWindow, Event.StartTime)) as SimultaneousFAndSCount,
+        (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.LineID = Event.LineID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
         UpdatedBy,
-        Note
-    INTO #temp
-    FROM cte
-    WHERE RowPriority = 1
-    ORDER BY StartTime
+        (SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as Note
+	INTO #temp
+	FROM #event Event
 
     DECLARE @sql NVARCHAR(MAX)
     SELECT @sql = COALESCE(@sql + ',dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName, 'dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName)
@@ -3146,6 +3154,7 @@ BEGIN
     EXEC sp_executesql @sql
 
     DROP TABLE #temp
+	DROP TABLE #event
 
 END
 GO

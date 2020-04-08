@@ -168,7 +168,7 @@ namespace FaultData.DataOperations
                             TripInitiate = tripInitiate,
                             PickupTimeTicks = (int)((latchOff - tripInitiate).TotalMilliseconds * 10000),
                             TripTimeTicks = (int)((fingerOpen - tripInitiate).TotalMilliseconds * 10000),
-                            TripCoilCondition = double.IsNaN(tripCoilCondition)? (double?)null: tripCoilCondition
+                            TripCoilCondition = double.IsNaN(tripCoilCondition) ? (double?)null : tripCoilCondition
                         });
                     }
                     

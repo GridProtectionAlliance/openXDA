@@ -1644,6 +1644,10 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_EventTypeID
 ON Disturbance(EventTypeID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_Disturbance_PhaseID
+ON Disturbance(PhaseID ASC)
+GO
+
 CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime
 ON Disturbance(StartTime ASC)
 GO
@@ -1755,6 +1759,10 @@ CREATE TABLE DisturbanceSeverity
     DisturbanceID INT NOT NULL REFERENCES Disturbance(ID),
     SeverityCode INT NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_DisturbanceSeverity_VoltageEnvelopeID
+ON DisturbanceSeverity(VoltageEnvelopeID ASC)
 GO
 
 CREATE NONCLUSTERED INDEX IX_DisturbanceSeverity_DisturbanceID

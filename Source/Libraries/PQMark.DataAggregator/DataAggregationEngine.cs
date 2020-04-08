@@ -112,11 +112,6 @@ namespace PQMark.DataAggregator
         #region [ Constructors ]
         public DataAggregationEngine()
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                HistorianServer = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-                HistorianInstance = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            }
         }
 
         public DataAggregationEngine(PQMarkAggregationSettings settings)
@@ -211,6 +206,16 @@ namespace PQMark.DataAggregator
         #endregion
 
         #region [ Methods ]
+
+        public void Initialize()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                HistorianServer = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+                HistorianInstance = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+            }
+        }
+
         public void Dispose()
         {
             if (!m_disposed)

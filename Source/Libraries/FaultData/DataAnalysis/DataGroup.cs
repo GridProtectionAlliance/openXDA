@@ -178,7 +178,7 @@ namespace FaultData.DataAnalysis
         }
 
         /// <summary>
-        /// Gets the sample rate, in samples per second,
+        /// Gets the duration, in seconds,
         /// of the data series in this data group.
         /// </summary>
         public double Duration

@@ -179,6 +179,8 @@ namespace FaultData.DataResources
                 .Zip(detections.Skip(1), (p1, p2) => new Range<int>(p1, p2))
                 .Where(range => range.End - range.Start < samplesPerCycle);
 
+            double nominalPeakVoltage = nominalVoltage * Math.Sqrt(2.0D);
+
             return Range<int>.MergeAllOverlapping(ranges)
                 .Select(range =>
                 {
@@ -196,7 +198,7 @@ namespace FaultData.DataResources
                         StartTime = waveform[range.Start].Time,
                         EndTime = waveform[range.End].Time,
                         Magnitude = peak,
-                        PerUnitMagnitude = peak / nominalVoltage
+                        PerUnitMagnitude = peak / nominalPeakVoltage
                     };
                 })
                 .ToList();

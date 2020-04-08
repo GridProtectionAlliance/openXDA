@@ -296,30 +296,23 @@ namespace openXDA
             m_serviceMonitors.AdapterLoadException += (obj, args) => HandleException(args.Argument);
             m_serviceMonitors.Initialize();
 
-            string systemSettingsConnectionString = LoadSystemSettings();
-
             // Set up the analysis engine
             m_extensibleDisturbanceAnalysisEngine = new ExtensibleDisturbanceAnalysisEngine();
 
             // Set up data pusher engine
             m_dataPusherEngine = new DataPusherEngine();
-            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_dataPusherEngine);
 
             // Set up data aggregation engine
             m_dataAggregationEngine = new DataAggregationEngine();
-            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_dataAggregationEngine);
 
             // Set up data reports engine
             m_reportsEngine = new ReportsEngine();
-            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_reportsEngine);
 
             // Set up data reports engine
             m_pqTrendingWebReportEngine = new PQTrendingWebReportEngine();
-            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_pqTrendingWebReportEngine);
 
             // Set up data reports engine
             m_stepChangeWebReportEngine = new StepChangeWebReportEngine();
-            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_stepChangeWebReportEngine);
 
 
             //Set up datahub callbacks
@@ -365,7 +358,6 @@ namespace openXDA
                     reportsEngineStarted = m_reportsEngine.Start();
                     pqTrendingWebReportsEngineStarted = pqTrendingWebReportsEngineStarted || TryStartPQTrendingWebReportsEngine();
                     statChangeWebReportsEngineStarted = statChangeWebReportsEngineStarted || TryStartStepChangeWebReportsEngine();
-
 
                     if (engineStarted && webUIStarted && dataPusherEngineStarted && reportsEngineStarted && pqTrendingWebReportsEngineStarted && statChangeWebReportsEngineStarted)
                         break;
@@ -453,6 +445,11 @@ namespace openXDA
         {
             try
             {
+                m_dataPusherEngine.Initialize();
+
+                string systemSettingsConnectionString = LoadSystemSettings();
+                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_dataPusherEngine);
+
                 if (m_dataPusherEngine.DataPusherSettings.Enabled)
                     m_dataPusherEngine.Start();
                 return true;
@@ -477,6 +474,11 @@ namespace openXDA
         {
             try
             {
+                m_dataAggregationEngine.Initialize();
+
+                string systemSettingsConnectionString = LoadSystemSettings();
+                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_dataAggregationEngine);
+
                 // Start the analysis engine
                 if (m_dataAggregationEngine.PQMarkAggregationSettings.Enabled)
                     m_dataAggregationEngine.Start();
@@ -498,10 +500,39 @@ namespace openXDA
         }
 
         // Attempts to start the engine and logs startup errors.
+        private bool TryStartReportsEngine()
+        {
+            try
+            {
+                string systemSettingsConnectionString = LoadSystemSettings();
+                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_reportsEngine);
+
+                m_reportsEngine.Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string message;
+
+                // Stop the reports engine
+                m_reportsEngine.Stop();
+
+                // Log the exception
+                message = "Failed to start Reports engine due to exception: " + ex.Message;
+                HandleException(new InvalidOperationException(message, ex));
+
+                return false;
+            }
+        }
+
+        // Attempts to start the engine and logs startup errors.
         private bool TryStartPQTrendingWebReportsEngine()
         {
             try
             {
+                string systemSettingsConnectionString = LoadSystemSettings();
+                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_pqTrendingWebReportEngine);
+
                 // Start the analysis engine
                 if (m_pqTrendingWebReportEngine.PQTrendingWebReportSettings.Enabled)
                     m_pqTrendingWebReportEngine.Start();
@@ -527,6 +558,9 @@ namespace openXDA
         {
             try
             {
+                string systemSettingsConnectionString = LoadSystemSettings();
+                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_stepChangeWebReportEngine);
+
                 // Start the analysis engine
                 if (m_stepChangeWebReportEngine.StepChangeWebReportSettings.Enabled)
                     m_stepChangeWebReportEngine.Start();

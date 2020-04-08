@@ -169,6 +169,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxCurrent', '1000000.0', '1000000.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxEventDuration', '0.0', '0.0')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxFileCreationTimeOffset', '0.0', '0.0')
 GO
 
