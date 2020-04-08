@@ -3074,12 +3074,12 @@ BEGIN
 
 	SELECT
 		Event.ID,
-		Event.LineID,
+		Event.AssetID,
 		EventType.Name AS EventType,
 		Event.StartTime,
-		MeterLine.LineName,
-		Line.AssetKey AS LineKey,
-		Line.VoltageKV AS LineVoltage,
+		Asset.AssetKey,
+        Asset.AssetName,
+		Asset.VoltageKV AS AssetVoltage,
 		FaultSummary.FaultType,
 		Disturbance.Type AS DisturbanceType,
 		FaultSummary.Distance AS FaultDistance,
@@ -3114,26 +3114,25 @@ BEGIN
 			ORDER BY IsSelectedAlgorithm DESC, IsSuppressed, IsValid DESC, Inception
 		) FaultSummary JOIN
         Meter ON Meter.ID = @MeterID JOIN
-        Line ON Event.LineID = Line.ID JOIN
-        MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
+        Asset ON Event.AssetID = Asset.ID
     WHERE
         Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
         Event.MeterID = @localMeterID
 
 	SELECT
-        LineID AS thelineid,
+        AssetID AS thelineid,
         ID AS theeventid,
         EventType AS theeventtype,
         CAST(StartTime AS VARCHAR(26)) AS theinceptiontime,
-        LineName + ' ' + LineKey AS thelinename,
-        LineVoltage AS voltage,
+        AssetName + ' ' + AssetKey AS thelinename,
+        AssetVoltage AS voltage,
         COALESCE(FaultType, DisturbanceType, '') AS thefaulttype,
         CASE WHEN FaultDistance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultDistance AS DECIMAL(16, 4)) AS NVARCHAR(19)), '') END AS thecurrentdistance,
         dbo.EventHasImpactedComponents(ID) AS pqiexists,
         StartTime,
         (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.StartTime BETWEEN DateAdd(SECOND, -5, Event.StartTime) and  DateAdd(SECOND, 5, Event.StartTime)) as SimultaneousCount,
         (SELECT COUNT(*) FROM Event as EventCount WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name = 'Sag' OR Name = 'Fault') AND EventCount.StartTime BETWEEN DateAdd(SECOND, -@timeWindow, Event.StartTime) and  DateAdd(SECOND, @timeWindow, Event.StartTime)) as SimultaneousFAndSCount,
-        (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.LineID = Event.LineID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
+        (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.AssetID = Event.AssetID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
         UpdatedBy,
         (SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as Note
 	INTO #temp
