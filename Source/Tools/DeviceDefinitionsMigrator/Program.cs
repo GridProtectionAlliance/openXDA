@@ -744,9 +744,11 @@ namespace DeviceDefinitionsMigrator
                 VoltageKV = asset.VoltageKV
             };
 
+            if (double.TryParse((string)lineElement.Element("maxfaultdistance"), out double maxFaultDistance))
+                line.MaxFaultDistance = maxFaultDistance;
 
-            line.MaxFaultDistance = Convert.ToDouble((string)lineElement.Element("maxfaultdistance") ?? "0.0");
-            line.MinFaultDistance = Convert.ToDouble((string)lineElement.Element("minfaultdistance") ?? "0.0");
+            if (double.TryParse((string)lineElement.Element("minfaultdistance"), out double minFaultDistance))
+                line.MinFaultDistance = minFaultDistance;
             
             TableOperations<Line> lineTable = new TableOperations<Line>(connection);
             lineTable.AddNewOrUpdateRecord(line);
