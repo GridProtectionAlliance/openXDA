@@ -680,7 +680,7 @@ namespace FaultData.DataResources
                 if (i == 0)
                     segment.StartSample = fault.StartSample;
 
-                if (i == fault.Segments.Count)
+                if (i + 1 == fault.Segments.Count)
                     segment.EndSample = fault.EndSample;
 
                 if (i + 1 < fault.Segments.Count)
