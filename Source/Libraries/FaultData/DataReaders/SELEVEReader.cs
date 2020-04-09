@@ -128,15 +128,15 @@ namespace FaultData.DataReaders
                 ?? m_eventFile.CommaSeparatedEventReports[0].Header;
 
             Meter meter = new Meter();
-            meter.MeterLocation = new MeterLocation();
+            meter.Location = new Location();
             meter.Channels = new List<Channel>();
             meter.AssetKey = header.RelayID;
             meter.Name = header.RelayID;
             meter.ShortName = new string(header.RelayID.ToNonNullString().Take(50).ToArray());
 
-            MeterLocation meterLocation = meter.MeterLocation;
+            Location meterLocation = meter.Location;
             meterLocation.Meters = new List<Meter>() { meter };
-            meterLocation.AssetKey = header.StationID;
+            meterLocation.LocationKey = header.StationID;
             meterLocation.Name = header.StationID;
             meterLocation.ShortName = new string(header.StationID.ToNonNullString().Take(50).ToArray());
             meterLocation.Description = header.StationID;
@@ -205,16 +205,7 @@ namespace FaultData.DataReaders
                 if (double.TryParse(report.GetGroupSettings("Z0ANG"), out groupSetting))
                     z0.Angle = Angle.FromDegrees(groupSetting);
 
-                if (z1 != z0)
-                {
-                    m_meterDataSet.Configuration.R1 = z1.Real;
-                    m_meterDataSet.Configuration.X1 = z1.Imaginary;
-                    m_meterDataSet.Configuration.R0 = z0.Real;
-                    m_meterDataSet.Configuration.X0 = z0.Imaginary;
-
-                    if (double.TryParse(report.GetGroupSettings("LL"), out groupSetting))
-                        m_meterDataSet.Configuration.LineLength = groupSetting;
-                }
+               
             }
 
             foreach (CommaSeparatedEventReport report in m_eventFile.CommaSeparatedEventReports)

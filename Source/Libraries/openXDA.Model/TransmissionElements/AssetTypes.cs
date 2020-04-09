@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  ConfigurationDataSet.cs - Gbtc
+//  AssetTypes.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,19 +16,56 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  12/08/2016 - Stephen C. Wills
+//  12/24/2019 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-namespace FaultData.DataSets
+
+using GSF.Data;
+using GSF.Data.Model;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace openXDA.Model
 {
-    public class ConfigurationDataSet
+    public enum AssetType
     {
-        public double? R1 { get; set; }
-        public double? X1 { get; set; }
-        public double? R0 { get; set; }
-        public double? X0 { get; set; }
-        public double? LineLength { get; set; }
+        Line = 1,
+        Bus = 2,
+        Breaker = 3,
+        CapacitorBank = 4,
+        LineSegement = 5,
+        Transformer = 6
+    }
+
+    [TableName("AssetType")]
+    public class AssetTypes
+    {
+        #region [ Members ]
+
+      
+        #endregion
+
+        #region [ Properties ]
+
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        [StringLength(50)]
+        [Searchable]
+        public string Name { get; set; }
+
+        [StringLength(250)]
+        [Searchable]
+        public string Description { get; set; }
+      
+        #endregion
+
     }
 }

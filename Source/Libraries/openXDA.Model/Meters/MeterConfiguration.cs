@@ -23,6 +23,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using GSF.Data.Model;
 using GSF.Text;
 
@@ -41,6 +42,10 @@ namespace openXDA.Model
         public string ConfigKey { get; set; }
 
         public string ConfigText { get; set; }
+
+        public int RevisionMajor { get; set; }
+        public int RevisionMinor { get; set; }
+
     }
 
     public static partial class TableOperationsExtensions
@@ -76,6 +81,8 @@ namespace openXDA.Model
                 newConfiguration.MeterID = meterConfiguration.MeterID;
                 newConfiguration.ConfigKey = meterConfiguration.ConfigKey;
                 newConfiguration.ConfigText = newConfigText;
+                newConfiguration.RevisionMajor = newConfiguration.RevisionMajor + 1;
+                newConfiguration.RevisionMinor = 0;
                 meterConfigurationTable.AddNewRecord(newConfiguration);
 
                 meterConfiguration.DiffID = meterConfigurationTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
@@ -91,7 +98,7 @@ namespace openXDA.Model
                 new RecordRestriction("ConfigKey = {0}", configKey) &
                 new RecordRestriction("DiffID IS NULL");
 
-            MeterConfiguration latestConfiguration = meterConfigurationTable.QueryRecord("ID DESC", latestConfigurationQueryRestriction);
+            MeterConfiguration latestConfiguration = meterConfigurationTable.QueryRecord("RevisionMajor DESC, RevisionMinor DESC", latestConfigurationQueryRestriction);
 
             if (latestConfiguration == null)
             {
@@ -99,6 +106,8 @@ namespace openXDA.Model
                 newConfiguration.MeterID = meter.ID;
                 newConfiguration.ConfigKey = configKey;
                 newConfiguration.ConfigText = newConfigText;
+                newConfiguration.RevisionMajor = 0;
+                newConfiguration.RevisionMinor = 0;
                 meterConfigurationTable.AddNewRecord(newConfiguration);
                 return;
             }

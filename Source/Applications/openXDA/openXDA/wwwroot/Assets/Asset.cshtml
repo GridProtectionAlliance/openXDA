@@ -1,0 +1,185 @@
+﻿@*******************************************************************************************************
+    //  Asset.cshtml - Gbtc
+    //
+    //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+    //
+    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+    //  file except in compliance with the License. You may obtain a copy of the License at:
+    //
+    //      http://opensource.org/licenses/MIT
+    //
+    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+    //  License for the specific language governing permissions and limitations.
+    //
+    //  Code Modification History:
+    //  ----------------------------------------------------------------------------------------------------
+    //  01/15/2016 - J. Ritchie Carroll
+    //       Generated original version of source code.
+    //  08/23/2019 - Christoph Lackner
+    //       Added Relay Alert Settings.
+    //  12/20/2019 - Christoph Lackner
+    //       Changed to point to Asset Model and removed Line specific attributes.
+    //
+    //*****************************************************************************************************@
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.RegularExpressions
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@using RazorEngine.Templating
+@using openXDA.Hubs
+
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Assets/Layout.cshtml";
+    ViewBag.Title = "Assets";
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    ViewBag.LocationID = -1;
+    string locationName = null;
+
+    if (parameters.ContainsKey("Asset"))
+    {
+        ViewBag.Asset = parameters["Asset"];
+    }
+
+    if (parameters.ContainsKey("LocationID"))
+    {
+        ViewBag.LocationID = int.Parse(parameters["LocationID"] ?? "-1");
+        locationName = dataContext.Connection.ExecuteScalar<string>("SELECT LocationKey FROM Location WHERE ID = {0}", ViewBag.LocationID);
+        ViewBag.CustomHeader = "Assets at <a href=\"/Assets/Sites.cshtml?Site=" + locationName + "\">" + locationName + "</a>";
+        ViewBag.Title = "Assets at " + locationName;
+    }
+
+    ViewBag.ParentKeys = ViewBag.LocationID;
+
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+new[] { "AssetKey", "Key", "text-Left" },
+new[] { "AssetName", "Asset Name", "text-left" },
+new[] { "AssetType", "Asset Type", "text-left"},
+new[] { "VoltageKV", "Voltage", "text-left"},
+new[] { null, "Asset Connections", "text-left"},
+new[] { null, "Meters", "text-left"},
+new[] { null, "Affected Customer", "text-left"},
+new[] { null, "Spared out", "text-left"}
+};
+
+    ViewBag.AddNewEditTitle = "Asset";
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+}
+@helper AssetFilter()
+{
+    <div class='row'>
+        <div class='col-md-12'>
+            <div class='form-group'>
+                <label for='linefilter'>Asset Key Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='linefilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@helper BodyRows()
+{
+    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: AssetName"></td>
+    <td width="20%" class="text-left valign-middle" nowrap><a data-bind="attr: { href: '/Assets/' + AssetType +  's.cshtml?Asset=' + AssetKey }" }><span data-bind="text: AssetType"/> </a></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/AssetConnections.cshtml?AssetID=' + ID  }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Connections&nbsp;&nbsp;<span class="badge" data-bind="text: getConnectionCount(ID, $($element)), attr: {id: 'connectionCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?AssetID=' + ID + '&MeterID=-1' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/CustomerAsset.cshtml?AssetID=' + ID + '&CustomerID=-1' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Customers&nbsp;&nbsp;<span class="badge" data-bind="text: getCustomerCount(ID, $($element)), attr: {id: 'customerCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><input type="checkbox" data-bind="checked: Spare" disabled></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    <div class="col-md-12">
+        @Raw(dataContext.AddInputField<Asset>("AssetKey", fieldLabel: "Key"))
+        @Raw(dataContext.AddInputField<Asset>("AssetName", fieldLabel: "Name"))
+        @Raw(dataContext.AddSelectField<Asset, AssetTypes>("AssetTypeID", "ID", "Name", fieldLabel: "Type"))
+        @Raw(dataContext.AddInputField<Asset>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
+        @Raw(dataContext.AddTextAreaField<Asset>("Description"))
+        @Raw(dataContext.AddCheckBoxField<Asset>("Spare", fieldLabel: "Asset Spared Out"))
+    </div>
+
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@section Scripts
+{
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<Asset, DataHub>(ViewBag,null,null,ViewBag.LocationID))
+
+        $(function () {
+            $("#pageHeader").append("@Raw(Regex.Replace(AssetFilter().ToString(), @"\r|\n", ""))");
+
+            $('#linefilter').on('keyup', function (e) {
+                if ($('#linefilter').val().length == 0) {
+                    viewModel.filterText = '';
+                    viewModel.queryPageRecords();
+                } else {
+                    viewModel.filterText = $('#linefilter').val();
+                    viewModel.queryPageRecords();
+                }
+            });
+            $('#linefilter').val('@ViewBag.Asset');
+            $('#linefilter').trigger('keyup');
+        });
+
+        function getConnectionCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryAssetConnectionCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+
+        function getMeterCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryMeterAssetCount(sourceID, -1, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }    
+
+        function getAssetCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryCustomerAssetCount(sourceID, -1, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }    
+
+        function getCustomerCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryCustomerAssetCount(-1, sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }    
+
+    </script>
+}

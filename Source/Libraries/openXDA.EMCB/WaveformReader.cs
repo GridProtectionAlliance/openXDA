@@ -78,7 +78,7 @@ namespace openXDA.EMCB
         public void Parse(string filePath)
         {
             Meter meter = new Meter();
-            meter.MeterLocation = new MeterLocation();
+            meter.Location = new Location();
             meter.Channels = new List<Channel>();
             meter.AssetKey = "UNKNOWN";
             meter.Name = "Unknown";
@@ -86,8 +86,8 @@ namespace openXDA.EMCB
             meter.Make = "Eaton";
             meter.Model = "EMCB";
 
-            MeterLocation meterLocation = meter.MeterLocation;
-            meterLocation.AssetKey = "UNKNOWN";
+            Location meterLocation = meter.Location;
+            meterLocation.LocationKey = "UNKNOWN";
             meterLocation.Latitude = 0.0D;
             meterLocation.Longitude = 0.0D;
             meterLocation.Name = "Unknown";
@@ -146,7 +146,7 @@ namespace openXDA.EMCB
                     meter.AssetKey = meterKey;
                     meter.Name = meterKey;
                     meter.Description = meterKey;
-                    meterLocation.AssetKey = meterKey;
+                    meterLocation.LocationKey = meterKey;
                     meterLocation.Name = meterKey;
                     meterLocation.Description = meterKey;
 

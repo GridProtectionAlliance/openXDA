@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  LineImpedance.cs - Gbtc
+//  Transformer.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,33 +16,41 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
-//       Generated original version of source code.
+//  12/13/2019 - Christoph Lackner
+//      Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    public class LineImpedance
+    [MetadataType(typeof(Asset))]
+    public class Transformer: Asset
     {
         #region [ Members ]
-
-        // Fields
-        private Line m_line;
-
+       
         #endregion
 
         #region [ Properties ]
+       
 
-        [PrimaryKey(true)]
-        public int ID { get; set; }
 
-        public int LineID { get; set; }
+        [Required]
+        public double PrimaryVoltageKV { get; set; }
+
+        [Required]
+        public double SecondaryVoltageKV { get; set; }
+
+        public double Tap { get; set; }
+
+        public double ThermalRating { get; set; }
 
         public double R0 { get; set; }
 
@@ -52,66 +60,34 @@ namespace openXDA.Model
 
         public double X1 { get; set; }
 
-        [JsonIgnore]
-        [NonRecordField]
-        public Line Line
-        {
-            get
-            {
-                return m_line ?? (m_line = QueryLine());
-            }
-            set
-            {
-                m_line = value;
-            }
-        }
 
-        [JsonIgnore]
-        [NonRecordField]
-        public Func<AdoDataConnection> ConnectionFactory
-        {
-            get
-            {
-                return LazyContext.ConnectionFactory;
-            }
-            set
-            {
-                LazyContext.ConnectionFactory = value;
-            }
-        }
-
-        [JsonIgnore]
-        [NonRecordField]
-        internal LazyContext LazyContext { get; set; } = new LazyContext();
 
         #endregion
 
         #region [ Methods ]
 
-        public Line GetLine(AdoDataConnection connection)
+
+        public static Transformer DetailedTransformer(Asset asset, AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<Line> lineTable = new TableOperations<Line>(connection);
-            return lineTable.QueryRecordWhere("ID = {0}", LineID);
+            TableOperations<Transformer> xfTable = new TableOperations<Transformer>(connection);
+            Transformer xf = xfTable.QueryRecordWhere("ID = {0}", asset.ID);
+
+            if (xf == null)
+                return null;
+
+            xf.LazyContext = asset.LazyContext;
+            xf.ConnectionFactory = asset.ConnectionFactory;
+
+            return xf;
         }
 
-        private Line QueryLine()
+        public static Transformer DetailedTransformer(Asset asset)
         {
-            Line line;
-
-            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
-            {
-                line = GetLine(connection);
-            }
-
-            if ((object)line != null)
-                line.LazyContext = LazyContext;
-
-            return LazyContext.GetLine(line);
+            return DetailedTransformer(asset, asset.ConnectionFactory.Invoke());
         }
-
         #endregion
     }
 }

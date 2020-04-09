@@ -46,24 +46,12 @@ namespace FaultData.DataAnalysis
 
         public static VICycleDataGroup ToVICycleDataGroup(VIDataGroup dataGroup, double frequency)
         {
-            DataSeries[] cycleSeries =
-            {
-                dataGroup.VA,
-                dataGroup.VB,
-                dataGroup.VC,
-                dataGroup.VAB,
-                dataGroup.VBC,
-                dataGroup.VCA,
-                dataGroup.IA,
-                dataGroup.IB,
-                dataGroup.IC,
-                dataGroup.IR
-            };
-
+            DataSeries[] cycleSeries = dataGroup.Data;
+            
             return new VICycleDataGroup(cycleSeries
                 .Where(dataSeries => (object)dataSeries != null)
-                .Select(dataSeries => ToCycleDataGroup(dataSeries, frequency))
-                .ToList());
+                .Select(dataSeries =>  ToCycleDataGroup(dataSeries, frequency))            
+                .ToList(), dataGroup.Asset);
         }
 
         public static CycleDataGroup ToCycleDataGroup(DataSeries dataSeries, double frequency)
@@ -171,7 +159,7 @@ namespace FaultData.DataAnalysis
             dataGroup.Add(peakSeries);
             dataGroup.Add(errorSeries);
 
-            return new CycleDataGroup(dataGroup);
+            return new CycleDataGroup(dataGroup, dataSeries.SeriesInfo.Channel.Asset);
         }
 
         public static List<double> ToValues(DataSeries series)

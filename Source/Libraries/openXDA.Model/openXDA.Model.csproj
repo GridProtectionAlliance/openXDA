@@ -41,6 +41,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependencies\GSF\GSF.Security.dll</HintPath>
     </Reference>
+    <Reference Include="Ionic.Zlib, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Projects\EPRI_PQDSParser\src\Dependencies\DotNetZip\Ionic.Zlib.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\Dependencies\GSF\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -58,7 +62,9 @@
     <Compile Include="Alarms\ChannelsWithNormalLimits.cs" />
     <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
     <Compile Include="Alarms\MetersWithNormalLimits.cs" />
+    <Compile Include="Channels\ChannelData.cs" />
     <Compile Include="Dashboard\ContourClasses.cs" />
+    <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
@@ -80,12 +86,17 @@
     <Compile Include="Files\FileGroupField.cs" />
     <Compile Include="Files\FileGroupFieldValue.cs" />
     <Compile Include="LazyContext.cs" />
+    <Compile Include="Links\AssetSpare.cs" />
+    <Compile Include="Links\AssetConnectionType.cs" />
     <Compile Include="Links\AssetGroupAssetGroup.cs" />
+    <Compile Include="Links\AssetConnection.cs" />
     <Compile Include="Links\PQViewSite.cs" />
     <Compile Include="Links\EDNAPoint.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="Meters\MeterConfiguration.cs" />
+    <Compile Include="Note.cs" />
+    <Compile Include="NoteType.cs" />
     <Compile Include="Settings\BreakerReportsSettings.cs" />
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
@@ -104,6 +115,13 @@
     <Compile Include="System\AuditLog.cs" />
     <Compile Include="System\ConfigurationLoader.cs" />
     <Compile Include="System\DataReader.cs" />
+    <Compile Include="Links\CustomerAsset.cs" />
+    <Compile Include="TransmissionElements\Customer.cs" />
+    <Compile Include="TransmissionElements\AssetTypes.cs" />
+    <Compile Include="TransmissionElements\Asset.cs" />
+    <Compile Include="TransmissionElements\AssetView.cs" />
+    <Compile Include="TransmissionElements\CapBank.cs" />
+    <Compile Include="TransmissionElements\Bus.cs" />
     <Compile Include="TransmissionElements\BreakerOperation.cs" />
     <Compile Include="Channels\BreakerChannel.cs" />
     <Compile Include="Channels\Channel.cs" />
@@ -114,8 +132,10 @@
     <Compile Include="System\DataOperation.cs" />
     <Compile Include="Alarms\DataQualityRangeLimit.cs" />
     <Compile Include="TransmissionElements\BreakerOperationType.cs" />
+    <Compile Include="TransmissionElements\Breaker.cs" />
+    <Compile Include="TransmissionElements\Transformer.cs" />
+    <Compile Include="TransmissionElements\LineSegment.cs" />
     <Compile Include="TransmissionElements\Structure.cs" />
-    <Compile Include="TransmissionElements\RelayAlertSetting.cs" />
     <Compile Include="Trending\DailyTrendingSummary.cs" />
     <Compile Include="Alarms\DefaultAlarmRangeLimit.cs" />
     <Compile Include="Events\Disturbances\Disturbance.cs" />
@@ -145,9 +165,7 @@
     <Compile Include="EAS\ICFEvent.cs" />
     <Compile Include="EAS\ICFResult.cs" />
     <Compile Include="TransmissionElements\Line.cs" />
-    <Compile Include="TransmissionElements\LineImpedance.cs" />
     <Compile Include="Links\LineAssetGroup.cs" />
-    <Compile Include="LinesToDataPush.cs" />
     <Compile Include="TransmissionElements\LineView.cs" />
     <Compile Include="Channels\MeasurementCharacteristic.cs" />
     <Compile Include="Channels\MeasurementType.cs" />
@@ -162,7 +180,7 @@
     <Compile Include="Meters\MeterLocation.cs" />
     <Compile Include="Links\MeterLocationLine.cs" />
     <Compile Include="Links\MeterAssetGroup.cs" />
-    <Compile Include="MetersToDataPush.cs" />
+    <Compile Include="DataPush\MetersToDataPush.cs" />
     <Compile Include="Channels\OutputChannel.cs" />
     <Compile Include="Channels\Phase.cs" />
     <Compile Include="PQMarkAggregate.cs" />

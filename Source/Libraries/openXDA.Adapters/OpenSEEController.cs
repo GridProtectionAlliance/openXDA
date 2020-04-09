@@ -238,7 +238,7 @@ namespace openXDA.Adapters
                 DataTable table;
 
                 Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                 foreach (DataRow row in table.Rows)
                 {
                     int eventID = row.ConvertField<int>("ID");
@@ -402,7 +402,7 @@ namespace openXDA.Adapters
 
                 int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                 Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                table = connection.RetrieveData("select ID from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                table = connection.RetrieveData("select ID from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                 foreach (DataRow row in table.Rows)
                 {
                     int eventID = row.ConvertField<int>("ID");
@@ -484,7 +484,7 @@ namespace openXDA.Adapters
 
                 int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                 Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                table = connection.RetrieveData("SELECT ID FROM FaultCurve WHERE EventID IN (SELECT ID FROM Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3})", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                table = connection.RetrieveData("SELECT ID FROM FaultCurve WHERE EventID IN (SELECT ID FROM Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3})", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                 foreach (DataRow row in table.Rows)
                 {
                     KeyValuePair<string, FlotSeries> temp = QueryFaultDistanceData(int.Parse(row["ID"].ToString()), meter);
@@ -523,7 +523,7 @@ namespace openXDA.Adapters
             {
                 FaultCurve faultCurve = new TableOperations<FaultCurve>(connection).QueryRecordWhere("ID = {0}", faultCurveID);
                 DataGroup dataGroup = new DataGroup();
-                dataGroup.FromData(meter, faultCurve.Data);
+                dataGroup.FromData(meter, new List<byte[]>() { faultCurve.Data });
                 FlotSeries flotSeries = new FlotSeries()
                 {
                     ChannelID = 0,
@@ -553,10 +553,10 @@ namespace openXDA.Adapters
 
             Task<DataGroup> dataGroupTask = new Task<DataGroup>(() =>
             {
+
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    byte[] frequencyDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = (SELECT EventDataID FROM Event WHERE ID = {0})", eventID);
-                    return ToDataGroup(meter, frequencyDomainData);
+                   return ToDataGroup(meter, ChannelData.DataFromEvent(eventID,connection));
                 }
             });
 
@@ -590,7 +590,7 @@ namespace openXDA.Adapters
             return viCycleDataGroupTask.Result;
         }
 
-        private DataGroup ToDataGroup(Meter meter, byte[] data)
+        private DataGroup ToDataGroup(Meter meter, List<byte[]> data)
         {
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(meter, data);
@@ -707,8 +707,8 @@ namespace openXDA.Adapters
                 returnDict.Add("postedStationName", theEvent.StationName);
                 returnDict.Add("postedMeterId", theEvent.MeterID.ToString());
                 returnDict.Add("postedMeterName", theEvent.MeterName);
-                returnDict.Add("postedLineName", theEvent.LineName);
-                returnDict.Add("postedLineLength", theEvent.Length.ToString());
+                //returnDict.Add("postedLineName", theEvent.LineName);
+                //returnDict.Add("postedLineLength", theEvent.Length.ToString());
 
                 returnDict.Add("postedEventName", theEvent.EventTypeName);
                 returnDict.Add("postedEventDate", theEvent.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
@@ -998,7 +998,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -1081,7 +1081,7 @@ namespace openXDA.Adapters
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                double nominalVoltage = connection.ExecuteScalar<double?>("SELECT VoltageKV * 1000 FROM Line WHERE ID = {0}", dataSeries.SeriesInfo.Channel.LineID) ?? 1;
+                double nominalVoltage = connection.ExecuteScalar<double?>("SELECT VoltageKV * 1000 FROM Line WHERE ID = {0}", dataSeries.SeriesInfo.Channel.AssetID) ?? 1;
 
                 double lastX = 0;
                 double lastY = 0;
@@ -1137,7 +1137,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -1259,7 +1259,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -1389,7 +1389,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -1529,7 +1529,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -1657,7 +1657,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -1878,7 +1878,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -2051,7 +2051,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -2225,7 +2225,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, OverlapSeries> dict = new Dictionary<string, OverlapSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -2349,7 +2349,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -2405,7 +2405,7 @@ namespace openXDA.Adapters
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                double nominalVoltage = connection.ExecuteScalar<double?>("SELECT VoltageKV * 1000 FROM Line WHERE ID = {0}", dataSeries.SeriesInfo.Channel.LineID) ?? 1;
+                double nominalVoltage = connection.ExecuteScalar<double?>("SELECT VoltageKV * 1000 FROM Asset WHERE ID = {0}", dataSeries.SeriesInfo.Channel.AssetID) ?? 1;
 
                 double lastY = 0;
 
@@ -2458,7 +2458,7 @@ namespace openXDA.Adapters
                     double calcTime;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -2577,7 +2577,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -2746,7 +2746,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -2888,7 +2888,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -3002,7 +3002,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");
@@ -3138,7 +3138,7 @@ namespace openXDA.Adapters
                     DataTable table;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.LineID);
+                    table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
                     foreach (DataRow row in table.Rows)
                     {
                         int eventID = row.ConvertField<int>("ID");

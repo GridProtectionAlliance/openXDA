@@ -30,7 +30,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
         public string AssetKey { get; set; }
-        public int LineID { get; set; }
+        public int AssetID { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
     }

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  LineImpedance.cs - Gbtc
+//  AssetSpare.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,70 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/23/2019 - Christoph Lackner
+//  01/14/2020 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+using System;
+using System.ComponentModel.DataAnnotations;
+using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    public class RelayAlertSetting
+    public class AssetSpare
     {
+        #region [ Members ]
+
+        #endregion
+
+        #region [ Properties ]
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int LineID { get; set; }
+        public int AssetID { get; set; }
 
-        public int TripTime { get; set; }
+        public int SpareAssetID { get; set; }
+        
+        #endregion
 
-        public int PickupTime { get; set; }
+        #region [ Methods ]
 
-        public double TripCoilCondition { get; set; }
-
+        #endregion
     }
+
+    public class AssetSpareView
+    {
+        #region [ Members ]
+
+        #endregion
+
+        #region [ Properties ]
+
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        public int AssetID { get; set; }
+
+        public int SpareAssetID { get; set; }
+
+        public string AssetKey { get; set; }
+
+        public string AssetName { get; set; }
+
+        public string SpareKey { get; set; }
+
+        public string SpareName { get; set; }
+
+        public string AssetType { get; set; }
+        #endregion
+
+        #region [ Methods ]
+
+        #endregion
+    }
+
 }

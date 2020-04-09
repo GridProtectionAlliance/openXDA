@@ -103,7 +103,7 @@ namespace FaultData.Configuration
         /// at zero in order for a subsequent current spike to be considered a restrike.
         /// </summary>
         [Setting]
-        [DefaultValue(2.0D)]
+        [DefaultValue(70.0D)]
         public double MaxCyclesBeforeRestrike { get; set; }
 
         /// <summary>

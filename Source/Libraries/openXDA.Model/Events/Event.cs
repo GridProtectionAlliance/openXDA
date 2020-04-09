@@ -41,7 +41,7 @@ namespace openXDA.Model
 
         public int MeterID { get; set; }
 
-        public int LineID { get; set; }
+        public int AssetID { get; set; }
 
         public int EventTypeID { get; set; }
 
@@ -73,7 +73,7 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
-        public EventData EventData { get; set; }
+        public List<ChannelData> EventData { get; set; }
 
         [JsonIgnore]
         [NonRecordField]
@@ -104,14 +104,12 @@ namespace openXDA.Model
         }
 
         [Searchable]
-        public string LineName { get; set; }
+        public string AssetName { get; set; }
 
         [Searchable]
         public string MeterName { get; set; }
 
         public string StationName { get; set; }
-
-        public double Length { get; set; }
 
         [Searchable]
         public string EventTypeName { get; set; }
@@ -169,7 +167,7 @@ namespace openXDA.Model
             }
         }
 
-        public static List<Event> GetLineEvent(this TableOperations<Event> eventTable, int lineID, DateTime startTime, DateTime endTime, double timeTolerance)
+        public static List<Event> GetLineEvent(this TableOperations<Event> eventTable, int assetID, DateTime startTime, DateTime endTime, double timeTolerance)
         {
             AdoDataConnection connection = eventTable.Connection;
 
@@ -178,7 +176,7 @@ namespace openXDA.Model
                 command.CommandText = "GetLineEvent";
                 command.CommandType = CommandType.StoredProcedure;
                 command.CommandTimeout = connection.DefaultTimeout;
-                AddParameter(command, "lineID", lineID, DbType.Int32);
+                AddParameter(command, "assetID", assetID, DbType.Int32);
                 AddParameter(command, "startTime", startTime, DbType.DateTime2);
                 AddParameter(command, "endTime", endTime, DbType.DateTime2);
                 AddParameter(command, "timeTolerance", timeTolerance, DbType.Double);

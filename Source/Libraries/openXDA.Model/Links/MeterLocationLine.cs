@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  06/19/2017 - Billy Ernest
 //       Generated original version of source code.
+//  12/13/2019 - C. Lackner
+//       Update to reflect changes in Location and move from Line to Asset.
 //
 //******************************************************************************************************
 
@@ -28,13 +30,13 @@ using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    public class MeterLocationLine
+    public class AssetLocation
     {
         #region [ Members ]
 
         // Fields
-        private MeterLocation m_meterLocation;
-        private Line m_line;
+        private Location m_Location;
+        private Asset m_asset;
         private SourceImpedance m_sourceImpedance;
 
         #endregion
@@ -44,35 +46,35 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int MeterLocationID { get; set; }
+        public int LocationID { get; set; }
 
-        public int LineID { get; set; }
+        public int AssetID { get; set; }
 
         [JsonIgnore]
         [NonRecordField]
-        public MeterLocation MeterLocation
+        public Location Location
         {
             get
             {
-                return m_meterLocation ?? (m_meterLocation = QueryMeterLocation());
+                return m_Location ?? (m_Location = QueryLocation());
             }
             set
             {
-                m_meterLocation = value;
+                m_Location = value;
             }
         }
 
         [JsonIgnore]
         [NonRecordField]
-        public Line Line
+        public Asset Asset
         {
             get
             {
-                return m_line ?? (m_line ?? QueryLine());
+                return m_asset ?? (m_asset ?? QueryAsset());
             }
             set
             {
-                m_line = value;
+                m_asset = value;
             }
         }
 
@@ -112,22 +114,30 @@ namespace openXDA.Model
 
         #region [ Methods ]
 
-        public MeterLocation GetMeterLocation(AdoDataConnection connection)
+        public Location GetLocation(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<MeterLocation> meterLocationTable = new TableOperations<MeterLocation>(connection);
-            return meterLocationTable.QueryRecordWhere("ID = {0}", MeterLocationID);
+            TableOperations<Location> locationTable = new TableOperations<Location>(connection);
+
+            try
+            {
+                return locationTable.QueryRecordWhere("ID = {0}", LocationID);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
-        public Line GetLine(AdoDataConnection connection)
+        public Asset GetAsset(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<Line> lineTable = new TableOperations<Line>(connection);
-            return lineTable.QueryRecordWhere("ID = {0}", LineID);
+            TableOperations<Asset> assetTable = new TableOperations<Asset>(connection);
+            return assetTable.QueryRecordWhere("ID = {0}", AssetID);
         }
 
         public SourceImpedance GetSourceImpedance(AdoDataConnection connection)
@@ -136,37 +146,37 @@ namespace openXDA.Model
                 return null;
 
             TableOperations<SourceImpedance> sourceImpedanceTable = new TableOperations<SourceImpedance>(connection);
-            return sourceImpedanceTable.QueryRecordWhere("MeterLocationLineID = {0}", ID);
+            return sourceImpedanceTable.QueryRecordWhere("AssetLocationID = {0}", ID);
         }
 
-        private MeterLocation QueryMeterLocation()
+        private Location QueryLocation()
         {
-            MeterLocation meterLocation;
+            Location location;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                meterLocation = GetMeterLocation(connection);
+                location = GetLocation(connection);
             }
 
-            if ((object)meterLocation != null)
-                meterLocation.LazyContext = LazyContext;
+            if ((object)location != null)
+                location.LazyContext = LazyContext;
 
-            return LazyContext.GetMeterLocation(meterLocation);
+            return LazyContext.GetLocation(location);
         }
 
-        private Line QueryLine()
+        private Asset QueryAsset()
         {
-            Line line;
+            Asset asset;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                line = GetLine(connection);
+                asset = GetAsset(connection);
             }
 
-            if ((object)line != null)
-                line.LazyContext = LazyContext;
+            if ((object)asset != null)
+                asset.LazyContext = LazyContext;
 
-            return LazyContext.GetLine(line);
+            return LazyContext.GetAsset(asset);
         }
 
         private SourceImpedance QuerySourceImpedance()

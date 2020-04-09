@@ -31,7 +31,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int MeterLineID { get; set; }
+        public int MeterAssetID { get; set; }
 
         [StringLength(500)]
         public string Expression { get; set; }

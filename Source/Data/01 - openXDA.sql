@@ -32,6 +32,15 @@
 
 ----- TABLES -----
 
+CREATE TABLE AccessLog(
+    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    UserName varchar(200) NOT NULL,
+    AccessGranted bit NOT NULL,
+    CreatedOn datetime NOT NULL CONSTRAINT [DF_AccessLog_Timestamp]  DEFAULT (getutcdate())
+)
+GO
+
+
 CREATE TABLE Setting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -140,10 +149,10 @@ CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupFieldID
 ON FileGroupFieldValue(FileGroupFieldID ASC)
 GO
 
-CREATE TABLE MeterLocation
+CREATE TABLE Location
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    AssetKey VARCHAR(50) NOT NULL UNIQUE,
+    LocationKey VARCHAR(50) NOT NULL UNIQUE,
     Name VARCHAR(200) NOT NULL,
     Alias VARCHAR(200) NULL,
     ShortName VARCHAR(50) NULL,
@@ -157,7 +166,7 @@ CREATE TABLE Meter
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetKey VARCHAR(50) NOT NULL UNIQUE,
-    MeterLocationID INT NOT NULL REFERENCES MeterLocation(ID),
+    LocationID INT NOT NULL REFERENCES Location(ID),
     Name VARCHAR(200) NOT NULL,
     Alias VARCHAR(200) NULL,
     ShortName VARCHAR(50) NULL,
@@ -176,43 +185,716 @@ CREATE TABLE MeterFacility
 )
 GO
 
-CREATE TABLE Line
+CREATE TABLE AssetType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    AssetKey VARCHAR(50) NOT NULL UNIQUE,
-    VoltageKV FLOAT NOT NULL,
-    ThermalRating FLOAT NOT NULL,
-    Length FLOAT NOT NULL,
-    MaxFaultDistance FLOAT NULL,
-    MinFaultDistance FLOAT NULL,
+    Name VARCHAR(50) NOT NULL,
     Description VARCHAR(MAX) NULL
 )
 GO
+
+CREATE TABLE Asset
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetTypeID INT NOT NULL REFERENCES AssetType(ID),
+    AssetKey VARCHAR(50) NOT NULL UNIQUE,
+    Description VARCHAR(MAX) NULL,
+	AssetName VARCHAR(200) NOT NULL,
+	VoltageKV FLOAT NOT NULL,
+	Spare Bit NULL Default 0
+)
+GO
+
+CREATE TABLE AssetSpare
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT UNIQUE NOT NULL REFERENCES Asset(ID),
+    SpareAssetID INT NOT NULL REFERENCES Asset(ID)
+)
+GO
+
+CREATE VIEW AssetSpareView AS
+	SELECT 
+	AssetSpare.ID AS ID,
+	AssetSpare.AssetID AS AssetID,
+	AssetSpare.SpareAssetID AS SpareAssetID,
+	Parent.AssetName AS Assetname,
+	Parent.AssetKey AS AssetKey,
+	Child.AssetName AS SpareName,
+	Child.AssetKey AS SpareKey,
+	AssetType.Name AS AssetType
+FROM
+	AssetSpare LEFT JOIN Asset Child ON Child.ID = AssetSpare.SpareAssetID LEFT JOIN
+	Asset Parent ON Parent.ID = AssetSpare.AssetID LEFT JOIN
+	AssetType ON Parent.AssetTypeID = AssetType.ID
+GO
+
+CREATE TABLE Customer
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    CustomerKey VARCHAR(50) NOT NULL UNIQUE,
+    Name VARCHAR(200) NULL
+)
+GO
+
+CREATE TABLE CustomerAsset
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    CustomerID INT NOT NULL REFERENCES Customer(ID),
+    AssetID INT NOT NULL REFERENCES Asset(ID)
+)
+GO
+
+Create View CustomerAssetDetail AS
+SELECT 
+	CustomerAsset.ID AS ID,
+	Customer.CustomerKey AS CustomerKey,
+	Customer.Name AS CustomerName,
+	Asset.AssetKey AS AssetKey,
+	Asset.AssetName AS AssetName,
+	AssetType.Name AS AssetType,
+	Customer.ID AS CustomerID,
+	Asset.ID AS AssetID
+FROM
+	CustomerAsset LEFT JOIN Asset ON Asset.ID = CustomerAsset.AssetID LEFT JOIN
+	Customer ON Customer.ID = CustomerAsset.CustomerID LEFT JOIN
+	AssetType ON Asset.AssetTypeID = AssetType.ID
+GO
+
+
+CREATE TABLE AssetRelationshipType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+	BiDirectional BIT NOT NULL DEFAULT 0,
+	JumpConnection VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
+	PassThrough VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
+)
+GO
+
+CREATE TABLE AssetRelationship
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetRelationshipTypeID INT NOT NULL REFERENCES AssetRelationshipType(ID),
+    ParentID INT NOT NULL REFERENCES Asset(ID),
+    ChildID INT NOT NULL REFERENCES Asset(ID)
+)
+GO
+
+/* View with Procedures Due To Spare Logic */
+
+CREATE VIEW AssetConnection AS 
+SELECT
+	AssetRelationship.ID AS ID,
+	AssetRelationship.AssetRelationshipTypeID AS AssetRelationshipTypeID,
+	(SELECT (CASE WHEN Child.Spare = 1 THEN SpareChild.SpareAssetID ELSE AssetRelationship.ChildID END)) AS ChildID,
+	(SELECT (CASE WHEN Parent.Spare = 1 THEN SpareParent.SpareAssetID ELSE AssetRelationship.ParentID END)) AS ParentID
+FROM
+	AssetRelationship JOIN ASSET CHILD ON AssetRelationship.ChildID = Child.ID JOIN
+	Asset Parent ON AssetRelationship.ParentID = Parent.ID LEFT JOIN
+	AssetSpare SpareChild ON Child.ID = SpareChild.AssetID LEFT JOIN
+	AssetSpare SpareParent ON Parent.ID = SpareParent.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_AssetConnection ON AssetConnection
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO AssetRelationship (ChildID, ParentID, AssetRelationshipTypeID)
+		SELECT 
+			ChildID AS ChildID,
+			ParentID AS ParentID,
+			AssetRelationshipTypeID AS AssetRelationshipTypeID
+	FROM INSERTED
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_AssetConnection ON AssetConnection
+INSTEAD OF UPDATE AS
+BEGIN
+
+		UPDATE AssetRelationship
+		SET
+			AssetRelationship.ChildID = AssetRelationship.ChildID,
+			AssetRelationship.ParentID = AssetRelationship.ParentID,
+			AssetRelationship.AssetRelationshipTypeID = AssetRelationship.AssetRelationshipTypeID
+		FROM
+			AssetRelationship INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = AssetRelationship.ID;
+END
+GO
+
+CREATE TRIGGER TR_DELETE_AssetConnection ON AssetConnection
+INSTEAD OF DELETE AS 
+BEGIN
+	DELETE FROM AssetRelationship WHERE ID IN (SELECT DELETED.ID FROM DELETED)
+END
+GO
+/* End Spare Logic */
+
+CREATE TABLE BusAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+)
+GO
+
+CREATE TABLE BreakerAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+	ThermalRating FLOAT NOT NULL DEFAULT(0),
+	Speed FLOAT NOT NULL DEFAULT(0),
+	TripTime INT NULL DEFAULT(0),
+	PickupTime INT NULL DEFAULT(0),
+	TripCoilCondition FLOAT NULL DEFAULT(0)
+)
+GO
+
+CREATE TABLE CapacitorBankAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+    NumberOfBanks INT NOT NULL DEFAULT(1),
+    CansPerBank INT NOT NULL DEFAULT(1),
+    CapacitancePerBank INT NOT NULL DEFAULT(0)
+)
+GO
+
+CREATE TABLE LineAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+    MaxFaultDistance FLOAT NULL,
+    MinFaultDistance FLOAT NULL,
+)
+GO
+
+CREATE TABLE LineSegmentAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+    Length FLOAT NOT NULL,
+    R0 FLOAT NOT NULL,
+    X0 FLOAT NOT NULL,
+    R1 FLOAT NOT NULL,
+    X1 FLOAT NOT NULL,
+	ThermalRating FLOAT NOT NULL
+)
+GO
+
+CREATE TABLE TransformerAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+    R0 FLOAT NOT NULL DEFAULT(0),
+    X0 FLOAT NOT NULL DEFAULT(0),
+    R1 FLOAT NOT NULL DEFAULT(0),
+    X1 FLOAT NOT NULL DEFAULT(0),
+	ThermalRating FLOAT NOT NULL,
+	SecondaryVoltageKV FLOAT NULL,
+	PrimaryVoltageKV FLOAT NULL,
+	Tap FLOAT NULL
+)
+GO
+
+
+
+/* Correspoding Views and Trigger */
+CREATE VIEW Line AS
+	SELECT 
+		AssetID AS ID,
+		MaxFaultDistance,
+		MinFaultDistance,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN LineAttributes ON Asset.ID = LineAttributes.AssetID
+GO
+
+CREATE VIEW AssetView AS
+	SELECT 
+		Asset.ID AS ID,
+		AssetKey,
+		VoltageKV,
+		Asset.Description,
+		AssetName,
+		AssetType.Name AS AssetType,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN	AssetType ON AssetType.ID = Asset.AssetTypeID WHERE AssetType.ID != 5  
+
+
+GO
+
+CREATE TRIGGER TR_INSERT_Line ON Line
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName,VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'Line') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO LineAttributes (AssetID, MinFaultDistance, MaxFaultDistance)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			MinFaultDistance AS MinFaultDistance,
+			MaxFaultDistance AS MaxFaultDistance
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Line ON Line
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV) OR UPDATE(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+	UPDATE LineAttributes
+		SET
+			LineAttributes.MaxFaultDistance = INSERTED.MaxFaultDistance,
+			LineAttributes.MinFaultDistance = INSERTED.MinFaultDistance
+		FROM
+			LineAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.ID = LineAttributes.AssetID;
+END
+GO
+
+/* END Line Model Triggers */
+/* Bus Model */
+CREATE VIEW Bus AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN BusAttributes ON Asset.ID = BusAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_Bus ON BUS
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'Bus') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO BusAttributes (AssetID)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Bus ON BUS
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV) OR UPDATE(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+END
+GO
+
+
+/* Breaker Model */
+CREATE VIEW Breaker AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		ThermalRating,
+		Speed,
+		Description,
+		AssetName,
+		AssetTypeID,
+		TripTime,
+		PickupTime,
+		TripCoilCondition,
+		Spare
+	FROM Asset JOIN BreakerAttributes ON Asset.ID = BreakerAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_Breaker ON Breaker
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, VoltageKV, AssetName, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'Breaker') AS AssetTypeID,
+			Description AS Description,
+			VoltageKV AS VoltageKV,
+			AssetName AS AssetName,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed, TripTime, PickupTime, TripCoilCondition)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			ThermalRating AS ThermalRating,
+			Speed AS Speed,
+			TripTime AS TripTime,
+			PickupTime AS PickupTime,
+			TripCoilCondition AS TripCoilCondition
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Breaker ON Breaker
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV) OR UPDATE(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+	UPDATE BreakerAttributes
+		SET
+			BreakerAttributes.ThermalRating = INSERTED.ThermalRating,
+			BreakerAttributes.Speed = INSERTED.Speed,
+			BreakerAttributes.TripTime = INSERTED.TripTime,
+			BreakerAttributes.PickupTime = INSERTED.PickupTime,
+			BreakerAttributes.TripCoilCondition = INSERTED.TripCoilCondition
+		FROM
+			BreakerAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.ID = BreakerAttributes.AssetID;
+END
+GO
+
+
+/* Capacitor Bank Model */
+CREATE VIEW CapBank AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		NumberofBanks,
+		CansPerBank,
+		CapacitancePerBank,
+		Description,
+		AssetName,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN CapacitorBankAttributes ON Asset.ID = CapacitorBankAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_CapBank ON CapBank
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'CapacitorBank') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO CapacitorBankAttributes (AssetID, NumberOfBanks, CansPerBank, CapacitancePerBank)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			NumberOfBanks AS NumberOfBanks,
+			CansPerBank AS CansPerBank,
+			CapacitancePerBank AS CapacitancePerBank
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_CapBank ON CapBank
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR Update(Spare) )
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+	UPDATE CapacitorBankAttributes
+		SET
+			CapacitorBankAttributes.NumberOfBanks = INSERTED.NumberOfBanks,
+			CapacitorBankAttributes.CansPerBank = INSERTED.CansPerBank,
+			CapacitorBankAttributes.CapacitancePerBank = INSERTED.CapacitancePerBank
+		FROM
+			CapacitorBankAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.ID = CapacitorBankAttributes.AssetID;
+END
+GO
+
+
+/* Line Segment Model */
+CREATE VIEW LineSegment AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		Length,
+		R0,
+		X0,
+		R1,
+		X1,
+		ThermalRating,
+		Description,
+		AssetName,
+		VoltageKV,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN LineSegmentAttributes ON Asset.ID = LineSegmentAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_LineSegment ON LineSegment
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'LineSegment') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO LineSegmentAttributes (AssetID, Length, R0, X0, R1, X1, ThermalRating)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			Length AS Length,
+			R0 AS R0,
+			X0 AS X0,
+			R1 AS R1,
+			X1 AS X1,
+			ThermalRating AS ThermalRating
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_LineSegment ON LineSegment
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR Update(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV  = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+	UPDATE LineSegmentAttributes
+		SET
+			LineSegmentAttributes.R0 = INSERTED.R0,
+			LineSegmentAttributes.X0 = INSERTED.X0,
+			LineSegmentAttributes.R1 = INSERTED.R1,
+			LineSegmentAttributes.X1 = INSERTED.X1,
+			LineSegmentAttributes.ThermalRating = INSERTED.ThermalRating
+		FROM
+			LineSegmentAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.ID = LineSegmentAttributes.AssetID;
+END
+GO
+
+
+/* Transformers */
+CREATE VIEW Transformer AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		R0,
+		X0,
+		R1,
+		X1,
+		ThermalRating,
+		SecondaryVoltageKV,
+		PrimaryVoltageKV,
+		TAP,
+		Description,
+		AssetName,
+		VoltageKV,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN TransformerAttributes ON Asset.ID = TransformerAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_Tranformer ON Transformer
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'Transformer') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO TransformerAttributes (AssetID, R0, X0, R1, X1, ThermalRating, SecondaryVoltageKV, PrimaryVoltageKV, Tap )
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			R0 AS R0,
+			X0 AS X0,
+			R1 AS R1,
+			X1 AS X1,
+			ThermalRating AS ThermalRating,
+			SecondaryVoltageKV AS SecondaryVoltageKV,
+			PrimaryVoltageKV AS PrimaryVoltageKV,
+			Tap AS Tap
+
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Tranformer ON Transformer
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR UPDATE(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+	UPDATE TransformerAttributes
+		SET
+			TransformerAttributes.R0 = INSERTED.R0,
+			TransformerAttributes.X0 = INSERTED.X0,
+			TransformerAttributes.R1 = INSERTED.R1,
+			TransformerAttributes.X1 = INSERTED.X1,
+			TransformerAttributes.ThermalRating = INSERTED.ThermalRating,
+			TransformerAttributes.SecondaryVoltageKV = INSERTED.SecondaryVoltageKV,
+			TransformerAttributes.PrimaryVoltageKV = INSERTED.PrimaryVoltageKV,
+			TransformerAttributes.Tap = INSERTED.Tap
+		FROM
+			TransformerAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.ID = TransformerAttributes.AssetID;
+END
+GO
+
+/* *************** End Model Section ********* */
 
 CREATE TABLE Structure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetKey VARCHAR(50) NOT NULL UNIQUE,
-    LineID INT NOT NULL REFERENCES Line(ID),
+    AssetID INT NOT NULL REFERENCES Asset(ID),
     Latitude FLOAT NOT NULL DEFAULT 0.0,
     Longitude FLOAT NOT NULL DEFAULT 0.0
 )
 GO
 
-CREATE TABLE MeterLine
+CREATE TABLE MeterAsset
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
-    LineID INT NOT NULL REFERENCES Line(ID),
-    LineName VARCHAR(200) NOT NULL
+    AssetID INT NOT NULL REFERENCES Asset(ID),
 )
 GO
 
-CREATE TABLE MeterLocationLine
+CREATE TABLE AssetLocation
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    MeterLocationID INT NOT NULL REFERENCES MeterLocation(ID),
-    LineID INT NOT NULL REFERENCES Line(ID)
+    LocationID INT NOT NULL REFERENCES Location(ID),
+    AssetID INT NOT NULL REFERENCES Asset(ID)
 )
 GO
 
@@ -245,7 +927,7 @@ CREATE TABLE Channel
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
-    LineID INT NOT NULL REFERENCES Line(ID),
+	AssetID INT NOT NULL REFERENCES Asset(ID),
     MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
@@ -262,10 +944,6 @@ CREATE NONCLUSTERED INDEX IX_Channel_MeterID
 ON Channel(MeterID ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_Channel_LineID
-ON Channel(LineID ASC)
-GO
-
 CREATE NONCLUSTERED INDEX IX_Channel_MeasurementTypeID
 ON Channel(MeasurementTypeID ASC)
 GO
@@ -280,6 +958,14 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_Channel_MeterID_MeasurementTypeID_MeasurementCharacteristicID_PhaseID_HarmonicGroup
 ON Channel(MeterID ASC, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup)
+GO
+
+CREATE TABLE AssetChannel
+(
+    ID INT IDENTITY(1, 1) NOT NULL,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+    ChannelID INT NOT NULL REFERENCES Channel(ID)
+)
 GO
 
 CREATE TABLE SeriesType
@@ -320,7 +1006,10 @@ CREATE TABLE MeterConfiguration
     MeterID INT NOT NULL REFERENCES Meter(ID),
     DiffID INT NULL REFERENCES MeterConfiguration(ID),
     ConfigKey VARCHAR(50) NOT NULL,
-    ConfigText VARCHAR(MAX) NOT NULL
+    ConfigText VARCHAR(MAX) NOT NULL,
+    RevisionMajor INT NULL DEFAULT(0),
+    RevisionMinor INT NULL DEFAULT(0),
+    CONSTRAINT UC_MeterConfiguration UNIQUE(MeterID, RevisionMajor, RevisionMinor)
 )
 GO
 
@@ -384,31 +1073,31 @@ AS BEGIN
 END
 GO
 
-CREATE TABLE LineAssetGroup
+CREATE TABLE AssetAssetGroup
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    LineID INT NOT NULL REFERENCES Line(ID),
+    AssetID INT NOT NULL REFERENCES Asset(ID),
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_LineAssetGroup_LineID
-ON LineAssetGroup(LineID ASC)
+CREATE NONCLUSTERED INDEX IX_AssetAssetGroup_AssetID
+ON AssetAssetGroup(AssetID ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_LineAssetGroup_AssetGroupID
-ON LineAssetGroup(AssetGroupID ASC)
+CREATE NONCLUSTERED INDEX IX_AssetAssetGroup_AssetGroupID
+ON AssetAssetGroup(AssetGroupID ASC)
 GO
 
-CREATE TRIGGER Line_AugmentAllAssetsGroup
-ON Line
+CREATE TRIGGER Asset_AugmentAllAssetsGroup
+ON Asset
 AFTER INSERT
 AS BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO LineAssetGroup(LineID, AssetGroupID)
-    SELECT Line.ID, AssetGroup.ID
-    FROM inserted Line CROSS JOIN AssetGroup
+    INSERT INTO AssetAssetGroup(AssetID, AssetGroupID)
+    SELECT Asset.ID, AssetGroup.ID
+    FROM inserted Asset CROSS JOIN AssetGroup
     WHERE AssetGroup.Name = 'AllAssets'
 END
 GO
@@ -462,19 +1151,19 @@ CREATE TABLE AuditLog
 GO
 
 CREATE TABLE PQViewSite(
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	SiteID int NOT NULL,
-	StationKey varchar(20) NULL,
-	LineKey varchar(20) NULL,
-	PQIFacility int NULL,
-	Enabled bit NOT NULL DEFAULT 1
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	SiteID INT NOT NULL,
+	StationKey VARCHAR(20) NULL,
+	LineKey VARCHAR(20) NULL,
+	PQIFacility INT NULL,
+	Enabled BIT NOT NULL DEFAULT 1
 )
 GO
 
 CREATE TABLE EDNAPoint(
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	LineID int NOT NULL FOREIGN KEY REFERENCES Line(ID),
-	Point varchar(20) NOT NULL,
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	BreakerID INT NOT NULL FOREIGN KEY REFERENCES Asset(ID),
+	Point VARCHAR(20) NOT NULL,
 )
 GO
 
@@ -516,9 +1205,6 @@ INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.d
 GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 5)
-GO
-
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.BreakerRestrikeOperation', 6)
 GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 7)
@@ -823,7 +1509,6 @@ CREATE TABLE EventData
     FileGroupID INT NOT NULL,
     RuntimeID INT NOT NULL,
     TimeDomainData VARBINARY(MAX) NOT NULL,
-    CycleData VARBINARY(MAX) NOT NULL,
     MarkedForDeletion INT NOT NULL
 )
 GO
@@ -840,6 +1525,40 @@ CREATE NONCLUSTERED INDEX IX_EventData_MarkedForDeletion
 ON EventData(MarkedForDeletion ASC)
 GO
 
+
+-- ChannelData references the IDs in other tables,
+-- but no foreign key constraints are defined.
+-- If they were defined, the records in this
+-- table would need to be deleted before we
+-- could delete records in the referenced table.
+CREATE TABLE ChannelData
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL,
+    RuntimeID INT NOT NULL,
+    TimeDomainData VARBINARY(MAX) NULL,
+    MarkedForDeletion INT NOT NULL,
+	SeriesID INT NOT NULL,
+	EventID INT NOT NULL,
+	EventDataID INT NULL
+)
+GO
+
+
+/* Indices for Channel Data potentially Neccesarry
+CREATE NONCLUSTERED INDEX IX_EventData_FileGroupID
+ON EventData(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventData_RuntimeID
+ON EventData(RuntimeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventData_MarkedForDeletion
+ON EventData(MarkedForDeletion ASC)
+GO
+*/
+
 CREATE TABLE EventType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -853,7 +1572,7 @@ CREATE TABLE Event
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
     MeterID INT NOT NULL REFERENCES Meter(ID),
-    LineID INT NOT NULL REFERENCES Line(ID),
+	AssetID INT NOT NULL REFERENCES Asset(ID),
     EventTypeID INT NOT NULL REFERENCES EventType(ID),
     EventDataID INT NULL REFERENCES EventData(ID),
     Name VARCHAR(200) NOT NULL,
@@ -876,10 +1595,6 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_Event_MeterID
 ON Event(MeterID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_Event_LineID
-ON Event(LineID ASC)
 GO
 
 CREATE NONCLUSTERED INDEX IX_Event_EventTypeID
@@ -971,7 +1686,6 @@ GO
 CREATE NONCLUSTERED INDEX IX_BreakerRestrike_EventID
 ON BreakerRestrike(EventID ASC)
 GO
-
 
 CREATE TABLE VoltageEnvelope
 (
@@ -1145,9 +1859,6 @@ INSERT INTO EventType(Name, Description) VALUES ('Other', 'Other')
 GO
 
 INSERT INTO EventType(Name, Description) VALUES ('Test', 'Test')
-GO
-
-INSERT INTO EventType(Name, Description) VALUES ('Breaker', 'Breaker')
 GO
 
 INSERT INTO EventType(Name, Description) VALUES ('Snapshot', 'Snapshot')
@@ -1598,7 +2309,7 @@ GO
 CREATE TABLE SourceImpedance
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    MeterLocationLineID INT NOT NULL REFERENCES MeterLocationLine(ID),
+    AssetLocationID INT NOT NULL REFERENCES AssetLocation(ID),
     RSrc FLOAT NOT NULL,
     XSrc FLOAT NOT NULL
 )
@@ -1607,13 +2318,14 @@ GO
 CREATE TABLE LineImpedance
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    LineID INT NOT NULL UNIQUE REFERENCES Line(ID),
+    LineID INT NOT NULL UNIQUE REFERENCES Asset(ID),
     R0 FLOAT NOT NULL,
     X0 FLOAT NOT NULL,
     R1 FLOAT NOT NULL,
     X1 FLOAT NOT NULL
 )
 GO
+
 
 CREATE TABLE SegmentType
 (
@@ -1638,7 +2350,7 @@ GO
 CREATE TABLE FaultDetectionLogic
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    MeterLineID INT NOT NULL REFERENCES MeterLine(ID),
+    MeterAssetID INT NOT NULL REFERENCES MeterAsset(ID),
     Expression VARCHAR(500) NOT NULL
 )
 GO
@@ -1663,7 +2375,8 @@ CREATE TABLE FaultCurve
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL,
     Algorithm VARCHAR(80) NOT NULL,
-    Data VARBINARY(MAX) NOT NULL
+    Data VARBINARY(MAX) NOT NULL,
+	AngleData VARBINARY(MAX) NOT NULL
 )
 GO
 
@@ -1754,7 +2467,8 @@ CREATE TABLE NearestStructure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FaultSummaryID INT NOT NULL REFERENCES FaultSummary(ID),
-    StructureID INT NOT NULL REFERENCES Structure(ID)
+    StructureID INT NOT NULL REFERENCES Structure(ID),
+    Deviation FLOAT NULL
 )
 GO
 
@@ -1827,6 +2541,20 @@ GO
 
 INSERT INTO SegmentType(Name, Description) VALUES('Postfault', 'After the fault ends')
 GO
+
+CREATE TABLE LightningStrike(
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	EventID int NOT NULL FOREIGN KEY REFERENCES Event(ID),
+	Service varchar(50) NOT NULL,
+	UTCTime datetime2(7) NOT NULL,
+	DisplayTime varchar(50) NOT NULL,
+	Amplitude float NOT NULL,
+	Latitude float NOT NULL,
+	Longitude float NOT NULL
+)
+
+GO
+
 
 -- -------- --
 -- Trending --
@@ -2316,6 +3044,13 @@ INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Meter', 'Meter')
 GO
 INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Event', 'Event')
 GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Asset', 'Asset')
+GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Location', 'Location')
+GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Customer', 'Customer')
+GO
+
 
 CREATE TABLE Note (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
@@ -2362,14 +3097,14 @@ CREATE TABLE MetersToDataPush
 )
 GO
 
-CREATE TABLE LinesToDataPush
+CREATE TABLE AssetsToDataPush
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    LocalXDALineID INT NOT NULL,
-    RemoteXDALineID INT NULL,
+    LocalXDAAssetID INT NOT NULL,
+    RemoteXDAAssetID INT NULL,
     LocalXDAAssetKey VARCHAR(200) NOT NULL,
     RemoteXDAAssetKey VARCHAR(200) NOT NULL,
-	RemoteLineCreatedByDataPusher bit NOT NULL DEFAULT (1)
+	RemoteAssetCreatedByDataPusher bit NOT NULL DEFAULT (1)
 )
 GO
 
@@ -2411,15 +3146,6 @@ ALTER TABLE FileGroupLocalToRemote WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
 REFERENCES FileGroup(ID)
 GO
 
-CREATE TABLE RelayAlertSetting
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    LineID INT NOT NULL REFERENCES Line(ID),
-	TripTime INT NULL,
-	PickupTime INT NULL,
-	TripCoilCondition FLOAT NULL,
-)
-GO
 
 -- ------------ --
 -- PQ Dashboard --
@@ -2735,39 +3461,6 @@ GO
 
 ----- FUNCTIONS -----
 
-CREATE FUNCTION ComputeHash
-(
-    @eventID INT,
-    @templateID INT
-)
-RETURNS BIGINT
-BEGIN
-    DECLARE @md5Hash BINARY(16)
-
-    DECLARE @eventDetailSQL VARCHAR(MAX) =
-    (
-        SELECT EventDetailSQL
-        FROM
-            EmailType JOIN
-            EventEmailParameters ON EventEmailParameters.EmailTypeID = EmailType.ID
-        WHERE EmailType.XSLTemplateID = @templateID
-    )
-
-    DECLARE @eventDetail VARCHAR(MAX)
-    EXEC sp_executesql @eventDetailSQL, @eventID, @eventDetail OUT
-
-    SELECT @md5Hash = master.sys.fn_repl_hash_binary(CONVERT(VARBINARY(MAX), @eventDetail))
-    FROM EventDetail
-    WHERE EventID = @eventID
-
-    SELECT @md5Hash = master.sys.fn_repl_hash_binary(@md5Hash + CONVERT(VARBINARY(MAX), Template))
-    FROM XSLTemplate
-    WHERE ID = @templateID
-
-    RETURN CONVERT(BIGINT, SUBSTRING(@md5Hash, 0, 8)) ^ CONVERT(BIGINT, SUBSTRING(@md5Hash, 8, 8))
-END
-GO
-
 CREATE FUNCTION AdjustDateTime2
 (
     @dateTime2 DATETIME2,
@@ -2873,67 +3566,6 @@ AS BEGIN
     SELECT ID
     FROM Event
     WHERE @adjustedStartTime <= StartTime AND EndTime <= @adjustedEndTime
-
-    RETURN
-END
-GO
-
-CREATE FUNCTION GetLineEventIDs
-(
-    @lineID INT,
-    @startTime DATETIME2,
-    @endTime DATETIME2,
-    @timeTolerance FLOAT
-)
-RETURNS @lineEvent TABLE
-(
-    EventID INT
-)
-AS BEGIN
-    DECLARE @adjustedStartTime DATETIME2 = dbo.AdjustDateTime2(@startTime, -@timeTolerance)
-    DECLARE @adjustedEndTime DATETIME2 = dbo.AdjustDateTime2(@endTime, @timeTolerance)
-    DECLARE @minStartTime DATETIME2
-    DECLARE @maxEndTime DATETIME2
-
-    SELECT
-        @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)),
-        @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
-    FROM
-        Event JOIN
-        FileGroup ON Event.FileGroupID = FileGroup.ID
-    WHERE
-        LineID = @lineID AND
-        StartTime <= @adjustedEndTime AND
-        @adjustedStartTime <= EndTime AND
-        ProcessingEndTime > '0001-01-01'
-
-    WHILE @startTime != @minStartTime OR @endTime != @maxEndTime
-    BEGIN
-        SET @startTime = @minStartTime
-        SET @endTime = @maxEndTime
-        SET @adjustedStartTime = dbo.AdjustDateTime2(@startTime, -@timeTolerance)
-        SET @adjustedEndTime = dbo.AdjustDateTime2(@endTime, @timeTolerance)
-
-        SELECT
-            @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)),
-            @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
-        FROM
-            Event JOIN
-            FileGroup ON Event.FileGroupID = FileGroup.ID
-        WHERE
-            LineID = @lineID AND
-            StartTime <= @adjustedEndTime AND
-            @adjustedStartTime <= EndTime AND
-            ProcessingEndTime > '0001-01-01'
-    END
-
-    INSERT INTO @lineEvent
-    SELECT ID
-    FROM Event
-    WHERE
-        LineID = @lineID AND
-        @adjustedStartTime <= StartTime AND
-        EndTime <= @adjustedEndTime
 
     RETURN
 END
@@ -3052,13 +3684,13 @@ SELECT
 	AssetGroup.Name,
 	COUNT(DISTINCT AssetGroupAssetGroup.ChildAssetGroupID) as AssetGroups,
 	COUNT(DISTINCT MeterAssetGroup.MeterID) as Meters,
-	COUNT(DISTINCT LineAssetGroup.LineID) as Lines,
+	COUNT(DISTINCT AssetAssetGroup.AssetID) as Assets,
 	COUNT(DISTINCT UserAccountAssetGroup.UserAccountID) as Users
 FROM
 	AssetGroup LEFT JOIN
 	AssetGroupAssetGroup ON AssetGroup.ID = AssetGroupAssetGroup.ParentAssetGroupID LEFT JOIN
 	MeterAssetGroup ON AssetGroup.ID = MeterAssetGroup.AssetGroupID LEFT JOIN
-	LineAssetGroup ON AssetGroup.ID = LineAssetGroup.AssetGroupID LEFT JOIN
+	AssetAssetGroup ON AssetGroup.ID = AssetAssetGroup.AssetGroupID LEFT JOIN
 	UserAccountAssetGroup ON AssetGroup.ID = UserAccountAssetGroup.AssetGroupID
 GROUP BY
 	AssetGroup.ID,AssetGroup.Name
@@ -3066,7 +3698,7 @@ GO
 
 CREATE VIEW BreakerHistory
 AS
-SELECT  Line.ID AS LineID,
+SELECT  Breaker.ID AS BreakerID,
 		RelayPerformance.EventID AS EventID,
         RelayPerformance.Imax1,
 		RelayPerformance.Imax2,
@@ -3074,14 +3706,14 @@ SELECT  Line.ID AS LineID,
 		RelayPerformance.TripTime / 10 AS TripTime,
 		RelayPerformance.PickupTime / 10 AS PickupTime,
 		RelayPerformance.TripCoilCondition,
-		RelayAlertSetting.TripCoilCondition AS TripCoilConditionAlert,
-		RelayAlertSetting.TripTime AS TripTimeAlert,
-		RelayAlertSetting.PickupTime AS PickupTimeAlert,
+		Breaker.TripCoilCondition AS TripCoilConditionAlert,
+		Breaker.TripTime AS TripTimeAlert,
+		Breaker.PickupTime AS PickupTimeAlert,
 		RelayPerformance.ChannelID AS TripCoilChannelID
 FROM    RelayPerformance LEFT OUTER JOIN
         Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
-        Line ON Channel.LineID = Line.ID LEFT OUTER JOIN 
-		RelayAlertSetting ON RelayAlertSetting.LineID = Line.ID
+        AssetChannel ON AssetChannel.ChannelID = Channel.ID LEFT JOIN
+        Breaker ON Breaker.ID = AssetChannel.AssetID
 GO
 
 
@@ -3090,11 +3722,11 @@ CREATE VIEW MeterDetail
 AS
 SELECT  Meter.ID,
         Meter.AssetKey,
-        Meter.MeterLocationID,
-        MeterLocation.AssetKey AS LocationKey,
-        MeterLocation.Name AS Location,
-        MeterLocation.Latitude,
-        MeterLocation.Longitude,
+        Meter.LocationID,
+        Location.LocationKey AS LocationKey,
+        Location.Name AS Location,
+        Location.Latitude,
+        Location.Longitude,
         Meter.Name,
         Meter.Alias,
         Meter.ShortName,
@@ -3105,103 +3737,133 @@ SELECT  Meter.ID,
             ELSE Meter.TimeZone END AS TimeZone,
         Meter.Description
 FROM    Meter INNER JOIN
-        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+        Location ON Meter.LocationID = Location.ID LEFT OUTER JOIN
         Setting ON Setting.Name = 'DefaultMeterTimeZone'
 
 GO
 
 CREATE VIEW LineView
 AS
-SELECT
-    Line.ID,
-    Line.AssetKey,
-    Line.VoltageKV,
-    Line.ThermalRating,
-    Line.Length,
-    COALESCE(Line.MaxFaultDistance, Line.Length * MaxFaultDistanceMultiplier.Value) MaxFaultDistance,
-    COALESCE(Line.MinFaultDistance, Line.Length * MinFaultDistanceMultiplier.Value) MinFaultDistance,
-    Line.Description,
-    (
-        SELECT TOP 1 LineName
-        FROM MeterLine
-        WHERE LineID = Line.ID
-    ) AS TopName,
-    LineImpedance.R0,
-    LineImpedance.X0,
-    LineImpedance.R1,
-    LineImpedance.X1,
-    LineImpedance.ID AS LineImpedanceID,
-	RelayAlertSetting.TripTime,
-	RelayAlertSetting.PickupTime,
-	RelayAlertSetting.TripCoilCondition,
-	RelayAlertSetting.ID AS RelayAlertSettingID
-FROM
-    Line LEFT OUTER JOIN
-    LineImpedance ON Line.ID = LineImpedance.LineID LEFT OUTER JOIN
-	RelayAlertSetting ON Line.ID = RelayAlertSetting.LineID CROSS JOIN
-    (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MaxFaultDistanceMultiplier'), 1.05) Value) MaxFaultDistanceMultiplier CROSS JOIN
-    (SELECT COALESCE((SELECT Value FROM Setting WHERE Name = 'FaultLocation.MinFaultDistanceMultiplier'), 1.05) Value) MinFaultDistanceMultiplier
+SELECT	Line.ID,
+		MaxFaultDistance,
+		MinFaultDistance,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		ISNULL((SELECT Sum(LineSegment.Length) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
+		+ ISNULL((SELECT Sum(LineSegment.Length) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment')),0)
+		AS Length,
+		ISNULL((SELECT Sum(LineSegment.R0) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
+		+ ISNULL((SELECT Sum(LineSegment.R0) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
+		AS R0,
+		ISNULL((SELECT Sum(LineSegment.R1) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
+		+ ISNULL((SELECT Sum(LineSegment.R1) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
+		AS R1,
+			ISNULL((SELECT Sum(LineSegment.X0) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment') ),0)
+		+ ISNULL((SELECT Sum(LineSegment.X0) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID =  (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment')),0)
+		AS X0,
+		ISNULL((SELECT Sum(LineSegment.X1) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ChildID = LineSegment.ID 
+			WHERE AssetRelationship.ParentID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment')),0)
+		+ ISNULL((SELECT Sum(LineSegment.X1) FROM AssetRelationship LEFT JOIN 
+			LineSegment ON AssetRelationship.ParentID = LineSegment.ID 
+			WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment')),0)
+		AS X1
+	FROM LINE
 
 GO
 
-CREATE VIEW MeterLineDetail
-AS
-SELECT
-    MeterLine.ID,
-    MeterLine.MeterID,
-    Meter.AssetKey AS MeterKey,
-    Meter.Name AS MeterName,
-    MeterLine.LineID,
-    Line.AssetKey AS LineKey,
-    MeterLine.LineName,
-    FaultDetectionLogic.Expression as FaultDetectionLogic
-FROM
-    MeterLine JOIN
-    Meter ON MeterLine.MeterID = Meter.ID JOIN
-    Line ON MeterLIne.LineID = Line.ID LEFT JOIN
-    FaultDetectionLogic ON FaultDetectionLogic.MeterLineID = MeterLine.ID
+CREATE VIEW MeterAssetDetail AS
+	SELECT 
+		MeterAsset.ID,
+		MeterAsset.AssetID,
+		MeterAsset.MeterID,
+		Meter.AssetKey AS MeterKey,
+		Asset.AssetKey AS AssetKey,
+		AssetType.Name AS AssetType,
+		FaultDetectionLogic.Expression AS FaultDetectionLogic,
+		Asset.AssetName AS AssetName
+	FROM
+		MeterAsset LEFT JOIN Meter ON MeterAsset.MeterID = Meter.ID LEFT JOIN
+		ASSET ON MeterAsset.AssetID = Asset.ID LEFT JOIN 
+		AssetType ON Asset.AssetTypeID = AssetType.ID LEFT JOIN
+		FaultDetectionLogic ON FaultDetectionLogic.MeterAssetID = MeterAsset.ID
 GO
+
+CREATE VIEW AssetConnectionDetail AS
+SELECT
+	AssetRelationship.ID,
+	AssetRelationship.ChildID,
+	Asset1.AssetKey AS ChildKey,
+	AssetRelationship.ParentID,
+	Asset2.AssetKey AS ParentKey,
+	AssetRelationship.AssetRelationshipTypeID,
+	AssetRelationshipType.Name AS AssetRelationshipType
+FROM
+	AssetRelationship LEFT JOIN Asset Asset1 ON Asset1.ID = AssetRelationship.ChildID LEFT JOIN
+	Asset Asset2 ON Asset2.ID = AssetRelationship.ParentID LEFT JOIN
+	AssetRelationshipType ON AssetRelationship.AssetRelationshipTypeID = AssetRelationshipType.ID
+GO
+
 
 CREATE VIEW ChannelDetail
 AS
 SELECT
     Channel.ID,
-    Channel.MeterID,
-    Meter.AssetKey AS MeterKey,
-    Meter.Name AS MeterName,
-    Channel.LineID,
-    Line.AssetKey AS LineKey,
-    MeterLine.LineName,
-    Channel.MeasurementTypeID,
-    MeasurementType.Name AS MeasurementType,
-    Channel.MeasurementCharacteristicID,
-    MeasurementCharacteristic.Name AS MeasurementCharacteristic,
-    Channel.PhaseID,
-    Phase.Name AS Phase,
-    Channel.Name,
-    Channel.SamplesPerHour,
-    Channel.PerUnitValue,
-    Channel.HarmonicGroup,
-    Series.SourceIndexes AS Mapping,
-    Channel.Description,
-    Channel.Enabled,
-    Series.SeriesTypeID,
-    SeriesType.Name AS SeriesType
-FROM
-    Channel JOIN
-    Meter ON Channel.MeterID = Meter.ID JOIN
-    Line ON Channel.LineID = Line.ID JOIN
-    MeterLine ON
-        MeterLine.MeterID = Meter.ID AND
-        MeterLine.LineID = Line.ID JOIN
-    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
-    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
-    Phase ON Channel.PhaseID = Phase.ID LEFT OUTER JOIN
-    Series ON
-        Series.ChannelID = Channel.ID AND
-        Series.SourceIndexes <> '' LEFT OUTER JOIN
-    SeriesType ON dbo.Series.SeriesTypeID = dbo.SeriesType.ID
+     Channel.MeterID,
+     Meter.AssetKey AS MeterKey,
+     Meter.Name AS MeterName,
+     Channel.AssetID,
+     Asset.AssetKey AS AssetKey,
+     Asset.AssetName,
+     Channel.MeasurementTypeID,
+     MeasurementType.Name AS MeasurementType,
+     Channel.MeasurementCharacteristicID,
+     MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+     Channel.PhaseID,
+     Phase.Name AS Phase,
+     Channel.Name,
+     Channel.SamplesPerHour,
+     Channel.PerUnitValue,
+     Channel.HarmonicGroup,
+     Series.SourceIndexes AS Mapping,
+     Channel.Description,
+     Channel.Enabled,
+     Series.SeriesTypeID,
+     SeriesType.Name AS SeriesType
+ FROM
+     Channel JOIN
+     Meter ON Channel.MeterID = Meter.ID JOIN
+     Asset ON Channel.AssetID = Asset.ID JOIN
+     MeterAsset ON
+         MeterAsset.MeterID = Meter.ID AND
+         MeterAsset.AssetID = Asset.ID JOIN
+     MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+     MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+     Phase ON Channel.PhaseID = Phase.ID LEFT OUTER JOIN
+     Series ON
+         Series.ChannelID = Channel.ID AND
+         Series.SourceIndexes <> '' LEFT OUTER JOIN
+     SeriesType ON dbo.Series.SeriesTypeID = dbo.SeriesType.ID
 GO
+
 
 CREATE VIEW DefaultAlarmRangeLimitView
 AS
@@ -3225,38 +3887,38 @@ FROM
     MeasurementType ON DefaultAlarmRangeLimit.MeasurementTypeID = MeasurementType.ID
 GO
 
-CREATE VIEW AlarmRangeLimitView
-AS
-SELECT
-    AlarmRangeLimit.ID,
-    AlarmRangeLimit.ChannelID,
-    Channel.MeterID,
-    Channel.LineID,
-    Channel.Name,
-    AlarmRangeLimit.AlarmTypeID,
-    AlarmRangeLimit.Severity,
-    AlarmRangeLimit.High,
-    AlarmRangeLimit.Low,
-    AlarmRangeLimit.RangeInclusive,
-    AlarmRangeLimit.PerUnit,
-    AlarmRangeLimit.Enabled,
-    MeasurementType.Name AS MeasurementType,
-    MeasurementCharacteristic.Name AS MeasurementCharacteristic,
-    Phase.Name AS Phase,
-    Channel.HarmonicGroup,
-    Channel.MeasurementTypeID,
-    Channel.MeasurementCharacteristicID,
-    Channel.PhaseID,
-    AlarmRangeLimit.IsDefault,
-    Meter.Name AS MeterName
-FROM
-    AlarmRangeLimit JOIN
-    Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
-    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
-    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
-    Phase ON Channel.PhaseID = Phase.ID JOIN
-    Meter ON Channel.MeterID = Meter.ID
-GO
+ CREATE VIEW AlarmRangeLimitView
+ AS
+ SELECT
+     AlarmRangeLimit.ID,
+     AlarmRangeLimit.ChannelID,
+     Channel.MeterID,
+     Channel.AssetID,
+     Channel.Name,
+     AlarmRangeLimit.AlarmTypeID,
+     AlarmRangeLimit.Severity,
+     AlarmRangeLimit.High,
+     AlarmRangeLimit.Low,
+     AlarmRangeLimit.RangeInclusive,
+     AlarmRangeLimit.PerUnit,
+     AlarmRangeLimit.Enabled,
+     MeasurementType.Name AS MeasurementType,
+     MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+     Phase.Name AS Phase,
+     Channel.HarmonicGroup,
+     Channel.MeasurementTypeID,
+     Channel.MeasurementCharacteristicID,
+     Channel.PhaseID,
+     AlarmRangeLimit.IsDefault,
+     Meter.Name AS MeterName
+ FROM
+     AlarmRangeLimit JOIN
+     Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
+     MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+     MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+     Phase ON Channel.PhaseID = Phase.ID JOIN
+     Meter ON Channel.MeterID = Meter.ID
+ GO
 
 CREATE VIEW MeterAssetGroupView
 AS
@@ -3265,39 +3927,39 @@ SELECT
     Meter.Name AS MeterName,
     Meter.ID AS MeterID,
     AssetGroupID,
-    MeterLocation.Name AS Location
+    Location.Name AS Location
 FROM
     MeterAssetGroup JOIN
     Meter ON MeterAssetGroup.MeterID = Meter.ID JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+    Location ON Meter.LocationID = Location.ID
 GO
 
-CREATE VIEW LineAssetGroupView
-AS
-SELECT
-    LineAssetGroup.ID,
-    Line.AssetKey AS LineName,
-    (SELECT TOP 1 LineName FROM MeterLine Where LineID = Line.ID) AS LongLineName,
-    Line.ID AS LineID,
-    AssetGroupID
-FROM
-    LineAssetGroup JOIN
-    Line ON LineAssetGroup.LineID = Line.ID
-GO
-
-CREATE VIEW AssetGroupAssetGroupView
-AS
-SELECT
-    AssetGroupAssetGroup.ID,
-    AssetGroupAssetGroup.ParentAssetGroupID,
-    AssetGroupAssetGroup.ChildAssetGroupID,
-    Parent.Name as ParentAssetGroupName,
-    Child.Name as ChildAssetGroupName
-FROM
-    AssetGroupAssetGroup JOIN
-    AssetGroup as Parent ON AssetGroupAssetGroup.ParentAssetGroupID = Parent.ID JOIN
-    AssetGroup as Child ON AssetGroupAssetGroup.ChildAssetGroupID = Child.ID
-GO
+-- CREATE VIEW LineAssetGroupView
+-- AS
+-- SELECT
+--     LineAssetGroup.ID,
+--     Line.AssetKey AS LineName,
+--     (SELECT TOP 1 LineName FROM MeterLine Where LineID = Line.ID) AS LongLineName,
+--     Line.ID AS LineID,
+--     AssetGroupID
+-- FROM
+--     LineAssetGroup JOIN
+--     Line ON LineAssetGroup.LineID = Line.ID
+-- GO
+-- 
+-- CREATE VIEW AssetGroupAssetGroupView
+-- AS
+-- SELECT
+--     AssetGroupAssetGroup.ID,
+--     AssetGroupAssetGroup.ParentAssetGroupID,
+--     AssetGroupAssetGroup.ChildAssetGroupID,
+--     Parent.Name as ParentAssetGroupName,
+--     Child.Name as ChildAssetGroupName
+-- FROM
+--     AssetGroupAssetGroup JOIN
+--     AssetGroup as Parent ON AssetGroupAssetGroup.ParentAssetGroupID = Parent.ID JOIN
+--     AssetGroup as Child ON AssetGroupAssetGroup.ChildAssetGroupID = Child.ID
+-- GO
 
 
 CREATE VIEW UserAccountAssetGroupView
@@ -3314,25 +3976,6 @@ FROM
     UserAccountAssetGroup JOIN
     UserAccount ON UserAccountAssetGroup.UserAccountID = UserAccount.ID JOIN
     AssetGroup ON UserAccountAssetGroup.AssetGroupID = AssetGroup.ID
-GO
-
-CREATE VIEW UserMeter
-AS
-SELECT DISTINCT
-    UserAccount.Name AS UserName,
-    Meter.ID AS MeterID
-FROM
-    UserAccount JOIN
-    UserAccountAssetGroup ON UserAccountAssetGroup.UserAccountID = UserAccount.ID LEFT OUTER JOIN
-    MeterAssetGroup ON MeterAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID LEFT OUTER JOIN
-    LineAssetGroup ON LineAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID LEFT OUTER JOIN
-    MeterLine ON MeterLine.LineID = LineAssetGroup.LineID JOIN
-    Meter ON
-        MeterAssetGroup.MeterID = Meter.ID OR
-        MeterLine.MeterID = Meter.ID
-WHERE
-    UserAccount.Approved <> 0 AND
-    UserAccountAssetGroup.Dashboard <> 0
 GO
 
 CREATE VIEW DoubleEndedFaultSummary AS
@@ -3375,141 +4018,141 @@ FROM
         Channel.HarmonicGroup = ContourChannelType.HarmonicGroup
 GO
 
-CREATE VIEW EventView
-AS
-SELECT
-    Event.ID,
-    Event.FileGroupID,
-    Event.MeterID,
-    Event.LineID,
-    Event.EventTypeID,
-    Event.EventDataID,
-    Event.Name,
-    Event.Alias,
-    Event.ShortName,
-    Event.StartTime,
-    Event.EndTime,
-    Event.Samples,
-    Event.TimeZoneOffset,
-    Event.SamplesPerSecond,
-    Event.SamplesPerCycle,
-    Event.Description,
-    Event.UpdatedBy,
-    MeterLine.LineName,
-    Meter.Name AS MeterName,
-    MeterLocation.Name AS StationName,
-    Line.Length,
-    EventType.Name AS EventTypeName
-FROM
-    Event JOIN
-    Meter ON Event.MeterID = Meter.ID JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
-    Line ON Event.LineID = Line.ID JOIN
-    MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID JOIN
-    EventType ON Event.EventTypeID = EventType.ID
+ CREATE VIEW EventView
+ AS
+ SELECT
+     Event.ID,
+     Event.FileGroupID,
+     Event.MeterID,
+     Event.AssetID,
+     Event.EventTypeID,
+     Event.EventDataID,
+     Event.Name,
+     Event.Alias,
+     Event.ShortName,
+     Event.StartTime,
+     Event.EndTime,
+     Event.Samples,
+     Event.TimeZoneOffset,
+     Event.SamplesPerSecond,
+     Event.SamplesPerCycle,
+     Event.Description,
+     Event.UpdatedBy,
+     Asset.AssetName,
+     Meter.Name AS MeterName,
+     Location.Name AS StationName,
+     EventType.Name AS EventTypeName
+ FROM
+     Event JOIN
+     Meter ON Event.MeterID = Meter.ID JOIN
+     Location ON Meter.LocationID = Location.ID JOIN
+     Asset ON Event.AssetID = Asset.ID JOIN
+     MeterAsset ON MeterAsset.MeterID = Meter.ID AND MeterAsset.AssetID = Asset.ID JOIN
+     EventType ON Event.EventTypeID = EventType.ID
 GO
 
-CREATE VIEW DisturbanceView
-AS
-SELECT
-    Disturbance.ID,
-    Disturbance.EventID,
-    Disturbance.EventTypeID,
-    Disturbance.PhaseID,
-    Disturbance.Magnitude,
-    Disturbance.PerUnitMagnitude,
-    Disturbance.StartTime,
-    Disturbance.EndTime,
-    Disturbance.DurationSeconds,
-    Disturbance.DurationCycles,
-    Disturbance.StartIndex,
-    Disturbance.EndIndex,
-    Event.MeterID,
-    (
-        SELECT MAX(SeverityCode) AS Expr1
-        FROM DisturbanceSeverity
-        WHERE (DisturbanceID = Disturbance.ID)
-    ) AS SeverityCode,
-    Meter.Name AS MeterName,
-    Phase.Name AS PhaseName,
-    Event.LineID
-FROM
-    Disturbance JOIN
-    Event ON Disturbance.EventID = Event.ID JOIN
-    Meter ON Event.MeterID = Meter.ID JOIN
-    Phase ON Disturbance.PhaseID = Phase.ID
-GO
+-- CREATE VIEW DisturbanceView
+-- AS
+-- SELECT
+--     Disturbance.ID,
+--     Disturbance.EventID,
+--     Disturbance.EventTypeID,
+--     Disturbance.PhaseID,
+--     Disturbance.Magnitude,
+--     Disturbance.PerUnitMagnitude,
+--     Disturbance.StartTime,
+--     Disturbance.EndTime,
+--     Disturbance.DurationSeconds,
+--     Disturbance.DurationCycles,
+--     Disturbance.StartIndex,
+--     Disturbance.EndIndex,
+--     Event.MeterID,
+--     (
+--         SELECT MAX(SeverityCode) AS Expr1
+--         FROM DisturbanceSeverity
+--         WHERE (DisturbanceID = Disturbance.ID)
+--     ) AS SeverityCode,
+--     Meter.Name AS MeterName,
+--     Phase.Name AS PhaseName,
+--     Event.LineID
+-- FROM
+--     Disturbance JOIN
+--     Event ON Disturbance.EventID = Event.ID JOIN
+--     Meter ON Event.MeterID = Meter.ID JOIN
+--     Phase ON Disturbance.PhaseID = Phase.ID
+-- GO
 
-CREATE VIEW BreakerView
-AS
-SELECT
-    BreakerOperation.ID,
-    Meter.ID AS MeterID,
-    Event.ID AS EventID,
-    EventType.Name AS EventType,
-    BreakerOperation.TripCoilEnergized AS Energized,
-    BreakerOperation.BreakerNumber,
-    MeterLine.LineName,
-    Phase.Name AS PhaseName,
-    CAST(BreakerOperation.BreakerTiming AS DECIMAL(16, 5)) AS Timing,
-    BreakerOperation.BreakerSpeed AS Speed,
-    BreakerOperationType.Name AS OperationType,
-    BreakerOperation.UpdatedBy
-FROM
-    BreakerOperation JOIN
-    Event ON BreakerOperation.EventID = Event.ID JOIN
-    EventType ON EventType.ID = Event.EventTypeID JOIN
-    Meter ON Meter.ID = Event.MeterID JOIN
-    Line ON Line.ID = Event.LineID JOIN
-    MeterLine ON MeterLine.LineID = Event.LineID AND MeterLine.MeterID = Meter.ID JOIN
-    BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
-    Phase ON BreakerOperation.PhaseID = Phase.ID
-GO
+-- CREATE VIEW BreakerView
+-- AS
+-- SELECT
+--     BreakerOperation.ID,
+--     Meter.ID AS MeterID,
+--     Event.ID AS EventID,
+--     EventType.Name AS EventType,
+--     BreakerOperation.TripCoilEnergized AS Energized,
+--     BreakerOperation.BreakerNumber,
+--     MeterLine.LineName,
+--     Phase.Name AS PhaseName,
+--     CAST(BreakerOperation.BreakerTiming AS DECIMAL(16, 5)) AS Timing,
+--     BreakerOperation.BreakerSpeed AS Speed,
+--     BreakerOperationType.Name AS OperationType,
+--     BreakerOperation.UpdatedBy
+-- FROM
+--     BreakerOperation JOIN
+--     Event ON BreakerOperation.EventID = Event.ID JOIN
+--     EventType ON EventType.ID = Event.EventTypeID JOIN
+--     Meter ON Meter.ID = Event.MeterID JOIN
+--     Line ON Line.ID = Event.LineID JOIN
+--     MeterLine ON MeterLine.LineID = Event.LineID AND MeterLine.MeterID = Meter.ID JOIN
+--     BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
+--     Phase ON BreakerOperation.PhaseID = Phase.ID
+-- GO
 
 CREATE VIEW FaultView
 AS
 SELECT
-    FaultSummary.ID AS ID,
-    FaultSummary.EventID,
-    FaultSummary.Algorithm,
-    FaultSummary.FaultNumber,
-    FaultSummary.CalculationCycle,
-    FaultSummary.Distance,
-    FaultSummary.CurrentMagnitude,
-    FaultSummary.CurrentLag,
-    FaultSummary.PrefaultCurrent,
-    FaultSummary.PostfaultCurrent,
-    FaultSummary.Inception,
-    FaultSummary.DurationSeconds,
-    FaultSummary.DurationCycles,
-    FaultSummary.FaultType,
-    FaultSummary.IsSelectedAlgorithm,
-    FaultSummary.IsValid,
-    FaultSummary.IsSuppressed,
-    Meter.Name AS MeterName,
-    Meter.ShortName AS ShortName,
-    MeterLocation.ShortName AS LocationName,
-    Meter.ID AS MeterID,
-    Line.ID AS LineID,
-    MeterLine.LineName AS LineName,
-    Line.VoltageKV AS Voltage,
-    Event.StartTime AS InceptionTime,
-    CASE WHEN FaultSummary.Distance = '-1E308'
-        THEN 'NaN'
-        ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19))
-    END AS CurrentDistance,
-    ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY FaultSummary.IsSuppressed, FaultSummary.IsSelectedAlgorithm DESC, FaultSummary.Inception) AS RK
-FROM
-    FaultSummary JOIN
-    Event ON FaultSummary.EventID = Event.ID JOIN
-    EventType ON Event.EventTypeID = EventType.ID JOIN
-    Meter ON Event.MeterID = Meter.ID JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
-    Line ON Event.LineID = Line.ID JOIN
-    MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID
-WHERE
-    EventType.Name = 'Fault'
-GO
+     FaultSummary.ID AS ID,
+     FaultSummary.EventID,
+     FaultSummary.Algorithm,
+     FaultSummary.FaultNumber,
+     FaultSummary.CalculationCycle,
+     FaultSummary.Distance,
+     FaultSummary.CurrentMagnitude,
+     FaultSummary.CurrentLag,
+     FaultSummary.PrefaultCurrent,
+     FaultSummary.PostfaultCurrent,
+     FaultSummary.Inception,
+     FaultSummary.DurationSeconds,
+     FaultSummary.DurationCycles,
+     FaultSummary.FaultType,
+     FaultSummary.IsSelectedAlgorithm,
+     FaultSummary.IsValid,
+     FaultSummary.IsSuppressed,
+     Meter.Name AS MeterName,
+     Meter.ShortName AS ShortName,
+     Location.ShortName AS LocationName,
+     Meter.ID AS MeterID,
+     Asset.ID AS AssetID,
+     Asset.AssetName AS AssetName,
+     Asset.VoltageKV AS Voltage,
+     Event.StartTime AS InceptionTime,
+     CASE WHEN FaultSummary.Distance = '-1E308'
+         THEN 'NaN'
+         ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19))
+     END AS CurrentDistance,
+     ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY FaultSummary.IsSuppressed, FaultSummary.IsSelectedAlgorithm DESC, FaultSummary.Inception) AS RK
+ FROM
+     FaultSummary JOIN
+     Event ON FaultSummary.EventID = Event.ID JOIN
+     EventType ON Event.EventTypeID = EventType.ID JOIN
+     Meter ON Event.MeterID = Meter.ID JOIN
+     Location ON Meter.LocationID = Location.ID JOIN
+     Asset ON Event.AssetID = Asset.ID     
+ WHERE
+     EventType.Name = 'Fault'
+ GO
+
+
 
 CREATE VIEW WorkbenchVoltageCurveView
 AS
@@ -3667,12 +4310,12 @@ GO
 
 -- Each user can update this to create their own scalar stat view in openSEE
 CREATE VIEW OpenSEEScalarStatView AS
-SELECT
+	SELECT
     Event.ID AS EventID,
-    MeterLocation.Name AS Station,
+    Location.Name AS Station,
     Meter.Name AS Meter,
-    Line.AssetKey AS LineKey,
-    MeterLine.LineName,
+    Asset.AssetKey AS AssetKey,
+	Asset.AssetName,
     EventType.Name AS [Event Type],
     FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) / 1000.0, '0.###') AS [File Duration (seconds)],
     FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) * System.Frequency / 1000.0, '0.##') AS [File Duration (cycles)],
@@ -3709,109 +4352,109 @@ SELECT
     IBN.Mapping AS [IBN Channel],
     ICN.Mapping AS [ICN Channel],
     IR.Mapping AS [IR Channel],
-	FORMAT(RP.Imax1, '0.000') AS [Lmax 1],
+ 	FORMAT(RP.Imax1, '0.000') AS [Lmax 1],
 	FORMAT(RP.Imax2, '0.000') AS [Lmax 2],
-	FORMAT(RP.TripInitiate,'HH:mm:ss.fff') AS [Trip Initiation],
-	(RP.TripTime / 10) AS [Trip Time (microsec)],
-	(RP.PickupTime / 10) AS [Pickup Time (microsec)],
-	FORMAT(RP.TripCoilCondition, '0.000') AS [Trip Coil Condition (Aps)]
+ 	FORMAT(RP.TripInitiate,'HH:mm:ss.fff') AS [Trip Initiation],
+ 	(RP.TripTime / 10) AS [Trip Time (microsec)],
+ 	(RP.PickupTime / 10) AS [Pickup Time (microsec)],
+ 	FORMAT(RP.TripCoilCondition, '0.000') AS [Trip Coil Condition (Aps)]
 FROM
-    Event JOIN
-    MeterLine ON
-        Event.MeterID = MeterLine.MeterID AND
-        Event.LineID = MeterLine.LineID JOIN
-    Meter ON Event.MeterID = Meter.ID JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
-    Line ON Event.LineID = Line.ID JOIN
-    EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
-    FaultSummary ON
-        Event.ID = FaultSummary.EventID AND
-        FaultSummary.IsSelectedAlgorithm <> 0 AND
-        FaultSummary.FaultNumber = 1 LEFT OUTER JOIN
-    EventStat ON Event.ID = EventStat.EventID LEFT OUTER JOIN
-    ChannelDetail VAN ON
-        Event.MeterID = VAN.MeterID AND
-        Event.LineID = VAN.LineID AND
-        VAN.MeasurementType = 'Voltage' AND
-        VAN.Phase = 'AN' AND
-        VAN.MeasurementCharacteristic = 'Instantaneous' AND
-        VAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
-    ChannelDetail VBN ON
-        Event.MeterID = VBN.MeterID AND
-        Event.LineID = VBN.LineID AND
-        VBN.MeasurementType = 'Voltage' AND
-        VBN.Phase = 'BN' AND
-        VBN.MeasurementCharacteristic = 'Instantaneous' AND
-        VBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
-    ChannelDetail VCN ON
-        Event.MeterID = VCN.MeterID AND
-        Event.LineID = VCN.LineID AND
-        VCN.MeasurementType = 'Voltage' AND
-        VCN.Phase = 'CN' AND
-        VCN.MeasurementCharacteristic = 'Instantaneous' AND
-        VCN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
-    ChannelDetail IAN ON
-        Event.MeterID = IAN.MeterID AND
-        Event.LineID = IAN.LineID AND
-        IAN.MeasurementType = 'Current' AND
-        IAN.Phase = 'AN' AND
-        IAN.MeasurementCharacteristic = 'Instantaneous' AND
-        IAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
-    ChannelDetail IBN ON
-        Event.MeterID = IBN.MeterID AND
-        Event.LineID = IBN.LineID AND
-        IBN.MeasurementType = 'Current' AND
-        IBN.Phase = 'BN' AND
-        IBN.MeasurementCharacteristic = 'Instantaneous' AND
-        IBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
-    ChannelDetail ICN ON
+     Event JOIN
+     MeterAsset ON
+         Event.MeterID = MeterAsset.MeterID AND
+         Event.AssetID = MeterAsset.AssetID JOIN
+     Meter ON Event.MeterID = Meter.ID JOIN
+     Location ON Meter.LocationID = Location.ID JOIN
+     Asset ON Event.AssetID = Asset.ID JOIN
+     EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
+     FaultSummary ON
+         Event.ID = FaultSummary.EventID AND
+         FaultSummary.IsSelectedAlgorithm <> 0 AND
+         FaultSummary.FaultNumber = 1 LEFT OUTER JOIN
+     EventStat ON Event.ID = EventStat.EventID LEFT OUTER JOIN
+     ChannelDetail VAN ON
+         Event.MeterID = VAN.MeterID AND
+         Event.AssetID = VAN.AssetID AND
+         VAN.MeasurementType = 'Voltage' AND
+         VAN.Phase = 'AN' AND
+         VAN.MeasurementCharacteristic = 'Instantaneous' AND
+         VAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail VBN ON
+         Event.MeterID = VBN.MeterID AND
+         Event.AssetID = VBN.AssetID AND
+         VBN.MeasurementType = 'Voltage' AND
+         VBN.Phase = 'BN' AND
+         VBN.MeasurementCharacteristic = 'Instantaneous' AND
+         VBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail VCN ON
+         Event.MeterID = VCN.MeterID AND
+         Event.AssetID = VCN.AssetID AND
+         VCN.MeasurementType = 'Voltage' AND
+         VCN.Phase = 'CN' AND
+         VCN.MeasurementCharacteristic = 'Instantaneous' AND
+         VCN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail IAN ON
+         Event.MeterID = IAN.MeterID AND
+         Event.AssetID = IAN.AssetID AND
+         IAN.MeasurementType = 'Current' AND
+         IAN.Phase = 'AN' AND
+         IAN.MeasurementCharacteristic = 'Instantaneous' AND
+         IAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail IBN ON
+         Event.MeterID = IBN.MeterID AND
+         Event.AssetID = IBN.AssetID AND
+         IBN.MeasurementType = 'Current' AND
+         IBN.Phase = 'BN' AND
+         IBN.MeasurementCharacteristic = 'Instantaneous' AND
+         IBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail ICN ON
         Event.MeterID = ICN.MeterID AND
-        Event.LineID = ICN.LineID AND
-        ICN.MeasurementType = 'Current' AND
-        ICN.Phase = 'CN' AND
-        ICN.MeasurementCharacteristic = 'Instantaneous' AND
-        ICN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
-    ChannelDetail IR ON
-        Event.MeterID = IR.MeterID AND
-        Event.LineID = IR.LineID AND
-        IR.MeasurementType = 'Current' AND
-        IR.Phase = 'RES' AND
-        IR.MeasurementCharacteristic = 'Instantaneous' AND
-        IR.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
-	RelayPerformance RP ON
-		Event.ID = RP.EventID AND
-		RP.ChannelID IN 
-		(
-			SELECT ID fROM ChannelDetail RPD WHERE 
-				Event.MeterID = RPD.MeterID AND
-				Event.LineID = RPD.LineID
-		) CROSS JOIN
-    (
-        SELECT COALESCE(CONVERT(FLOAT,
-        (
-            SELECT TOP 1 Value
-            FROM Setting
-            WHERE Name = 'SystemFrequency'
-        )), 60.0) AS Frequency
-    ) System OUTER APPLY
-    (
-        SELECT TOP 1
-            Disturbance.PerUnitMagnitude * 100 AS MagnitudePercent,
-            Disturbance.Magnitude AS MagnitudeVolts
-        FROM
-            Disturbance JOIN
-            EventType ON
-                Disturbance.EventTypeID = EventType.ID AND
-                EventType.Name = 'Sag' JOIN
-            Phase ON
-                Disturbance.PhaseID = Phase.ID AND
-                Phase.Name = 'Worst'
-        WHERE
-            Disturbance.EventID = Event.ID AND
-            Disturbance.StartTime <= dbo.AdjustDateTime2(FaultSummary.Inception, FaultSummary.DurationSeconds) AND
-            Disturbance.EndTime >= FaultSummary.Inception
-    ) Sag
-GO
+         Event.AssetID = ICN.AssetID AND
+         ICN.MeasurementType = 'Current' AND
+         ICN.Phase = 'CN' AND
+         ICN.MeasurementCharacteristic = 'Instantaneous' AND
+         ICN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+     ChannelDetail IR ON
+         Event.MeterID = IR.MeterID AND
+         Event.AssetID = IR.AssetID AND
+         IR.MeasurementType = 'Current' AND
+         IR.Phase = 'RES' AND
+         IR.MeasurementCharacteristic = 'Instantaneous' AND
+         IR.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
+ 	RelayPerformance RP ON
+ 		Event.ID = RP.EventID AND
+ 		RP.ChannelID IN 
+ 		(
+ 			SELECT ID fROM ChannelDetail RPD WHERE 
+ 				Event.MeterID = RPD.MeterID AND
+ 				Event.AssetID = RPD.AssetID
+ 		) CROSS JOIN
+     (
+         SELECT COALESCE(CONVERT(FLOAT,
+         (
+             SELECT TOP 1 Value
+             FROM Setting
+             WHERE Name = 'SystemFrequency'
+         )), 60.0) AS Frequency
+     ) System OUTER APPLY
+     (
+         SELECT TOP 1
+             Disturbance.PerUnitMagnitude * 100 AS MagnitudePercent,
+             Disturbance.Magnitude AS MagnitudeVolts
+         FROM
+             Disturbance JOIN
+             EventType ON
+                 Disturbance.EventTypeID = EventType.ID AND
+                 EventType.Name = 'Sag' JOIN
+             Phase ON
+                 Disturbance.PhaseID = Phase.ID AND
+                 Phase.Name = 'Worst'
+         WHERE
+             Disturbance.EventID = Event.ID AND
+             Disturbance.StartTime <= dbo.AdjustDateTime2(FaultSummary.Inception, FaultSummary.DurationSeconds) AND
+             Disturbance.EndTime >= FaultSummary.Inception
+     ) Sag
+ GO
 
 
 CREATE FUNCTION RecursiveMeterSearch(@assetGroupID int)
@@ -3841,79 +4484,6 @@ GO
 
 ----- PROCEDURES -----
 
-CREATE PROCEDURE GetEventEmailRecipients
-(
-    @eventID INT
-)
-AS BEGIN
-    DECLARE @lineID INT
-    DECLARE @startTime DATETIME2
-    DECLARE @endTime DATETIME2
-    DECLARE @timeTolerance FLOAT
-
-    SELECT
-        @lineID = LineID,
-        @startTime = StartTime,
-        @endTime = EndTime,
-        @timeTolerance = COALESCE(Value, 0.5)
-    FROM
-        Event LEFT OUTER JOIN
-        Setting ON Setting.Name = 'TimeTolerance'
-    WHERE Event.ID = @eventID
-
-    SELECT DISTINCT
-        UserAccountAssetGroup.UserAccountID,
-        EmailType.XSLTemplateID AS TemplateID
-    FROM
-        GetLineEventIDs(@lineID, @startTime, @endTime, @timeTolerance) LineEventID JOIN
-        Event ON LineEventID.EventID = Event.ID JOIN
-        EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
-        MeterAssetGroup ON MeterAssetGroup.MeterID = Event.MeterID LEFT OUTER JOIN
-        LineAssetGroup ON LineAssetGroup.LineID = Event.LineID JOIN
-        UserAccountAssetGroup ON
-            UserAccountAssetGroup.AssetGroupID = MeterAssetGroup.AssetGroupID OR
-            UserAccountAssetGroup.AssetGroupID = LineAssetGroup.AssetGroupID JOIN
-        UserAccountEmailType ON UserAccountAssetGroup.UserAccountID = UserAccountEmailType.UserAccountID JOIN
-        EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID JOIN
-        EmailCategory ON
-            EmailType.EmailCategoryID = EmailCategory.ID AND
-            EmailCategory.Name = 'Event'
-    WHERE
-        (
-            EventType.Name = 'Fault' AND
-            EXISTS
-            (
-                SELECT *
-                FROM FaultEmailCriterion
-                WHERE FaultEmailCriterion.EmailTypeID = EmailType.ID
-            )
-        )
-        OR
-        (
-            EventType.Name = 'RecloseIntoFault' AND
-            EXISTS
-            (
-                SELECT *
-                FROM FaultEmailCriterion
-                WHERE
-                    FaultEmailCriterion.EmailTypeID = EmailType.ID AND
-                    FaultEmailCriterion.EmailOnReclose <> 0
-            )
-        )
-        OR EXISTS
-        (
-            SELECT *
-            FROM
-                Disturbance JOIN
-                DisturbanceSeverity ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
-                DisturbanceEmailCriterion ON DisturbanceSeverity.SeverityCode = DisturbanceEmailCriterion.SeverityCode
-            WHERE
-                Disturbance.EventID = Event.ID AND
-                DisturbanceEmailCriterion.EmailTypeID = EmailType.ID
-        )
-END
-GO
-
 CREATE PROCEDURE GetSystemEvent
     @startTime DATETIME2,
     @endTime DATETIME2,
@@ -3922,18 +4492,6 @@ AS BEGIN
     SELECT *
     FROM Event
     WHERE ID IN (SELECT * FROM dbo.GetSystemEventIDs(@startTime, @endTime, @timeTolerance))
-END
-GO
-
-CREATE PROCEDURE GetLineEvent
-    @lineID INT,
-    @startTime DATETIME2,
-    @endTime DATETIME2,
-    @timeTolerance FLOAT
-AS BEGIN
-    SELECT *
-    FROM Event
-    WHERE ID IN (SELECT * FROM dbo.GetLineEventIDs(@lineID, @startTime, @endTime, @timeTolerance))
 END
 GO
 
@@ -3982,7 +4540,7 @@ AS BEGIN
     DECLARE @facilityID INT
     DECLARE @magnitude FLOAT
     DECLARE @duration FLOAT
-
+    DECLARE @subeventid INT
     CREATE TABLE #temp
     (
         Facility VARCHAR(64),
@@ -3992,14 +4550,16 @@ AS BEGIN
         ComponentModel VARCHAR(64),
         ManufacturerName VARCHAR(64),
         SeriesName VARCHAR(64),
-        ComponentTypeName VARCHAR(32)
+        ComponentTypeName VARCHAR(32),
+		EventID int
     )
 
     DECLARE dbCursor CURSOR FOR
     SELECT
         FacilityID,
         PerUnitMagnitude,
-        DurationSeconds
+        DurationSeconds,
+        Event.ID as EventID
     FROM
         Disturbance JOIN
         Event ON Disturbance.EventID = Event.ID JOIN
@@ -4008,14 +4568,14 @@ AS BEGIN
         EventID = @eventID
 
     OPEN dbCursor
-    FETCH NEXT FROM dbCursor INTO @facilityID, @magnitude, @duration
+    FETCH NEXT FROM dbCursor INTO @facilityID, @magnitude, @duration, @subeventid
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
         INSERT INTO #temp
-        EXEC GetImpactedComponents @facilityID, @magnitude, @duration
+        EXEC GetImpactedComponents @facilityID, @magnitude, @duration, @subeventid
 
-        FETCH NEXT FROM dbCursor INTO @facilityID, @magnitude, @duration
+        FETCH NEXT FROM dbCursor INTO @facilityID, @magnitude, @duration, @subeventid
     END
 
     CLOSE dbCursor

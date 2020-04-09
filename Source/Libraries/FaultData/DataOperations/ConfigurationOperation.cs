@@ -194,8 +194,6 @@ namespace FaultData.DataOperations
                 // the configuration obtained from the latest file
                 FixUpdatedChannelInfo(meterDataSet, parsedMeter);
 
-                // Update line parameters pulled from the input data
-                UpdateConfigurationData(meterDataSet);
             }
         }
 
@@ -294,7 +292,7 @@ namespace FaultData.DataOperations
         {
             List<DataSeries> undefinedDataSeries = meterDataSet.DataSeries
                 .Concat(meterDataSet.Digitals)
-                .Where(dataSeries => (object)dataSeries.SeriesInfo.Channel.Line == null)
+                .Where(dataSeries => (object)dataSeries.SeriesInfo.Channel.Asset == null)
                 .ToList();
 
             if (undefinedDataSeries.Count <= 0)
@@ -302,24 +300,24 @@ namespace FaultData.DataOperations
 
             Meter meter = meterDataSet.Meter;
 
-            if (meter.MeterLines.Count == 0)
+            if (meter.MeterAssets.Count == 0)
             {
                 Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are no lines associated with that meter.");
                 return;
             }
 
-            if (meter.MeterLines.Count > 1)
+            if (meter.MeterAssets.Count > 1)
             {
                 Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are too many lines associated with that meter.");
                 return;
             }
 
-            Line line = meter.MeterLines
-                .Select(meterLine => meterLine.Line)
+            Asset asset = meter.MeterAssets
+                .Select(meterLine => meterLine.Asset)
                 .Single();
 
             foreach (DataSeries series in undefinedDataSeries)
-                series.SeriesInfo.Channel.LineID = line.ID;
+                series.SeriesInfo.Channel.AssetID = asset.ID;
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
@@ -379,7 +377,7 @@ namespace FaultData.DataOperations
                     string phaseName = channel.Phase.Name;
 
                     channel.MeterID = meter.ID;
-                    channel.LineID = line.ID;
+                    channel.AssetID = asset.ID;
                     channel.MeasurementTypeID = measurementTypeLookup[measurementTypeName].ID;
                     channel.MeasurementCharacteristicID = measurementCharacteristicLookup[measurementCharacteristicName].ID;
                     channel.PhaseID = phaseLookup[phaseName].ID;
@@ -393,9 +391,9 @@ namespace FaultData.DataOperations
                         if (IsVoltage(channel))
                         {
                             if (IsLineToNeutral(channel))
-                                channel.PerUnitValue = (line.VoltageKV * 1000.0D) / Sqrt3;
+                                channel.PerUnitValue = (asset.VoltageKV * 1000.0D) / Sqrt3;
                             else if (IsLineToLine(channel))
-                                channel.PerUnitValue = line.VoltageKV * 1000.0D;
+                                channel.PerUnitValue = asset.VoltageKV * 1000.0D;
                         }
                     }
 
@@ -470,73 +468,7 @@ namespace FaultData.DataOperations
             }
         }
 
-        private void UpdateConfigurationData(MeterDataSet meterDataSet)
-        {
-            bool updateLineLength = meterDataSet.Configuration.LineLength.HasValue;
-
-            bool updateLineImpedance =
-                meterDataSet.Configuration.R1.HasValue &&
-                meterDataSet.Configuration.X1.HasValue &&
-                meterDataSet.Configuration.R0.HasValue &&
-                meterDataSet.Configuration.X0.HasValue;
-
-            if (!updateLineLength && !updateLineImpedance)
-                return;
-
-            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
-            {
-                TableOperations<Line> lineTable = new TableOperations<Line>(connection);
-
-                List<Line> lines = lineTable.QueryRecordsWhere("ID IN (SELECT LineID FROM MeterLocationLine WHERE MeterLocationID = {0})", meterDataSet.Meter.MeterLocationID).ToList();
-
-                if (lines.Count != 1)
-                    return;
-
-                Line line = lines[0];
-
-                if (updateLineLength)
-                {
-                    line.Length = meterDataSet.Configuration.LineLength.GetValueOrDefault();
-                    lineTable.UpdateRecord(line);
-                }
-
-                if (updateLineImpedance)
-                {
-                    TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
-                    LineImpedance lineImpedance = lineImpedanceTable.QueryRecordWhere("LineID = {0}", line.ID);
-
-                    if ((object)lineImpedance == null)
-                        lineImpedance = new LineImpedance() { ID = line.ID };
-
-                    if (meterDataSet.Configuration.R1.HasValue)
-                        lineImpedance.R1 = meterDataSet.Configuration.R1.GetValueOrDefault();
-
-                    if (meterDataSet.Configuration.X1.HasValue)
-                        lineImpedance.X1 = meterDataSet.Configuration.X1.GetValueOrDefault();
-
-                    if (meterDataSet.Configuration.R0.HasValue)
-                        lineImpedance.R0 = meterDataSet.Configuration.R0.GetValueOrDefault();
-
-                    if (meterDataSet.Configuration.X0.HasValue)
-                        lineImpedance.X0 = meterDataSet.Configuration.X0.GetValueOrDefault();
-
-                    try
-                    {
-                        lineImpedanceTable.AddNewOrUpdateRecord(lineImpedance);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Ignore errors regarding unique key constraints
-                        // which can occur as a result of a race condition
-                        bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
-
-                        if (!isUniqueViolation)
-                            throw;
-                    }
-                }
-            }
-        }
-
+        
         private void FixUpdatedChannelInfo(MeterDataSet meterDataSet, Meter parsedMeter)
         {
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
@@ -567,7 +499,7 @@ namespace FaultData.DataOperations
 
                 IEnumerable<ChannelKey> parsedChannelKeys = parsedMeter.Channels
                     .Concat(allDataSeries.Select(dataSeries => dataSeries.SeriesInfo.Channel))
-                    .Where(channel => (object)channel.Line != null)
+                    .Where(channel => (object)channel.Asset != null)
                     .Select(channel => new ChannelKey(channel));
 
                 HashSet<ChannelKey> parsedChannelLookup = new HashSet<ChannelKey>(parsedChannelKeys);

@@ -35,84 +35,232 @@ namespace FaultData.DataAnalysis
         #region [ Members ]
 
         // Fields
-        private int m_vaIndex;
-        private int m_vbIndex;
-        private int m_vcIndex;
-        private int m_vabIndex;
-        private int m_vbcIndex;
-        private int m_vcaIndex;
+        private List<VIndices> m_vIndices;
+       
         private int m_iaIndex;
         private int m_ibIndex;
         private int m_icIndex;
         private int m_irIndex;
 
+
         private DataGroup m_dataGroup;
 
+        private class VIndices
+        {
+            public int Va;
+            public int Vb;
+            public int Vc;
+
+            public int Vab;
+            public int Vbc;
+            public int Vca;
+
+            public int distance;
+            public VIndices()
+            {
+                Va = -1;
+                Vb = -1;
+                Vc = -1;
+                Vab = -1;
+                Vbc = -1;
+                Vca = -1;
+
+                distance = -1;
+            }
+
+            public int DefinedNeutralVoltages
+            {
+                get
+                {
+                    return ((Va > -1)? 1: 0) + ((Vb > -1) ? 1 : 0) + ((Vc > -1) ? 1 : 0);
+                }
+            }
+
+            public int DefinedLineVoltages
+            {
+                get
+                {
+                    return ((Vab > -1) ? 1 : 0) + ((Vbc > -1) ? 1 : 0) + ((Vca > -1) ? 1 : 0);
+                }
+            }
+
+            public bool allVoltagesDefined
+            {
+                get
+                {
+                    return ((Vab > -1) && (Vbc > -1) && (Vca > -1) &&
+                        (Va > -1) && (Vb > -1) && (Vc > -1));
+                }
+            }
+
+        }
         #endregion
 
         #region [ Constructors ]
 
         public VIDataGroup(DataGroup dataGroup)
         {
-            string[] instantaneousSeriesTypes = { "Values", "Instantaneous" };
 
             // Initialize each of
             // the indexes to -1
-            m_vaIndex = -1;
-            m_vbIndex = -1;
-            m_vcIndex = -1;
-            m_vabIndex = -1;
-            m_vbcIndex = -1;
-            m_vcaIndex = -1;
+            m_vIndices = new List<VIndices>();
+
             m_iaIndex = -1;
             m_ibIndex = -1;
             m_icIndex = -1;
             m_irIndex = -1;
 
             // Initialize the data group
-            m_dataGroup = new DataGroup(dataGroup.DataSeries);
+            m_dataGroup = new DataGroup(dataGroup.DataSeries, dataGroup.Asset);
+
+           
+            // List of Indices matching channel type
+            List<int> vaIndices = new List<int>();
+            List<int> vbIndices = new List<int>();
+            List<int> vcIndices = new List<int>();
+            List<int> vabIndices = new List<int>();
+            List<int> vbcIndices = new List<int>();
+            List<int> vcaIndices = new List<int>();
+
+            List<int> iaIndices = new List<int>();
+            List<int> ibIndices = new List<int>();
+            List<int> icIndices = new List<int>();
+            List<int> iresIndices = new List<int>();
 
             for (int i = 0; i < dataGroup.DataSeries.Count; i++)
             {
-                string measurementType = dataGroup[i].SeriesInfo.Channel.MeasurementType.Name;
-                string measurementCharacteristic = dataGroup[i].SeriesInfo.Channel.MeasurementCharacteristic.Name;
-                string seriesType = dataGroup[i].SeriesInfo.SeriesType.Name;
-                string phase = dataGroup[i].SeriesInfo.Channel.Phase.Name;
-
-                // If the data group is not instantaneous, do not use it in the VIDataGroup
-                if (measurementCharacteristic != "Instantaneous")
-                    continue;
-
-                // If the data group is not instantaneous, do not use it in the VIDataGroup
-                if (!instantaneousSeriesTypes.Contains(seriesType))
-                    continue;
-
-                // Assign the proper indexes for the seven VIDataGroup
-                // channels by checking the name of the channel
-                if (measurementType == "Voltage" && phase == "AN")
-                    m_vaIndex = i;
-                else if (measurementType == "Voltage" && phase == "BN")
-                    m_vbIndex = i;
-                else if (measurementType == "Voltage" && phase == "CN")
-                    m_vcIndex = i;
-                else if (measurementType == "Voltage" && phase == "AB")
-                    m_vabIndex = i;
-                else if (measurementType == "Voltage" && phase == "BC")
-                    m_vbcIndex = i;
-                else if (measurementType == "Voltage" && phase == "CA")
-                    m_vcaIndex = i;
-                else if (measurementType == "Current" && phase == "AN")
-                    m_iaIndex = i;
-                else if (measurementType == "Current" && phase == "BN")
-                    m_ibIndex = i;
-                else if (measurementType == "Current" && phase == "CN")
-                    m_icIndex = i;
-                else if (measurementType == "Current" && phase == "RES")
-                    m_irIndex = i;
+                if (isVoltage("AN", dataGroup[i]))
+                    vaIndices.Add(i);
+                else if (isVoltage("BN", dataGroup[i]))
+                    vbIndices.Add(i);
+                else if (isVoltage("CN", dataGroup[i]))
+                    vcIndices.Add(i);
+                else if (isVoltage("AB", dataGroup[i]))
+                    vabIndices.Add(i);
+                else if (isVoltage("BC", dataGroup[i]))
+                    vbcIndices.Add(i);
+                else if (isVoltage("CA", dataGroup[i]))
+                    vcaIndices.Add(i);
+                else if (isCurrent("AN", dataGroup[i]))
+                    iaIndices.Add(i);
+                else if (isCurrent("BN", dataGroup[i]))
+                    ibIndices.Add(i);
+                else if (isCurrent("CN", dataGroup[i]))
+                    icIndices.Add(i);
+                else if (isCurrent("RES", dataGroup[i]))
+                    iresIndices.Add(i);
             }
+
+            //Walk through all Va and try to get corresponding Vb and Vc...
+            List<int?> ProcessedIndices = new List<int?>();
+            foreach(int? VaIndex in vaIndices)
+            {
+                int assetID = dataGroup[(int)VaIndex].SeriesInfo.Channel.AssetID;
+                int VbIndex = vbIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VcIndex = vcIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VabIndex = vabIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VbcIndex = vbcIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VcaIndex = vcaIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+
+                VIndices set = new VIndices();
+                ProcessedIndices.Add(VaIndex);
+                set.Va = (int)VaIndex;
+
+                if (VbIndex > -1)
+                {
+                    ProcessedIndices.Add(VbIndex);
+                    set.Vb = VbIndex;
+                }
+                if (VcIndex > -1)
+                {
+                    ProcessedIndices.Add(VcIndex);
+                    set.Vc = VcIndex;
+                }
+
+                if (VabIndex > -1)
+                {
+                    ProcessedIndices.Add(VabIndex);
+                    set.Vab = VabIndex;
+                }
+                if (VbcIndex > -1)
+                {
+                    ProcessedIndices.Add(VbcIndex);
+                    set.Vbc = VbcIndex;
+                }
+                if (VcaIndex > -1)
+                {
+                    ProcessedIndices.Add(VcaIndex);
+                    set.Vca = VcaIndex;
+                }
+
+
+                if (assetID == dataGroup.Asset.ID)
+                {
+                    set.distance = 0;
+                }
+                else
+                {
+                    set.distance = dataGroup.Asset.DistanceToAsset(assetID);
+                }
+
+                m_vIndices.Add(set);
+            }
+            
+            // Start by matching 
+            //Check if a voltage and current channnel exist on this asset
+            
+            if (iaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_iaIndex = iaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+            if (ibIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_ibIndex = ibIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+            if (icIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_icIndex = icIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+
+            if (iresIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
+                m_irIndex = iresIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
+
+            // use one of the connected Assets
+            List<int> connectedAssets = dataGroup.Asset.ConnectedAssets.Select(item => item.ID).ToList();
+
+            
+
+            if (m_iaIndex == -1 && iaIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_iaIndex = iaIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+            if (m_ibIndex == -1 && ibIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_ibIndex = ibIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+            if (m_icIndex == -1 && icIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_icIndex = icIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+
+            if (m_irIndex == -1 && iresIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).Count() > 0)
+                m_irIndex = iresIndices.Where(i => connectedAssets.Contains(dataGroup[i].SeriesInfo.Channel.AssetID)).First();
+
+            
+            if (m_iaIndex == -1 && iaIndices.Count() > 0)
+                m_iaIndex = iaIndices.First();
+            if (m_ibIndex == -1 && ibIndices.Count() > 0)
+                m_ibIndex = ibIndices.First();
+            if (m_ibIndex == -1 && ibIndices.Count() > 0)
+                m_ibIndex = icIndices.First();
+
+            if (m_irIndex == -1 && iresIndices.Count() > 0)
+                m_irIndex = iresIndices.First();
+
+
+            if (m_vIndices.Count() == 0)
+                m_vIndices.Add(new VIndices());
 
             CalculateMissingCurrentChannel();
             CalculateMissingLLVoltageChannels();
+
+            //sort by all available Channels and number of Hops to actual Asset
+            m_vIndices.Sort((a, b) => 
+                {
+                    if (b.allVoltagesDefined && !a.allVoltagesDefined)
+                        return 1;
+                    if (a.allVoltagesDefined && !b.allVoltagesDefined)
+                        return -1;
+                    return a.distance.CompareTo(b.distance);
+                });
         }
 
         private VIDataGroup()
@@ -127,7 +275,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vaIndex >= 0) ? m_dataGroup[m_vaIndex] : null;
+                return (m_vIndices[0].Va >= 0) ? m_dataGroup[m_vIndices[0].Va] : null;
             }
         }
 
@@ -135,7 +283,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vbIndex >= 0) ? m_dataGroup[m_vbIndex] : null;
+                return (m_vIndices[0].Vb >= 0) ? m_dataGroup[m_vIndices[0].Vb] : null;
             }
         }
 
@@ -143,7 +291,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vcIndex >= 0) ? m_dataGroup[m_vcIndex] : null;
+                return (m_vIndices[0].Vc >= 0) ? m_dataGroup[m_vIndices[0].Vc] : null;
             }
         }
 
@@ -151,7 +299,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vabIndex >= 0) ? m_dataGroup[m_vabIndex] : null;
+                return (m_vIndices[0].Vab >= 0) ? m_dataGroup[m_vIndices[0].Vab] : null;
             }
         }
 
@@ -159,7 +307,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vbcIndex >= 0) ? m_dataGroup[m_vbcIndex] : null;
+                return (m_vIndices[0].Vbc >= 0) ? m_dataGroup[m_vIndices[0].Vbc] : null;
             }
         }
 
@@ -167,7 +315,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vcaIndex >= 0) ? m_dataGroup[m_vcaIndex] : null;
+                return (m_vIndices[0].Vca >= 0) ? m_dataGroup[m_vIndices[0].Vca] : null;
             }
         }
 
@@ -207,7 +355,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return NeutralVoltageIndexes.Count(index => index >= 0);
+                return m_vIndices.Select(item => item.DefinedNeutralVoltages).Sum();
             }
         }
 
@@ -215,7 +363,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return LineVoltageIndexes.Count(index => index >= 0);
+                return m_vIndices.Select(item => item.DefinedLineVoltages).Sum();
             }
         }
 
@@ -231,25 +379,8 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return NeutralVoltageIndexes
-                    .Concat(CurrentIndexes)
-                    .All(index => index >= 0);
-            }
-        }
-
-        private int[] NeutralVoltageIndexes
-        {
-            get
-            {
-                return new int[] { m_vaIndex, m_vbIndex, m_vcIndex };
-            }
-        }
-
-        private int[] LineVoltageIndexes
-        {
-            get
-            {
-                return new int[] { m_vabIndex, m_vbcIndex, m_vcaIndex };
+                return m_vIndices[0].allVoltagesDefined &&
+                    CurrentIndexes.All(index => index >= 0);
             }
         }
 
@@ -261,8 +392,51 @@ namespace FaultData.DataAnalysis
             }
         }
 
+        public Asset Asset
+        {
+            get
+            {
+                return m_dataGroup.Asset;
+            }
+        }
         #endregion
 
+        public DataSeries[] Data
+        {
+            get
+            {
+                List<DataSeries> result = new List<DataSeries>();
+                foreach (VIndices Vindex in m_vIndices)
+                {
+                    if (Vindex.Va > -1)
+                        result.Add(m_dataGroup[Vindex.Va]);
+                    if (Vindex.Vb > -1)
+                        result.Add(m_dataGroup[Vindex.Vb]);
+                    if (Vindex.Vc > -1)
+                        result.Add(m_dataGroup[Vindex.Vc]);
+
+                    if (Vindex.Vab > -1)
+                        result.Add(m_dataGroup[Vindex.Vab]);
+                    if (Vindex.Vbc > -1)
+                        result.Add(m_dataGroup[Vindex.Vbc]);
+                    if (Vindex.Vca > -1)
+                        result.Add(m_dataGroup[Vindex.Vca]);
+
+
+                }
+                
+                if (m_iaIndex > -1)
+                    result.Add(m_dataGroup[m_iaIndex]);
+                if (m_ibIndex > -1)
+                    result.Add(m_dataGroup[m_ibIndex]);
+                if (m_icIndex > -1)
+                    result.Add(m_dataGroup[m_icIndex]);
+                if (m_irIndex > -1)
+                    result.Add(m_dataGroup[m_irIndex]);
+                return result.ToArray();
+
+            }
+        }
         #region [ Methods ]
 
         /// <summary>
@@ -287,7 +461,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IA = IR - IB - IC
                 missingSeries = IR.Add(IB.Negate()).Add(IC.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "AN");
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "AN", IR.SeriesInfo.Channel.AssetID);
                 missingSeries.Calculated = true;
                 m_iaIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
@@ -296,7 +470,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IB = IR - IA - IC
                 missingSeries = IR.Add(IA.Negate()).Add(IC.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "BN");
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "BN", IR.SeriesInfo.Channel.AssetID);
                 missingSeries.Calculated = true;
                 m_ibIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
@@ -305,7 +479,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IC = IR - IA - IB
                 missingSeries = IR.Add(IA.Negate()).Add(IB.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "CN");
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "CN", IR.SeriesInfo.Channel.AssetID);
                 missingSeries.Calculated = true;
                 m_icIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
@@ -314,7 +488,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IR = IA + IB + IC
                 missingSeries = IA.Add(IB).Add(IC);
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "RES");
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "RES", IA.SeriesInfo.Channel.AssetID);
                 missingSeries.Calculated = true;
                 m_irIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
@@ -326,61 +500,64 @@ namespace FaultData.DataAnalysis
             Meter meter;
             DataSeries missingSeries;
 
-            // If all line voltages are already present or there are not
-            // atleast 2 lines we will not perform line to line calculations
-            if ( DefinedLineVoltages == 3 || DefinedNeutralVoltages < 2 )
-                return;
-
-            // Get the meter associated with the channels in this data group
-            meter = (VA ?? VB ?? VC).SeriesInfo.Channel.Meter;
-
-            if (m_vabIndex == -1 && VA != null && VB != null)
+            //Do this for every Voltage set
+            for (int i = 0; i < m_vIndices.Count(); i++)
             {
-                // Calculate VAB = VA - VB
-                missingSeries = VA.Add(VB.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "AB");
-                missingSeries.Calculated = true;
-                m_vabIndex = m_dataGroup.DataSeries.Count;
-                m_dataGroup.Add(missingSeries);
-            }
+                // If all line voltages are already present or there are not
+                // atleast 2 lines we will not perform line to line calculations
+                if (m_vIndices[i].DefinedLineVoltages == 3 || m_vIndices[i].DefinedNeutralVoltages < 2)
+                    return;
 
-            if (m_vbcIndex == -1 && VB != null && VC != null)
-            {
-                // Calculate VBC = VB - VC
-                missingSeries = VB.Add(VC.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "BC");
-                missingSeries.Calculated = true;
-                m_vbcIndex = m_dataGroup.DataSeries.Count;
-                m_dataGroup.Add(missingSeries);
-            }
+                // Get the meter associated with the channels in this data group
+                DataSeries VA = m_dataGroup[m_vIndices[i].Va];
+                DataSeries VB = m_dataGroup[m_vIndices[i].Vb];
+                DataSeries VC = m_dataGroup[m_vIndices[i].Vc];
 
-            if (m_vcaIndex == -1 && VC != null && VA != null)
-            {
-                // Calculate VCA = VC - VA
-                missingSeries = VC.Add(VA.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "CA");
-                missingSeries.Calculated = true;
-                m_vcaIndex = m_dataGroup.DataSeries.Count;
-                m_dataGroup.Add(missingSeries);
+                meter = (VA ?? VB ?? VC).SeriesInfo.Channel.Meter;
+
+                if (m_vIndices[i].Vab == -1 && VA != null && VB != null)
+                {
+                    // Calculate VAB = VA - VB
+                    missingSeries = VA.Add(VB.Negate());
+                    missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "AB", VA.SeriesInfo.Channel.AssetID);
+                    missingSeries.Calculated = true;
+                    m_vIndices[i].Vab = m_dataGroup.DataSeries.Count;
+                    m_dataGroup.Add(missingSeries);
+                }
+
+                if (m_vIndices[i].Vbc == -1 && VB != null && VC != null)
+                {
+                    // Calculate VBC = VB - VC
+                    missingSeries = VB.Add(VC.Negate());
+                    missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "BC", VB.SeriesInfo.Channel.AssetID);
+                    missingSeries.Calculated = true;
+                    m_vIndices[i].Vbc = m_dataGroup.DataSeries.Count;
+                    m_dataGroup.Add(missingSeries);
+                }
+
+                if (m_vIndices[i].Vca == -1 && VC != null && VA != null)
+                {
+                    // Calculate VCA = VC - VA
+                    missingSeries = VC.Add(VA.Negate());
+                    missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "CA", VC.SeriesInfo.Channel.AssetID);
+                    missingSeries.Calculated = true;
+                    m_vIndices[i].Vca = m_dataGroup.DataSeries.Count;
+                    m_dataGroup.Add(missingSeries);
+                }
             }
 
         }
 
         public DataGroup ToDataGroup()
         {
-            return new DataGroup(m_dataGroup.DataSeries);
+            return new DataGroup(m_dataGroup.DataSeries, m_dataGroup.Asset);
         }
 
         public VIDataGroup ToSubGroup(int startIndex, int endIndex)
         {
             VIDataGroup subGroup = new VIDataGroup();
 
-            subGroup.m_vaIndex = m_vaIndex;
-            subGroup.m_vbIndex = m_vbIndex;
-            subGroup.m_vcIndex = m_vcIndex;
-            subGroup.m_vabIndex = m_vabIndex;
-            subGroup.m_vbcIndex = m_vbcIndex;
-            subGroup.m_vcaIndex = m_vcaIndex;
+            subGroup.m_vIndices = m_vIndices;
             subGroup.m_iaIndex = m_iaIndex;
             subGroup.m_ibIndex = m_ibIndex;
             subGroup.m_icIndex = m_icIndex;
@@ -395,12 +572,7 @@ namespace FaultData.DataAnalysis
         {
             VIDataGroup subGroup = new VIDataGroup();
 
-            subGroup.m_vaIndex = m_vaIndex;
-            subGroup.m_vbIndex = m_vbIndex;
-            subGroup.m_vcIndex = m_vcIndex;
-            subGroup.m_vabIndex = m_vabIndex;
-            subGroup.m_vbcIndex = m_vbcIndex;
-            subGroup.m_vcaIndex = m_vcaIndex;
+            subGroup.m_vIndices = m_vIndices;
             subGroup.m_iaIndex = m_iaIndex;
             subGroup.m_ibIndex = m_ibIndex;
             subGroup.m_icIndex = m_icIndex;
@@ -416,9 +588,8 @@ namespace FaultData.DataAnalysis
         #region [ Static ]
 
         // Static Methods
-        private static Series GetSeriesInfo(Meter meter, DataGroup dataGroup, string measurementTypeName, string phaseName)
+        private static Series GetSeriesInfo(Meter meter, DataGroup dataGroup, string measurementTypeName, string phaseName, int assetID)
         {
-            int lineID = dataGroup.Line.ID;
             string measurementCharacteristicName = "Instantaneous";
             string seriesTypeName = "Values";
 
@@ -426,7 +597,7 @@ namespace FaultData.DataAnalysis
             string phaseDesignation = (phaseName == "RES") ? "R" : phaseName.TrimEnd('N');
             string channelName = string.Concat(typeDesignation, phaseDesignation);
 
-            ChannelKey channelKey = new ChannelKey(lineID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
+            ChannelKey channelKey = new ChannelKey(assetID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
             SeriesKey seriesKey = new SeriesKey(channelKey, seriesTypeName);
 
             Series dbSeries = meter.Channels
@@ -438,6 +609,14 @@ namespace FaultData.DataAnalysis
                 Channel dbChannel = meter.Channels
                     .FirstOrDefault(channel => channelKey.Equals(new ChannelKey(channel)));
 
+                //need to get Asset based on the asset of the datagroup or the connected assets 
+                Asset asset = dataGroup.Asset;
+                if (asset.ID != assetID)
+                {
+                    List<Asset> connectedAssets = asset.ConnectedAssets.ToList();
+                    asset = connectedAssets.Find(item => item.ID == assetID);
+                }
+
                 if ((object)dbChannel == null)
                 {
                     MeasurementType measurementType = new MeasurementType() { Name = measurementTypeName };
@@ -447,7 +626,7 @@ namespace FaultData.DataAnalysis
                     dbChannel = new Channel()
                     {
                         MeterID = meter.ID,
-                        LineID = lineID,
+                        AssetID = assetID,
                         MeasurementTypeID = measurementType.ID,
                         MeasurementCharacteristicID = measurementCharacteristic.ID,
                         PhaseID = phase.ID,
@@ -457,7 +636,7 @@ namespace FaultData.DataAnalysis
                         Enabled = true,
 
                         Meter = meter,
-                        Line = dataGroup.Line,
+                        Asset = asset,
                         MeasurementType = measurementType,
                         MeasurementCharacteristic = measurementCharacteristic,
                         Phase = phase,
@@ -483,6 +662,56 @@ namespace FaultData.DataAnalysis
             }
 
             return dbSeries;
+        }
+
+        private static bool isVoltage(string phase, DataSeries dataSeries)
+        {
+            string[] instantaneousSeriesTypes = { "Values", "Instantaneous" };
+
+            string measurementType = dataSeries.SeriesInfo.Channel.MeasurementType.Name;
+            string measurementCharacteristic = dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name;
+            string seriesType = dataSeries.SeriesInfo.SeriesType.Name;
+            string seriesPhase = dataSeries.SeriesInfo.Channel.Phase.Name;
+
+            if (measurementCharacteristic != "Instantaneous")
+                return false;
+
+            if (!instantaneousSeriesTypes.Contains(seriesType))
+                return false;
+
+            if (measurementType != "Voltage")
+                return false;
+
+            if (seriesPhase != phase)
+                return false;
+
+            return true;
+
+        }
+
+        private static bool isCurrent(string phase, DataSeries dataSeries)
+        {
+            string[] instantaneousSeriesTypes = { "Values", "Instantaneous" };
+
+            string measurementType = dataSeries.SeriesInfo.Channel.MeasurementType.Name;
+            string measurementCharacteristic = dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name;
+            string seriesType = dataSeries.SeriesInfo.SeriesType.Name;
+            string seriesPhase = dataSeries.SeriesInfo.Channel.Phase.Name;
+
+            if (measurementCharacteristic != "Instantaneous")
+                return false;
+
+            if (!instantaneousSeriesTypes.Contains(seriesType))
+                return false;
+
+            if (measurementType != "Current")
+                return false;
+
+            if (seriesPhase != phase)
+                return false;
+
+            return true;
+
         }
 
         #endregion

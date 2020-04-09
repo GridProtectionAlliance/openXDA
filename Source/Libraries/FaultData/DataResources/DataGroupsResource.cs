@@ -57,17 +57,36 @@ namespace FaultData.DataResources
         {
             List<DataGroup> dataGroups = new List<DataGroup>();
 
-            foreach (IGrouping<Line, DataSeries> lineGroup in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(GetLine))
+            foreach (IGrouping<DateTime, DataSeries> startTimeGroup in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(dataSeries => dataSeries.DataPoints[0].Time))
             {
-                foreach (IGrouping<DateTime, DataSeries> startTimeGroup in lineGroup.GroupBy(dataSeries => dataSeries.DataPoints[0].Time))
+                foreach (IGrouping<DateTime, DataSeries> endTimeGroup in startTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints[dataSeries.DataPoints.Count - 1].Time))
                 {
-                    foreach (IGrouping<DateTime, DataSeries> endTimeGroup in startTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints[dataSeries.DataPoints.Count - 1].Time))
+                    foreach (IGrouping<int, DataSeries> sampleCountGroup in endTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints.Count))
                     {
-                        foreach (IGrouping<int, DataSeries> sampleCountGroup in endTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints.Count))
+                        List<int> completedAsset = new List<int>();
+                        foreach (IGrouping<Asset, DataSeries> assetGroup in sampleCountGroup.GroupBy(GetAsset))
                         {
+                            completedAsset.Add(assetGroup.Key.ID);
+
                             DataGroup dataGroup = new DataGroup();
 
-                            foreach (DataSeries dataSeries in sampleCountGroup)
+                            foreach (DataSeries dataSeries in assetGroup)
+                                dataGroup.Add(dataSeries);
+
+                            foreach (DataSeries dataSeries in GetConnectedSeries(sampleCountGroup,assetGroup.Key))
+                                dataGroup.Add(dataSeries);
+
+                            dataGroups.Add(dataGroup);
+                        }
+
+                        //Add Any Datagroups for Assets that have no directly connected Assets
+                        foreach (Asset asset in meterDataSet.Meter.MeterAssets.Select(item => item.Asset))
+                        {
+                            if (completedAsset.Contains(asset.ID))
+                                continue;
+
+                            DataGroup dataGroup = new DataGroup(asset);
+                            foreach (DataSeries dataSeries in GetConnectedSeries(sampleCountGroup, asset))
                                 dataGroup.Add(dataSeries);
 
                             dataGroups.Add(dataGroup);
@@ -76,7 +95,10 @@ namespace FaultData.DataResources
                 }
             }
 
-            if (meterDataSet.Meter.MeterLines.Count == 1)
+            
+
+
+            if (meterDataSet.Meter.MeterAssets.Count == 1)
             {
                 foreach (ReportedDisturbance disturbance in meterDataSet.ReportedDisturbances.OrderBy(dist => dist.Time))
                 {
@@ -94,14 +116,27 @@ namespace FaultData.DataResources
             m_dataGroups = dataGroups;
         }
 
-        private Line GetLine(DataSeries dataSeries)
+        private Asset GetAsset(DataSeries dataSeries)
         {
             if ((object)dataSeries.SeriesInfo != null)
-                return dataSeries.SeriesInfo.Channel.Line;
+                return dataSeries.SeriesInfo.Channel.Asset;
 
             return null;
         }
 
+        private List<DataSeries> GetConnectedSeries(IGrouping<int, DataSeries> groupedSeries, Asset asset)
+        {
+            List<DataSeries> result = new List<DataSeries>();
+            List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
+
+            foreach (DataSeries ds in groupedSeries)
+            {
+                if (channelIDs.Contains(ds.SeriesInfo.ChannelID))
+                    result.Add(ds);
+            }
+
+            return result;
+        }
         #endregion
     }
 }

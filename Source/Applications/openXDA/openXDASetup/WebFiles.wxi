@@ -15,9 +15,6 @@
   <Component Id="wwwroot_OpenSEECSVDownload_ashx">
     <File Id="wwwroot_OpenSEECSVDownload.ashx" Name="OpenSEECSVDownload.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEECSVDownload.ashx" />
   </Component>
-  <Component Id="wwwroot_OpenSEEold_cshtml">
-    <File Id="wwwroot_OpenSEEold.cshtml" Name="OpenSEEold.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEEold.cshtml" />
-  </Component>
   <Component Id="wwwroot_OpenSTE_cshtml">
     <File Id="wwwroot_OpenSTE.cshtml" Name="OpenSTE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSTE.cshtml" />
   </Component>
@@ -26,8 +23,29 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Assets_Components" Directory="wwwroot_ASSETSFOLDER">
+  <Component Id="wwwroot_Assets_Asset_cshtml">
+    <File Id="wwwroot_Assets_Asset.cshtml" Name="Asset.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Asset.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Assets_AssetConnections_cshtml">
+    <File Id="wwwroot_Assets_AssetConnections.cshtml" Name="AssetConnections.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\AssetConnections.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Assets_Breakers_cshtml">
+    <File Id="wwwroot_Assets_Breakers.cshtml" Name="Breakers.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Breakers.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Assets_Buss_cshtml">
+    <File Id="wwwroot_Assets_Buss.cshtml" Name="Buss.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Buss.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Assets_CapacitorBanks_cshtml">
+    <File Id="wwwroot_Assets_CapacitorBanks.cshtml" Name="CapacitorBanks.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\CapacitorBanks.cshtml" />
+  </Component>
   <Component Id="wwwroot_Assets_Channels_cshtml">
     <File Id="wwwroot_Assets_Channels.cshtml" Name="Channels.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Channels.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Assets_Customer_cshtml">
+    <File Id="wwwroot_Assets_Customer.cshtml" Name="Customer.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Customer.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Assets_CustomerAsset_cshtml">
+    <File Id="wwwroot_Assets_CustomerAsset.cshtml" Name="CustomerAsset.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\CustomerAsset.cshtml" />
   </Component>
   <Component Id="wwwroot_Assets_Help_cshtml">
     <File Id="wwwroot_Assets_Help.cshtml" Name="Help.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Help.cshtml" />
@@ -41,6 +59,9 @@
   <Component Id="wwwroot_Assets_Lines_cshtml">
     <File Id="wwwroot_Assets_Lines.cshtml" Name="Lines.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Lines.cshtml" />
   </Component>
+  <Component Id="wwwroot_Assets_LineSegments_cshtml">
+    <File Id="wwwroot_Assets_LineSegments.cshtml" Name="LineSegments.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\LineSegments.cshtml" />
+  </Component>
   <Component Id="wwwroot_Assets_MeterLines_cshtml">
     <File Id="wwwroot_Assets_MeterLines.cshtml" Name="MeterLines.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\MeterLines.cshtml" />
   </Component>
@@ -49,6 +70,12 @@
   </Component>
   <Component Id="wwwroot_Assets_Sites_cshtml">
     <File Id="wwwroot_Assets_Sites.cshtml" Name="Sites.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Sites.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Assets_SpareAsset_cshtml">
+    <File Id="wwwroot_Assets_SpareAsset.cshtml" Name="SpareAsset.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\SpareAsset.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Assets_Transformers_cshtml">
+    <File Id="wwwroot_Assets_Transformers.cshtml" Name="Transformers.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Transformers.cshtml" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Config_Components" Directory="wwwroot_CONFIGFOLDER">
@@ -3992,8 +4019,6 @@
   <Component Id="wwwroot_Scripts_TS_Services_TrendingDataDisplay_ts">
     <File Id="wwwroot_Scripts_TS_Services_TrendingDataDisplay.ts" Name="TrendingDataDisplay.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\TrendingDataDisplay.ts" />
   </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_TS_Services_SystemCenter_Components" Directory="wwwroot_SCRIPTSTSSERVICESSYSTEMCENTERFOLDER">
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_TSX_Components" Directory="wwwroot_SCRIPTSTSXFOLDER">
   <Component Id="wwwroot_Scripts_TSX_BigTable_tsx">

@@ -77,24 +77,22 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
+            DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            EventClassificationResource eventClassificationResource = meterDataSet.GetResource<EventClassificationResource>();
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                List<Event> events = GetEvents(connection, meterDataSet);
+                List<DataGroup> dataGroups = new List<DataGroup>(cycleDataResource.DataGroups);
+                dataGroups.AddRange(dataGroupsResource.DataGroups.Where(dataGroup => dataGroup.DataSeries.Count == 0));
+
+                List<Event> events = GetEvents(connection, meterDataSet, dataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
                 LoadEvents(connection, events, meterDataSet);
             }
         }
 
-        private List<Event> GetEvents(AdoDataConnection connection, MeterDataSet meterDataSet)
+        private List<Event> GetEvents(AdoDataConnection connection, MeterDataSet meterDataSet, List<DataGroup> dataGroups, List<VICycleDataGroup> viCycleDataGroups, Dictionary<DataGroup, EventClassification> eventClassifications)
         {
-            DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
-            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            List<DataGroup> dataGroups = new List<DataGroup>(cycleDataResource.DataGroups);
-            dataGroups.AddRange(dataGroupsResource.DataGroups.Where(dataGroup => dataGroup.DataSeries.Count == 0));
-
-            EventClassificationResource eventClassificationResource = meterDataSet.GetResource<EventClassificationResource>();
-            Dictionary<DataGroup, EventClassification> eventClassifications = eventClassificationResource.Classifications;
-
             int count = dataGroups
                 .Where(dataGroup => dataGroup.Classification != DataClassification.Trend)
                 .Where(dataGroup => dataGroup.Classification != DataClassification.Unknown)
@@ -132,14 +130,14 @@ namespace FaultData.DataOperations
                 if (!eventClassifications.TryGetValue(dataGroup, out EventClassification eventClassification))
                     continue;
 
-                if ((object)dataGroup.Line == null && meterDataSet.Meter.MeterLocation.MeterLocationLines.Count != 1)
+                if ((object)dataGroup.Asset == null && meterDataSet.Meter.Location.AssetLocations.Count != 1)
                     continue;
 
-                Line line = dataGroup.Line ?? meterDataSet.Meter.MeterLocation.MeterLocationLines.Single().Line;
+                Asset asset = dataGroup.Asset ?? meterDataSet.Meter.Location.AssetLocations.Single().Asset;
                 IDbDataParameter startTime2 = ToDateTime2(connection, dataGroup.StartTime);
                 IDbDataParameter endTime2 = ToDateTime2(connection, dataGroup.EndTime);
 
-                if (eventTable.QueryRecordCountWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", startTime2, endTime2, dataGroup.Samples, meterDataSet.Meter.ID, line.ID) > 0)
+                if (eventTable.QueryRecordCountWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND AssetID = {4}", startTime2, endTime2, dataGroup.Samples, meterDataSet.Meter.ID, asset.ID) > 0)
                     continue;
 
                 TableOperations<MaintenanceWindow> maintenanceWindowTable = new TableOperations<MaintenanceWindow>(connection);
@@ -151,7 +149,7 @@ namespace FaultData.DataOperations
                 {
                     FileGroupID = meterDataSet.FileGroup.ID,
                     MeterID = meterDataSet.Meter.ID,
-                    LineID = line.ID,
+                    AssetID = asset.ID,
                     EventTypeID = eventType.ID,
                     EventDataID = null,
                     Name = string.Empty,
@@ -165,21 +163,18 @@ namespace FaultData.DataOperations
 
                 if (dataGroup.Samples > 0)
                 {
-                    FastRMSDataResource fastRMSDataResource = meterDataSet.GetResource<FastRMSDataResource>();
-                    Dictionary<DataGroup, DataGroup> fastRMSLookup = fastRMSDataResource.FastRMSLookup;
-                    byte[] cycleData = new byte[0];
-
-                    if (fastRMSLookup.TryGetValue(dataGroup, out DataGroup fastRMS))
-                        cycleData = fastRMS.ToData();
-
-                    evt.EventData = new EventData()
-                    {
-                        FileGroupID = meterDataSet.FileGroup.ID,
-                        RunTimeID = i,
-                        TimeDomainData = dataGroup.ToData(),
-                        CycleData = cycleData,
-                        MarkedForDeletion = 0
-                    };
+                    evt.EventData = dataGroup.ToData().Select(item =>
+                   {
+                       return new ChannelData()
+                       {
+                           FileGroupID = meterDataSet.FileGroup.ID,
+                           RunTimeID = i,
+                           TimeDomainData = item.Value,
+                           MarkedForDeletion = 0,
+                           SeriesID = item.Key,
+                           EventID = evt.ID
+                       };
+                   }).ToList();
 
                     evt.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
                     evt.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
@@ -198,7 +193,7 @@ namespace FaultData.DataOperations
         private void LoadEvents(AdoDataConnection connection, List<Event> events, MeterDataSet meterDataSet)
         {
             TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-            TableOperations<EventData> eventDataTable = new TableOperations<EventData>(connection);
+            TableOperations<ChannelData> eventDataTable = new TableOperations<ChannelData>(connection);
             TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
 
             foreach (Event evt in events)
@@ -206,20 +201,29 @@ namespace FaultData.DataOperations
                 IDbDataParameter startTime2 = ToDateTime2(connection, evt.StartTime);
                 IDbDataParameter endTime2 = ToDateTime2(connection, evt.EndTime);
 
-                if (eventTable.QueryRecordsWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.LineID).Any())
+                if (eventTable.QueryRecordsWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND AssetID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.AssetID).Any())
                     continue;
 
-                EventData eventData = evt.EventData;
+
+                
+                eventTable.AddNewRecord(evt);
+                evt.ID = eventTable.QueryRecordWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND AssetID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.AssetID).ID;
+
+                List<ChannelData> eventData = evt.EventData;
 
                 if ((object)eventData != null)
                 {
-                    eventDataTable.AddNewRecord(eventData);
-                    eventData.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-                    evt.EventDataID = eventData.ID;
-                }
+                    foreach (ChannelData channelData in eventData)
+                    {
 
-                eventTable.AddNewRecord(evt);
-                evt.ID = eventTable.QueryRecordWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.LineID).ID;
+                        if ((object)channelData != null)
+                        {
+                            channelData.EventID = evt.ID;
+                            eventDataTable.AddNewRecord(channelData);
+                            channelData.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                        }
+                    }
+                }
 
                 foreach (DbDisturbance disturbance in evt.Disturbances)
                 {
@@ -306,31 +310,7 @@ namespace FaultData.DataOperations
             return dbDisturbance;
         }
 
-        private double GetPerUnitMagnitude(Line line, ReportedDisturbance disturbance)
-        {
-            double nominalVoltage = GetLineVoltage(line, disturbance.Phase);
-            double puMax = disturbance.Maximum / nominalVoltage;
-            double puMin = disturbance.Minimum / nominalVoltage;
-            double maxDiff = Math.Abs(1.0D - puMax);
-            double minDiff = Math.Abs(1.0D - puMin);
-
-            if (maxDiff > minDiff)
-                return puMax;
-
-            return puMin;
-        }
-
-        private double GetLineVoltage(Line line, PQDPhase phase)
-        {
-            PQDPhase[] lnPhases = { PQDPhase.AN, PQDPhase.BN, PQDPhase.CN, PQDPhase.LineToNeutralAverage };
-            double lineVoltage = line.VoltageKV;
-
-            if (lnPhases.Contains(phase))
-                lineVoltage /= Math.Sqrt(3.0D);
-
-            return lineVoltage * 1000.0D;
-        }
-
+        
         private double ToDbFloat(double value)
         {
             const double Invalid = -1.0e308D;

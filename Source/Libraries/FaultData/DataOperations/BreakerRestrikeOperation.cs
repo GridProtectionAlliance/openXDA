@@ -60,11 +60,7 @@ namespace FaultData.DataOperations
                     foreach (BreakerDataResource.Restrike restrike in restrikes)
                     {
                         Phase phase = phaseTable.GetOrAdd(restrike.Phase.ToString());
-                        BreakerRestrike breakerRestrike = new BreakerRestrike();
-                        breakerRestrike.EventID = evt.ID;
-                        breakerRestrike.PhaseID = phase.ID;
-                        breakerRestrike.Sample = restrike.Sample;
-                        breakerRestrike.Timestamp = restrike.Timestamp;
+                        BreakerRestrike breakerRestrike = ProcessRestrike(restrike, phase, evt, new VIDataGroup(dataGroup));
                         breakerRestrikeTable.AddNewRecord(breakerRestrike);
                     }
                 }
@@ -90,6 +86,44 @@ namespace FaultData.DataOperations
         {
             BreakerRestrikeResource breakerRestrikeResource = meterDataSet.GetResource<BreakerRestrikeResource>();
             return breakerRestrikeResource.BreakerRestrikeData;
+        }
+
+        private BreakerRestrike ProcessRestrike(BreakerDataResource.Restrike restrike, Phase phase, Event evt, VIDataGroup dataGroup)
+        {
+
+            DataSeries voltage = (phase.Name == "AN"? dataGroup.VA: (phase.Name == "BN" ? dataGroup.VB : dataGroup.VC));
+            DataSeries current = (phase.Name == "AN" ? dataGroup.IA : (phase.Name == "BN" ? dataGroup.IB : dataGroup.IC));
+
+            BreakerRestrike result = new BreakerRestrike();
+
+            result.EventID = evt.ID;
+            result.PhaseID = phase.ID;
+
+            result.InitialExtinguishSample = restrike.initialExtinction;
+            result.InitialExtinguishTime = current[restrike.initialExtinction].Time;
+            result.InitialExtinguishVoltage= voltage[restrike.initialExtinction].Value;
+
+            result.RestrikeSample = restrike.restrike;
+            result.RestrikeTime = current[restrike.restrike].Time;
+            result.RestrikeVoltage = voltage[restrike.restrike].Value;
+
+            result.RestrikeCurrentPeak = current[restrike.currentMaximum].Value;
+            result.RestrikeVoltageDip = voltage[restrike.maximumVoltageSurpression].Value;
+
+            result.TransientPeakSample = restrike.transientOverVoltage;
+
+
+            result.TransientPeakTime = current[restrike.transientOverVoltage].Time;
+            result.TransientPeakVoltage = voltage[restrike.transientOverVoltage].Value;
+            result.PerUnitTransientPeakVoltage = voltage[restrike.transientOverVoltage].Value;
+
+            result.FinalExtinguishSample = restrike.finalExtinction;
+            result.FinalExtinguishTime = current[restrike.finalExtinction].Time;
+            result.FinalExtinguishVoltage = voltage[restrike.finalExtinction].Value;
+            result.I2t = 0.0;
+
+            return result;
+
         }
     }
 }

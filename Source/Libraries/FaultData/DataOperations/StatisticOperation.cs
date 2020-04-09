@@ -64,7 +64,7 @@ namespace FaultData.DataOperations
                 {
                     const string Filter =
                         "FileGroupID = {0} AND " +
-                        "LineID = {1} AND " +
+                        "AssetID = {1} AND " +
                         "StartTime = {2} AND " +
                         "EndTime = {3}";
 
@@ -72,11 +72,11 @@ namespace FaultData.DataOperations
                     VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
                     VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
                     int fileGroupID = meterDataSet.FileGroup.ID;
-                    int lineID = dataGroup.Line.ID;
+                    int assetID = dataGroup.Asset.ID;
                     object startTime = ToDateTime2(dataGroup.StartTime);
                     object endTime = ToDateTime2(dataGroup.EndTime);
 
-                    Event evt = eventTable.QueryRecordWhere(Filter, fileGroupID, lineID, startTime, endTime);
+                    Event evt = eventTable.QueryRecordWhere(Filter, fileGroupID, assetID, startTime, endTime);
 
                     if (evt == null)
                         continue;

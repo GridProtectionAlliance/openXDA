@@ -14,16 +14,6 @@ RETURNS TABLE
 AS EXTERNAL NAME [openXDA.SqlClr].[openXDA.SqlClr.XDAFunctions].GetEventData;
 GO
 
-CREATE FUNCTION GetCycleData(@eventID INT)
-RETURNS TABLE
-(
-    SeriesID INT,
-    Time DATETIME2,
-    Value FLOAT
-)
-AS EXTERNAL NAME [openXDA.SqlClr].[openXDA.SqlClr.XDAFunctions].GetCycleData;
-GO
-
 CREATE FUNCTION GetFaultData(@eventID INT)
 RETURNS TABLE
 (

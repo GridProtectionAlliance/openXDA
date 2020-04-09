@@ -79,7 +79,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ControllerConfig.cs" />
-    <Compile Include="OpenSEEComtradeDownload.ashx.cs" />
     <Compile Include="OpenSEECSVDownload.ashx.cs" />
     <Compile Include="SpectralDataDisplayController.cs" />
     <Compile Include="StepChangeWebReportController.cs" />

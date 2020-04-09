@@ -92,7 +92,7 @@ namespace openXDA.DataPusher
             }
         }
 
-        public T GetRecordIDWhereHub<T>(string instance, string whereClause, UserAccount userAccount) where T: class
+        public T GetRecordIDWhereHub<T>(string instance, string whereClause, UserAccount userAccount) where T : class
         {
             return GetRecordIDWhere<T>(instance, whereClause, userAccount);
         }
@@ -108,7 +108,7 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                
+
                 string urlEncodedWhereClause = HttpUtility.UrlEncode(whereClause);
                 HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecordIDWhere/{typeof(T).Name}?where={urlEncodedWhereClause}").Result;
 
@@ -125,7 +125,7 @@ namespace openXDA.DataPusher
             return GetRecordIDsWhere<T>(instance, whereClause, userAccount);
         }
 
-        public static IEnumerable<T> GetRecordIDsWhere<T>(string instance, string whereClause, UserAccount userAccount) where T: class
+        public static IEnumerable<T> GetRecordIDsWhere<T>(string instance, string whereClause, UserAccount userAccount) where T : class
         {
             using (WebRequestHandler handler = new WebRequestHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -235,7 +235,7 @@ namespace openXDA.DataPusher
             return GetRecordWhere<T>(instance, whereClause, userAccount);
         }
 
-        public static T GetRecordWhere<T>(string instance, string whereClause, UserAccount userAccount) where T: class
+        public static T GetRecordWhere<T>(string instance, string whereClause, UserAccount userAccount) where T : class
         {
             using (WebRequestHandler handler = new WebRequestHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -275,7 +275,7 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                
+
                 HttpResponseMessage response = client.GetAsync($"api/PQMark/GetChannels/channel/{ids}").Result;
 
                 if (!response.IsSuccessStatusCode)
@@ -317,7 +317,7 @@ namespace openXDA.DataPusher
             return CreateRecord<T>(instance, record, userAccount);
         }
 
-        public static int CreateRecord<T>(string instance, T record, UserAccount userAccount) where T: class
+        public static int CreateRecord<T>(string instance, T record, UserAccount userAccount) where T : class
         {
             string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
 
@@ -494,7 +494,7 @@ namespace openXDA.DataPusher
             try
             {
                 simpleCertificateChecker.ValidPolicyErrors = (SslPolicyErrors)Enum.Parse(typeof(SslPolicyErrors), (systemSettings["ValidPolicyErrors"].Value != "All" ? systemSettings["ValidPolicyErrors"].Value : "7"));
-                simpleCertificateChecker.ValidChainFlags = (X509ChainStatusFlags)Enum.Parse(typeof(X509ChainStatusFlags), (systemSettings["ValidChainFlags"].Value != "All"? systemSettings["ValidChainFlags"].Value : (~0).ToString()));
+                simpleCertificateChecker.ValidChainFlags = (X509ChainStatusFlags)Enum.Parse(typeof(X509ChainStatusFlags), (systemSettings["ValidChainFlags"].Value != "All" ? systemSettings["ValidChainFlags"].Value : (~0).ToString()));
                 simpleCertificateChecker.TrustedCertificates.Add((!string.IsNullOrEmpty(systemSettings["CertFile"].Value) ? new X509Certificate2(systemSettings["CertFile"].Value) : certificate));
             }
             catch (Exception ex)

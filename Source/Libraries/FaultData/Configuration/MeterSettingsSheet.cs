@@ -68,7 +68,7 @@ namespace FaultData.Configuration
             XElement meterElement = new XElement("meter");
             meterElement.Add(new XElement(nameof(meter.ID), meter.ID));
             meterElement.Add(new XElement(nameof(meter.AssetKey), meter.AssetKey));
-            meterElement.Add(new XElement(nameof(meter.MeterLocationID), meter.MeterLocationID));
+            meterElement.Add(new XElement(nameof(meter.LocationID), meter.LocationID));
             meterElement.Add(new XElement(nameof(meter.Name), meter.Name));
             meterElement.Add(new XElement(nameof(meter.Alias), meter.Alias));
             meterElement.Add(new XElement(nameof(meter.ShortName), meter.ShortName));
@@ -78,44 +78,142 @@ namespace FaultData.Configuration
             meterElement.Add(new XElement(nameof(meter.Description), meter.Description));
             rootElement.Add(meterElement);
 
-            XElement meterLocationElement = new XElement("meterLocation");
-            meterLocationElement.Add(new XElement(nameof(meter.MeterLocation.ID), meter.MeterLocation.ID));
-            meterLocationElement.Add(new XElement(nameof(meter.MeterLocation.AssetKey), meter.MeterLocation.AssetKey));
-            meterLocationElement.Add(new XElement(nameof(meter.MeterLocation.Name), meter.MeterLocation.Name));
-            meterLocationElement.Add(new XElement(nameof(meter.MeterLocation.Alias), meter.MeterLocation.Alias));
-            meterLocationElement.Add(new XElement(nameof(meter.MeterLocation.ShortName), meter.MeterLocation.ShortName));
-            meterLocationElement.Add(new XElement(nameof(meter.MeterLocation.Latitude), meter.MeterLocation.Latitude));
-            meterLocationElement.Add(new XElement(nameof(meter.MeterLocation.Longitude), meter.MeterLocation.Longitude));
-            meterLocationElement.Add(new XElement(nameof(meter.MeterLocation.Description), meter.MeterLocation.Description));
-            rootElement.Add(meterLocationElement);
+            XElement locationElement = new XElement("location");
+            locationElement.Add(new XElement(nameof(meter.Location.ID), meter.Location.ID));
+            locationElement.Add(new XElement(nameof(meter.Location.LocationKey), meter.Location.LocationKey));
+            locationElement.Add(new XElement(nameof(meter.Location.Name), meter.Location.Name));
+            locationElement.Add(new XElement(nameof(meter.Location.Alias), meter.Location.Alias));
+            locationElement.Add(new XElement(nameof(meter.Location.ShortName), meter.Location.ShortName));
+            locationElement.Add(new XElement(nameof(meter.Location.Latitude), meter.Location.Latitude));
+            locationElement.Add(new XElement(nameof(meter.Location.Longitude), meter.Location.Longitude));
+            locationElement.Add(new XElement(nameof(meter.Location.Description), meter.Location.Description));
+            rootElement.Add(locationElement);
 
-            IEnumerable<Line> lines = meter.MeterLines
-                .Select(meterLine => meterLine.Line)
-                .OrderBy(line => line.ID);
+            // Start With Assets
+            IEnumerable<Asset> assets = meter.MeterAssets
+                .Select(meterLine => meterLine.Asset)
+                .OrderBy(asset => asset.ID);
 
-            foreach (Line line in lines)
+            //Save individual Assets (Except LineSegments)
+            List<LineSegment> lineSegments = new List<LineSegment>();
+            List<AssetConnection> assetConnections = new List<AssetConnection>();
+
+            foreach (Asset asset in assets)
             {
-                XElement lineElement = new XElement("line");
-                lineElement.Add(new XElement(nameof(line.ID), line.ID));
-                lineElement.Add(new XElement(nameof(line.AssetKey), line.AssetKey));
-                lineElement.Add(new XElement(nameof(line.VoltageKV), line.VoltageKV));
-                lineElement.Add(new XElement(nameof(line.ThermalRating), line.ThermalRating));
-                lineElement.Add(new XElement(nameof(line.Length), line.Length));
-                lineElement.Add(new XElement(nameof(line.MaxFaultDistance), line.MaxFaultDistance));
-                lineElement.Add(new XElement(nameof(line.MinFaultDistance), line.MinFaultDistance));
-                lineElement.Add(new XElement(nameof(line.Description), line.Description));
-
-                if (line.LineImpedance != null)
+                XElement assetElement = new XElement("asset"); ;
+               
+                switch (asset.AssetTypeID)
                 {
-                    lineElement.Add(new XElement(nameof(line.LineImpedance), line.LineImpedance.ID));
-                    lineElement.Add(new XElement(nameof(line.LineImpedance.R0), line.LineImpedance.R0));
-                    lineElement.Add(new XElement(nameof(line.LineImpedance.X0), line.LineImpedance.X0));
-                    lineElement.Add(new XElement(nameof(line.LineImpedance.R1), line.LineImpedance.R1));
-                    lineElement.Add(new XElement(nameof(line.LineImpedance.X1), line.LineImpedance.X1));
+                    case ((int)AssetType.Breaker):
+                        assetElement = new XElement("breaker");
+                        Breaker breaker = Breaker.DetailedBreaker(asset, asset.ConnectionFactory?.Invoke());
+                        assetElement.Add(new XElement(nameof(breaker.VoltageKV), breaker.VoltageKV));
+                        assetElement.Add(new XElement(nameof(breaker.ThermalRating), breaker.ThermalRating));
+                        assetElement.Add(new XElement(nameof(breaker.Speed), breaker.Speed));
+                        assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
+                        assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
+                        assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
+                        assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
+                        break;
+
+                    case ((int)AssetType.Bus):
+                        assetElement = new XElement("bus");
+                        Bus bus = Bus.DetailedBus(asset, asset.ConnectionFactory?.Invoke());
+                        assetElement.Add(new XElement(nameof(bus.VoltageKV), bus.VoltageKV));
+                        assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
+                        assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
+                        assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
+                        assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
+                        break;
+                    case ((int)AssetType.CapacitorBank):
+                        assetElement = new XElement("capacitorBank");
+                        CapBank capBank = CapBank.DetailedCapBank(asset, asset.ConnectionFactory?.Invoke());
+                        assetElement.Add(new XElement(nameof(capBank.VoltageKV), capBank.VoltageKV));
+                        assetElement.Add(new XElement(nameof(capBank.NumberOfBanks), capBank.NumberOfBanks));
+                        assetElement.Add(new XElement(nameof(capBank.CansPerBank), capBank.CansPerBank));
+                        assetElement.Add(new XElement(nameof(capBank.CapacitancePerBank), capBank.CapacitancePerBank));
+                        assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
+                        assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
+                        assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
+                        assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
+                        break;
+                    case ((int)AssetType.Transformer):
+                        assetElement = new XElement("transformer");
+                        Transformer xfr = Transformer.DetailedTransformer(asset, asset.ConnectionFactory?.Invoke());
+                        assetElement.Add(new XElement(nameof(xfr.ThermalRating), xfr.ThermalRating));
+                        assetElement.Add(new XElement(nameof(xfr.SecondaryVoltageKV), xfr.SecondaryVoltageKV));
+                        assetElement.Add(new XElement(nameof(xfr.PrimaryVoltageKV), xfr.PrimaryVoltageKV));
+                        assetElement.Add(new XElement(nameof(xfr.Tap), xfr.Tap));
+                        assetElement.Add(new XElement(nameof(xfr.X0), xfr.X0));
+                        assetElement.Add(new XElement(nameof(xfr.R0), xfr.R0));
+                        assetElement.Add(new XElement(nameof(xfr.X1), xfr.X1));
+                        assetElement.Add(new XElement(nameof(xfr.R1), xfr.R1));
+                        assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
+                        assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
+                        assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
+                        assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
+                        break;
+                    case ((int)AssetType.Line):
+                        assetElement = new XElement("line");
+                        Line line = Line.DetailedLine(asset);
+                        assetElement.Add(new XElement(nameof(line.VoltageKV), line.VoltageKV));
+                        assetElement.Add(new XElement(nameof(line.MaxFaultDistance), line.MaxFaultDistance));
+                        assetElement.Add(new XElement(nameof(line.MinFaultDistance), line.MinFaultDistance));
+                        assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
+                        assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
+                        assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
+                        assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
+                        lineSegments.AddRange(line.Segments);
+                        break;
+                    case ((int)AssetType.LineSegement):
+                        lineSegments.Add(LineSegment.DetailedLineSegment(asset, asset.ConnectionFactory?.Invoke()));
+                        break;
+                    default:
+                        assetElement = new XElement("asset");
+                        assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
+                        assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
+                        assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
+                        assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
+                        break;
                 }
 
-                rootElement.Add(lineElement);
+                assetConnections.AddRange(asset.Connections.Where(item => item.ParentID == asset.ID));
+                rootElement.Add(assetElement);
             }
+
+            //Deal with special Cases... If it is a line we need to keep the Line Segments...
+            foreach (LineSegment lineSegment in lineSegments)
+            {
+                XElement lineSegmentElement = new XElement("lineSegment");
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.ThermalRating), lineSegment.ThermalRating));
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.X0), lineSegment.X0));
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.R0), lineSegment.R0));
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.X1), lineSegment.X1));
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.R1), lineSegment.R1));
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.ID), lineSegment.ID));
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.Length), lineSegment.Length));
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.AssetKey), lineSegment.AssetKey));
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.Description), lineSegment.Description));
+                lineSegmentElement.Add(new XElement(nameof(lineSegment.AssetName), lineSegment.AssetName));
+                assetConnections.AddRange(lineSegment.Connections.Where(item => item.ParentID == lineSegment.ID));
+                rootElement.Add(lineSegmentElement);
+            }
+
+            //Deal with Asset -> Asset Connections.....
+            foreach (AssetConnection assetConnection in assetConnections)
+            {
+                if (assets.Select(item => item.ID).Contains(assetConnection.ChildID)|| lineSegments.Select(item => item.ID).Contains(assetConnection.ChildID))
+                {
+                    XElement assetConnectionElement = new XElement("assetConnection");
+                    assetConnectionElement.Add(new XElement(nameof(assetConnection.ID), assetConnection.ID));
+                    assetConnectionElement.Add(new XElement(nameof(assetConnection.ChildID), assetConnection.ChildID));
+                    assetConnectionElement.Add(new XElement(nameof(assetConnection.ParentID), assetConnection.ParentID));
+                    assetConnectionElement.Add(new XElement(nameof(assetConnection.AssetRelationshipTypeID), assetConnection.AssetRelationshipTypeID));
+                    rootElement.Add(assetConnectionElement);
+                }
+            }
+
+            // That is it for Assets 
 
             IEnumerable<Channel> channels = meter.Channels
                 .OrderBy(channel => channel.ID);
@@ -128,7 +226,7 @@ namespace FaultData.Configuration
                 XElement channelElement = new XElement("channel");
                 channelElement.Add(new XElement(nameof(channel.ID), channel.ID));
                 channelElement.Add(new XElement(nameof(channel.MeterID), channel.MeterID));
-                channelElement.Add(new XElement(nameof(channel.LineID), channel.LineID));
+                channelElement.Add(new XElement(nameof(channel.AssetID), channel.AssetID));
                 channelElement.Add(new XElement(nameof(channel.MeasurementTypeID), channel.MeasurementTypeID));
                 channelElement.Add(new XElement(nameof(channel.MeasurementType), channel.MeasurementType.Name));
                 channelElement.Add(new XElement(nameof(channel.MeasurementCharacteristicID), channel.MeasurementCharacteristicID));
@@ -162,28 +260,27 @@ namespace FaultData.Configuration
                 rootElement.Add(seriesElement);
             }
 
-            IEnumerable<MeterLocationLine> meterLocationLines = meter.MeterLocation.MeterLocationLines
-                .OrderBy(meterLocationLine => meterLocationLine.ID);
+            IEnumerable<AssetLocation> assetLocations = meter.Location.AssetLocations
+                .OrderBy(assetLocation => assetLocation.ID);
 
-            foreach (MeterLocationLine meterLocationLine in meterLocationLines)
+            foreach (AssetLocation assetLocation in assetLocations)
             {
-                XElement meterLocationLineElement = new XElement("meterLocationLine");
-                meterLocationLineElement.Add(new XElement(nameof(meterLocationLine.ID), meterLocationLine.ID));
-                meterLocationLineElement.Add(new XElement(nameof(meterLocationLine.MeterLocationID), meterLocationLine.MeterLocationID));
-                meterLocationLineElement.Add(new XElement(nameof(meterLocationLine.LineID), meterLocationLine.LineID));
+                XElement meterLocationLineElement = new XElement("assetLocation");
+                meterLocationLineElement.Add(new XElement(nameof(assetLocation.ID), assetLocation.ID));
+                meterLocationLineElement.Add(new XElement(nameof(assetLocation.LocationID), assetLocation.LocationID));
+                meterLocationLineElement.Add(new XElement(nameof(assetLocation.AssetID), assetLocation.AssetID));
                 rootElement.Add(meterLocationLineElement);
             }
 
-            IEnumerable<MeterLine> meterLines = meter.MeterLines
-                .OrderBy(meterLine => meterLine.ID);
+            IEnumerable<MeterAsset> meterAssets = meter.MeterAssets
+                .OrderBy(meterAsset => meterAsset.ID);
 
-            foreach (MeterLine meterLine in meterLines)
+            foreach (MeterAsset meterAsset in meterAssets)
             {
-                XElement meterLineElement = new XElement("meterLine");
-                meterLineElement.Add(new XElement(nameof(meterLine.ID), meterLine.ID));
-                meterLineElement.Add(new XElement(nameof(meterLine.MeterID), meterLine.MeterID));
-                meterLineElement.Add(new XElement(nameof(meterLine.LineID), meterLine.LineID));
-                meterLineElement.Add(new XElement(nameof(meterLine.LineName), meterLine.LineName));
+                XElement meterLineElement = new XElement("meterAsset");
+                meterLineElement.Add(new XElement(nameof(meterAsset.ID), meterAsset.ID));
+                meterLineElement.Add(new XElement(nameof(meterAsset.MeterID), meterAsset.MeterID));
+                meterLineElement.Add(new XElement(nameof(meterAsset.AssetID), meterAsset.AssetID));
                 rootElement.Add(meterLineElement);
             }
 
@@ -204,14 +301,14 @@ namespace FaultData.Configuration
 
             Meter meter = new Meter()
             {
-                MeterLines = new List<MeterLine>(),
+                MeterAssets = new List<MeterAsset>(),
                 Channels = new List<Channel>()
             };
 
             XElement meterElement = rootElement.Element("meter");
             meter.ID = Convert.ToInt32((string)meterElement.Element(nameof(meter.ID)));
             meter.AssetKey = (string)meterElement.Element(nameof(meter.AssetKey));
-            meter.MeterLocationID = Convert.ToInt32((string)meterElement.Element(nameof(meter.MeterLocationID)));
+            meter.LocationID = Convert.ToInt32((string)meterElement.Element(nameof(meter.LocationID)));
             meter.Name = (string)meterElement.Element(nameof(meter.Name));
             meter.Alias = (string)meterElement.Element(nameof(meter.Alias));
             meter.ShortName = (string)meterElement.Element(nameof(meter.ShortName));
@@ -220,56 +317,206 @@ namespace FaultData.Configuration
             meter.TimeZone = (string)meterElement.Element(nameof(meter.TimeZone));
             meter.Description = (string)meterElement.Element(nameof(meter.Description));
 
-            MeterLocation meterLocation = new MeterLocation()
+            Location location = new Location()
             {
                 Meters = new List<Meter>(),
-                MeterLocationLines = new List<MeterLocationLine>()
+                AssetLocations = new List<AssetLocation>()
             };
 
-            XElement meterLocationElement = rootElement.Element("meterLocation");
-            meterLocation.ID = Convert.ToInt32((string)meterLocationElement.Element(nameof(meterLocation.ID)));
-            meterLocation.AssetKey = (string)meterLocationElement.Element(nameof(meterLocation.AssetKey));
-            meterLocation.Name = (string)meterLocationElement.Element(nameof(meterLocation.Name));
-            meterLocation.Alias = (string)meterLocationElement.Element(nameof(meterLocation.Alias));
-            meterLocation.ShortName = (string)meterLocationElement.Element(nameof(meterLocation.ShortName));
-            meterLocation.Latitude = Convert.ToDouble((string)meterLocationElement.Element(nameof(meterLocation.Latitude)));
-            meterLocation.Longitude = Convert.ToDouble((string)meterLocationElement.Element(nameof(meterLocation.Longitude)));
-            meterLocation.Description = (string)meterLocationElement.Element(nameof(meterLocation.Description));
-            meterLocation.Meters.Add(meter);
-            meter.MeterLocation = meterLocation;
+            XElement meterLocationElement = rootElement.Element("location");
+            location.ID = Convert.ToInt32((string)meterLocationElement.Element(nameof(location.ID)));
+            location.LocationKey = (string)meterLocationElement.Element(nameof(location.LocationKey));
+            location.Name = (string)meterLocationElement.Element(nameof(location.Name));
+            location.Alias = (string)meterLocationElement.Element(nameof(location.Alias));
+            location.ShortName = (string)meterLocationElement.Element(nameof(location.ShortName));
+            location.Latitude = Convert.ToDouble((string)meterLocationElement.Element(nameof(location.Latitude)));
+            location.Longitude = Convert.ToDouble((string)meterLocationElement.Element(nameof(location.Longitude)));
+            location.Description = (string)meterLocationElement.Element(nameof(location.Description));
+            location.Meters.Add(meter);
+            meter.Location = location;
 
-            Dictionary<int, Line> lines = new Dictionary<int, Line>();
+            // This needs to be adjusted to work for Assets of all Types 
+            Dictionary<int, Asset> assets = new Dictionary<int, Asset>();
+
+            foreach (XElement breakerElement in rootElement.Elements("breaker"))
+            {
+
+                Breaker breaker = new Breaker()
+                {
+                    AssetLocations = new List<AssetLocation>(),
+                    MeterAssets = new List<MeterAsset>(),
+                    DirectChannels = new List<Channel>(),
+                    Connections = new List<AssetConnection>(),
+                    AssetTypeID = (int)AssetType.Breaker
+                };
+                breaker.VoltageKV = Convert.ToDouble((string)breakerElement.Element(nameof(breaker.VoltageKV)));
+                breaker.ThermalRating = Convert.ToDouble((string)breakerElement.Element(nameof(breaker.ThermalRating)));
+                breaker.Speed = Convert.ToDouble((string)breakerElement.Element(nameof(breaker.Speed)));
+                breaker.ID = Convert.ToInt32((string)breakerElement.Element(nameof(breaker.ID)));
+                breaker.AssetKey = (string)breakerElement.Element(nameof(breaker.AssetKey));
+                breaker.Description = (string)breakerElement.Element(nameof(breaker.Description));
+                breaker.AssetName = (string)breakerElement.Element(nameof(breaker.AssetName));
+                assets.Add(breaker.ID, breaker);
+            }
+
+            foreach (XElement busElement in rootElement.Elements("bus"))
+            {
+
+                Bus bus = new Bus()
+                {
+                    AssetLocations = new List<AssetLocation>(),
+                    MeterAssets = new List<MeterAsset>(),
+                    DirectChannels = new List<Channel>(),
+                    Connections = new List<AssetConnection>(),
+                    AssetTypeID = (int)AssetType.Bus
+                };
+                bus.VoltageKV = Convert.ToDouble((string)busElement.Element(nameof(bus.VoltageKV)));
+                bus.ID = Convert.ToInt32((string)busElement.Element(nameof(bus.ID)));
+                bus.AssetKey = (string)busElement.Element(nameof(bus.AssetKey));
+                bus.Description = (string)busElement.Element(nameof(bus.Description));
+                bus.AssetName = (string)busElement.Element(nameof(bus.AssetName));
+
+                assets.Add(bus.ID, bus);
+            }
+
+            foreach (XElement capacitorBankElement in rootElement.Elements("capacitorBank"))
+            {
+
+                CapBank capBank = new CapBank()
+                {
+                    AssetLocations = new List<AssetLocation>(),
+                    MeterAssets = new List<MeterAsset>(),
+                    DirectChannels = new List<Channel>(),
+                    Connections = new List<AssetConnection>(),
+                    AssetTypeID = (int)AssetType.CapacitorBank
+                };
+                capBank.VoltageKV = Convert.ToDouble((string)capacitorBankElement.Element(nameof(capBank.VoltageKV)));
+                capBank.NumberOfBanks = Convert.ToInt32((string)capacitorBankElement.Element(nameof(capBank.NumberOfBanks)));
+                capBank.CansPerBank = Convert.ToInt32((string)capacitorBankElement.Element(nameof(capBank.CansPerBank)));
+                capBank.CapacitancePerBank = Convert.ToDouble((string)capacitorBankElement.Element(nameof(capBank.CapacitancePerBank)));
+
+                capBank.ID = Convert.ToInt32((string)capacitorBankElement.Element(nameof(capBank.ID)));
+                capBank.AssetKey = (string)capacitorBankElement.Element(nameof(capBank.AssetKey));
+                capBank.Description = (string)capacitorBankElement.Element(nameof(capBank.Description));
+                capBank.AssetName = (string)capacitorBankElement.Element(nameof(capBank.AssetName));
+
+                assets.Add(capBank.ID, capBank);
+            }
+
+            foreach (XElement xfrElement in rootElement.Elements("transformer"))
+            {
+
+                Transformer xfr = new Transformer()
+                {
+                    AssetLocations = new List<AssetLocation>(),
+                    MeterAssets = new List<MeterAsset>(),
+                    DirectChannels = new List<Channel>(),
+                    Connections = new List<AssetConnection>(),
+                    AssetTypeID = (int)AssetType.Transformer
+                };
+                xfr.ThermalRating = Convert.ToDouble((string)xfrElement.Element(nameof(xfr.ThermalRating)));
+                xfr.SecondaryVoltageKV = Convert.ToDouble((string)xfrElement.Element(nameof(xfr.SecondaryVoltageKV)));
+                xfr.PrimaryVoltageKV = Convert.ToDouble((string)xfrElement.Element(nameof(xfr.PrimaryVoltageKV)));
+                xfr.Tap = Convert.ToDouble((string)xfrElement.Element(nameof(xfr.Tap)));
+                xfr.R0 = Convert.ToDouble((string)xfrElement.Element(nameof(xfr.R0)));
+                xfr.X0 = Convert.ToDouble((string)xfrElement.Element(nameof(xfr.X0)));
+                xfr.R1 = Convert.ToDouble((string)xfrElement.Element(nameof(xfr.R1)));
+                xfr.X1 = Convert.ToDouble((string)xfrElement.Element(nameof(xfr.X1)));
+
+                xfr.ID = Convert.ToInt32((string)xfrElement.Element(nameof(xfr.ID)));
+                xfr.AssetKey = (string)xfrElement.Element(nameof(xfr.AssetKey));
+                xfr.Description = (string)xfrElement.Element(nameof(xfr.Description));
+                xfr.AssetName = (string)xfrElement.Element(nameof(xfr.AssetName));
+
+                assets.Add(xfr.ID, xfr);
+            }
 
             foreach (XElement lineElement in rootElement.Elements("line"))
             {
+
                 Line line = new Line()
                 {
-                    MeterLocationLines = new List<MeterLocationLine>(),
-                    MeterLines = new List<MeterLine>(),
-                    Channels = new List<Channel>()
+                    AssetLocations = new List<AssetLocation>(),
+                    MeterAssets = new List<MeterAsset>(),
+                    DirectChannels = new List<Channel>(),
+                    Connections = new List<AssetConnection>(),
+                    AssetTypeID = (int)AssetType.Line,
+                    Segments = new List<LineSegment>()
                 };
+                line.VoltageKV = Convert.ToDouble((string)lineElement.Element(nameof(line.VoltageKV)));
+                line.MaxFaultDistance = Convert.ToInt32((string)lineElement.Element(nameof(line.MaxFaultDistance)));
+                line.MinFaultDistance = Convert.ToInt32((string)lineElement.Element(nameof(line.MinFaultDistance)));
 
                 line.ID = Convert.ToInt32((string)lineElement.Element(nameof(line.ID)));
                 line.AssetKey = (string)lineElement.Element(nameof(line.AssetKey));
-                line.VoltageKV = Convert.ToDouble((string)lineElement.Element(nameof(line.VoltageKV)));
-                line.ThermalRating = Convert.ToDouble((string)lineElement.Element(nameof(line.ThermalRating)));
-                line.Length = Convert.ToDouble((string)lineElement.Element(nameof(line.Length)));
-                line.MaxFaultDistance = ToNullableDouble((string)lineElement.Element(nameof(line.MaxFaultDistance)));
-                line.MinFaultDistance = ToNullableDouble((string)lineElement.Element(nameof(line.MinFaultDistance)));
                 line.Description = (string)lineElement.Element(nameof(line.Description));
+                line.AssetName = (string)lineElement.Element(nameof(line.AssetName));
 
-                line.LineImpedance = new LineImpedance()
-                {
-                    ID = Convert.ToInt32((string)lineElement.Element(nameof(line.LineImpedance))),
-                    R0 = Convert.ToDouble((string)lineElement.Element(nameof(line.LineImpedance.R0))),
-                    X0 = Convert.ToDouble((string)lineElement.Element(nameof(line.LineImpedance.X0))),
-                    R1 = Convert.ToDouble((string)lineElement.Element(nameof(line.LineImpedance.R1))),
-                    X1 = Convert.ToDouble((string)lineElement.Element(nameof(line.LineImpedance.X1)))
-                };
-
-                lines.Add(line.ID, line);
+                assets.Add(line.ID, line);
             }
 
+            foreach (XElement lineSegmentElement in rootElement.Elements("lineSegment"))
+            {
+
+                LineSegment lineSegment = new LineSegment()
+                {
+                    AssetLocations = new List<AssetLocation>(),
+                    MeterAssets = new List<MeterAsset>(),
+                    DirectChannels = new List<Channel>(),
+                    Connections = new List<AssetConnection>(),
+                    AssetTypeID = (int)AssetType.LineSegement
+                };
+                lineSegment.ThermalRating = Convert.ToDouble((string)lineSegmentElement.Element(nameof(lineSegment.ThermalRating)));
+                lineSegment.R0 = Convert.ToDouble((string)lineSegmentElement.Element(nameof(lineSegment.R0)));
+                lineSegment.X0 = Convert.ToDouble((string)lineSegmentElement.Element(nameof(lineSegment.X0)));
+                lineSegment.R1 = Convert.ToDouble((string)lineSegmentElement.Element(nameof(lineSegment.R1)));
+                lineSegment.X1 = Convert.ToDouble((string)lineSegmentElement.Element(nameof(lineSegment.X1)));
+                lineSegment.Length = Convert.ToDouble((string)lineSegmentElement.Element(nameof(lineSegment.Length)));
+
+                lineSegment.ID = Convert.ToInt32((string)lineSegmentElement.Element(nameof(lineSegment.ID)));
+                lineSegment.AssetKey = (string)lineSegmentElement.Element(nameof(lineSegment.AssetKey));
+                lineSegment.Description = (string)lineSegmentElement.Element(nameof(lineSegment.Description));
+                lineSegment.AssetName = (string)lineSegmentElement.Element(nameof(lineSegment.AssetName));
+
+                assets.Add(lineSegment.ID, lineSegment);
+            }
+            foreach (XElement assetConnectionElement in rootElement.Elements("assetConnection"))
+            {
+                AssetConnection assetConnection = new AssetConnection();
+
+                assetConnection.ID = Convert.ToInt32((string)assetConnectionElement.Element(nameof(assetConnection.ID)));
+                assetConnection.ChildID = Convert.ToInt32((string)assetConnectionElement.Element(nameof(assetConnection.ChildID)));
+                assetConnection.ParentID = Convert.ToInt32((string)assetConnectionElement.Element(nameof(assetConnection.ParentID)));
+                assetConnection.AssetRelationshipTypeID = Convert.ToInt32((string)assetConnectionElement.Element(nameof(assetConnection.AssetRelationshipTypeID)));
+                
+                assets[assetConnection.ChildID].Connections.Add(assetConnection);
+                assets[assetConnection.ParentID].Connections.Add(assetConnection);
+
+                if (assets[assetConnection.ChildID].AssetTypeID == (int)AssetType.Line && assets[assetConnection.ParentID].AssetTypeID == (int)AssetType.LineSegement)
+                {
+                    Line line = (Line)assets[assetConnection.ChildID];
+                    LineSegment lineSegment = (LineSegment)assets[assetConnection.ParentID];
+                    line.Segments.Add(lineSegment);
+                    lineSegment.Line = line;
+                    assets[assetConnection.ChildID] = line;
+                    assets[assetConnection.ParentID] = lineSegment;
+                }
+                else if (assets[assetConnection.ParentID].AssetTypeID == (int)AssetType.Line && assets[assetConnection.ChildID].AssetTypeID == (int)AssetType.LineSegement)
+                {
+                    Line line = (Line)assets[assetConnection.ParentID];
+                    LineSegment lineSegment = (LineSegment)assets[assetConnection.ChildID];
+                    line.Segments.Add(lineSegment);
+                    lineSegment.Line = line;
+                    assets[assetConnection.ParentID] = line;
+                    assets[assetConnection.ChildID] = lineSegment;
+                }
+
+                assetConnection.Child = assets[assetConnection.ChildID];
+                assetConnection.Parent = assets[assetConnection.ParentID];
+            }
+
+
+               
             Dictionary<int, Channel> channels = new Dictionary<int, Channel>();
             Dictionary<int, MeasurementType> measurementTypes = new Dictionary<int, MeasurementType>();
             Dictionary<int, MeasurementCharacteristic> measurementCharacteristics = new Dictionary<int, MeasurementCharacteristic>();
@@ -280,7 +527,7 @@ namespace FaultData.Configuration
                 Channel channel = new Channel() { Series = new List<Series>() };
                 channel.ID = Convert.ToInt32((string)channelElement.Element(nameof(channel.ID)));
                 channel.MeterID = Convert.ToInt32((string)channelElement.Element(nameof(channel.MeterID)));
-                channel.LineID = Convert.ToInt32((string)channelElement.Element(nameof(channel.LineID)));
+                channel.AssetID = Convert.ToInt32((string)channelElement.Element(nameof(channel.AssetID)));
                 channel.MeasurementTypeID = Convert.ToInt32((string)channelElement.Element(nameof(channel.MeasurementTypeID)));
                 channel.MeasurementCharacteristicID = Convert.ToInt32((string)channelElement.Element(nameof(channel.ID)));
                 channel.PhaseID = Convert.ToInt32((string)channelElement.Element(nameof(channel.PhaseID)));
@@ -313,8 +560,8 @@ namespace FaultData.Configuration
                 channel.Meter = meter;
                 meter.Channels.Add(channel);
 
-                channel.Line = lines[channel.LineID];
-                channel.Line.Channels.Add(channel);
+                channel.Asset = assets[channel.AssetID];
+                channel.Asset.DirectChannels.Add(channel);
             }
 
             Dictionary<int, SeriesType> seriesTypes = new Dictionary<int, SeriesType>();
@@ -337,33 +584,32 @@ namespace FaultData.Configuration
                 series.Channel.Series.Add(series);
             }
 
-            foreach (XElement meterLocationLineElement in rootElement.Elements("meterLocationLine"))
+            foreach (XElement assetLocationElement in rootElement.Elements("assetLocation"))
             {
-                MeterLocationLine meterLocationLine = new MeterLocationLine();
-                meterLocationLine.ID = Convert.ToInt32((string)meterLocationLineElement.Element(nameof(meterLocationLine.ID)));
-                meterLocationLine.MeterLocationID = Convert.ToInt32((string)meterLocationLineElement.Element(nameof(meterLocationLine.MeterLocationID)));
-                meterLocationLine.LineID = Convert.ToInt32((string)meterLocationLineElement.Element(nameof(meterLocationLine.LineID)));
+                AssetLocation assetLocation = new AssetLocation();
+                assetLocation.ID = Convert.ToInt32((string)assetLocationElement.Element(nameof(assetLocation.ID)));
+                assetLocation.LocationID = Convert.ToInt32((string)assetLocationElement.Element(nameof(assetLocation.LocationID)));
+                assetLocation.AssetID = Convert.ToInt32((string)assetLocationElement.Element(nameof(assetLocation.AssetID)));
 
-                meterLocationLine.MeterLocation = meterLocation;
-                meterLocation.MeterLocationLines.Add(meterLocationLine);
+                assetLocation.Location = location;
+                location.AssetLocations.Add(assetLocation);
 
-                meterLocationLine.Line = lines[meterLocationLine.LineID];
-                meterLocationLine.Line.MeterLocationLines.Add(meterLocationLine);
+                assetLocation.Asset = assets[assetLocation.AssetID];
+                assetLocation.Asset.AssetLocations.Add(assetLocation);
             }
 
-            foreach (XElement meterLineElement in rootElement.Elements("meterLine"))
+            foreach (XElement meterAssetElement in rootElement.Elements("meterAsset"))
             {
-                MeterLine meterLine = new MeterLine();
-                meterLine.ID = Convert.ToInt32((string)meterLineElement.Element(nameof(meterLine.ID)));
-                meterLine.MeterID = Convert.ToInt32((string)meterLineElement.Element(nameof(meterLine.MeterID)));
-                meterLine.LineID = Convert.ToInt32((string)meterLineElement.Element(nameof(meterLine.LineID)));
-                meterLine.LineName = (string)meterLineElement.Element(nameof(meterLine.LineName));
+                MeterAsset meterAsset= new MeterAsset();
+                meterAsset.ID = Convert.ToInt32((string)meterAssetElement.Element(nameof(meterAsset.ID)));
+                meterAsset.MeterID = Convert.ToInt32((string)meterAssetElement.Element(nameof(meterAsset.MeterID)));
+                meterAsset.AssetID = Convert.ToInt32((string)meterAssetElement.Element(nameof(meterAsset.AssetID)));
 
-                meterLine.Meter = meter;
-                meter.MeterLines.Add(meterLine);
+                meterAsset.Meter = meter;
+                meter.MeterAssets.Add(meterAsset);
 
-                meterLine.Line = lines[meterLine.LineID];
-                meterLine.Line.MeterLines.Add(meterLine);
+                meterAsset.Asset = assets[meterAsset.AssetID];
+                meterAsset.Asset.MeterAssets.Add(meterAsset);
             }
 
             return meter;

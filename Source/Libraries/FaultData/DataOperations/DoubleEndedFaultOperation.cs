@@ -273,8 +273,7 @@ namespace FaultData.DataOperations
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<openXDA.Model.Line> lineTable = new TableOperations<openXDA.Model.Line>(connection);
-                TableOperations<MeterLocationLine> meterLocationLineTable = new TableOperations<MeterLocationLine>(connection);
-                TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
+                TableOperations<AssetLocation> meterLocationLineTable = new TableOperations<AssetLocation>(connection);
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 TableOperations<DoubleEndedFaultDistance> doubleEndedFaultDistanceTable = new TableOperations<DoubleEndedFaultDistance>(connection);
                 TableOperations<FaultCurve> faultCurveTable = new TableOperations<FaultCurve>(connection);
@@ -286,10 +285,10 @@ namespace FaultData.DataOperations
                     // Get the full collection of events from the database that comprise the system event that overlaps this time range
                     List<Event> dbSystemEvent = eventTable.GetSystemEvent(systemEvent.StartTime, systemEvent.EndTime, m_timeTolerance);
 
-                    foreach (IGrouping<int, Event> lineGrouping in dbSystemEvent.GroupBy(evt => evt.LineID))
+                    foreach (IGrouping<int, Event> lineGrouping in dbSystemEvent.GroupBy(evt => evt.AssetID))
                     {
                         // Make sure this line connects two known meter locations
-                        int meterLocationCount = meterLocationLineTable.QueryRecordCountWhere("LineID = {0}", lineGrouping.Key);
+                        int meterLocationCount = meterLocationLineTable.QueryRecordCountWhere("AssetID = {0}", lineGrouping.Key);
 
                         if (meterLocationCount != 2)
                             continue;
@@ -297,7 +296,12 @@ namespace FaultData.DataOperations
                         // Determine the length of the line
                         double lineLength = lineTable
                             .QueryRecordsWhere("ID = {0}", lineGrouping.Key)
-                            .Select(line => line.Length)
+                            .Select(line =>
+                            {
+                                line.ConnectionFactory = meterDataSet.CreateDbConnection;
+
+                                return line.Segments.Select(item => item.Length).Sum();
+                            })
                             .DefaultIfEmpty(double.NaN)
                             .First();
 
@@ -305,11 +309,19 @@ namespace FaultData.DataOperations
                             continue;
 
                         // Determine the nominal impedance of the line
-                        ComplexNumber nominalImpedance = lineImpedanceTable
-                            .QueryRecordsWhere("LineID = {0}", lineGrouping.Key)
-                            .Select(lineImpedance => new ComplexNumber(lineImpedance.R1, lineImpedance.X1))
-                            .FirstOrDefault();
+                        ComplexNumber nominalImpedance = new ComplexNumber(
+                            lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line =>
+                            {
+                                line.ConnectionFactory = meterDataSet.CreateDbConnection;
+                                return line.Segments.Select(item => item.R1).Sum();
+                            }).FirstOrDefault(),
+                            lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line =>
+                            {
+                                line.ConnectionFactory = meterDataSet.CreateDbConnection;
+                                return line.Segments.Select(item => item.X1).Sum();
+                            }).FirstOrDefault());
 
+                           
                         if (!nominalImpedance.AllAssigned)
                             continue;
 
@@ -453,7 +465,7 @@ namespace FaultData.DataOperations
                     Left = meterGrouping1,
                     Right = meterGrouping2
                 }))
-                .Where(mapping => mapping.Left.Meter.MeterLocationID < mapping.Right.Meter.MeterLocationID)
+                .Where(mapping => mapping.Left.Meter.LocationID < mapping.Right.Meter.LocationID)
                 .SelectMany(mapping => mapping.Left.Faults.Zip(mapping.Right.Faults, (left, right) => new Mapping(left, right)))
                 .ToList();
         }
@@ -462,16 +474,17 @@ namespace FaultData.DataOperations
         {
             VICycleDataGroup viCycleDataGroup = GetCycleData(connection, grouping.Key);
             DataGroup faultCurveGroup = new DataGroup();
+            DataGroup faultCurveAngleGroup = new DataGroup();
 
             faultCurveGroup.Add(viCycleDataGroup.VA.RMS.Multiply(double.NaN));
-            faultCurveGroup.Add(faultCurveGroup[0].Copy());
+            faultCurveAngleGroup.Add(faultCurveGroup[0].Copy());
 
             foreach (MappingNode node in grouping)
             {
                 for (int i = node.StartSample; node.DistanceCurve.HasData(i); i++)
                 {
                     faultCurveGroup[0][i].Value = node.DistanceCurve[i].Value;
-                    faultCurveGroup[1][i].Value = node.AngleCurve[i].Value;
+                    faultCurveAngleGroup[0][i].Value = node.AngleCurve[i].Value;
                 }
             }
 
@@ -479,7 +492,8 @@ namespace FaultData.DataOperations
             {
                 EventID = grouping.Key,
                 Algorithm = "DoubleEnded",
-                Data = faultCurveGroup.ToData()
+                Data = faultCurveGroup.ToData()[0],
+                AngleData = faultCurveAngleGroup.ToData()[0]
             };
         }
 
@@ -544,10 +558,8 @@ namespace FaultData.DataOperations
             if ((object)evt == null)
                 return null;
 
-            byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
-
-            if ((object)timeDomainData == null)
-                return null;
+            List<byte[]> timeDomainData = ChannelData.DataFromEvent(eventID, connection);
+                        
 
             TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
             Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);

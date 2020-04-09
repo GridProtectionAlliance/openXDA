@@ -50,13 +50,11 @@ using ChannelDetail = openXDA.Model.ChannelDetail;
 using Disturbance = openXDA.Model.Disturbance;
 using Event = openXDA.Model.Event;
 using Fault = openXDA.Model.Fault;
-using Line = openXDA.Model.Line;
-using LineImpedance = openXDA.Model.LineImpedance;
-using RelayAlertSetting = openXDA.Model.RelayAlertSetting;
+using Asset = openXDA.Model.Asset;
 using Meter = openXDA.Model.Meter;
 using MeterDetail = openXDA.Model.MeterDetail;
-using MeterLine = openXDA.Model.MeterLine;
-using MeterLocation = openXDA.Model.MeterLocation;
+using MeterAsset = openXDA.Model.MeterAsset;
+using Location = openXDA.Model.Location;
 using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
 using Setting = openXDA.Model.Setting;
 using GSF.Security;
@@ -3078,6 +3076,903 @@ namespace openXDA.Hubs
 
         #region [Assets Operations]
 
+
+        #region [Asset Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Asset), RecordOperation.QueryRecordCount)]
+        public int QueryAssetCount(int locationID, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                RecordRestriction restriction;
+                TableOperations<AssetView> tableOperations = new TableOperations<AssetView>(connection);
+                if (locationID > 0)
+                    restriction = tableOperations.GetSearchRestriction(filterString) + AssetLocationRestriction(locationID,connection);
+                else
+                    restriction = tableOperations.GetSearchRestriction(filterString);
+
+                return tableOperations.QueryRecordCount(restriction);
+            }
+        }
+
+        private RecordRestriction AssetLocationRestriction(int locationID, AdoDataConnection connection)
+        {
+            List<int> assetIds = new TableOperations<AssetLocation>(connection).QueryRecordsWhere("LocationID = {0}",locationID).Select(item => item.AssetID).ToList();
+            string restriction = string.Join(",", assetIds.Select(item => item.ToString()));
+            return new RecordRestriction("ID in (" + restriction + ")");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Asset), RecordOperation.QueryRecords)]
+        public IEnumerable<AssetView> QueryAssets(int locationID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                RecordRestriction restriction;
+                TableOperations<AssetView> tableOperations = new TableOperations<AssetView>(connection);
+
+                if (locationID > 0)
+                    restriction = tableOperations.GetSearchRestriction(filterString) + AssetLocationRestriction(locationID, connection);
+                else
+                    restriction = tableOperations.GetSearchRestriction(filterString);
+
+                return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Asset), RecordOperation.UpdateRecord)]
+        public void UpdateAsset(AssetView record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                
+                new TableOperations<Asset>(connection).UpdateRecord(CreateAsset(record));
+            }
+        }
+
+        private Asset CreateAsset(AssetView record)
+        {
+            Asset asset = NewAsset();
+            asset.ID = record.ID;
+            asset.AssetKey = record.AssetKey;
+            asset.Description = record.Description;
+            asset.Spare = record.Spare;
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                asset.AssetTypeID = connection.ExecuteScalar<int>("SELECT ID From AssetType WHERE Name = {0}", record.AssetType);
+            }
+
+            asset.AssetName = record.AssetName;
+            asset.VoltageKV = record.VoltageKV;
+            return asset;
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Asset), RecordOperation.AddNewRecord)]
+        public void AddNewAssetView(AssetView record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<Asset>(connection).AddNewRecord(CreateAsset(record));
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+                    int assetTypeID = connection.ExecuteScalar<int>("SELECT ID From AssetType WHERE Name = {0}", record.AssetType);
+
+                    switch (assetTypeID)
+                    {
+                        case ((int)AssetType.Breaker):
+                            connection.ExecuteNonQuery("INSERT INTO BreakerAttributes (AssetID) VALUES ({0})", record.ID);
+                            break;
+                        case ((int)AssetType.Bus):
+                            connection.ExecuteNonQuery("INSERT INTO BusAttributes (AssetID) VALUES ({0})", record.ID);
+                            break;
+                        case ((int)AssetType.CapacitorBank):
+                            connection.ExecuteNonQuery("INSERT INTO CapacitorBankAttributes (AssetID) VALUES ({0})", record.ID);
+                            break;
+                        case ((int)AssetType.Line):
+                            connection.ExecuteNonQuery("INSERT INTO LineAttributes (AssetID) VALUES ({0})", record.ID);
+                            break;
+                        case ((int)AssetType.Transformer):
+                            connection.ExecuteNonQuery("INSERT INTO TransformerAttributes (AssetID) VALUES ({0})", record.ID);
+                            break;
+                    }
+                }
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Asset), RecordOperation.DeleteRecord)]
+        public void DeleteAsset(int id)
+        {
+            CascadeDelete("Asset", $"ID = {id}");
+        }
+
+        
+        private Asset NewAsset()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Asset>(connection).NewRecord();
+            }
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Asset), RecordOperation.CreateNewRecord)]
+        public AssetView NewAssetView()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<AssetView>(connection).NewRecord();
+            }
+
+        }
+
+        #endregion
+
+        #region [Breaker Overview]
+
+            [AuthorizeHubRole("Administrator")]
+            [RecordOperation(typeof(Breaker), RecordOperation.QueryRecordCount)]
+            public int QueryBreakerCount(string filterString)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<Breaker>(connection).QueryRecordCount(filterString);
+                }
+            }
+
+            [AuthorizeHubRole("Administrator")]
+            [RecordOperation(typeof(Breaker), RecordOperation.QueryRecords)]
+            public IEnumerable<Breaker> QueryBreaker(string sortField, bool ascending, int page, int pageSize, string filterString)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<Breaker>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+                }
+            }
+
+            [AuthorizeHubRole("Administrator")]
+            [RecordOperation(typeof(Breaker), RecordOperation.CreateNewRecord)]
+            public Breaker NewBreaker()
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<Breaker>(connection).NewRecord();
+                }
+            }
+
+            [AuthorizeHubRole("Administrator")]
+            [RecordOperation(typeof(Breaker), RecordOperation.AddNewRecord)]
+            public void AddNewBreaker(Breaker record)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    int added = new TableOperations<Breaker>(connection).AddNewRecord(record);
+                    if (added != 0)
+                    {
+                        int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                        record.ID = index;
+                    }
+                }
+            }
+
+            [AuthorizeHubRole("Administrator, Owner")]
+            [RecordOperation(typeof(Breaker), RecordOperation.UpdateRecord)]
+            public void UpdateBreaker(Breaker record)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    new TableOperations<Breaker>(connection).UpdateRecord(record);
+                }
+            }
+
+            [AuthorizeHubRole("Administrator")]
+            [RecordOperation(typeof(Breaker), RecordOperation.DeleteRecord)]
+            public void DeleteBreaker(int id)
+            {
+                CascadeDelete("Asset", $"ID = {id}");
+            }
+
+            public int QueryLineBreakersCount(int lineID)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<EDNAPoint>(connection).QueryRecordsWhere("LineID = {0}", lineID).ToList().Count();
+                }
+            }
+
+            public IEnumerable<EDNAPoint> QueryLineBreakers(int lineID)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<EDNAPoint>(connection).QueryRecordsWhere("LineID = {0}", lineID).ToList();
+                }
+            }
+
+            public void DeleteLineBreaker(int id)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    new TableOperations<EDNAPoint>(connection).DeleteRecord(new RecordRestriction("ID = {0}", id));
+                }
+            }
+
+            public EDNAPoint AddNewLineBreaker(EDNAPoint record)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    new TableOperations<EDNAPoint>(connection).AddNewRecord(record);
+                    return new TableOperations<EDNAPoint>(connection).QueryRecordWhere("BreakerID = {0} AND Point = {1}", record.BreakerID, record.Point);
+                }
+            }
+
+        #endregion
+
+        #region [Line Overview]
+
+            [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
+            public int QueryLineCount(string filterString)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<LineView>(connection).QueryRecordCount(filterString);
+                }
+            }
+
+            [AuthorizeHubRole("Administrator")]
+            [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
+            public IEnumerable<LineView> QueryLine(string sortField, bool ascending, int page, int pageSize, string filterString)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<LineView>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+                }
+            }
+
+            [AuthorizeHubRole("Administrator")]
+            [RecordOperation(typeof(LineView), RecordOperation.CreateNewRecord)]
+            public LineView NewLine()
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<LineView>(connection).NewRecord();
+                }
+            }
+
+            [AuthorizeHubRole("Administrator, Owner")]
+            [RecordOperation(typeof(LineView), RecordOperation.UpdateRecord)]
+            public void UpdateLine(LineView record)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+
+                    new TableOperations<Line>(connection).UpdateRecord(CreateLine(record));
+                }
+            }
+
+            private Line CreateLine(LineView record)
+            {
+                Line line = new Line();
+                line.ID = record.ID;
+                line.AssetKey = record.AssetKey;
+                line.Description = record.Description;
+                line.AssetTypeID = (int)AssetType.Line;
+
+                line.AssetName = record.AssetName;
+                line.VoltageKV = record.VoltageKV;
+                line.MaxFaultDistance = record.MaxFaultDistance;
+                line.MinFaultDistance = record.MinFaultDistance;
+
+                return line;
+            }
+
+            [AuthorizeHubRole("Administrator")]
+            [RecordOperation(typeof(LineView), RecordOperation.AddNewRecord)]
+            public void AddNewLineView(LineView record)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    int added = new TableOperations<Line>(connection).AddNewRecord(CreateLine(record));
+                    if (added != 0)
+                    {
+                        int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                        record.ID = index;
+                    }
+                }
+            }
+
+            [AuthorizeHubRole("Administrator")]
+            [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
+            public void DeleteLine(int id)
+            {
+                CascadeDelete("Asset", $"ID = {id}");
+            }
+
+        #endregion
+
+        #region [LineSegment Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineSegment), RecordOperation.QueryRecordCount)]
+        public int QueryLineSegmentCount(int lineID, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<LineSegment> tableOperations = new TableOperations<LineSegment>(connection);
+                RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (lineID > 0)
+                {
+                    List<int> connectionID = new TableOperations<AssetConnection>(connection).
+                        QueryRecordsWhere("(ParentID = {0} OR ChildID = {0}) AND AssetRelationshipTypeID = 1", lineID).
+                        Select(item =>
+                        {
+                            if (item.ParentID == lineID)
+                                return item.ChildID;
+                            return item.ParentID;
+                        }).ToList();
+
+                    //Because we are looking through the Line Segment View it does not matter if there are other
+                    // Assets caught with this restriction.
+                    restriction = restriction + new RecordRestriction("ID in ({0})", string.Join(",", connectionID));
+                }
+                return tableOperations.QueryRecordCount(restriction);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineSegment), RecordOperation.QueryRecords)]
+        public IEnumerable<LineSegment> QueryLineSegment(int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                TableOperations<LineSegment> tableOperations = new TableOperations<LineSegment>(connection);
+                RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (lineID > 0)
+                {
+                    List<int> connectionID = new TableOperations<AssetConnection>(connection).
+                        QueryRecordsWhere("(ParentID = {0} OR ChildID = {0}) AND AssetRelationshipTypeID = 1", lineID).
+                        Select(item =>
+                        {
+                            if (item.ParentID == lineID)
+                                return item.ChildID;
+                            return item.ParentID;
+                        }).ToList();
+
+                    restriction = restriction + new RecordRestriction("ID in ({0})", string.Join(",", connectionID));
+                }
+
+                return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineSegment), RecordOperation.CreateNewRecord)]
+        public LineSegment NewLineSegment()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<LineSegment>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(LineSegment), RecordOperation.UpdateRecord)]
+        public void UpdateLineSegment(LineSegment record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                new TableOperations<LineSegment>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineSegment), RecordOperation.AddNewRecord)]
+        public void AddNewLineSegment(LineSegment record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<LineSegment>(connection).AddNewRecord(record);
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+
+                }
+            }
+            
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineSegment), RecordOperation.DeleteRecord)]
+        public void DeleteLineSegment(int id)
+        {
+            CascadeDelete("Asset", $"ID = {id}");
+        }
+
+        #endregion
+
+        #region [Bus Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Bus), RecordOperation.QueryRecordCount)]
+        public int QueryBusCount(string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Bus>(connection).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Bus), RecordOperation.QueryRecords)]
+        public IEnumerable<Bus> QueryBus(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Bus>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Bus), RecordOperation.CreateNewRecord)]
+        public Bus NewBus()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Bus>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Bus), RecordOperation.AddNewRecord)]
+        public void AddNewBus(Bus record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<Bus>(connection).AddNewRecord(record);
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+                }
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Bus), RecordOperation.UpdateRecord)]
+        public void UpdateBus(Bus record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<Bus>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Bus), RecordOperation.DeleteRecord)]
+        public void DeleteBus(int id)
+        {
+            CascadeDelete("Asset", $"ID = {id}");
+        }
+
+        #endregion
+
+        #region [CapBank Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBank), RecordOperation.QueryRecordCount)]
+        public int QueryCapBankCount(string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<CapBank>(connection).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBank), RecordOperation.QueryRecords)]
+        public IEnumerable<CapBank> QueryCapBank(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<CapBank>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBank), RecordOperation.CreateNewRecord)]
+        public CapBank NewCapBank()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<CapBank>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBank), RecordOperation.AddNewRecord)]
+        public void AddNewCapBank(CapBank record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<CapBank>(connection).AddNewRecord(record);
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+                }
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(CapBank), RecordOperation.UpdateRecord)]
+        public void UpdateCapBank(CapBank record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<CapBank>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBank), RecordOperation.DeleteRecord)]
+        public void DeleteCapBank(int id)
+        {
+            CascadeDelete("Asset", $"ID = {id}");
+        }
+        #endregion
+
+        #region [Transformer Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Transformer), RecordOperation.QueryRecordCount)]
+        public int QueryTransformerCount(string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Transformer>(connection).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Transformer), RecordOperation.QueryRecords)]
+        public IEnumerable<Transformer> QueryTransformer(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Transformer>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Transformer), RecordOperation.CreateNewRecord)]
+        public Transformer NewTransformer()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Transformer>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Transformer), RecordOperation.AddNewRecord)]
+        public void AddNewTransformer(Transformer record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<Transformer>(connection).AddNewRecord(record);
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+                }
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Transformer), RecordOperation.UpdateRecord)]
+        public void UpdateTransformer(Transformer record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<Transformer>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Transformer), RecordOperation.DeleteRecord)]
+        public void DeleteTransformer(int id)
+        {
+            CascadeDelete("Asset", $"ID = {id}");
+        }
+
+        #endregion
+
+        #region [MeterAssets Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.QueryRecordCount)]
+        public int QueryMeterAssetCount(int assetID, int meterID, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<MeterAsset> tableOperations = new TableOperations<MeterAsset>(connection);
+                RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (assetID > 0)
+                    restriction = restriction + new RecordRestriction("AssetID = {0}", assetID);
+                if (meterID > 0)
+                    restriction = restriction + new RecordRestriction("MeterID = {0}", meterID);
+
+                return tableOperations.QueryRecordCount(restriction);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.QueryRecords)]
+        public IEnumerable<MeterAssetDetail> QueryMeterAsset(int assetID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                TableOperations<MeterAssetDetail> tableOperations = new TableOperations<MeterAssetDetail>(connection);
+                RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (assetID > 0)
+                    restriction = restriction + new RecordRestriction("AssetID = {0}", assetID);
+                if (meterID > 0)
+                    restriction = restriction + new RecordRestriction("MeterID = {0}", meterID);
+
+                return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.DeleteRecord)]
+        public void DeleteMeterAsset(int id)
+        {
+            CascadeDelete("MeterAsset", $"ID = {id}");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.CreateNewRecord)]
+        public MeterAssetDetail NewMeterAsset()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                return new TableOperations<MeterAssetDetail>(connection).NewRecord();
+            }
+        }
+
+        private MeterAsset ToMeterAsset(MeterAssetDetail record)
+        {
+            MeterAsset result = new MeterAsset();
+            result.ID = record.ID;
+            result.MeterID = record.MeterID;
+            result.AssetID = record.AssetID;
+
+            return result;
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.AddNewRecord)]
+        public void AddNewMeterAsset(MeterAssetDetail record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<MeterAsset>(connection).AddNewRecord(ToMeterAsset(record));
+
+                if (record.FaultDetectionLogic != null)
+                {
+                    int? id = connection.ExecuteScalar<int?>("SELECT @@IDENTITY");
+                    if (id != null)
+                        new TableOperations<FaultDetectionLogic>(connection).AddNewRecord(new FaultDetectionLogic() { MeterAssetID = (int)id, Expression = record.FaultDetectionLogic });
+                }
+
+            }
+
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(MeterAsset), RecordOperation.UpdateRecord)]
+        public void UpdateMeterAsset(MeterAssetDetail record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<MeterAsset>(connection).UpdateRecord(ToMeterAsset(record));
+                FaultDetectionLogic logic = new TableOperations<FaultDetectionLogic>(connection).QueryRecordWhere("MeterAssetID = {0}", record.ID);
+
+                if (record.FaultDetectionLogic != null && record.FaultDetectionLogic != string.Empty && logic == null)
+                {
+
+                    new TableOperations<FaultDetectionLogic>(connection).AddNewRecord(new FaultDetectionLogic() { MeterAssetID = record.ID, Expression = record.FaultDetectionLogic });
+                }
+                else if (record.FaultDetectionLogic != null && record.FaultDetectionLogic != string.Empty && logic != null)
+                {
+                    logic.Expression = record.FaultDetectionLogic;
+                    new TableOperations<FaultDetectionLogic>(connection).UpdateRecord(logic);
+                }
+                else if ((record.FaultDetectionLogic == null || record.FaultDetectionLogic == string.Empty) && logic != null)
+                {
+                    new TableOperations<FaultDetectionLogic>(connection).DeleteRecord(logic);
+                }
+
+            }
+        }
+
+        #endregion
+
+        #region [AssetConnections Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetConnection), RecordOperation.QueryRecordCount)]
+        public int QueryAssetConnectionCount(int assetID, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<AssetConnection> tableOperations = new TableOperations<AssetConnection>(connection);
+                RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (assetID > 0)
+                    restriction = restriction + new RecordRestriction("ChildID = {0} OR ParentID = {0}", assetID);
+                
+
+                return tableOperations.QueryRecordCount(restriction);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetConnection), RecordOperation.QueryRecords)]
+        public IEnumerable<AssetConnectionDetail> QueryMeterAssetConnection(int assetID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                TableOperations<AssetConnectionDetail> tableOperations = new TableOperations<AssetConnectionDetail>(connection);
+                RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (assetID > 0)
+                    restriction = restriction + new RecordRestriction("ChildID = {0} OR ParentID = {0}", assetID);
+
+
+                return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetConnection), RecordOperation.DeleteRecord)]
+        public void DeleteAssetConnection(int id)
+        {
+            CascadeDelete("AssetConnection", $"ID = {id}");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetConnection), RecordOperation.CreateNewRecord)]
+        public AssetConnectionDetail NewAssetConnection()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                return new TableOperations<AssetConnectionDetail>(connection).NewRecord();
+            }
+        }
+
+        private AssetConnection ToAssetConnection(AssetConnectionDetail record)
+        {
+            AssetConnection result = new AssetConnection();
+            result.ID = record.ID;
+            result.ParentID = record.ParentID;
+            result.ChildID = record.ChildID;
+            result.AssetRelationshipTypeID = record.AssetRelationshipTypeID;
+
+            return result;
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetConnection), RecordOperation.AddNewRecord)]
+        public void AddNewAssetConnection(AssetConnectionDetail record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<AssetConnection>(connection).AddNewRecord(ToAssetConnection(record));
+            }
+
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(AssetConnection), RecordOperation.UpdateRecord)]
+        public void UpdateAssetConnection(AssetConnectionDetail record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<AssetConnection>(connection).UpdateRecord(ToAssetConnection(record));
+            }
+        }
+        #endregion
+
+        #region [ Location  Overview ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Location), RecordOperation.QueryRecordCount)]
+        public int QueryLocationCount(string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Location>(connection).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Location), RecordOperation.QueryRecords)]
+        public IEnumerable<Location> QueryLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Location>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Location), RecordOperation.DeleteRecord)]
+        public void DeleteLocation(int id)
+        {
+            CascadeDelete("Location", $"ID = {id}");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Location), RecordOperation.CreateNewRecord)]
+        public Location NewLocation()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Location>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Location), RecordOperation.AddNewRecord)]
+        public void AddNewLocation(Location record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<Location>(connection).AddNewRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Location), RecordOperation.UpdateRecord)]
+        public void UpdateLocation(Location record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<Location>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public Dictionary<string, string> SearchLocations(string searchText, int limit = -1)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
+                return new TableOperations<Location>(connection).QueryRecords("Name", restriction, limit).ToDictionary(x => x.ID.ToString(), x => x.Name);
+            }
+        }
+
+        #endregion
+
         #region [ Meter Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
@@ -3089,7 +3984,7 @@ namespace openXDA.Hubs
                 TableOperations<MeterDetail> tableOperations = new TableOperations<MeterDetail>(connection);
                 RecordRestriction restriction;
                 if (meterLocationID > 0)
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
+                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LocationID = {0}", meterLocationID);
                 else
                     restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -3199,135 +4094,265 @@ namespace openXDA.Hubs
 
         #endregion
 
-        #region [ MeterLocation Table Operations ]
+        #region[Customer Table Operations]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
-        public int QueryMeterLocationCount(string filterString)
+        [RecordOperation(typeof(Customer), RecordOperation.QueryRecordCount)]
+        public int QueryCustomerCount(string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                return new TableOperations<MeterLocation>(connection).QueryRecordCount(filterString);
+                return (new TableOperations<Customer>(connection)).QueryRecordCount(filterString);
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(Customer), RecordOperation.QueryRecords)]
+        public IEnumerable<Customer> QueryCustomer(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                return new TableOperations<MeterLocation>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+                return new TableOperations<Customer>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.DeleteRecord)]
-        public void DeleteMeterLocation(int id)
+        [RecordOperation(typeof(Customer), RecordOperation.DeleteRecord)]
+        public void DeleteCustomer(int id)
         {
-            CascadeDelete("MeterLocation", $"ID = {id}");
+            CascadeDelete("Customer", $"ID = {id}");
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.CreateNewRecord)]
-        public MeterLocation NewMeterLocation()
+        [RecordOperation(typeof(Customer), RecordOperation.CreateNewRecord)]
+        public Customer NewCustomer()
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                return new TableOperations<MeterLocation>(connection).NewRecord();
+                return new TableOperations<Customer>(connection).NewRecord();
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.AddNewRecord)]
-        public void AddNewMeterLocation(MeterLocation record)
+        [RecordOperation(typeof(Customer), RecordOperation.AddNewRecord)]
+        public void AddNewCustomer(Customer record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                new TableOperations<MeterLocation>(connection).AddNewRecord(record);
+                new TableOperations<Customer>(connection).AddNewRecord(record);
             }
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.UpdateRecord)]
-        public void UpdateMeterLocation(MeterLocation record)
+        [RecordOperation(typeof(Customer), RecordOperation.UpdateRecord)]
+        public void UpdateCustomer(Customer record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                new TableOperations<MeterLocation>(connection).UpdateRecord(record);
-            }
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public Dictionary<string,string> SearchMeterLocations(string searchText, int limit = -1)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
-                return new TableOperations<MeterLocation>(connection).QueryRecords("Name", restriction, limit).ToDictionary(x => x.ID.ToString(), x => x.Name);
+                new TableOperations<Customer>(connection).UpdateRecord(record);
             }
         }
 
         #endregion
 
-        #region [ Lines Table Operations ]
+        #region[CustomerAsset Table Operations]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.QueryRecordCount)]
-        public int QueryLinesCount(string filterString)
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.QueryRecordCount)]
+        public int QueryCustomerAssetCount(int customerID, int assetID, string filterString)
         {
+
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                return new TableOperations<Line>(connection).QueryRecordCount(filterString);
+                RecordRestriction restriction;
+                TableOperations<CustomerAsset> tableOperations = new TableOperations<CustomerAsset>(connection);
+
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (customerID > 0)
+                    restriction = restriction + new RecordRestriction("CustomerID = {0}", customerID);
+                if (assetID > 0)
+                    restriction = restriction + new RecordRestriction("AssetID = {0}", assetID);
+                
+                return (new TableOperations<CustomerAsset>(connection)).QueryRecordCount(restriction);
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.QueryRecords)]
-        public IEnumerable<Line> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.QueryRecords)]
+        public IEnumerable<CustomerAssetDetail> QueryCustomerAsset(int customerID, int assetID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                return new TableOperations<Line>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
-            }
-        }
+                RecordRestriction restriction;
+                TableOperations<CustomerAssetDetail> tableOperations = new TableOperations<CustomerAssetDetail>(connection);
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.DeleteRecord)]
-        public void DeleteLines(int id)
-        {
-            CascadeDelete("Line", $"ID = {id}");
-        }
+                restriction = tableOperations.GetSearchRestriction(filterString);
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.CreateNewRecord)]
-        public Line NewLine()
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                return new TableOperations<Line>(connection).NewRecord();
-            }
-        }
+                if (customerID > 0)
+                    restriction = restriction + new RecordRestriction("CustomerID = {0}", customerID);
+                if (assetID > 0)
+                    restriction = restriction + new RecordRestriction("AssetID = {0}", assetID);
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.AddNewRecord)]
-        public void AddNewLines(Line record)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                new TableOperations<Line>(connection).AddNewRecord(record);
+                return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
             }
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(Line), RecordOperation.UpdateRecord)]
-        public void UpdateLine(Line record)
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.UpdateRecord)]
+        public void UpdateCustomerAsset(CustomerAssetDetail record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                new TableOperations<Line>(connection).UpdateRecord(record);
+
+                new TableOperations<CustomerAsset>(connection).UpdateRecord(CreateCustomerAsset(record));
             }
         }
+
+        private CustomerAsset CreateCustomerAsset(CustomerAssetDetail record)
+        {
+            CustomerAsset customerAsset = NewCustomerAsset();
+            customerAsset.ID = record.ID;
+            customerAsset.AssetID = record.AssetID;
+            customerAsset.CustomerID = record.CustomerID;
+
+            return customerAsset;
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.AddNewRecord)]
+        public void AddNewCustomerAsset(CustomerAssetDetail record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<CustomerAsset>(connection).AddNewRecord(CreateCustomerAsset(record));
+                
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.DeleteRecord)]
+        public void DeleteCustomerAsset(int id)
+        {
+            CascadeDelete("CustomerAsset", $"ID = {id}");
+        }
+
+
+        private CustomerAsset NewCustomerAsset()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<CustomerAsset>(connection).NewRecord();
+            }
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CustomerAsset), RecordOperation.CreateNewRecord)]
+        public CustomerAssetDetail NewCustomerAssetView()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<CustomerAssetDetail>(connection).NewRecord();
+            }
+
+        }
+
+
+        #endregion
+
+        #region[AssetSpare Table Operations]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.QueryRecordCount)]
+        public int QueryAssetSpareCount(string filterString)
+        {
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return (new TableOperations<AssetSpare>(connection)).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.QueryRecords)]
+        public IEnumerable<AssetSpareView> QueryAssetSpare(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+    
+                return (new TableOperations<AssetSpareView>(connection)).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.UpdateRecord)]
+        public void UpdateAssetSpare(AssetSpareView record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                new TableOperations<AssetSpare>(connection).UpdateRecord(CreateAssetSpare(record));
+            }
+        }
+
+        private AssetSpare CreateAssetSpare(AssetSpareView record)
+        {
+            AssetSpare customerAsset = NewAssetSpare();
+            customerAsset.ID = record.ID;
+            customerAsset.AssetID = record.AssetID;
+            customerAsset.SpareAssetID = record.SpareAssetID;
+
+            return customerAsset;
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.AddNewRecord)]
+        public void AddNewAssetSpare(AssetSpareView record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<AssetSpare>(connection).AddNewRecord(CreateAssetSpare(record));
+
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.DeleteRecord)]
+        public void DeleteAssetSpare(int id)
+        {
+            CascadeDelete("AsssetSpare", $"ID = {id}");
+        }
+
+
+        private AssetSpare NewAssetSpare()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<AssetSpare>(connection).NewRecord();
+            }
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetSpare), RecordOperation.CreateNewRecord)]
+        public AssetSpareView NewAssetSpareView()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<AssetSpareView>(connection).NewRecord();
+            }
+
+        }
+
+
+        #endregion
+
+        // Legacy Line Table Operations
+        // I am not sure these are necesarry but don't want to remove them
+        // until checking with Steven
+        #region [ Lines Table Operations ]
+
 
         [AuthorizeHubRole("Administrator")]
         public Dictionary<string,string> SearchLines(string searchText, int limit = -1)
@@ -3352,254 +4377,7 @@ namespace openXDA.Hubs
 
         #endregion
 
-        #region [ LineView Table Operations ]
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
-        public int QueryLineViewCount(string filterString)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                return new TableOperations<LineView>(connection).QueryRecordCount(filterString);
-            }
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
-        public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                return new TableOperations<LineView>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
-            }
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
-        public void DeleteLineView(int id)
-        {
-            CascadeDelete("Line", $"ID = {id}");
-
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.CreateNewRecord)]
-        public LineView NewLineView()
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                return new TableOperations<LineView>(connection).NewRecord();
-            }
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.AddNewRecord)]
-        public void AddNewLineView(LineView record)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                int added = new TableOperations<Line>(connection).AddNewRecord(CreateLine(record));
-                if (added != 0)
-                {
-                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Line')") ?? 0;
-                    record.ID = index;
-                    new TableOperations<LineImpedance>(connection).AddNewRecord(CreateLineImpedance(record));
-                    new TableOperations<RelayAlertSetting>(connection).AddNewRecord(CreateRelayAlertSetting(record));
-                }
-            }
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(LineView), RecordOperation.UpdateRecord)]
-        public void UpdateLineView(LineView record)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                new TableOperations<Line>(connection).UpdateRecord(CreateLine(record));
-                new TableOperations<LineImpedance>(connection).UpdateRecord(CreateLineImpedance(record));
-                new TableOperations<RelayAlertSetting>(connection).UpdateRecord(CreateRelayAlertSetting(record));
-            }
-        }
-
-        public Line CreateLine(LineView record)
-        {
-            Line line = NewLine();
-            line.ID = record.ID;
-            line.AssetKey = record.AssetKey;
-            line.Description = record.Description;
-            line.Length = record.Length;
-            line.MaxFaultDistance = record.MaxFaultDistance;
-            line.MinFaultDistance = record.MinFaultDistance;
-            line.ThermalRating = record.ThermalRating;
-            line.VoltageKV = record.VoltageKV;
-            return line;
-        }
-
-        public LineImpedance CreateLineImpedance(LineView record)
-        {
-            LineImpedance li = new LineImpedance();
-            li.ID = record.LineImpedanceID;
-            li.R0 = record.R0;
-            li.R1 = record.R1;
-            li.X0 = record.X0;
-            li.X1 = record.X1;
-            li.LineID = record.ID;
-            return li;
-        }
-
-        public RelayAlertSetting CreateRelayAlertSetting(LineView record)
-        {
-            RelayAlertSetting ras = new RelayAlertSetting();
-            ras.ID = record.RelayAlertSettingID;
-            ras.TripTime = record.TripTime;
-            ras.PickupTime = record.PickupTime;
-            ras.TripCoilCondition = record.TripCoilCondition;
-            ras.LineID = record.ID;
-
-            return ras;
-        }
-
-        public int QueryLineBreakersCount(int lineID)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                return new TableOperations<EDNAPoint>(connection).QueryRecordsWhere("LineID = {0}", lineID).ToList().Count();
-            }
-        }
-
-
-        public IEnumerable<EDNAPoint> QueryLineBreakers(int lineID)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                return new TableOperations<EDNAPoint>(connection).QueryRecordsWhere("LineID = {0}", lineID).ToList();
-            }
-        }
-
-        public void DeleteLineBreaker(int id)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                new TableOperations<EDNAPoint>(connection).DeleteRecord(new RecordRestriction("ID = {0}", id));
-            }
-        }
-
-        public EDNAPoint AddNewLineBreaker(EDNAPoint record)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                new TableOperations<EDNAPoint>(connection).AddNewRecord(record);
-                return new TableOperations<EDNAPoint>(connection).QueryRecordWhere("LineID = {0} AND Point = {1}", record.LineID, record.Point);
-            }
-        }
-
-        #endregion
-
-        #region [ MeterLine Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecordCount)]
-        public int QueryMeterLineCount(int lineID, int meterID, string filterString)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                TableOperations<MeterLineDetail> tableOperations = new TableOperations<MeterLineDetail>(connection);
-                RecordRestriction restriction;
-
-                if (lineID == -1 && meterID != -1)
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0}", meterID);
-                else if (meterID == -1 && lineID != -1)
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
-                else
-                    restriction = tableOperations.GetSearchRestriction(filterString);
-                return tableOperations.QueryRecordCount(restriction);
-            }
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterLineDetail> QueryMeterLine(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-
-                TableOperations<MeterLineDetail> tableOperations = new TableOperations<MeterLineDetail>(connection);
-                RecordRestriction restriction;
-
-                if (lineID == -1 && meterID != -1)
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0}", meterID);
-                else if (meterID == -1 && lineID != -1)
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
-                else
-                    restriction = tableOperations.GetSearchRestriction(filterString);
-                return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
-            }
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.DeleteRecord)]
-        public void DeleteMeterLine(int id)
-        {
-            CascadeDelete("MeterLine", $"ID = {id}");
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.CreateNewRecord)]
-        public MeterLineDetail NewMeterLine()
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-
-                return new TableOperations<MeterLineDetail>(connection).NewRecord();
-            }
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.AddNewRecord)]
-        public void AddNewMeterLine(MeterLineDetail record)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
-                new TableOperations<MeterLine>(connection).AddNewRecord(record);
-
-                if (record.FaultDetectionLogic != null)
-                {
-                    int? id = connection.ExecuteScalar<int?>("SELECT @@IDENTITY");
-                    if (id != null)
-                        new TableOperations<FaultDetectionLogic>(connection).AddNewRecord(new FaultDetectionLogic() { MeterLineID = (int)id, Expression = record.FaultDetectionLogic });
-                }
-
-            }
-
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.UpdateRecord)]
-        public void UpdateMeterLine(MeterLineDetail record)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                new TableOperations<MeterLine>(connection).UpdateRecord(record);
-                FaultDetectionLogic logic = new TableOperations<FaultDetectionLogic>(connection).QueryRecordWhere("MeterLineID = {0}", record.ID);
-
-                if (record.FaultDetectionLogic != null && record.FaultDetectionLogic != string.Empty && logic == null)
-                {
-
-                    new TableOperations<FaultDetectionLogic>(connection).AddNewRecord(new FaultDetectionLogic() { MeterLineID = record.ID, Expression = record.FaultDetectionLogic });
-                }
-                else if (record.FaultDetectionLogic != null && record.FaultDetectionLogic != string.Empty && logic != null)
-                {
-                    logic.Expression = record.FaultDetectionLogic;
-                    new TableOperations<FaultDetectionLogic>(connection).UpdateRecord(logic);
-                }
-                else if ((record.FaultDetectionLogic == null || record.FaultDetectionLogic == string.Empty) && logic != null)
-                {
-                    new TableOperations<FaultDetectionLogic>(connection).DeleteRecord(logic);
-                }
-
-            }
-        }
-
-        #endregion
 
         #region [ Channel Table Operations ]
 
@@ -3615,9 +4393,9 @@ namespace openXDA.Hubs
                 if (meterID != -1 && lineID == -1)
                     restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
                 else if (meterID == -1 && lineID != -1)
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
+                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("AssetID = {0}", lineID);
                 else
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND LineID = {1}", meterID, lineID);
+                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND AssetID = {1}", meterID, lineID);
 
                 return tableOperations.QueryRecordCount(restriction);
             }
@@ -3636,9 +4414,9 @@ namespace openXDA.Hubs
                 if (meterID != -1 && lineID == -1)
                     restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
                 else if (meterID == -1 && lineID != -1)
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
+                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("AssetID = {0}", lineID);
                 else
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND LineID = {1}", meterID, lineID);
+                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND AssetID = {1}", meterID, lineID);
 
                 return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
             }
@@ -4123,7 +4901,7 @@ namespace openXDA.Hubs
                     DataGroup dataFaultAlgo = new DataGroup();
 
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", record.MeterID);
-                    byte[] timeSeries = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    List<byte[]> timeSeries = ChannelData.DataFromEvent(record.ID, connection);
                     byte[] faultCurve = connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
 
                     meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
@@ -4141,14 +4919,17 @@ namespace openXDA.Hubs
                                 }
                             }
 
-
-                            byte[] newTimeData = dataTimeGroup.ToData();
-                            connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0} WHERE ID = {1}", newTimeData, record.EventDataID);
+                            foreach (int channelID in dataTimeGroup.ToData().Keys)
+                            {
+                                connection.ExecuteNonQuery("Update ChannelData SET TimeDomainData = {0} WHERE ChannelID = {1} AND EventID = {2}", 
+                                    dataTimeGroup.ToData()[channelID], channelID, record.EventDataID);
+                            }
+                            
                         }
 
                         if (faultCurve != null)
                         {
-                            dataFaultAlgo.FromData(meter, faultCurve);
+                            dataFaultAlgo.FromData(meter, new List<byte[]>() { faultCurve });
                             foreach (var dataSeries in dataFaultAlgo.DataSeries)
                             {
                                 foreach (var dataPoint in dataSeries.DataPoints)
@@ -4157,7 +4938,7 @@ namespace openXDA.Hubs
                                 }
                             }
 
-                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
+                            byte[] newFaultAlgo = dataFaultAlgo.ToData()[dataFaultAlgo.DataSeries[0].SeriesInfo.ChannelID];
 
                             connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                         }
@@ -4218,7 +4999,7 @@ namespace openXDA.Hubs
             newEvent.ID = record.ID;
             newEvent.FileGroupID = record.FileGroupID;
             newEvent.MeterID = record.MeterID;
-            newEvent.LineID = record.LineID;
+            newEvent.AssetID = record.AssetID;
             newEvent.EventTypeID = record.EventTypeID;
             newEvent.EventDataID = record.EventDataID;
             newEvent.Name = record.Name;
@@ -6920,7 +7701,12 @@ namespace openXDA.Hubs
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, userAccount, new CancellationToken());
+
+                    CancellationTokenSource source = new CancellationTokenSource();
+                    CancellationToken token = source.Token;
+
+                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, userAccount, token);
+
                 }
                 catch (Exception ex)
                 {
@@ -6942,7 +7728,12 @@ namespace openXDA.Hubs
                     // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                     DataPusherEngine engine = new DataPusherEngine();
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    engine.SyncMeterFilesForInstance(clientId, instance, meterId, new CancellationToken());
+
+                    CancellationTokenSource source = new CancellationTokenSource();
+                    CancellationToken token = source.Token;
+
+                    engine.SyncMeterFilesForInstance(clientId, instance, meterId, token);
+
                 }
                 catch (Exception ex)
                 {
@@ -7020,7 +7811,13 @@ namespace openXDA.Hubs
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
-            engine.SyncInstanceConfiguration(Context.ConnectionId, instanceId, new CancellationToken());
+
+            // Define the cancellation token.
+            CancellationTokenSource source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+
+            engine.SyncInstanceConfiguration(Context.ConnectionId, instanceId, token);
+
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -7032,7 +7829,11 @@ namespace openXDA.Hubs
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine();
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                engine.SyncInstanceFiles(Context.ConnectionId, instance, new CancellationToken());
+
+                CancellationTokenSource source = new CancellationTokenSource();
+                CancellationToken token = source.Token;
+
+                engine.SyncInstanceFiles(Context.ConnectionId, instance, token);
             }
         }
 

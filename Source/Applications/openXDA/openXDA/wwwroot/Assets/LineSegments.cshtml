@@ -1,0 +1,150 @@
+﻿@*******************************************************************************************************
+    //  LineSegments.cshtml - Gbtc
+    //
+    //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+    //
+    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+    //  file except in compliance with the License. You may obtain a copy of the License at:
+    //
+    //      http://opensource.org/licenses/MIT
+    //
+    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+    //  License for the specific language governing permissions and limitations.
+    //
+    //  Code Modification History:
+    //  ----------------------------------------------------------------------------------------------------
+    //  01/15/2016 - J. Ritchie Carroll
+    //       Generated original version of source code.
+    //  08/23/2019 - Christoph Lackner
+    //       Added Relay Alert Settings.
+    //  12/20/2019 - Christoph Lackner
+    //       Changed to point to Asset Model and removed Line specific attributes.
+    //
+    //*****************************************************************************************************@
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.RegularExpressions
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@using RazorEngine.Templating
+@using openXDA.Hubs
+
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Assets/Layout.cshtml";
+    ViewBag.Title = "Line Segments";
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    ViewBag.LineID = -1;
+    ViewBag.lengthUnits = dataContext.Connection.ExecuteScalar<string>("Select Value From [Setting] WHERE Name = 'LengthUnits'");
+
+    string LineName = null;
+
+    if (parameters.ContainsKey("Asset"))
+    {
+        ViewBag.Asset = parameters["Asset"];
+    }
+
+    if (parameters.ContainsKey("LineID"))
+    {
+        ViewBag.LineID = int.Parse(parameters["LineID"] ?? "-1");
+        LineName = dataContext.Connection.ExecuteScalar<string>("SELECT AssetKey FROM Line WHERE ID = {0}", ViewBag.LineID);
+        ViewBag.CustomHeader = "Segments of <a href=\"/Assets/Lines.cshtml?Asset=" + LineName + "\">" + LineName + "</a>";
+        ViewBag.Title = "Segments of " + LineName;
+    }
+
+    ViewBag.ParentKeys = ViewBag.LineID;
+
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+new[] { "AssetKey", "Key", "text-Left" },
+new[] { "AssetName", "Asset Name", "text-left" },
+new[] { "Length", "Length", "text-left" },
+new[] { "ThermalRating", "Thermal Rating", "text-left"},
+};
+
+    ViewBag.AddNewEditTitle = "Segment";
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.lengthUnits = dataContext.Connection.ExecuteScalar<string>("Select Value From [Setting] WHERE Name = 'LengthUnits'");
+}
+@helper AssetFilter()
+{
+    <div class='row'>
+        <div class='col-md-12'>
+            <div class='form-group'>
+                <label for='linefilter'>Asset Key Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='linefilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@helper BodyRows()
+{
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: AssetName"></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: Length"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: ThermalRating"></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    <div class="col-md-4">
+        @Raw(dataContext.AddInputField<LineSegment>("AssetKey", fieldLabel: "Key"))
+        @Raw(dataContext.AddInputField<LineSegment>("AssetName", fieldLabel: "Name"))
+        @Raw(dataContext.AddInputField<LineSegment>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (kV)"))
+        @Raw(dataContext.AddTextAreaField<LineSegment>("Description"))
+    </div>
+    <div class="col-md-4">
+
+
+        @Raw(dataContext.AddInputField<LineSegment>("R0", fieldLabel: "R0 (p.u.)"))
+        @Raw(dataContext.AddInputField<LineSegment>("X0", fieldLabel: "X0 (p.u.)"))
+        @Raw(dataContext.AddInputField<LineSegment>("R1", fieldLabel: "R1 (p.u.)"))
+        @Raw(dataContext.AddInputField<LineSegment>("X1", fieldLabel: "X1 (p.u.)"))
+    </div>
+    <div class="col-md-4">
+        @Raw(dataContext.AddInputField<LineSegment>("ThermalRating", fieldLabel: "ThermalRating (A)"))
+        @Raw(dataContext.AddInputField<LineSegment>("Length", fieldLabel: "Length (" + ViewBag.lengthUnits + ")"))
+    </div>
+
+    }
+    @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+    @section Scripts
+{
+                <script>
+        @Raw(dataContext.RenderViewModelConfiguration<LineSegment, DataHub>(ViewBag,null,null,ViewBag.LineID))
+
+        $(function () {
+            $("#pageHeader").append("@Raw(Regex.Replace(AssetFilter().ToString(), @"\r|\n", ""))");
+
+            $('#linefilter').on('keyup', function (e) {
+                if ($('#linefilter').val().length == 0) {
+                    viewModel.filterText = '';
+                    viewModel.queryPageRecords();
+                } else {
+                    viewModel.filterText = $('#linefilter').val();
+                    viewModel.queryPageRecords();
+                }
+            });
+            $('#linefilter').val('@ViewBag.Asset');
+            $('#linefilter').trigger('keyup');
+        });
+
+                </script>
+            }

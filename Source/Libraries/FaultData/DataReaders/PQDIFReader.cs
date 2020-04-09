@@ -338,15 +338,15 @@ namespace FaultData.DataReaders
             Guid equipmentID = dataSource.EquipmentID;
 
             Meter meter = new Meter();
-            meter.MeterLocation = new MeterLocation();
+            meter.Location = new Location();
             meter.Channels = new List<Channel>();
             meter.Name = name;
             meter.AssetKey = name;
             meter.ShortName = name.Substring(0, Math.Min(name.Length, 50));
 
-            MeterLocation meterLocation = meter.MeterLocation;
+            Location meterLocation = meter.Location;
             meterLocation.Meters = new List<Meter>() { meter };
-            meterLocation.AssetKey = name;
+            meterLocation.LocationKey = name;
             meterLocation.Name = string.Format("{0} location", name);
             meterLocation.ShortName = meterLocation.Name.Substring(0, Math.Min(meterLocation.Name.Length, 50));
             meterLocation.Description = meterLocation.Name;

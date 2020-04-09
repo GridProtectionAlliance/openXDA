@@ -37,6 +37,8 @@ namespace openXDA.Model
         public string Algorithm { get; set; }
 
         public byte[] Data { get; set; }
+
+        public byte[] AngleData { get; set; }
     }
 
     public class FaultCurveStatistic

@@ -96,7 +96,7 @@ namespace openXDA.Adapters
         }
 
         [HttpPost]
-        public IEnumerable<MeterLocation> GetStations(ConfigJSON json)
+        public IEnumerable<Location> GetStations(ConfigJSON json)
         {
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
@@ -104,8 +104,8 @@ namespace openXDA.Adapters
                 int id = (json != null ? (json.ID == null ? -1 : int.Parse(json.ID)) : -1);
                 string name = (json != null ? (json.Name ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData("Select * FROM MeterLocation WHERE AssetKey LIKE {0} AND " + (id != -1 ? "ID LIKE {1} AND " : "") + "NAME LIKE {2} ", assetKey, id, name);
-                return table.Select().Select(row => dataContext.Table<MeterLocation>().LoadRecord(row)).ToList();
+                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Location WHERE LocationKey LIKE {0} AND " + (id != -1 ? "ID LIKE {1} AND " : "") + "NAME LIKE {2} ", assetKey, id, name);
+                return table.Select().Select(row => dataContext.Table<Location>().LoadRecord(row)).ToList();
             }
         }
 
@@ -389,7 +389,8 @@ namespace openXDA.Adapters
                         Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                         Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
                         meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
-                        byte[] frequencyDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = (SELECT EventDataID FROM Event WHERE ID = {0})", eventID);
+                        List<byte[]> frequencyDomainData = ChannelData.DataFromEvent(eventID,connection);
+                        
                         DataGroup dataGroup = new DataGroup();
                         dataGroup.FromData(meter, frequencyDomainData);
                         VIDataGroup vIDataGroup = new VIDataGroup(dataGroup);

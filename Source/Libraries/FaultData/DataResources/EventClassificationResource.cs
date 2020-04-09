@@ -47,7 +47,6 @@ namespace FaultData.DataResources
         Swell,
         Transient,
         Other,
-        Breaker,
         Snapshot
     }
 
@@ -179,7 +178,12 @@ namespace FaultData.DataResources
                 if (!faultDataResource.FaultLookup.TryGetValue(dataGroup, out faultGroup))
                     faultGroup = null;
 
-                m_classifications.Add(dataGroup, Classify(meterDataSet, dataGroup, viDataGroup, faultGroup));
+                EventClassification classification = Classify(meterDataSet, dataGroup, viDataGroup, faultGroup);
+
+                if (!ValidateEventType(classification, (AssetType)dataGroup.Asset.AssetTypeID))
+                    classification = EventClassification.Other;
+
+                m_classifications.Add(dataGroup, classification);
             }
 
             foreach (DataGroup dataGroup in dataGroupsResource.DataGroups)
@@ -187,7 +191,12 @@ namespace FaultData.DataResources
                 if (dataGroup.DataSeries.Count > 0)
                     continue;
 
-                m_classifications.Add(dataGroup, Classify(meterDataSet, dataGroup));
+                EventClassification classification = Classify(meterDataSet, dataGroup);
+
+                if (!ValidateEventType(classification, (AssetType)dataGroup.Asset.AssetTypeID))
+                    classification = EventClassification.Other;
+
+                m_classifications.Add(dataGroup, classification);
             }
         }
 
@@ -200,7 +209,7 @@ namespace FaultData.DataResources
             if ((object)viDataGroup != null)
             {
                 if (viDataGroup.DefinedNeutralVoltages == 0 && viDataGroup.DefinedLineVoltages == 0 && HasBreakerChannels(dataGroup))
-                    return EventClassification.Breaker;
+                    return EventClassification.Other;
             }
 
             if ((object)faultGroup != null)
@@ -246,9 +255,34 @@ namespace FaultData.DataResources
             return EventClassification.Other;
         }
 
+        private static bool ValidateEventType(EventClassification eventClassification, AssetType asset)
+        {
+            
+            switch (eventClassification)
+            {
+                case (EventClassification.BreakerOpen):
+                    return (asset == AssetType.Breaker);
+                case (EventClassification.Fault):
+                    return ((asset == AssetType.Transformer)||(asset == AssetType.Line));
+                case (EventClassification.RecloseIntoFault):
+                    return ((asset == AssetType.Transformer) || (asset == AssetType.Line));
+                case (EventClassification.Interruption):
+                    return ((asset == AssetType.Bus) || (asset == AssetType.CapacitorBank));
+                case (EventClassification.Sag):
+                    return ((asset == AssetType.Bus) || (asset == AssetType.CapacitorBank));
+                case (EventClassification.Swell):
+                    return ((asset == AssetType.Bus) || (asset == AssetType.CapacitorBank));
+                case (EventClassification.Transient):
+                    return ((asset == AssetType.Bus) || (asset == AssetType.CapacitorBank));
+                default:
+                    return true;
+            }
+
+        }
+
         private static bool HasBreakerChannels(DataGroup dataGroup)
         {
-            using (AdoDataConnection connection = dataGroup.Line.ConnectionFactory())
+            using (AdoDataConnection connection = dataGroup.Asset.ConnectionFactory())
             {
                 TableOperations<BreakerChannel> breakerChannelTable = new TableOperations<BreakerChannel>(connection);
 

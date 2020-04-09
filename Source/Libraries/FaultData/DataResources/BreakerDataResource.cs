@@ -54,16 +54,25 @@ namespace FaultData.DataResources
 
         public class Restrike
         {
-            public Restrike(Phase phase, int sample, DateTime timestamp)
+            public Restrike(Phase phase, int initial )
             {
                 Phase = phase;
-                Sample = sample;
-                Timestamp = timestamp;
+                initialExtinction = initial;
+                restrike = initial;
+                currentMaximum = initial;
+                maximumVoltageSurpression = initial;
+                transientOverVoltage = initial;
+                finalExtinction = initial;
+
             }
 
             public Phase Phase { get; }
-            public int Sample { get; }
-            public DateTime Timestamp { get; }
+            public int initialExtinction { get; }
+            public int restrike { get; }
+            public int currentMaximum { get; }
+            public int maximumVoltageSurpression { get; }
+            public int transientOverVoltage { get; }
+            public int finalExtinction { get; }
         }
 
         #endregion
@@ -143,13 +152,13 @@ namespace FaultData.DataResources
                 DataSeries ic = viDataGroup.IC;
 
                 IEnumerable<Restrike> iaRestrikes = FindRestrikes(ia)
-                    .Select(index => new Restrike(Phase.AN, index, ia[index].Time));
+                    .Select(index => new Restrike(Phase.AN, index));
 
                 IEnumerable<Restrike> ibRestrikes = FindRestrikes(ib)
-                    .Select(index => new Restrike(Phase.BN, index, ib[index].Time));
+                    .Select(index => new Restrike(Phase.BN, index));
 
                 IEnumerable<Restrike> icRestrikes = FindRestrikes(ic)
-                    .Select(index => new Restrike(Phase.CN, index, ic[index].Time));
+                    .Select(index => new Restrike(Phase.CN, index));
 
                 List<Restrike> allRestrikes = Enumerable.Empty<Restrike>()
                     .Concat(iaRestrikes)
@@ -169,10 +178,12 @@ namespace FaultData.DataResources
             if (waveform == null)
                 return restrikes;
 
+            int quarterCycle = (int)Math.Floor((waveform.SampleRate / SystemFrequency)*0.25D);
             double minSecondsBeforeRestrike = BreakerSettings.MinCyclesBeforeRestrike / SystemFrequency;
             double maxSecondsBeforeRestrike = BreakerSettings.MaxCyclesBeforeRestrike / SystemFrequency;
             TimeSpan minTimeBeforeRestrike = TimeSpan.FromSeconds(minSecondsBeforeRestrike);
             TimeSpan maxTimeBeforeRestrike = TimeSpan.FromSeconds(maxSecondsBeforeRestrike);
+
             int startIndex = -1;
 
             for (int i = 0; i < waveform.DataPoints.Count; i++)
@@ -183,28 +194,43 @@ namespace FaultData.DataResources
                 if (closeToZero && startIndex < 0)
                     startIndex = i;
 
+                // If the start of the region is the start of the waveform,
+                // we can't tell when the region actually started so it is
+                // therefore not a valid candidate for breaker restrike
+                if (!closeToZero && startIndex > 0)
+                {
+
+                    DataPoint start = waveform[startIndex];
+                    DataPoint end = waveform[i - 1];
+                    TimeSpan duration = end.Time - start.Time;
+
+                    if (minTimeBeforeRestrike <= duration && duration <= maxTimeBeforeRestrike)
+                    {
+                        // Check how much higher (or lower) is it in 1/4 of a cycle
+                        // If the difference is > 2*maximum during the flat then it is a restrike
+                        // This should determine if the Breaker actually opened or if it is just a noisy signal
+                        double maxNoise = waveform.DataPoints.Skip(startIndex).Take(i - startIndex).Select(item => Math.Abs(item.Value)).Max();
+
+                        double quarterPeak = waveform[(int)Math.Min(i + quarterCycle, waveform.Length - 1)].Value;
+
+                        if ( maxNoise* 2.0D < Math.Abs(quarterPeak))
+                            restrikes.Add(i);
+                        else
+                            closeToZero = true;
+                    }
+                    else
+                        closeToZero = true;
+                }
+
                 if (!closeToZero)
                 {
-                    // If the start of the region is the start of the waveform,
-                    // we can't tell when the region actually started so it is
-                    // therefore not a valid candidate for breaker restrike
-                    if (startIndex > 0)
-                    {
-                        DataPoint start = waveform[startIndex];
-                        DataPoint end = waveform[i - 1];
-                        TimeSpan duration = end.Time - start.Time;
-
-                        if (minTimeBeforeRestrike <= duration && duration <= maxTimeBeforeRestrike)
-                            restrikes.Add(i);
-                    }
-
                     startIndex = -1;
-                }
+                }                
             }
 
             return restrikes;
         }
-
+        
         #endregion
     }
 }

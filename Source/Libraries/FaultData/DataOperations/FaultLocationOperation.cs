@@ -264,7 +264,8 @@ namespace FaultData.DataOperations
                 {
                     EventID = eventID,
                     Algorithm = FaultGroup.Faults[0].Curves[curveIndex].Algorithm,
-                    Data = Serialize(series)
+                    Data = Serialize(series),
+                    AngleData = new byte[0]
                 };
             }
 
@@ -282,7 +283,7 @@ namespace FaultData.DataOperations
             {
                 DataGroup group = new DataGroup();
                 group.Add(series);
-                return group.ToData();
+                return group.ToData()[0];
             }
 
             #endregion

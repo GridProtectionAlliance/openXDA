@@ -124,15 +124,15 @@ namespace FaultData.DataReaders
             Schema schema = Parser.Schema;
 
             Meter meter = new Meter();
-            meter.MeterLocation = new MeterLocation();
+            meter.Location = new Location();
             meter.Channels = new List<Channel>();
             meter.AssetKey = schema.DeviceID;
             meter.Name = schema.DeviceID;
             meter.ShortName = schema.DeviceID.Substring(0, Math.Min(schema.DeviceID.Length, 50));
 
-            MeterLocation meterLocation = meter.MeterLocation;
+            Location meterLocation = meter.Location;
             meterLocation.Meters = new List<Meter>() { meter };
-            meterLocation.AssetKey = schema.StationName;
+            meterLocation.LocationKey = schema.StationName;
             meterLocation.Name = schema.StationName;
             meterLocation.ShortName = schema.StationName.Substring(0, Math.Min(schema.StationName.Length, 50));
             meterLocation.Description = schema.StationName;

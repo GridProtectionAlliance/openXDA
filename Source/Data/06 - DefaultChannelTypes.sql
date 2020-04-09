@@ -420,3 +420,38 @@ GO
 
 INSERT INTO StepChangeMeasurement (PQMeasurementID, Setting) VALUES ((SELECT ID FROM PQMeasurement WHERE Name = 'Average Current Unbalance(S0/S1)'), 5)
 GO
+
+/* Default Asset Types */
+INSERT INTO AssetType (Name, Description) VALUES ('Line','Transmission Line')
+GO
+INSERT INTO AssetType (Name, Description) VALUES ('Bus','Bus')
+GO
+INSERT INTO AssetType (Name, Description) VALUES ('Breaker','Breaker')
+GO
+INSERT INTO AssetType (Name, Description) VALUES ('CapacitorBank','Bank of Capacitors')
+GO
+INSERT INTO AssetType (Name, Description) VALUES ('LineSegment','Segment of a Transmission Line')
+GO
+INSERT INTO AssetType (Name, Description) VALUES ('Transformer','Transformer')
+GO
+
+/* Default Asset Connections */
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Line-LineSegment','No measurements are passed across this connection',1,'SELECT 0','SELECT 0')
+GO
+
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Bus-Line','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)','SELECT 0')
+GO
+
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Bus-Breaker','only Voltages and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 OR {0} = 5 THEN 1 ELSE 0 END)','SELECT 0')
+GO
+
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Line-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 OR {0} = 5 OR {0} = 2 THEN 1 ELSE 0 END)','SELECT 1')
+GO
+
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Line-(Double)Breaker','only Voltage are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)','SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)')
+GO

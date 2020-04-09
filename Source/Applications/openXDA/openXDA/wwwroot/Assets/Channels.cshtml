@@ -44,18 +44,19 @@
         ViewBag.meterID = -1;
     }
 
-    if (parameters.ContainsKey("LineID"))
+    if (parameters.ContainsKey("AssetID"))
     {
-        ViewBag.lineID = int.Parse(parameters["LineID"]);
+        ViewBag.assetID = int.Parse(parameters["AssetID"]);
     }
     else
     {
-        ViewBag.lineID = -1;
+        ViewBag.assetID = -1;
     }
 
     string meterName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM Meter WHERE ID = {0}", ViewBag.meterID);
-    string lineKey = dataContext.Connection.ExecuteScalar<string>("SELECT AssetKey FROM Line WHERE ID = {0}", ViewBag.lineID);
-    string lineName = dataContext.Connection.ExecuteScalar<string>("SELECT LineName FROM MeterLine WHERE MeterID = {0} AND LineID = {1}", ViewBag.meterID, ViewBag.lineID);
+    string lineKey = dataContext.Connection.ExecuteScalar<string>("SELECT AssetKey FROM Asset WHERE ID = {0}", ViewBag.assetID);
+    string lineName = dataContext.Connection.ExecuteScalar<string>("SELECT AssetName FROM Asset WHERE ID = {0}", ViewBag.assetID);
+
     ViewBag.CustomHeader = "Channels for <a href=\"/Assets/Meters.cshtml?Meter=" + meterName + "\">" + meterName + "</a> and <a href=\"/Assets/Lines.cshtml?Line=" + lineKey + "\">" + lineName + "</a>";
 
     Layout = "Assets/Layout.cshtml";
@@ -127,7 +128,7 @@
         @Raw(dataContext.AddInputField<Channel>("Mapping", fieldLabel: "Channel Number"))
         @Raw(dataContext.AddInputField<Channel>("Name"))
         @Raw(dataContext.AddSelectField<Channel, Meter>("MeterID", "ID", "Name"))
-        @Raw(dataContext.AddSelectField<Channel, Line>("LineID", "ID", "AssetKey"))
+        @Raw(dataContext.AddSelectField<Channel, Asset>("AssetID", "ID", "AssetKey"))
         @Raw(dataContext.AddSelectField<Channel, MeasurementType>("MeasurementTypeID", "ID", "Name"))
         @Raw(dataContext.AddSelectField<Channel, MeasurementCharacteristic>("MeasurementCharacteristicID", "ID", "Name"))
         @Raw(dataContext.AddSelectField<ChannelDetail, SeriesType>("SeriesTypeID", "ID", "Name"))
@@ -143,16 +144,15 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
-    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Channel, DataHub>(ViewBag, "ID", null, ViewBag.meterID, ViewBag.lineID))
+        @Raw(dataContext.RenderViewModelConfiguration<Channel, DataHub>(ViewBag, "ID", null, ViewBag.meterID, ViewBag.assetID))
 
         $(viewModel).on("newRecord", function (event, observableRecord) {
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
 
-            if (@ViewBag.lineID !== -1)
-                observableRecord.LineID = @ViewBag.lineID;
+            if (@ViewBag.assetID !== -1)
+                observableRecord.AssetID = @ViewBag.assetID;
         });
 
         $(function () {

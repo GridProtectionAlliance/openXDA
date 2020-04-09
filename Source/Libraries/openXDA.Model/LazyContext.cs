@@ -32,13 +32,11 @@ namespace openXDA.Model
         #region [ Members ]
 
         // Fields
-        private Dictionary<int, MeterLocation> m_meterLocations;
+        private Dictionary<int, Location> m_locations;
         private Dictionary<int, Meter> m_meters;
-        private Dictionary<int, Line> m_lines;
-        private Dictionary<int, LineImpedance> m_lineImpedances;
-        private Dictionary<int, MeterLocationLine> m_meterLocationLines;
+        private Dictionary<int, AssetLocation> m_assetLocations;
         private Dictionary<int, SourceImpedance> m_sourceImpedances;
-        private Dictionary<int, MeterLine> m_meterLines;
+        private Dictionary<int, MeterAsset> m_meterAssets;
         private Dictionary<int, Channel> m_channels;
         private Dictionary<int, Series> m_series;
         private Dictionary<int, MeasurementType> m_measurementTypes;
@@ -46,25 +44,32 @@ namespace openXDA.Model
         private Dictionary<int, Phase> m_phases;
         private Dictionary<int, SeriesType> m_seriesTypes;
 
+        private Dictionary<int, Asset> m_assets;
+        private Dictionary<int, AssetConnection> m_assetConnections;
+        private Dictionary<int, Line> m_lines;
+        private Dictionary<int, LineSegment> m_lineSegments;
+
         #endregion
 
         #region [ Constructors ]
 
         public LazyContext()
         {
-            m_meterLocations = new Dictionary<int, MeterLocation>();
+            m_locations = new Dictionary<int, Location>();
             m_meters = new Dictionary<int, Meter>();
-            m_lines = new Dictionary<int, Line>();
-            m_lineImpedances = new Dictionary<int, LineImpedance>();
-            m_meterLocationLines = new Dictionary<int, MeterLocationLine>();
+            m_assets = new Dictionary<int, Asset>();
+            m_assetLocations = new Dictionary<int, AssetLocation>();
             m_sourceImpedances = new Dictionary<int, SourceImpedance>();
-            m_meterLines = new Dictionary<int, MeterLine>();
+            m_meterAssets = new Dictionary<int, MeterAsset>();
             m_channels = new Dictionary<int, Channel>();
             m_series = new Dictionary<int, Series>();
             m_measurementTypes = new Dictionary<int, MeasurementType>();
             m_measurementCharacteristics = new Dictionary<int, MeasurementCharacteristic>();
             m_phases = new Dictionary<int, Phase>();
             m_seriesTypes = new Dictionary<int, SeriesType>();
+            m_assetConnections = new Dictionary<int, AssetConnection>();
+            m_lines = new Dictionary<int, Line>();
+            m_lineSegments = new Dictionary<int, LineSegment>();
         }
 
         #endregion
@@ -77,21 +82,21 @@ namespace openXDA.Model
 
         #region [ Methods ]
 
-        public MeterLocation GetMeterLocation(MeterLocation meterLocation)
+        public Location GetLocation(Location location)
         {
-            MeterLocation cachedMeterLocation;
+            Location cachedLocation;
 
-            if ((object)meterLocation == null)
+            if ((object)location == null)
                 return null;
 
-            if (meterLocation.ID == 0)
-                return meterLocation;
+            if (location.ID == 0)
+                return location;
 
-            if (m_meterLocations.TryGetValue(meterLocation.ID, out cachedMeterLocation))
-                return cachedMeterLocation;
+            if (m_locations.TryGetValue(location.ID, out cachedLocation))
+                return cachedLocation;
 
-            m_meterLocations.Add(meterLocation.ID, meterLocation);
-            return meterLocation;
+            m_locations.Add(location.ID, location);
+            return location;
         }
 
         public Meter GetMeter(Meter meter)
@@ -111,55 +116,38 @@ namespace openXDA.Model
             return meter;
         }
 
-        public Line GetLine(Line line)
+        public Asset GetAsset(Asset asset)
         {
-            Line cachedLine;
+            Asset cachedAsset;
 
-            if ((object)line == null)
+            if ((object)asset == null)
                 return null;
 
-            if (line.ID == 0)
-                return line;
+            if (asset.ID == 0)
+                return asset;
 
-            if (m_lines.TryGetValue(line.ID, out cachedLine))
-                return cachedLine;
+            if (m_assets.TryGetValue(asset.ID, out cachedAsset))
+                return cachedAsset;
 
-            m_lines.Add(line.ID, line);
-            return line;
+            m_assets.Add(asset.ID, asset);
+            return asset;
         }
 
-        public LineImpedance GetLineImpedance(LineImpedance lineImpedance)
+        public AssetLocation GetAssetLocation(AssetLocation assetLocation)
         {
-            LineImpedance cachedLineImpedance;
+            AssetLocation cachedAssetLocation;
 
-            if ((object)lineImpedance == null)
+            if ((object)assetLocation == null)
                 return null;
 
-            if (lineImpedance.ID == 0)
-                return lineImpedance;
+            if (assetLocation.ID == 0)
+                return assetLocation;
 
-            if (m_lineImpedances.TryGetValue(lineImpedance.ID, out cachedLineImpedance))
-                return cachedLineImpedance;
+            if (m_assetLocations.TryGetValue(assetLocation.ID, out cachedAssetLocation))
+                return cachedAssetLocation;
 
-            m_lineImpedances.Add(lineImpedance.ID, lineImpedance);
-            return lineImpedance;
-        }
-
-        public MeterLocationLine GetMeterLocationLine(MeterLocationLine meterLocationLine)
-        {
-            MeterLocationLine cachedMeterLocationLine;
-
-            if ((object)meterLocationLine == null)
-                return null;
-
-            if (meterLocationLine.ID == 0)
-                return meterLocationLine;
-
-            if (m_meterLocationLines.TryGetValue(meterLocationLine.ID, out cachedMeterLocationLine))
-                return cachedMeterLocationLine;
-
-            m_meterLocationLines.Add(meterLocationLine.ID, meterLocationLine);
-            return meterLocationLine;
+            m_assetLocations.Add(assetLocation.ID, assetLocation);
+            return assetLocation;
         }
 
         public SourceImpedance GetSourceImpedance(SourceImpedance sourceImpedance)
@@ -179,21 +167,21 @@ namespace openXDA.Model
             return sourceImpedance;
         }
 
-        public MeterLine GetMeterLine(MeterLine meterLine)
+        public MeterAsset GetMeterAsset(MeterAsset meterAsset)
         {
-            MeterLine cachedMeterLine;
+            MeterAsset cachedMeterAsset;
 
-            if ((object)meterLine == null)
+            if ((object)meterAsset == null)
                 return null;
 
-            if (meterLine.ID == 0)
-                return meterLine;
+            if (meterAsset.ID == 0)
+                return meterAsset;
 
-            if (m_meterLines.TryGetValue(meterLine.ID, out cachedMeterLine))
-                return cachedMeterLine;
+            if (m_meterAssets.TryGetValue(meterAsset.ID, out cachedMeterAsset))
+                return cachedMeterAsset;
 
-            m_meterLines.Add(meterLine.ID, meterLine);
-            return meterLine;
+            m_meterAssets.Add(meterAsset.ID, meterAsset);
+            return meterAsset;
         }
 
         public Channel GetChannel(Channel channel)
@@ -297,6 +285,58 @@ namespace openXDA.Model
             m_seriesTypes.Add(seriesType.ID, seriesType);
             return seriesType;
         }
+
+        public AssetConnection GetAssetConnection(AssetConnection connection)
+        {
+            AssetConnection cachedConnection;
+
+            if ((object)connection == null)
+                return null;
+
+            if (connection.ID == 0)
+                return connection;
+
+            if (m_assetConnections.TryGetValue(connection.ID, out cachedConnection))
+                return cachedConnection;
+
+            m_assetConnections.Add(connection.ID, connection);
+            return connection;
+        }
+
+        public Line GetLine(Line line)
+        {
+            Line cachedLine;
+
+            if ((object)line == null)
+                return null;
+
+            if (line.ID == 0)
+                return line;
+
+            if (m_lines.TryGetValue(line.ID, out cachedLine))
+                return cachedLine;
+
+            m_lines.Add(line.ID, line);
+            return line;
+        }
+
+        public LineSegment GetLineSegment(LineSegment line)
+        {
+            LineSegment cachedLine;
+
+            if ((object)line == null)
+                return null;
+
+            if (line.ID == 0)
+                return line;
+
+            if (m_lineSegments.TryGetValue(line.ID, out cachedLine))
+                return cachedLine;
+
+            m_lineSegments.Add(line.ID, line);
+            return line;
+        }
+
 
         #endregion
     }

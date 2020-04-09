@@ -151,7 +151,7 @@ namespace FaultData.DataResources
 
             double sampleRate = waveform.SampleRate;
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveform.SampleRate, SystemFrequency);
-            double nominalVoltage = waveform.SeriesInfo.Channel.Line.VoltageKV * 1000.0D;
+            double nominalVoltage = waveform.SeriesInfo.Channel.Asset.VoltageKV * 1000.0D;
 
             if (IsLineToNeutral(waveform.SeriesInfo.Channel.Phase.Name))
                 nominalVoltage /= Math.Sqrt(3.0D);

@@ -453,7 +453,7 @@ namespace FaultData.DataOperations
                 TableOperations<BreakerChannel> breakerChannelTable = new TableOperations<BreakerChannel>(connection);
 
                 List<int> channelsIDs = cycleDataResource.DataGroups
-                    .Where(dataGroup => dataGroup.Line.AssetKey.StartsWith("BR"))
+                    .Where(dataGroup => dataGroup.Asset.AssetTypeID == (int)AssetType.Breaker)
                     .SelectMany(dataGroup => dataGroup.DataSeries)
                     .Select(dataSeries => dataSeries.SeriesInfo.ChannelID)
                     .Distinct()

@@ -304,7 +304,7 @@ namespace openXDAFileWatcher
                 if (systemSettings.FileShareList.Any())
                 {
                     statusBuilder.AppendLine("  File shares:");
-                    
+
                     foreach (FileShare fileShare in systemSettings.FileShareList)
                     {
                         if ((object)fileShare.AuthenticationException == null)
@@ -778,7 +778,7 @@ namespace openXDAFileWatcher
                     {
                         string fileGroupIDs = string.Join(",", fileGroups.Select(fg => fg.ID));
 
-                        List<DataFile> dataFiles = WebAPIHub.GetRecordsWhere<DataFile>(systemSettings.XDAAddress,$"FileGroupID IN ({fileGroupIDs})", userAccount)
+                        List<DataFile> dataFiles = WebAPIHub.GetRecordsWhere<DataFile>(systemSettings.XDAAddress, $"FileGroupID IN ({fileGroupIDs})", userAccount)
                             .ToList();
 
                         if (dataFiles.Any())
@@ -875,7 +875,8 @@ namespace openXDAFileWatcher
                 FileBlob fileBlob = new FileBlob();
                 fileBlob.DataFileID = dataFile.ID;
                 fileBlob.Blob = File.ReadAllBytes(dataFile.FilePath);
-                WebAPIHub.CreateRecord(xdaAddress,  fileBlob, userAccount);
+                WebAPIHub.CreateRecord(xdaAddress, fileBlob, userAccount);
+
             }
         }
 

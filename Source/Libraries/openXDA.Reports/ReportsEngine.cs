@@ -32,6 +32,8 @@ using System.Net.Mail;
 using System.Text;
 using GSF;
 using GSF.Configuration;
+using GSF.Data;
+using GSF.Data.Model;
 using GSF.Scheduling;
 using GSF.Web.Model;
 using log4net;
@@ -89,9 +91,9 @@ namespace openXDA.Reports
             DateTime firstOfMonth = month.AddDays(1 - month.Day);
             DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                ProcessMonthlyReport(meter, firstOfMonth, endOfMonth, dataContext);
+                ProcessMonthlyReport(meter, firstOfMonth, endOfMonth, connection);
             }
         }
 
@@ -211,12 +213,8 @@ namespace openXDA.Reports
                     new Attachment(csvStream, csvName, csvContentType)
                 };
 
-                using (DataContext dataConext = new DataContext("systemSettings"))
-                {
-                    EmailWriter emailWriter = new EmailWriter(dataConext, PQReportsSettings, EmailSettings);
-                   
-                    emailWriter.SendEmailWithAttachment(BreakerReportsSettings.EmailList.Split(',').ToList(), $"Breaker Report for {fileName}", "", attachments);
-                }
+                EmailWriter emailWriter = new EmailWriter(PQReportsSettings, EmailSettings);                 
+                emailWriter.SendEmailWithAttachment(BreakerReportsSettings.EmailList.Split(',').ToList(), $"Breaker Report for {fileName}", "", attachments);
 
             }
 
@@ -228,29 +226,30 @@ namespace openXDA.Reports
             DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
             DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
                 // TODO: There is no EmailGroupAssetGroup
-                IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterAssetGroup WHERE AssetGroupID IN (SELECT AssetGroupID FROM EmailGroupAssetGroup WHERE EmailGroupID = (SELECT ID FROM EmailGroup WHERE Name = 'PQ Report')))");
+                IEnumerable<Meter> meters = new TableOperations<Meter>(connection).QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterAssetGroup WHERE AssetGroupID IN (SELECT AssetGroupID FROM EmailGroupAssetGroup WHERE EmailGroupID = (SELECT ID FROM EmailGroup WHERE Name = 'PQ Report')))");
 
                 foreach (Meter meter in meters)
-                    ProcessMonthlyReport(meter, firstOfMonth, endOfMonth, dataContext);
+                    ProcessMonthlyReport(meter, firstOfMonth, endOfMonth, connection);
 
-                EmailWriter emailWriter = new EmailWriter(dataContext, PQReportsSettings, EmailSettings);
+                EmailWriter emailWriter = new EmailWriter(PQReportsSettings, EmailSettings);
                 emailWriter.Execute(firstOfMonth.Month, firstOfMonth.Year);
             }
         }
 
-        private void ProcessMonthlyReport(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
+        private void ProcessMonthlyReport(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, AdoDataConnection connection)
         {
             Log.Info($"Starting monthly Report for {meter.Name}...");
-            PQReport pQReport = new PQReport(PQReportsSettings, meter, firstOfMonth, endOfMonth, dataContext);
+            PQReport pQReport = new PQReport(PQReportsSettings, meter, firstOfMonth, endOfMonth, connection);
             byte[] pdf = pQReport.createPDF();
             Log.Info($"Completed monthly Report for {meter.Name}");
 
             try
             {
-                Report report = dataContext.Table<Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
+                TableOperations<Report> to = new TableOperations<Report>(connection);
+                Report report = to.QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
 
                 if (report != null)
                 {
@@ -260,11 +259,11 @@ namespace openXDA.Reports
                     report.Results = pQReport.Result;
                     report.PDF = pdf;
 
-                    dataContext.Table<Report>().UpdateRecord(report);
+                    to.UpdateRecord(report);
                 }
                 else
                 {
-                    dataContext.Table<Report>().AddNewRecord(new Report()
+                    to.AddNewRecord(new Report()
                     {
                         MeterID = meter.ID,
                         Month = firstOfMonth.Month,

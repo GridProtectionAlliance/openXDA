@@ -29,6 +29,8 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms.DataVisualization.Charting;
 using GSF;
+using GSF.Data;
+using GSF.Data.Model;
 using GSF.Web.Model;
 using log4net;
 using openHistorian.XDALink;
@@ -187,24 +189,23 @@ namespace openXDA.Reports
         public Meter Meter { get; set; }
         public DateTime FirstOfMonth { get; set; }
         public DateTime EndOfMonth { get; set; }
-        public DataContext DataContext { get; set; }
         public string Result { get; set; }
         public FontDef FontDefinition { get; set; }
         private SummaryResults Summary { get; set; }
-
+        private AdoDataConnection Connection { get; set; }
         #endregion
 
         #region [ Constructors ]
 
-        public PQReport(PQReportsSettings reportsSettings, Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
+        public PQReport(PQReportsSettings reportsSettings, Meter meter, DateTime firstOfMonth, DateTime endOfMonth, AdoDataConnection connection)
         {
             ReportsSettings = reportsSettings;
             Meter = meter;
             FirstOfMonth = firstOfMonth;
             EndOfMonth = endOfMonth;
-            DataContext = dataContext;
             FontDefinition = new FontDef(this, "Helvetica");
             Summary = new SummaryResults();
+            Connection = connection;
         }
 
         #endregion
@@ -339,7 +340,7 @@ namespace openXDA.Reports
             double verticalMillimeters = InsertHeader(page);
             verticalMillimeters += InsertSectionHeader(page, verticalMillimeters, "Section 8: Interruptions");
 
-            DataTable dataTable = DataContext.Connection.RetrieveData(@"
+            DataTable dataTable = Connection.RetrieveData(@"
                     Select 
 	                    cast(Disturbance.StartTime as Date) as Date,
 	                    cast(Disturbance.StartTime as Time) as Time,
@@ -409,7 +410,7 @@ namespace openXDA.Reports
 
             verticalMillimeters += InsertSectionHeader(page, verticalMillimeters, "Section 9: Sags");
 
-            DataTable dataTable = DataContext.Connection.RetrieveData(@"
+            DataTable dataTable = Connection.RetrieveData(@"
                     Select 
 	                    cast(Disturbance.StartTime as Date) as Date,
 	                    cast(Disturbance.StartTime as Time) as Time,
@@ -478,7 +479,7 @@ namespace openXDA.Reports
             }
 
             verticalMillimeters += InsertSectionHeader(page, verticalMillimeters, "Section 10: Swells");
-            DataTable dataTable = DataContext.Connection.RetrieveData(@"
+            DataTable dataTable = Connection.RetrieveData(@"
                     Select 
 	                    cast(Disturbance.StartTime as Date) as Date,
 	                    cast(Disturbance.StartTime as Time) as Time,
@@ -543,7 +544,7 @@ namespace openXDA.Reports
             double verticalMillimeters = InsertHeader(page);
             verticalMillimeters += InsertSectionHeader( page, verticalMillimeters, "Section 7: Mag-Dur Chart");
 
-            DataTable dataTable = DataContext.Connection.RetrieveData(@"
+            DataTable dataTable = Connection.RetrieveData(@"
                     Select 
 	                    Disturbance.PerUnitMagnitude as Depth,
 	                    Disturbance.DurationSeconds as Duration 
@@ -578,7 +579,7 @@ namespace openXDA.Reports
             }
 
             verticalMillimeters += InsertSectionHeader(page, verticalMillimeters, "Section 11: Faults");
-            DataTable dataTable = DataContext.Connection.RetrieveData(@"
+            DataTable dataTable = Connection.RetrieveData(@"
                 SELECT 
 	                Cast(FaultSummary.Inception as Date) as Date,
 	                Cast(FaultSummary.Inception as Time) as Time,
@@ -776,7 +777,7 @@ namespace openXDA.Reports
             verticalMillimeters += 5;
 
             // Company
-            page.AddCB_MM(verticalMillimeters + companyFont.rSizeMM, new RepString(companyFont, $"{DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'CompanyName'")}"));
+            page.AddCB_MM(verticalMillimeters + companyFont.rSizeMM, new RepString(companyFont, $"{Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'CompanyName'")}"));
 
             verticalMillimeters += 1.5D * titleFont.rSizeMM;
 
@@ -884,9 +885,9 @@ namespace openXDA.Reports
 
         private double InsertFrequencyPage(Page page, double verticalMillimeters)
         {
-            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            IEnumerable<Channel> channels = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Frequency') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", Meter.ID);
+            string historianServer = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+            IEnumerable<Channel> channels = new TableOperations<Channel>(Connection).QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Frequency') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", Meter.ID);
 
             if (!channels.Any())
             {
@@ -1010,12 +1011,12 @@ namespace openXDA.Reports
 
         private double InsertVoltageLNPage( Page page, double verticalMillimeters)
         {
-            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+            string historianServer = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
 
-            Channel line1 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'AN')", Meter.ID);
-            Channel line2 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'BN')", Meter.ID);
-            Channel line3 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CN')", Meter.ID);
+            Channel line1 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'AN')", Meter.ID);
+            Channel line2 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'BN')", Meter.ID);
+            Channel line3 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CN')", Meter.ID);
 
             int lineId;
 
@@ -1027,13 +1028,13 @@ namespace openXDA.Reports
             }
 
             if (line1 != null)
-                lineId = line1.LineID;
+                lineId = line1.AssetID;
             else if (line2 != null)
-                lineId = line2.LineID;
+                lineId = line2.AssetID;
             else
-                lineId = line3.LineID;
+                lineId = line3.AssetID;
 
-            double nominal = Summary.VoltageLN.Nominal = DataContext.Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Line WHERE ID = {0}", lineId) * 1000 / Math.Sqrt(3);
+            double nominal = Summary.VoltageLN.Nominal = Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Asset WHERE ID = {0}", lineId) * 1000 / Math.Sqrt(3);
             verticalMillimeters += InsertNominal(page, verticalMillimeters, "Voltage", string.Format("{0:N0}", nominal), "V L-N");
 
             using (Historian historian = new Historian(historianServer, historianInstance))
@@ -1214,13 +1215,13 @@ namespace openXDA.Reports
 
         private double InsertVoltageLLPage(Page page, double verticalMillimeters)
         {
-            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            IEnumerable<Channel> channels = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", Meter.ID);
+            string historianServer = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+            IEnumerable<Channel> channels = new TableOperations<Channel>(Connection).QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", Meter.ID);
 
-            Channel line1 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'AB')", Meter.ID);
-            Channel line2 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'BC')", Meter.ID);
-            Channel line3 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CA')", Meter.ID);
+            Channel line1 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'AB')", Meter.ID);
+            Channel line2 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'BC')", Meter.ID);
+            Channel line3 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CA')", Meter.ID);
 
             int lineId;
 
@@ -1232,13 +1233,13 @@ namespace openXDA.Reports
             }
 
             if (line1 != null)
-                lineId = line1.LineID;
+                lineId = line1.AssetID;
             else if (line2 != null)
-                lineId = line2.LineID;
+                lineId = line2.AssetID;
             else
-                lineId = line3.LineID;
+                lineId = line3.AssetID;
 
-            double nominal = Summary.VoltageLL.Nominal = DataContext.Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Line WHERE ID = {0}", lineId) * 1000;
+            double nominal = Summary.VoltageLL.Nominal = Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Asset WHERE ID = {0}", lineId) * 1000;
             verticalMillimeters += InsertNominal(page, verticalMillimeters, "Voltage", string.Format("{0:N0}", nominal), "V L-L");
 
             using (Historian historian = new Historian(historianServer, historianInstance))
@@ -1418,11 +1419,11 @@ namespace openXDA.Reports
 
         private double InsertFlickerPage(Page page, double verticalMillimeters)
         {
-            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            Channel line1 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'AN')", Meter.ID);
-            Channel line2 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'BN')", Meter.ID);
-            Channel line3 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CN')", Meter.ID);
+            string historianServer = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+            Channel line1 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'AN')", Meter.ID);
+            Channel line2 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'BN')", Meter.ID);
+            Channel line3 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CN')", Meter.ID);
 
             if (line1 == null && line2 == null && line3 == null)
             {
@@ -1554,9 +1555,9 @@ namespace openXDA.Reports
 
         private double InsertImbalancePage(Page page, double verticalMillimeters)
         {
-            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            Channel channel = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'AvgImbal') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", Meter.ID);
+            string historianServer = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+            Channel channel = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'AvgImbal') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", Meter.ID);
 
             if (channel == null)
             {
@@ -1646,12 +1647,12 @@ namespace openXDA.Reports
 
         private double InsertTHDPage(Page page, double verticalMillimeters)
         {
-            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+            string historianServer = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
 
-            Channel line1 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'AN')", Meter.ID);
-            Channel line2 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'BN')", Meter.ID);
-            Channel line3 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CN')", Meter.ID);
+            Channel line1 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'AN')", Meter.ID);
+            Channel line2 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'BN')", Meter.ID);
+            Channel line3 = new TableOperations<Channel>(Connection).QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CN')", Meter.ID);
 
             if (line1 == null && line2 == null && line3 == null)
             {
