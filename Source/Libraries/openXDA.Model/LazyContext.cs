@@ -46,6 +46,7 @@ namespace openXDA.Model
 
         private Dictionary<int, Asset> m_assets;
         private Dictionary<int, AssetConnection> m_assetConnections;
+        private Dictionary<int, LineSegmentConnections> m_segmentConnections;
         private Dictionary<int, Line> m_lines;
         private Dictionary<int, LineSegment> m_lineSegments;
 
@@ -70,6 +71,7 @@ namespace openXDA.Model
             m_assetConnections = new Dictionary<int, AssetConnection>();
             m_lines = new Dictionary<int, Line>();
             m_lineSegments = new Dictionary<int, LineSegment>();
+            m_segmentConnections = new Dictionary<int, LineSegmentConnections>();
         }
 
         #endregion
@@ -300,6 +302,23 @@ namespace openXDA.Model
                 return cachedConnection;
 
             m_assetConnections.Add(connection.ID, connection);
+            return connection;
+        }
+
+        public LineSegmentConnections GetLineSegmentConnection(LineSegmentConnections connection)
+        {
+            LineSegmentConnections cachedConnection;
+
+            if ((object)connection == null)
+                return null;
+
+            if (connection.ID == 0)
+                return connection;
+
+            if (m_segmentConnections.TryGetValue(connection.ID, out cachedConnection))
+                return cachedConnection;
+
+            m_segmentConnections.Add(connection.ID, connection);
             return connection;
         }
 

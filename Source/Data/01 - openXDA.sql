@@ -386,6 +386,14 @@ CREATE TABLE LineSegmentAttributes
 )
 GO
 
+CREATE TABLE LineSegmentConnections
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ParentSegment INT REFERENCES Asset(ID),
+    ChildSegment INT REFERENCES Asset(ID),
+)
+GO
+
 CREATE TABLE TransformerAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

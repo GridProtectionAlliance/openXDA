@@ -86,6 +86,7 @@
     <Compile Include="Files\FileGroupField.cs" />
     <Compile Include="Files\FileGroupFieldValue.cs" />
     <Compile Include="LazyContext.cs" />
+    <Compile Include="Links\LineSegmentConnections.cs" />
     <Compile Include="Links\AssetSpare.cs" />
     <Compile Include="Links\AssetConnectionType.cs" />
     <Compile Include="Links\AssetGroupAssetGroup.cs" />
