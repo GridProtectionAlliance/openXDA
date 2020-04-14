@@ -381,7 +381,8 @@ CREATE TABLE LineSegmentAttributes
     X0 FLOAT NOT NULL,
     R1 FLOAT NOT NULL,
     X1 FLOAT NOT NULL,
-	ThermalRating FLOAT NOT NULL
+	ThermalRating FLOAT NOT NULL,
+    IsEnd BIT NOT NULL DEFAULT(0)
 )
 GO
 
@@ -714,7 +715,8 @@ CREATE VIEW LineSegment AS
 		AssetName,
 		VoltageKV,
 		AssetTypeID,
-		Spare
+		Spare,
+        IsEnd
 	FROM Asset JOIN LineSegmentAttributes ON Asset.ID = LineSegmentAttributes.AssetID
 GO
 
@@ -731,7 +733,7 @@ BEGIN
 			Spare AS Spare
 	FROM INSERTED
 
-	INSERT INTO LineSegmentAttributes (AssetID, Length, R0, X0, R1, X1, ThermalRating)
+	INSERT INTO LineSegmentAttributes (AssetID, Length, R0, X0, R1, X1, ThermalRating, IsEnd)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			Length AS Length,
@@ -739,6 +741,7 @@ BEGIN
 			X0 AS X0,
 			R1 AS R1,
 			X1 AS X1,
+            IsEnd AS IsEnd,
 			ThermalRating AS ThermalRating
 	FROM INSERTED
 
@@ -770,7 +773,8 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 			LineSegmentAttributes.X0 = INSERTED.X0,
 			LineSegmentAttributes.R1 = INSERTED.R1,
 			LineSegmentAttributes.X1 = INSERTED.X1,
-			LineSegmentAttributes.ThermalRating = INSERTED.ThermalRating
+			LineSegmentAttributes.ThermalRating = INSERTED.ThermalRating,
+            LineSegmentAttributes.IsEnd = INSERTED.IsEnd
 		FROM
 			LineSegmentAttributes 
 	INNER JOIN

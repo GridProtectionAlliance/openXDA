@@ -55,6 +55,8 @@ namespace openXDA.Model
 
         public double Length { get; set; }
 
+        public bool IsEnd { get; set; }
+
         [JsonIgnore]
         [NonRecordField]
         public Line Line
