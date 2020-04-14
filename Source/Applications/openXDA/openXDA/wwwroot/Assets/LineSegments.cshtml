@@ -70,6 +70,7 @@ new[] { "AssetKey", "Key", "text-Left" },
 new[] { "AssetName", "Asset Name", "text-left" },
 new[] { "Length", "Length", "text-left" },
 new[] { "ThermalRating", "Thermal Rating", "text-left"},
+new[] { "IsEnd", "End of Line", "text-left"},
 };
 
     ViewBag.AddNewEditTitle = "Segment";
@@ -95,8 +96,9 @@ new[] { "ThermalRating", "Thermal Rating", "text-left"},
 {
     <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
     <td width="25%" class="text-left valign-middle" data-bind="text: AssetName"></td>
-    <td width="25%" class="text-left valign-middle" data-bind="text: Length"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: Length"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: ThermalRating"></td>
+    <td width="5%" class="text-left valign-middle" data-bind="text: IsEnd"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -108,6 +110,7 @@ new[] { "ThermalRating", "Thermal Rating", "text-left"},
         @Raw(dataContext.AddInputField<LineSegment>("AssetKey", fieldLabel: "Key"))
         @Raw(dataContext.AddInputField<LineSegment>("AssetName", fieldLabel: "Name"))
         @Raw(dataContext.AddInputField<LineSegment>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (kV)"))
+        @Raw(dataContext.AddCheckBoxField<LineSegment>("IsEnd", fieldLabel: "End of the Line"))
         @Raw(dataContext.AddTextAreaField<LineSegment>("Description"))
     </div>
     <div class="col-md-4">
@@ -123,11 +126,11 @@ new[] { "ThermalRating", "Thermal Rating", "text-left"},
         @Raw(dataContext.AddInputField<LineSegment>("Length", fieldLabel: "Length (" + ViewBag.lengthUnits + ")"))
     </div>
 
-    }
-    @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
-    @section Scripts
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@section Scripts
 {
-                <script>
+    <script>
         @Raw(dataContext.RenderViewModelConfiguration<LineSegment, DataHub>(ViewBag,null,null,ViewBag.LineID))
 
         $(function () {
@@ -146,5 +149,5 @@ new[] { "ThermalRating", "Thermal Rating", "text-left"},
             $('#linefilter').trigger('keyup');
         });
 
-                </script>
-            }
+    </script>
+}
