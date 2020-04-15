@@ -38,7 +38,7 @@ namespace openXDA.Model
 
         // Fields
         private Line m_line;
-
+        private List<LineSegmentConnections> m_connectedSegements;
         #endregion
 
         #region [ Properties ]
@@ -68,6 +68,20 @@ namespace openXDA.Model
             set
             {
                 m_line = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public List<LineSegmentConnections> connectedSegments
+        {
+            get
+            {
+                return m_connectedSegements ?? (m_connectedSegements = QueryConnectedSegements());
+            }
+            set
+            {
+                m_connectedSegements = value;
             }
         }
 
@@ -139,6 +153,38 @@ namespace openXDA.Model
             return line;
         }
 
+        public IEnumerable<LineSegmentConnections> GetConnectedSegments(AdoDataConnection connection)
+        {
+
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<LineSegmentConnections> connectionTable = new TableOperations<LineSegmentConnections>(connection);
+            return connectionTable.QueryRecordsWhere("ParentSegment = {0} OR ChildSegment = {1}", ID, ID);
+
+        }
+
+        private List<LineSegmentConnections> QueryConnectedSegements()
+        {
+            List<LineSegmentConnections> connections;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                connections = GetConnectedSegments(connection)?
+                    .Select(LazyContext.GetLineSegmentConnection)
+                    .ToList();
+            }
+
+            if ((object)connections != null)
+            {
+                foreach (LineSegmentConnections connection in connections)
+                {
+                    connection.LazyContext = LazyContext;
+                }
+            }
+
+            return connections;
+        }
 
         #endregion
     }

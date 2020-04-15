@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  12/13/2019 - Christoph Lackner
 //       Moved Base functionality to Asset.
+//  04/15/2020 - Christoph Lackner
+//       Added Transmission Path.
 //
 //******************************************************************************************************
 
@@ -59,6 +61,20 @@ namespace openXDA.Model
             set
             {
                 m_lineSegment = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public List<TransmissionPath> Path
+        {
+            get
+            {
+                return new List<TransmissionPath>();
+            }
+            set
+            {
+                //m_lineSegment = value;
             }
         }
 
@@ -134,4 +150,18 @@ namespace openXDA.Model
         }
         #endregion
     }
+
+
+    public class TransmissionPath
+    {
+        public double Length;
+        public double X0;
+        public double R0;
+        public double X1;
+        public double R1;
+
+        public IEnumerable<LineSegment> Segments;
+        public Line Line; 
+    }
+
 }
