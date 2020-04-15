@@ -75,12 +75,12 @@ namespace FaultData.DataResources
             {
                 if (Line.Segments != null)
                 {
-                    if (Line.Segments.Select(item => item.R0).Sum() == 0.0D && Line.Segments.Select(item => item.X0).Sum() == 0.0D &&
-                        Line.Segments.Select(item => item.R1).Sum() == 0.0D && Line.Segments.Select(item => item.X1).Sum() == 0.0D)
+                    if (Line.Path[0].R0 == 0.0D && Line.Path[0].X0 == 0.0D &&
+                        Line.Path[0].R1 == 0.0D && Line.Path[0].X1 == 0.0D)
                         return false;
 
-                    FaultLocationDataSet.Z0 = new ComplexNumber(Line.Segments.Select(item => item.R0).Sum(), Line.Segments.Select(item => item.X0).Sum());
-                    FaultLocationDataSet.Z1 = new ComplexNumber(Line.Segments.Select(item => item.R1).Sum(), Line.Segments.Select(item => item.X1).Sum());
+                    FaultLocationDataSet.Z0 = new ComplexNumber(Line.Path[0].R0, Line.Path[0].X0);
+                    FaultLocationDataSet.Z1 = new ComplexNumber(Line.Path[0].R1, Line.Path[0].X1);
 
                     SourceImpedance localImpedance = Line.AssetLocations
                         .Where(link => link.Location == Meter.Location)
@@ -366,7 +366,7 @@ namespace FaultData.DataResources
                 Line line = Line.DetailedLine(dataGroup.Asset);
 
                 FaultLocationDataSet faultLocationDataSet = new FaultLocationDataSet();
-                faultLocationDataSet.LineDistance = line.Segments.Select(item => item.Length).Sum();
+                faultLocationDataSet.LineDistance = line.Path[0].Length;
                 faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
 
                 // Extract impedances from the database
@@ -1085,10 +1085,10 @@ namespace FaultData.DataResources
             double minFaultDistanceMultiplier = FaultLocationSettings.MinFaultDistanceMultiplier;
 
             double maxDistance = line.MaxFaultDistance
-                ?? maxFaultDistanceMultiplier * line.Segments.Select(item => item.Length).Sum();
+                ?? maxFaultDistanceMultiplier * line.Path[0].Length;
 
             double minDistance = line.MinFaultDistance
-                ?? minFaultDistanceMultiplier * line.Segments.Select(item => item.Length).Sum();
+                ?? minFaultDistanceMultiplier * line.Path[0].Length;
 
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
@@ -1483,8 +1483,8 @@ namespace FaultData.DataResources
             if (line == null)
                 return double.NaN;
 
-            ComplexNumber z0 = new ComplexNumber(line.Segments.Select(item => item.R0).Sum(), line.Segments.Select(item => item.X0).Sum());
-            ComplexNumber z1 = new ComplexNumber(line.Segments.Select(item => item.R1).Sum(), line.Segments.Select(item => item.X1).Sum());
+            ComplexNumber z0 = new ComplexNumber(line.Path[0].R0, line.Path[0].X0);
+            ComplexNumber z1 = new ComplexNumber(line.Path[0].R1, line.Path[0].X1);
             ComplexNumber loopImpedance = (z0 + 2.0D * z1) / 3.0D;
 
             double zf = faultImpedance.Magnitude;

@@ -300,7 +300,7 @@ namespace FaultData.DataOperations
                             {
                                 line.ConnectionFactory = meterDataSet.CreateDbConnection;
 
-                                return line.Segments.Select(item => item.Length).Sum();
+                                return line.Path[0].Length;
                             })
                             .DefaultIfEmpty(double.NaN)
                             .First();
@@ -313,12 +313,12 @@ namespace FaultData.DataOperations
                             lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line =>
                             {
                                 line.ConnectionFactory = meterDataSet.CreateDbConnection;
-                                return line.Segments.Select(item => item.R1).Sum();
+                                return line.Path[0].R1;
                             }).FirstOrDefault(),
                             lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line =>
                             {
                                 line.ConnectionFactory = meterDataSet.CreateDbConnection;
-                                return line.Segments.Select(item => item.X1).Sum();
+                                return line.Path[0].X1;
                             }).FirstOrDefault());
 
                            

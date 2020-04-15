@@ -371,8 +371,8 @@ namespace openXDA.Hubs
         /// <param name="line"></param>
         private void FixFaultCurve(DataSeries faultCurve, Line line)
         {
-            double maxFaultDistance = MaxFaultDistanceMultiplier * line.Segments.Select(item => item.Length).Sum();
-            double minFaultDistance = MinFaultDistanceMultiplier * line.Segments.Select(item => item.Length).Sum();
+            double maxFaultDistance = MaxFaultDistanceMultiplier * line.Path[0].Length;
+            double minFaultDistance = MinFaultDistanceMultiplier * line.Path[0].Length;
 
             foreach (DataPoint dataPoint in faultCurve.DataPoints)
             {
