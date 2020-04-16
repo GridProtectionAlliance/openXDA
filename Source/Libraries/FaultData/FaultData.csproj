@@ -113,6 +113,7 @@
     <Compile Include="DataOperations\DataOperationBase.cs" />
     <Compile Include="DataOperations\DataPusherOperation.cs" />
     <Compile Include="DataOperations\DataQualityOperation.cs" />
+    <Compile Include="DataOperations\GTC\MeterDataQualityOverride.cs" />
     <Compile Include="DataOperations\LightningDataOperation.cs" />
     <Compile Include="DataOperations\PQube\PQubeClassificationOverride.cs" />
     <Compile Include="DataOperations\RelayEnergization.cs" />
