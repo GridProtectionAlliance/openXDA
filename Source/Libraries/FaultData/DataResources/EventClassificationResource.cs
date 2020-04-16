@@ -47,7 +47,8 @@ namespace FaultData.DataResources
         Swell,
         Transient,
         Other,
-        Snapshot
+        Snapshot,
+        MeterDataQuality
     }
 
     public class EventClassificationResource : DataResourceBase<MeterDataSet>
