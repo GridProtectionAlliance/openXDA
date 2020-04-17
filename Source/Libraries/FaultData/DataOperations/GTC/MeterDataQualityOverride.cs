@@ -73,12 +73,12 @@ namespace FaultData.DataOperations.GTC
 
                 DataSeries[] puVoltages =
                 {
-                    viDataGroup.VA?.Multiply(1.0D / lnFactor),
-                    viDataGroup.VB?.Multiply(1.0D / lnFactor),
-                    viDataGroup.VC?.Multiply(1.0D / lnFactor),
-                    viDataGroup.VAB?.Multiply(1.0D / llFactor),
-                    viDataGroup.VBC?.Multiply(1.0D / llFactor),
-                    viDataGroup.VCA?.Multiply(1.0D / llFactor)
+                    viDataGroup.VA?.Multiply(lnFactor),
+                    viDataGroup.VB?.Multiply(lnFactor),
+                    viDataGroup.VC?.Multiply(lnFactor),
+                    viDataGroup.VAB?.Multiply(llFactor),
+                    viDataGroup.VBC?.Multiply(llFactor),
+                    viDataGroup.VCA?.Multiply(llFactor)
                 };
 
                 bool invalidVoltage = false;
