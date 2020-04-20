@@ -62,7 +62,7 @@ namespace FaultData.DataOperations.GTC
             {
                 DataGroup dataGroup = cycleDataResource.DataGroups[i];
                 VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
-                double llPeakNominalVoltage = dataGroup.Line.VoltageKV * 1000.0D * Math.Sqrt(2.0D);
+                double llPeakNominalVoltage = dataGroup.Asset.VoltageKV * 1000.0D * Math.Sqrt(2.0D);
                 double lnPeakNominalVoltage = llPeakNominalVoltage / Math.Sqrt(3.0D);
 
                 // Nominal multipliers used for first derivative, based on:
