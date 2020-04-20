@@ -749,8 +749,8 @@ BEGIN
 			X0 AS X0,
 			R1 AS R1,
 			X1 AS X1,
-            IsEnd AS IsEnd,
-			ThermalRating AS ThermalRating
+			ThermalRating AS ThermalRating,
+            IsEnd AS IsEnd
 	FROM INSERTED
 
 END
