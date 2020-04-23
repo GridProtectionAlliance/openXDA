@@ -245,7 +245,7 @@ namespace FaultData.DataReaders
         {
             string assetKey = GetMeterKey(filePath, m_filePattern) ?? ThreadContext.Properties["Meter"].ToString();
             string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
-            string directoryPath = Path.Combine(m_emaxSettings.COMTRADEExportDirectory, assetKey);
+            string directoryPath = Path.Combine(m_emaxSettings.COMTRADEExportDirectory, assetKey, "Event Comtrade");
             string schemaFilePath = Path.Combine(directoryPath, $"{rootFileName}.cfg");
             string dataFilePath = Path.Combine(directoryPath, $"{rootFileName}.dat");
             Schema comtradeSchema = new Schema();
