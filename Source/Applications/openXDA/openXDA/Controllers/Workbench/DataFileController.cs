@@ -54,7 +54,7 @@ namespace openXDA.Controllers.Config
                     TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
                     RecordRestriction restriction = dataFileTable.GetSearchRestriction(postData.filterString);
                     string query = string.Format(QueryFormat, restriction?.FilterExpression ?? "1=1");
-                    return connection.ExecuteScalar<int>(query, restriction?.Parameters ?? new object[0]);
+                    return connection.ExecuteScalar<int>(180, query, restriction?.Parameters ?? new object[0]);
                 }
             }, cancellationToken);
         }
@@ -121,7 +121,7 @@ namespace openXDA.Controllers.Config
                         .ToArray();
 
                     return connection
-                        .RetrieveData(query, parameters);
+                        .RetrieveData(180, query, parameters);
                 }
             }, cancellationToken);
 
