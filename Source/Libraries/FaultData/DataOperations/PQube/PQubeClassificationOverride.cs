@@ -38,7 +38,7 @@ namespace FaultData.DataOperations.PQube
         {
             EventClassificationResource eventClassificationResource = meterDataSet.GetResource<EventClassificationResource>();
 
-            foreach (DataGroup dataGroup in eventClassificationResource.Classifications.Keys)
+            foreach (DataGroup dataGroup in eventClassificationResource.Classifications.Keys.ToList())
             {
                 if (meterDataSet.Triggers.Contains("Voltage Sag"))
                     eventClassificationResource.Classifications[dataGroup] = EventClassification.Sag;
