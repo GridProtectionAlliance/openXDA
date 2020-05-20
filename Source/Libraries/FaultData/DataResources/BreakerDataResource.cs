@@ -57,25 +57,14 @@ namespace FaultData.DataResources
         {
             public Restrike()
             { }
-            public Restrike(Phase phase, int initial )
-            {
-                Phase = phase;
-                initialExtinction = initial;
-                restrike = initial;
-                currentMaximum = initial;
-                maximumVoltageSurpression = initial;
-                transientOverVoltage = initial;
-                finalExtinction = initial;
-
-            }
-
-            public Phase Phase { get; }
-            public int initialExtinction { get; }
-            public int restrike { get; }
-            public int currentMaximum { get; }
-            public int maximumVoltageSurpression { get; }
-            public int transientOverVoltage { get; }
-            public int finalExtinction { get; }
+          
+            public openXDA.Model.Phase Phase { get; set; }
+            public int initialExtinction { get; set; }
+            public int restrike { get; set; }
+            public int currentMaximum { get; set; }
+            public int maximumVoltageSurpression { get; set; }
+            public int transientOverVoltage { get; set; }
+            public int finalExtinction { get; set; }
         }
 
         #endregion
@@ -151,16 +140,13 @@ namespace FaultData.DataResources
                 DataGroup dataGroup = cycleDataResource.DataGroups[i];
                 VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
                 VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
-    
 
-                IEnumerable<Restrike> iaRestrikes = FindRestrikes(viCycleDataGroup.IA,viDataGroup.IA )
-                    .Select(index => new Restrike(Phase.AN, index));
 
-                IEnumerable<Restrike> ibRestrikes = FindRestrikes(viCycleDataGroup.IB, viDataGroup.IB)
-                    .Select(index => new Restrike(Phase.BN, index));
+                IEnumerable<Restrike> iaRestrikes = FindRestrikes(viCycleDataGroup.IA, viDataGroup.IA);
 
-                IEnumerable<Restrike> icRestrikes = FindRestrikes(viCycleDataGroup.IC, viDataGroup.IC)
-                    .Select(index => new Restrike(Phase.CN, index));
+                IEnumerable<Restrike> ibRestrikes = FindRestrikes(viCycleDataGroup.IB, viDataGroup.IB);
+
+                IEnumerable<Restrike> icRestrikes = FindRestrikes(viCycleDataGroup.IC, viDataGroup.IC);
 
                 List<Restrike> allRestrikes = Enumerable.Empty<Restrike>()
                     .Concat(iaRestrikes)
@@ -173,9 +159,9 @@ namespace FaultData.DataResources
             }
         }
 
-        private List<int> FindRestrikes(CycleDataGroup cycleData, DataSeries pointOnWaveData)
+        private List<Restrike> FindRestrikes(CycleDataGroup cycleData, DataSeries pointOnWaveData)
         {
-            List<int> restrikes = new List<int>();
+            List<Restrike> restrikes = new List<Restrike>();
 
             if (cycleData == null || pointOnWaveData == null)
                 return restrikes;
@@ -287,14 +273,13 @@ namespace FaultData.DataResources
 
                 startIndex = segments[i].Item2;
 
-                double amplitudeEnd = GetAmplitude(pointOnWaveData.ToSubSeries(startIndex, startIndex + 20).DataPoints);
 
                 if (avdDists < BreakerSettings.OpenBreakerThreshold)
                     isValid.Add(false);
                 else
                     isValid.Add(true);
 
-                if (avgEnd < avgStart)
+                if (Math.Abs(avgEnd) < Math.Abs(avgStart))
                     breakerOpening.Add(true);
                 else
                     breakerOpening.Add(false);
@@ -346,12 +331,76 @@ namespace FaultData.DataResources
             segments = segments.Where((item, index) => isValid[index]).ToList();
             breakerOpening = breakerOpening.Where((item, index) => isValid[index]).ToList();
 
+            if (segments.Count < 2)
+                return restrikes;
+
             // Check if there are Breaker close movements that are restrikes
             //restrikes = segments.Where((item, index) => (index > 0) && (!breakerOpening[index])).Select(item => item.Item1).ToList();
-            restrikes = segments.Select(item => item.Item1).ToList();
+            for (int i = 1; i < segments.Count; i++)
+            {
+                //It's only a restrike if the Breaker Closes
+                if (breakerOpening[i])
+                    continue;
 
-            //Determine excact point based on POW deviation (going forward for Breaker closing)
+                // determine the exact Points for Breaker Open and Breaker Close (Initial Current Extinguishment and Time of Current Restrike)
+                int breakerOpenIndex = segments[i-1].Item1 + 1;
+                int breakerCloseIndex = segments[i].Item2 - 1;
 
+                double diff = pointOnWaveData[breakerOpenIndex].Value - pointOnWaveData[segments[i - 1].Item1].Value;
+                while (breakerOpenIndex < segments[i - 1].Item2)
+                {
+                    breakerOpenIndex++;
+
+                    if (diff * (pointOnWaveData[breakerOpenIndex].Value - pointOnWaveData[breakerOpenIndex - 1].Value) < 0)
+                        break;
+                    diff = pointOnWaveData[breakerOpenIndex].Value - pointOnWaveData[breakerOpenIndex - 1].Value;
+                }
+
+                diff = pointOnWaveData[breakerCloseIndex].Value - pointOnWaveData[segments[i].Item2].Value;
+                while (breakerCloseIndex > segments[i].Item1)
+                {
+                    breakerCloseIndex--;
+
+                    if (diff * (pointOnWaveData[breakerCloseIndex].Value - pointOnWaveData[breakerOpenIndex + 1].Value) < 0)
+                        break;
+                    diff = pointOnWaveData[breakerCloseIndex].Value - pointOnWaveData[breakerCloseIndex + 1].Value;
+                }
+
+                Restrike restrike = new Restrike();
+                restrike.Phase = pointOnWaveData.SeriesInfo.Channel.Phase;
+                restrike.initialExtinction = breakerOpenIndex;
+                restrike.restrike = breakerCloseIndex;
+
+                //Maximum Current will be within 1 cycle or before the next Breaker Open
+                if (i < (segments.Count - 1))
+                {
+                    breakerOpenIndex = segments[i + 1].Item1 + 1;
+
+                    diff = pointOnWaveData[breakerOpenIndex].Value - pointOnWaveData[segments[i + 1].Item1].Value;
+                    while (breakerOpenIndex < segments[i + 1].Item2)
+                    {
+                        breakerOpenIndex++;
+
+                        if (diff * (pointOnWaveData[breakerOpenIndex].Value - pointOnWaveData[breakerOpenIndex + 1].Value) < 0)
+                            break;
+                        diff = pointOnWaveData[breakerOpenIndex].Value - pointOnWaveData[breakerOpenIndex + 1].Value;
+                    }
+
+                    restrike.finalExtinction = breakerOpenIndex;
+                }
+                else
+                    breakerOpenIndex = breakerCloseIndex + fullCycle;
+
+                double maxI = pointOnWaveData.ToSubSeries(breakerCloseIndex, breakerOpenIndex).DataPoints.Select(item => Math.Abs(item.Value)).Max();
+                restrike.currentMaximum = breakerCloseIndex + pointOnWaveData.ToSubSeries(breakerCloseIndex, breakerOpenIndex).DataPoints.IndexOf(item => Math.Abs(item.Value) == maxI);
+
+
+
+
+
+
+                restrikes.Add(restrike);
+            }
 
             return restrikes;
         }
@@ -380,6 +429,7 @@ namespace FaultData.DataResources
             // Use a curve fitting algorithm to estimate the sine wave 
             return Math.Abs(sineFit.Amplitude);
         }
+
         #endregion
     }
 }
