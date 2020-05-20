@@ -37,6 +37,7 @@ namespace FaultData.DataOperations
     {
         public override void Execute(MeterDataSet meterDataSet)
         {
+            LoadRestrikeAnalysis(meterDataSet);
             LoadGTCRestrikeData(meterDataSet);
         }
 
