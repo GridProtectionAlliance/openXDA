@@ -60,7 +60,7 @@ namespace FaultData.DataOperations
 
                     foreach (BreakerDataResource.Restrike restrike in restrikes)
                     {
-                        Phase phase = phaseTable.GetOrAdd(restrike.Phase.ToString());
+                        Phase phase = phaseTable.GetOrAdd(restrike.Phase.Name);
                         BreakerRestrike breakerRestrike = ProcessRestrike(restrike, phase, evt, new VIDataGroup(dataGroup));
                         breakerRestrikeTable.AddNewRecord(breakerRestrike);
                     }
