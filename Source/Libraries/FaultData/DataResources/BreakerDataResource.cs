@@ -361,7 +361,7 @@ namespace FaultData.DataResources
                 {
                     breakerCloseIndex--;
 
-                    if (diff * (pointOnWaveData[breakerCloseIndex].Value - pointOnWaveData[breakerOpenIndex + 1].Value) < 0)
+                    if (diff * (pointOnWaveData[breakerCloseIndex].Value - pointOnWaveData[breakerCloseIndex + 1].Value) < 0)
                         break;
                     diff = pointOnWaveData[breakerCloseIndex].Value - pointOnWaveData[breakerCloseIndex + 1].Value;
                 }
