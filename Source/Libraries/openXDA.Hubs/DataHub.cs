@@ -4771,7 +4771,7 @@ namespace openXDA.Hubs
 
                 TableOperations<EventView> tableOperations = new TableOperations<EventView>(connection);
                 RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) +
-                    new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
+                    new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR AssetID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
                                                                                              "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
                                                                                              "StartTime >= {1} AND " +
                                                                                              "StartTime <= {2} ",
@@ -4794,7 +4794,7 @@ namespace openXDA.Hubs
 
                 TableOperations<EventView> tableOperations = new TableOperations<EventView>(connection);
                 RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) +
-                    new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
+                    new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR AssetID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
                                                                                              "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
                                                                                              "StartTime >= {1} AND " +
                                                                                              "StartTime <= {2} ",
@@ -5113,7 +5113,7 @@ namespace openXDA.Hubs
                     filterString += "%";
 
 
-                return new TableOperations<EventView>(connection).QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR MeterName LIKE {3} OR LineName LIKE {4} OR EventTypeName LIKE {5})", startTime, endTime, filterString, filterString, filterString, filterString)).ToList();
+                return new TableOperations<EventView>(connection).QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR MeterName LIKE {3} OR AssetName LIKE {4} OR EventTypeName LIKE {5})", startTime, endTime, filterString, filterString, filterString, filterString)).ToList();
             }
         }
 
@@ -5131,7 +5131,7 @@ namespace openXDA.Hubs
                     filterString += "%";
 
 
-                return new TableOperations<EventView>(connection).QueryRecordCount(new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR MeterName LIKE {3} OR LineName LIKE {4} OR EventTypeName Like {5})", startTime, endTime, filterString, filterString, filterString, filterString));
+                return new TableOperations<EventView>(connection).QueryRecordCount(new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR MeterName LIKE {3} OR AssetName LIKE {4} OR EventTypeName Like {5})", startTime, endTime, filterString, filterString, filterString, filterString));
             }
         }
 

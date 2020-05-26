@@ -58,7 +58,7 @@
     {   //    { "Field", "Label", "Classes" }
         new[] { "ID", "Event ID", "text-left"},
         new[] { "MeterName", "Meter Name", "text-left"},
-        new[] { "LineName", "Line Name", "text-left"},
+        new[] { "AssetName", "Asset Name", "text-left"},
         new[] { "EventTypeName", "Event Type" , "text-center"},
         new[] { "StartTime", "Start Time", "text-center"},
         new[] { "EndTime", "End Time", "text-center" },
@@ -83,7 +83,7 @@
 {
     <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?eventid=' + ID + '&faultcurves=1' }, text: ID"></a>@*<button  type="button" class="btn btn-link" data-bind="click: goToOpenSEE.bind($data), text: ID"></button>*@</td>
     <td width="20%" class="text-left valign-middle" data-bind="text: MeterName"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: LineName.truncate(25), attr: {title: LineName}"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: AssetName.truncate(25), attr: {title: AssetName}"></td>
     <td width="10%" class="text-center valign-middle" data-bind="text: EventTypeName"></td>
     <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + StartTime + '&EventID=' + ID + '&time=1'}, text: StartTime.formatDate(DateTimeFormat)"></a></td>
     <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + EndTime + '&EventID=' + ID  + '&time=2'}, text: EndTime.formatDate(DateTimeFormat)"></a></td>
@@ -100,7 +100,7 @@
 {
     @Raw(dataContext.AddInputField<EventView>("ID", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<EventView>("MeterName", "string", customDataBinding: "enable: false"))
-    @Raw(dataContext.AddInputField<EventView>("LineName", "string", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<EventView>("AssetName", "string", customDataBinding: "enable: false"))
     @Raw(dataContext.AddSelectField<EventView, EventType>("EventTypeID", "ID", "Name"))
     @Raw(dataContext.AddInputField<EventView>("StartTime", "string", customDataBinding: "type: text, enable: true"))
     @Raw(dataContext.AddInputField<EventView>("EndTime", "string", customDataBinding: "enable: false"))
@@ -121,7 +121,7 @@
             <div class="modal-body">
                 <label for="meterName">Meter</label>
                 <span id="meterName" type="text" class="form-control"></span>
-                <label for="lineName">Line</label>
+                <label for="lineName">Asset</label>
                 <span id="lineName" type="text" class="form-control"></span>
                 <label for="eventType">Event Type</label>
                 <span id="eventType" type="text" class="form-control"></span>
