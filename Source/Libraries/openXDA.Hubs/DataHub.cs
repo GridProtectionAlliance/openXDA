@@ -4841,6 +4841,9 @@ namespace openXDA.Hubs
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 TableOperations<Disturbance> disturbanceTable = new TableOperations<Disturbance>(connection);
                 TableOperations<Fault> faultTable = new TableOperations<Fault>(connection);
+                TableOperations<BreakerRestrike> restrikeTable = new TableOperations<BreakerRestrike>(connection);
+                TableOperations<RelayPerformance> relayTable = new TableOperations<RelayPerformance>(connection);
+
 
                 DateTime oldStartTime = connection.ExecuteScalar<DateTime>($"SELECT StartTime FROM Event WHERE ID = {record.ID}");
                 if (oldStartTime != record.StartTime)
@@ -4897,7 +4900,42 @@ namespace openXDA.Hubs
                         faultTable.UpdateRecord(fault);
                     }
 
-                  
+                    // Update RelayEnergization records
+                    // IF propagate is true update all associated with the file
+                    // if propagate is false update all assocaited with the event id
+                    IEnumerable<RelayPerformance> relayPerformances;
+
+                    if (propagate)
+                        relayPerformances = relayTable.QueryRecords(restriction: new RecordRestriction("EventID IN (Select ID from Event WHERE FileGroupID = {0})", record.FileGroupID));
+                    else
+                        relayPerformances = relayTable.QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                    foreach (var relay in relayPerformances)
+                    {
+                        relay.TripInitiate = relay.TripInitiate?.AddTicks(ticks);
+                        relayTable.UpdateRecord(relay) ;
+                    }
+
+                    // Update Breaker Restrike records
+                    // IF propagate is true update all associated with the file
+                    // if propagate is false update all assocaited with the event id
+                    IEnumerable<BreakerRestrike> breakerRestrikes;
+
+                    if (propagate)
+                        breakerRestrikes = restrikeTable.QueryRecords(restriction: new RecordRestriction("EventID IN (Select ID from Event WHERE FileGroupID = {0})", record.FileGroupID));
+                    else
+                        breakerRestrikes = restrikeTable.QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                    foreach (var restrike in breakerRestrikes)
+                    {
+                        restrike.InitialExtinguishTime = restrike.InitialExtinguishTime.AddTicks(ticks);
+                        restrike.RestrikeTime = restrike.RestrikeTime.AddTicks(ticks);
+                        restrike.TransientPeakTime = restrike.TransientPeakTime.AddTicks(ticks);
+                        restrike.FinalExtinguishTime = restrike.FinalExtinguishTime.AddTicks(ticks);
+                        restrikeTable.UpdateRecord(restrike);
+                    }
+
+
                     //This is only to get old Data Migrated we will not be using the output, but calling 
                     // DataFromEvent will cause all of the data to be migrated to the new schema 
                     List<byte[]> timeSeries = ChannelData.DataFromEvent(record.ID, connection);
