@@ -4897,14 +4897,9 @@ namespace openXDA.Hubs
                         faultTable.UpdateRecord(fault);
                     }
 
-                    DataGroup dataTimeGroup = new DataGroup();
-                    DataGroup dataFaultAlgo = new DataGroup();
-
-                    Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", record.MeterID);
-
+                  
                     //This is only to get old Data Migrated we will not be using the output, but calling 
                     // DataFromEvent will cause all of the data to be migrated to the new schema 
-                    
                     List<byte[]> timeSeries = ChannelData.DataFromEvent(record.ID, connection);
 
                     if (propagate)
@@ -4917,14 +4912,15 @@ namespace openXDA.Hubs
                     }
 
 
-                    byte[] faultCurve = connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
-
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
-
                     TableOperations<ChannelData> channelDataTbl = new TableOperations<ChannelData>(connection);
+                    TableOperations<FaultCurve> faultCurveTbl = new TableOperations<FaultCurve>(connection);
+
+
                     List<ChannelData> channelData = channelDataTbl.QueryRecordsWhere(
                         (propagate? "FileGroupID = (SELECT TOP 1 FileGroupID FROM ChannelData WHERE EventID = {0})" : "EventID = {0}"), record.ID).ToList();
 
+                    List<FaultCurve> faultCurves = faultCurveTbl.QueryRecordsWhere("EventID in (SELECT ID FROM Event WHERE " + 
+                        (propagate ? "FileGroupID = (SELECT TOP 1 FileGroupID FROM ChannelData WHERE EventID = {0}))" : "EventID = {0})"), record.ID).ToList();
                     try
                     {
                         if (channelData != null)
@@ -4938,20 +4934,13 @@ namespace openXDA.Hubs
                             
                         }
 
-                        if (faultCurve != null)
+                        if (faultCurves != null)
                         {
-                            dataFaultAlgo.FromData(meter, new List<byte[]>() { faultCurve });
-                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            foreach (FaultCurve item in faultCurves)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
-                            }
-
-                            byte[] newFaultAlgo = dataFaultAlgo.ToData()[dataFaultAlgo.DataSeries[0].SeriesInfo.ChannelID];
-
-                            connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
+                                item.Adjust(ticks);
+                                faultCurveTbl.UpdateRecord(item);
+                            }                            
                         }
                     }
                     catch (Exception ex)
