@@ -116,12 +116,13 @@ namespace FaultData.DataOperations
 
             result.TransientPeakTime = current[restrike.transientOverVoltage].Time;
             result.TransientPeakVoltage = voltage[restrike.transientOverVoltage].Value;
-            result.PerUnitTransientPeakVoltage = voltage[restrike.transientOverVoltage].Value;
+            result.PerUnitTransientPeakVoltage = voltage[restrike.transientOverVoltage].Value / (voltage.SeriesInfo.Channel.Asset.VoltageKV * 1000.0D);
 
             result.FinalExtinguishSample = restrike.finalExtinction;
             result.FinalExtinguishTime = current[restrike.finalExtinction].Time;
             result.FinalExtinguishVoltage = voltage[restrike.finalExtinction].Value;
-            result.I2t = 0.0;
+            double DeltaT = 1.0D / current.SampleRate;
+            result.I2t = current.ToSubSeries(restrike.restrike,restrike.finalExtinction).DataPoints.Select(item => item.Value*item.Value*DeltaT).Sum();
 
             return result;
 

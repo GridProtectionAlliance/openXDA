@@ -142,11 +142,11 @@ namespace FaultData.DataResources
                 VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
 
 
-                IEnumerable<Restrike> iaRestrikes = FindRestrikes(viCycleDataGroup.IA, viDataGroup.IA);
+                IEnumerable<Restrike> iaRestrikes = FindRestrikes(viCycleDataGroup.IA, viDataGroup.IA, viDataGroup.VA);
 
-                IEnumerable<Restrike> ibRestrikes = FindRestrikes(viCycleDataGroup.IB, viDataGroup.IB);
+                IEnumerable<Restrike> ibRestrikes = FindRestrikes(viCycleDataGroup.IB, viDataGroup.IB, viDataGroup.VB);
 
-                IEnumerable<Restrike> icRestrikes = FindRestrikes(viCycleDataGroup.IC, viDataGroup.IC);
+                IEnumerable<Restrike> icRestrikes = FindRestrikes(viCycleDataGroup.IC, viDataGroup.IC, viDataGroup.VC);
 
                 List<Restrike> allRestrikes = Enumerable.Empty<Restrike>()
                     .Concat(iaRestrikes)
@@ -159,7 +159,7 @@ namespace FaultData.DataResources
             }
         }
 
-        private List<Restrike> FindRestrikes(CycleDataGroup cycleData, DataSeries pointOnWaveData)
+        private List<Restrike> FindRestrikes(CycleDataGroup cycleData, DataSeries pointOnWaveData, DataSeries VPOW)
         {
             List<Restrike> restrikes = new List<Restrike>();
 
@@ -395,10 +395,23 @@ namespace FaultData.DataResources
                 restrike.currentMaximum = breakerCloseIndex + pointOnWaveData.ToSubSeries(breakerCloseIndex, breakerOpenIndex).DataPoints.IndexOf(item => Math.Abs(item.Value) == maxI);
 
 
+                int quarterCycle = (int)Math.Max(10, Math.Ceiling(fullCycle / 4.0D));
+                double maxV = VPOW.ToSubSeries(breakerCloseIndex, breakerCloseIndex + quarterCycle).DataPoints.Select(item => item.Value).Max();
+                double minV = VPOW.ToSubSeries(breakerCloseIndex, breakerCloseIndex + quarterCycle).DataPoints.Select(item => item.Value).Min();
 
+                // If Voltage was on upswing check lowest Voltage (within 1/8 cycle) for Surpression
+                if ((VPOW[breakerCloseIndex].Value - VPOW[breakerCloseIndex - 10].Value) > 0)
+                {
+                   restrike.maximumVoltageSurpression = breakerCloseIndex + VPOW.ToSubSeries(breakerCloseIndex, breakerCloseIndex + quarterCycle).DataPoints.IndexOf(item => item.Value == maxV);
+                   restrike.transientOverVoltage = breakerCloseIndex + VPOW.ToSubSeries(breakerCloseIndex, breakerCloseIndex + quarterCycle).DataPoints.IndexOf(item => item.Value == minV);
+                }
+                else
+                {
+                    //If Voltage was on Down Swing we need highest Voltage (within 1/8 cycle) for Surpression
+                    restrike.maximumVoltageSurpression = breakerCloseIndex + VPOW.ToSubSeries(breakerCloseIndex, breakerCloseIndex + quarterCycle).DataPoints.IndexOf(item => item.Value == minV);
+                    restrike.transientOverVoltage = breakerCloseIndex + VPOW.ToSubSeries(breakerCloseIndex, breakerCloseIndex + quarterCycle).DataPoints.IndexOf(item => item.Value == maxV);
 
-
-
+                }
                 restrikes.Add(restrike);
             }
 
