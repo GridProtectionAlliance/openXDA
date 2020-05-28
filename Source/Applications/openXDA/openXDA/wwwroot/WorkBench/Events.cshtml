@@ -106,7 +106,7 @@
     @Raw(dataContext.AddInputField<EventView>("EndTime", "string", customDataBinding: "enable: false"))
 
     <div class="checkbox">
-        <label><input id="allrecords" type="checkbox" class="" checked="checked" />Update timestamps for all events with associated record?</label>
+        <label><input id="allrecords" type="checkbox" class="" checked="checked" disabled/>Update timestamps for all events with associated record?</label>
     </div>
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
@@ -210,7 +210,7 @@
                 var target = document.getElementById('contentWell');
                 var spinner = new Spinner(opts).spin(target);
 
-                return dataHub.updateEvent(record, $('#allrecords').prop('checked')).done(
+                return dataHub.updateEvent(record, true).done(
                     function (data) {
                         spinner.stop();
                     });

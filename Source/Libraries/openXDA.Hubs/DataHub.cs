@@ -4901,28 +4901,39 @@ namespace openXDA.Hubs
                     DataGroup dataFaultAlgo = new DataGroup();
 
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", record.MeterID);
+
+                    //This is only to get old Data Migrated we will not be using the output, but calling 
+                    // DataFromEvent will cause all of the data to be migrated to the new schema 
+                    
                     List<byte[]> timeSeries = ChannelData.DataFromEvent(record.ID, connection);
+
+                    if (propagate)
+                    {
+                        IEnumerable<Event> events = eventTable.QueryRecords(restriction: new RecordRestriction("FileGroupID = {0} AND ID <> {1}", record.FileGroupID, record.ID));
+                        foreach (Event e in events)
+                        {
+                            timeSeries = ChannelData.DataFromEvent(e.ID, connection);
+                        }
+                    }
+
+
                     byte[] faultCurve = connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
 
                     meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
 
+                    TableOperations<ChannelData> channelDataTbl = new TableOperations<ChannelData>(connection);
+                    List<ChannelData> channelData = channelDataTbl.QueryRecordsWhere(
+                        (propagate? "FileGroupID = (SELECT TOP 1 FileGroupID FROM ChannelData WHERE EventID = {0})" : "EventID = {0}"), record.ID).ToList();
+
                     try
                     {
-                        if (timeSeries != null)
+                        if (channelData != null)
                         {
-                            dataTimeGroup.FromData(meter, timeSeries);
-                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                          
+                            foreach (ChannelData item in channelData)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
-                            }
-
-                            foreach (int channelID in dataTimeGroup.ToData().Keys)
-                            {
-                                connection.ExecuteNonQuery("Update ChannelData SET TimeDomainData = {0} WHERE ChannelID = {1} AND EventID = {2}", 
-                                    dataTimeGroup.ToData()[channelID], channelID, record.EventDataID);
+                                item.AdjustData(ticks);
+                                channelDataTbl.UpdateRecord(item);
                             }
                             
                         }
@@ -5149,7 +5160,7 @@ namespace openXDA.Hubs
                     filterString += "%";
 
 
-                return new TableOperations<EventView>(connection).QueryRecordCount(new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString));
+                return new TableOperations<EventView>(connection).QueryRecordCount(new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR AssetName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString));
             }
         }
 
@@ -5169,7 +5180,7 @@ namespace openXDA.Hubs
                     filterString += "%";
 
 
-                return new TableOperations<EventView>(connection).QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString)).ToList();
+                return new TableOperations<EventView>(connection).QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR AssetName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString)).ToList();
 
             }
         }
