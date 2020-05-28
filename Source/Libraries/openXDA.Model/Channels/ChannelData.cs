@@ -145,7 +145,13 @@ namespace openXDA.Model
             return result;
         }
 
-        // from new EvendData Blob format
+       /// <summary>
+       /// Decompress a EventData Blob, add it as multiple CHannelData Blobs and remove it from EventData
+       /// </summary>
+       /// <param name="eventID"> The ID of the Event</param>
+       /// <param name="requestedSeriesID"> The ID of the Series actually requested. </param>
+       /// <param name="connection"> An <see cref="AdoDataConnection"/>.</param>
+       /// <returns> A single Channel Data Blob for the  requested Series</returns>
         private static byte[] ProcessLegacyBlob(int eventID, int requestedSeriesID, AdoDataConnection connection)
         {
             int eventDataID = connection.ExecuteScalar<int>("SELECT EventDataID FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", requestedSeriesID, eventID);
@@ -153,138 +159,23 @@ namespace openXDA.Model
             byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", eventDataID);
             byte[] resultData = null;
 
-            // If the blob contains the GZip header,
-            // use the legacy deserialization algorithm
-            if (timeDomainData[0] == 0x1F && timeDomainData[1] == 0x8B)
+            List<Tuple<int, List<DataPoint>>> data = Decompress(timeDomainData);
+
+           
+            foreach (Tuple<int,List<DataPoint>> item in data)
             {
-                return FromData_Legacy(timeDomainData, requestedSeriesID, eventID, connection);
-            }
-
-            // Restore the GZip header before uncompressing
-            timeDomainData[0] = 0x1F;
-            timeDomainData[1] = 0x8B;
-
-            byte[] uncompressedData = GZipStream.UncompressBuffer(timeDomainData);
-            int offset = 0;
-
-            int m_samples = LittleEndian.ToInt32(uncompressedData, offset);
-            offset += sizeof(int);
-
-            List<DateTime> times = new List<DateTime>();
-
-            while (times.Count < m_samples)
-            {
-                int timeValues = LittleEndian.ToInt32(uncompressedData, offset);
-                offset += sizeof(int);
-
-                long currentValue = LittleEndian.ToInt64(uncompressedData, offset);
-                offset += sizeof(long);
-                times.Add(new DateTime(currentValue));
-
-                for (int i = 1; i < timeValues; i++)
-                {
-                    currentValue += LittleEndian.ToUInt16(uncompressedData, offset);
-                    offset += sizeof(ushort);
-                    times.Add(new DateTime(currentValue));
-                }
-            }
-
-            while (offset < uncompressedData.Length)
-            {
-                List<DataPoint> dataSeries = new List<DataPoint>();
-                int seriesID = LittleEndian.ToInt32(uncompressedData, offset);
-                offset += sizeof(int);
-
                 
-                const ushort NaNValue = ushort.MaxValue;
-                double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
-                double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
-                offset += 2 * sizeof(double);
-
-                for (int i = 0; i < m_samples; i++)
+                
+                if (item.Item1 == requestedSeriesID)
                 {
-                    ushort compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
-                    offset += sizeof(ushort);
-
-                    double decompressedValue = decompressionScale * compressedValue + decompressionOffset;
-
-                    if (compressedValue == NaNValue)
-                        decompressedValue = double.NaN;
-
-                    dataSeries.Add(new DataPoint()
-                    {
-                        Time = times[i],
-                        Value = decompressedValue
-                    });
-                }
-                if (seriesID == requestedSeriesID)
-                {
-                    resultData = ToData(dataSeries, seriesID, m_samples);
+                    resultData = ToData(item.Item2, item.Item1, item.Item2.Count);
                 }
 
                 // Insert into correct ChannelData.....
-                connection.ExecuteNonQuery("UPDATE ChannelData SET TimeDomainData = {0} WHERE SeriesID = {1} AND EventID = {2}", ToData(dataSeries, seriesID, m_samples), seriesID, eventID);
+                connection.ExecuteNonQuery("UPDATE ChannelData SET TimeDomainData = {0} WHERE SeriesID = {1} AND EventID = {2}", ToData(item.Item2, item.Item1, item.Item2.Count), item.Item1, eventID);
 
             }
 
-            connection.ExecuteNonQuery("DELETE FROM EventData WHERE ID = {0}", eventDataID);
-
-            return resultData;
-        }
-
-        // From old EventDataBlob format
-        private static byte[] FromData_Legacy(byte[] data, int requestedSeriesID, int eventID, AdoDataConnection connection)
-        {
-            byte[] resultData = null;
-            byte[] uncompressedData;
-            int offset;
-            DateTime[] times;
-            int seriesID;
-
-            uncompressedData = GZipStream.UncompressBuffer(data);
-            offset = 0;
-
-            int m_samples = LittleEndian.ToInt32(uncompressedData, offset);
-            offset += sizeof(int);
-
-            times = new DateTime[m_samples];
-
-            for (int i = 0; i < m_samples; i++)
-            {
-                times[i] = new DateTime(LittleEndian.ToInt64(uncompressedData, offset));
-                offset += sizeof(long);
-            }
-
-            while (offset < uncompressedData.Length)
-            {
-                seriesID = LittleEndian.ToInt32(uncompressedData, offset);
-                offset += sizeof(int);
-
-                List<DataPoint> points = new List<DataPoint>();
-
-                for (int i = 0; i < m_samples; i++)
-                {
-                    points.Add(new DataPoint()
-                    {
-                        Time = times[i],
-                        Value = LittleEndian.ToDouble(uncompressedData, offset)
-                    });
-
-                    offset += sizeof(double);
-                }
-
-                if (seriesID == requestedSeriesID)
-                {
-                    resultData = ToData(points, seriesID, m_samples);
-                }
-
-                // Insert into correct ChannelData.....
-                connection.ExecuteNonQuery("UPDATE ChannelData SET TimeDomainData = {0} WHERE SeriesID = {1} AND EventID = {2}", ToData(points, seriesID, m_samples), seriesID, eventID);
-                
-            }
-
-            //Remove EventData
-            int eventDataID = connection.ExecuteScalar<int>("SELECT EventDataID FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", requestedSeriesID, eventID);
             connection.ExecuteNonQuery("DELETE FROM EventData WHERE ID = {0}", eventDataID);
 
             return resultData;
@@ -364,6 +255,163 @@ namespace openXDA.Model
             returnArray[1] = 0x33;
 
             return returnArray;
+        }
+
+        /// <summary>
+        /// This Decompresses the Time Domain Data into a List of DataPoints
+        /// </summary>
+        /// <param name="data"> Raw data to be decompressed</param>
+        /// <returns> Returns a <see cref="Tuple"/> with the Series ID and the List of <see cref="DataPoint"/> </returns>
+        private static List<Tuple<int, List<DataPoint>>> Decompress(byte[] data)
+        {
+            List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
+
+            // If the blob contains the GZip header,
+            // use the legacy deserialization algorithm
+            if (data[0] == 0x1F && data[1] == 0x8B)
+            {
+                return Decompress_Legacy(data);
+            }
+
+            // Restore the GZip header before uncompressing
+            data[0] = 0x1F;
+            data[1] = 0x8B;
+
+            byte[] uncompressedData;
+            int offset;
+
+            uncompressedData = GZipStream.UncompressBuffer(data);
+            offset = 0;
+
+            int m_samples = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            List<DateTime> times = new List<DateTime>();
+
+            while (times.Count < m_samples)
+            {
+                int timeValues = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+                long currentValue = LittleEndian.ToInt64(uncompressedData, offset);
+                offset += sizeof(long);
+                times.Add(new DateTime(currentValue));
+
+                for (int i = 1; i < timeValues; i++)
+                {
+                    currentValue += LittleEndian.ToUInt16(uncompressedData, offset);
+                    offset += sizeof(ushort);
+                    times.Add(new DateTime(currentValue));
+                }
+            }
+
+            while (offset < uncompressedData.Length)
+            {
+                List<DataPoint> dataSeries = new List<DataPoint>();
+                int seriesID = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+
+                const ushort NaNValue = ushort.MaxValue;
+                double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
+                double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
+                offset += 2 * sizeof(double);
+
+                for (int i = 0; i < m_samples; i++)
+                {
+                    ushort compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
+                    offset += sizeof(ushort);
+
+                    double decompressedValue = decompressionScale * compressedValue + decompressionOffset;
+
+                    if (compressedValue == NaNValue)
+                        decompressedValue = double.NaN;
+
+                    dataSeries.Add(new DataPoint()
+                    {
+                        Time = times[i],
+                        Value = decompressedValue
+                    });
+                }
+               
+
+                    result.Add(new Tuple<int, List<DataPoint>>(seriesID, dataSeries));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// This Decompresses the Time Domain Data into a List of DataPoints based on the Legacy Compression Algorithm
+        /// </summary>
+        /// <param name="data"> Raw data to be decompressed</param>
+        /// <returns> Returns a <see cref="Tuple"/> with the Series ID and the List of <see cref="DataPoint"/> </returns>
+        private static List<Tuple<int, List<DataPoint>>> Decompress_Legacy(byte[] data)
+        {
+            List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
+            byte[] uncompressedData;
+            int offset;
+            DateTime[] times;
+            int seriesID;
+
+            uncompressedData = GZipStream.UncompressBuffer(data);
+            offset = 0;
+
+            int m_samples = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            times = new DateTime[m_samples];
+
+            for (int i = 0; i < m_samples; i++)
+            {
+                times[i] = new DateTime(LittleEndian.ToInt64(uncompressedData, offset));
+                offset += sizeof(long);
+            }
+
+            while (offset < uncompressedData.Length)
+            {
+                seriesID = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+                List<DataPoint> points = new List<DataPoint>();
+
+                for (int i = 0; i < m_samples; i++)
+                {
+                    points.Add(new DataPoint()
+                    {
+                        Time = times[i],
+                        Value = LittleEndian.ToDouble(uncompressedData, offset)
+                    });
+
+                    offset += sizeof(double);
+                }
+
+                result.Add(new Tuple<int, List<DataPoint>>(seriesID, points));
+            }
+            return result;
+        }
+
+        
+        /// <summary>
+        /// Adjusts the TimeDomain Data by Moving it a certain ammount of Time
+        /// </summary>
+        /// <param name="ticks"> The number of Ticks the Data is moved. For moving it backwards in Time this needs to be < 0 </param>
+        public void AdjustData(Ticks ticks)
+        {
+            // Initially we assume Data is already migrated...
+            if (this.TimeDomainData == null)
+                return;
+
+            Tuple<int,List<DataPoint>> decompressed = Decompress(this.TimeDomainData)[0];
+            List<DataPoint> data = decompressed.Item2;
+
+            foreach (DataPoint dataPoint in data)
+            {
+                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+            }
+
+            this.TimeDomainData = ToData(data, decompressed.Item1, data.Count);
+
         }
 
         #endregion
