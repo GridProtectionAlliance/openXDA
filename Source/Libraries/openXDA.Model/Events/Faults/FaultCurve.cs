@@ -69,7 +69,7 @@ namespace openXDA.Model
             // move from Legacy Compression to normal Compression
             if (this.AngleData[0] == 0x1F && this.AngleData[1] == 0x8B)
             {
-                this.AngleData = MigrateCompression(this.AngleData)
+                this.AngleData = MigrateCompression(this.AngleData);
             }
 
             this.Data = ChangeTS(this.Data, ticks);
