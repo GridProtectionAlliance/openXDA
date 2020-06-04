@@ -247,6 +247,10 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('XDATimeZone', 'UTC', 'UTC')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.FolderPath', 'Trms.dat', 'Trms.dat')
+GO
+
+
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
 
