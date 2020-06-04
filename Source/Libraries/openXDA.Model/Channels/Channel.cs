@@ -159,6 +159,9 @@ namespace openXDA.Model
         public string Description { get; set; }
 
         public bool Enabled { get; set; }
+
+        [StringLength(200)]
+        public string ChannelName { get; set; }
     }
 
     public class Channel : ChannelBase
