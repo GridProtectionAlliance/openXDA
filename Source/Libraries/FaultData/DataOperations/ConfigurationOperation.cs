@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Text.RegularExpressions;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
@@ -46,10 +47,14 @@ namespace FaultData.DataOperations
         {
             public double Multiplier;
             public int ChannelIndex;
+            public bool ByName;
+            public static SourceIndex Parse(string text, List<string> channelNames = null)
+             {
+                if (channelNames == null)
+                    channelNames = new List<string>();
 
-            public static SourceIndex Parse(string text)
-            {
                 SourceIndex sourceIndex = new SourceIndex();
+                sourceIndex.ByName = false;
 
                 string[] parts = text.Split('*');
                 string multiplier = (parts.Length > 1) ? parts[0].Trim() : "1";
@@ -65,15 +70,38 @@ namespace FaultData.DataOperations
                     return null;
 
                 if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
-                    throw new FormatException($"Incorrect format for channel index {channelIndex} found in source index {text}.");
+                {
+                    sourceIndex.ChannelIndex = SourceIndex.ParseName(channelIndex, channelNames);
+                    sourceIndex.ByName = true;
+                }
+                    
 
                 if (channelIndex[0] == '-')
                 {
                     sourceIndex.Multiplier *= -1.0D;
-                    sourceIndex.ChannelIndex *= -1;
+                    if (!sourceIndex.ByName)
+                        sourceIndex.ChannelIndex *= -1;
                 }
 
                 return sourceIndex;
+            }
+
+            /// <summary>
+            /// Attempts to Parse a channel Name into an Index.
+            /// </summary>
+            /// <param name="name"> The Channel Name</param>
+            /// <param name="nameIndexPairs"> A List of Channel Names in Index Order.</param>
+            /// <returns> The Channel Index associated with this channelName</returns>
+            private static int ParseName(string name, List<string> nameIndexPairs)
+            {
+                string test = (name[0] == '-' ? name.Substring(1) : name);
+                if (!nameIndexPairs.Contains(test))
+                    throw new FormatException($"Incorrect format for channel name {test} not found.");
+                if (nameIndexPairs.FindAll(item => item == test).Count() > 1)
+                    throw new FormatException($"Incorrect format for channel name {test} duplicates found in configuration.");
+
+                return nameIndexPairs.FindIndex(item => item == test);
+
             }
         }
 
@@ -122,6 +150,21 @@ namespace FaultData.DataOperations
         {
             // Grab the parsed meter right away as we will be replacing it in the meter data set with the meter from the database
             Meter parsedMeter = meterDataSet.Meter;
+
+            //Check if it is APP Trending Data
+            bool isRMSTrending = false;
+            string rmsTrendingMatch = null;
+            
+
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+                rmsTrendingMatch = connection.ExecuteScalar<string>("SELECT VALUE FROM Setting WHERE Name = 'TrendingData.FolderPath'");
+
+
+            if (rmsTrendingMatch != null)
+            {
+                Regex rmsTrendingRegex = new Regex(rmsTrendingMatch, RegexOptions.Compiled);
+                isRMSTrending = rmsTrendingRegex.Match(meterDataSet.FilePath).Success;
+            }
 
             // Search the database for a meter definition that matches the parsed meter
             Meter dbMeter = LoadMeterFromDatabase(meterDataSet);
@@ -190,8 +233,7 @@ namespace FaultData.DataOperations
                 // configuration by assuming the meter monitors only one line
                 AddUndefinedChannels(meterDataSet);
 
-                // Set samples per hour and enabled flags based on
-                // the configuration obtained from the latest file
+                 
                 FixUpdatedChannelInfo(meterDataSet, parsedMeter);
 
             }
@@ -257,8 +299,9 @@ namespace FaultData.DataOperations
             List<SourceIndex> sourceIndexes;
             DataSeries dataSeries;
 
+            List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null? "" : item.SeriesInfo.Channel.Name)).ToList();
             sourceIndexes = series.SourceIndexes.Split(',')
-                .Select(SourceIndex.Parse)
+                .Select(item => SourceIndex.Parse(item, channelNames))
                 .Where(sourceIndex => (object)sourceIndex != null)
                 .ToList();
 
@@ -548,7 +591,7 @@ namespace FaultData.DataOperations
                     meterDataSet.Digitals.RemoveAt(i);
             }
         }
-
+       
         #endregion
 
         #region [ Static ]
