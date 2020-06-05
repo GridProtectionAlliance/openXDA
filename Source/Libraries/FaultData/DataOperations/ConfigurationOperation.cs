@@ -48,6 +48,8 @@ namespace FaultData.DataOperations
             public double Multiplier;
             public int ChannelIndex;
             public bool ByName;
+            public bool IsRMSTrend;
+
             public static SourceIndex Parse(string text, List<string> channelNames = null)
              {
                 if (channelNames == null)
@@ -55,10 +57,27 @@ namespace FaultData.DataOperations
 
                 SourceIndex sourceIndex = new SourceIndex();
                 sourceIndex.ByName = false;
+                sourceIndex.IsRMSTrend = false;
+
+                string channelIndex;
+
+                // Deal with RMS Trends before anythin else since they don't have a valid Name
+                if (text.Trim().StartsWith("RMS", StringComparison.OrdinalIgnoreCase))
+                {
+                    // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n)
+                    sourceIndex.IsRMSTrend = true;
+                    channelIndex = text.Trim().Substring(text.Trim().IndexOf("(") + 1, text.Trim().IndexOf(")") - text.Trim().IndexOf("(") - 1);
+                    if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
+                    {
+                        throw new FormatException($"Incorrect format for channel name {channelIndex} not found.");
+                    }
+                    return sourceIndex;
+                }
+                    
 
                 string[] parts = text.Split('*');
                 string multiplier = (parts.Length > 1) ? parts[0].Trim() : "1";
-                string channelIndex = (parts.Length > 1) ? parts[1].Trim() : parts[0].Trim();
+                channelIndex = (parts.Length > 1) ? parts[1].Trim() : parts[0].Trim();
 
                 if (parts.Length > 2)
                     throw new FormatException($"Too many asterisks found in source index {text}.");
@@ -91,12 +110,12 @@ namespace FaultData.DataOperations
             /// </summary>
             /// <param name="name"> The Channel Name</param>
             /// <param name="nameIndexPairs"> A List of Channel Names in Index Order.</param>
-            /// <returns> The Channel Index associated with this channelName</returns>
+            /// <returns> The Channel Index associated with this channelName. Returns -1 if it is not found</returns>
             private static int ParseName(string name, List<string> nameIndexPairs)
             {
                 string test = (name[0] == '-' ? name.Substring(1) : name);
                 if (!nameIndexPairs.Contains(test))
-                    throw new FormatException($"Incorrect format for channel name {test} not found.");
+                    return -1;
                 if (nameIndexPairs.FindAll(item => item == test).Count() > 1)
                     throw new FormatException($"Incorrect format for channel name {test} duplicates found in configuration.");
 
@@ -196,8 +215,42 @@ namespace FaultData.DataOperations
             // are combinations of the parsed series
             List<DataSeries> calculatedDataSeriesList = new List<DataSeries>();
 
-            foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
-                AddCalculatedDataSeries(calculatedDataSeriesList, meterDataSet, series);
+
+            if (isRMSTrending)
+            {
+                // Only get Trending Data for Voltages and Currents
+                List<Channel> powChannels = dbMeter.Channels.Where(channel =>
+                    (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") && channel.MeasurementCharacteristic.Name == "Instantaneous")
+                    .ToList();
+
+                List<SourceIndex> rmsSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Select(item => SourceIndex.Parse(item))).Where(item => item.IsRMSTrend).ToList();
+                
+                // Add RMS Channels as neccesarry for PoW Channels
+                powChannels.ForEach(item => AddRMSChannel(item, rmsSourceIndices,meterDataSet));
+
+                //Need to update Meter here to make sure we have all Series that were generated
+                dbMeter.Channels = null;
+
+                seriesList = dbMeter.Channels
+                   .SelectMany(channel => channel.Series)
+                   .ToList();
+
+                //compute Series properly to account for multiply and Add
+                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
+                    AddRMSSeries(calculatedDataSeriesList, meterDataSet, series);
+                
+            }
+
+            //remove Channels with RMS Trending Data Series
+            else
+            {
+                seriesList = seriesList.Where(series => !series.SourceIndexes.Split(',').Any(index => SourceIndex.Parse(index).IsRMSTrend)).ToList();
+
+
+
+                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
+                    AddCalculatedDataSeries(calculatedDataSeriesList, meterDataSet, series);
+            }
 
             foreach (DataSeries calculatedDataSeries in calculatedDataSeriesList)
             {
@@ -302,8 +355,11 @@ namespace FaultData.DataOperations
             List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null? "" : item.SeriesInfo.Channel.Name)).ToList();
             sourceIndexes = series.SourceIndexes.Split(',')
                 .Select(item => SourceIndex.Parse(item, channelNames))
-                .Where(sourceIndex => (object)sourceIndex != null)
+                .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
                 .ToList();
+
+            if (sourceIndexes.Any(index => index.ChannelIndex <= 0))
+                throw new FormatException($"Incorrect format for channel name {series.SourceIndexes} Channel not found in File.");
 
             if (sourceIndexes.Count == 0)
                 return;
@@ -591,7 +647,100 @@ namespace FaultData.DataOperations
                     meterDataSet.Digitals.RemoveAt(i);
             }
         }
-       
+
+        private void AddRMSChannel(Channel powChannel, List<SourceIndex> rmsIndices, MeterDataSet meterDataSet)
+        {
+            // We Assume they get set up in pairs of 3 for now.
+            if (rmsIndices.Any(item => item.ChannelIndex == powChannel.ID))
+                return;
+
+            //Create new RMS Channel and Series
+            Channel rmsChannel = new Channel()
+            {
+                MeterID = powChannel.MeterID,
+                AssetID = powChannel.AssetID,
+                MeasurementTypeID = powChannel.MeasurementTypeID,
+                MeasurementCharacteristicID = powChannel.MeasurementCharacteristicID,
+                PhaseID = powChannel.PhaseID,
+                Name = powChannel.Name,
+                SamplesPerHour = powChannel.SamplesPerHour,
+                PerUnitValue = powChannel.PerUnitValue,
+                HarmonicGroup = powChannel.HarmonicGroup,
+                Description = powChannel.Description,
+                Enabled = powChannel.Enabled,
+                MeasurementType = powChannel.MeasurementType,
+                Phase = powChannel.Phase
+            };
+
+            Dictionary<ChannelKey, Channel> channelLookup = meterDataSet.Meter.Channels
+                    .GroupBy(channel => new ChannelKey(channel))
+                    .ToDictionary(grouping =>
+                    {
+                        if (grouping.Count() > 1)
+                            Log.Warn($"Detected duplicate channel key: {grouping.First().ID}");
+
+                        return grouping.Key;
+                    }, grouping => grouping.First());
+
+            
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
+                TableOperations<SeriesType> seriesTypeTable = new TableOperations<SeriesType>(connection);
+                TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+                TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
+
+                
+                rmsChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = 'RMS'");
+                rmsChannel.MeasurementCharacteristicID = rmsChannel.MeasurementCharacteristic.ID;
+
+                ChannelKey key = new ChannelKey(rmsChannel);
+                Channel conChannel;
+                if (!channelLookup.TryGetValue(key,out conChannel))
+                {
+                    channelTable.AddNewRecord(rmsChannel);
+                    meterDataSet.Meter.Channels = null;
+                    channelLookup = meterDataSet.Meter.Channels
+                    .GroupBy(channel => new ChannelKey(channel))
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
+
+                    conChannel = channelLookup[key];
+                }
+
+                //Create all 3 Series for this Channel
+                Series avgSeries = new Series() 
+                { 
+                    ChannelID = conChannel.ID,
+                    SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Average'").ID,
+                    SourceIndexes = "RMSAVG(" + powChannel.ID +  ")"
+                };
+                Series minSeries = new Series()
+                {
+                    ChannelID = conChannel.ID,
+                    SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Minimum'").ID,
+                    SourceIndexes = "RMSMIN(" + powChannel.ID + ")"
+                };
+                Series maxSeries = new Series()
+                {
+                    ChannelID = conChannel.ID,
+                    SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Maximum'").ID,
+                    SourceIndexes = "RMSMAX(" + powChannel.ID + ")"
+                };
+
+                seriesTable.AddNewRecord(avgSeries);
+                seriesTable.AddNewRecord(minSeries);
+                seriesTable.AddNewRecord(maxSeries);
+
+
+            }
+             
+        }
+
+        private void AddRMSSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
+        {
+
+        }
+
         #endregion
 
         #region [ Static ]
