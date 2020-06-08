@@ -49,6 +49,9 @@ namespace FaultData.DataOperations
             public int ChannelIndex;
             public bool ByName;
             public bool IsRMSTrend;
+            public string ChannelName;
+            public bool IsTrend { get => IsRMSTrend; }
+
 
             public static SourceIndex Parse(string text, List<string> channelNames = null)
              {
@@ -67,6 +70,8 @@ namespace FaultData.DataOperations
                     // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n)
                     sourceIndex.IsRMSTrend = true;
                     channelIndex = text.Trim().Substring(text.Trim().IndexOf("(") + 1, text.Trim().IndexOf(")") - text.Trim().IndexOf("(") - 1);
+                    sourceIndex.ChannelName = text.Trim().Substring(0,text.Trim().IndexOf("("));
+
                     if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
                     {
                         throw new FormatException($"Incorrect format for channel name {channelIndex} not found.");
@@ -91,6 +96,7 @@ namespace FaultData.DataOperations
                 if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
                 {
                     sourceIndex.ChannelIndex = SourceIndex.ParseName(channelIndex, channelNames);
+                    sourceIndex.ChannelName = (channelIndex[0] == '-' ? channelIndex.Substring(1) : channelIndex);
                     sourceIndex.ByName = true;
                 }
                     
@@ -237,14 +243,14 @@ namespace FaultData.DataOperations
 
                 //compute Series properly to account for multiply and Add
                 foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
-                    AddRMSSeries(calculatedDataSeriesList, meterDataSet, series);
+                    AddRMSTrendSeries(calculatedDataSeriesList, meterDataSet, series);
                 
             }
 
             //remove Channels with RMS Trending Data Series
             else
             {
-                seriesList = seriesList.Where(series => !series.SourceIndexes.Split(',').Any(index => SourceIndex.Parse(index).IsRMSTrend)).ToList();
+                seriesList = seriesList.Where(series => !series.SourceIndexes.Split(',').Any(index => SourceIndex.Parse(index).IsTrend)).ToList();
 
 
 
@@ -648,6 +654,12 @@ namespace FaultData.DataOperations
             }
         }
 
+        /// <summary>
+        /// Checks if the RMS Trend Channels exist and adds them if necesarry.
+        /// </summary>
+        /// <param name="powChannel">The point on Wave Data Channel.</param>
+        /// <param name="rmsIndices">Source Indices of the existing RMS Trend Channels.</param>
+        /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
         private void AddRMSChannel(Channel powChannel, List<SourceIndex> rmsIndices, MeterDataSet meterDataSet)
         {
             // We Assume they get set up in pairs of 3 for now.
@@ -736,11 +748,81 @@ namespace FaultData.DataOperations
              
         }
 
-        private void AddRMSSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
+        /// <summary>
+        /// Adds the Processed RMS Trend Data
+        /// </summary>
+        /// <param name="calculatedDataSeriesList">List of all processed DataSeries</param>
+        /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
+        /// <param name="series">The RMS Trend Series that is being processed</param>
+        private void AddRMSTrendSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
         {
+            List<SourceIndex> sourceIndexes;
+            DataSeries dataSeries;
+            Series sourceSeries;
+
+            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).Any())
+                return;
+
+            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.Any())
+                return;
+
+            List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null ? "" : item.SeriesInfo.Channel.Name)).ToList();
+
+            sourceSeries = meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.First();
+            sourceIndexes = sourceSeries.SourceIndexes.Split(',')
+                .Select(item => Translate(item,SourceIndex.Parse(series.SourceIndexes), channelNames))
+                .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
+                .ToList();
+
+           if (sourceIndexes.Count == 0)
+                return;
+
+          
+           
+            dataSeries = sourceIndexes
+                    .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
+                    .Aggregate((series1, series2) => series1.Add(series2));
+            
+            
+
+            dataSeries.SeriesInfo = series;
+            calculatedDataSeriesList.Add(dataSeries);
 
         }
 
+        private SourceIndex Translate(string original, SourceIndex functional, List<string> seriesNames)
+        {
+            if (!functional.IsTrend)
+                return null;
+
+            string translated = original;
+            SourceIndex parsed = SourceIndex.Parse(original);
+            
+            if (!parsed.ByName)
+                return null;
+
+            if (functional.ChannelName.Equals("RMSAVG", StringComparison.OrdinalIgnoreCase))
+                translated = translated.Replace(parsed.ChannelName, "Avg_" + parsed.ChannelName);
+            if (functional.ChannelName.Equals("RMSMIN", StringComparison.OrdinalIgnoreCase))
+                translated = translated.Replace(parsed.ChannelName, "Min_" + parsed.ChannelName);
+            if (functional.ChannelName.Equals("RMSMAX", StringComparison.OrdinalIgnoreCase))
+                translated = translated.Replace(parsed.ChannelName, "Max_" + parsed.ChannelName);
+
+            // Deal with Multiplication of negative Values
+            if (parsed.Multiplier < 0)
+            {
+                if (functional.ChannelName.Equals("RMSMIN", StringComparison.OrdinalIgnoreCase))
+                {
+                    translated = translated.Replace("Min_", "Max_");                   
+                }
+                if (functional.ChannelName.Equals("RMSMAX", StringComparison.OrdinalIgnoreCase))
+                {
+                    translated = translated.Replace("Max_", "Min_");
+                }
+            }
+
+            return SourceIndex.Parse(translated, seriesNames);
+        }
         #endregion
 
         #region [ Static ]
