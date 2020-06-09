@@ -48,9 +48,11 @@ namespace FaultData.DataOperations
             public double Multiplier;
             public int ChannelIndex;
             public bool ByName;
-            public bool IsRMSTrend;
             public string ChannelName;
-            public bool IsTrend { get => IsRMSTrend; }
+
+            public bool IsRMSTrend;
+            public bool IsFLKRTrend;
+            public bool IsTrend { get => IsRMSTrend || IsFLKRTrend; }
 
 
             public static SourceIndex Parse(string text, List<string> channelNames = null)
@@ -61,14 +63,21 @@ namespace FaultData.DataOperations
                 SourceIndex sourceIndex = new SourceIndex();
                 sourceIndex.ByName = false;
                 sourceIndex.IsRMSTrend = false;
+                sourceIndex.IsFLKRTrend = false;
 
                 string channelIndex;
 
                 // Deal with RMS Trends before anythin else since they don't have a valid Name
-                if (text.Trim().StartsWith("RMS", StringComparison.OrdinalIgnoreCase))
+                if (text.Trim().StartsWith("RMS", StringComparison.OrdinalIgnoreCase) || text.Trim().StartsWith("FLKR", StringComparison.OrdinalIgnoreCase))
                 {
-                    // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n)
-                    sourceIndex.IsRMSTrend = true;
+                    // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n)
+
+                    if (text.Trim().StartsWith("RMS", StringComparison.OrdinalIgnoreCase))
+                        sourceIndex.IsRMSTrend = true;
+                    
+                    if (text.Trim().StartsWith("FLKR", StringComparison.OrdinalIgnoreCase))
+                        sourceIndex.IsFLKRTrend = true;
+
                     channelIndex = text.Trim().Substring(text.Trim().IndexOf("(") + 1, text.Trim().IndexOf(")") - text.Trim().IndexOf("(") - 1);
                     sourceIndex.ChannelName = text.Trim().Substring(0,text.Trim().IndexOf("("));
 
@@ -179,16 +188,26 @@ namespace FaultData.DataOperations
             //Check if it is APP Trending Data
             bool isRMSTrending = false;
             string rmsTrendingMatch = null;
-            
+            bool isFlkrTrending = false;
+            string flkrTrendingMatch = null;
+
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
-                rmsTrendingMatch = connection.ExecuteScalar<string>("SELECT VALUE FROM Setting WHERE Name = 'TrendingData.FolderPath'");
+            {
+                rmsTrendingMatch = connection.ExecuteScalar<string>("SELECT VALUE FROM Setting WHERE Name = 'TrendingData.RMS.FolderPath'");
+                flkrTrendingMatch = connection.ExecuteScalar<string>("SELECT VALUE FROM Setting WHERE Name = 'TrendingData.Flicker.FolderPath'");
+            }
 
 
             if (rmsTrendingMatch != null)
             {
                 Regex rmsTrendingRegex = new Regex(rmsTrendingMatch, RegexOptions.Compiled);
                 isRMSTrending = rmsTrendingRegex.Match(meterDataSet.FilePath).Success;
+            }
+            if (flkrTrendingMatch != null)
+            {
+                Regex flkrTrendingRegex = new Regex(flkrTrendingMatch, RegexOptions.Compiled);
+                isFlkrTrending = flkrTrendingRegex.Match(meterDataSet.FilePath).Success;
             }
 
             // Search the database for a meter definition that matches the parsed meter
@@ -247,6 +266,32 @@ namespace FaultData.DataOperations
                 
             }
 
+            else if (isFlkrTrending)
+            {
+                
+                // Only get Trending Data for Voltages and Currents
+                List<Channel> powChannels = dbMeter.Channels.Where(channel =>
+                    (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") && channel.MeasurementCharacteristic.Name == "Instantaneous")
+                    .ToList();
+
+                    List<SourceIndex> flkrSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Select(item => SourceIndex.Parse(item))).Where(item => item.IsFLKRTrend).ToList();
+
+                    // Add RMS Channels as neccesarry for PoW Channels
+                    powChannels.ForEach(item => AddFlkrChannel(item, flkrSourceIndices, meterDataSet));
+
+                    //Need to update Meter here to make sure we have all Series that were generated
+                    dbMeter.Channels = null;
+
+                    seriesList = dbMeter.Channels
+                       .SelectMany(channel => channel.Series)
+                       .ToList();
+
+                    //compute Series properly to account for multiply and Add
+                    foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
+                        AddFlkrTrendSeries(calculatedDataSeriesList, meterDataSet, series);
+
+                
+            }
             //remove Channels with RMS Trending Data Series
             else
             {
@@ -749,6 +794,87 @@ namespace FaultData.DataOperations
         }
 
         /// <summary>
+        /// Checks if the Flicker Trend Channels exist and adds them if necesarry.
+        /// </summary>
+        /// <param name="powChannel">The point on Wave Data Channel.</param>
+        /// <param name="flkrIndices">Source Indices of the existing Flicker Trend Channels.</param>
+        /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
+        private void AddFlkrChannel(Channel powChannel, List<SourceIndex> flkrIndices, MeterDataSet meterDataSet)
+        {
+            // We Assume they get set up in pairs of 3 for now.
+            if (flkrIndices.Any(item => item.ChannelIndex == powChannel.ID))
+                return;
+
+            //Create new RMS Channel and Series
+            Channel flkrChannel = new Channel()
+            {
+                MeterID = powChannel.MeterID,
+                AssetID = powChannel.AssetID,
+                MeasurementTypeID = powChannel.MeasurementTypeID,
+                MeasurementCharacteristicID = powChannel.MeasurementCharacteristicID,
+                PhaseID = powChannel.PhaseID,
+                Name = powChannel.Name,
+                SamplesPerHour = powChannel.SamplesPerHour,
+                PerUnitValue = powChannel.PerUnitValue,
+                HarmonicGroup = powChannel.HarmonicGroup,
+                Description = powChannel.Description,
+                Enabled = powChannel.Enabled,
+                MeasurementType = powChannel.MeasurementType,
+                Phase = powChannel.Phase
+            };
+
+            Dictionary<ChannelKey, Channel> channelLookup = meterDataSet.Meter.Channels
+                    .GroupBy(channel => new ChannelKey(channel))
+                    .ToDictionary(grouping =>
+                    {
+                        if (grouping.Count() > 1)
+                            Log.Warn($"Detected duplicate channel key: {grouping.First().ID}");
+
+                        return grouping.Key;
+                    }, grouping => grouping.First());
+
+
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
+                TableOperations<SeriesType> seriesTypeTable = new TableOperations<SeriesType>(connection);
+                TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+                TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
+
+
+                flkrChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = 'FlkrPST'");
+                flkrChannel.MeasurementCharacteristicID = flkrChannel.MeasurementCharacteristic.ID;
+
+                ChannelKey key = new ChannelKey(flkrChannel);
+                Channel conChannel;
+                if (!channelLookup.TryGetValue(key, out conChannel))
+                {
+                    channelTable.AddNewRecord(flkrChannel);
+                    meterDataSet.Meter.Channels = null;
+                    channelLookup = meterDataSet.Meter.Channels
+                    .GroupBy(channel => new ChannelKey(channel))
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
+
+                    conChannel = channelLookup[key];
+                }
+
+                //Create Series for this Channel
+                Series avgSeries = new Series()
+                {
+                    ChannelID = conChannel.ID,
+                    SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Values'").ID,
+                    SourceIndexes = "FLKR(" + powChannel.ID + ")"
+                };
+                
+
+                seriesTable.AddNewRecord(avgSeries);
+                
+
+            }
+
+        }
+
+        /// <summary>
         /// Adds the Processed RMS Trend Data
         /// </summary>
         /// <param name="calculatedDataSeriesList">List of all processed DataSeries</param>
@@ -784,6 +910,48 @@ namespace FaultData.DataOperations
                     .Aggregate((series1, series2) => series1.Add(series2));
             
             
+
+            dataSeries.SeriesInfo = series;
+            calculatedDataSeriesList.Add(dataSeries);
+
+        }
+
+        /// <summary>
+        /// Adds the Processed Flicker Trend Data
+        /// </summary>
+        /// <param name="calculatedDataSeriesList">List of all processed DataSeries</param>
+        /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
+        /// <param name="series">The Flicker Trend Series that is being processed</param>
+        private void AddFlkrTrendSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
+        {
+            List<SourceIndex> sourceIndexes;
+            DataSeries dataSeries;
+            Series sourceSeries;
+
+            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).Any())
+                return;
+
+            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.Any())
+                return;
+
+            List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null ? "" : item.SeriesInfo.Channel.Name)).ToList();
+
+            sourceSeries = meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.First();
+            sourceIndexes = sourceSeries.SourceIndexes.Split(',')
+                .Select(item =>  SourceIndex.Parse(item, channelNames))
+                .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsFLKRTrend)
+                .ToList();
+
+            if (sourceIndexes.Count == 0)
+                return;
+
+
+
+            dataSeries = sourceIndexes
+                    .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
+                    .Aggregate((series1, series2) => series1.Add(series2));
+
+
 
             dataSeries.SeriesInfo = series;
             calculatedDataSeriesList.Add(dataSeries);
