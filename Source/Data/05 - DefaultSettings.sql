@@ -253,7 +253,8 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Flicker.FolderPath', 'FkrR61.dat', 'FkrR61.dat')
 GO
 
-
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.FolderPath', 'FkrR61.dat', 'TrR61.dat')
+GO
 
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
