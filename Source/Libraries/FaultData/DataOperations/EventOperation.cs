@@ -111,7 +111,6 @@ namespace FaultData.DataOperations
 
             TableOperations<Event> eventTable = new TableOperations<Event>(connection);
             TableOperations<EventType> eventTypeTable = new TableOperations<EventType>(connection);
-            TableOperations<EventData> eventDataTable = new TableOperations<EventData>(connection);
 
             for (int i = 0; i < dataGroups.Count; i++)
             {
