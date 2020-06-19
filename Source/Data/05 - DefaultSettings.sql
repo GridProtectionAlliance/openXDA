@@ -232,6 +232,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SystemFrequency', '60.0', '60.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SystemMVABase', '100.0', '100.0')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TimeTolerance', '0.5', '0.5')
 GO
 
