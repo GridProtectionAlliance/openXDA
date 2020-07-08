@@ -1204,6 +1204,10 @@ GO
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.cev', 'FaultData.dll', 'FaultData.DataReaders.SELEVEReader', 1)
 GO
 
+INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.txt', 'FaultData.dll', 'FaultData.DataReaders.SELLDPReader', 1)
+GO
+
+
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.ConfigurationOperation', 1)
 GO
 
