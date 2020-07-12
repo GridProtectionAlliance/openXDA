@@ -28,6 +28,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
+using System.Text;
 using System.Xml.Linq;
 using FaultData.DataWriters.GTC;
 using GSF;
@@ -217,12 +218,30 @@ namespace FaultData.DataWriters
                 string fttEventID = (string)element.Attribute("eventID") ?? "-1";
                 string cid = $"event{fttEventID}_ftt{index:00}.jpg";
 
-                Stream image = FTTImageGenerator.ConvertToFTTImageStream(element);
-                Attachment attachment = new Attachment(image, cid);
-                attachment.ContentId = attachment.Name;
-                attachments.Add(attachment);
+                try
+                {
+                    Stream image = FTTImageGenerator.ConvertToFTTImageStream(element);
+                    Attachment attachment = new Attachment(image, cid);
+                    attachment.ContentId = attachment.Name;
+                    attachments.Add(attachment);
 
-                return new XElement("img", new XAttribute("src", $"cid:{cid}"));
+                    return new XElement("img", new XAttribute("src", $"cid:{cid}"));
+                }
+                catch (Exception ex)
+                {
+                    string text = new StringBuilder()
+                        .AppendLine($"Error while querying {cid}:")
+                        .Append(ex.ToString())
+                        .ToString();
+
+                    object[] content = text
+                        .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+                        .SelectMany(line => new object[] { new XElement("br"), new XText(line) })
+                        .Skip(1)
+                        .ToArray();
+
+                    return new XElement("div", content);
+                }
             });
         }
 
