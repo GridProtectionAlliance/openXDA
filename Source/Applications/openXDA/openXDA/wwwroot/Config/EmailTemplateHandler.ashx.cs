@@ -33,6 +33,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using FaultData.DataWriters;
+using FaultData.DataWriters.GTC;
 using GSF.Threading;
 using GSF.Web.Hosting;
 using GSF.Web.Model;
@@ -176,6 +177,134 @@ namespace openXDA
             #endregion
         }
 
+        private class FTTIdentity : IEquatable<FTTIdentity>
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly Tuple<int, int, int> m_fttTuple;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public FTTIdentity(int eventID, int templateID, int fttID)
+            {
+                m_fttTuple = Tuple.Create(eventID, templateID, fttID);
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public int EventID
+            {
+                get
+                {
+                    return m_fttTuple.Item1;
+                }
+            }
+
+            public int TemplateID
+            {
+                get
+                {
+                    return m_fttTuple.Item2;
+                }
+            }
+
+            public int ChartID
+            {
+                get
+                {
+                    return m_fttTuple.Item3;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public bool Equals(FTTIdentity other)
+            {
+                return m_fttTuple.Equals(other.m_fttTuple);
+            }
+
+            public override bool Equals(object obj)
+            {
+                FTTIdentity other = obj as FTTIdentity;
+
+                if ((object)other != null)
+                    return Equals(other);
+
+                return base.Equals(obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return m_fttTuple.GetHashCode();
+            }
+
+            #endregion
+        }
+
+        private class FTTData
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly XElement m_fttElement;
+            private readonly long m_contentHash;
+            private ICancellationToken m_cancellationToken;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public FTTData(XElement fttElement, long contentHash)
+            {
+                m_fttElement = fttElement;
+                m_contentHash = contentHash;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public XElement FTTElement
+            {
+                get
+                {
+                    return m_fttElement;
+                }
+            }
+
+            public long ContentHash
+            {
+                get
+                {
+                    return m_contentHash;
+                }
+            }
+
+            public ICancellationToken CancellationToken
+            {
+                get
+                {
+                    return Interlocked.CompareExchange(ref m_cancellationToken, null, null);
+                }
+                set
+                {
+                    ICancellationToken cancellationToken = Interlocked.Exchange(ref m_cancellationToken, value);
+
+                    if ((object)cancellationToken != null)
+                        cancellationToken.Cancel();
+                }
+            }
+
+            #endregion
+        }
+
         // Constants
         private const string GetEventDetailSQL =
             "SELECT EventDetailSQL " +
@@ -270,10 +399,12 @@ namespace openXDA
                     m_eventID = Convert.ToInt32(parameters["EventID"]);
                     m_templateID = Convert.ToInt32(parameters["TemplateID"]);
 
-                    if ((object)parameters["chartID"] == null)
-                        ProcessEmailRequest(request, response);
-                    else
+                    if (parameters["chartID"] != null)
                         ProcessChartRequest(request, response);
+                    else if (parameters["fttID"] != null)
+                        ProcessFTTImageRequest(request, response);
+                    else
+                        ProcessEmailRequest(request, response);
                 }
                 catch (Exception ex)
                 {
@@ -288,7 +419,8 @@ namespace openXDA
         {
             XDocument doc = XDocument.Parse(ApplyTemplate(request), LoadOptions.PreserveWhitespace);
             doc.TransformAll("format", element => element.Format());
-            doc.TransformAll("chart", (element, index) => ToImgTag(element, index));
+            doc.TransformAll("chart", (element, index) => ChartToImgTag(element, index));
+            doc.TransformAll("ftt", (element, index) => FTTToImgTag(element, index));
 
             using (DataContext dataContext = new DataContext())
             {
@@ -340,6 +472,36 @@ namespace openXDA
             }
         }
 
+        private void ProcessFTTImageRequest(HttpRequestMessage request, HttpResponseMessage response)
+        {
+            NameValueCollection parameters = request.RequestUri.ParseQueryString();
+            int fttID = Convert.ToInt32(parameters["fttID"]);
+            FTTIdentity fttIdentity = new FTTIdentity(m_eventID, m_templateID, fttID);
+
+            XElement fttElement;
+
+            if (s_fttLookup.TryGetValue(fttIdentity, out FTTData fttData))
+            {
+                fttElement = fttData.FTTElement;
+            }
+            else
+            {
+                XDocument doc = XDocument.Parse(ApplyTemplate(request), LoadOptions.PreserveWhitespace);
+                fttElement = doc.Descendants("ftt").Skip(fttID).FirstOrDefault();
+            }
+
+            if (fttElement == null)
+            {
+                response.StatusCode = HttpStatusCode.NotFound;
+                return;
+            }
+
+            response.Content = new StreamContent(FTTImageGenerator.ConvertToFTTImageStream(fttElement));
+            response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment");
+            response.Content.Headers.ContentDisposition.FileName = $"faulttracetool-{fttIdentity.GetHashCode()}.jpg";
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+        }
+
         private string ApplyTemplate(HttpRequestMessage request)
         {
             string eventDetail;
@@ -355,7 +517,7 @@ namespace openXDA
             return eventDetail.ApplyXSLTransform(emailTemplate);
         }
 
-        private XElement ToImgTag(XElement chartElement, int chartID)
+        private XElement ChartToImgTag(XElement chartElement, int chartID)
         {
             ChartIdentity chartIdentity = new ChartIdentity(m_eventID, m_templateID, chartID);
             ChartData chartData = s_chartLookup.GetOrAdd(chartIdentity, ident => new ChartData(chartElement, m_contentHash));
@@ -377,12 +539,35 @@ namespace openXDA
             return new XElement("img", new XAttribute("src", url));
         }
 
+        private XElement FTTToImgTag(XElement fttElement, int fttID)
+        {
+            FTTIdentity fttIdentity = new FTTIdentity(m_eventID, m_templateID, fttID);
+            FTTData fttData = s_fttLookup.GetOrAdd(fttIdentity, ident => new FTTData(fttElement, m_contentHash));
+
+            // If the cancellation token has been initialized, but we are not able to cancel it,
+            // it's possible that the action already executed so we attempt to add it back into the lookup
+            if ((object)fttData.CancellationToken != null && fttData.CancellationToken.Cancel())
+                fttData = s_fttLookup.GetOrAdd(fttIdentity, fttData);
+
+            // If the content hash of the FTT image does not match the content hash of the email,
+            // then the email has changed and we need to update the FTT image data in the cache
+            if (fttData.ContentHash != m_contentHash)
+                fttData = s_fttLookup[fttIdentity] = new FTTData(fttElement, m_contentHash);
+
+            // Create a new cancellation token to remove the FTT image data from the cache in one minute
+            fttData.CancellationToken = new Action(() => s_fttLookup.TryRemove(fttIdentity, out fttData)).DelayAndExecute(60 * 1000);
+
+            string url = $"EmailTemplateHandler.ashx?EventID={m_eventID}&TemplateID={m_templateID}&FTTID={fttID}";
+            return new XElement("img", new XAttribute("src", url));
+        }
+
         #endregion
 
         #region [ Static ]
 
         // Static Fields
         private static readonly ConcurrentDictionary<ChartIdentity, ChartData> s_chartLookup = new ConcurrentDictionary<ChartIdentity, ChartData>();
+        private static readonly ConcurrentDictionary<FTTIdentity, FTTData> s_fttLookup = new ConcurrentDictionary<FTTIdentity, FTTData>();
 
         #endregion
     }

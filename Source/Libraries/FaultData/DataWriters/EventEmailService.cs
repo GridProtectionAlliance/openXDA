@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Mail;
 using System.Xml.Linq;
+using FaultData.DataWriters.GTC;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
@@ -190,10 +191,8 @@ namespace FaultData.DataWriters
             return htmlDocument;
         }
 
-        public List<Attachment> ApplyChartTransform(XDocument htmlDocument)
+        public void ApplyChartTransform(List<Attachment> attachments, XDocument htmlDocument)
         {
-            List<Attachment> attachments = new List<Attachment>();
-
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 htmlDocument.TransformAll("chart", (element, index) =>
@@ -209,8 +208,22 @@ namespace FaultData.DataWriters
                     return new XElement("img", new XAttribute("src", $"cid:{cid}"));
                 });
             }
+        }
 
-            return attachments;
+        public void ApplyFTTTransform(List<Attachment> attachments, XDocument htmlDocument)
+        {
+            htmlDocument.TransformAll("ftt", (element, index) =>
+            {
+                string fttEventID = (string)element.Attribute("eventID") ?? "-1";
+                string cid = $"event{fttEventID}_ftt{index:00}.jpg";
+
+                Stream image = FTTImageGenerator.ConvertToFTTImageStream(element);
+                Attachment attachment = new Attachment(image, cid);
+                attachment.ContentId = attachment.Name;
+                attachments.Add(attachment);
+
+                return new XElement("img", new XAttribute("src", $"cid:{cid}"));
+            });
         }
 
         public int LoadSentEmail(List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
