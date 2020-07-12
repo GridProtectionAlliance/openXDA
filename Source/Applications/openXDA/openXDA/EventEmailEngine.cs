@@ -359,11 +359,12 @@ namespace openXDA
 
                 List<string> recipients = m_eventEmailService.GetRecipients(emailType, eventIDs);
                 XDocument htmlDocument = m_eventEmailService.ApplyTemplate(emailType, templateData);
-                List<Attachment> attachments = null;
+                List<Attachment> attachments = new List<Attachment>();
 
                 try
                 {
-                    attachments = m_eventEmailService.ApplyChartTransform(htmlDocument);
+                    m_eventEmailService.ApplyChartTransform(attachments, htmlDocument);
+                    m_eventEmailService.ApplyFTTTransform(attachments, htmlDocument);
                     m_eventEmailService.SendEmail(recipients, htmlDocument, attachments);
                     m_eventEmailService.LoadSentEmail(recipients, htmlDocument, eventIDs);
                 }
