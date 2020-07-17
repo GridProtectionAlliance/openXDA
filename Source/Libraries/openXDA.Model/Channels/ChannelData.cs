@@ -75,9 +75,17 @@ namespace openXDA.Model
 
         #region [Statics]
 
-        // This is going through this function to migtrate all EventdataBlobs over to ChannelDataBlobs as they are read eventually removing the legacy table (eventData)
-        public static List<byte[]> DataFromEvent(int eventID, AdoDataConnection connection)
+        public static List<byte[]> DataFromEvent(int eventID, string connectionStringCategory)
         {
+            AdoDataConnection connection = new AdoDataConnection(connectionStringCategory);
+            return DataFromEvent(eventID, connection,  () => { return new AdoDataConnection(connectionStringCategory); });
+        }
+            // This is going through this function to migtrate all EventdataBlobs over to ChannelDataBlobs as they are read eventually removing the legacy table (eventData)
+        public static List<byte[]> DataFromEvent(int eventID, AdoDataConnection connection, Func<AdoDataConnection> assetConnection = null)
+        {
+            if (assetConnection == null)
+                assetConnection = () => { return new AdoDataConnection(connection.Connection.ConnectionString, typeof(SqlConnection), typeof(SqlDataAdapter)); };
+            
             List<byte[]> result = new List<byte[]>();
             List<int> directChannelIDs = new List<int>();
 
@@ -101,7 +109,7 @@ namespace openXDA.Model
 
             //This Will get the extended Data (throught connections)....
             Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT AssetID FROM Event WHERE ID = {0})", eventID);
-            asset.ConnectionFactory = () => { return new AdoDataConnection(connection.Connection.ConnectionString, typeof(SqlConnection), typeof(SqlDataAdapter)); };
+            asset.ConnectionFactory = assetConnection;
             List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
 
             foreach (int channelID in channelIDs)
