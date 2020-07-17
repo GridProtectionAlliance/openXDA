@@ -266,6 +266,8 @@ namespace openXDA.Model
         {
             List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
 
+            if (data == null)
+                return result;
             // If the blob contains the GZip header,
             // use the legacy deserialization algorithm
             if (data[0] == 0x1F && data[1] == 0x8B)

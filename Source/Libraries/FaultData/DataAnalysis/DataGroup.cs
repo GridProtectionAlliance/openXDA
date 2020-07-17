@@ -540,6 +540,8 @@ namespace FaultData.DataAnalysis
 
             foreach (byte[] data in dataList)
             {
+                if (data == null)
+                    continue;
                 // If the blob contains the GZip header,
                 // use the legacy deserialization algorithm
                 if (data[0] == 0x1F && data[1] == 0x8B)
