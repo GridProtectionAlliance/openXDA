@@ -3501,6 +3501,12 @@ CREATE TABLE CBRestrikeType (
 )
 GO
 
+CREATE TABLE CBSwitchingCondition (
+    ID INT NOT NULL PRIMARY KEY,
+    Description VARCHAR(200) NOT NULL
+)
+GO
+
 
 CREATE TABLE CBAnalyticResult (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -3545,6 +3551,16 @@ CREATE TABLE CBRestrikeResult (
     Drest FLOAT NULL,
     Vmax FLOAT NULL,
     Imax FLOAT NULL
+    )
+GO
+
+CREATE TABLE CBSwitchHealthAnalytic (
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    CBResultID INT NOT NULL REFERENCES CBAnalyticResult(ID),
+    CBSwitchingConditionID INT NOT NULL REFERENCES CBSwitchingCondition(ID),
+    R FLOAT NULL,
+    X FLOAT NULL,
+    Duration FLOAT NULL
     )
 GO
 

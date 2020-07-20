@@ -503,3 +503,10 @@ INSERT INTO CBRestrikeType (ID, Description) VALUES
 	(41,'Reignition on this phase, with voltage polarity reversal'),
 	(42,'Restrike on this phase, with voltage polarity reversal')
 GO
+
+INSERT INTO CBSwitchingCondition (ID, Description) VALUES
+	(0,'Normal'),
+	(1,'One transient present, switched-in without pre-insertion or never switched-out (stuck)'),
+	(2,'duration too short (less than 1 cycle) or long (more than 12 cycles)'),
+	(3,'Unknown or undetermined')
+GO
