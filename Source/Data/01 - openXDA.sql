@@ -3494,6 +3494,14 @@ CREATE TABLE CBStatus (
 )
 GO
 
+
+CREATE TABLE CBRestrikeType (
+    ID INT NOT NULL PRIMARY KEY,
+    Description VARCHAR(200) NOT NULL
+)
+GO
+
+
 CREATE TABLE CBAnalyticResult (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
@@ -3524,6 +3532,19 @@ CREATE TABLE CBAnalyticResult (
     Xpost FLOAT NULL,
     Time DATETIME2 NULL,
     Toffset FLOAT NULL
+    )
+GO
+
+CREATE TABLE CBRestrikeResult (
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    CBResultID INT NOT NULL REFERENCES CBAnalyticResult(ID),
+    CBRestrikeTypeID INT NOT NULL REFERENCES CBRestrikeType(ID),
+    Text FLOAT NULL,
+    Trest FLOAT NULL,
+    Text2 FLOAT NULL,
+    Drest FLOAT NULL,
+    Vmax FLOAT NULL,
+    Imax FLOAT NULL
     )
 GO
 

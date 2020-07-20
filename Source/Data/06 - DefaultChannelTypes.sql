@@ -493,3 +493,13 @@ INSERT INTO CBStatus (ID, Description) VALUES
 	(7,'No switching operations. (1) Current at the beginning and end are near zero. No cap. bank is in service. (2) Current at the beginning and end are not zero but correspond to that of energized banks. One or more cap banks are in service'),
 	(8,'Pre-insertion switch has abnormality: switched-in without pre-insertion or never switched-out (stuck) or duration is too short or too long')
 GO
+
+INSERT INTO CBRestrikeType (ID, Description) VALUES
+	(0,'No restrike'),
+	(10,'Possible restrike or reignition on this phase'),
+	(20,'Possible restrike or reignition on the other one or two phases of this bank, but not on this phase'),
+	(31,'Reignition on this phase, with current gap less than 0.25 cycle'),
+	(32,'Restrike on this phase, with a current gap of longer than 0.25 cycle'),
+	(41,'Reignition on this phase, with voltage polarity reversal'),
+	(42,'Restrike on this phase, with voltage polarity reversal')
+GO

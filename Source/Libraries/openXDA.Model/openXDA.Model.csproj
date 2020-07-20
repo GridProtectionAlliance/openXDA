@@ -62,6 +62,8 @@
     <Compile Include="Alarms\ChannelsWithNormalLimits.cs" />
     <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
     <Compile Include="Alarms\MetersWithNormalLimits.cs" />
+    <Compile Include="CapBankAnalytic\CBRestrikeType.cs" />
+    <Compile Include="CapBankAnalytic\CBRestrikeResult.cs" />
     <Compile Include="CapBankAnalytic\CBOperation.cs" />
     <Compile Include="CapBankAnalytic\CBDataError.cs" />
     <Compile Include="CapBankAnalytic\CBStatus.cs" />
