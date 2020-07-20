@@ -3474,6 +3474,58 @@ CREATE TABLE RelayPerformance
 )
 GO
 
+/* CapBank Analytics */
+
+CREATE TABLE CBDataError (
+    ID INT NOT NULL PRIMARY KEY,
+    Description VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE CBOperation (
+    ID INT NOT NULL PRIMARY KEY,
+    Description VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE CBStatus (
+    ID INT NOT NULL PRIMARY KEY,
+    Description VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE CBAnalyticResult (
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    PhaseID INT NOT NULL REFERENCES Phase(ID),
+    CBStatusID INT NULL REFERENCES CBStatus(ID),
+    DataErrorID INT NULL REFERENCES CBDataError(ID),
+    CBOperationID INT NULL REFERENCES CBOperation(ID),
+    DeEnergizedBanks INT NULL,
+    EnergizedBanks INT NULL,
+    InServiceBank INT NULL,
+    DeltaQ FLOAT NULL,
+    Ipre FLOAT NULL,
+    Ipost FLOAT NULL,
+    Vpre FLOAT NULL,
+    Vpost FLOAT NULL,
+    MVAsc FLOAT NULL,
+    IsRes BIT NULL,
+    ResFreq FLOAT NULL,
+    THDpre FLOAT NULL,
+    THDpost FLOAT NULL,
+    THDVpre FLOAT NULL,
+    THDVpost FLOAT NULL,
+    StepPre INT NULL,
+    StepPost INT NULL,
+    SwitchingFreq FLOAT NULL,
+    Vpeak FLOAT NULL,
+    Xpre FLOAT NULL,
+    Xpost FLOAT NULL,
+    Time DATETIME2 NULL,
+    Toffset FLOAT NULL
+    )
+GO
 
 ----- FUNCTIONS -----
 

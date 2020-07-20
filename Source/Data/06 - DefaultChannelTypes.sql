@@ -455,3 +455,41 @@ GO
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
 	VALUES ('Line-(Double)Breaker','only Voltage are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)','SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)')
 GO
+
+INSERT INTO CBDataError (ID, Description) VALUES
+	(0, 'No Error'),
+	(11, 'Error: One or more input parameters are incorrect.'),
+	(12, 'Error: One or more waveforms are missing or data lengths or all waveforms are not the same or data length of each waveform is less than 24 cycles'),
+	(13, 'Error: Non-uniform sampling time or sample rates of waveforms do not match those specified in the input parameters')
+GO
+
+
+INSERT INTO CBOperation (ID, Description) VALUES
+	(-1, 'Cannot be determined (inconclusive) or not determined because of data error'),
+	(101,'Opening operation: final opening. After de-energizing, the number cap bank is zero.'),
+	(102, 'Opening operation: next step opening. After de-energizing, the number of cap bank is reduced by one with at least one remaining in service.'),
+	(201, 'Closing operation: first closing. Initially there is no cap bank in service. After the operation, the number of cap bank in service is one.'),
+	(202, 'Closing operation: next step closing. After the energizing operation, the number of cap bank increases by one.'),
+	(-101,'No switching operation. Current at the beginning and end are near zero, no cap.bank is in service'),
+	(-102, 'No switching operation. Current at the beginning and end are about the same,but not zero. There can be one or more cap. banks in service'),
+	(-103,'No switching operation. There is at least one cap. bank in service. Current at the end is higher than that the beginning more than the tolerance, indicating shorted units or restrike/reignition conditions.'),
+	(-200,'Not a capacitor switching operation, because a voltage sag/swell below 0.85 andabove 1.08 pu is detected')
+GO
+
+INSERT INTO CBStatus (ID, Description) VALUES
+	(-1,'Data error'),
+	(0,'All pole closing, normal closing, normal opening'),
+	(10,'Failed closing: one pole does not close, while the other two close'),
+	(11,'Missing pole, this is a follow-on of failed closing. Two poles open, while one has zero current all the time'),
+	(12,'The longest time between two closing or opening poles is more than 2 cycles'),
+	(2,'Some capacitor elements or units are shorted, blown fuses, i.e., unhealthy cap bank and/or relay conditions'),
+	(20,'Some fuseless units are shorted, or fused units shorted and fuses failed to clear'),
+	(21,'Blown fuses detected'),
+	(22,'Missing tap voltage, blown resistors, or other unhealthy condition'),
+	(3,'Failed opening, a pole never opens or failed opening during next step opening'),
+	(4,'Restrike or reignition without failed opening'),
+	(5,'Restrike or reignition and failed opening'),
+	(6,'Voltage waveform may have a sag, swell, or other non-sinusoidal features. Current waveforms may have sporadic transients such as those due to loose connections'),
+	(7,'No switching operations. (1) Current at the beginning and end are near zero. No cap. bank is in service. (2) Current at the beginning and end are not zero but correspond to that of energized banks. One or more cap banks are in service'),
+	(8,'Pre-insertion switch has abnormality: switched-in without pre-insertion or never switched-out (stuck) or duration is too short or too long')
+GO
