@@ -29,22 +29,153 @@ using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
 
+/// <summary>
+/// Relay:
+///     34, 35 compensated
+///     
+/// </summary>
 namespace openXDA.Model
 {
+    /// <summary>
+    /// The following Lines are from Asset:
+    /// 18 : VoltageKV
+    /// 
+    /// The following Lines are Systemwide Settings
+    /// 33
+    /// </summary>
     [MetadataType(typeof(Asset))]
     public class CapBank: Asset
     {
-        #region [ Members ]D:\Projects\XDAModel\openXDA\Source\Libraries\openXDA.Model\TransmissionElements\Line.cs
+        #region [ Members ]
 
         #endregion
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Line 17
+        /// </summary>
         public int NumberOfBanks { get; set; }
 
-        public int CansPerBank { get; set; }
-
+        /// <summary>
+        /// Line 19
+        /// </summary>
         public double CapacitancePerBank { get; set; }
+
+        /// <summary>
+        /// Line 20
+        /// </summary>
+        public bool CktSwitcher { get; set; }
+
+        /// <summary>
+        /// Line 21
+        /// </summary>
+        public double MaxKV { get; set; }
+
+        /// <summary>
+        /// Line 22
+        /// </summary>
+        public double UnitKV { get; set; }
+
+        /// <summary>
+        /// Line 23
+        /// </summary>
+        public double UnitKVAr { get; set; }
+
+        /// <summary>
+        /// Line 24
+        /// </summary>
+        public double NegReactanceTol { get; set; }
+        
+        /// <summary>
+        /// Line 25
+        /// </summary>
+        public double PosReactanceTol { get; set; }
+
+        /// <summary>
+        /// Line 24 (Fuseless) Line 31 (Fused)
+        /// </summary>
+        public int Nparalell { get; set; }
+
+        /// <summary>
+        /// Line 25 (Fuseless) Line 30 (Fused)
+        /// </summary>
+        public int Nseries { get; set; }
+
+        /// <summary>
+        /// Line 28
+        /// </summary>
+        public int NSeriesGroup { get; set; }
+
+        /// <summary>
+        /// Line 29
+        /// </summary>
+        public int NParalellGroup { get; set; }
+
+        /// <summary>
+        /// Determines if the Bank is Fused or Fuseless
+        /// </summary>
+        public bool Fused { get; set; }
+
+        /// <summary>
+        /// Line 37
+        /// </summary>
+        public double VTratioBus { get; set; }
+
+        /// <summary>
+        /// Line 38
+        /// </summary>
+        public int NumberLVCaps { get; set; }
+
+        /// <summary>
+        /// Line 39
+        /// </summary>
+        public int NumberLVUnits { get; set; }
+
+        /// <summary>
+        /// Line 40
+        /// </summary>
+        public double LVKVAr { get; set; }
+
+        /// <summary>
+        /// Line 41
+        /// </summary>
+        public double LVKV { get; set; }
+
+        /// <summary>
+        /// Line 42
+        /// </summary>
+        public double LVNegReactanceTol { get; set; }
+
+        /// <summary>
+        /// Line 43
+        /// </summary>
+        public double LVPosReactanceTol { get; set; }
+
+        /// <summary>
+        /// Line 48
+        /// </summary>
+        public double UpperXFRRatio { get; set; }
+
+        /// <summary>
+        /// Line 49
+        /// </summary>
+        public double LowerXFRRatio { get; set; }
+
+        /// <summary>
+        /// Line 60 and 64
+        /// </summary>
+        public double Nshorted { get; set; }
+
+        /// <summary>
+        /// Line 62
+        /// </summary>
+        public int BlownFuses { get; set; }
+
+        /// <summary>
+        /// Line 63
+        /// </summary>
+        public int BlownGroups { get; set; }
 
         #endregion
 

@@ -357,11 +357,46 @@ CREATE TABLE CapacitorBankAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
-    NumberOfBanks INT NOT NULL DEFAULT(1),
-    CansPerBank INT NOT NULL DEFAULT(1),
-    CapacitancePerBank INT NOT NULL DEFAULT(0)
+    NumberOfBanks INT NOT NULL,
+    CapacitancePerBank INT NOT NULL,
+    CktSwitcher BIT NOT NULL,
+    MaxKV FLOAT NOT NULL,
+    UnitKV FLOAT NOT NULL,
+    UnitKVAr FLOAT NOT NULL,
+    NegReactanceTol FLOAT NOT NULL,
+    PosReactanceTol FLOAT NOT NULL,
+    Nparalell INT NOT NULL,
+    Nseries INT NOT NULL,
+    NSeriesGroup INT NOT NULL,
+    NParalellGroup INT NOT NULL,
+    Fused BIT NOT NULL,
+    VTratioBus FLOAT NOT NULL,
+    NumberLVCaps INT NOT NULL,
+    NumberLVUnits INT NOT NULL,
+    LVKVAr FLOAT NOT NULL,
+    LVKV FLOAT NOT NULL,
+    LVNegReactanceTol FLOAT NOT NULL,
+    LVPosReactanceTol FLOAT NOT NULL,
+    UpperXFRRatio FLOAT NOT NULL,
+    LowerXFRRatio FLOAT NOT NULL,
+    Nshorted FLOAT NOT NULL,
+    BlownFuses INT NOT NULL,
+    BlownGroups INT NOT NULL
 )
 GO
+
+CREATE TABLE CapacitorBankRelayAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+    OnVoltageThreshhold FLOAT NOT NULL,
+    RelayPTRatio VARCHAR(50) NOT NULL,
+    Rv FLOAT NOT NULL,
+    Rh FLOAT NOT NULL,
+    Compensated BIT NOT NULL
+)
+GO
+
 
 CREATE TABLE LineAttributes
 (
@@ -633,6 +668,85 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 END
 GO
 
+/* Capacitor Bank Relay Model */
+CREATE VIEW CapBankRelay AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		AssetTypeID,
+		Spare,
+        OnVoltageThreshhold,
+        RelayPTRatio,
+        Rv,
+        Rh,
+        Compensated
+	FROM Asset JOIN CapacitorBankRelayAttributes ON Asset.ID = CapacitorBankRelayAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_CapBankRelay ON CapBankRelay
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'CapacitorBankRelay') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO CapacitorBankRelayAttributes (AssetID, OnVoltageThreshhold, RelayPTRatio, Rv, Rh, Compensated)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			OnVoltageThreshhold AS OnVoltageThreshhold,
+            RelayPTRatio AS RelayPTRatio,
+            Rv AS Rv,
+            Rh AS Rh,
+            Compensated AS Compensated
+	    FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_CapBankRelay ON CapBankRelay
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR Update(Spare) )
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+	UPDATE CapacitorBankRelayAttributes
+		SET
+			CapacitorBankRelayAttributes.OnVoltageThreshhold = INSERTED.OnVoltageThreshhold,
+            CapacitorBankRelayAttributes.RelayPTRatio = INSERTED.RelayPTRatio,
+            CapacitorBankRelayAttributes.Rv = INSERTED.Rv,
+            CapacitorBankRelayAttributes.Rh = INSERTED.Rh,
+            CapacitorBankRelayAttributes.Compensated = INSERTED.Compensated
+		FROM
+			CapacitorBankRelayAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.ID = CapacitorBankRelayAttributes.AssetID;
+END
+GO
+
 
 /* Capacitor Bank Model */
 CREATE VIEW CapBank AS
@@ -640,13 +754,35 @@ CREATE VIEW CapBank AS
 		AssetID AS ID,
 		AssetKey,
 		VoltageKV,
-		NumberofBanks,
-		CansPerBank,
-		CapacitancePerBank,
 		Description,
 		AssetName,
 		AssetTypeID,
-		Spare
+		Spare,
+        NumberOfBanks,
+        CapacitancePerBank,
+        CktSwitcher,
+        MaxKV,
+        UnitKV,
+        UnitKVAr,
+        NegReactanceTol,
+        PosReactanceTol,
+        Nparalell,
+        Nseries,
+        NSeriesGroup,
+        NParalellGroup,
+        Fused,
+        VTratioBus,
+        NumberLVCaps,
+        NumberLVUnits,
+        LVKVAr,
+        LVKV,
+        LVNegReactanceTol,
+        LVPosReactanceTol,
+        UpperXFRRatio,
+        LowerXFRRatio,
+        Nshorted,
+        BlownFuses,
+        BlownGroups
 	FROM Asset JOIN CapacitorBankAttributes ON Asset.ID = CapacitorBankAttributes.AssetID
 GO
 
@@ -663,12 +799,35 @@ BEGIN
 			Spare AS Spare
 	FROM INSERTED
 
-	INSERT INTO CapacitorBankAttributes (AssetID, NumberOfBanks, CansPerBank, CapacitancePerBank)
+	INSERT INTO CapacitorBankAttributes (AssetID, CapacitancePerBank, CktSwitcher, MaxKV, UnitKV, UnitKVAr, NegReactanceTol,
+        PosReactanceTol, Nparalell, Nseries, NSeriesGroup, NParalellGroup, Fused, VTratioBus, NumberLVCaps, NumberLVUnits, LVKVAr,
+        LVKV, LVNegReactanceTol, LVPosReactanceTol, UpperXFRRatio, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
-			NumberOfBanks AS NumberOfBanks,
-			CansPerBank AS CansPerBank,
-			CapacitancePerBank AS CapacitancePerBank
+			CapacitancePerBank AS CapacitancePerBank,
+            CktSwitcher AS CktSwitcher,
+            MaxKV AS MaxKV,
+            UnitKV AS UnitKV,
+            UnitKVAr AS UnitKVAr,
+            NegReactanceTol AS NegReactanceTol,
+            PosReactanceTol AS PosReactanceTol,
+            Nparalell AS Nparalell,
+            Nseries AS Nseries,
+            NSeriesGroup AS NSeriesGroup,
+            NParalellGroup AS NParalellGroup,
+            Fused AS Fused,
+            VTratioBus AS VTratioBus,
+            NumberLVCaps AS NumberLVCaps,
+            NumberLVUnits AS NumberLVUnits,
+            LVKVAr AS LVKVAr,
+            LVKV AS LVKV,
+            LVNegReactanceTol AS LVNegReactanceTol,
+            LVPosReactanceTol AS LVPosReactanceTol,
+            UpperXFRRatio AS UpperXFRRatio,
+            LowerXFRRatio AS LowerXFRRatio,
+            Nshorted AS Nshorted,
+            BlownFuses AS BlownFuses,
+            BlownGroups AS BlownGroups
 	FROM INSERTED
 
 END
@@ -695,9 +854,30 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 	END
 	UPDATE CapacitorBankAttributes
 		SET
-			CapacitorBankAttributes.NumberOfBanks = INSERTED.NumberOfBanks,
-			CapacitorBankAttributes.CansPerBank = INSERTED.CansPerBank,
-			CapacitorBankAttributes.CapacitancePerBank = INSERTED.CapacitancePerBank
+			CapacitorBankAttributes.CapacitancePerBank = INSERTED.CapacitancePerBank,
+            CapacitorBankAttributes.CktSwitcher = INSERTED.CktSwitcher,
+            CapacitorBankAttributes.MaxKV = INSERTED.MaxKV,
+            CapacitorBankAttributes.UnitKV = INSERTED.UnitKV,
+            CapacitorBankAttributes.UnitKVAr = INSERTED.UnitKVAr,
+            CapacitorBankAttributes.NegReactanceTol = INSERTED.NegReactanceTol,
+            CapacitorBankAttributes.PosReactanceTol = INSERTED.PosReactanceTol,
+            CapacitorBankAttributes.Nparalell = INSERTED.Nparalell,
+            CapacitorBankAttributes.Nseries = INSERTED.Nseries,
+            CapacitorBankAttributes.NSeriesGroup = INSERTED.NSeriesGroup,
+            CapacitorBankAttributes.NParalellGroup = INSERTED.NParalellGroup,
+            CapacitorBankAttributes.Fused = INSERTED.Fused,
+            CapacitorBankAttributes.VTratioBus = INSERTED.VTratioBus,
+            CapacitorBankAttributes.NumberLVCaps = INSERTED.NumberLVCaps,
+            CapacitorBankAttributes.NumberLVUnits = INSERTED.NumberLVUnits,
+            CapacitorBankAttributes.LVKVAr = INSERTED.LVKVAr,
+            CapacitorBankAttributes.LVKV = INSERTED.LVKV,
+            CapacitorBankAttributes.LVNegReactanceTol = INSERTED.LVNegReactanceTol,
+            CapacitorBankAttributes.LVPosReactanceTol = INSERTED.LVPosReactanceTol,
+            CapacitorBankAttributes.UpperXFRRatio = INSERTED.UpperXFRRatio,
+            CapacitorBankAttributes.LowerXFRRatio = INSERTED.LowerXFRRatio,
+            CapacitorBankAttributes.Nshorted = INSERTED.Nshorted,
+            CapacitorBankAttributes.BlownFuses = INSERTED.BlownFuses,
+            CapacitorBankAttributes.BlownGroups = INSERTED.BlownGroups
 		FROM
 			CapacitorBankAttributes 
 	INNER JOIN

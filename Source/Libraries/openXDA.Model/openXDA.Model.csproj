@@ -125,6 +125,7 @@
     <Compile Include="System\ConfigurationLoader.cs" />
     <Compile Include="System\DataReader.cs" />
     <Compile Include="Links\CustomerAsset.cs" />
+    <Compile Include="TransmissionElements\CapBankRelay.cs" />
     <Compile Include="TransmissionElements\Customer.cs" />
     <Compile Include="TransmissionElements\AssetTypes.cs" />
     <Compile Include="TransmissionElements\Asset.cs" />

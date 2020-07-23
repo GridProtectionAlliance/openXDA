@@ -434,6 +434,8 @@ INSERT INTO AssetType (Name, Description) VALUES ('LineSegment','Segment of a Tr
 GO
 INSERT INTO AssetType (Name, Description) VALUES ('Transformer','Transformer')
 GO
+INSERT INTO AssetType (Name, Description) VALUES ('CapacitorBankRelay','Relay for a Capacitor Bank')
+GO
 
 /* Default Asset Connections */
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
@@ -463,6 +465,15 @@ INSERT INTO CBDataError (ID, Description) VALUES
 	(13, 'Error: Non-uniform sampling time or sample rates of waveforms do not match those specified in the input parameters')
 GO
 
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Bus-CapBank','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)','SELECT 0')
+GO
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Bus-Relay','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)','SELECT 0')
+GO
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Relay-CapBank','This Connection is for the Cap Bank Analytic',0,'SELECT 0','SELECT 0')
+GO
 
 INSERT INTO CBOperation (ID, Description) VALUES
 	(-1, 'Cannot be determined (inconclusive) or not determined because of data error'),
