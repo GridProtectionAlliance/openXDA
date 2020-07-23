@@ -346,6 +346,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="wwwroot\**\*" Exclude="wwwroot\**\*.ashx.cs;wwwroot\Scripts\TS\**\*;wwwroot\Scripts\TSX\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\Assets\CapacitorBankRelays.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="wwwroot\Scripts\TS\**\*;wwwroot\Scripts\TSX\**\*" />
     <None Include="AppDebug.config">
       <SubType>Designer</SubType>

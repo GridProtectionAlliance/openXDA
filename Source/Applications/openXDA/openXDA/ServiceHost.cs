@@ -676,6 +676,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Assets/LineSegments.cshtml", new Tuple<Type, Type>(typeof(LineSegment), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Buss.cshtml", new Tuple<Type, Type>(typeof(Bus), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/CapacitorBanks.cshtml", new Tuple<Type, Type>(typeof(CapBank), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Assets/CapacitorBankRelays.cshtml", new Tuple<Type, Type>(typeof(CapBankRelay), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Transformers.cshtml", new Tuple<Type, Type>(typeof(Transformer), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Breakers.cshtml", new Tuple<Type, Type>(typeof(Breaker), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterAsset), typeof(DataHub)));
