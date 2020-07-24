@@ -129,9 +129,9 @@ namespace FaultData.Configuration
                         assetElement = new XElement("capacitorBank");
                         CapBank capBank = CapBank.DetailedCapBank(asset, asset.ConnectionFactory?.Invoke());
                         assetElement.Add(new XElement(nameof(capBank.VoltageKV), capBank.VoltageKV));
-                        assetElement.Add(new XElement(nameof(capBank.NumberOfBanks), capBank.NumberOfBanks));
-                        assetElement.Add(new XElement(nameof(capBank.CansPerBank), capBank.CansPerBank));
-                        assetElement.Add(new XElement(nameof(capBank.CapacitancePerBank), capBank.CapacitancePerBank));
+                        //assetElement.Add(new XElement(nameof(capBank.NumberOfBanks), capBank.NumberOfBanks));
+                        //assetElement.Add(new XElement(nameof(capBank.CansPerBank), capBank.CansPerBank));
+                        //assetElement.Add(new XElement(nameof(capBank.CapacitancePerBank), capBank.CapacitancePerBank));
                         assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
                         assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
                         assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
@@ -391,9 +391,9 @@ namespace FaultData.Configuration
                     AssetTypeID = (int)AssetType.CapacitorBank
                 };
                 capBank.VoltageKV = Convert.ToDouble((string)capacitorBankElement.Element(nameof(capBank.VoltageKV)));
-                capBank.NumberOfBanks = Convert.ToInt32((string)capacitorBankElement.Element(nameof(capBank.NumberOfBanks)));
-                capBank.CansPerBank = Convert.ToInt32((string)capacitorBankElement.Element(nameof(capBank.CansPerBank)));
-                capBank.CapacitancePerBank = Convert.ToDouble((string)capacitorBankElement.Element(nameof(capBank.CapacitancePerBank)));
+                //capBank.NumberOfBanks = Convert.ToInt32((string)capacitorBankElement.Element(nameof(capBank.NumberOfBanks)));
+                //capBank.CansPerBank = Convert.ToInt32((string)capacitorBankElement.Element(nameof(capBank.CansPerBank)));
+                //capBank.CapacitancePerBank = Convert.ToDouble((string)capacitorBankElement.Element(nameof(capBank.CapacitancePerBank)));
 
                 capBank.ID = Convert.ToInt32((string)capacitorBankElement.Element(nameof(capBank.ID)));
                 capBank.AssetKey = (string)capacitorBankElement.Element(nameof(capBank.AssetKey));
