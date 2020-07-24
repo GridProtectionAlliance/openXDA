@@ -446,7 +446,7 @@ namespace FaultData.DataOperations
                 .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
                 .ToList();
 
-            if (sourceIndexes.Any(index => index.ChannelIndex <= 0))
+            if (sourceIndexes.Any(index => index.ChannelIndex < 0))
                 throw new FormatException($"Incorrect format for channel name {series.SourceIndexes} Channel not found in File.");
 
             if (sourceIndexes.Count == 0)
