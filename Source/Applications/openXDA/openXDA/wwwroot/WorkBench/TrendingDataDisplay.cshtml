@@ -41,7 +41,7 @@
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
-    IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (select DISTINCT MeterID from MeterDataQualitySummary)").OrderBy(x => x.AssetKey);
+    IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (select DISTINCT MeterID from MeterDataQualitySummary)").OrderBy(x => x.Name);
 #if DEBUG
     bool debug = true;
 #else
