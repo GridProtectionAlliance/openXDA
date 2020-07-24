@@ -721,8 +721,8 @@ namespace DeviceDefinitionsMigrator
             };
 
             capbank.NumberOfBanks = Convert.ToInt32((string)lineElement.Element("primary") ?? "0");
-            capbank.CansPerBank = Convert.ToInt32((string)lineElement.Element("secondary") ?? "0");
-            capbank.CapacitancePerBank = Convert.ToDouble((string)lineElement.Element("tap") ?? "0.0");
+            //capbank.CansPerBank = Convert.ToInt32((string)lineElement.Element("secondary") ?? "0");
+            //capbank.CapacitancePerBank = Convert.ToDouble((string)lineElement.Element("tap") ?? "0.0");
             
 
             TableOperations<CapBank> capBankTable = new TableOperations<CapBank>(connection);
