@@ -106,6 +106,8 @@ namespace FaultData.DataOperations
 
                 if (channelIndex == "NONE")
                     return null;
+                if (string.IsNullOrEmpty(channelIndex))
+                    return null;
 
                 if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
                 {
@@ -133,14 +135,15 @@ namespace FaultData.DataOperations
             /// <returns> The Channel Index associated with this channelName. Returns -1 if it is not found</returns>
             private static int ParseName(string name, List<string> nameIndexPairs)
             {
+              
                 string test = (name[0] == '-' ? name.Substring(1) : name);
                 if (!nameIndexPairs.Contains(test))
                     return -1;
                 if (nameIndexPairs.FindAll(item => item == test).Count() > 1)
                     throw new FormatException($"Incorrect format for channel name {test} duplicates found in configuration.");
-
+               
                 return nameIndexPairs.FindIndex(item => item == test);
-
+               
             }
         }
 
@@ -260,7 +263,8 @@ namespace FaultData.DataOperations
                     (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") && channel.MeasurementCharacteristic.Name == "Instantaneous")
                     .ToList();
 
-                List<SourceIndex> rmsSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Select(item => SourceIndex.Parse(item))).Where(item => item.IsRMSTrend).ToList();
+                List<SourceIndex> rmsSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Where(item => !string.IsNullOrEmpty(item))
+                    .Select(item => SourceIndex.Parse(item))).Where(item => item.IsRMSTrend).ToList();
                 
                 // Add RMS Channels as neccesarry for PoW Channels
                 powChannels.ForEach(item => AddRMSChannel(item, rmsSourceIndices,meterDataSet));
@@ -287,7 +291,8 @@ namespace FaultData.DataOperations
                     (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") && channel.MeasurementCharacteristic.Name == "Instantaneous")
                     .ToList();
 
-                List<SourceIndex> flkrSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Select(item => SourceIndex.Parse(item))).Where(item => item.IsFLKRTrend).ToList();
+                List<SourceIndex> flkrSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Where(item => !string.IsNullOrEmpty(item))
+                    .Select(item => SourceIndex.Parse(item))).Where(item => item.IsFLKRTrend).ToList();
 
                     // Add RMS Channels as neccesarry for PoW Channels
                     powChannels.ForEach(item => AddFlkrChannel(item, flkrSourceIndices, meterDataSet));
@@ -310,10 +315,13 @@ namespace FaultData.DataOperations
             else if (isTriggerTrending)
             {
                 List<Channel> powChannels = dbMeter.Channels.Where(channel =>
-                    (channel.MeasurementType.Name == "Digital") && channel.MeasurementCharacteristic.Name == "Instantaneous")
+                    (channel.MeasurementType.Name == "Digital") && (channel.MeasurementCharacteristic.Name == "Trigger - RMS" ||
+                        channel.MeasurementCharacteristic.Name == "Trigger - Impulse" || channel.MeasurementCharacteristic.Name == "Trigger - THD" ||
+                        channel.MeasurementCharacteristic.Name == "Trigger - Ubal" || channel.MeasurementCharacteristic.Name == "Trigger - I"))
                     .ToList();
 
-                List<SourceIndex> trendSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Select(item => SourceIndex.Parse(item))).Where(item => item.IsFLKRTrend).ToList();
+                List<SourceIndex> trendSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',')
+                    .Where(item => !string.IsNullOrEmpty(item)).Select(item => SourceIndex.Parse(item))).Where(item => item.IsTriggerTrend).ToList();
 
                 // Add Trend Channels as neccesarry for PoW Channels
                 powChannels.ForEach(item => AddTriggerChannel(item, trendSourceIndices, meterDataSet));
@@ -326,7 +334,8 @@ namespace FaultData.DataOperations
                    .ToList();
 
                 //compute Series properly to account for multiply and Add
-                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
+                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
+                    (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsTriggerTrend))))
                     AddTriggerTrendSeries(calculatedDataSeriesList, meterDataSet, series);
 
             }
@@ -334,8 +343,10 @@ namespace FaultData.DataOperations
             //remove Channels with RMS Trending Data Series
             else
             {
-                seriesList = seriesList.Where(series => !series.SourceIndexes.Split(',').Any(index => SourceIndex.Parse(index).IsTrend)).ToList();
-
+                seriesList = seriesList.Where(series => !series.SourceIndexes.Split(',').Any(index => {
+                    SourceIndex sourceIndex = SourceIndex.Parse(index);
+                    return (sourceIndex == null || sourceIndex.IsTrend);
+                })).ToList();
 
 
                 foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
@@ -449,7 +460,10 @@ namespace FaultData.DataOperations
                 .ToList();
 
             if (sourceIndexes.Any(index => index.ChannelIndex < 0))
-                throw new FormatException($"Incorrect format for channel name {series.SourceIndexes} Channel not found in File.");
+            {
+                Log.Error($"Incorrect format for channel name {series.SourceIndexes} Channel not found in File.");
+                return;
+            }
 
             if (sourceIndexes.Count == 0)
                 return;
@@ -942,6 +956,7 @@ namespace FaultData.DataOperations
                 MeasurementType = powChannel.MeasurementType,
                 Phase = powChannel.Phase
             };
+            
 
             Dictionary<ChannelKey, Channel> channelLookup = meterDataSet.Meter.Channels
                     .GroupBy(channel => new ChannelKey(channel))
@@ -957,13 +972,55 @@ namespace FaultData.DataOperations
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
+                TableOperations<MeasurementType> measurementTypeTable = new TableOperations<MeasurementType>(connection);
                 TableOperations<SeriesType> seriesTypeTable = new TableOperations<SeriesType>(connection);
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
                 TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
 
 
-                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = 'None'");
+                trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("ID = {0}", trendChannel.MeasurementTypeID);
+                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("ID = {0}", trendChannel.MeasurementCharacteristicID);
+
+                if (trendChannel.MeasurementCharacteristic.Name == "Trigger - RMS" || trendChannel.MeasurementCharacteristic.Name == "Trigger - Impulse")
+                {
+                    trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = 'Voltage'");
+                    trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
+                }
+                else if (trendChannel.MeasurementCharacteristic.Name == "Trigger - I")
+                {
+                    trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = 'Current'");
+                    trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
+                }
+                else
+                {
+                    trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = 'Analog'");
+                    trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
+                }
+
+                string measCharacteristic = "";
+
+                switch (trendChannel.MeasurementCharacteristic.Name)
+                {
+                    case ("Trigger - RMS"):
+                        measCharacteristic = "RMS";
+                        break;
+                    case ("Trigger - Impulse"):
+                        measCharacteristic = "Instantaneous";
+                        break;
+                    case ("Trigger - THD"):
+                        measCharacteristic = "TotalTHD";
+                        break;
+                    case ("Trigger - Ubal"):
+                        measCharacteristic = "Instantaneous";
+                        break;
+                    case ("Trigger - I"):
+                        measCharacteristic = "Instantaneous";
+                        break;
+                }
+
+                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name ={0}", measCharacteristic);
                 trendChannel.MeasurementCharacteristicID = trendChannel.MeasurementCharacteristic.ID;
+
 
                 ChannelKey key = new ChannelKey(trendChannel);
                 Channel conChannel;
@@ -1031,8 +1088,18 @@ namespace FaultData.DataOperations
 
             sourceSeries = meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.First();
             sourceIndexes = sourceSeries.SourceIndexes.Split(',')
-                .Select(item => Translate(item,SourceIndex.Parse(series.SourceIndexes), channelNames))
-                .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
+                .Select(item =>
+                {
+
+                    SourceIndex sourceIndex = SourceIndex.Parse(item, channelNames);
+                    if ((object)sourceIndex == null)
+                        return null;
+                    if (!sourceIndex.ByName)
+                    {
+                        item = "A" + item;
+                    }
+                    return Translate(item, SourceIndex.Parse(series.SourceIndexes), channelNames);
+                }).Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
                 .ToList();
 
            if (sourceIndexes.Count == 0)
@@ -1116,7 +1183,18 @@ namespace FaultData.DataOperations
 
             sourceSeries = meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.First();
             sourceIndexes = sourceSeries.SourceIndexes.Split(',')
-                .Select(item =>  SourceIndex.Parse(item, channelNames))
+                .Select(item => {
+                    SourceIndex sourceIndex = SourceIndex.Parse(item, channelNames);
+                    if ((object)sourceIndex == null)
+                        return null;
+
+                    if (!sourceIndex.ByName)
+                    {
+                        item = "A" + item;
+                        sourceIndex = SourceIndex.Parse(item, channelNames);
+                    }
+                    return sourceIndex; 
+                })
                 .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsFLKRTrend)
                 .ToList();
 
@@ -1136,7 +1214,7 @@ namespace FaultData.DataOperations
 
         }
 
-        private SourceIndex Translate(string original, SourceIndex functional, List<string> seriesNames, string pref="A")
+        private SourceIndex Translate(string original, SourceIndex functional, List<string> seriesNames)
         {
             if (!functional.IsTrend)
                 return null;
@@ -1145,30 +1223,24 @@ namespace FaultData.DataOperations
             SourceIndex parsed = SourceIndex.Parse(original);
 
             if (!parsed.ByName)
-            {
-                translated = pref + original;
-                parsed = SourceIndex.Parse(translated);
-            }
+                return null;
 
-
-            if (functional.ChannelName.Equals("RMSAVG", StringComparison.OrdinalIgnoreCase))
+            if (functional.ChannelName.EndsWith("AVG", StringComparison.OrdinalIgnoreCase))
                 translated = translated.Replace(parsed.ChannelName, "Avg_" + parsed.ChannelName);
-            if (functional.ChannelName.Equals("RMSMIN", StringComparison.OrdinalIgnoreCase))
+            if (functional.ChannelName.EndsWith("MIN", StringComparison.OrdinalIgnoreCase))
                 translated = translated.Replace(parsed.ChannelName, "Min_" + parsed.ChannelName);
-            if (functional.ChannelName.Equals("RMSMAX", StringComparison.OrdinalIgnoreCase))
+            if (functional.ChannelName.EndsWith("MAX", StringComparison.OrdinalIgnoreCase))
                 translated = translated.Replace(parsed.ChannelName, "Max_" + parsed.ChannelName);
 
             // Deal with Multiplication of negative Values
             if (parsed.Multiplier < 0)
             {
-                if (functional.ChannelName.Equals("RMSMIN", StringComparison.OrdinalIgnoreCase))
-                {
+                if (functional.ChannelName.EndsWith("MIN", StringComparison.OrdinalIgnoreCase))
                     translated = translated.Replace("Min_", "Max_");                   
-                }
-                if (functional.ChannelName.Equals("RMSMAX", StringComparison.OrdinalIgnoreCase))
-                {
+                
+                if (functional.ChannelName.EndsWith("MAX", StringComparison.OrdinalIgnoreCase))
                     translated = translated.Replace("Max_", "Min_");
-                }
+                
             }
 
             return SourceIndex.Parse(translated, seriesNames);
