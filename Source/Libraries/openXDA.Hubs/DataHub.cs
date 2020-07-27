@@ -1533,7 +1533,7 @@ namespace openXDA.Hubs
                 string MeterID = (meterID == -1 ? "%" : meterID.ToString());
                 string LineID = (lineID == -1 ? "%" : lineID.ToString());
 
-                return new TableOperations<AlarmRangeLimitView>(connection).QueryRecordCount(new RecordRestriction("MeterName Like {0} AND Name LIKE {1} AND MeasurementType LIKE {2} AND MeasurementCharacteristic LIKE {3}" + (MeterID == "%" ? "" : " AND MeterID = {4} AND LineID = {5}"), meterFilter, channelFilter, typeFilter, charFilter, MeterID, LineID));
+                return new TableOperations<AlarmRangeLimitView>(connection).QueryRecordCount(new RecordRestriction("MeterName Like {0} AND Name LIKE {1} AND MeasurementType LIKE {2} AND MeasurementCharacteristic LIKE {3}" + (MeterID == "%" ? "" : " AND MeterID = {4} AND AssetID = {5}"), meterFilter, channelFilter, typeFilter, charFilter, MeterID, LineID));
             }
         }
 
@@ -4001,7 +4001,7 @@ namespace openXDA.Hubs
                 TableOperations<MeterDetail> tableOperations = new TableOperations<MeterDetail>(connection);
                 RecordRestriction restriction;
                 if (meterLocationID > 0)
-                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
+                    restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LocationID = {0}", meterLocationID);
                 else
                     restriction = tableOperations.GetSearchRestriction(filterString);
 
