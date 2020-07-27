@@ -13,6 +13,10 @@ GO
 INSERT INTO MeasurementType(Name, Description) VALUES ('Digital', 'Digital')
 GO
 
+INSERT INTO MeasurementType(Name, Description) VALUES ('Analog', 'Analog')
+GO
+
+
 INSERT INTO MeasurementType(Name, Description) VALUES ('TripCoilCurrent', 'Relay Trip Coil Energization Current')
 GO
 
@@ -158,6 +162,17 @@ INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('TIF',
 GO
 
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('DF', 'Displacement Factor - Cosine of the phase angle between fundamental frequency voltage and current phasors.', 0)
+GO
+
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('Trigger - RMS', 'RMS Trigger', 0)
+GO
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('Trigger - Impulse', 'Impulse Trigger', 0)
+GO
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('Trigger - THD', 'THD Trigger', 0)
+GO
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('Trigger - Ubal', 'Unbalance Trigger', 0)
+GO
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('Trigger - I', 'Instantanous Current Trigger', 0)
 GO
 
 INSERT INTO Phase(Name, Description) VALUES('AN', 'A-phase to neutral')
