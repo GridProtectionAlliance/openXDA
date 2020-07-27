@@ -81,7 +81,7 @@ namespace openXDA.Model
                 newConfiguration.MeterID = meterConfiguration.MeterID;
                 newConfiguration.ConfigKey = meterConfiguration.ConfigKey;
                 newConfiguration.ConfigText = newConfigText;
-                newConfiguration.RevisionMajor = newConfiguration.RevisionMajor + 1;
+                newConfiguration.RevisionMajor = meterConfiguration.RevisionMajor + 1;
                 newConfiguration.RevisionMinor = 0;
                 meterConfigurationTable.AddNewRecord(newConfiguration);
 
