@@ -222,7 +222,7 @@ namespace FaultData.DataReaders
                         {
                             double value = Parse32Float(record.Data, index);
                             index = index + 4;
-                            MeterDataSet.DataSeries[i].DataPoints.Add(new DataPoint() { Time = TS, Value = channels[i].Multiplier * channels[i].Scalar * value });
+                            MeterDataSet.DataSeries[i].DataPoints.Add(new DataPoint() { Time = TS, Value = channels[i].Scalar * value });
                         }
                     }
 
