@@ -72,7 +72,7 @@ namespace FaultData.DataOperations
                 // Deal with RMS Trends before anythin else since they don't have a valid Name
                 if (text.Trim().StartsWith("RMS", StringComparison.OrdinalIgnoreCase) || text.Trim().StartsWith("FLKR", StringComparison.OrdinalIgnoreCase) || text.Trim().StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase))
                 {
-                    // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n)
+                    // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n) Where n is a Channel ID (not a Series ID)
 
                     if (text.Trim().StartsWith("RMS", StringComparison.OrdinalIgnoreCase))
                         sourceIndex.IsRMSTrend = true;
@@ -271,9 +271,10 @@ namespace FaultData.DataOperations
                 seriesList = dbMeter.Channels
                    .SelectMany(channel => channel.Series)
                    .ToList();
-
-                //compute Series properly to account for multiply and Add
-                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
+                 
+                //compute Series properly to account for multiply and Add (only deal with RMS here)
+                foreach (Series series in seriesList.Where(series => (!string.IsNullOrEmpty(series.SourceIndexes)) &&
+                    (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsRMSTrend))))
                     AddRMSTrendSeries(calculatedDataSeriesList, meterDataSet, series);
                 
             }
@@ -299,7 +300,8 @@ namespace FaultData.DataOperations
                        .ToList();
 
                     //compute Series properly to account for multiply and Add
-                    foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
+                    foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
+                    (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsFLKRTrend))))
                         AddFlkrTrendSeries(calculatedDataSeriesList, meterDataSet, series);
 
                 
@@ -850,7 +852,7 @@ namespace FaultData.DataOperations
                 MeasurementTypeID = powChannel.MeasurementTypeID,
                 MeasurementCharacteristicID = powChannel.MeasurementCharacteristicID,
                 PhaseID = powChannel.PhaseID,
-                Name = powChannel.Name,
+                Name = powChannel.Name + "Flicker",
                 SamplesPerHour = powChannel.SamplesPerHour,
                 PerUnitValue = powChannel.PerUnitValue,
                 HarmonicGroup = powChannel.HarmonicGroup,
@@ -1017,9 +1019,11 @@ namespace FaultData.DataOperations
             DataSeries dataSeries;
             Series sourceSeries;
 
+            //If the corresponding Channel exists (and is attached to this Meter)
             if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).Any())
                 return;
 
+            //If that Channel has a Series Attached to it
             if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.Any())
                 return;
 
@@ -1132,16 +1136,20 @@ namespace FaultData.DataOperations
 
         }
 
-        private SourceIndex Translate(string original, SourceIndex functional, List<string> seriesNames)
+        private SourceIndex Translate(string original, SourceIndex functional, List<string> seriesNames, string pref="A")
         {
             if (!functional.IsTrend)
                 return null;
 
             string translated = original;
             SourceIndex parsed = SourceIndex.Parse(original);
-            
+
             if (!parsed.ByName)
-                return null;
+            {
+                translated = pref + original;
+                parsed = SourceIndex.Parse(translated);
+            }
+
 
             if (functional.ChannelName.Equals("RMSAVG", StringComparison.OrdinalIgnoreCase))
                 translated = translated.Replace(parsed.ChannelName, "Avg_" + parsed.ChannelName);
