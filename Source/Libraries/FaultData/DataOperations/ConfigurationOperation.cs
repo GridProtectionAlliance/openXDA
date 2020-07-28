@@ -1096,7 +1096,7 @@ namespace FaultData.DataOperations
                         return null;
                     if (!sourceIndex.ByName)
                     {
-                        item = "A" + item;
+                        item = sourceIndex.Multiplier.ToString() + "*A" + sourceIndex.ChannelIndex.ToString();
                     }
                     return Translate(item, SourceIndex.Parse(series.SourceIndexes), channelNames);
                 }).Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
@@ -1105,13 +1105,9 @@ namespace FaultData.DataOperations
            if (sourceIndexes.Count == 0)
                 return;
 
-          
-           
             dataSeries = sourceIndexes
                     .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
                     .Aggregate((series1, series2) => series1.Add(series2));
-            
-            
 
             dataSeries.SeriesInfo = series;
             calculatedDataSeriesList.Add(dataSeries);
@@ -1190,7 +1186,7 @@ namespace FaultData.DataOperations
 
                     if (!sourceIndex.ByName)
                     {
-                        item = "A" + item;
+                        item = sourceIndex.Multiplier.ToString() + "*A" + sourceIndex.ChannelIndex.ToString();
                         sourceIndex = SourceIndex.Parse(item, channelNames);
                     }
                     return sourceIndex; 
