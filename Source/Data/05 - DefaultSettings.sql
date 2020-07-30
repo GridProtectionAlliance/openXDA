@@ -259,6 +259,10 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.FolderPath', 'TrR[0-9]*\.dat', 'TrR[0-9]*\.dat')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.FileLocation', './CapBankAnalysis/', './CapBankAnalysis/')
+GO
+
+
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
 
