@@ -259,7 +259,11 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.FolderPath', 'TrR[0-9]*\.dat', 'TrR[0-9]*\.dat')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.FileLocation', './CapBankAnalysis/', './CapBankAnalysis/')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.ResultFileLocation', './CapBankAnalysis/Results/', './CapBankAnalysis/Results/')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.ParameterFileLocation', './CapBankAnalysis/Parameter/', './CapBankAnalysis/Parameter/')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.DataFileLocation', './CapBankAnalysis/Data/', './CapBankAnalysis/Data/')
 GO
 
 

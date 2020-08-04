@@ -48,6 +48,8 @@ namespace openXDA.Model
     {
         #region [ Members ]
 
+        private List<CapBankRelay> m_relays;
+
         #endregion
 
         #region [ Properties ]
@@ -93,12 +95,12 @@ namespace openXDA.Model
         public double PosReactanceTol { get; set; }
 
         /// <summary>
-        /// Line 24 (Fuseless) Line 31 (Fused)
+        /// Line 26 (Fuseless) Line 31 (Fused)
         /// </summary>
         public int Nparalell { get; set; }
 
         /// <summary>
-        /// Line 25 (Fuseless) Line 30 (Fused)
+        /// Line 27 (Fuseless) Line 30 (Fused)
         /// </summary>
         public int Nseries { get; set; }
 
@@ -177,9 +179,47 @@ namespace openXDA.Model
         /// </summary>
         public int BlownGroups { get; set; }
 
+        [JsonIgnore]
+        [NonRecordField]
+        public List<CapBankRelay> ConnectedRelays
+        {
+            get
+            {
+                return m_relays ?? (m_relays = QueryRelays());
+            }
+            set
+            {
+                m_relays = value;
+            }
+
+        }
+
         #endregion
 
         #region [ Methods ]
+
+        private List<CapBankRelay> QueryRelays()
+        {
+            List<CapBankRelay> connectedRelays;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                connectedRelays = GetRelays(connection)?
+                    .Select(LazyContext.GetRelay)
+                    .ToList();
+            }
+
+            if ((object)connectedRelays != null)
+            {
+                foreach (CapBankRelay relay in connectedRelays)
+                {
+                    relay.LazyContext = LazyContext;
+                }
+            }
+
+            return connectedRelays;
+        }
+
 
         public static CapBank DetailedCapBank (Asset asset, AdoDataConnection connection)
         {
@@ -193,6 +233,22 @@ namespace openXDA.Model
 
             return capBank;
         }
+
+        public IEnumerable<CapBankRelay> GetRelays(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<CapBankRelay> relayTable = new TableOperations<CapBankRelay>(connection);
+            return relayTable.QueryRecordsWhere(@" ID in (
+                (SELECT ChildID FROM AssetConnection LEFT JOIN Asset ON AssetConnection.ChildID = Asset.ID WHERE Asset.AssetTypeID = (SELECT ID FROM AssetType WHERE Name = 'CapacitorBankRelay') 
+                    AND AssetConnection.ParentID = {0} )
+                UNION 
+                (SELECT ParentID FROM AssetConnection LEFT JOIN Asset ON AssetConnection.ParentID = Asset.ID WHERE Asset.AssetTypeID = (SELECT ID FROM AssetType WHERE Name = 'CapacitorBankRelay')
+                    AND AssetConnection.ChildID = {0} ) )
+           ", ID, ID);
+        }
+
 
         public static CapBank DetailedCapBank(Asset asset)
         {

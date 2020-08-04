@@ -116,12 +116,12 @@
     <Compile Include="DataOperations\GTC\MeterDataQualityOverride.cs" />
     <Compile Include="DataOperations\LightningDataOperation.cs" />
     <Compile Include="DataOperations\PQube\PQubeClassificationOverride.cs" />
-    <Compile Include="DataOperations\CapBankAnalytics.cs" />
     <Compile Include="DataOperations\RelayEnergization.cs" />
     <Compile Include="DataOperations\StatisticOperation.cs" />
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
+    <Compile Include="DataOperations\TVA\EPRICapBankAnalytics.cs" />
     <Compile Include="DataOperations\TVA\StructureQueryOperation.cs" />
     <Compile Include="DataReaders\SELLDPReader.cs" />
     <Compile Include="DataReaders\PQubeTrendingDataCSVReader.cs" />

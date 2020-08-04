@@ -49,6 +49,7 @@ namespace openXDA.Model
         private Dictionary<int, LineSegmentConnections> m_segmentConnections;
         private Dictionary<int, Line> m_lines;
         private Dictionary<int, LineSegment> m_lineSegments;
+        private Dictionary<int, CapBankRelay> m_relays;
 
         #endregion
 
@@ -72,6 +73,7 @@ namespace openXDA.Model
             m_lines = new Dictionary<int, Line>();
             m_lineSegments = new Dictionary<int, LineSegment>();
             m_segmentConnections = new Dictionary<int, LineSegmentConnections>();
+            m_relays = new Dictionary<int, CapBankRelay>();
         }
 
         #endregion
@@ -338,6 +340,24 @@ namespace openXDA.Model
             m_lines.Add(line.ID, line);
             return line;
         }
+
+        public CapBankRelay GetRelay(CapBankRelay relay)
+        {
+            CapBankRelay cachedRelay;
+
+            if ((object)relay == null)
+                return null;
+
+            if (relay.ID == 0)
+                return relay;
+
+            if (m_relays.TryGetValue(relay.ID, out cachedRelay))
+                return cachedRelay;
+
+            m_relays.Add(relay.ID, relay);
+            return relay;
+        }
+
 
         public LineSegment GetLineSegment(LineSegment line)
         {

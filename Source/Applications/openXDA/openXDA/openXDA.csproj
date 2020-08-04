@@ -242,6 +242,7 @@
     <Compile Include="DebugHost.Designer.cs">
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
+    <Compile Include="CapBankAnalyticEngine.cs" />
     <Compile Include="EventEmailEngine.cs" />
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
     <Compile Include="Logging\FileSkippedExceptionFilter.cs" />
