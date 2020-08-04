@@ -593,7 +593,7 @@ namespace openXDA
 
                 foreach (DataRow row in dataTable.Rows)
                 {
-                    result.Add(evtTbl.QueryRecordWhere("ID = {0}", int.Parse(row["ID"].ToString())));
+                    result.Add(evtTbl.QueryRecordWhere("ID = {0}", int.Parse(row["EventID"].ToString())));
                 }
 
                 return result;

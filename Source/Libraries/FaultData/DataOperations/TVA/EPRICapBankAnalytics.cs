@@ -73,7 +73,7 @@ namespace FaultData.DataOperations
             m_triggeredEvents = new List<Event>();
             m_fileGroupID = -1;
             m_processEventCallback = processCallback;
-            m_synchronizedOperation = new LongSynchronizedOperation(ExecuteProcessCallback, HandleException);
+            m_synchronizedOperation = new LongSynchronizedOperation(UpdateTimersAndRunAnalysis, HandleException);
         }
 
         #endregion
