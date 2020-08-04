@@ -73,6 +73,10 @@ namespace openXDA
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
+                bool enabled = connection.ExecuteScalar<bool?>("SELECT Value FROM Settings WHERE Name = 'EPRICapBankAnalytic.Enabled'") ?? false;
+                if (!enabled)
+                    return;
+
                 TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
                 int capBankId = connection.ExecuteScalar<int>("SELECT ID FROM AssetType WHERE Name = 'CapacitorBank'");
 

@@ -265,6 +265,8 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Param
 GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.DataFileLocation', './CapBankAnalysis/Data/', './CapBankAnalysis/Data/')
 GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Enabled', 'False', 'False')
+GO
 
 
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
