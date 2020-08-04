@@ -282,6 +282,7 @@ namespace openXDA
         private int m_meterTaskCount;
 
         private EventEmailEngine m_eventEmailEngine;
+        private CapBankAnalyticEngine m_capBankAnalyticEngine;
 
         private bool m_stopped;
         private bool m_disposed;
@@ -452,6 +453,10 @@ namespace openXDA
             // Setup new email engine to send emails when an event occurs
             if ((object)m_eventEmailEngine == null)
                 m_eventEmailEngine = new EventEmailEngine();
+
+            // Setup new CapBank Analytic engine to Analyze Capacitor Banks when an event occurs
+            if ((object)m_capBankAnalyticEngine == null)
+                m_capBankAnalyticEngine = new CapBankAnalyticEngine();
 
             // Setup new file processor to monitor the watch directories
             if ((object)m_fileProcessor == null)
@@ -1553,6 +1558,9 @@ namespace openXDA
             OnStatusMessage($"Processing file '{filePath}'...");
             ProcessMeterDataSet(state.MeterDataSet);
             OnStatusMessage($"Finished processing file '{filePath}'.");
+
+            // Send data set to CapBank Analytic engine for processing
+            m_capBankAnalyticEngine.Process(state.MeterDataSet);
 
             // Send data set to email engine for processing
             m_eventEmailEngine.Process(state.MeterDataSet);
