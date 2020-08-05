@@ -40,6 +40,7 @@ using openXDA.Model;
 using FaultData.DataOperations;
 using System.IO;
 using FaultData.DataAnalysis;
+using GSF.Collections;
 
 namespace openXDA
 {
@@ -47,17 +48,29 @@ namespace openXDA
     {
         #region [ Members ]
 
-        private List<EPRICapBankAnalytics> m_analytics;
-        private Dictionary<int, List<int>> m_delayedEvents;
-
         #endregion
 
         #region [ Constructors ]
 
         public CapBankAnalyticEngine()
         {
-            m_analytics = new List<EPRICapBankAnalytics>();
-            m_delayedEvents = new Dictionary<int, List<int>>();
+            lock (s_eventFileLock)
+            {
+                using(AdoDataConnection connection = new AdoDataConnection("SystemSettings"))
+                using (FileBackedDictionary<int, List<int>> dictionary = new FileBackedDictionary<int, List<int>>("./CapBankAnalytic.bin"))
+                {
+                    foreach (int fileGroupID in dictionary.Keys)
+                    {
+                        EPRICapBankAnalytics analytic = new EPRICapBankAnalytics(RunAnalytic);
+                        TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
+                        List<Event> evts = dictionary[fileGroupID].Select(item => evtTbl.QueryRecordWhere("Id = {0}", item)).ToList();
+                        analytic.Process(evts, fileGroupID);
+                        analytic.StartTimer();
+                    }
+                }
+                    
+            }
+
         }
 
         #endregion
@@ -73,7 +86,7 @@ namespace openXDA
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                bool enabled = connection.ExecuteScalar<bool?>("SELECT Value FROM Settings WHERE Name = 'EPRICapBankAnalytic.Enabled'") ?? false;
+                bool enabled = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.Enabled'") ?? false;
                 if (!enabled)
                     return;
 
@@ -91,21 +104,25 @@ namespace openXDA
                     EPRICapBankAnalytics analytic = new EPRICapBankAnalytics(RunAnalytic);
                     analytic.Process(group.ToList(), meterDataSet.FileGroup.ID);
                     analytic.StartTimer();
-                    m_analytics.Add(analytic);
-                    m_delayedEvents.Add(meterDataSet.FileGroup.ID, group.Select(item => item.ID).ToList());
+                    lock(s_eventFileLock)
+                    {
+                        using (FileBackedDictionary<int, List<int>> dictionary = new FileBackedDictionary<int, List<int>>("./CapBankAnalytic.bin"))
+                            dictionary.Add(meterDataSet.FileGroup.ID, group.Select(item => item.ID).ToList());
+                    }
+                    
                 }
             }
         }
 
-        public void Restore()
-        {
-            // This will Get the Events from the Filebacked List
-        }
-
         private void RunAnalytic(List <Event> events, int fileGroupID)
         {
+
             // First step is to remove entry from Dictionary to avoid reprocessing if anything fails
-            m_delayedEvents.Remove(fileGroupID);
+            lock (s_eventFileLock)
+            {
+                using (FileBackedDictionary<int, List<int>> dictionary = new FileBackedDictionary<int, List<int>>("./CapBankAnalytic.bin"))
+                    dictionary.Remove(fileGroupID);
+            }
 
             // Then Run the EPRI Analytic
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -666,6 +683,8 @@ namespace openXDA
                 return parameter;
             }
         }
+
+        private static readonly object s_eventFileLock = new object();
         #endregion
     }
 }

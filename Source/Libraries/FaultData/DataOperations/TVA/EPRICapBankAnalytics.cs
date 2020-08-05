@@ -177,7 +177,7 @@ namespace FaultData.DataOperations
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(EPRICapBankAnalytics));
 
-        private static readonly int Delay = 10000;
+        private static readonly int Delay = 30000;
         #endregion
     }
 
