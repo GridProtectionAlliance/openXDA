@@ -399,7 +399,7 @@ namespace openXDA
                 lines.Add("Specify relay data inputs and requirements");
                 lines.Add($"33 Offset time between cap bank and relay time stamps; dToffset = 1");
                 lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV}");
-                lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {relays.First().OnVoltageThreshhold}");
+                lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {capBank.OnVoltageThreshhold}");
                 lines.Add("");
                 lines.Add("Specify relay capacitor configuration for fuseless configurations");
                 lines.Add($"37 Bus VT ratio; busVT = {capBank.VTratioBus}");
@@ -409,9 +409,9 @@ namespace openXDA
                 lines.Add($"41 rated voltage of the low - voltage capacitor; LVcapUnitRatedV = {capBank.LVKV}");
                 lines.Add($"42 the reactance tolerance of LV cap., negative tolerance in percent; nLVcapTolpct = {capBank.LVNegReactanceTol}");
                 lines.Add($"43 the reactance tolerance of LV cap., positive tolerance in percent; pLVcapTolpct = {capBank.LVPosReactanceTol}");
-                lines.Add($"44 relay PT ratio, high to low; relayPTR = {relays.First().RelayPTRatio}");
-                lines.Add($"45 the output resistor of the voltage divider circuit; Rv = {relays.First().Rv}");
-                lines.Add($"46 the input resistor of the voltage divider circuit; Rh = {relays.First().Rh}");
+                lines.Add($"44 relay PT ratio, high to low; relayPTR = {capBank.RelayPTRatio}");
+                lines.Add($"45 the output resistor of the voltage divider circuit; Rv = {capBank.Rv}");
+                lines.Add($"46 the input resistor of the voltage divider circuit; Rh = {capBank.Rh}");
                 lines.Add("");
                 lines.Add("Specify relay capacitor configuration for fused configurations");
                 lines.Add($"48 upper group voltage transformer ratio; UVTR = {capBank.UpperXFRRatio}");
@@ -422,7 +422,7 @@ namespace openXDA
                 lines.Add("Set pCapDesign to 1 for compensated design");
                 lines.Add("Set pCapDesign to 2 for uncompensated design");
                 lines.Add("Set pCapDesign to 3 for fused design");
-                lines.Add($"55 pCapDesign = {(relays.First().Compensated ? "1" : (capBank.Fused ? "3" : "2"))}");
+                lines.Add($"55 pCapDesign = {(capBank.Compensated ? "1" : (capBank.Fused ? "3" : "2"))}");
                 lines.Add("");
                 lines.Add("Specify the assumed initial numbers of shorted or blown fuses in cap banks.");
                 lines.Add("They are used to set thresholds for declaring banks having shorted units or blown fuses");

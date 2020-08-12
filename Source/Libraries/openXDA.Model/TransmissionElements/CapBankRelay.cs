@@ -48,30 +48,7 @@ namespace openXDA.Model
 
         #region [ Properties ]
 
-        /// <summary>
-        /// Line 35
-        /// </summary>
-        public double OnVoltageThreshhold;
-
-        /// <summary>
-        /// Line 44 => 800 250
-        /// </summary>
-        public string RelayPTRatio { get; set; }
-
-        /// <summary>
-        /// Line 45
-        /// </summary>
-        public double Rv { get; set; }
-
-        /// <summary>
-        /// Line 46
-        /// </summary>
-        public double Rh { get; set; }
-
-        /// <summary>
-        /// Compensated => used for Line 55
-        /// </summary>
-        public bool Compensated { get; set; }
+       
         #endregion
 
         #region [ Methods ]
