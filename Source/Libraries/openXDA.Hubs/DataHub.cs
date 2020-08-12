@@ -3633,6 +3633,94 @@ namespace openXDA.Hubs
         }
         #endregion
 
+        #region [CapBankRelay Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBankRelay), RecordOperation.QueryRecordCount)]
+        public int QueryCapBankRelayCount(int capBankId, string filterString)
+        {
+            
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<CapBankRelay> tableOperations = new TableOperations<CapBankRelay>(connection);
+                RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (capBankId > 0)
+                    restriction = restriction + new RecordRestriction(@" ID in 
+                        (SELECT ParentID FROM AssetRelationShip WHERE ChildID = {0} AND AssetRelationshipTypeID = (SELECT ID FROM [AssetRelationshipType] WHERE Name = 'Relay-CapBank'))
+                        OR ID in 
+                        (SELECT ChildID FROM AssetRelationShip WHERE ParentID = {0} AND AssetRelationshipTypeID = (SELECT ID FROM [AssetRelationshipType] WHERE Name = 'Relay-CapBank'))", capBankId);
+
+
+                return tableOperations.QueryRecordCount(restriction);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBankRelay), RecordOperation.QueryRecords)]
+        public IEnumerable<CapBankRelay> QueryCapBankRelay(int capBankId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                TableOperations<CapBankRelay> tableOperations = new TableOperations<CapBankRelay>(connection);
+                RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
+
+                if (capBankId > 0)
+                    restriction = restriction + new RecordRestriction(@" ID in 
+                        (SELECT ParentID FROM AssetRelationShip WHERE ChildID = {0} AND AssetRelationshipTypeID = (SELECT ID FROM [AssetRelationshipType] WHERE Name = 'Relay-CapBank'))
+                        OR ID in 
+                        (SELECT ChildID FROM AssetRelationShip WHERE ParentID = {0} AND AssetRelationshipTypeID = (SELECT ID FROM [AssetRelationshipType] WHERE Name = 'Relay-CapBank'))", capBankId);
+
+                return new TableOperations<CapBankRelay>(connection).QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBankRelay), RecordOperation.CreateNewRecord)]
+        public CapBankRelay NewCapBankRelay()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<CapBankRelay>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBankRelay), RecordOperation.AddNewRecord)]
+        public void AddNewCapBankRelay(CapBankRelay record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<CapBankRelay>(connection).AddNewRecord(record);
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+                }
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(CapBankRelay), RecordOperation.UpdateRecord)]
+        public void UpdateCapBankRelay(CapBankRelay record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<CapBankRelay>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(CapBankRelay), RecordOperation.DeleteRecord)]
+        public void DeleteCapBankRelay(int id)
+        {
+            CascadeDelete("Asset", $"ID = {id}");
+        }
+        #endregion
+
+
         #region [Transformer Overview]
 
         [AuthorizeHubRole("Administrator")]

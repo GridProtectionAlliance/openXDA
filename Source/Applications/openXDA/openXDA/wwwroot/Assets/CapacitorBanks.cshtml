@@ -1,7 +1,7 @@
 ﻿@*******************************************************************************************************
     //  CapacitorBanks.cshtml - Gbtc
     //
-    //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+    //  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
     //
     //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
     //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -18,6 +18,8 @@
     //  ----------------------------------------------------------------------------------------------------
     //  12/20/2019 - C. Lackner
     //       Generated original version of source code.
+    //  08/12/2020 - C. Lackner
+    //       Updated for EPRI Cap Bank Analytics.
     //
     //*****************************************************************************************************@
 @using System.Collections.Generic
@@ -50,6 +52,7 @@
 new[] { "AssetKey", "Key", "text-Left" },
 new[] { "AssetName", "Asset Name", "text-left" },
 new[] { "VoltageKV", "Voltage", "text-left"},
+new[] { null, "Connected-Relays", "text-left"},
 new[] { null, "Asset Connections", "text-left"},
 new[] { null, "Meters", "text-left"},
 };
@@ -76,9 +79,10 @@ new[] { null, "Meters", "text-left"},
 {
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: AssetName"></td>
-    <td width="45%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/AssetConnections.cshtml?AssetID=' + ID  }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Connections&nbsp;&nbsp;<span class="badge" data-bind="text: getConnectionCount(ID, $($element)), attr: {id: 'connectionCount' + ID}">0</span></a></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?AssetID=' + ID + '&MeterID=-1' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
+    <td width="15%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/CapacitorBankRelays.cshtml?capBankID=' + ID  }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Relays&nbsp;&nbsp;<span class="badge" data-bind="text: getRelayCount(ID, $($element)), attr: {id: 'relayCount' + ID}">0</span></a></td>
+    <td width="10%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/AssetConnections.cshtml?AssetID=' + ID  }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Connections&nbsp;&nbsp;<span class="badge" data-bind="text: getConnectionCount(ID, $($element)), attr: {id: 'connectionCount' + ID}">0</span></a></td>
+    <td width="10%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?AssetID=' + ID + '&MeterID=-1' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -86,13 +90,60 @@ new[] { null, "Meters", "text-left"},
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    <div class="col-md-6">
-        @Raw(dataContext.AddInputField<CapBank>("AssetKey", fieldLabel: "Key"))
-        @Raw(dataContext.AddInputField<CapBank>("AssetName", fieldLabel: "Name"))
-        @Raw(dataContext.AddInputField<CapBank>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
-        @Raw(dataContext.AddTextAreaField<CapBank>("Description"))
-    </div>
-    <div class="col-md-6">
+<div class="col-md-4">
+    @Raw(dataContext.AddInputField<CapBank>("AssetKey", fieldLabel: "Key"))
+    @Raw(dataContext.AddInputField<CapBank>("AssetName", fieldLabel: "Name"))
+    @Raw(dataContext.AddInputField<CapBank>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
+
+    @Raw(dataContext.AddCheckBoxField<CapBank>("CktSwitcher", fieldLabel: "Pre-Insertion Switcher"))
+    @Raw(dataContext.AddCheckBoxField<CapBank>("Fused", fieldLabel: "Fused Design"))
+    @Raw(dataContext.AddCheckBoxField<CapBank>("Compensated", fieldLabel: "Compensated Design"))
+
+    @Raw(dataContext.AddTextAreaField<CapBank>("Description"))
+</div>
+<div class="col-md-4">
+    @Raw(dataContext.AddInputField<CapBank>("NumberOfBanks", inputType: "number", fieldLabel: "Number of Banks"))
+    @Raw(dataContext.AddInputField<CapBank>("CapacitancePerBank", inputType: "number", fieldLabel: "Capacitance per Bank (kVAR)"))
+
+
+    @Raw(dataContext.AddInputField<CapBank>("MaxKV", inputType: "number", fieldLabel: "Maximum Operating Voltage (kV)"))
+    @Raw(dataContext.AddInputField<CapBank>("UnitKV", inputType: "number", fieldLabel: "Unit rated Voltage (kV)"))
+    @Raw(dataContext.AddInputField<CapBank>("UnitKVAr", inputType: "number", fieldLabel: "Unit rated kVA"))
+
+    @Raw(dataContext.AddInputField<CapBank>("NegReactanceTol", inputType: "number", fieldLabel: "neg. reactance tolerance (%)"))
+    @Raw(dataContext.AddInputField<CapBank>("PosReactanceTol", inputType: "number", fieldLabel: "pos. reactance tolerance (%)"))
+
+    @Raw(dataContext.AddInputField<CapBank>("Nparalell", inputType: "number", fieldLabel: "Num. of parallel units"))
+    @Raw(dataContext.AddInputField<CapBank>("Nseries", inputType: "number", fieldLabel: "Num. of serial units"))
+    @Raw(dataContext.AddInputField<CapBank>("NSeriesGroup", inputType: "number", fieldLabel: "Num. of serial groups"))
+    @Raw(dataContext.AddInputField<CapBank>("NParalellGroup", inputType: "number", fieldLabel: "Num. of parallel groups"))
+
+    @Raw(dataContext.AddInputField<CapBank>("UpperXFRRatio", inputType: "number", fieldLabel: "Upper Group VT ratio"))
+    @Raw(dataContext.AddInputField<CapBank>("LowerXFRRatio", inputType: "number", fieldLabel: "Lower Group VT ratio"))
+    @Raw(dataContext.AddInputField<CapBank>("RelayPTRatio", fieldLabel: "Relay PT ratio"))
+
+</div>
+    <div class="col-md-4">
+       
+
+        @Raw(dataContext.AddInputField<CapBank>("VTratioBus", inputType: "number", fieldLabel: "Bus VT ratio"))
+        @Raw(dataContext.AddInputField<CapBank>("NumberLVCaps", inputType: "number", fieldLabel: "Num. of relay Capacitors"))
+        @Raw(dataContext.AddInputField<CapBank>("NumberLVUnits", inputType: "number", fieldLabel: "Num. of relay elements"))
+        @Raw(dataContext.AddInputField<CapBank>("LVKVAr", inputType: "number", fieldLabel: "Low V cap. size (kVAR)"))
+        @Raw(dataContext.AddInputField<CapBank>("LVKV", inputType: "number", fieldLabel: "Rated Voltage LV Cap. (kV)"))
+        @Raw(dataContext.AddInputField<CapBank>("LVNegReactanceTol", inputType: "number", fieldLabel: "neg. reactance tolerance LV (%)"))
+        @Raw(dataContext.AddInputField<CapBank>("LVPosReactanceTol", inputType: "number", fieldLabel: "pos. reactance tolerance LV (%)"))
+
+       
+
+        @Raw(dataContext.AddInputField<CapBank>("Rv", inputType: "number", fieldLabel: "Rout Voltage divider Ckt (Ohm)"))
+        @Raw(dataContext.AddInputField<CapBank>("Rh", inputType: "number", fieldLabel: "Rin Voltage divider Ckt (Ohm)"))
+
+        @Raw(dataContext.AddInputField<CapBank>("Nshorted", inputType: "number", fieldLabel: "Initial Num. shorted Cap. Elements"))
+        @Raw(dataContext.AddInputField<CapBank>("BlownFuses", inputType: "number", fieldLabel: "Inital Num blown fuse per group"))
+        @Raw(dataContext.AddInputField<CapBank>("BlownGroups", inputType: "number", fieldLabel: "Inital Num of groups w blown fuse"))
+
+        @Raw(dataContext.AddInputField<CapBank>("OnVoltageThreshhold", inputType: "number", fieldLabel: "Relay ON Voltage (p.u.)"))
     </div>
 
 }
@@ -131,6 +182,16 @@ new[] { null, "Meters", "text-left"},
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryMeterAssetCount(sourceID, -1, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+
+        function getRelayCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryCapBankRelayCount(sourceID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }
