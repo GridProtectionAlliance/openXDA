@@ -1,0 +1,87 @@
+From 24a7e9ff04416b7f9764acc6208f945893f3463f Mon Sep 17 00:00:00 2001
+From: StephenCWills <swills@gridprotectionalliance.org>
+Date: Thu, 13 Aug 2020 14:04:10 -0400
+Subject: [PATCH] Added code to handle Title and Subject tags in
+ ContainerRecord.
+
+---
+ .../Libraries/GSF.PQDIF/Logical/ContainerRecord.cs | 56 ++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/Source/Libraries/GSF.PQDIF/Logical/ContainerRecord.cs b/Source/Libraries/GSF.PQDIF/Logical/ContainerRecord.cs
+index 5d3b448a99..53996ba4a4 100755
+--- a/Source/Libraries/GSF.PQDIF/Logical/ContainerRecord.cs
++++ b/Source/Libraries/GSF.PQDIF/Logical/ContainerRecord.cs
+@@ -193,6 +193,52 @@ public DateTime Creation
+         }
+ 
+         /// <summary>
++        /// Gets the title applied to the file.
++        /// </summary>
++        public string Title
++        {
++            get
++            {
++                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
++                VectorElement titleElement = collectionElement.GetVectorByTag(TitleTag);
++
++                if ((object)titleElement == null)
++                    return null;
++
++                return Encoding.ASCII.GetString(titleElement.GetValues()).Trim((char)0);
++            }
++            set
++            {
++                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
++                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
++                collectionElement.AddOrUpdateVector(TitleTag, PhysicalType.Char1, bytes);
++            }
++        }
++
++        /// <summary>
++        /// Gets the subject applied to the file.
++        /// </summary>
++        public string Subject
++        {
++            get
++            {
++                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
++                VectorElement subjectElement = collectionElement.GetVectorByTag(SubjectTag);
++
++                if ((object)subjectElement == null)
++                    return null;
++
++                return Encoding.ASCII.GetString(subjectElement.GetValues()).Trim((char)0);
++            }
++            set
++            {
++                CollectionElement collectionElement = m_physicalRecord.Body.Collection;
++                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
++                collectionElement.AddOrUpdateVector(SubjectTag, PhysicalType.Char1, bytes);
++            }
++        }
++
++        /// <summary>
+         /// Gets the notes stored in the file.
+         /// </summary>
+         public string Notes
+@@ -302,6 +348,16 @@ public void RemoveElement(Guid tag)
+         /// <summary>
+         /// Tag that identifies the notes stored in the PQDIF file.
+         /// </summary>
++        public static readonly Guid TitleTag = new Guid("8973860d-f1c3-11cf-9d89-0080c72e70a3");
++
++        /// <summary>
++        /// Tag that identifies the notes stored in the PQDIF file.
++        /// </summary>
++        public static readonly Guid SubjectTag = new Guid("8973860e-f1c3-11cf-9d89-0080c72e70a3");
++
++        /// <summary>
++        /// Tag that identifies the notes stored in the PQDIF file.
++        /// </summary>
+         public static readonly Guid NotesTag = new Guid("89738617-f1c3-11cf-9d89-0080c72e70a3");
+ 
+         /// <summary>
+-- 
+2.11.0
+
