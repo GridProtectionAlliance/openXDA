@@ -3983,6 +3983,27 @@ GO
 
 ----- VIEWS -----
 
+CREATE VIEW CBReportEventTable AS
+SELECT
+    CBAnalyticResult.ID AS ID,
+    Event.AssetID AS CapBankID,
+    Event.ID AS EventID,
+    Phase.Name AS Phase,
+    CBStatus.Description AS Status,
+    CBAnalyticResult.DataErrorID AS DataErrorID,
+    CBOperation.Description AS Operation,
+    CBAnalyticResult.DeltaQ AS DeltaQ,
+    CBAnalyticResult.MVAsc AS MVAsc,
+    CBAnalyticResult.IsRes AS IsRes,
+    CBAnalyticResult.Time AS Time
+FROM
+    CBAnalyticResult LEFT JOIN 
+    Event ON CBAnalyticResult.EventID = Event.ID LEFT JOIN
+    Phase ON CBAnalyticResult.PhaseID = Phase.ID LEFT JOIN
+    CBStatus ON CBAnalyticResult.CBStatusID = CBStatus.ID LEFT JOIN
+    CBOperation ON CBAnalyticResult.CBOperationID = CBOperation.ID
+GO
+
 CREATE VIEW AssetGroupView AS
 SELECT
 	AssetGroup.ID,
