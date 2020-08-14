@@ -124,6 +124,7 @@ namespace openXDA
                     dictionary.Remove(fileGroupID);
             }
 
+            
             // Then Run the EPRI Analytic
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
@@ -140,26 +141,34 @@ namespace openXDA
                 capBank.ConnectionFactory = () => { return new AdoDataConnection("systemSettings"); };
                 relays = capBank.ConnectedRelays;
 
-                // Create TxT Input File
-                GenerateParameterFile(events.First());
-
-                foreach (Event evt in events)
+                lock (s_folderLock)
                 {
-                    GenerateCapBankDataFile(evt);
+                    
+                    // Create TxT Input File
+                    GenerateParameterFile(events.First());
 
-                    List<Event> relayEvents = GetRelayEvents(evt.StartTime, evt.EndTime, relays);
-                    relayEvents.ForEach(relayEvt => GenerateRelayDataFile(relayEvt));
+                    foreach (Event evt in events)
+                    {
+                        string fname = GenerateCapBankDataFile(evt);
+                        if (fname == "")
+                            continue;
+
+                        eventMapping.Add(fname, evt);
+
+                        List<Event> relayEvents = GetRelayEvents(evt.StartTime, evt.EndTime, relays);
+                        relayEvents.ForEach(relayEvt => GenerateRelayDataFile(relayEvt));
+                    }
+
+                    if (eventMapping.Count == 0)
+                        return;
+
+                    // Run ML code
+
+                    // Read Output Files
+                    Log.Info("Processing CapBank Analytic Results...");
+                    ParseOutputs(eventMapping);
+
                 }
-
-                if (eventMapping.Count == 0)
-                    return;
-                // Run ML code
-
-                // Read Output Files
-                Log.Info("Processing CapBank Analytic Results...");
-                ParseOutputs(eventMapping);
-
-
             }
 
         }
@@ -352,8 +361,27 @@ namespace openXDA
                 datafolder = Path.GetDirectoryName(datafolder) ?? string.Empty;
                 resultFolder = Path.GetDirectoryName(resultFolder) ?? string.Empty;
 
+                Directory.CreateDirectory(datafolder);
+                Directory.CreateDirectory(resultFolder);
+                Directory.CreateDirectory(dstFolder);
+
+                foreach (FileInfo file in new DirectoryInfo(datafolder).EnumerateFiles())
+                {
+                    file.Delete();
+                }
+                foreach (FileInfo file in new DirectoryInfo(resultFolder).EnumerateFiles())
+                {
+                    file.Delete();
+                }
+                foreach (FileInfo file in new DirectoryInfo(dstFolder).EnumerateFiles())
+                {
+                    file.Delete();
+                }
+
                 string dstFile = capBank.AssetKey + ".txt";
                 List<string> lines = new List<string>();
+
+
 
                 lines.Add("Please enter capacitor bank data; Do not change the variable names; Change the values only");
                 lines.Add("The equal sign character is used as a delimiter, do not change or use it as part of text");
@@ -445,7 +473,7 @@ namespace openXDA
                 lines.Add("Evaluation of pre-insertion takes a longer time.  Set evalPreIns to 1 to evaluate; 0 to skip");
                 lines.Add($"{n + 66} evalPreIns = 1");
 
-                Directory.CreateDirectory(dstFolder);
+                
                 // Open the file and write in each line
                 using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(dstFolder + "\\" + dstFile)))
                 {
@@ -458,7 +486,7 @@ namespace openXDA
 
         }
 
-        private void GenerateCapBankDataFile(Event evt)
+        private string GenerateCapBankDataFile(Event evt)
         {
             CapBank capBank;
             VIDataGroup data = QueryDataGroup(evt.ID, evt.MeterID);
@@ -518,12 +546,11 @@ namespace openXDA
                 }
 
                 if (header == "Time (s),")
-                    return;
+                    return "";
 
                 lines.Add(header);
                 lines.AddRange(ToCsV(series));
 
-                Directory.CreateDirectory(datafolder);
                 // Open the file and write in each line
                 using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(datafolder + "\\" + dstFile)))
                 {
@@ -532,6 +559,8 @@ namespace openXDA
                         fileWriter.WriteLine(lines[i]);
                     }
                 }
+
+                return dstFile;
             }
 
         }
@@ -579,7 +608,6 @@ namespace openXDA
                 lines.Add(header);
                 lines.AddRange(ToCsV(series));
 
-                Directory.CreateDirectory(datafolder);
                 // Open the file and write in each line
                 using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(datafolder + "\\" + dstFile)))
                 {
@@ -685,6 +713,8 @@ namespace openXDA
         }
 
         private static readonly object s_eventFileLock = new object();
+
+        private static readonly object s_folderLock = new object();
         #endregion
     }
 }
