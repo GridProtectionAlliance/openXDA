@@ -34,18 +34,21 @@ namespace FaultData.DataReaders.PQube
         public static readonly Guid PSL = Guid.Parse("4e354a9b-2ad0-463f-9c08-52a8ff9d5149");
         public static readonly Guid PQube = Guid.Parse("06afbbc3-35a9-4840-96f9-3b64381bde51");
 
-        public static List<string> GetTriggers(List<ObservationRecord> observationRecords)
+        public static List<string> GetTriggers(ContainerRecord containerRecord, List<ObservationRecord> observationRecords)
         {
             return observationRecords
                 .Where(observationRecord => observationRecord.DataSource.VendorID == PSL)
                 .Where(observationRecord => observationRecord.DataSource.EquipmentID == PQube)
-                .Select(GetTrigger)
+                .Select(observationRecord => GetTrigger(containerRecord, observationRecord))
                 .Distinct()
                 .ToList();
         }
 
-        private static string GetTrigger(ObservationRecord observationRecord)
+        private static string GetTrigger(ContainerRecord containerRecord, ObservationRecord observationRecord)
         {
+            if (containerRecord.Subject.StartsWith("EVENT:", StringComparison.OrdinalIgnoreCase))
+                return containerRecord.Subject.Substring(7);
+
             string observationName = observationRecord.Name;
             string pattern = "^[^a-zA-Z]*";
             return Regex.Replace(observationName, pattern, "").Replace('_', ' ');

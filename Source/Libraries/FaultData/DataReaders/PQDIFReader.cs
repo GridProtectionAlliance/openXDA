@@ -284,7 +284,7 @@ namespace FaultData.DataReaders
             m_meterDataSet.Meter = meter;
 
             // Parse triggers from PQube data
-            m_meterDataSet.Triggers = PQubeReader.GetTriggers(observationRecords);
+            m_meterDataSet.Triggers = PQubeReader.GetTriggers(m_parser.ContainerRecord, observationRecords);
         }
 
         public void Dispose()
