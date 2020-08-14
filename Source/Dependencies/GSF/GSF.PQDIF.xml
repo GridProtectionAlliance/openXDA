@@ -2564,12 +2564,12 @@
         </member>
         <member name="F:GSF.PQDIF.Logical.ContainerRecord.TitleTag">
             <summary>
-            Tag that identifies the notes stored in the PQDIF file.
+            Tag that identifies the title applied to the PQDIF file.
             </summary>
         </member>
         <member name="F:GSF.PQDIF.Logical.ContainerRecord.SubjectTag">
             <summary>
-            Tag that identifies the notes stored in the PQDIF file.
+            Tag that identifies the subject applied to the PQDIF file.
             </summary>
         </member>
         <member name="F:GSF.PQDIF.Logical.ContainerRecord.NotesTag">
