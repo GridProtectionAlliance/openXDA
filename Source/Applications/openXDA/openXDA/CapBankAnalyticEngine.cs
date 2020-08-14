@@ -232,7 +232,7 @@ namespace openXDA
             string fileName = "";
 
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSetting"))
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
 
                 foreach (string line in lines.Skip(2))
@@ -255,61 +255,62 @@ namespace openXDA
                     else
                         row.PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'None'");
 
-                    row.DataErrorID = Convert.ToInt32(fields[2].Trim());
-                    if (Convert.ToInt32(fields[3].Trim()) == 1)
+                    row.DataErrorID = ConvertToInt(fields[2]);
+                    if (ConvertToInt(fields[3]) == 1)
                     {
                         Log.Warn("No Relay Data Found");
                     }
 
-                    row.CBStatusID = Convert.ToInt32(fields[4].Trim());
-                    row.CBOperationID = Convert.ToInt32(fields[5].Trim());
-                    if (Convert.ToInt32(fields[6].Trim()) < 1 && Convert.ToInt32(fields[7].Trim()) < 1)
+                    row.CBStatusID = ConvertToInt(fields[4]);
+                    row.CBOperationID = ConvertToInt(fields[5]);
+                    if (ConvertToInt(fields[6]) < 1 && ConvertToInt(fields[7]) < 1)
                     {
                         Log.Warn("Capacitor Bank Analysis not completed");
                         continue;
                     }
-                    row.EnergizedBanks = Convert.ToInt32(fields[6].Trim());
-                    row.DeEnergizedBanks = Convert.ToInt32(fields[7].Trim());
+                    row.EnergizedBanks = ConvertToInt(fields[6]);
+                    row.DeEnergizedBanks = ConvertToInt(fields[7]);
 
-                    row.InServiceBank = Convert.ToInt32(fields[8].Trim());
-                    row.DeltaQ = Convert.ToDouble(fields[9].Trim());
-                    row.Ipre = Convert.ToDouble(fields[10].Trim());
-                    row.Ipost = Convert.ToDouble(fields[11].Trim());
-                    row.Vpre = Convert.ToDouble(fields[13].Trim());
-                    row.Vpost = Convert.ToDouble(fields[14].Trim());
-                    row.MVAsc = Convert.ToDouble(fields[16].Trim());
+                    row.InServiceBank = ConvertToInt(fields[8]);
+                    row.DeltaQ = ConvertToDouble(fields[9]);
+                    row.Ipre = ConvertToDouble(fields[10]);
+                    row.Ipost = ConvertToDouble(fields[11]);
+                    row.Vpre = ConvertToDouble(fields[13]);
+                    row.Vpost = ConvertToDouble(fields[14]);
+                    row.MVAsc = ConvertToDouble(fields[16]);
 
-                    row.IsRes = Convert.ToInt32(fields[17].Trim()) == 1;
-                    row.ResFreq = Convert.ToInt32(fields[18].Trim());
+                    row.IsRes = ConvertToInt(fields[17]) == 1;
+                    row.ResFreq = ConvertToInt(fields[18]);
 
-                    row.THDpre = Convert.ToDouble(fields[19].Trim());
-                    row.THDpost = Convert.ToDouble(fields[20].Trim());
-                    row.THDVpre = Convert.ToDouble(fields[22].Trim());
-                    row.THDVpost = Convert.ToDouble(fields[23].Trim());
+                    row.THDpre = ConvertToDouble(fields[19]);
+                    row.THDpost = ConvertToDouble(fields[20]);
+                    row.THDVpre = ConvertToDouble(fields[22]);
+                    row.THDVpost = ConvertToDouble(fields[23]);
 
-                    row.StepPre = Convert.ToInt32(fields[25].Trim());
-                    row.StepPost = Convert.ToInt32(fields[26].Trim());
-                    row.SwitchingFreq = Convert.ToDouble(fields[27].Trim());
-                    row.Vpeak = Convert.ToDouble(fields[28].Trim());
-                    row.Xpre = Convert.ToDouble(fields[29].Trim());
-                    row.Xpost = Convert.ToDouble(fields[30].Trim());
+                    row.StepPre = ConvertToInt(fields[25]);
+                    row.StepPost = ConvertToInt(fields[26]);
+                    row.SwitchingFreq = ConvertToDouble(fields[27]);
+                    row.Vpeak = ConvertToDouble(fields[28]);
+                    row.Xpre = ConvertToDouble(fields[29]);
+                    row.Xpost = ConvertToDouble(fields[30]);
 
-                    int year = Convert.ToInt32(fields[31].Trim());
-                    int month = Convert.ToInt32(fields[32].Trim());
-                    int day = Convert.ToInt32(fields[33].Trim());
+                    int year = ConvertToInt(fields[31])?? 2020;
+                    int month = ConvertToInt(fields[32]) ?? 1;
+                    int day = ConvertToInt(fields[33]) ?? 1;
 
-                    int hour = Convert.ToInt32(fields[34].Trim());
-                    int minute = Convert.ToInt32(fields[35].Trim());
-                    int second = Convert.ToInt32(fields[36].Trim());
+                    int hour = ConvertToInt(fields[34]) ?? 0;
+                    int minute = ConvertToInt(fields[35]) ?? 0;
+                    int second = ConvertToInt(fields[36]) ?? 0;
 
                     row.Time = new DateTime(year, month, day, hour, minute, second);
-                    row.Toffset = Convert.ToDouble(fields[37].Trim());
+                    row.Toffset = ConvertToDouble(fields[37]);
 
                     Event evt = null;
                     if (eventMapping.TryGetValue(fileName, out evt))
                     {
                         row.EventID = evt.ID;
                         new TableOperations<CBAnalyticResult>(connection).AddNewRecord(row);
+                        row.ID = connection.ExecuteScalar<int>("SELECT @@Identity");
                         result.Add(row);
                     }
 
@@ -317,6 +318,23 @@ namespace openXDA
             }
 
             return result;
+        }
+
+        private int? ConvertToInt(string value)
+        {
+            double? v = ConvertToDouble(value);
+            if (v == null)
+                return null;
+
+            return (int?)v;
+        }
+
+        private double? ConvertToDouble(string value)
+        {
+            double v = Convert.ToDouble(value);
+            if (double.IsNaN(v))
+                return null;
+            return v;
         }
 
         private void GenerateParameterFile(Event evt)
