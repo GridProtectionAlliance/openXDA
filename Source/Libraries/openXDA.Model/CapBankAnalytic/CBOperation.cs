@@ -32,7 +32,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        [StringLength(200)]
+        [StringLength(500)]
         public string Description { get; set; }
 
     } 

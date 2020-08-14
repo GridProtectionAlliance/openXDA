@@ -3656,13 +3656,13 @@ GO
 
 CREATE TABLE CBOperation (
     ID INT NOT NULL PRIMARY KEY,
-    Description VARCHAR(200) NOT NULL
+    Description VARCHAR(500) NOT NULL
 )
 GO
 
 CREATE TABLE CBStatus (
     ID INT NOT NULL PRIMARY KEY,
-    Description VARCHAR(200) NOT NULL
+    Description VARCHAR(500) NOT NULL
 )
 GO
 
