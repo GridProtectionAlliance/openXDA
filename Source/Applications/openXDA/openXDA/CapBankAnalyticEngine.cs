@@ -309,6 +309,7 @@ namespace openXDA
                     if (eventMapping.TryGetValue(fileName, out evt))
                     {
                         row.EventID = evt.ID;
+                        new TableOperations<CBAnalyticResult>(connection).AddNewRecord(row);
                         result.Add(row);
                     }
 
