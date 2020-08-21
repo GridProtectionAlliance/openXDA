@@ -199,12 +199,12 @@ namespace openXDA
             capBankAnalytics = csvFiles.Where(item => item.EndsWith("_RelayHealth.csv", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             Log.Info($"Processing CapBank and Relay Health Analytic Files");
 
-            List<CBAnalyticResult> results;
-
+           
             if (!string.IsNullOrEmpty(switchingAnalysis))
             {
                 Log.Info($"Processing Capacitor Switching Analytic File");
-                results = ReadSwitchingAnalytic(switchingAnalysis, eventMapping);
+                ReadSwitchingAnalytic(switchingAnalysis, eventMapping);
+                ReadPreInsertionAnalytic(preInsertionAnalytics, eventMapping);
 
             }
             else
@@ -215,7 +215,7 @@ namespace openXDA
 
         }
 
-        private List<CBAnalyticResult> ReadSwitchingAnalytic(string filename, Dictionary<string, Event> eventMapping)
+        private void ReadSwitchingAnalytic(string filename, Dictionary<string, Event> eventMapping)
         {
             List<string> lines = new List<string>();
 
@@ -228,7 +228,7 @@ namespace openXDA
                 }
             }
 
-            List<CBAnalyticResult> result = new List<CBAnalyticResult>();
+            
             string fileName = "";
 
 
@@ -311,13 +311,74 @@ namespace openXDA
                         row.EventID = evt.ID;
                         new TableOperations<CBAnalyticResult>(connection).AddNewRecord(row);
                         row.ID = connection.ExecuteScalar<int>("SELECT @@Identity");
-                        result.Add(row);
                     }
 
                 }
             }
+        }
 
-            return result;
+        private void ReadPreInsertionAnalytic(string filename, Dictionary<string, Event> eventMapping)
+        {
+            List<string> lines = new List<string>();
+
+            // Open the file and read each line
+            using (StreamReader fileReader = new StreamReader(File.OpenRead(filename)))
+            {
+                while (!fileReader.EndOfStream)
+                {
+                    lines.Add(fileReader.ReadLine().Trim());
+                }
+            }
+
+            
+            string fileName = "";
+
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                foreach (string line in lines.Skip(2))
+                {
+                    List<string> fields = line.Split(',').ToList();
+
+                    if (!string.IsNullOrEmpty(fields[0].Trim()))
+                        fileName = fields[0].Trim();
+
+                    string evtLabel = fields[1].Trim();
+
+                    CBSwitchHealthAnalytic row = new CBSwitchHealthAnalytic();
+                    int PhaseID = 0;
+
+                    if (evtLabel.EndsWith("a", StringComparison.OrdinalIgnoreCase))
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'AN'");
+                    else if (evtLabel.EndsWith("b", StringComparison.OrdinalIgnoreCase))
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'BN'");
+                    else if (evtLabel.EndsWith("c", StringComparison.OrdinalIgnoreCase))
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'CN'");
+                    else
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'None'");
+
+                    row.CBSwitchingConditionID = ConvertToInt(fields[3]);
+                    row.R = ConvertToDouble(fields[7]) ?? double.NaN;
+                    row.X = ConvertToDouble(fields[8]) ?? double.NaN;
+                    row.Duration = ConvertToDouble(fields[6]) ?? double.NaN;
+
+                    if (double.IsNaN(row.R) && double.IsNaN(row.X) && double.IsNaN(row.Duration))
+                        continue;
+
+                    Event evt = null;
+                    if (eventMapping.TryGetValue(fileName, out evt))
+                    {
+                        if (new TableOperations<CBAnalyticResult>(connection).QueryRecordCountWhere("PhaseID = {0} AND EventID = {1}", PhaseID, evt.ID) != 1)
+                            continue;
+                        
+                        row.CBResultID = new TableOperations<CBAnalyticResult>(connection).QueryRecordWhere("PhaseID = {0} AND EventID = {1}", PhaseID,evt.ID).ID;
+
+                        new TableOperations<CBSwitchHealthAnalytic>(connection).AddNewRecord(row);
+                    }
+
+                }
+            }
         }
 
         private int? ConvertToInt(string value)
