@@ -48,7 +48,12 @@ namespace openXDA.Model
 
         #region [ Properties ]
 
-       
+
+        /// <summary>
+        /// Line 35
+        /// </summary>
+        public double OnVoltageThreshhold;
+
         #endregion
 
         #region [ Methods ]

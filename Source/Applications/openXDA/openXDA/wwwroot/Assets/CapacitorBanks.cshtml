@@ -95,7 +95,6 @@ new[] { null, "Meters", "text-left"},
     @Raw(dataContext.AddInputField<CapBank>("AssetName", fieldLabel: "Name"))
     @Raw(dataContext.AddInputField<CapBank>("VoltageKV", fieldLabel: "Line-to-Line Nominal Voltage (KV)"))
 
-    @Raw(dataContext.AddCheckBoxField<CapBank>("CktSwitcher", fieldLabel: "Pre-Insertion Switcher"))
     @Raw(dataContext.AddCheckBoxField<CapBank>("Fused", fieldLabel: "Fused Design"))
     @Raw(dataContext.AddCheckBoxField<CapBank>("Compensated", fieldLabel: "Compensated Design"))
 
@@ -104,7 +103,7 @@ new[] { null, "Meters", "text-left"},
 <div class="col-md-4">
     @Raw(dataContext.AddInputField<CapBank>("NumberOfBanks", inputType: "number", fieldLabel: "Number of Banks"))
     @Raw(dataContext.AddInputField<CapBank>("CapacitancePerBank", inputType: "number", fieldLabel: "Capacitance per Bank (kVAR)"))
-
+    @Raw(dataContext.AddInputField<CapBank>("CktSwitcher", fieldLabel: "Pre-Insertion Switcher"))
 
     @Raw(dataContext.AddInputField<CapBank>("MaxKV", inputType: "number", fieldLabel: "Maximum Operating Voltage (kV)"))
     @Raw(dataContext.AddInputField<CapBank>("UnitKV", inputType: "number", fieldLabel: "Unit rated Voltage (kV)"))
@@ -123,28 +122,28 @@ new[] { null, "Meters", "text-left"},
     @Raw(dataContext.AddInputField<CapBank>("RelayPTRatio", fieldLabel: "Relay PT ratio"))
 
 </div>
-    <div class="col-md-4">
-       
+<div class="col-md-4">
 
-        @Raw(dataContext.AddInputField<CapBank>("VTratioBus", inputType: "number", fieldLabel: "Bus VT ratio"))
-        @Raw(dataContext.AddInputField<CapBank>("NumberLVCaps", inputType: "number", fieldLabel: "Num. of relay Capacitors"))
-        @Raw(dataContext.AddInputField<CapBank>("NumberLVUnits", inputType: "number", fieldLabel: "Num. of relay elements"))
-        @Raw(dataContext.AddInputField<CapBank>("LVKVAr", inputType: "number", fieldLabel: "Low V cap. size (kVAR)"))
-        @Raw(dataContext.AddInputField<CapBank>("LVKV", inputType: "number", fieldLabel: "Rated Voltage LV Cap. (kV)"))
-        @Raw(dataContext.AddInputField<CapBank>("LVNegReactanceTol", inputType: "number", fieldLabel: "neg. reactance tolerance LV (%)"))
-        @Raw(dataContext.AddInputField<CapBank>("LVPosReactanceTol", inputType: "number", fieldLabel: "pos. reactance tolerance LV (%)"))
 
-       
+    @Raw(dataContext.AddInputField<CapBank>("VTratioBus", inputType: "number", fieldLabel: "Bus VT ratio"))
+    @Raw(dataContext.AddInputField<CapBank>("NumberLVCaps", inputType: "number", fieldLabel: "Num. of relay Capacitors"))
+    @Raw(dataContext.AddInputField<CapBank>("NumberLVUnits", inputType: "number", fieldLabel: "Num. of relay elements"))
+    @Raw(dataContext.AddInputField<CapBank>("LVKVAr", inputType: "number", fieldLabel: "Low V cap. size (kVAR)"))
+    @Raw(dataContext.AddInputField<CapBank>("LVKV", inputType: "number", fieldLabel: "Rated Voltage LV Cap. (kV)"))
+    @Raw(dataContext.AddInputField<CapBank>("LVNegReactanceTol", inputType: "number", fieldLabel: "neg. reactance tolerance LV (%)"))
+    @Raw(dataContext.AddInputField<CapBank>("LVPosReactanceTol", inputType: "number", fieldLabel: "pos. reactance tolerance LV (%)"))
+    @Raw(dataContext.AddInputField<CapBank>("NLowerGroups", inputType: "number", fieldLabel: "Num. of Groups Below Tap"))
 
-        @Raw(dataContext.AddInputField<CapBank>("Rv", inputType: "number", fieldLabel: "Rout Voltage divider Ckt (Ohm)"))
-        @Raw(dataContext.AddInputField<CapBank>("Rh", inputType: "number", fieldLabel: "Rin Voltage divider Ckt (Ohm)"))
 
-        @Raw(dataContext.AddInputField<CapBank>("Nshorted", inputType: "number", fieldLabel: "Initial Num. shorted Cap. Elements"))
-        @Raw(dataContext.AddInputField<CapBank>("BlownFuses", inputType: "number", fieldLabel: "Inital Num blown fuse per group"))
-        @Raw(dataContext.AddInputField<CapBank>("BlownGroups", inputType: "number", fieldLabel: "Inital Num of groups w blown fuse"))
+    @Raw(dataContext.AddInputField<CapBank>("Rv", inputType: "number", fieldLabel: "Rout Voltage divider Ckt (Ohm)"))
+    @Raw(dataContext.AddInputField<CapBank>("Rh", inputType: "number", fieldLabel: "Rin Voltage divider Ckt (Ohm)"))
 
-        @Raw(dataContext.AddInputField<CapBank>("OnVoltageThreshhold", inputType: "number", fieldLabel: "Relay ON Voltage (p.u.)"))
-    </div>
+    @Raw(dataContext.AddInputField<CapBank>("Nshorted", inputType: "number", fieldLabel: "Initial Num. shorted Cap. Elements"))
+    @Raw(dataContext.AddInputField<CapBank>("BlownFuses", inputType: "number", fieldLabel: "Inital Num blown fuse per group"))
+    @Raw(dataContext.AddInputField<CapBank>("BlownGroups", inputType: "number", fieldLabel: "Inital Num of groups w blown fuse"))
+    @Raw(dataContext.AddInputField<CapBank>("ShortedGroups", inputType: "number", fieldLabel: "Initial Num. shorted Groups"))
+
+</div>
 
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")

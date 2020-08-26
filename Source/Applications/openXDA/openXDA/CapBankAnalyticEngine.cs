@@ -497,7 +497,7 @@ namespace openXDA
                 lines.Add($"17 number of banks; numBanks = {capBank.NumberOfBanks}");
                 lines.Add($"18 nominal bus voltage in kV line-to - line; nominalBuskVLL = {capBank.VoltageKV}");
                 lines.Add($"19 capacitor step size; StepSizeQ3kvar = {capBank.CapacitancePerBank}");
-                lines.Add($"20 type of the circuit switcher(0 for no control, 1 for pre - ins, 2 for sync closing) ; capSwitcherTypeMultBanks = [{string.Join(", ", Enumerable.Repeat((capBank.CktSwitcher ? "1" : "0"), capBank.NumberOfBanks))}]");
+                lines.Add($"20 type of the circuit switcher(0 for no control, 1 for pre - ins, 2 for sync closing) ; capSwitcherTypeMultBanks = [{capBank.CktSwitcher}]");
                 lines.Add($"21 bank max operating voltage in kV; bankMCOV = {capBank.MaxKV}");
                 lines.Add($"22 rated kvar of a capacitor unit; capUnitRatedkvar = {capBank.UnitKVAr}");
                 lines.Add($"23 rated kV of a capacitor unit; capUnitRatedkV = {capBank.UnitKV}");
@@ -513,7 +513,7 @@ namespace openXDA
                 lines.Add("Specify relay data inputs and requirements");
                 lines.Add($"33 Offset time between cap bank and relay time stamps; dToffset = {tOffset}");
                 lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV}");
-                lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {capBank.OnVoltageThreshhold}");
+                lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {relays.First().OnVoltageThreshhold}");
                 lines.Add("");
                 lines.Add("Specify relay capacitor configuration for fuseless configurations");
                 lines.Add($"37 Bus VT ratio; busVT = {capBank.VTratioBus}");
@@ -530,7 +530,7 @@ namespace openXDA
                 lines.Add("Specify relay capacitor configuration for fused configurations");
                 lines.Add($"48 upper group voltage transformer ratio; UVTR = {capBank.UpperXFRRatio}");
                 lines.Add($"49 lower group voltage transformer ratio; LVTR = {capBank.LowerXFRRatio}");
-                lines.Add($"50 number of lower groups below the tap point; nLGbTap = 3");
+                lines.Add($"50 number of lower groups below the tap point; nLGbTap = {capBank.NLowerGroups}");
                 lines.Add("");
                 lines.Add("Specify capacitor protection scheme");
                 lines.Add("Set pCapDesign to 1 for compensated design");
@@ -546,7 +546,7 @@ namespace openXDA
                 lines.Add("For the fused compensated design, specify the following:");
                 lines.Add($"62 the assumed initial number of blown fuses per group; use 1 to catch more; nBFG_init = {capBank.BlownFuses}");
                 lines.Add($"63 the assumed initial number of groups with blown fuses; use 1 to catch more; nGBF_init = {capBank.BlownGroups}");
-                lines.Add($"64 the assumed initial number of groups shorted; use 0.5 to to catch more; NsS_init = {capBank.Nshorted}");
+                lines.Add($"64 the assumed initial number of groups shorted; use 0.5 to to catch more; NsS_init = {capBank.ShortedGroups}");
                 lines.Add("");
                 lines.Add("Specify relay keywords");
                 int n = 1;

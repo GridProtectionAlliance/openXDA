@@ -103,6 +103,7 @@ new[] { null, "Meters", "text-left"},
         @Raw(dataContext.AddTextAreaField<CapBankRelay>("Description"))
     </div>
     <div class="col-md-6">
+        @Raw(dataContext.AddInputField<CapBankRelay>("OnVoltageThreshhold", inputType: "number", fieldLabel: "Relay ON Voltage (p.u.)"))
     </div>
 
 }

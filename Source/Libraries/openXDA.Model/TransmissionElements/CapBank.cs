@@ -67,7 +67,7 @@ namespace openXDA.Model
         /// <summary>
         /// Line 20
         /// </summary>
-        public bool CktSwitcher { get; set; }
+        public string CktSwitcher { get; set; }
 
         /// <summary>
         /// Line 21
@@ -165,7 +165,12 @@ namespace openXDA.Model
         public double LowerXFRRatio { get; set; }
 
         /// <summary>
-        /// Line 60 and 64
+        /// Line 50
+        /// </summary>
+        public int NLowerGroups { get; set; }
+
+        /// <summary>
+        /// Line 60
         /// </summary>
         public double Nshorted { get; set; }
 
@@ -180,9 +185,10 @@ namespace openXDA.Model
         public int BlownGroups { get; set; }
 
         /// <summary>
-        /// Line 35
+        /// Line 64
         /// </summary>
-        public double OnVoltageThreshhold;
+        public int ShortedGroups { get; set; }
+
 
         /// <summary>
         /// Line 44 => 800 250
@@ -198,6 +204,8 @@ namespace openXDA.Model
         /// Line 46
         /// </summary>
         public double Rh { get; set; }
+
+
 
         /// <summary>
         /// Compensated => used for Line 55

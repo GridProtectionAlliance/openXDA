@@ -359,7 +359,7 @@ CREATE TABLE CapacitorBankAttributes
     AssetID INT NOT NULL REFERENCES Asset(ID),
     NumberOfBanks INT NOT NULL,
     CapacitancePerBank INT NOT NULL,
-    CktSwitcher BIT NOT NULL,
+    CktSwitcher VARCHAR(20) NOT NULL,
     MaxKV FLOAT NOT NULL,
     UnitKV FLOAT NOT NULL,
     UnitKVAr FLOAT NOT NULL,
@@ -382,11 +382,12 @@ CREATE TABLE CapacitorBankAttributes
     Nshorted FLOAT NOT NULL,
     BlownFuses INT NOT NULL,
     BlownGroups INT NOT NULL,
-    OnVoltageThreshhold FLOAT NOT NULL,
     RelayPTRatio VARCHAR(50) NOT NULL,
     Rv FLOAT NOT NULL,
     Rh FLOAT NOT NULL,
-    Compensated BIT NOT NULL
+    Compensated BIT NOT NULL,
+    NLowerGroup INT NOT NULL,
+    ShortedGroups INT NOT NULL
 )
 GO
 
@@ -394,6 +395,7 @@ CREATE TABLE CapacitorBankRelayAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
+    OnVoltageThreshhold FLOAT NOT NULL
 )
 GO
 
@@ -677,7 +679,8 @@ CREATE VIEW CapBankRelay AS
 		Description,
 		AssetName,
 		AssetTypeID,
-		Spare
+		Spare,
+        OnVoltageThreshhold
 	FROM Asset JOIN CapacitorBankRelayAttributes ON Asset.ID = CapacitorBankRelayAttributes.AssetID
 GO
 
@@ -694,9 +697,10 @@ BEGIN
 			Spare AS Spare
 	FROM INSERTED
 
-	INSERT INTO CapacitorBankRelayAttributes (AssetID)
+	INSERT INTO CapacitorBankRelayAttributes (AssetID, OnVoltageThreshhold )
 		SELECT 
-			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+            OnVoltageThreshhold AS OnVoltageThreshhold
 	    FROM INSERTED
 
 END
@@ -721,6 +725,15 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 		ON 
 			INSERTED.ID = ASSET.ID;
 	END
+    UPDATE CapBankRelay
+		SET
+			CapBankRelay.OnVoltageThreshhold = INSERTED.OnVoltageThreshhold
+		FROM
+			CapBankRelay 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.ID = CapBankRelay.AssetID;
 END
 GO
 
@@ -760,11 +773,12 @@ CREATE VIEW CapBank AS
         Nshorted,
         BlownFuses,
         BlownGroups,
-        OnVoltageThreshhold,
         RelayPTRatio,
         Rv,
         Rh,
-        Compensated
+        Compensated,
+        NLowerGroups,
+        ShortedGroups
 	FROM Asset JOIN CapacitorBankAttributes ON Asset.ID = CapacitorBankAttributes.AssetID
 GO
 
@@ -783,8 +797,8 @@ BEGIN
 
 	INSERT INTO CapacitorBankAttributes (AssetID, CapacitancePerBank, CktSwitcher, MaxKV, UnitKV, UnitKVAr, NegReactanceTol,
         PosReactanceTol, Nparalell, Nseries, NSeriesGroup, NParalellGroup, Fused, VTratioBus, NumberLVCaps, NumberLVUnits, LVKVAr,
-        LVKV, LVNegReactanceTol, LVPosReactanceTol, UpperXFRRatio, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups, OnVoltageThreshhold,
-        RelayPTRatio, Rv, Rh, Compensated)
+        LVKV, LVNegReactanceTol, LVPosReactanceTol, UpperXFRRatio, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups,
+        RelayPTRatio, Rv, Rh, Compensated, NLowerGroups, ShortedGroups)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			CapacitancePerBank AS CapacitancePerBank,
@@ -811,11 +825,12 @@ BEGIN
             Nshorted AS Nshorted,
             BlownFuses AS BlownFuses,
             BlownGroups AS BlownGroups,
-            OnVoltageThreshhold AS OnVoltageThreshhold,
             RelayPTRatio AS RelayPTRatio,
             Rv AS Rv,
             Rh AS Rh,
-            Compensated AS Compensated
+            Compensated AS Compensated,
+            NLowerGroups AS NLowerGroups,
+            ShortedGroups AS ShortedGroups
 	    FROM INSERTED
 END
 GO
@@ -865,11 +880,12 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             CapacitorBankAttributes.Nshorted = INSERTED.Nshorted,
             CapacitorBankAttributes.BlownFuses = INSERTED.BlownFuses,
             CapacitorBankAttributes.BlownGroups = INSERTED.BlownGroups,
-            CapacitorBankAttributes.OnVoltageThreshhold = INSERTED.OnVoltageThreshhold,
             CapacitorBankAttributes.RelayPTRatio = INSERTED.RelayPTRatio,
             CapacitorBankAttributes.Rv = INSERTED.Rv,
             CapacitorBankAttributes.Rh = INSERTED.Rh,
-            CapacitorBankAttributes.Compensated = INSERTED.Compensated
+            CapacitorBankAttributes.Compensated = INSERTED.Compensated,
+            CapacitorBankAttributes.NLowerGroups = INSERTE.NLowerGroups,
+            CapacitorBankAttributes.ShortedGroups = INSERTED.ShortedGroups
 		FROM
 			CapacitorBankAttributes 
 	INNER JOIN
