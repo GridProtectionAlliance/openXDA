@@ -884,7 +884,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             CapacitorBankAttributes.Rv = INSERTED.Rv,
             CapacitorBankAttributes.Rh = INSERTED.Rh,
             CapacitorBankAttributes.Compensated = INSERTED.Compensated,
-            CapacitorBankAttributes.NLowerGroups = INSERTE.NLowerGroups,
+            CapacitorBankAttributes.NLowerGroups = INSERTED.NLowerGroups,
             CapacitorBankAttributes.ShortedGroups = INSERTED.ShortedGroups
 		FROM
 			CapacitorBankAttributes 
