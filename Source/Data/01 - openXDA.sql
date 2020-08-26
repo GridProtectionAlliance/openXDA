@@ -386,7 +386,7 @@ CREATE TABLE CapacitorBankAttributes
     Rv FLOAT NOT NULL,
     Rh FLOAT NOT NULL,
     Compensated BIT NOT NULL,
-    NLowerGroup INT NOT NULL,
+    NLowerGroups INT NOT NULL,
     ShortedGroups INT NOT NULL
 )
 GO
