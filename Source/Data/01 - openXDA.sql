@@ -795,13 +795,14 @@ BEGIN
 			Spare AS Spare
 	FROM INSERTED
 
-	INSERT INTO CapacitorBankAttributes (AssetID, CapacitancePerBank, CktSwitcher, MaxKV, UnitKV, UnitKVAr, NegReactanceTol,
+	INSERT INTO CapacitorBankAttributes (AssetID, CapacitancePerBank, NumberOfBanks, CktSwitcher, MaxKV, UnitKV, UnitKVAr, NegReactanceTol,
         PosReactanceTol, Nparalell, Nseries, NSeriesGroup, NParalellGroup, Fused, VTratioBus, NumberLVCaps, NumberLVUnits, LVKVAr,
         LVKV, LVNegReactanceTol, LVPosReactanceTol, UpperXFRRatio, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups,
         RelayPTRatio, Rv, Rh, Compensated, NLowerGroups, ShortedGroups)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			CapacitancePerBank AS CapacitancePerBank,
+            NumberOfBanks AS NumberOfBanks,
             CktSwitcher AS CktSwitcher,
             MaxKV AS MaxKV,
             UnitKV AS UnitKV,
@@ -857,6 +858,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 	UPDATE CapacitorBankAttributes
 		SET
 			CapacitorBankAttributes.CapacitancePerBank = INSERTED.CapacitancePerBank,
+            CapacitorBankAttributes.NumberOfBanks = INSERTED.NumberOfBanks,
             CapacitorBankAttributes.CktSwitcher = INSERTED.CktSwitcher,
             CapacitorBankAttributes.MaxKV = INSERTED.MaxKV,
             CapacitorBankAttributes.UnitKV = INSERTED.UnitKV,
