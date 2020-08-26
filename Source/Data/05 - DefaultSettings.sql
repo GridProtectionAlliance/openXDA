@@ -265,9 +265,20 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Param
 GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.DataFileLocation', './CapBankAnalysis/Data/', './CapBankAnalysis/Data/')
 GO
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Enabled', 'False', 'False')
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.VThreshhold', '500', '500')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.IThreshhold', '4', '4')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.THDLimit', '10', '10')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Toffset', '1', '1')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Enabled', 'False', 'False')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.EvalPreInsertion', 'True', 'True')
+GO
 
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO

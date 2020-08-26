@@ -429,7 +429,13 @@ namespace openXDA
                 }
 
                 double systemFreq = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0D;
+                double vThreshold = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.VThreshhold'") ?? 500.0D;
+                double iThreshold = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.IThreshhold'") ?? 4.0D;
+                double thdLimit = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.THDLimit'") ?? 10.0D;
+                double tOffset = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.Toffset'") ?? 1.0D;
+                bool enablePreInsertion = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.EvalPreInsertion'") ?? false;
 
+                
                 iSamples = Math.Round(iSamples / systemFreq);
                 vSamples = Math.Round(vSamples / systemFreq);
 
@@ -483,9 +489,9 @@ namespace openXDA
                 lines.Add($"10 fundamental frequency; fundf = {systemFreq}");
                 lines.Add($"11 sampling rate for voltage; svNSPC = {vSamples}");
                 lines.Add($"12 sampling rate for current; siNSPC = {iSamples}");
-                lines.Add("13 no - voltage threshold for voltage waveforms in V; noBusVoltage = 500");
-                lines.Add("14 no - current threshold for current waveforms in A; noBusCurrent = 4.0");
-                lines.Add("15 the upper limit(in percent) to detect harmonic resonance; iTHDLimit = 5.5");
+                lines.Add($"13 no - voltage threshold for voltage waveforms in V; noBusVoltage = {vThreshold}");
+                lines.Add($"14 no - current threshold for current waveforms in A; noBusCurrent = {iThreshold}");
+                lines.Add($"15 the upper limit(in percent) to detect harmonic resonance; iTHDLimit = {thdLimit}");
                 lines.Add("");
                 lines.Add("Specify cap bank configuration data");
                 lines.Add($"17 number of banks; numBanks = {capBank.NumberOfBanks}");
@@ -505,7 +511,7 @@ namespace openXDA
                 lines.Add($"31 for fused design; the number of capacitors per group; each cap is in parallel; Np = {capBank.Nparalell}");
                 lines.Add("");
                 lines.Add("Specify relay data inputs and requirements");
-                lines.Add($"33 Offset time between cap bank and relay time stamps; dToffset = 1");
+                lines.Add($"33 Offset time between cap bank and relay time stamps; dToffset = {tOffset}");
                 lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV}");
                 lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {capBank.OnVoltageThreshhold}");
                 lines.Add("");
@@ -551,9 +557,9 @@ namespace openXDA
                 }
                 lines.Add("");
                 lines.Add("Evaluation of pre-insertion takes a longer time.  Set evalPreIns to 1 to evaluate; 0 to skip");
-                lines.Add($"{n + 66} evalPreIns = 1");
+                lines.Add($"{n + 66} evalPreIns = {(enablePreInsertion? 1 : 0)}");
 
-                
+
                 // Open the file and write in each line
                 using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(dstFolder + "\\" + dstFile)))
                 {
