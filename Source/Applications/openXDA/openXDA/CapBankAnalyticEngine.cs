@@ -205,7 +205,8 @@ namespace openXDA
                 Log.Info($"Processing Capacitor Switching Analytic File");
                 ReadSwitchingAnalytic(switchingAnalysis, eventMapping);
                 ReadPreInsertionAnalytic(preInsertionAnalytics, eventMapping);
-
+                ReadRestrikeAnalytic(restrikeAnalysis, eventMapping);
+                ReadCapBankAnalytic(capBankAnalytics, eventMapping);
             }
             else
             {
@@ -380,6 +381,222 @@ namespace openXDA
                 }
             }
         }
+
+        private void ReadRestrikeAnalytic(string filename, Dictionary<string, Event> eventMapping)
+        {
+            List<string> lines = new List<string>();
+
+            // Open the file and read each line
+            using (StreamReader fileReader = new StreamReader(File.OpenRead(filename)))
+            {
+                while (!fileReader.EndOfStream)
+                {
+                    lines.Add(fileReader.ReadLine().Trim());
+                }
+            }
+
+
+            string fileName = "";
+
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                foreach (string line in lines.Skip(2))
+                {
+                    List<string> fields = line.Split(',').ToList();
+
+                    if (!string.IsNullOrEmpty(fields[0].Trim()))
+                        fileName = fields[0].Trim();
+
+                    string evtLabel = fields[1].Trim();
+
+                    CBRestrikeResult row = new CBRestrikeResult();
+                    int PhaseID = 0;
+
+                    if (evtLabel.EndsWith("a", StringComparison.OrdinalIgnoreCase))
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'AN'");
+                    else if (evtLabel.EndsWith("b", StringComparison.OrdinalIgnoreCase))
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'BN'");
+                    else if (evtLabel.EndsWith("c", StringComparison.OrdinalIgnoreCase))
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'CN'");
+                    else
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'None'");
+
+                    row.CBRestrikeTypeID = ConvertToInt(fields[3]) ?? -1;
+                    row.Text = ConvertToDouble(fields[6]) ?? double.NaN;
+                    row.Trest = ConvertToDouble(fields[7]) ?? double.NaN;
+                    row.Text2 = ConvertToDouble(fields[8]) ?? double.NaN;
+                    row.Drest = ConvertToDouble(fields[9]) ?? double.NaN;
+                    row.Imax = ConvertToDouble(fields[10]) ?? double.NaN;
+                    row.Vmax = ConvertToDouble(fields[11]) ?? double.NaN;
+
+                    if (row.CBRestrikeTypeID < 0)
+                        continue;
+
+                    Event evt = null;
+                    if (eventMapping.TryGetValue(fileName, out evt))
+                    {
+                        if (new TableOperations<CBAnalyticResult>(connection).QueryRecordCountWhere("PhaseID = {0} AND EventID = {1}", PhaseID, evt.ID) != 1)
+                            continue;
+
+                        row.CBResultID = new TableOperations<CBAnalyticResult>(connection).QueryRecordWhere("PhaseID = {0} AND EventID = {1}", PhaseID, evt.ID).ID;
+
+                        new TableOperations<CBRestrikeResult>(connection).AddNewRecord(row);
+                    }
+
+                }
+            }
+        }
+
+        private void ReadCapBankAnalytic(string filename, Dictionary<string, Event> eventMapping)
+        {
+            List<string> lines = new List<string>();
+
+            // Open the file and read each line
+            using (StreamReader fileReader = new StreamReader(File.OpenRead(filename)))
+            {
+                while (!fileReader.EndOfStream)
+                {
+                    lines.Add(fileReader.ReadLine().Trim());
+                }
+            }
+
+
+            string fileName = "";
+
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                foreach (string line in lines.Skip(2))
+                {
+                    List<string> fields = line.Split(',').ToList();
+
+                    if (!string.IsNullOrEmpty(fields[0].Trim()))
+                        fileName = fields[0].Trim();
+
+                    string evtLabel = fields[1].Trim();
+
+                    CBCapBankResult row = new CBCapBankResult();
+                    int PhaseID = 0;
+
+                    if (evtLabel.EndsWith("a", StringComparison.OrdinalIgnoreCase))
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'AN'");
+                    else if (evtLabel.EndsWith("b", StringComparison.OrdinalIgnoreCase))
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'BN'");
+                    else if (evtLabel.EndsWith("c", StringComparison.OrdinalIgnoreCase))
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'CN'");
+                    else
+                        PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'None'");
+
+                    Event evt = null;
+                    if (eventMapping.TryGetValue(fileName, out evt))
+                    {
+                        if (new TableOperations<CBAnalyticResult>(connection).QueryRecordCountWhere("PhaseID = {0} AND EventID = {1}", PhaseID, evt.ID) != 1)
+                            continue;
+
+                        row.CBResultID = new TableOperations<CBAnalyticResult>(connection).QueryRecordWhere("PhaseID = {0} AND EventID = {1}", PhaseID, evt.ID).ID;
+                    }
+                    if (evt == null)
+                        continue;
+
+                    CapBank capBank = new TableOperations<CapBank>(connection).QueryRecordWhere("Id = {0}", evt.AssetID);
+                    int offset = 3;
+                    CBAnalyticResult result = new TableOperations<CBAnalyticResult>(connection).QueryRecordWhere("Id = {0}", row.CBResultID);
+
+                    row.CBBankHealthID = ConvertToInt(fields[offset]) ?? -1;
+                    offset++;
+                    row.CBOperationID = ConvertToInt(fields[offset]) ?? -1;
+                    offset++;
+
+                    if (capBank.Compensated && !capBank.Fused)
+                    {
+                        row.Kfactor = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.dV = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.XLV = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.X = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.XVmiss = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.VUIEC = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.VUIEEE = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                    }
+                    else if (!capBank.Fused && !capBank.Compensated)
+                    {
+                        row.Vrelay = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.Ineutral = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.V0 = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.Z0 = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.XLV = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.X = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.VUIEC = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.VUIEEE = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                    }
+                    else
+                    {
+                        row.Kfactor = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.dV = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.XUG = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.XLG = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.X = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.XVmiss = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.VUIEC = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        offset = offset + capBank.NumberOfBanks;
+
+                        row.VUIEEE = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                    }
+
+                   
+
+                    if (row.CBOperationID < 0)
+                        continue;
+
+                    row.BankInService = (int)result.InServiceBank;
+
+                    new TableOperations<CBCapBankResult>(connection).AddNewRecord(row);
+                    
+                }
+            }
+        }
+
+
 
         private int? ConvertToInt(string value)
         {
