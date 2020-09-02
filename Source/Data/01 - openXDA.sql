@@ -3767,7 +3767,7 @@ CREATE TABLE CBCapBankResult (
     CBOperationID INT NULL REFERENCES CBOperation(ID),
     BankInService INT NOT NULL,
     Vrelay FLOAT NULL,
-    [In] FLOAT NULL,
+    Ineutral FLOAT NULL,
     V0 FLOAT NULL,
     Z0 FLOAT NULL,
     XLV FLOAT NULL,

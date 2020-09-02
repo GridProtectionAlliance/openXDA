@@ -64,7 +64,7 @@ namespace openXDA.Model
         /// <summary>
         /// The neutral current magnitude of bank <see cref="BankInService"/> when it is in service alone
         /// </summary>
-        public double? In { get; set; }
+        public double? Ineutral { get; set; }
 
         /// <summary>
         /// Zero-sequence voltage of the bus when bank <see cref="BankInService"/> in service alone
