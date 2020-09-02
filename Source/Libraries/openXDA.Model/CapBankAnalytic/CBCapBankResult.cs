@@ -34,14 +34,9 @@ namespace openXDA.Model
         public int ID { get; set; }
 
         /// <summary>
-        /// Corresponding <see cref="Event"/>
+        /// Corresponding <see cref="CBAnalyticResult"/>
         /// </summary>
-        public int EventID { get; set; }
-
-        /// <summary>
-        /// A flag for input and capacitor data error, <see cref="CBDataError"/> for more details
-        /// </summary>
-        public int? DataErrorID { get; set; }
+        public int CBResultID { get; set; }
 
         /// <summary>
         /// A flag for denoting an abnormal health condition of capacitor and relay (see <see cref="CBBankHealth"/>for more details)
