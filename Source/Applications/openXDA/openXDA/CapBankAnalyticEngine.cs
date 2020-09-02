@@ -22,25 +22,18 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
-using System.Net.Mail;
-using System.Text;
-using System.Threading;
-using System.Xml.Linq;
+using FaultData.DataAnalysis;
+using FaultData.DataOperations;
 using FaultData.DataSets;
-using FaultData.DataWriters;
+using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Threading;
 using log4net;
 using openXDA.Model;
-using FaultData.DataOperations;
-using System.IO;
-using FaultData.DataAnalysis;
-using GSF.Collections;
 
 namespace openXDA
 {
