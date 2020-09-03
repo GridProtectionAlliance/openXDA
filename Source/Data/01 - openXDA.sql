@@ -733,7 +733,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 	INNER JOIN
 		INSERTED
 	ON 
-		INSERTED.ID = CapBankRelay.AssetID;
+		INSERTED.ID = CapBankRelay.ID;
 END
 GO
 
