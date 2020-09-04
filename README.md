@@ -2,6 +2,8 @@
 
 **eXtensible Disturbance Analytics**
 
+![CodeQL](https://github.com/GridProtectionAlliance/openXDA/workflows/CodeQL/badge.svg)
+
 # About
 openXDA is an extension of work conducted in 2012 on openFLE for the Electric Power Research Institute (EPRI) which is posted under the project EPRIopenFLE.codeplex.com.  The openFLE project included an open source C# parser for PQDIF formatted power quality files (IEEE 1159.3-2003).
 
