@@ -37,6 +37,7 @@
     <Reference Include="MWArray, Version=2.20.0.0, Culture=neutral, PublicKeyToken=e1d84a0da19db86f, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Program Files\MATLAB\MATLAB Runtime\v98\toolbox\dotnetbuilder\bin\win64\v4.0\MWArray.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -48,6 +49,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="TCSAM">
       <HintPath>..\..\..\..\..\Program Files\EPRI\TCSAM\application\TCSAM.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
