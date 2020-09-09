@@ -131,12 +131,6 @@ namespace openXDA
             // Then Run the EPRI Analytic
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                string enabledSetting = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.Enabled'");
-                bool enabled = enabledSetting.ParseBoolean();
-
-                if (!enabled)
-                    return;
-
                 TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
 
                 Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", events.First().AssetID);
