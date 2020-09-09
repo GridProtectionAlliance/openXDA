@@ -23,13 +23,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using FaultData.DataAnalysis;
 using FaultData.DataOperations;
 using FaultData.DataSets;
+using GSF;
 using GSF.Collections;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
@@ -40,6 +45,8 @@ namespace openXDA
     public class CapBankAnalyticEngine
     {
         #region [ Members ]
+
+        private delegate void CapBankAnalysisRoutine(double[,] kFactors, string inputParameterFile);
 
         #endregion
 
@@ -63,12 +70,15 @@ namespace openXDA
                 }
                     
             }
-
         }
 
         #endregion
 
         #region [ Properties ]
+
+        private string AnalysisRoutineAssembly { get; set; }
+        private string AnalysisRoutineMethod { get; set; }
+        private CapBankAnalysisRoutine AnalysisRoutine { get; set; }
 
         #endregion
 
@@ -121,6 +131,12 @@ namespace openXDA
             // Then Run the EPRI Analytic
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
+                string enabledSetting = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.Enabled'");
+                bool enabled = enabledSetting.ParseBoolean();
+
+                if (!enabled)
+                    return;
+
                 TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
 
                 Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", events.First().AssetID);
@@ -156,6 +172,10 @@ namespace openXDA
                         return;
 
                     // Run ML code
+                    double[,] kFactors = GetKFactors(connection, events.First(), capBank.NumberOfBanks);
+                    string inputParameterFile = @"C:\Users\swills\Documents\Projects\tva\CSA\Test\Belfast Example Input p1 Fuseless Cmpstd dll call.txt";
+                    CapBankAnalysisRoutine analysisRoutine = GetAnalysisRoutine(connection);
+                    analysisRoutine(kFactors, inputParameterFile);
 
                     // Read Output Files
                     Log.Info("Processing CapBank Analytic Results...");
@@ -164,6 +184,72 @@ namespace openXDA
                 }
             }
 
+        }
+
+        private double[,] GetKFactors(AdoDataConnection connection, Event evt, int numBanks)
+        {
+            int GetPhaseIndex(string phaseName)
+            {
+                switch (phaseName)
+                {
+                    case "AN": return 0;
+                    case "BN": return 1;
+                    case "CN": return 2;
+                    default: return -1;
+                }
+            }
+
+            string query =
+                "SELECT " +
+                "    Event.StartTime EventTime, " +
+                "    CBCapBankResult.BankInService, " +
+                "    Phase.Name Phase, " +
+                "    CBCapBankResult.Kfactor " +
+                "INTO #kfactors " +
+                "FROM " +
+                "    CBCapBankResult JOIN " +
+                "    CBAnalyticResult ON CBCapBankResult.CBResultID = CBAnalyticResult.ID JOIN " +
+                "    Event ON CBAnalyticResult.EventID = Event.ID JOIN " +
+                "    Phase ON CBAnalyticResult.PhaseID = Phase.ID " +
+                "WHERE MeterID = {0} " +
+                " " +
+                "SELECT " +
+                "    Bank.Number BankNumber, " +
+                "    KRecord.Phase, " +
+                "    KRecord.Kfactor " +
+                "FROM " +
+                "    (SELECT DISTINCT BankInService Number FROM #kfactors) Bank CROSS APPLY " +
+                "    (SELECT TOP 1 * FROM #kfactors WHERE BankInService = Bank.Number ORDER BY EventTime DESC) KRecord";
+
+            int phases = 3;
+            int banks = numBanks;
+            double[,] kFactors = new double[phases, banks];
+
+            for (int i = 0; i < phases; i++)
+            {
+                for (int j = 0; j < banks; j++)
+                    kFactors[i, j] = double.NaN;
+            }
+
+            using (DataTable kRecords = connection.RetrieveData(query, evt.MeterID))
+            {
+                foreach (DataRow row in kRecords.Rows)
+                {
+                    string phaseName = row.ConvertField<string>("Phase");
+                    int phase = GetPhaseIndex(phaseName);
+                    int bank = row.ConvertField<int>("BankNumber");
+
+                    if (phase < 0 || phase >= phases)
+                        continue;
+
+                    if (bank < 0 || bank >= banks)
+                        continue;
+
+                    kFactors[phase, bank] = row.ConvertField<double>("Kfactor");
+                }
+            }
+
+            return kFactors;
         }
 
         private void ParseOutputs(Dictionary<string, Event> eventMapping)
@@ -207,6 +293,104 @@ namespace openXDA
                 return;
             }
 
+        }
+
+        private CapBankAnalysisRoutine GetAnalysisRoutine(AdoDataConnection parentConnection)
+        {
+            const string AnalyzerSettingsCategory = "EPRICapBankAnalytic.Analyzer";
+            const string AnalysisRoutineAssemblySetting = "EPRICapBankAnalytic.AnalysisRoutineAssembly";
+            const string AnalysisRoutineMethodSetting = "EPRICapBankAnalytic.AnalysisRoutineMethod";
+            string analysisRoutineAssembly = null;
+            string analysisRoutineMethod = null;
+
+            using (DataTable settings = parentConnection.RetrieveData($"SELECT Name, Value FROM Setting WHERE Name IN ('{AnalysisRoutineAssemblySetting}', '{AnalysisRoutineMethodSetting}')"))
+            {
+                foreach (DataRow row in settings.Rows)
+                {
+                    string name = row.ConvertField<string>("Name");
+                    string value = row.ConvertField<string>("Value");
+
+                    switch (name)
+                    {
+                        case AnalysisRoutineAssemblySetting:
+                            analysisRoutineAssembly = value;
+                            break;
+
+                        case AnalysisRoutineMethodSetting:
+                            analysisRoutineMethod = value;
+                            break;
+                    }
+                }
+            }
+
+            if ((object)analysisRoutineAssembly == null || (object)analysisRoutineMethod == null)
+            {
+                AnalysisRoutine = (_, __) => { };
+                return AnalysisRoutine;
+            }
+
+            if (analysisRoutineAssembly == AnalysisRoutineAssembly && analysisRoutineMethod == AnalysisRoutineMethod)
+                return AnalysisRoutine;
+
+            AnalysisRoutineAssembly = analysisRoutineAssembly;
+            AnalysisRoutineMethod = analysisRoutineMethod;
+
+            try
+            {
+                int index = analysisRoutineMethod.LastIndexOf('.');
+
+                if (index < 0)
+                    throw new IndexOutOfRangeException($"Type information for cap bank analysis method {AnalysisRoutineMethod} not found.");
+
+                string assemblyPath = analysisRoutineAssembly;
+                string typeName = analysisRoutineMethod.Substring(0, index);
+                string methodName = analysisRoutineMethod.Substring(index + 1);
+
+                Type analysisRoutineType = typeof(CapBankAnalysisRoutine);
+                MethodInfo invokeMethod = analysisRoutineType.GetMethod("Invoke");
+
+                Type[] parameterTypes = invokeMethod
+                    .GetParameters()
+                    .Select(parameter => parameter.ParameterType)
+                    .ToArray();
+
+                Assembly analysisAssembly = Assembly.LoadFrom(assemblyPath);
+                Type analyzerType = analysisAssembly.GetType(typeName);
+                object analyzer = Activator.CreateInstance(analyzerType);
+
+                MethodInfo analysisMethod = analyzerType.GetMethod(methodName, parameterTypes);
+                Delegate analysisDelegate = analysisMethod.CreateDelegate(analysisRoutineType, analyzer);
+                CapBankAnalysisRoutine analysisRoutine = (CapBankAnalysisRoutine)analysisDelegate;
+
+                AnalysisRoutine = (kFactors, inputParameterFile) =>
+                {
+                    using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                    using (DataTable settingTable = connection.RetrieveData($"SELECT Name, Value FROM Setting WHERE Name LIKE '{AnalyzerSettingsCategory}.%'"))
+                    {
+                        string connectionString = settingTable.Select()
+                            .Select(row =>
+                            {
+                                string name = row.ConvertField<string>("Name");
+                                string value = row.ConvertField<string>("Value");
+                                string trunc = name.Substring(AnalyzerSettingsCategory.Length + 1);
+                                return new { Name = trunc, Value = value };
+                            })
+                            .ToDictionary(obj => obj.Name, obj => obj.Value)
+                            .JoinKeyValuePairs();
+
+                        ConnectionStringParser.ParseConnectionString(connectionString, analyzer);
+                    }
+
+                    analysisRoutine(kFactors, inputParameterFile);
+                };
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Unable to resolve the cap bank analysis routine.", ex);
+                AnalysisRoutine = (_, __) => { };
+            }
+
+            return AnalysisRoutine;
         }
 
         private void ReadSwitchingAnalytic(string filename, Dictionary<string, Event> eventMapping)
@@ -976,6 +1160,7 @@ namespace openXDA
             return result;
         }
 
+        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
         private static readonly ILog Log = LogManager.GetLogger(typeof(CapBankAnalyticEngine));
 
         private static VIDataGroup QueryDataGroup(int eventID, int meterId)

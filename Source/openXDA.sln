@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29709.97
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1231
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{B3493118-9437-497D-A716-24232CE0D4F2}"
 EndProject
@@ -137,6 +137,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PQWaveformDataParser", "Tools\PQWaveformDataParser\PQWaveformDataParser.csproj", "{79FBD416-8CFF-425E-A010-15E61B9D3BD7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PQDS", "Libraries\PQDS\PQDS\PQDS.csproj", "{C6E64BA2-DCA7-4A34-973A-2306A1F9EFFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.CapSwitchAnalysis", "Libraries\openXDA.CapSwitchAnalysis\openXDA.CapSwitchAnalysis.csproj", "{BAC37D4D-3719-44F9-8F05-448E5FF6D08C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -490,6 +492,12 @@ Global
 		{C6E64BA2-DCA7-4A34-973A-2306A1F9EFFC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C6E64BA2-DCA7-4A34-973A-2306A1F9EFFC}.Release|x86.ActiveCfg = Release|Any CPU
 		{C6E64BA2-DCA7-4A34-973A-2306A1F9EFFC}.Release|x86.Build.0 = Release|Any CPU
+		{BAC37D4D-3719-44F9-8F05-448E5FF6D08C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAC37D4D-3719-44F9-8F05-448E5FF6D08C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BAC37D4D-3719-44F9-8F05-448E5FF6D08C}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{BAC37D4D-3719-44F9-8F05-448E5FF6D08C}.Mono|x86.ActiveCfg = Release|Any CPU
+		{BAC37D4D-3719-44F9-8F05-448E5FF6D08C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAC37D4D-3719-44F9-8F05-448E5FF6D08C}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -529,6 +537,7 @@ Global
 		{DC15C938-C7A4-47C4-B12C-8F36E9D886B9} = {9DA625F5-5D02-4855-A891-5E059AE2BD83}
 		{79FBD416-8CFF-425E-A010-15E61B9D3BD7} = {9DA625F5-5D02-4855-A891-5E059AE2BD83}
 		{C6E64BA2-DCA7-4A34-973A-2306A1F9EFFC} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
+		{BAC37D4D-3719-44F9-8F05-448E5FF6D08C} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77720899-DA0C-45E0-AE45-677A89071A7B}
