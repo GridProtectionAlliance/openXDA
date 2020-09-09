@@ -187,7 +187,7 @@ namespace openXDA.Model
         /// <summary>
         /// Line 64
         /// </summary>
-        public int ShortedGroups { get; set; }
+        public double ShortedGroups { get; set; }
 
 
         /// <summary>
