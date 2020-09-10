@@ -205,14 +205,12 @@ namespace openXDA
 
         private void RunAnalytic(List <Event> events, int fileGroupID)
         {
-
             // First step is to remove entry from Dictionary to avoid reprocessing if anything fails
             lock (s_eventFileLock)
             {
                 using (FileBackedDictionary<int, List<int>> dictionary = new FileBackedDictionary<int, List<int>>("./CapBankAnalytic.bin"))
                     dictionary.Remove(fileGroupID);
             }
-
             
             // Then Run the EPRI Analytic
             using (AdoDataConnection connection = ConnectionFactory())
@@ -252,18 +250,20 @@ namespace openXDA
                         return;
 
                     // Run ML code
+                    EngineSettings settings = GetSettings(ConnectionString);
+                    string dstFolder = settings.AnalyticSettings.ParameterFileLocation;
+                    dstFolder = Path.GetFullPath(Path.GetDirectoryName(dstFolder));
+
                     double[,] kFactors = GetKFactors(connection, events.First(), capBank.NumberOfBanks);
-                    string inputParameterFile = @"C:\Users\swills\Documents\Projects\tva\CSA\Test\Belfast Example Input p1 Fuseless Cmpstd dll call.txt";
+                    string inputParameterFile = Path.Combine(dstFolder, $"{capBank.AssetKey}.txt");
                     CapBankAnalysisRoutine analysisRoutine = GetAnalysisRoutine(connection);
                     analysisRoutine(kFactors, inputParameterFile);
 
                     // Read Output Files
                     Log.Info("Processing CapBank Analytic Results...");
                     ParseOutputs(eventMapping);
-
                 }
             }
-
         }
 
         private double[,] GetKFactors(AdoDataConnection connection, Event evt, int numBanks)
@@ -877,8 +877,8 @@ namespace openXDA
 
                 string datafolder = settings.AnalyticSettings.DataFileLocation;
                 string resultFolder = settings.AnalyticSettings.ResultFileLocation;
-                datafolder = Path.GetDirectoryName(datafolder);
-                resultFolder = Path.GetDirectoryName(resultFolder);
+                datafolder = Path.GetFullPath(Path.GetDirectoryName(datafolder));
+                resultFolder = Path.GetFullPath(Path.GetDirectoryName(resultFolder));
 
                 Directory.CreateDirectory(datafolder);
                 Directory.CreateDirectory(resultFolder);
