@@ -29,10 +29,10 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using FaultData.DataAnalysis;
 using FaultData.DataOperations;
 using FaultData.DataSets;
-using GSF;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
@@ -46,17 +46,87 @@ namespace openXDA
     {
         #region [ Members ]
 
+        // Nested Types
         private delegate void CapBankAnalysisRoutine(double[,] kFactors, string inputParameterFile);
+
+        public class EPRICapBankAnalyticSettings
+        {
+            [Setting]
+            [DefaultValue(false)]
+            public bool Enabled { get; set; }
+
+            [Setting]
+            [DefaultValue("./CapBankAnalysis/Data/")]
+            public string DataFileLocation { get; set; }
+
+            [Setting]
+            [DefaultValue("./CapBankAnalysis/Parameter/")]
+            public string ParameterFileLocation { get; set; }
+
+            [Setting]
+            [DefaultValue("./CapBankAnalysis/Results/")]
+            public string ResultFileLocation { get; set; }
+
+            [Setting]
+            [DefaultValue(500.0D)]
+            public double VThreshhold { get; set; }
+
+            [Setting]
+            [DefaultValue(4.0D)]
+            public double IThreshhold { get; set; }
+
+            [Setting]
+            [DefaultValue(10.0D)]
+            public double THDLimit { get; set; }
+
+            [Setting]
+            [DefaultValue(1.0D)]
+            public double Toffset { get; set; }
+
+            [Setting]
+            [DefaultValue(true)]
+            public bool EvalPreInsertion { get; set; }
+
+            [Setting]
+            [DefaultValue("openXDA.CapSwitchAnalysis.dll")]
+            public string AnalysisRoutineAssembly { get; set; }
+
+            [Setting]
+            [DefaultValue("openXDA.CapSwitchAnalysis.Analyzer.RunAnalytic")]
+            public string AnalysisRoutineMethod { get; set; }
+
+            [Setting]
+            [DefaultValue("")]
+            public string Analyzer { get; set; }
+        }
+
+        private class EngineSettings
+        {
+            [Setting]
+            public double SystemFrequency { get; set; }
+
+            [Category]
+            [SettingName("EPRICapBankAnalytic")]
+            public EPRICapBankAnalyticSettings AnalyticSettings { get; } =
+                new EPRICapBankAnalyticSettings();
+        }
+
+        // Fields
+        private Func<AdoDataConnection> m_connectionFactory;
+        private string m_connectionString;
 
         #endregion
 
         #region [ Constructors ]
 
-        public CapBankAnalyticEngine()
+        public CapBankAnalyticEngine(Func<AdoDataConnection> connectionFactory, string connectionString)
         {
+            ConnectionFactory = connectionFactory;
+            ConnectionString = connectionString;
+
             lock (s_eventFileLock)
             {
-                using(AdoDataConnection connection = new AdoDataConnection("SystemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 using (FileBackedDictionary<int, List<int>> dictionary = new FileBackedDictionary<int, List<int>>("./CapBankAnalytic.bin"))
                 {
                     foreach (int fileGroupID in dictionary.Keys)
@@ -76,6 +146,18 @@ namespace openXDA
 
         #region [ Properties ]
 
+        private Func<AdoDataConnection> ConnectionFactory
+        {
+            get => Interlocked.CompareExchange(ref m_connectionFactory, null, null);
+            set => Interlocked.Exchange(ref m_connectionFactory, value);
+        }
+
+        private string ConnectionString
+        {
+            get => Interlocked.CompareExchange(ref m_connectionString, null, null);
+            set => Interlocked.Exchange(ref m_connectionString, value);
+        }
+
         private string AnalysisRoutineAssembly { get; set; }
         private string AnalysisRoutineMethod { get; set; }
         private CapBankAnalysisRoutine AnalysisRoutine { get; set; }
@@ -86,12 +168,16 @@ namespace openXDA
 
         public void Process(MeterDataSet meterDataSet)
         {
+            ConnectionFactory = meterDataSet.CreateDbConnection;
+            ConnectionString = meterDataSet.ConnectionString;
 
-            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            EngineSettings settings = GetSettings(ConnectionString);
+
+            if (!settings.AnalyticSettings.Enabled)
+                return;
+
+            using (AdoDataConnection connection = ConnectionFactory())
             {
-                bool enabled = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.Enabled'") ?? false;
-                if (!enabled)
-                    return;
 
                 TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
                 int capBankId = connection.ExecuteScalar<int>("SELECT ID FROM AssetType WHERE Name = 'CapacitorBank'");
@@ -107,12 +193,12 @@ namespace openXDA
                     EPRICapBankAnalytics analytic = new EPRICapBankAnalytics(RunAnalytic);
                     analytic.Process(group.ToList(), meterDataSet.FileGroup.ID);
                     analytic.StartTimer();
+
                     lock(s_eventFileLock)
                     {
                         using (FileBackedDictionary<int, List<int>> dictionary = new FileBackedDictionary<int, List<int>>("./CapBankAnalytic.bin"))
                             dictionary.Add(meterDataSet.FileGroup.ID, group.Select(item => item.ID).ToList());
                     }
-                    
                 }
             }
         }
@@ -129,7 +215,7 @@ namespace openXDA
 
             
             // Then Run the EPRI Analytic
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
 
@@ -141,7 +227,7 @@ namespace openXDA
                 List<CapBankRelay> relays;
 
                 capBank = new TableOperations<CapBank>(connection).QueryRecordWhere("ID = {0}", asset.ID);
-                capBank.ConnectionFactory = () => { return new AdoDataConnection("systemSettings"); };
+                capBank.ConnectionFactory = ConnectionFactory;
                 relays = capBank.ConnectedRelays;
 
                 lock (s_folderLock)
@@ -248,13 +334,8 @@ namespace openXDA
 
         private void ParseOutputs(Dictionary<string, Event> eventMapping)
         {
-            string resultFolder = "./";
-
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                resultFolder = connection.ExecuteScalar<string>("SELECT Value from Setting Where Name='EPRICapBankAnalytic.ResultFileLocation'");
-            }
-
+            EngineSettings settings = GetSettings(ConnectionString);
+            string resultFolder = settings.AnalyticSettings.ResultFileLocation;
             resultFolder = Path.GetDirectoryName(resultFolder) ?? string.Empty;
 
             string[] csvFiles = Directory.GetFiles(resultFolder, "*.csv", SearchOption.AllDirectories);
@@ -291,33 +372,11 @@ namespace openXDA
 
         private CapBankAnalysisRoutine GetAnalysisRoutine(AdoDataConnection parentConnection)
         {
-            const string AnalyzerSettingsCategory = "EPRICapBankAnalytic.Analyzer";
-            const string AnalysisRoutineAssemblySetting = "EPRICapBankAnalytic.AnalysisRoutineAssembly";
-            const string AnalysisRoutineMethodSetting = "EPRICapBankAnalytic.AnalysisRoutineMethod";
-            string analysisRoutineAssembly = null;
-            string analysisRoutineMethod = null;
+            EngineSettings settings = GetSettings(ConnectionString);
+            string analysisRoutineAssembly = settings.AnalyticSettings.AnalysisRoutineAssembly;
+            string analysisRoutineMethod = settings.AnalyticSettings.AnalysisRoutineMethod;
 
-            using (DataTable settings = parentConnection.RetrieveData($"SELECT Name, Value FROM Setting WHERE Name IN ('{AnalysisRoutineAssemblySetting}', '{AnalysisRoutineMethodSetting}')"))
-            {
-                foreach (DataRow row in settings.Rows)
-                {
-                    string name = row.ConvertField<string>("Name");
-                    string value = row.ConvertField<string>("Value");
-
-                    switch (name)
-                    {
-                        case AnalysisRoutineAssemblySetting:
-                            analysisRoutineAssembly = value;
-                            break;
-
-                        case AnalysisRoutineMethodSetting:
-                            analysisRoutineMethod = value;
-                            break;
-                    }
-                }
-            }
-
-            if ((object)analysisRoutineAssembly == null || (object)analysisRoutineMethod == null)
+            if (string.IsNullOrEmpty(analysisRoutineAssembly) || string.IsNullOrEmpty(analysisRoutineMethod))
             {
                 AnalysisRoutine = (_, __) => { };
                 return AnalysisRoutine;
@@ -358,23 +417,9 @@ namespace openXDA
 
                 AnalysisRoutine = (kFactors, inputParameterFile) =>
                 {
-                    using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                    using (DataTable settingTable = connection.RetrieveData($"SELECT Name, Value FROM Setting WHERE Name LIKE '{AnalyzerSettingsCategory}.%'"))
-                    {
-                        string connectionString = settingTable.Select()
-                            .Select(row =>
-                            {
-                                string name = row.ConvertField<string>("Name");
-                                string value = row.ConvertField<string>("Value");
-                                string trunc = name.Substring(AnalyzerSettingsCategory.Length + 1);
-                                return new { Name = trunc, Value = value };
-                            })
-                            .ToDictionary(obj => obj.Name, obj => obj.Value)
-                            .JoinKeyValuePairs();
-
-                        ConnectionStringParser.ParseConnectionString(connectionString, analyzer);
-                    }
-
+                    EngineSettings engineSettings = GetSettings(ConnectionString);
+                    string analyzerSettings = engineSettings.AnalyticSettings.Analyzer;
+                    ConnectionStringParser.ParseConnectionString(analyzerSettings, analyzer);
                     analysisRoutine(kFactors, inputParameterFile);
                 };
             }
@@ -404,7 +449,7 @@ namespace openXDA
             string fileName = "";
 
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
 
                 foreach (string line in lines.Skip(2))
@@ -506,7 +551,7 @@ namespace openXDA
             string fileName = "";
 
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
 
                 foreach (string line in lines.Skip(2))
@@ -570,7 +615,7 @@ namespace openXDA
             string fileName = "";
 
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
 
                 foreach (string line in lines.Skip(2))
@@ -637,7 +682,7 @@ namespace openXDA
             string fileName = "";
 
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
 
                 foreach (string line in lines.Skip(2))
@@ -804,10 +849,10 @@ namespace openXDA
                 item.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous").First()?.SampleRate ?? -1.0;
 
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 capBank = new TableOperations<CapBank>(connection).QueryRecordWhere("ID = {0}", evt.AssetID);
-                capBank.ConnectionFactory = () => { return new AdoDataConnection("systemSettings"); };
+                capBank.ConnectionFactory = ConnectionFactory;
                 relays = capBank.ConnectedRelays;
 
                 if (vSamples == -1 || iSamples == -1)
@@ -816,24 +861,24 @@ namespace openXDA
                     return;
                 }
 
-                double systemFreq = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0D;
-                double vThreshold = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.VThreshhold'") ?? 500.0D;
-                double iThreshold = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.IThreshhold'") ?? 4.0D;
-                double thdLimit = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.THDLimit'") ?? 10.0D;
-                double tOffset = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.Toffset'") ?? 1.0D;
-                bool enablePreInsertion = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'EPRICapBankAnalytic.EvalPreInsertion'") ?? false;
-
+                EngineSettings settings = GetSettings(ConnectionString);
+                double systemFreq = settings.SystemFrequency;
+                double vThreshold = settings.AnalyticSettings.VThreshhold;
+                double iThreshold = settings.AnalyticSettings.IThreshhold;
+                double thdLimit = settings.AnalyticSettings.THDLimit;
+                double tOffset = settings.AnalyticSettings.Toffset;
+                bool enablePreInsertion = settings.AnalyticSettings.EvalPreInsertion;
                 
                 iSamples = Math.Round(iSamples / systemFreq);
                 vSamples = Math.Round(vSamples / systemFreq);
 
-                string dstFolder = connection.ExecuteScalar<string>("SELECT Value from Setting Where Name='EPRICapBankAnalytic.ParameterFileLocation'");
-                dstFolder = Path.GetDirectoryName(dstFolder) ?? string.Empty;
+                string dstFolder = settings.AnalyticSettings.ParameterFileLocation;
+                dstFolder = Path.GetDirectoryName(dstFolder);
 
-                string datafolder = connection.ExecuteScalar<string>("SELECT Value from Setting Where Name='EPRICapBankAnalytic.DataFileLocation'");
-                string resultFolder = connection.ExecuteScalar<string>("SELECT Value from Setting Where Name='EPRICapBankAnalytic.ResultFileLocation'");
-                datafolder = Path.GetDirectoryName(datafolder) ?? string.Empty;
-                resultFolder = Path.GetDirectoryName(resultFolder) ?? string.Empty;
+                string datafolder = settings.AnalyticSettings.DataFileLocation;
+                string resultFolder = settings.AnalyticSettings.ResultFileLocation;
+                datafolder = Path.GetDirectoryName(datafolder);
+                resultFolder = Path.GetDirectoryName(resultFolder);
 
                 Directory.CreateDirectory(datafolder);
                 Directory.CreateDirectory(resultFolder);
@@ -965,13 +1010,14 @@ namespace openXDA
             CapBank capBank;
             VIDataGroup data = QueryDataGroup(evt.ID, evt.MeterID);
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 capBank = new TableOperations<CapBank>(connection).QueryRecordWhere("ID = {0}", evt.AssetID);
-                capBank.ConnectionFactory = () => { return new AdoDataConnection("systemSettings"); };
+                capBank.ConnectionFactory = ConnectionFactory;
 
-                string datafolder = connection.ExecuteScalar<string>("SELECT Value from Setting Where Name='EPRICapBankAnalytic.DataFileLocation'");
-                datafolder = Path.GetDirectoryName(datafolder) ?? string.Empty;
+                EngineSettings settings = GetSettings(ConnectionString);
+                string datafolder = settings.AnalyticSettings.DataFileLocation;
+                datafolder = Path.GetDirectoryName(datafolder);
 
 
                 string dstFile = capBank.AssetKey + $"-{evt.ID}.csv";
@@ -1044,13 +1090,14 @@ namespace openXDA
             CapBankRelay relay;
             VIDataGroup data = QueryDataGroup(evt.ID, evt.MeterID);
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 relay = new TableOperations<CapBankRelay>(connection).QueryRecordWhere("ID = {0}", evt.AssetID);
-                relay.ConnectionFactory = () => { return new AdoDataConnection("systemSettings"); };
+                relay.ConnectionFactory = ConnectionFactory;
 
-                string datafolder = connection.ExecuteScalar<string>("SELECT Value from Setting Where Name='EPRICapBankAnalytic.DataFileLocation'");
-                datafolder = Path.GetDirectoryName(datafolder) ?? string.Empty;
+                EngineSettings settings = GetSettings(ConnectionString);
+                string datafolder = settings.AnalyticSettings.DataFileLocation;
+                datafolder = Path.GetDirectoryName(datafolder);
 
 
                 string dstFile = relay.AssetKey + $"-{evt.ID}.csv";
@@ -1098,7 +1145,7 @@ namespace openXDA
         {
             List<Event> result = new List<Event>();
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
 
@@ -1121,7 +1168,17 @@ namespace openXDA
 
                 return result;
             }
+        }
 
+        private VIDataGroup QueryDataGroup(int eventID, int meterId)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
+                Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterId);
+                meter.ConnectionFactory = ConnectionFactory;
+                return ToDataGroup(meter, data);
+            }
         }
 
         #endregion
@@ -1157,16 +1214,11 @@ namespace openXDA
         private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
         private static readonly ILog Log = LogManager.GetLogger(typeof(CapBankAnalyticEngine));
 
-        private static VIDataGroup QueryDataGroup(int eventID, int meterId)
+        private static EngineSettings GetSettings(string connectionString)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
-                Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterId);
-                meter.ConnectionFactory = () => { return new AdoDataConnection("systemSettings"); };
-                return ToDataGroup(meter, data);
-            }
-
+            EngineSettings settings = new EngineSettings();
+            ConnectionStringParser.ParseConnectionString(connectionString, settings);
+            return settings;
         }
 
         private static VIDataGroup ToDataGroup(Meter meter, List<byte[]> data)

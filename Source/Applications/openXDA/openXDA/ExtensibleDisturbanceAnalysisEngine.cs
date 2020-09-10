@@ -456,7 +456,11 @@ namespace openXDA
 
             // Setup new CapBank Analytic engine to Analyze Capacitor Banks when an event occurs
             if ((object)m_capBankAnalyticEngine == null)
-                m_capBankAnalyticEngine = new CapBankAnalyticEngine();
+            {
+                Func<AdoDataConnection> connectionFactory = () => CreateDbConnection(m_systemSettings);
+                string connectionString = m_systemSettings.ToConnectionString();
+                m_capBankAnalyticEngine = new CapBankAnalyticEngine(connectionFactory, connectionString);
+            }
 
             // Setup new file processor to monitor the watch directories
             if ((object)m_fileProcessor == null)
