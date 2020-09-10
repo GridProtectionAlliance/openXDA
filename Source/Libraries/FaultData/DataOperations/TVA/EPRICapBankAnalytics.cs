@@ -24,22 +24,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Numerics;
-using System.Text.RegularExpressions;
-using FaultData.DataAnalysis;
-using FaultData.DataResources;
-using FaultData.DataOperations;
-using FaultData.DataSets;
-using GSF.Data;
-using GSF.Data.Model;
-using openXDA.Model;
-using log4net;
-using System.IO;
-using System.Collections.Concurrent;
-using GSF.Threading;
 using System.Threading;
+using GSF.Threading;
+using log4net;
+using openXDA.Model;
 
 namespace FaultData.DataOperations
 {
