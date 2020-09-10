@@ -1020,10 +1020,10 @@ namespace openXDA
                 datafolder = Path.GetDirectoryName(datafolder);
 
 
-                string dstFile = capBank.AssetKey + $"-{evt.ID}.csv";
+                string dstFile = $"{capBank.AssetKey}-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
                 List<string> lines = new List<string>();
 
-                lines.Add($"\"{capBank.AssetKey} - {evt.StartTime.ToString("%M/%d/%yyyy")} {evt.StartTime.ToString("%HH:%mm:%ss.ffff")} \"");
+                lines.Add($"\"{capBank.AssetKey} - {evt.StartTime:MM/dd/yyyy HH:mm:ss.ffff} \"");
                 lines.Add("\"\"");
                 string header = "Time (s),";
                 List<DataSeries> series = new List<DataSeries>();
@@ -1100,10 +1100,10 @@ namespace openXDA
                 datafolder = Path.GetDirectoryName(datafolder);
 
 
-                string dstFile = relay.AssetKey + $"-{evt.ID}.csv";
+                string dstFile = $"{relay.AssetKey}-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
                 List<string> lines = new List<string>();
 
-                lines.Add($"\"{relay.AssetKey} - {evt.StartTime.ToString("%M/%d/%yyyy")} {evt.StartTime.ToString("%HH:%mm:%ss.ffff")} \"");
+                lines.Add($"\"{relay.AssetKey} - {evt.StartTime:MM/dd/yyyy HH:mm:ss.ffff} \"");
                 lines.Add("\"\"");
                 string header = "Time (s),";
                 List<DataSeries> series = new List<DataSeries>();
@@ -1195,7 +1195,7 @@ namespace openXDA
             {
                 double TS = (data.First().DataPoints[i].Time - startingTime).TotalSeconds;
 
-                IEnumerable<string> row = new List<string>() { TS.ToString() };
+                IEnumerable<string> row = new List<string>() { TS.ToString("0.#######") };
 
                 row = row.Concat(data.Select(x =>
                 {
