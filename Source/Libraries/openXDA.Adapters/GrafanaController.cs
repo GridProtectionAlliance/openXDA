@@ -91,7 +91,7 @@ namespace openXDA.Adapters
             /// Search data source for a target.
             /// </summary>
             /// <param name="request">Search target.</param>
-            public override Task<string[]> Search(Target request)
+            public override Task<string[]> Search(Target request, CancellationToken cancellationToken)
             {
                 // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders
                 // For now, just return a truncated list of tag names
@@ -254,7 +254,7 @@ namespace openXDA.Adapters
         [HttpPost]
         public Task<string[]> Search(Target request)
         {
-            return DataSource?.Search(request) ?? Task.FromResult(new string[0]);
+            return DataSource?.Search(request, CancellationToken.None) ?? Task.FromResult(new string[0]);
         }
 
         /// <summary>
