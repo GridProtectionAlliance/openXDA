@@ -221,7 +221,7 @@ namespace FaultData.DataWriters
 
             Event evt = eventTable.QueryRecordWhere("ID = {0}", m_eventID);
             Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);
-            List<byte[]> timeDomainData = ChannelData.DataFromEvent(evt.ID, m_connection);
+            List<byte[]> timeDomainData = ChannelData.DataFromEvent(evt.ID, "systemSettings");
 
             //This Should start by getting multiple datasets
             meter.ConnectionFactory = () => new AdoDataConnection(m_connection.Connection, m_connection.AdapterType, false);

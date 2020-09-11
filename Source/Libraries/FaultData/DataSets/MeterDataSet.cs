@@ -65,7 +65,7 @@ namespace FaultData.DataSets
                 FileGroup = (new TableOperations<FileGroup>(connection)).QueryRecordWhere("ID = {0}", evt.FileGroupID);
                 
 
-                DataGroup dataGroup = ToDataGroup(ChannelData.DataFromEvent(evt.ID,connection));
+                DataGroup dataGroup = ToDataGroup(ChannelData.DataFromEvent(evt.ID, "systemSettings"));
                 DataSeries = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name != "Digital").ToList();
                 Digitals = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name == "Digital").ToList();
             }

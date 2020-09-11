@@ -5026,14 +5026,14 @@ namespace openXDA.Hubs
 
                     //This is only to get old Data Migrated we will not be using the output, but calling 
                     // DataFromEvent will cause all of the data to be migrated to the new schema 
-                    List<byte[]> timeSeries = ChannelData.DataFromEvent(record.ID, connection);
+                    List<byte[]> timeSeries = ChannelData.DataFromEvent(record.ID, "systemSettings");
 
                     if (propagate)
                     {
                         IEnumerable<Event> events = eventTable.QueryRecords(restriction: new RecordRestriction("FileGroupID = {0} AND ID <> {1}", record.FileGroupID, record.ID));
                         foreach (Event e in events)
                         {
-                            timeSeries = ChannelData.DataFromEvent(e.ID, connection);
+                            timeSeries = ChannelData.DataFromEvent(e.ID, "systemSettings");
                         }
                     }
 

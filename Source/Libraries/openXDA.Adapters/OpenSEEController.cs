@@ -556,7 +556,7 @@ namespace openXDA.Adapters
 
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                   return ToDataGroup(meter, ChannelData.DataFromEvent(eventID,connection));
+                   return ToDataGroup(meter, ChannelData.DataFromEvent(eventID, "systemSettings"));
                 }
             });
 

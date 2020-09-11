@@ -81,7 +81,7 @@ namespace openXDA.Model
             return DataFromEvent(eventID, connection,  () => { return new AdoDataConnection(connectionStringCategory); });
         }
             // This is going through this function to migtrate all EventdataBlobs over to ChannelDataBlobs as they are read eventually removing the legacy table (eventData)
-        public static List<byte[]> DataFromEvent(int eventID, AdoDataConnection connection, Func<AdoDataConnection> assetConnection = null)
+        public static List<byte[]> DataFromEvent(int eventID, AdoDataConnection connection, Func<AdoDataConnection> assetConnection)
         {
             if (assetConnection == null)
                 assetConnection = () => { return new AdoDataConnection(connection.Connection.ConnectionString, typeof(SqlConnection), typeof(SqlDataAdapter)); };

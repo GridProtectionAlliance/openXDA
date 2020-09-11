@@ -353,7 +353,7 @@ namespace openXDA.Adapters
             IEnumerable<DataGroup> dataGroups = dataTable
                 .Select()
                 .Select(row => row.ConvertField<int>("ID"))
-                .Select(id => ToDataGroup(meter, ChannelData.DataFromEvent(id,connection)))
+                .Select(id => ToDataGroup(meter, ChannelData.DataFromEvent(id, "systemSettings")))
                 .OrderBy(subGroup => subGroup.StartTime)
                 .ToList();
 

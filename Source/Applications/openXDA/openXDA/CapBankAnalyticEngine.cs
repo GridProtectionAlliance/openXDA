@@ -1174,7 +1174,7 @@ namespace openXDA
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
+                List<byte[]> data = ChannelData.DataFromEvent(eventID, "systemSettings");
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterId);
                 meter.ConnectionFactory = ConnectionFactory;
                 return ToDataGroup(meter, data);

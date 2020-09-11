@@ -389,7 +389,7 @@ namespace openXDA.Adapters
                         Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                         Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
                         meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
-                        List<byte[]> frequencyDomainData = ChannelData.DataFromEvent(eventID,connection);
+                        List<byte[]> frequencyDomainData = ChannelData.DataFromEvent(eventID,"systemSettings");
                         
                         DataGroup dataGroup = new DataGroup();
                         dataGroup.FromData(meter, frequencyDomainData);

@@ -558,7 +558,7 @@ namespace FaultData.DataOperations
             if ((object)evt == null)
                 return null;
 
-            List<byte[]> timeDomainData = ChannelData.DataFromEvent(eventID, connection);
+            List<byte[]> timeDomainData = ChannelData.DataFromEvent(eventID, "systemSettings");
                         
 
             TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
