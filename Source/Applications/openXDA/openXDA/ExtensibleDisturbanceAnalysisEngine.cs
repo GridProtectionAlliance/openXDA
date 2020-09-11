@@ -459,7 +459,7 @@ namespace openXDA
             {
                 Func<AdoDataConnection> connectionFactory = () => CreateDbConnection(m_systemSettings);
                 string connectionString = m_systemSettings.ToConnectionString();
-                m_capBankAnalyticEngine = new CapBankAnalyticEngine(connectionFactory, connectionString);
+                m_capBankAnalyticEngine = new CapBankAnalyticEngine(connectionFactory, connectionString, m_eventEmailEngine);
             }
 
             // Setup new file processor to monitor the watch directories

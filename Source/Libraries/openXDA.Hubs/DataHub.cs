@@ -2816,7 +2816,7 @@ namespace openXDA.Hubs
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
                 connection.ExecuteNonQuery("UPDATE XSLTemplate SET Name = {0} WHERE ID = (SELECT XSLTemplateID FROM EmailType WHERE ID = (SELECT EmailTypeID FROM EventEmailParameters WHERE ID = {1}))", record["Name"].ToString(), int.Parse(record["ID"].ToString()));
-                connection.ExecuteNonQuery("UPDATE EventEmailParameters SET MinDelay = {0}, MaxDelay = {1} WHERE ID = {2}", double.Parse(record["MinDelay"].ToString()), double.Parse(record["MaxDelay"].ToString()), int.Parse(record["ID"].ToString()));
+                connection.ExecuteNonQuery("UPDATE EventEmailParameters SET TriggerSource = {0}, MinDelay = {1}, MaxDelay = {2} WHERE ID = {3}", record["TriggerSource"].ToString(), double.Parse(record["MinDelay"].ToString()), double.Parse(record["MaxDelay"].ToString()), int.Parse(record["ID"].ToString()));
                 connection.ExecuteNonQuery("UPDATE EmailType SET SMS = {0} WHERE ID = (SELECT EmailTypeID FROM EventEmailParameters WHERE ID = {1})", bool.Parse(record["SMS"].ToString()), int.Parse(record["ID"].ToString()));
             }
         }

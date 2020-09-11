@@ -119,10 +119,11 @@ namespace openXDA
 
         #region [ Constructors ]
 
-        public CapBankAnalyticEngine(Func<AdoDataConnection> connectionFactory, string connectionString)
+        public CapBankAnalyticEngine(Func<AdoDataConnection> connectionFactory, string connectionString, EventEmailEngine eventEmailEngine)
         {
             ConnectionFactory = connectionFactory;
             ConnectionString = connectionString;
+            EventEmailEngine = eventEmailEngine;
 
             lock (s_eventFileLock)
             {
@@ -158,6 +159,7 @@ namespace openXDA
             set => Interlocked.Exchange(ref m_connectionString, value);
         }
 
+        private EventEmailEngine EventEmailEngine { get; }
         private string AnalysisRoutineAssembly { get; set; }
         private string AnalysisRoutineMethod { get; set; }
         private CapBankAnalysisRoutine AnalysisRoutine { get; set; }
@@ -262,6 +264,9 @@ namespace openXDA
                     // Read Output Files
                     Log.Info("Processing CapBank Analytic Results...");
                     ParseOutputs(eventMapping);
+
+                    // Trigger cap bank emails
+                    EventEmailEngine.Process(events, "CapBankAnalyticEngine");
                 }
             }
         }

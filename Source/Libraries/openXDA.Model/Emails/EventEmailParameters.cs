@@ -39,6 +39,8 @@ namespace openXDA.Model
 
         public string EventDetailSQL { get; set; }
 
+        public string TriggerSource { get; set; }
+
         public double MinDelay { get; set; }
 
         public double MaxDelay { get; set; }

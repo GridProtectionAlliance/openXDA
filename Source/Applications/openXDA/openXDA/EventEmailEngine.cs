@@ -250,7 +250,13 @@ namespace openXDA
 
         #region [ Methods ]
 
-        public void Process(MeterDataSet meterDataSet)
+        public void Configure(string connectionString, Func<AdoDataConnection> connectionFactory)
+        {
+            m_eventEmailService.ConnectionString = connectionString;
+            m_eventEmailService.ConnectionFactory = connectionFactory;
+        }
+
+        public void Process(MeterDataSet meterDataSet, string triggerSource = "")
         {
             m_eventEmailService.ConnectionString = meterDataSet.ConnectionString;
 
@@ -258,18 +264,36 @@ namespace openXDA
                 return;
 
             m_eventEmailService.ConnectionFactory = meterDataSet.CreateDbConnection;
-            UpdateEmailTypes();
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 IEnumerable<Event> events = eventTable.QueryRecordsWhere("FileGroupID = {0}", meterDataSet.FileGroup.ID);
+                Process(events, triggerSource);
+            }
+        }
 
-                foreach (Event evt in events)
-                {
-                    foreach (EventEmailType emailType in EmailTypes)
-                        emailType.Process(evt);
-                }
+        public void Process(IEnumerable<Event> events, string triggerSource = "")
+        {
+            if (!m_eventEmailService.Enabled)
+                return;
+
+            if (m_eventEmailService.ConnectionString == null)
+                return;
+
+            if (m_eventEmailService.ConnectionFactory == null)
+                return;
+
+            UpdateEmailTypes();
+
+            List<EventEmailType> triggeredEmailTypes = EmailTypes
+                .Where(emailType => string.Equals(emailType.Parameters.TriggerSource, triggerSource, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            foreach (Event evt in events)
+            {
+                foreach (EventEmailType emailType in triggeredEmailTypes)
+                    emailType.Process(evt);
             }
         }
 
