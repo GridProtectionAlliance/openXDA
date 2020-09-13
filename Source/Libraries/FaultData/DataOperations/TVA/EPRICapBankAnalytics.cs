@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using GSF.Data;
 using GSF.Threading;
 using log4net;
 using openXDA.Model;
@@ -52,17 +53,18 @@ namespace FaultData.DataOperations
         private int m_timerAction;
         private int m_runAnalysis;
 
-
+        private int m_delay;
         #endregion
 
         #region [Constructors]
 
-        public EPRICapBankAnalytics(Action<List<Event>, int> processCallback)
+        public EPRICapBankAnalytics(Action<List<Event>, int> processCallback, int delay)
         {
             m_triggeredEvents = new List<Event>();
             m_fileGroupID = -1;
             m_processEventCallback = processCallback;
             m_synchronizedOperation = new LongSynchronizedOperation(UpdateTimersAndRunAnalysis, HandleException);
+            m_delay = delay;
         }
 
         #endregion
@@ -128,8 +130,8 @@ namespace FaultData.DataOperations
                 return;
 
             Action runAnalysisAction = new Action(RunAnalysis);
-            int delay = Delay;
-            cancellationToken = runAnalysisAction.DelayAndExecute(delay);
+
+            cancellationToken = runAnalysisAction.DelayAndExecute(m_delay);
             Interlocked.Exchange(ref m_delayCancellationToken, cancellationToken);
         }
 
@@ -166,7 +168,6 @@ namespace FaultData.DataOperations
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(EPRICapBankAnalytics));
 
-        private static readonly int Delay = 30000;
         #endregion
     }
 

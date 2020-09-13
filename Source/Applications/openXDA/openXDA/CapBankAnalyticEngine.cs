@@ -98,6 +98,10 @@ namespace openXDA
             [Setting]
             [DefaultValue("")]
             public string Analyzer { get; set; }
+
+            [Setting]
+            [DefaultValue(1200)]
+            public int Delay { get; set; }
         }
 
         private class EngineSettings
@@ -125,6 +129,13 @@ namespace openXDA
             ConnectionString = connectionString;
             EventEmailEngine = eventEmailEngine;
 
+          
+            EngineSettings settings = GetSettings(ConnectionString);
+
+            if (!settings.AnalyticSettings.Enabled)
+                return;
+
+
             lock (s_eventFileLock)
             {
                 using (AdoDataConnection connection = ConnectionFactory())
@@ -132,7 +143,7 @@ namespace openXDA
                 {
                     foreach (int fileGroupID in dictionary.Keys)
                     {
-                        EPRICapBankAnalytics analytic = new EPRICapBankAnalytics(RunAnalytic);
+                        EPRICapBankAnalytics analytic = new EPRICapBankAnalytics(RunAnalytic,settings.AnalyticSettings.Delay);
                         TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
                         List<Event> evts = dictionary[fileGroupID].Select(item => evtTbl.QueryRecordWhere("Id = {0}", item)).ToList();
                         analytic.Process(evts, fileGroupID);
@@ -192,7 +203,7 @@ namespace openXDA
                     if (asset.AssetTypeID != capBankId)
                         continue;
 
-                    EPRICapBankAnalytics analytic = new EPRICapBankAnalytics(RunAnalytic);
+                    EPRICapBankAnalytics analytic = new EPRICapBankAnalytics(RunAnalytic, settings.AnalyticSettings.Delay);
                     analytic.Process(group.ToList(), meterDataSet.FileGroup.ID);
                     analytic.StartTimer();
 
