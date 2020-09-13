@@ -3728,7 +3728,11 @@ CREATE TABLE CBAnalyticResult (
     Xpre FLOAT NULL,
     Xpost FLOAT NULL,
     Time DATETIME2 NULL,
-    Toffset FLOAT NULL
+    Toffset FLOAT NULL,
+    XshortedThld FLOAT NULL,
+    XblownThld FLOAT NULL,
+    dVThld FLOAT NULL,
+    dVThldLG FLOAT NULL
     )
 GO
 
@@ -3751,7 +3755,8 @@ CREATE TABLE CBSwitchHealthAnalytic (
     CBSwitchingConditionID INT NOT NULL REFERENCES CBSwitchingCondition(ID),
     R FLOAT NULL,
     X FLOAT NULL,
-    Duration FLOAT NULL
+    Duration FLOAT NULL,
+    I FLOAT NULL,
     )
 GO
 

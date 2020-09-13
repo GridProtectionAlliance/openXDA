@@ -170,6 +170,24 @@ namespace openXDA.Model
         public double? Xpost { get; set; }
 
         /// <summary>
+        /// The reactance Threshhold below which a Cap bank is considered shorted
+        /// </summary>
+        public double? XshortedThld { get; set; }
+        /// <summary>
+        /// The reactance Threshhold above which a Cap bank Fuse is considered blown
+        /// </summary>
+        public double? XblownThld { get; set; }
+        /// <summary>
+        /// The differential voltage threshold of the relay for fuseless banks or fused banks having no blown fuses in the lower group.
+        /// </summary>
+        public double? dVThld { get; set; }
+
+        /// <summary>
+        /// The differential voltage threshold of the relay for fused banks having blown fuses in one lower group.
+        /// </summary>
+        public double? dVThldLG { get; set; }
+
+        /// <summary>
         /// The Time Stamp
         /// </summary>
         [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]

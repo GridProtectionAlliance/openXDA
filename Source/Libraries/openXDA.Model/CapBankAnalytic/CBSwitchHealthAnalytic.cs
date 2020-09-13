@@ -57,5 +57,10 @@ namespace openXDA.Model
         /// Time between the first closing and the switching out of the pre-insertion R and X branch
         /// </summary>
         public double Duration { get; set; }
+
+        /// <summary>
+        /// The change of current magnitude with and without the pre-insertion during the energizing
+        /// </summary>
+        public double I { get; set; }
     } 
 }

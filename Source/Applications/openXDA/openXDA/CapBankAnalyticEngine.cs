@@ -538,6 +538,11 @@ namespace openXDA
                     row.Time = new DateTime(year, month, day, hour, minute, second);
                     row.Toffset = ConvertToDouble(fields[37]);
 
+                    row.XshortedThld = ConvertToDouble(fields[39]);
+                    row.XblownThld = ConvertToDouble(fields[40]);
+                    row.dVThld = ConvertToDouble(fields[41]);
+                    row.dVThldLG = ConvertToDouble(fields[42]);
+
                     Event evt = null;
                     if (eventMapping.TryGetValue(fileName, out evt))
                     {
@@ -595,6 +600,7 @@ namespace openXDA
                     row.R = ConvertToDouble(fields[7]) ?? double.NaN;
                     row.X = ConvertToDouble(fields[8]) ?? double.NaN;
                     row.Duration = ConvertToDouble(fields[6]) ?? double.NaN;
+                    row.I = ConvertToDouble(fields[9]) ?? double.NaN;
 
                     if (double.IsNaN(row.R) && double.IsNaN(row.X) && double.IsNaN(row.Duration))
                         continue;
