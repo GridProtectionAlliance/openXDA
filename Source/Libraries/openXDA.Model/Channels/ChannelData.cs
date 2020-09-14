@@ -93,19 +93,23 @@ namespace openXDA.Model
             string query = "SELECT SeriesID FROM ChannelData WHERE EventID = {0}";
             DataTable table = connection.RetrieveData(query, eventID);
 
-            result.AddRange(table.Rows.Cast<DataRow>().Select(row =>
-                {
+            foreach (DataRow row in table.Rows)
+            {
                     int seriesID = row.Field<int>("SeriesID");
-                    byte[] singleSeriesData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}"
-                        , seriesID, eventID);
-                    if (singleSeriesData == null)
+
+                    ChannelData channelData = new TableOperations<ChannelData>(connection).QueryRecordWhere("SeriesID = {0} AND EventID = {1}", seriesID, eventID);
+                    if (channelData == null) continue;
+                   
+                    if (channelData.TimeDomainData == null)
                     {
-                        singleSeriesData = ProcessLegacyBlob(eventID, seriesID, connection);
+                        channelData.TimeDomainData = ProcessLegacyBlob(eventID, seriesID, connection);
+                        if (channelData.TimeDomainData == null) continue;
+
                     }
                     directChannelIDs.Add(connection.ExecuteScalar<int>("SELECT ChannelID FROM Series WHERE ID = {0}", seriesID));
-                    return singleSeriesData;
-                }
-            ));
+                    result.Add(channelData.TimeDomainData);
+            }
+            
 
             //This Will get the extended Data (throught connections)....
             Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT AssetID FROM Event WHERE ID = {0})", eventID);
@@ -162,7 +166,8 @@ namespace openXDA.Model
        /// <returns> A single Channel Data Blob for the  requested Series</returns>
         private static byte[] ProcessLegacyBlob(int eventID, int requestedSeriesID, AdoDataConnection connection)
         {
-            int eventDataID = connection.ExecuteScalar<int>("SELECT EventDataID FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", requestedSeriesID, eventID);
+            int? eventDataID = connection.ExecuteScalar<int?>("SELECT EventDataID FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", requestedSeriesID, eventID);
+            if (eventDataID == null) return null;
 
             byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", eventDataID);
             byte[] resultData = null;
@@ -185,7 +190,7 @@ namespace openXDA.Model
             }
 
             connection.ExecuteNonQuery("DELETE FROM EventData WHERE ID = {0}", eventDataID);
-
+            connection.ExecuteNonQuery("DELETE FROM ChannelData WHERE EventDataID = {0} AND TimeDomainData IS NULL", eventDataID);
             return resultData;
         }
 
