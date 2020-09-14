@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Gemstone.Common" Version="1.0.56" />
+    <PackageReference Include="Gemstone.Data" Version="1.0.56" />
+    <PackageReference Include="Gemstone.Numeric" Version="1.0.56" />
+    <PackageReference Include="Gemstone.PQDIF" Version="1.0.56" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+  </ItemGroup>
+
+</Project>

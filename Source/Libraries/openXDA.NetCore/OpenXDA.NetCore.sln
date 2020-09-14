@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenXDA.NetCore", "OpenXDA.NetCore.csproj", "{3514FB7F-4E52-4C97-81BE-C8E391F73CA3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3514FB7F-4E52-4C97-81BE-C8E391F73CA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3514FB7F-4E52-4C97-81BE-C8E391F73CA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3514FB7F-4E52-4C97-81BE-C8E391F73CA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3514FB7F-4E52-4C97-81BE-C8E391F73CA3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B7CE3B67-074B-4D05-8B22-74A63D9CEAC5}
+	EndGlobalSection
+EndGlobal
