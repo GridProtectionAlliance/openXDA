@@ -4,6 +4,10 @@
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\..\Build\Output\Release\Libraries\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Gemstone.Common" Version="1.0.56" />
     <PackageReference Include="Gemstone.Data" Version="1.0.56" />
