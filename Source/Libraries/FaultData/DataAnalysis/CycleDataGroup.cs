@@ -35,7 +35,6 @@ namespace FaultData.DataAnalysis
         private const int PhaseIndex = 1;
         private const int PeakIndex = 2;
         private const int ErrorIndex = 3;
-        private const int DirectionalErrorIndex = 4;
         private Asset m_asset;
         // Fields
         private DataGroup m_dataGroup;
@@ -83,14 +82,6 @@ namespace FaultData.DataAnalysis
             get
             {
                 return m_dataGroup[ErrorIndex];
-            }
-        }
-
-        public DataSeries DirectionalError
-        {
-            get
-            {
-                return m_dataGroup[DirectionalErrorIndex];
             }
         }
 

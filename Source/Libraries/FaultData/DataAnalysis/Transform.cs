@@ -62,7 +62,6 @@ namespace FaultData.DataAnalysis
             DataSeries phaseSeries = new DataSeries();
             DataSeries peakSeries = new DataSeries();
             DataSeries errorSeries = new DataSeries();
-            DataSeries directionalerrorSeries = new DataSeries();
 
             int samplesPerCycle;
             double[] yValues;
@@ -80,7 +79,6 @@ namespace FaultData.DataAnalysis
             phaseSeries.SeriesInfo = dataSeries.SeriesInfo;
             peakSeries.SeriesInfo = dataSeries.SeriesInfo;
             errorSeries.SeriesInfo = dataSeries.SeriesInfo;
-            directionalerrorSeries.SeriesInfo = dataSeries.SeriesInfo;
 
             // Get samples per cycle of the data series based on the given frequency
             samplesPerCycle = CalculateSamplesPerCycle(dataSeries, frequency);
@@ -153,15 +151,6 @@ namespace FaultData.DataAnalysis
                         .Zip(yValues, (estimate, value) => Math.Abs(estimate - value))
                         .Sum()
                 });
-                directionalerrorSeries.DataPoints.Add(new DataPoint()
-                {
-                    Time = cycleTime,
-
-                    Value = tValues
-                        .Select(sineFit.CalculateY)
-                        .Zip(yValues, (estimate, value) => (estimate - value))
-                        .Sum()
-                });
             }
 
             // Add a series to the data group for each series of cycle data
@@ -169,7 +158,6 @@ namespace FaultData.DataAnalysis
             dataGroup.Add(phaseSeries);
             dataGroup.Add(peakSeries);
             dataGroup.Add(errorSeries);
-            dataGroup.Add(directionalerrorSeries);
 
             return new CycleDataGroup(dataGroup, dataSeries.SeriesInfo.Channel.Asset);
         }
