@@ -205,10 +205,66 @@ namespace FaultData.DataAnalysis
 
                 m_vIndices.Add(set);
             }
-            
+
+            // Also walk though all Vab to catch Leftover Cases where Va is not present
+            foreach (int? VabIndex in vabIndices)
+            {
+                int assetID = dataGroup[(int)VabIndex].SeriesInfo.Channel.AssetID;
+
+                int VaIndex = vaIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VbIndex = vbIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VcIndex = vcIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+
+                int VbcIndex = vbcIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VcaIndex = vcaIndices.Cast<int?>().FirstOrDefault(i => dataGroup[(int)i].SeriesInfo.Channel.AssetID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+
+                VIndices set = new VIndices();
+                ProcessedIndices.Add(VabIndex);
+                set.Vab = (int)VabIndex;
+
+                if (VbIndex > -1)
+                {
+                    ProcessedIndices.Add(VbIndex);
+                    set.Vb = VbIndex;
+                }
+                if (VcIndex > -1)
+                {
+                    ProcessedIndices.Add(VcIndex);
+                    set.Vc = VcIndex;
+                }
+
+                if (VaIndex > -1)
+                {
+                    ProcessedIndices.Add(VaIndex);
+                    set.Va = VaIndex;
+                }
+                if (VbcIndex > -1)
+                {
+                    ProcessedIndices.Add(VbcIndex);
+                    set.Vbc = VbcIndex;
+                }
+                if (VcaIndex > -1)
+                {
+                    ProcessedIndices.Add(VcaIndex);
+                    set.Vca = VcaIndex;
+                }
+
+
+                if (assetID == dataGroup.Asset.ID)
+                {
+                    set.distance = 0;
+                }
+                else
+                {
+                    set.distance = dataGroup.Asset.DistanceToAsset(assetID);
+                }
+
+                m_vIndices.Add(set);
+            }
+
             // Start by matching 
             //Check if a voltage and current channnel exist on this asset
-            
+
             if (iaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
                 m_iaIndex = iaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
             if (ibIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)

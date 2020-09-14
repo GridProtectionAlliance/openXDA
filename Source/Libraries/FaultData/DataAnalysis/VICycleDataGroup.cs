@@ -361,6 +361,61 @@ namespace FaultData.DataAnalysis
                 m_vIndices.Add(set);
             }
 
+            // Also walk though all Vab to catch Leftover Cases where Va is not present
+            foreach (int? VabIndex in vabIndices)
+            {
+                int assetID = m_cycleDataGroups[(int)VabIndex].Asset.ID;
+
+                int VaIndex = vaIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VbIndex = vbIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VcIndex = vcIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                
+                int VbcIndex = vbcIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+                int VcaIndex = vcaIndices.Cast<int?>().FirstOrDefault(i => m_cycleDataGroups[(int)i].Asset.ID == assetID && !ProcessedIndices.Contains(i)) ?? -1;
+
+                VIndices set = new VIndices();
+                ProcessedIndices.Add(VabIndex);
+                set.Vab = (int)VabIndex;
+
+                if (VbIndex > -1)
+                {
+                    ProcessedIndices.Add(VbIndex);
+                    set.Vb = VbIndex;
+                }
+                if (VcIndex > -1)
+                {
+                    ProcessedIndices.Add(VcIndex);
+                    set.Vc = VcIndex;
+                }
+
+                if (VaIndex > -1)
+                {
+                    ProcessedIndices.Add(VaIndex);
+                    set.Va = VaIndex;
+                }
+                if (VbcIndex > -1)
+                {
+                    ProcessedIndices.Add(VbcIndex);
+                    set.Vbc = VbcIndex;
+                }
+                if (VcaIndex > -1)
+                {
+                    ProcessedIndices.Add(VcaIndex);
+                    set.Vca = VcaIndex;
+                }
+
+
+                if (assetID == m_asset.ID)
+                {
+                    set.distance = 0;
+                }
+                else
+                {
+                    set.distance = m_asset.DistanceToAsset(assetID);
+                }
+
+                m_vIndices.Add(set);
+            }
 
             for (int i = 0; i < m_cycleDataGroups.Count; i++)
             {
