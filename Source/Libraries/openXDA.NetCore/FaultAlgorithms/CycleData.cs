@@ -67,6 +67,7 @@
 //*********************************************************************************************************************
 
 using System;
+using System.Numerics;
 using Gemstone;
 using Gemstone.Numeric;
 
@@ -88,8 +89,8 @@ namespace FaultAlgorithms
 
         // a = e^((2/3) * pi * i)
         private const double Rad120 = TwoPI / 3.0D;
-        private static readonly ComplexNumber a = new ComplexNumber(Math.Cos(Rad120), Math.Sin(Rad120));
-        private static readonly ComplexNumber aSq = a * a;
+        private static readonly Complex a = Complex.FromPolarCoordinates(1, Rad120);
+        private static readonly Complex aSq = a * a;
 
         // Fields
 
@@ -159,13 +160,13 @@ namespace FaultAlgorithms
         /// <param name="bnCycle">The cycle of B-to-neutral data to be used.</param>
         /// <param name="cnCycle">The cycle of C-to-neutral data to be used.</param>
         /// <returns>An array of size 3 containing the zero sequence, positive sequence, and negative sequence components in that order.</returns>
-        public static ComplexNumber[] CalculateSequenceComponents(Cycle anCycle, Cycle bnCycle, Cycle cnCycle)
+        public static Complex[] CalculateSequenceComponents(Cycle anCycle, Cycle bnCycle, Cycle cnCycle)
         {
-            ComplexNumber an = anCycle.Complex;
-            ComplexNumber bn = bnCycle.Complex;
-            ComplexNumber cn = cnCycle.Complex;
+            Complex an = anCycle.Complex;
+            Complex bn = bnCycle.Complex;
+            Complex cn = cnCycle.Complex;
 
-            ComplexNumber[] sequenceComponents = new ComplexNumber[3];
+            Complex[] sequenceComponents = new Complex[3];
 
             sequenceComponents[0] = (an + bn + cn) / 3.0D;
             sequenceComponents[1] = (an + a * bn + aSq * cn) / 3.0D;

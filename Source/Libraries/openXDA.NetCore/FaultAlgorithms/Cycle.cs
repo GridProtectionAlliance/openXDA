@@ -68,8 +68,8 @@
 
 using System;
 using System.Linq;
+using System.Numerics;
 using Gemstone;
-using Gemstone.Numeric;
 using Gemstone.Numeric.Analysis;
 using Gemstone.Units;
 
@@ -93,9 +93,14 @@ namespace FaultAlgorithms
         public double Frequency;
 
         /// <summary>
-        /// The complex number representation of the RMS phasor.
+        /// Root-mean-square of the <see cref="MeasurementData.Measurements"/> in the cycle.
         /// </summary>
-        public ComplexNumber Complex;
+        public double RMS;
+
+        /// <summary>
+        /// Phase angle of the start of the cycle, relative to the reference angle.
+        /// </summary>
+        public Angle Phase;
 
         /// <summary>
         /// The most extreme data point in the cycle.
@@ -168,32 +173,18 @@ namespace FaultAlgorithms
         #region [ Properties ]
 
         /// <summary>
-        /// Root-mean-square of the <see cref="MeasurementData.Measurements"/> in the cycle.
+        /// The complex number representation of the RMS phasor.
         /// </summary>
-        public double RMS
+        public Complex Complex
         {
             get
             {
-                return Complex.Magnitude;
+                return Complex.FromPolarCoordinates(RMS, Phase);
             }
             set
             {
-                Complex.Magnitude = value;
-            }
-        }
-
-        /// <summary>
-        /// Phase angle of the start of the cycle, relative to the reference angle.
-        /// </summary>
-        public Angle Phase
-        {
-            get
-            {
-                return Complex.Angle;
-            }
-            set
-            {
-                Complex.Angle = value;
+                RMS = value.Magnitude;
+                Phase = value.Phase;
             }
         }
 

@@ -66,12 +66,12 @@
 //
 //*********************************************************************************************************************
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Gemstone;
-using Gemstone.Numeric;
+using System.Numerics;
 using Gemstone.Numeric.Analysis;
 
 namespace FaultAlgorithms
@@ -84,7 +84,7 @@ namespace FaultAlgorithms
         #region [ Members ]
 
         // Fields
-        private List<CycleData> m_cycles;
+        private readonly List<CycleData> m_cycles;
 
         #endregion
 
@@ -262,25 +262,22 @@ namespace FaultAlgorithms
                 "Neg I Magnitude,Neg I Angle," +
                 "Zero I Magnitude,Zero I Angle";
 
-            using (FileStream fileStream = File.OpenWrite(fileName))
-            {
-                using (TextWriter fileWriter = new StreamWriter(fileStream))
-                {
-                    // Write the CSV header to the file
-                    fileWriter.WriteLine(Header);
+            using FileStream fileStream = File.OpenWrite(fileName);
+            using TextWriter fileWriter = new StreamWriter(fileStream);
 
-                    // Write data to the file
-                    foreach (CycleData cycleData in cycles.m_cycles)
-                        fileWriter.WriteLine(ToCSV(cycleData));
-                }
-            }
+            // Write the CSV header to the file
+            fileWriter.WriteLine(Header);
+
+            // Write data to the file
+            foreach (CycleData cycleData in cycles.m_cycles)
+                fileWriter.WriteLine(ToCSV(cycleData));
         }
 
         // Converts the cycle data to a row of CSV data.
         private static string ToCSV(CycleData cycleData)
         {
-            ComplexNumber[] vSeq = CycleData.CalculateSequenceComponents(cycleData.AN.V, cycleData.BN.V, cycleData.CN.V);
-            ComplexNumber[] iSeq = CycleData.CalculateSequenceComponents(cycleData.AN.I, cycleData.BN.I, cycleData.CN.I);
+            Complex[] vSeq = CycleData.CalculateSequenceComponents(cycleData.AN.V, cycleData.BN.V, cycleData.CN.V);
+            Complex[] iSeq = CycleData.CalculateSequenceComponents(cycleData.AN.I, cycleData.BN.I, cycleData.CN.I);
 
             string vCsv = string.Format("{0},{1},{2}", ToCSV(cycleData.AN.V), ToCSV(cycleData.BN.V), ToCSV(cycleData.CN.V));
             string vSeqCsv = string.Format("{0},{1},{2}", ToCSV(vSeq[1]), ToCSV(vSeq[2]), ToCSV(vSeq[0]));
@@ -297,9 +294,12 @@ namespace FaultAlgorithms
         }
 
         // Converts the sequence component to CSV data.
-        private static string ToCSV(ComplexNumber sequenceComponent)
+        private static string ToCSV(Complex sequenceComponent)
         {
-            return string.Format("{0},{1}", sequenceComponent.Magnitude, sequenceComponent.Angle.ToDegrees());
+            double magnitude = sequenceComponent.Magnitude;
+            double radians = sequenceComponent.Phase;
+            double degrees = radians * 180.0D / Math.PI;
+            return string.Format("{0},{1}", magnitude, degrees);
         }
 
         #endregion
