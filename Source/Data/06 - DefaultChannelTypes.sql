@@ -436,7 +436,7 @@ GO
 INSERT INTO StepChangeMeasurement (PQMeasurementID, Setting) VALUES ((SELECT ID FROM PQMeasurement WHERE Name = 'Average Current Unbalance(S0/S1)'), 5)
 GO
 
-/* Default Asset Types */
+-- Default Asset Types
 INSERT INTO AssetType (Name, Description) VALUES ('Line','Transmission Line')
 GO
 INSERT INTO AssetType (Name, Description) VALUES ('Bus','Bus')
@@ -452,7 +452,7 @@ GO
 INSERT INTO AssetType (Name, Description) VALUES ('CapacitorBankRelay','Relay for a Capacitor Bank')
 GO
 
-/* Default Asset Connections */
+-- Default Asset Connections
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
 	VALUES ('Line-LineSegment','No measurements are passed across this connection',1,'SELECT 0','SELECT 0')
 GO

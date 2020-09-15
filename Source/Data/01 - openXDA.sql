@@ -282,7 +282,7 @@ CREATE TABLE AssetRelationship
 )
 GO
 
-/* View with Procedures Due To Spare Logic */
+-- View with Procedures Due To Spare Logic --
 
 CREATE VIEW AssetConnection AS 
 SELECT
@@ -332,7 +332,8 @@ BEGIN
 	DELETE FROM AssetRelationship WHERE ID IN (SELECT DELETED.ID FROM DELETED)
 END
 GO
-/* End Spare Logic */
+
+-- End Spare Logic 
 
 CREATE TABLE BusAttributes
 (
@@ -447,8 +448,7 @@ CREATE TABLE TransformerAttributes
 GO
 
 
-
-/* Correspoding Views and Trigger */
+-- Correspoding Views and Trigger 
 CREATE VIEW Line AS
 	SELECT 
 		AssetID AS ID,
@@ -533,8 +533,8 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 END
 GO
 
-/* END Line Model Triggers */
-/* Bus Model */
+-- END Line Model Triggers 
+-- Bus Model 
 CREATE VIEW Bus AS
 	SELECT 
 		AssetID AS ID,
@@ -591,7 +591,7 @@ END
 GO
 
 
-/* Breaker Model */
+-- Breaker Model 
 CREATE VIEW Breaker AS
 	SELECT 
 		AssetID AS ID,
@@ -670,7 +670,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 END
 GO
 
-/* Capacitor Bank Relay Model */
+-- Capacitor Bank Relay Model 
 CREATE VIEW CapBankRelay AS
 	SELECT 
 		AssetID AS ID,
@@ -738,7 +738,7 @@ END
 GO
 
 
-/* Capacitor Bank Model */
+-- Capacitor Bank Model 
 CREATE VIEW CapBank AS
 	SELECT 
 		AssetID AS ID,
@@ -898,7 +898,7 @@ END
 GO
 
 
-/* Line Segment Model */
+-- Line Segment Model 
 CREATE VIEW LineSegment AS
 	SELECT 
 		AssetID AS ID,
@@ -983,7 +983,7 @@ END
 GO
 
 
-/* Transformers */
+-- Transformers 
 CREATE VIEW Transformer AS
 	SELECT 
 		AssetID AS ID,
@@ -1072,7 +1072,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 END
 GO
 
-/* *************** End Model Section ********* */
+--*************** End Model Section *********
 
 CREATE TABLE Structure
 (
@@ -1752,19 +1752,19 @@ CREATE TABLE ChannelData
 GO
 
 
-/* Indices for Channel Data potentially Neccesarry
-CREATE NONCLUSTERED INDEX IX_EventData_FileGroupID
-ON EventData(FileGroupID ASC)
-GO
+--Indices for Channel Data potentially Neccesarry
+--CREATE NONCLUSTERED INDEX IX_EventData_FileGroupID
+--ON EventData(FileGroupID ASC)
+--GO
 
-CREATE NONCLUSTERED INDEX IX_EventData_RuntimeID
-ON EventData(RuntimeID ASC)
-GO
+--CREATE NONCLUSTERED INDEX IX_EventData_RuntimeID
+--ON EventData(RuntimeID ASC)
+--GO
 
-CREATE NONCLUSTERED INDEX IX_EventData_MarkedForDeletion
-ON EventData(MarkedForDeletion ASC)
-GO
-*/
+--CREATE NONCLUSTERED INDEX IX_EventData_MarkedForDeletion
+--ON EventData(MarkedForDeletion ASC)
+--GO
+
 
 CREATE TABLE EventType
 (
@@ -3665,7 +3665,7 @@ CREATE TABLE RelayPerformance
 )
 GO
 
-/* CapBank Analytics */
+-- CapBank Analytics
 
 CREATE TABLE CBDataError (
     ID INT NOT NULL PRIMARY KEY,
@@ -5319,7 +5319,7 @@ GO
 UPDATE EventEmailParameters
 SET EventDetailSQL = 'DECLARE @url VARCHAR(MAX) = (SELECT Value FROM DashSettings WHERE Name = ''System.URL'')
 
-/*  Temporary Tables */
+/* Temporary Tables */
 /* Breaker */
 SELECT LN.ID AS LineID, ML.LineName AS Name, LN.AssetKey AS AssetKey, 
 	RP.TripTime / 10 AS TT, RP.PickupTime / 10 AS PT, RP.TripCoilCondition AS TCC, RP.TripInitiate AS TI, RP.Imax1 AS L1, RP.Imax2 AS L2,
