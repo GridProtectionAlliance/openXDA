@@ -364,15 +364,11 @@ namespace openXDA
 
                     statusBuilder.AppendLine($"   Internal buffer size: {m_fileProcessor.InternalBufferSize}");
                     statusBuilder.AppendLine($"   Max thread pool size: {m_fileProcessor.MaxThreadCount}");
-                    statusBuilder.AppendLine($"      Max fragmentation: {m_fileProcessor.MaxFragmentation}");
                     statusBuilder.AppendLine($"   Enumeration strategy: {m_fileProcessor.EnumerationStrategy}");
                     statusBuilder.AppendLine($"         Is Enumerating: {m_fileProcessor.IsEnumerating}");
                     statusBuilder.AppendLine($"        Processed files: {m_fileProcessor.ProcessedFileCount}");
                     statusBuilder.AppendLine($"          Skipped files: {m_fileProcessor.SkippedFileCount}");
                     statusBuilder.AppendLine($"         Requeued files: {m_fileProcessor.RequeuedFileCount}");
-                    statusBuilder.AppendLine($"            Is Cleaning: {m_fileProcessor.IsCleaning}");
-                    statusBuilder.AppendLine($"      Last Compact Time: {m_fileProcessor.LastCompactTime}");
-                    statusBuilder.AppendLine($"  Last Compact Duration: {m_fileProcessor.LastCompactDuration}");
                     statusBuilder.AppendLine();
 
                     if (m_fileProcessor.IsEnumerating)
@@ -465,13 +461,13 @@ namespace openXDA
             // Setup new file processor to monitor the watch directories
             if ((object)m_fileProcessor == null)
             {
-                m_fileProcessor = new FileProcessor(m_systemSettings.FileProcessorID);
+                m_fileProcessor = new FileProcessor();
                 m_fileProcessor.FolderExclusion = m_systemSettings.FolderExclusion;
                 m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
                 m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
                 m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
-                m_fileProcessor.MaxFragmentation = m_systemSettings.FileWatcherMaxFragmentation;
                 m_fileProcessor.FilterMethod = PrevalidateFile;
+                m_fileProcessor.TrackChanges = true;
                 m_fileProcessor.Processing += FileProcessor_Processing;
                 m_fileProcessor.Error += FileProcessor_Error;
 
@@ -578,7 +574,6 @@ namespace openXDA
                 m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
                 m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
                 m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
-                m_fileProcessor.MaxFragmentation = m_systemSettings.FileWatcherMaxFragmentation;
 
                 UpdateFileProcessorFilter(m_systemSettings);
 
@@ -776,16 +771,6 @@ namespace openXDA
 
                     oldValue = m_fileProcessor.MaxThreadCount.ToString();
                     m_fileProcessor.MaxThreadCount = maxThreadCount;
-                }
-                else if (args[1].Equals("MaxFragmentation", StringComparison.OrdinalIgnoreCase))
-                {
-                    int maxFragmentation;
-
-                    if (!int.TryParse(args[2], out maxFragmentation))
-                        throw new FormatException($"Malformed expression - Value for property 'MaxFragmentation' must be an integer. Type 'TweakFileProcessor -?' to get help with this command.");
-
-                    oldValue = m_fileProcessor.MaxFragmentation.ToString();
-                    m_fileProcessor.MaxFragmentation = maxFragmentation;
                 }
                 else if (args[1].Equals("EnumerationStrategy", StringComparison.OrdinalIgnoreCase))
                 {
@@ -1288,42 +1273,46 @@ namespace openXDA
 
             try
             {
-                string filePath;
-                int priority;
+                string filePath = fileProcessorEventArgs.FullPath;
 
-                filePath = fileProcessorEventArgs.FullPath;
-
-                priority = fileProcessorEventArgs.RaisedByFileWatcher
+                int priority = fileProcessorEventArgs.RaisedByFileWatcher
                     ? FileWatcherPriority
                     : FileEnumerationPriority;
 
                 // Determine whether the file has already been
                 // processed or needs to be processed again
-                if (fileProcessorEventArgs.AlreadyProcessed)
+                using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
                 {
-                    using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
+                    TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
+                    TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
+
+                    DataFile dataFile = dataFileTable
+                        .QueryRecordsWhere("FilePathHash = {0} AND FilePath = {1}", filePath.GetHashCode(), filePath)
+                        .MaxBy(file => file.ID);
+
+                    bool wasProcessed = (object)dataFile != null;
+                    bool modifiedSinceProcessing = false;
+
+                    if (wasProcessed)
                     {
-                        TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
-                        TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
+                        TimeZoneInfo xdaTimeZone = m_systemSettings.XDATimeZoneInfo;
+                        DateTime lastWriteTimeUTC = File.GetLastWriteTimeUtc(filePath);
+                        DateTime lastWriteTime = TimeZoneInfo.ConvertTimeFromUtc(lastWriteTimeUTC, xdaTimeZone);
+                        modifiedSinceProcessing = (dataFile.LastWriteTime > lastWriteTime);
+                    }
 
-                        DataFile dataFile = dataFileTable
-                            .QueryRecordsWhere("FilePathHash = {0} AND FilePath = {1}", filePath.GetHashCode(), filePath)
-                            .MaxBy(file => file.ID);
+                    if (wasProcessed && !modifiedSinceProcessing)
+                    {
+                        FileGroup fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", dataFile.FileGroupID);
+                        bool finishedProcessing = fileGroup.ProcessingEndTime > DateTime.MinValue;
 
-                        if ((object)dataFile != null)
+                        if (finishedProcessing)
                         {
-                            FileGroup fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", dataFile.FileGroupID);
-
-                            // This will tell us whether the service was stopped in the middle
-                            // of processing the last time it attempted to process the file
-                            if (fileGroup.ProcessingEndTime > DateTime.MinValue)
-                            {
-                                // Explicitly use Log.Debug() so that the message does not appear on the remote console,
-                                // but include a FileSkippedException so that the message gets routed to the skipped files log
-                                FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because it has already been processed.");
-                                Log.Debug(ex.Message, ex);
-                                return;
-                            }
+                            // Explicitly use Log.Debug() so that the message does not appear on the remote console,
+                            // but include a FileSkippedException so that the message gets routed to the skipped files log
+                            FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because path and timestamp indicate it has already been processed.");
+                            Log.Debug(ex.Message, ex);
+                            return;
                         }
                     }
                 }
@@ -1348,9 +1337,7 @@ namespace openXDA
                 {
                     string message = $"Skipped file \"{filePath}\" because it is empty.";
 
-                    if (fileProcessorEventArgs.AlreadyProcessed)
-                        Log.Debug(message, new FileSkippedException(message));
-                    else if (fileProcessorEventArgs.RetryCount < 30)
+                    if (fileProcessorEventArgs.RetryCount < 30)
                         fileProcessorEventArgs.Requeue = true;
                     else
                         throw new FileSkippedException(message);
@@ -1376,9 +1363,7 @@ namespace openXDA
 
                             if (fileBlobCount != 0)
                             {
-                                // Explicitly use Log.Debug() so that the message does not appear on the remote console,
-                                // but include a FileSkippedException so that the message gets routed to the skipped files log
-                                FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because it has already been processed.");
+                                FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because CRC indicates it has already been processed.");
                                 Log.Warn(ex.Message, ex);
                                 return;
                             }
