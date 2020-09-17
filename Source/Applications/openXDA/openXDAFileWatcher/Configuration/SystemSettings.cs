@@ -333,24 +333,6 @@ namespace openXDAFileWatcher.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the maximum amount of fragmentation allowed before
-        /// compacting the list of processed files in the file watcher.
-        /// </summary>
-        [Setting]
-        [DefaultValue(FileProcessor.DefaultMaxFragmentation)]
-        public int FileWatcherMaxFragmentation
-        {
-            get
-            {
-                return m_fileWatcherMaxFragmentation;
-            }
-            set
-            {
-                m_fileWatcherMaxFragmentation = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the number of threads used
         /// internally to the file processor.
         /// </summary>
@@ -413,18 +395,6 @@ namespace openXDAFileWatcher.Configuration
                     .Select(kvp => kvp.Value)
                     .Select(fileShareString => new FileShare(fileShareString))
                     .ToList();
-            }
-        }
-
-        /// <summary>
-        /// Gets the ID of the file processor which determines
-        /// the name of the file backed lookup table.
-        /// </summary>
-        public Guid FileProcessorID
-        {
-            get
-            {
-                return m_fileProcessorID;
             }
         }
 

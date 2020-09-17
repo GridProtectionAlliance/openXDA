@@ -304,25 +304,6 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the ID of the file processor which determines
-        /// the name of the file backed lookup table.
-        /// </summary>
-        [Setting]
-        [SettingName("FileProcessorID")]
-        [DefaultValue("4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D")]
-        public string FileProcessorIDSetting
-        {
-            get
-            {
-                return FileProcessorID.ToString();
-            }
-            set
-            {
-                FileProcessorID = Guid.Parse(value);
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the flag that indicates whether the local file watcher should be enabled.
         /// </summary>
         [Setting]
@@ -343,14 +324,6 @@ namespace openXDA.Configuration
         [Setting]
         [DefaultValue(false)]
         public bool FileWatcherOrderedEnumeration { get; set; }
-
-        /// <summary>
-        /// Gets or sets the maximum amount of fragmentation allowed before
-        /// compacting the list of processed files in the file watcher.
-        /// </summary>
-        [Setting]
-        [DefaultValue(FileProcessor.DefaultMaxFragmentation)]
-        public int FileWatcherMaxFragmentation { get; set; }
 
         /// <summary>
         /// Gets or sets the number of threads used
@@ -407,12 +380,6 @@ namespace openXDA.Configuration
                     .ToList();
             }
         }
-
-        /// <summary>
-        /// Gets the ID of the file processor which determines
-        /// the name of the file backed lookup table.
-        /// </summary>
-        public Guid FileProcessorID { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="TimeZoneInfo"/> for the time zone
