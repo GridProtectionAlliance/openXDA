@@ -77,6 +77,8 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
+            FilterProcessedDataGroups(meterDataSet);
+
             DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             EventClassificationResource eventClassificationResource = meterDataSet.GetResource<EventClassificationResource>();
@@ -88,6 +90,44 @@ namespace FaultData.DataOperations
 
                 List<Event> events = GetEvents(connection, meterDataSet, dataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
                 LoadEvents(connection, events, meterDataSet);
+            }
+        }
+
+        private void FilterProcessedDataGroups(MeterDataSet meterDataSet)
+        {
+            DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
+            List<DataGroup> dataGroups = dataGroupsResource.DataGroups;
+
+            if (!dataGroups.Any(dataGroup => dataGroup.Classification == DataClassification.Event))
+                return;
+
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+
+                for (int i = dataGroups.Count - 1; i >= 0; i--)
+                {
+                    DataGroup dataGroup = dataGroups[i];
+
+                    if (dataGroup.Classification != DataClassification.Event)
+                        continue;
+
+                    Asset asset = dataGroup.Asset ?? meterDataSet.Meter.Location.AssetLocations.Single().Asset;
+                    IDbDataParameter startTime2 = ToDateTime2(connection, dataGroup.StartTime);
+                    IDbDataParameter endTime2 = ToDateTime2(connection, dataGroup.EndTime);
+
+                    const string Filter =
+                        "StartTime = {0} AND " +
+                        "EndTime = {1} AND " +
+                        "Samples = {2} AND " +
+                        "MeterID = {3} AND " +
+                        "AssetID = {4}";
+
+                    int count = eventTable.QueryRecordCountWhere(Filter, startTime2, endTime2, dataGroup.Samples, meterDataSet.Meter.ID, asset.ID);
+
+                    if (count > 0)
+                        dataGroups.RemoveAt(i);
+                }
             }
         }
 
