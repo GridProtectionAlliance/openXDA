@@ -45,6 +45,8 @@ namespace openXDA.Model
         [FieldDataType(System.Data.DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime ProcessingEndTime { get; set; }
 
+        public int ProcessingVersion { get; set; }
+
         public int Error { get; set; }
 
         public int FileHash { get; set; }
