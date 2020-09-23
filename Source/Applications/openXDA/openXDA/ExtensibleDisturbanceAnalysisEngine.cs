@@ -68,10 +68,23 @@
 //
 //*********************************************************************************************************************
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataOperations;
-using FaultData.DataReaders;
 using FaultData.DataSets;
 using GSF.Annotations;
 using GSF.Collections;
@@ -84,20 +97,8 @@ using GSF.Threading;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data.SqlClient;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using FileShare = openXDA.Configuration.FileShare;
+using IDataReader = FaultData.DataReaders.IDataReader;
 
 namespace openXDA
 {
@@ -948,9 +949,44 @@ namespace openXDA
                         // Determine whether the timestamps in the file extend beyond user-defined thresholds
                         ValidateFileTimestamps(state.FilePath, state.FileGroup, state.SystemSettings);
 
-                        // Save the file group in the database now that the data has been successfully parsed
                         using (AdoDataConnection connection = state.MeterDataSet.CreateDbConnection())
                         {
+                            // Check the database to see if the
+                            // file has been processed before
+                            if (state.FileGroup.ID == 0)
+                            {
+                                DataFile dataFile = state.FileGroup.DataFiles
+                                    .Where(file => file.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase))
+                                    .FirstOrDefault();
+
+                                if (dataFile == null)
+                                    throw new FileNotFoundException($"File was deleted before processing could begin: {filePath}");
+
+                                string query =
+                                    "SELECT " +
+                                    "    FileGroup.ID FileGroupID, " +
+                                    "    FileGroup.ProcessingVersion " +
+                                    "FROM " +
+                                    "    FileGroup JOIN" +
+                                    "    DataFile ON DataFile.FileGroupID = FileGroup.ID " +
+                                    "WHERE " +
+                                    "    DataFile.FilePathHash = {0} AND " +
+                                    "    DataFile.FilePath = {1}";
+
+                                // If the file has been processed before, get the file group ID and increment the processing version
+                                using (DataTable versionTable = connection.RetrieveData(query, dataFile.FilePathHash, filePath))
+                                {
+                                    if (versionTable.Rows.Count > 0)
+                                    {
+                                        DataRow row = versionTable.Rows[0];
+                                        state.FileGroup.ID = row.ConvertField<int>("FileGroupID");
+                                        state.FileGroup.ProcessingVersion = row.ConvertField<int>("ProcessingVersion") + 1;
+                                    }
+                                }
+                            }
+
+                            // Save the file group in the database now
+                            // that the data has been successfully parsed
                             SaveFileGroup(connection, fileGroup);
                         }
 
@@ -1646,31 +1682,77 @@ namespace openXDA
         // Saves the given file group to the database using the given connection.
         private void SaveFileGroup(AdoDataConnection connection, FileGroup fileGroup)
         {
-            // Attempt to set the error flag on the file group
             TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
-
             fileGroupTable.AddNewOrUpdateRecord(fileGroup);
 
+            var idLookup = Enumerable.Empty<object>()
+                .Select(obj => new { DataFileID = 0, FileBlobID = 0 })
+                .ToDictionary(obj => string.Empty);
+
             if (fileGroup.ID == 0)
+            {
                 fileGroup.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+            }
+            else
+            {
+                string query =
+                    "SELECT " +
+                    "    DataFile.ID DataFileID, " +
+                    "    FileBlob.ID FileBlobID, " +
+                    "    DataFile.FilePath " +
+                    "FROM " +
+                    "    DataFile JOIN " +
+                    "    FileBlob ON FileBlob.DataFileID = DataFile.ID " +
+                    "WHERE DataFile.FileGroupID = {0}";
+
+                using (DataTable queryTable = connection.RetrieveData(query, fileGroup.ID))
+                {
+                    Func<DataRow, T> ToSelector<T>(Func<DataRow, T> lambda) => lambda;
+
+                    var keySelector = ToSelector(row => row.ConvertField<string>("FilePath"));
+
+                    var elementSelector = ToSelector(row => new
+                    {
+                        DataFileID = row.ConvertField<int>("DataFileID"),
+                        FileBlobID = row.ConvertField<int>("FileBlobID")
+                    });
+
+                    idLookup = queryTable.Select()
+                        .ToDictionary(keySelector, elementSelector, StringComparer.OrdinalIgnoreCase);
+                }
+            }
 
             TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
             TableOperations<FileBlob> fileBlobTable = new TableOperations<FileBlob>(connection);
 
             foreach (DataFile dataFile in fileGroup.DataFiles)
             {
+                FileBlob fileBlob = new FileBlob();
+
+                if (idLookup.TryGetValue(dataFile.FilePath, out var ids))
+                {
+                    dataFile.ID = ids.DataFileID;
+                    fileBlob.ID = ids.FileBlobID;
+                }
+
                 dataFile.FileGroupID = fileGroup.ID;
                 dataFileTable.AddNewOrUpdateRecord(dataFile);
 
                 if (dataFile.ID == 0)
                     dataFile.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
 
-                if (File.Exists(dataFile.FilePath) && fileBlobTable.QueryRecordCountWhere("DataFileID = {0}", dataFile.ID) == 0)
+                if (File.Exists(dataFile.FilePath))
                 {
-                    FileBlob fileBlob = new FileBlob();
-                    fileBlob.DataFileID = dataFile.ID;
-                    fileBlob.Blob = File.ReadAllBytes(dataFile.FilePath);
-                    fileBlobTable.AddNewOrUpdateRecord(fileBlob);
+                    try
+                    {
+                        fileBlob.DataFileID = dataFile.ID;
+                        fileBlob.Blob = File.ReadAllBytes(dataFile.FilePath);
+                        fileBlobTable.AddNewOrUpdateRecord(fileBlob);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warn($"Error loading blob for file: {dataFile.FilePath}", ex);
+                    }
                 }
             }
         }
