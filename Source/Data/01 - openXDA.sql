@@ -1830,6 +1830,7 @@ CREATE TABLE Event
     SamplesPerSecond INT NOT NULL,
     SamplesPerCycle INT NOT NULL,
     Description VARCHAR(MAX) NULL,
+    FileVersion INT NOT NULL DEFAULT 0,
     UpdatedBy VARCHAR(200) NULL
 )
 GO
