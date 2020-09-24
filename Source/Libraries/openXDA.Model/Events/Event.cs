@@ -69,6 +69,8 @@ namespace openXDA.Model
 
         public string Description { get; set; }
 
+        public int FileVersion { get; set; }
+
         public string UpdatedBy { get; set; }
 
         [JsonIgnore]

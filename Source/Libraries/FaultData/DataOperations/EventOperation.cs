@@ -198,7 +198,8 @@ namespace FaultData.DataOperations
                     Samples = dataGroup.Samples,
                     TimeZoneOffset = (int)TimeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes,
                     SamplesPerSecond = 0,
-                    SamplesPerCycle = 0
+                    SamplesPerCycle = 0,
+                    FileVersion = meterDataSet.FileGroup.ProcessingVersion
                 };
 
                 if (dataGroup.Samples > 0)
