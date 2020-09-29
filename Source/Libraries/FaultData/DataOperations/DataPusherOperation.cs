@@ -21,16 +21,13 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
 using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
-using openXDA.DataPusher;
 using openXDA.Model;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Threading;
 
 namespace FaultData.DataOperations
 {
@@ -75,7 +72,7 @@ namespace FaultData.DataOperations
                     if (DataPusherSettings.OnlyValidFaults)
                     {
                         TableOperations<FaultSummary> faultSummaryTable = new TableOperations<FaultSummary>(connection);
-                        int faultSummaryCount = faultSummaryTable.QueryRecordCountWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0}) AND IsValid = 1 AND IsSuppressed = 0", meterDataSet.FileGroup.ID);
+                        int faultSummaryCount = faultSummaryTable.QueryRecordCountWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0} AND FileVersion = {1}) AND IsValid = 1 AND IsSuppressed = 0", meterDataSet.FileGroup.ID, meterDataSet.FileGroup.ProcessingVersion);
                         if (faultSummaryCount > 0)
                             PushDataToRemoteInstances(connection, meterDataSet.FileGroup.ID, meterDataSet.Meter.ID);
                     }

@@ -197,7 +197,9 @@ namespace openXDA
                 TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
                 int capBankId = connection.ExecuteScalar<int>("SELECT ID FROM AssetType WHERE Name = 'CapacitorBank'");
 
-                List<Event> events = evtTbl.QueryRecordsWhere("FileGroupID = {0}", meterDataSet.FileGroup.ID).ToList();
+                List<Event> events = evtTbl
+                    .QueryRecordsWhere("FileGroupID = {0} AND FileVersion = {1}", meterDataSet.FileGroup.ID, meterDataSet.FileGroup.ProcessingVersion)
+                    .ToList();
 
                 foreach (IGrouping<int, Event> group in events.GroupBy<Event, int>(item => item.AssetID))
                 {

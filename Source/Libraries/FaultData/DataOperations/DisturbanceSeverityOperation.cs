@@ -49,7 +49,7 @@ namespace FaultData.DataOperations
                 TableOperations<VoltageCurvePoint> voltageCurvePointTable = new TableOperations<VoltageCurvePoint>(connection);
 
                 List<Disturbance> disturbances = disturbanceTable
-                    .QueryRecordsWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0})", meterDataSet.FileGroup.ID)
+                    .QueryRecordsWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0} AND FileVersion = {1})", meterDataSet.FileGroup.ID, meterDataSet.FileGroup.ProcessingVersion)
                     .ToList();
 
                 foreach (VoltageEnvelope voltageEnvelope in voltageEnvelopeTable.QueryRecords().ToList())

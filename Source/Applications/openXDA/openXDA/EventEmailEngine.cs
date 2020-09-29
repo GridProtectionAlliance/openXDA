@@ -268,7 +268,7 @@ namespace openXDA
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-                IEnumerable<Event> events = eventTable.QueryRecordsWhere("FileGroupID = {0}", meterDataSet.FileGroup.ID);
+                IEnumerable<Event> events = eventTable.QueryRecordsWhere("FileGroupID = {0} AND FileVersion = {1}", meterDataSet.FileGroup.ID, meterDataSet.FileGroup.ProcessingVersion);
                 Process(events, triggerSource);
             }
         }
