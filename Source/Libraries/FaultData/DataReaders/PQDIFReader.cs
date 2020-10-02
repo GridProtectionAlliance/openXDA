@@ -27,6 +27,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
+using FaultData.DataReaders.Linq;
 using FaultData.DataReaders.PQube;
 using FaultData.DataSets;
 using GSF;
@@ -38,6 +39,52 @@ using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataReaders
 {
+    namespace Linq
+    {
+        public static class EnumerableExtensions
+        {
+            public static IEnumerable<T> HandleExceptions<T>(this IEnumerable<T> enumerable, Action<AggregateException> handler)
+            {
+                List<Exception> exceptions = new List<Exception>();
+                IEnumerator<T> enumerator = enumerable.GetEnumerator();
+
+                using (enumerable as IDisposable)
+                using (enumerator as IDisposable)
+                {
+                    while (true)
+                    {
+                        T item;
+
+                        try
+                        {
+                            if (!enumerator.MoveNext())
+                                break;
+
+                            item = enumerator.Current;
+                        }
+                        catch (Exception ex)
+                        {
+                            exceptions.Add(ex);
+                            continue;
+                        }
+
+                        yield return item;
+                    }
+                }
+
+                try
+                {
+                    if (exceptions.Any())
+                        throw new AggregateException(exceptions);
+                }
+                catch (AggregateException ex)
+                {
+                    handler(ex);
+                }
+            }
+        }
+    }
+
     public class PQDIFReader : IDataReader, IDisposable
     {
         #region [ Members ]
@@ -165,6 +212,7 @@ namespace FaultData.DataReaders
                 .Where(channelInstance => QuantityType.IsQuantityTypeID(channelInstance.Definition.QuantityTypeID))
                 .Where(channelInstance => channelInstance.SeriesInstances.Any())
                 .Where(channelInstance => channelInstance.SeriesInstances[0].Definition.ValueTypeID == SeriesValueType.Time)
+                .HandleExceptions(ex => Log.Warn("Encountered malformed observation records in PQDIF file.", ex))
                 .ToList();
 
             // Create the list of series instances so we can
