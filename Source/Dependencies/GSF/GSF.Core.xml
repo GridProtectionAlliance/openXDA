@@ -21331,23 +21331,17 @@
             Arguments to events triggered by the <see cref="T:GSF.IO.FileProcessor"/>.
             </summary>
         </member>
-        <member name="M:GSF.IO.FileProcessorEventArgs.#ctor(System.String,System.Boolean,System.Boolean,System.Func{System.Int32})">
+        <member name="M:GSF.IO.FileProcessorEventArgs.#ctor(System.String,System.Boolean,System.Func{System.Int32})">
             <summary>
             Creates a new instance of the <see cref="T:GSF.IO.FileProcessorEventArgs"/> class.
             </summary>
             <param name="fullPath">The full path to the file to be processed.</param>
-            <param name="alreadyProcessed">Flag indicating whether this file has been processed before.</param>
             <param name="raisedByFileWatcher">Flag indicating whether this event was raised by the file watcher.</param>
             <param name="retryCounter">The function that provides the value for <see cref="P:GSF.IO.FileProcessorEventArgs.RetryCount"/>.</param>
         </member>
         <member name="P:GSF.IO.FileProcessorEventArgs.FullPath">
             <summary>
             Gets the full path to the file to be processed.
-            </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessorEventArgs.AlreadyProcessed">
-            <summary>
-            Gets the flag that indicates whether this file has been processed before.
             </summary>
         </member>
         <member name="P:GSF.IO.FileProcessorEventArgs.RaisedByFileWatcher">
@@ -21436,11 +21430,6 @@
             Default value for the <see cref="P:GSF.IO.FileProcessor.InternalBufferSize"/> property.
             </summary>
         </member>
-        <member name="F:GSF.IO.FileProcessor.DefaultMaxFragmentation">
-            <summary>
-            Default value for the <see cref="P:GSF.IO.FileProcessor.MaxFragmentation"/> property.
-            </summary>
-        </member>
         <member name="F:GSF.IO.FileProcessor.DefaultEnumerationStrategy">
             <summary>
             Default value for the <see cref="P:GSF.IO.FileProcessor.EnumerationStrategy"/> property.
@@ -21457,11 +21446,10 @@
             normal operation of the <see cref="T:GSF.IO.FileProcessor"/>.
             </summary>
         </member>
-        <member name="M:GSF.IO.FileProcessor.#ctor(System.Guid)">
+        <member name="M:GSF.IO.FileProcessor.#ctor">
             <summary>
             Creates a new instance of the <see cref="T:GSF.IO.FileProcessor"/> class.
             </summary>
-            <param name="processorID">Identifies the file processor so that it can locate its processed file cache.</param>
         </member>
         <member name="P:GSF.IO.FileProcessor.Filter">
             <summary>
@@ -21501,18 +21489,6 @@
             used for file processing and enumeration.
             </summary>
         </member>
-        <member name="P:GSF.IO.FileProcessor.MaxFragmentation">
-            <summary>
-            Gets or sets the maximum amount of fragmentation allowed
-            before compacting the lookup table for processed files.
-            </summary>
-            <remarks>
-            If files are frequently removed from the watch directories,
-            increasing this value may improve performance. Setting the
-            value too high may result in the file perpetually growing
-            or long pauses on the processing thread.
-            </remarks>
-        </member>
         <member name="P:GSF.IO.FileProcessor.EnumerationStrategy">
             <summary>
             Gets or sets the strategy to use to
@@ -21540,12 +21516,6 @@
             Gets the flag indicating if the file processor is actively enumerating.
             </summary>
         </member>
-        <member name="P:GSF.IO.FileProcessor.IsCleaning">
-            <summary>
-            Gets the flag indicating if the file processor is actively
-            purging processed files from the internal lookup table.
-            </summary>
-        </member>
         <member name="P:GSF.IO.FileProcessor.ProcessedFileCount">
             <summary>
             Gets the number of files
@@ -21560,18 +21530,6 @@
         <member name="P:GSF.IO.FileProcessor.RequeuedFileCount">
             <summary>
             Gets the number of times files that are being requeued by the file processor.
-            </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessor.LastCompactTime">
-            <summary>
-            Gets the time at which the last operation to
-            compact the set of processed files occurred.
-            </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessor.LastCompactDuration">
-            <summary>
-            Gets the amount of time spent during the last
-            operation to compact the set of processed files.
             </summary>
         </member>
         <member name="M:GSF.IO.FileProcessor.AddTrackedDirectory(System.String)">
