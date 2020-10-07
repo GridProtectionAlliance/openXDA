@@ -34,6 +34,7 @@ using GSF.Data.Model;
 using GSF.Identity;
 using GSF.Reflection;
 using GSF.Web.Security;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace openXDA.Controllers
@@ -92,7 +93,7 @@ namespace openXDA.Controllers
         protected virtual bool HasUniqueKey { get; } = false;
         protected virtual string UniqueKeyField { get; } = "";
         protected virtual string Connection { get; } = "systemSettings";
-        protected virtual string GetRoles { get; } = "";
+        protected virtual string GetRoles { get; } = "Viewer,Administrator";
         protected virtual string PostRoles { get; } = "Administrator";
         protected virtual string PatchRoles { get; } = "Administrator";
         protected virtual string DeleteRoles { get; } = "Administrator";
@@ -110,7 +111,8 @@ namespace openXDA.Controllers
 
                     try
                     {
-                        return Ok(new TableOperations<T>(connection).NewRecord());
+                        T record = new TableOperations<T>(connection).NewRecord();
+                        return Ok(JsonConvert.SerializeObject(record));
                     }
                     catch (Exception ex)
                     {
@@ -149,7 +151,7 @@ namespace openXDA.Controllers
                         else
                             result = new TableOperations<T>(connection).QueryRecords(GetOrderByExpression);
 
-                        return Ok(result);
+                        return Ok(JsonConvert.SerializeObject(result));
                     }
                     catch (Exception ex)
                     {
@@ -192,7 +194,7 @@ namespace openXDA.Controllers
                             return BadRequest(string.Format(PrimaryKeyField + " provided does not exist in '{0}'.", tableName));
                         }
                         else
-                            return Ok(result);
+                            return Ok(JsonConvert.SerializeObject(result));
                     }
                     catch (Exception ex)
                     {
