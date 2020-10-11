@@ -967,7 +967,9 @@ namespace openXDA
                 lines.Add("");
                 lines.Add("Specify relay data inputs and requirements");
                 lines.Add($"33 Offset time between cap bank and relay time stamps; dToffset = {tOffset}");
-                lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV}");
+                // Rated Realy Voltage is based on kV Field on primary side so it needs to be converted to secondary Side
+                double relayVoltageFactor = (ConvertToDouble(capBank.RelayPTRatio.Split(' ')[1].Trim('[',']')) / ConvertToDouble(capBank.RelayPTRatio.Split(' ')[0].Trim('[', ']')) ?? 1.0D);
+                lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV* relayVoltageFactor}");
                 lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {relays.First().OnVoltageThreshhold}");
                 lines.Add("");
                 lines.Add("Specify relay capacitor configuration for fuseless configurations");
