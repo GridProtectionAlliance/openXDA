@@ -74,6 +74,8 @@
     <Compile Include="CapBankAnalytic\CBStatus.cs" />
     <Compile Include="CapBankAnalytic\CBAnalyticResult.cs" />
     <Compile Include="Channels\ChannelData.cs" />
+    <Compile Include="Channels\ChannelGroup.cs" />
+    <Compile Include="Channels\ChannelGroupType.cs" />
     <Compile Include="Dashboard\ContourClasses.cs" />
     <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />

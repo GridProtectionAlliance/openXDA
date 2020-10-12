@@ -29,6 +29,12 @@ GO
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('CrestFactor', 'Crest factor', 0)
 GO
 
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('DFArith', 'Displacement Factor arithmetic sum', 0)
+GO
+
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('DFVector', 'Displacement Factor vector', 0)
+GO
+
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('FlkrPLT', 'Long term flicker', 1)
 GO
 
@@ -62,7 +68,16 @@ GO
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PF', 'True power factor', 0)
 GO
 
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PFArith', 'Power factor arithmatic sum', 0)
+GO
+
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PFDemand', 'True power factor for a demand interval', 1)
+GO
+
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PFVector', 'Power factor vector', 0)
+GO
+
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PHarmonic', 'Active power harmonic', 0)
 GO
 
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PIntg', 'Active power integrated over time', 0)
@@ -89,16 +104,37 @@ GO
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('S', 'Apparent power', 1)
 GO
 
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SArith', 'Apparent power arithmetic sum', 0)
+GO
+
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SArithFund', 'Apparent power arithmetic sum at fundamental frequency', 0)
+GO
+
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SDemand', 'Apparent power for a demand interval', 1)
+GO
+
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SIntgFund', 'Apparent power integrated over time at fundamental frequency', 0)
 GO
 
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SNeg', 'Negative sequence component', 1)
 GO
 
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('Spectra', 'Spectra', 0)
+GO
+
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SpectraHGroup', 'Spectra by harmonic group index', 0)
 GO
 
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SpectraIGroup', 'Spectra by interharmonic group index', 0)
+GO
+
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SPos', 'Positive sequence component', 1)
+GO
+
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SVector', 'Apparent power Vector', 0)
+GO
+
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SVectorFund', 'Apparent power Vector at fundamental frequency', 0)
 GO
 
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('SZero', 'Negative sequence component', 1)
@@ -435,6 +471,170 @@ GO
 
 INSERT INTO StepChangeMeasurement (PQMeasurementID, Setting) VALUES ((SELECT ID FROM PQMeasurement WHERE Name = 'Average Current Unbalance(S0/S1)'), 5)
 GO
+
+-- Channel Groupings
+INSERT INTO ChannelGroup(Name, Description) VALUES ('Voltage', 'Voltage')
+GO
+
+INSERT INTO ChannelGroup(Name, Description) VALUES ('Current', 'Current')
+GO
+
+INSERT INTO ChannelGroup(Name, Description) VALUES ('Power', 'Power')
+GO
+
+INSERT INTO ChannelGroup(Name, Description) VALUES ('Energy', 'Energy')
+GO
+
+INSERT INTO ChannelGroup(Name, Description) VALUES ('CapBank', 'CapBank')
+GO
+
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS'),'V RMS')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'),'V TotalTHD')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST'),'V FlkrPST')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPLT'),'V FlkrPLT')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'),'V SpectraHGroup')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'AngleFund'),'V AngleFund')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'AvgImbal'),'V AvgImbal')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Frequency'),'V Frequency')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'HRMS'),'V HRMS')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'None'),'V None')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SNeg'),'V SNeg')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SPos'),'V SPos')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SZero'),'V SZero')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S0S1'),'V S0S1')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S2S1'),'V S2S1')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PLTSlide'),'V PLTSlide')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS'),'I RMS')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'),'I TotalTHD')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'),'I SpectraHGroup')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'AngleFund'),'I AngleFund')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'AvgImbal'),'I AvgImbal')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'HRMS'),'I HRMS')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SNeg'),'I SNeg')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SPos'),'I SPos')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SZero'),'I SZero')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S0S1'),'I S0S1')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S2S1'),'I S2S1')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Current'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'KFactor'),'I KFactor')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Energy'), (SELECT ID FROM MeasurementType WHERE Name = 'Energy'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PIntg'),'PIntg')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Energy'), (SELECT ID FROM MeasurementType WHERE Name = 'Energy'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'QIntg'),'QIntg')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Energy'), (SELECT ID FROM MeasurementType WHERE Name = 'Energy'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SIntgFund'),'SIntgFund')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'AngleFund'),'AngleFund')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'P'),'P')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PDemand'),'PDemand')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PF'),'PF')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PFDemand'),'PFDemand')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'QDemand'),'QDemand')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'QFund'),'QFund')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S'),'S')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SDemand'),'SDemand')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Q'),'Q')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'DF'),'DF')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'DFArith'),'DFArith')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'DFVector'),'DFVector')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PFVector'),'PFVector')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PFArith'),'PFArith')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PHarmonic'),'PHarmonic')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SVector'),'SVector')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SVectorFund'),'SVectorFund')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SArith'),'SArith')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'Power'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SArithFund'),'SArithFund')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'CrestFactor'),'V CrestFactor')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Peak'),'V Peak')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'EvenTHD'),'V EvenTHD')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'OddTHD'),'V OddTHD')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FormFactor'),'V FormFactor')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'ArithSum'),'V ArithSum')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TIF'),'V TIF')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Spectra'),'V Spectra')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraIGroup'),'V SpectraIGroup')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'CrestFactor'),'I CrestFactor')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'IHRMS'),'IHRMS')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'IT'),'I IT')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TID'),'I TID')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Peak'),'I Peak')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'EvenTHD'),'I EvenTHD')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'OddTHD'),'I OddTHD')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FormFactor'),'I FormFactor')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'ArithSum'),'I ArithSum')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Spectra'),'I Spectra')
+GO
+INSERT INTO ChannelGroupType (ChannelGroupID, MeasurementTypeID, MeasurementCharacteristicID,DisplayName) VALUES ((SELECT ID FROM ChannelGroup WHERE Name = 'CapBank'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'),(SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraIGroup'),'I SpectraIGroup')
+GO
+
+
+
+
+
 
 -- Default Asset Types
 INSERT INTO AssetType (Name, Description) VALUES ('Line','Transmission Line')
