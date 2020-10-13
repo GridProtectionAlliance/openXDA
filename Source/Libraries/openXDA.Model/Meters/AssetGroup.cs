@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
@@ -36,6 +37,9 @@ namespace openXDA.Model
         [StringLength(100)]
         [Searchable]
         public string Name { get; set; }
+
+        [DefaultValue(true)]
+        public bool DisplayDashboard { get; set; }
     }
 
     [TableName("AssetGroupView")]

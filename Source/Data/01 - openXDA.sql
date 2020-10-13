@@ -1260,7 +1260,8 @@ GO
 CREATE TABLE AssetGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL
+    Name VARCHAR(200) NOT NULL,
+    DisplayDashboard Bit NOT NULL Default(1)
 )
 GO
 
@@ -1449,7 +1450,7 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataPusherOperation', 12)
 GO
 
-INSERT INTO AssetGroup(Name) VALUES('AllAssets')
+INSERT INTO AssetGroup(Name, DisplayDashboard) VALUES('AllAssets', 1)
 GO
 
 -- -------- --
