@@ -61,7 +61,7 @@
         new[] { "Name", "Name", "text-Left" },
         new[] { null, "Asset Groups", "text-center valign-middle"},
         new[] { null, "Meters", "text-center valign-middle"},
-        new[] { null, "Lines", "text-center valign-middle"},
+        new[] { null, "Assets", "text-center valign-middle"},
         new[] {null, "Users", "text-center valign-middle"}
     };
 
@@ -81,7 +81,7 @@
     <td width="75%" class="text-left valign-middle" nowrap data-bind="text: Name"></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openAssetGroups.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Asset Groups&nbsp;&nbsp;<span class="badge" data-bind="text: AssetGroups"></span></button></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: Meters"></span></button></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openLines.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: Lines"></span></button></td>
+    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openLines.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Assets&nbsp;&nbsp;<span class="badge" data-bind="text: Assets"></span></button></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="userWindow" data-bind="click: openUsers.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Users&nbsp;&nbsp;<span class="badge" data-bind="text: Users"></span></button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>

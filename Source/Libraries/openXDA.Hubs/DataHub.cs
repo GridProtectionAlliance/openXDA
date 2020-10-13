@@ -810,18 +810,18 @@ namespace openXDA.Hubs
         using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
         {
 
-            IEnumerable<LineAssetGroup> records = new TableOperations<LineAssetGroup>(connection).QueryRecords(restriction: new RecordRestriction("AssetGroupID = {0}", groupID)).ToList();
+            IEnumerable<AssetAssetGroup> records = new TableOperations<AssetAssetGroup>(connection).QueryRecords(restriction: new RecordRestriction("AssetGroupID = {0}", groupID)).ToList();
 
-            foreach (LineAssetGroup record in records)
+            foreach (AssetAssetGroup record in records)
             {
-                if (!lines.Contains(record.LineID.ToString()))
-                        new TableOperations<LineAssetGroup>(connection).DeleteRecord(record.ID);
+                if (!lines.Contains(record.AssetID.ToString()))
+                        new TableOperations<AssetAssetGroup>(connection).DeleteRecord(record.ID);
             }
 
             foreach (string line in lines)
             {
-                if (!records.Any(record => record.LineID == int.Parse(line)))
-                        new TableOperations<LineAssetGroup>(connection).AddNewRecord(new LineAssetGroup() { AssetGroupID = groupID, LineID = int.Parse(line) });
+                if (!records.Any(record => record.AssetID == int.Parse(line)))
+                        new TableOperations<AssetAssetGroup>(connection).AddNewRecord(new AssetAssetGroup() { AssetGroupID = groupID, AssetID = int.Parse(line) });
             }
         }
     }
@@ -1049,13 +1049,13 @@ namespace openXDA.Hubs
         #region [ LineAssetGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineAssetGroup), RecordOperation.QueryRecordCount)]
+        [RecordOperation(typeof(AssetAssetGroup), RecordOperation.QueryRecordCount)]
         public int QueryLineAssetGroupViewCount(int groupID, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
 
-                TableOperations<LineAssetGroupView> tableOperations = new TableOperations<LineAssetGroupView>(connection);
+                TableOperations<AssetAssetGroupView> tableOperations = new TableOperations<AssetAssetGroupView>(connection);
                 RecordRestriction restriction;
 
                 if (groupID > 0)
@@ -1068,13 +1068,13 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineAssetGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<LineAssetGroupView> QueryLineAssetGroupViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(AssetAssetGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<AssetAssetGroupView> QueryLineAssetGroupViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
 
-                TableOperations<LineAssetGroupView> tableOperations = new TableOperations<LineAssetGroupView>(connection);
+                TableOperations<AssetAssetGroupView> tableOperations = new TableOperations<AssetAssetGroupView>(connection);
                 RecordRestriction restriction;
 
                 if (groupID > 0)
@@ -1087,46 +1087,46 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineAssetGroup), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(AssetAssetGroup), RecordOperation.DeleteRecord)]
         public void DeleteLineAssetGroupView(int id)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
 
-                new TableOperations<LineAssetGroup>(connection).DeleteRecord(id);
+                new TableOperations<AssetAssetGroupView>(connection).DeleteRecord(id);
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineAssetGroup), RecordOperation.CreateNewRecord)]
-        public LineAssetGroupView NewLineAssetGroupView()
+        [RecordOperation(typeof(AssetAssetGroup), RecordOperation.CreateNewRecord)]
+        public AssetAssetGroupView NewLineAssetGroupView()
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
 
-                return new TableOperations<LineAssetGroupView>(connection).NewRecord();
+                return new TableOperations<AssetAssetGroupView>(connection).NewRecord();
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineAssetGroup), RecordOperation.AddNewRecord)]
-        public void AddNewLineAssetGroupView(LineAssetGroup record)
+        [RecordOperation(typeof(AssetAssetGroup), RecordOperation.AddNewRecord)]
+        public void AddNewLineAssetGroupView(AssetAssetGroupView record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
 
-                new TableOperations<LineAssetGroup>(connection).AddNewRecord(record);
+                new TableOperations<AssetAssetGroupView>(connection).AddNewRecord(record);
             }
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineAssetGroup), RecordOperation.UpdateRecord)]
-        public void UpdateLineAssetGroupView(LineAssetGroup record)
+        [RecordOperation(typeof(AssetAssetGroup), RecordOperation.UpdateRecord)]
+        public void UpdateLineAssetGroupView(AssetAssetGroup record)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
 
-                new TableOperations<LineAssetGroup>(connection).UpdateRecord(record);
+                new TableOperations<AssetAssetGroup>(connection).UpdateRecord(record);
             }
         }
 

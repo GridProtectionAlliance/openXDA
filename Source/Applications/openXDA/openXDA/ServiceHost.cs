@@ -655,7 +655,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/AssetGroups.cshtml", new Tuple<Type, Type>(typeof(AssetGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/AssetGroupAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(AssetGroupAssetGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/MeterAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterAssetGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/LineAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(LineAssetGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/LineAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(AssetAssetGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/UserDashSettings.cshtml", new Tuple<Type, Type>(typeof(UserDashSettings), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/MetersWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithHourlyLimits), typeof(DataHub)));

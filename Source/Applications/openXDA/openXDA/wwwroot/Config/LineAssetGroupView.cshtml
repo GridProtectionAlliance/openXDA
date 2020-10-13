@@ -46,8 +46,8 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
-        new[] { "LineName", "Line Name", "text-Left" },
-        new[] { "LongLineName", "Long Name", "text-Left" },
+        new[] { "AssetName", "Line Name", "text-Left" },
+        new[] { "LongAssetName", "Long Name", "text-Left" },
 
     };
 
@@ -59,22 +59,22 @@
 }
 @helper BodyRows()
 {
-    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: LineName, click: $parent.viewPageRecord"></button></td>
-    <td width="70%" class="text-left valign-middle" nowrap data-bind="text: LongLineName"></td>
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetName, click: $parent.viewPageRecord"></button></td>
+    <td width="70%" class="text-left valign-middle" nowrap data-bind="text: LongAssetName"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<LineAssetGroupView>("LongLineName"))
+    @Raw(dataContext.AddInputField<AssetAssetGroupView>("LongAssetName"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
     <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<LineAssetGroup, DataHub>(ViewBag, "ID", null, groupID))
+        @Raw(dataContext.RenderViewModelConfiguration<AssetAssetGroup, DataHub>(ViewBag, "ID", null, groupID))
         
         $(viewModel).on("beforeSave", function (event, observableRecord) {
             observableRecord.AssetGroupID(@groupID);
@@ -87,12 +87,12 @@
                         return dataHub.searchLinesForLineAssetGroupByGroup(@groupID, searchText, limit);
                     }
 
-                    initializeAutoCompleteLookupField("LongLineName", searchLines, false);
+                    initializeAutoCompleteLookupField("LongAssetName", searchLines, false);
 
                     $('#inputLongLineName').puiautocomplete({
                         select: function (event, item) {
                             var id = Number(item.data("id"));
-                            viewModel.currentRecord().LineID(id);
+                            viewModel.currentRecord().AssetID(id);
                         }
                     });
                 }

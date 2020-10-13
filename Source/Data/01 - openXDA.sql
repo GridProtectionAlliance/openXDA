@@ -4050,6 +4050,7 @@ CREATE VIEW AssetGroupView AS
 SELECT
 	AssetGroup.ID,
 	AssetGroup.Name,
+    AssetGroup.DisplayDashboard,
 	COUNT(DISTINCT AssetGroupAssetGroup.ChildAssetGroupID) as AssetGroups,
 	COUNT(DISTINCT MeterAssetGroup.MeterID) as Meters,
 	COUNT(DISTINCT AssetAssetGroup.AssetID) as Assets,
@@ -4061,7 +4062,7 @@ FROM
 	AssetAssetGroup ON AssetGroup.ID = AssetAssetGroup.AssetGroupID LEFT JOIN
 	UserAccountAssetGroup ON AssetGroup.ID = UserAccountAssetGroup.AssetGroupID
 GROUP BY
-	AssetGroup.ID,AssetGroup.Name
+	AssetGroup.ID,AssetGroup.Name,AssetGroup.DisplayDashboard
 GO
 
 CREATE VIEW BreakerHistory
@@ -4302,32 +4303,32 @@ FROM
     Location ON Meter.LocationID = Location.ID
 GO
 
--- CREATE VIEW LineAssetGroupView
--- AS
--- SELECT
---     LineAssetGroup.ID,
---     Line.AssetKey AS LineName,
---     (SELECT TOP 1 LineName FROM MeterLine Where LineID = Line.ID) AS LongLineName,
---     Line.ID AS LineID,
---     AssetGroupID
--- FROM
---     LineAssetGroup JOIN
---     Line ON LineAssetGroup.LineID = Line.ID
--- GO
--- 
--- CREATE VIEW AssetGroupAssetGroupView
--- AS
--- SELECT
---     AssetGroupAssetGroup.ID,
---     AssetGroupAssetGroup.ParentAssetGroupID,
---     AssetGroupAssetGroup.ChildAssetGroupID,
---     Parent.Name as ParentAssetGroupName,
---     Child.Name as ChildAssetGroupName
--- FROM
---     AssetGroupAssetGroup JOIN
---     AssetGroup as Parent ON AssetGroupAssetGroup.ParentAssetGroupID = Parent.ID JOIN
---     AssetGroup as Child ON AssetGroupAssetGroup.ChildAssetGroupID = Child.ID
--- GO
+ CREATE VIEW AssetAssetGroupView
+ AS
+ SELECT
+     AssetAssetGroup.ID,
+     Asset.AssetKey AS AssetName,
+     Asset.AssetName AS LongAssetName,
+     Asset.ID AS AssetID,
+     AssetGroupID
+ FROM
+     AssetAssetGroup JOIN
+     Asset ON AssetAssetGroup.AssetID = Asset.ID
+ GO
+ 
+ CREATE VIEW AssetGroupAssetGroupView
+ AS
+ SELECT
+     AssetGroupAssetGroup.ID,
+     AssetGroupAssetGroup.ParentAssetGroupID,
+     AssetGroupAssetGroup.ChildAssetGroupID,
+     Parent.Name as ParentAssetGroupName,
+     Child.Name as ChildAssetGroupName
+ FROM
+     AssetGroupAssetGroup JOIN
+     AssetGroup as Parent ON AssetGroupAssetGroup.ParentAssetGroupID = Parent.ID JOIN
+     AssetGroup as Child ON AssetGroupAssetGroup.ChildAssetGroupID = Child.ID
+ GO
 
 
 CREATE VIEW UserAccountAssetGroupView

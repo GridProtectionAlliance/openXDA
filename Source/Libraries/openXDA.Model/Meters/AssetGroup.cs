@@ -47,7 +47,7 @@ namespace openXDA.Model
     {
         public int AssetGroups { get; set; }
         public int Meters { get; set; }
-        public int Lines { get; set; }
+        public int Assets { get; set; }
         public int Users { get; set; }
 
     }

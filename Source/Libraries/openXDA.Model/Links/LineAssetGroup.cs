@@ -26,23 +26,23 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class LineAssetGroup
+    public class AssetAssetGroup
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int LineID { get; set; }
+        public int AssetID { get; set; }
 
         public int AssetGroupID { get; set; }
     }
 
-    [PrimaryLabel("LineName")]
-    public class LineAssetGroupView : LineAssetGroup
+    [PrimaryLabel("AssetName")]
+    public class AssetAssetGroupView : AssetAssetGroup
     {
         [Searchable]
-        public string LineName { get; set; }
+        public string AssetName { get; set; }
 
         [Searchable]
-        public string LongLineName { get; set; }
+        public string LongAssetName { get; set; }
     }
 }
