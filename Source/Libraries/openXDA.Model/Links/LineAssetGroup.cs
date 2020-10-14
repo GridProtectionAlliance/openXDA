@@ -44,5 +44,11 @@ namespace openXDA.Model
 
         [Searchable]
         public string LongAssetName { get; set; }
+
+        [Searchable]
+        public string AssetType { get; set; }
+
+        [Searchable]
+        public string AssetLocation { get; set; }
     }
 }

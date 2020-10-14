@@ -4307,15 +4307,18 @@ GO
  AS
  SELECT
      AssetAssetGroup.ID,
-     Asset.AssetKey AS AssetName,
+     Asset.AssetKey AS Assetname,
      Asset.AssetName AS LongAssetName,
      Asset.ID AS AssetID,
+	 AssetType.Name AS AssetType,
+	 (SELECT Top 1 LocationKey FROM Location WHERE Location.ID IN (SELECT LocationID FROM AssetLocation WHERE AssetLocation.AssetID = Asset.ID)) AS AssetLocation,
      AssetGroupID
  FROM
      AssetAssetGroup JOIN
-     Asset ON AssetAssetGroup.AssetID = Asset.ID
- GO
- 
+     Asset ON AssetAssetGroup.AssetID = Asset.ID LEFT JOIN
+	 AssetType ON Asset.AssetTypeID = AssetType.ID
+GO
+
  CREATE VIEW AssetGroupAssetGroupView
  AS
  SELECT
