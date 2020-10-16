@@ -3276,6 +3276,10 @@ INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Location', 'Location')
 GO
 INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Customer', 'Customer')
 GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('User', 'UserAccount')
+GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Company', 'Company')
+GO
 
 
 CREATE TABLE Note (
