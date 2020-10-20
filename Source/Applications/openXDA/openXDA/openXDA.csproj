@@ -4122,6 +4122,7 @@
     <None Include="wwwroot\Scripts\TrendingDataDisplay.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="wwwroot\SPCTools\Index.cshtml" />
     <None Include="wwwroot\WorkBench\AuditLog.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -4229,11 +4230,18 @@
     <None Include="Web.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="wwwroot\SPCTools\Scripts\D3\d3.js" />
+    <Content Include="wwwroot\SPCTools\Scripts\js\SPCTools.js" />
+    <Content Include="wwwroot\SPCTools\Scripts\ReactDependencies\react-router-dom.min.js" />
     <Content Include="XDA.ico" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\SpcTools.tsx" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <Target Name="AfterBuild">
