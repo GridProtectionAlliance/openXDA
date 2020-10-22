@@ -23,14 +23,36 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-import { BrowserRouter as Router, Route, Switch, Redirect} from 'react-router-dom';
+import NavBar from './NavBar';
 
+declare var homePath: string;
+declare var userIsAdmin: boolean;
+
+type Page = ('Home'|'Static'|'Dynamic'|'Meter'|'Channel')
 const SPCTools: React.FunctionComponent = (props: {}) => {
-    
+    const [page, setPage] = React.useState<Page>('Home');
+
     return (
-        <p> Testing Stuff </p>
+        <>
+            <NavBar page={page} pageSetter={(pg) => setPage(pg as Page)} />
+            <div className="container theme-showcase" role="main" id="bodyContainer">
+                <div className="screen" style={{ height: (window.innerHeight - 60), width: window.innerWidth, position: 'absolute', top: '60px' }}>
+                    <div className="row" style={{ height: '100%' }}>
+                        <div className="col" style={{ width: '100%', height: 'inherit', padding: '0 0 0 0', overflow: 'hidden' }}>
+                            <React.Suspense fallback={<div>Loading...</div>}>
+                                {(page == 'Home' ? <p> Home </p> : null)}
+                                {(page == 'Static' ? <p> New static Alarm </p> : null)}
+                                {(page == 'Dynamic' ? <p> New Dynamic Alarm </p> : null)}
+                                {(page == 'Meter' ? <p> Meter Overview </p> : null)}
+                                {(page == 'Channel' ? <p> Channel Overview </p> : null)}                               
+                            </React.Suspense>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+       
     );
 }
 
-ReactDOM.render(<SPCTools/>, document.getElementById('window'));
+ReactDOM.render(<SPCTools/>, document.getElementById('body'));
