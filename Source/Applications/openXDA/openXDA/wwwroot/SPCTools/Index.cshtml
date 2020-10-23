@@ -75,67 +75,18 @@
     <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
     <meta http-equiv="pragma" content="no-cache" />
 
-    <link href="@Url.Content("~/@GSF/Web/Shared/Content/bootstrap.css")" rel="stylesheet">
+    <link href="@Url.Content("~/@GSF/Web/Shared/Content/bootstrap4.css")" rel="stylesheet">
     <link href="@Url.Content("~/@GSF/Web/Shared/Content/font-awesome.css")" rel="stylesheet">
 
 </head>
 <body>
     <style>
-        @@media (max-width: 995px) {
-            .navbar-header {
-                float: none;
-            }
-
-            .navbar-left, .navbar-right {
-                float: none !important;
-            }
-
-            .navbar-toggle {
-                display: block;
-            }
-
-            .navbar-collapse {
-                border-top: 1px solid transparent;
-                box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
-            }
-
-            .navbar-fixed-top {
-                top: 0;
-                border-width: 0 0 1px;
-            }
-
-            .navbar-collapse.collapse {
-                display: none !important;
-            }
-
-            .navbar-nav {
-                float: none !important;
-                margin-top: 7.5px;
-            }
-
-                .navbar-nav > li {
-                    float: none;
-                }
-
-                    .navbar-nav > li > a {
-                        padding-top: 10px;
-                        padding-bottom: 10px;
-                    }
-
-            .collapse.in {
-                display: block !important;
-            }
-        }
-
-        @@media (min-width: 1600px) {
-            .container {
-                width: 1550px;
-            }
-        }
+       
     </style>
     <div id="body"></div>
     <script>
         var homePath = '@Html.Raw(Url.Content("~/SPCTools/"))';
+        var apiHomePath = '@Html.Raw(Url.Content("~/"))';
         var userIsAdmin = @Html.Raw((UserIsAdmin()? "true" : "false"));
     </script>
     @if (DetectIE(ViewBag.Request.Headers.UserAgent.ToString()))

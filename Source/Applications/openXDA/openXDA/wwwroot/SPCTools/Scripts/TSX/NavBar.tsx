@@ -23,43 +23,43 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import { SPCTools } from './global';
 
 declare var homePath: string;
 declare var userIsAdmin: boolean;
 
-interface IProps { page: string, pageSetter: (page: string) => void }
+interface IProps { page: SPCTools.Page, pageSetter: (page: SPCTools.Page) => void }
 
 const NavBar = (props: IProps ) => {
     
     return (
-        <div className="navbar navbar-inverse navbar-fixed-top" id="menuBar">
-            <div className="container">
-                <div className="navbar-header">
-                    <img className="pull-left" style={{ padding: "10px", height: '40px' }} alt="PQ SPC Limits Configurator " src="/Images/SPCTools.png"/>
-                </div>
-                <div id="navbar" className="navbar-collapse collapse">
-                    <ul className="nav navbar-nav">
-                        <li className={(props.page == 'Home' ? 'active' : '')} > <a onClick={() => props.pageSetter('Home')}>Home</a></li>
-                        <li className={"dropdown" + (props.page == 'Dynamic' || props.page == 'Static' ? ' active' : '')}>
-                            <a className="dropdown-toggle" data-toggle="dropdown" href="#">New Alarm Group <span className="caret"></span> </a>
-                            <ul className="dropdown-menu">
-                                <li><a onClick={() => props.pageSetter('Static')}>New Static Alarm Group</a></li>
-                                <li><a onClick={() => props.pageSetter('Dynamic')}>New Dynamic Alarm Group</a></li>
-                            </ul>
-                        </li>
-                        <li className={(props.page == 'Meter' ? 'active' : '')}> <a onClick={() => props.pageSetter('Meter')}>Meter Overview</a></li>
-                        <li className={(props.page == 'Channel' ? 'active' : '')}> <a onClick={() => props.pageSetter('Channel')}>Channel Overview</a></li>
+        <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a className="navbar-brand" href="#">
+                <img className="pull-left" style={{ padding: "0px", height: '40px' }} alt="PQ SPC Limits Configurator " src="/Images/SPCTools.png" />
+            </a>
+
+            <div className="navbar-collapse collapse">
+                <ul className="navbar-nav mr-auto">
+                    <li className={'nav-item' + (props.page == 'Home' ? ' active' : '')} > <a className='nav-link' onClick={() => props.pageSetter('Home')}>Home</a></li>
+                    <li className={"nav-item dropdown" + (props.page == 'Dynamic' || props.page == 'Static' ? ' active' : '')}>
+                        <a className="nav-link dropdown-toggle" data-toggle="dropdown" href="#">New Alarm Group <span className="caret"></span> </a>
+                        <div className="dropdown-menu">
+                            <a className="dropdown-item" onClick={() => props.pageSetter('Static')}>New Static Alarm Group</a>
+                            <a className="dropdown-item" onClick={() => props.pageSetter('Dynamic')}>New Dynamic Alarm Group</a>
+                        </div>
+                    </li>
+                    <li className={'nav-item' + (props.page == 'Meter' ? ' active' : '')}> <a className='nav-link' onClick={() => props.pageSetter('Meter')}>Meter Overview</a></li>
+                    <li className={'nav-item' + (props.page == 'Channel' ? ' active' : '')}> <a className='nav-link' onClick={() => props.pageSetter('Channel')}>Channel Overview</a></li>
                        
-                    </ul>
-                    <p className="nav navbar-text navbar-right">
-                        <button id="logoutButton" type="button" className="btn btn-sm btn-info">Log Out</button>
-                        <a href="https://www.gridprotectionalliance.org/" target="_blank" style={{ paddingLeft: '10px' }}>
-                            <img alt="Grid Protection Alliance" src="/Images/gpa-smalllock.png"/>
-                        </a>
-                    </p>
-                </div>
+                </ul>
+                <p className="nav navbar-text navbar-right">
+                    <button id="logoutButton" type="button" className="btn btn-sm btn-info">Log Out</button>
+                    <a href="https://www.gridprotectionalliance.org/" target="_blank" style={{ paddingLeft: '10px' }}>
+                        <img alt="Grid Protection Alliance" src="/Images/gpa-smalllock.png"/>
+                    </a>
+                </p>
             </div>
-        </div>
+        </nav>
     );
 }
 

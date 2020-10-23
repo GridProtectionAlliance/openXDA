@@ -3051,6 +3051,30 @@ CREATE TABLE AlarmType
 )
 GO
 
+CREATE TABLE AlarmGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+	Formula VARCHAR(MAX) NOT NULL
+)
+GO
+
+-- Views for UI --
+CREATE VIEW AlarmGroupView AS 
+SELECT 
+	AlarmGroup.ID,
+	AlarmGroup.Name,
+	AlarmGroup.AlarmTypeID,
+	AlarmGroup.Formula,
+	0 AS Channels,
+	0 AS Meters,
+	0 AS AlarmSeverityID
+	FROM AlarmGroup
+GO
+
+
+-- Old Alarm Structure (pre SPC Tool) --
 CREATE TABLE DefaultAlarmRangeLimit
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

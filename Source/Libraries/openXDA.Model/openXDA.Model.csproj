@@ -59,6 +59,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alarms\AlarmGroups\AlarmGroup.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmType.cs" />
     <Compile Include="Alarms\ChannelsWithNormalLimits.cs" />
     <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
     <Compile Include="Alarms\MetersWithNormalLimits.cs" />
@@ -81,7 +83,6 @@
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
-    <Compile Include="Alarms\AlarmType.cs" />
     <Compile Include="Emails\EmailTemplateUser.cs" />
     <Compile Include="Emails\UserEmailTemplate.cs" />
     <Compile Include="Emails\EmailType.cs" />
