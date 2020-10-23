@@ -98,12 +98,17 @@ namespace openXDA.Controllers
         protected virtual string PatchRoles { get; } = "Administrator";
         protected virtual string DeleteRoles { get; } = "Administrator";
         protected virtual string GetOrderByExpression { get; } = null;
+        protected virtual bool ViewOnly { get; } = false;
+        protected virtual bool AllowSearch { get; } = false;
         #endregion
 
         #region [ Http Methods ]
         [HttpGet, Route("New")]
         public virtual IHttpActionResult GetNew()
         {
+            if (ViewOnly)
+                return Unauthorized();
+
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
                 using (AdoDataConnection connection = new AdoDataConnection(Connection))
@@ -213,6 +218,9 @@ namespace openXDA.Controllers
         [HttpPost, Route("Add")]
         public virtual IHttpActionResult Post([FromBody] JObject record)
         {
+            if (ViewOnly)
+                return Unauthorized();
+
             try
             {
                 if (PostRoles == string.Empty || User.IsInRole(PostRoles))
@@ -251,6 +259,9 @@ namespace openXDA.Controllers
         [HttpPatch, Route("Update")]
         public virtual IHttpActionResult Patch([FromBody] T record)
         {
+            if (ViewOnly)
+                return Unauthorized();
+
             try
             {
                 if (PatchRoles == string.Empty || User.IsInRole(PatchRoles))
@@ -278,6 +289,9 @@ namespace openXDA.Controllers
         [HttpDelete, Route("Delete")]
         public virtual IHttpActionResult Delete(T record)
         {
+            if (ViewOnly)
+                return Unauthorized();
+
             try
             {
                 if (DeleteRoles == string.Empty || User.IsInRole(DeleteRoles))
@@ -333,6 +347,39 @@ namespace openXDA.Controllers
             }
         }
 
+        [HttpPost, Route("SearchableList")]
+        public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData)
+        {
+            if (!AllowSearch || (GetRoles != string.Empty && !User.IsInRole(GetRoles)))
+                return Unauthorized();
+
+            try
+            {
+
+                string whereClause = BuildWhereClause(postData.Searches);
+
+                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                {
+                    string tableName = new TableOperations<T>(connection).TableName;
+
+                    string sql = $@"
+                    DECLARE @SQLStatement NVARCHAR(MAX) = N'
+                        SELECT * FROM {tableName}
+                        {whereClause.Replace("'", "''")}
+                        ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}
+                    '
+                    exec sp_executesql @SQLStatement";
+                    
+                    DataTable table = connection.RetrieveData(sql, "");
+
+                    return Ok(table);
+                }
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
         #endregion
 
         #region [Helper Methods]
