@@ -1325,7 +1325,7 @@ namespace openXDA
                         TimeZoneInfo xdaTimeZone = m_systemSettings.XDATimeZoneInfo;
                         DateTime lastWriteTimeUTC = File.GetLastWriteTimeUtc(filePath);
                         DateTime lastWriteTime = TimeZoneInfo.ConvertTimeFromUtc(lastWriteTimeUTC, xdaTimeZone);
-                        modifiedSinceProcessing = (dataFile.LastWriteTime > lastWriteTime);
+                        modifiedSinceProcessing = (lastWriteTime > dataFile.LastWriteTime);
                     }
 
                     if (wasProcessed && !modifiedSinceProcessing)
