@@ -66,5 +66,25 @@ namespace openXDA.Model
             fileGroupFieldValue.Value = value;
             fileGroupFieldValueTable.AddNewRecord(fileGroupFieldValue);
         }
+
+        public void AddOrUpdateFieldValue(AdoDataConnection connection, string name, string value, string description = null)
+        {
+            TableOperations<FileGroupField> fileGroupFieldTable = new TableOperations<FileGroupField>(connection);
+            FileGroupField fileGroupField = fileGroupFieldTable.GetOrAdd(name, description);
+
+            TableOperations<FileGroupFieldValue> fileGroupFieldValueTable = new TableOperations<FileGroupFieldValue>(connection);
+            RecordRestriction fileGroupRestriction = new RecordRestriction("FileGroupID = {0}", ID);
+            RecordRestriction fileGroupFieldRestriction = new RecordRestriction("FileGroupFieldID = {0}", fileGroupField.ID);
+            RecordRestriction queryRestriction = fileGroupRestriction & fileGroupFieldRestriction;
+
+            FileGroupFieldValue fileGroupFieldValue = fileGroupFieldValueTable.QueryRecord(queryRestriction) ?? new FileGroupFieldValue()
+            {
+                FileGroupID = ID,
+                FileGroupFieldID = fileGroupField.ID
+            };
+
+            fileGroupFieldValue.Value = value;
+            fileGroupFieldValueTable.AddNewOrUpdateRecord(fileGroupFieldValue);
+        }
     }
 }
