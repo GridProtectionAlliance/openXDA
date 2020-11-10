@@ -968,7 +968,7 @@ namespace openXDA
                 lines.Add("Specify relay data inputs and requirements");
                 lines.Add($"33 Offset time between cap bank and relay time stamps; dToffset = {tOffset}");
                 // Rated Realy Voltage is based on kV Field on primary side so it needs to be converted to secondary Side
-                double relayVoltageFactor = (ConvertToDouble(capBank.RelayPTRatio.Split(' ')[1].Trim('[',']')) / ConvertToDouble(capBank.RelayPTRatio.Split(' ')[0].Trim('[', ']')) ?? 1.0D)/Math.Sqrt(3);
+                double relayVoltageFactor = ((double)capBank.RelayPTRatioSecondary / (double)capBank.RelayPTRatioPrimary)/Math.Sqrt(3);
                 lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV* relayVoltageFactor}");
                 lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {relays.First().OnVoltageThreshhold}");
                 lines.Add("");
@@ -980,7 +980,7 @@ namespace openXDA
                 lines.Add($"41 rated voltage of the low - voltage capacitor; LVcapUnitRatedV = {capBank.LVKV}");
                 lines.Add($"42 the reactance tolerance of LV cap., negative tolerance in percent; nLVcapTolpct = {capBank.LVNegReactanceTol}");
                 lines.Add($"43 the reactance tolerance of LV cap., positive tolerance in percent; pLVcapTolpct = {capBank.LVPosReactanceTol}");
-                lines.Add($"44 relay PT ratio, high to low; relayPTR = {capBank.RelayPTRatio}");
+                lines.Add($"44 relay PT ratio, high to low; relayPTR = {capBank.RelayPTRatioPrimary + " " + capBank.RelayPTRatioSecondary}");
                 lines.Add($"45 the output resistor of the voltage divider circuit; Rv = {capBank.Rv}");
                 lines.Add($"46 the input resistor of the voltage divider circuit; Rh = {capBank.Rh}");
                 lines.Add("");

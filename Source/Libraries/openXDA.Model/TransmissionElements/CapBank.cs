@@ -193,8 +193,12 @@ namespace openXDA.Model
         /// <summary>
         /// Line 44 => 800 250
         /// </summary>
-        public string RelayPTRatio { get; set; }
+        public int RelayPTRatioSecondary { get; set; }
 
+        /// <summary>
+        /// Line 44 => 800 250
+        /// </summary>
+        public int RelayPTRatioPrimary { get; set; }
         /// <summary>
         /// Line 45
         /// </summary>
