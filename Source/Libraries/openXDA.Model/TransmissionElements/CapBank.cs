@@ -209,7 +209,10 @@ namespace openXDA.Model
         /// </summary>
         public double Rh { get; set; }
 
-
+        /// <summary>
+        /// Wattage for Rh 
+        /// </summary>
+        public double Sh { get; set; }
 
         /// <summary>
         /// Compensated => used for Line 55

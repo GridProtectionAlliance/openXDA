@@ -389,7 +389,8 @@ CREATE TABLE CapacitorBankAttributes
     Rh FLOAT NOT NULL DEFAULT(0),
     Compensated BIT NOT NULL,
     NLowerGroups INT NOT NULL,
-    ShortedGroups FLOAT NOT NULL DEFAULT(0)
+    ShortedGroups FLOAT NOT NULL DEFAULT(0),
+    Sh FLOAT NOT NULL DEFAULT(0)
 )
 GO
 
@@ -773,7 +774,9 @@ CREATE VIEW CapBank AS
         Nshorted,
         BlownFuses,
         BlownGroups,
-        RelayPTRatio,
+        RelayPTRatioPrimary,
+        RelayPTRatioSecondary,
+        Sh,
         Rv,
         Rh,
         Compensated,
@@ -798,7 +801,7 @@ BEGIN
 	INSERT INTO CapacitorBankAttributes (AssetID, CapacitancePerBank, NumberOfBanks, CktSwitcher, MaxKV, UnitKV, UnitKVAr, NegReactanceTol,
         PosReactanceTol, Nparalell, Nseries, NSeriesGroup, NParalellGroup, Fused, VTratioBus, NumberLVCaps, NumberLVUnits, LVKVAr,
         LVKV, LVNegReactanceTol, LVPosReactanceTol, UpperXFRRatio, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups,
-        RelayPTRatio, Rv, Rh, Compensated, NLowerGroups, ShortedGroups)
+        RelayPTRatioPrimary, RelayPTRatioSecondary,Rv, Rh, Compensated, NLowerGroups, ShortedGroups,Sh)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			CapacitancePerBank AS CapacitancePerBank,
@@ -826,12 +829,14 @@ BEGIN
             Nshorted AS Nshorted,
             BlownFuses AS BlownFuses,
             BlownGroups AS BlownGroups,
-            RelayPTRatio AS RelayPTRatio,
+            RelayPTRatioPrimary AS RelayPTRatioPrimary,
+            RelayPTRatioSecondary AS RelayPTRatioPrimary,
             Rv AS Rv,
             Rh AS Rh,
             Compensated AS Compensated,
             NLowerGroups AS NLowerGroups,
-            ShortedGroups AS ShortedGroups
+            ShortedGroups AS ShortedGroups,
+            Sh as Sh
 	    FROM INSERTED
 END
 GO
@@ -882,12 +887,14 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             CapacitorBankAttributes.Nshorted = INSERTED.Nshorted,
             CapacitorBankAttributes.BlownFuses = INSERTED.BlownFuses,
             CapacitorBankAttributes.BlownGroups = INSERTED.BlownGroups,
-            CapacitorBankAttributes.RelayPTRatio = INSERTED.RelayPTRatio,
+            CapacitorBankAttributes.RelayPTRatioPrimary = INSERTED.RelayPTRatioPrimary,
+            CapacitorBankAttributes.RelayPTRatioSecondary = INSERTED.RelayPTRatioSecondary,
             CapacitorBankAttributes.Rv = INSERTED.Rv,
             CapacitorBankAttributes.Rh = INSERTED.Rh,
             CapacitorBankAttributes.Compensated = INSERTED.Compensated,
             CapacitorBankAttributes.NLowerGroups = INSERTED.NLowerGroups,
-            CapacitorBankAttributes.ShortedGroups = INSERTED.ShortedGroups
+            CapacitorBankAttributes.ShortedGroups = INSERTED.ShortedGroups,
+            CapacitorBankAttributes.Sh = INSERTED.Sh
 		FROM
 			CapacitorBankAttributes 
 	INNER JOIN
