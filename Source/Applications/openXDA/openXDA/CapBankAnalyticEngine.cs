@@ -100,7 +100,7 @@ namespace openXDA
             public string Analyzer { get; set; }
 
             [Setting]
-            [DefaultValue(1200)]
+            [DefaultValue(1200000)]
             public int Delay { get; set; }
         }
 
