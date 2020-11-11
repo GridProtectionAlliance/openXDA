@@ -12,7 +12,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>openXDA</RootNamespace>
     <AssemblyName>openXDA</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>XDA.ico</ApplicationIcon>
     <TargetFrameworkProfile />
@@ -316,6 +316,10 @@
     <ProjectReference Include="..\..\..\Libraries\openHistorian.XDALink\openHistorian.XDALink.csproj">
       <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
       <Name>openHistorian.XDALink</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.HIDS\openXDA.HIDS.csproj">
+      <Project>{2528ec50-0be9-4a9f-8ac3-77fc42afe8ce}</Project>
+      <Name>openXDA.HIDS</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.Hubs\openXDA.Hubs.csproj">
       <Project>{63e2953c-1c57-41c8-a51d-08e52780bf8a}</Project>

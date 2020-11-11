@@ -56,11 +56,11 @@ namespace openXDA.Model
                 "ON Source.ChannelID = Target.ChannelID AND Source.Date = Target.Date " +
                 "WHEN MATCHED THEN " +
                 "    UPDATE SET " +
-                "        Maximum = CASE WHEN Target.ValidCount = 0 OR Source.Maximum > Target.Maximum THEN Source.Maximum ELSE Target.Maximum END, " +
-                "        Minimum = CASE WHEN Target.ValidCount = 0 OR Source.Minimum < Target.Minimum THEN Source.Minimum ELSE Target.Minimum END, " +
-                "        Average = CASE WHEN Target.ValidCount = 0 THEN Source.Average ELSE Target.Average * (CAST(Target.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) + Source.Average * (CAST(Source.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) END, " +
-                "        ValidCount = Source.ValidCount + Target.ValidCount, " +
-                "        InvalidCount = Source.InvalidCount + Target.InvalidCount " +
+                "        Maximum = Source.Maximum, " +
+                "        Minimum = Source.Minimum, " +
+                "        Average = Source.Average, " +
+                "        ValidCount = Source.ValidCount, " +
+                "        InvalidCount = Source.InvalidCount " +
                 "WHEN NOT MATCHED THEN " +
                 "    INSERT (ChannelID, Date, Maximum, Minimum, Average, ValidCount, InvalidCount) " +
                 "    VALUES (Source.ChannelID, Source.Date, Source.Maximum, Source.Minimum, Source.Average, Source.ValidCount, Source.InvalidCount);";

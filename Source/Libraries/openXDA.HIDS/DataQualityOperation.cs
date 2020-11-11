@@ -23,89 +23,39 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using FaultData.DataAnalysis;
+using FaultData.DataOperations;
 using FaultData.DataResources;
 using FaultData.DataSets;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using HIDS;
 using log4net;
+using openXDA.HIDS.APIExtensions;
 using openXDA.Model;
 
-namespace FaultData.DataOperations
+namespace openXDA.HIDS
 {
     public class DataQualityOperation : DataOperationBase<MeterDataSet>
     {
-        #region [ Members ]
-
-        // Nested Types
-        private class ChannelSummary
-        {
-            #region [ Members ]
-
-            // Fields
-            private Channel m_channel;
-            private DateTime m_date;
-            private TrendingDataSummaryResource.TrendingDataSummary m_trendingSummary;
-
-            #endregion
-
-            #region [ Constructors ]
-
-            public ChannelSummary(Channel channel, TrendingDataSummaryResource.TrendingDataSummary summary)
-            {
-                m_channel = channel;
-                m_date = summary.Time.Date;
-                m_trendingSummary = summary;
-            }
-
-            #endregion
-
-            #region [ Properties ]
-
-            public Channel Channel
-            {
-                get
-                {
-                    return m_channel;
-                }
-            }
-
-            public DateTime Date
-            {
-                get
-                {
-                    return m_date;
-                }
-            }
-
-            public TrendingDataSummaryResource.TrendingDataSummary TrendingSummary
-            {
-                get
-                {
-                    return m_trendingSummary;
-                }
-            }
-
-            #endregion
-        }
-
-        #endregion
-
-        #region [ Methods ]
+        [Category]
+        [SettingName(HIDSSettings.CategoryName)]
+        public HIDSSettings HIDSSettings { get; } = new HIDSSettings();
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            Dictionary<Channel, List<DataGroup>> trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
+            TrendingGroupsResource trendingGroupsResource = meterDataSet.GetResource<TrendingGroupsResource>();
+            Dictionary<Channel, List<DataGroup>> trendingGroups = trendingGroupsResource.TrendingGroups;
 
             if (trendingGroups.Count == 0)
             {
                 Log.Debug($"No trending data found; skipping {nameof(DataQualityOperation)}.");
                 return;
             }
-
-            // Process the data quality range limits to identify unreasonable values
-            ProcessDataQualityRangeLimits(meterDataSet);
 
             // Get the total cumulative samples per hour
             // of each of the enabled channels in the meter
@@ -116,108 +66,118 @@ namespace FaultData.DataOperations
                 .DefaultIfEmpty(0.0D)
                 .Sum();
 
-            // Convert trending data summaries to channel summaries
-            // so that we can order by date to make processing easier
-            List<ChannelSummary> channelSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries
-                .SelectMany(kvp => kvp.Value.Select(summary => new ChannelSummary(kvp.Key, summary)))
-                .Where(channelSummary => channelSummary.Channel.Enabled)
-                .OrderBy(channelSummary => channelSummary.Date)
-                .ThenBy(channelSummary => channelSummary.Channel.ID)
-                .ToList();
+            using AdoDataConnection connection = meterDataSet.CreateDbConnection();
+            TableOperations<ChannelDataQualitySummary> channelDataQualitySummaryTable = new TableOperations<ChannelDataQualitySummary>(connection);
+            TableOperations<MeterDataQualitySummary> meterDataQualitySummaryTable = new TableOperations<MeterDataQualitySummary>(connection);
 
-            if (channelSummaries.Count == 0)
-                return;
-
-            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            async Task LoadSummariesAsync()
             {
-                TableOperations<ChannelDataQualitySummary> channelDataQualitySummaryTable = new TableOperations<ChannelDataQualitySummary>(connection);
-                TableOperations<MeterDataQualitySummary> meterDataQualitySummaryTable = new TableOperations<MeterDataQualitySummary>(connection);
 
-                ChannelDataQualitySummary channelDataQualitySummary = null;
-                MeterDataQualitySummary meterDataQualitySummary = null;
-
-                foreach (ChannelSummary channelSummary in channelSummaries)
+                await foreach (IAsyncGrouping<DateTime, ChannelDataQualitySummary> grouping in QuerySummariesAsync(trendingGroups).GroupBy(summary => summary.Date))
                 {
-                    // If the current channel summary's data does not belong in the same aggregate as the previous channel summary,
-                    // update the meter summary record, submit the current channel summary record, and create a new channel summary record
-                    if ((object)channelDataQualitySummary != null && (channelSummary.Channel.ID != channelDataQualitySummary.ChannelID || channelSummary.Date != channelDataQualitySummary.Date))
+                    MeterDataQualitySummary meterDataQualitySummary = new MeterDataQualitySummary()
                     {
-                        meterDataQualitySummary.GoodPoints += channelDataQualitySummary.GoodPoints;
-                        meterDataQualitySummary.LatchedPoints += channelDataQualitySummary.LatchedPoints;
+                        MeterID = meterDataSet.Meter.ID,
+                        Date = grouping.Key,
+                        ExpectedPoints = (int)(24.0D * meterSamplesPerHour)
+                    };
+
+                    await foreach (ChannelDataQualitySummary channelDataQualitySummary in grouping)
+                    {
                         meterDataQualitySummary.UnreasonablePoints += channelDataQualitySummary.UnreasonablePoints;
+                        meterDataQualitySummary.LatchedPoints += channelDataQualitySummary.LatchedPoints;
                         meterDataQualitySummary.NoncongruentPoints += channelDataQualitySummary.NoncongruentPoints;
-                        meterDataQualitySummary.DuplicatePoints += channelDataQualitySummary.DuplicatePoints;
-
+                        meterDataQualitySummary.GoodPoints += channelDataQualitySummary.GoodPoints;
                         channelDataQualitySummaryTable.Upsert(channelDataQualitySummary);
-                        channelDataQualitySummary = null;
                     }
 
-                    // If the current channel summary's data does not fall on the same date as the previous
-                    // channel summary's data, submit the current meter summary record and create a new one
-                    if ((object)meterDataQualitySummary != null && channelSummary.Date != meterDataQualitySummary.Date)
-                    {
-                        meterDataQualitySummaryTable.Upsert(meterDataQualitySummary);
-                        meterDataQualitySummary = null;
-                    }
-
-                    // If there is no existing record to aggregate
-                    // channel summary data, create a new one
-                    if ((object)channelDataQualitySummary == null)
-                    {
-                        channelDataQualitySummary = new ChannelDataQualitySummary();
-                        channelDataQualitySummary.ChannelID = channelSummary.Channel.ID;
-                        channelDataQualitySummary.Date = channelSummary.Date;
-                        channelDataQualitySummary.ExpectedPoints = (int)Math.Round(24.0D * channelSummary.Channel.SamplesPerHour);
-                        channelDataQualitySummary.GoodPoints = 0;
-                        channelDataQualitySummary.LatchedPoints = 0;
-                        channelDataQualitySummary.UnreasonablePoints = 0;
-                        channelDataQualitySummary.NoncongruentPoints = 0;
-                        channelDataQualitySummary.DuplicatePoints = 0;
-                    }
-
-                    // If there is no existing record to aggregate
-                    // meter summary data, create a new one
-                    if ((object)meterDataQualitySummary == null)
-                    {
-                        meterDataQualitySummary = new MeterDataQualitySummary();
-                        meterDataQualitySummary.MeterID = meterDataSet.Meter.ID;
-                        meterDataQualitySummary.Date = channelSummary.Date;
-                        meterDataQualitySummary.ExpectedPoints = (int)Math.Round(24.0D * meterSamplesPerHour);
-                        meterDataQualitySummary.GoodPoints = 0;
-                        meterDataQualitySummary.LatchedPoints = 0;
-                        meterDataQualitySummary.UnreasonablePoints = 0;
-                        meterDataQualitySummary.NoncongruentPoints = 0;
-                        meterDataQualitySummary.DuplicatePoints = 0;
-                    }
-
-                    // Update the channel summary aggregates
-                    // based on the current channel summary
-                    if (channelSummary.TrendingSummary.IsDuplicate)
-                        channelDataQualitySummary.DuplicatePoints++;
-                    else if (channelSummary.TrendingSummary.Latched)
-                        channelDataQualitySummary.LatchedPoints++;
-                    else if (channelSummary.TrendingSummary.Unreasonable)
-                        channelDataQualitySummary.UnreasonablePoints++;
-                    else if (channelSummary.TrendingSummary.NonCongruent)
-                        channelDataQualitySummary.NoncongruentPoints++;
-                    else
-                        channelDataQualitySummary.GoodPoints++;
-                }
-
-                // Make sure the last channel and meter summary
-                // records get submitted to the database
-                if ((object)channelDataQualitySummary != null)
-                {
-                    meterDataQualitySummary.GoodPoints += channelDataQualitySummary.GoodPoints;
-                    meterDataQualitySummary.LatchedPoints += channelDataQualitySummary.LatchedPoints;
-                    meterDataQualitySummary.UnreasonablePoints += channelDataQualitySummary.UnreasonablePoints;
-                    meterDataQualitySummary.NoncongruentPoints += channelDataQualitySummary.NoncongruentPoints;
-                    meterDataQualitySummary.DuplicatePoints += channelDataQualitySummary.DuplicatePoints;
-
-                    channelDataQualitySummaryTable.Upsert(channelDataQualitySummary);
                     meterDataQualitySummaryTable.Upsert(meterDataQualitySummary);
                 }
             }
+
+            Task loadSummariesTask = LoadSummariesAsync();
+            loadSummariesTask.GetAwaiter().GetResult();
+        }
+
+        private IAsyncEnumerable<ChannelDataQualitySummary> QuerySummariesAsync(Dictionary<Channel, List<DataGroup>> trendingGroups)
+        {
+            using API hids = new API();
+            hids.Configure(HIDSSettings);
+
+            IEnumerable<string> tags = trendingGroups.Keys
+                .Where(channel => channel.Enabled)
+                .Select(channel => hids.ToTag(channel.ID));
+
+            DateTime startTime = trendingGroups.Values
+                .SelectMany(list => list)
+                .Min(dataGroup => dataGroup.StartTime.Date);
+
+            DateTime endTime = trendingGroups.Values
+                .SelectMany(list => list)
+                .Max(dataGroup => dataGroup.EndTime.AddDays(1.0D).AddTicks(-1L).Date);
+
+            void QueryUnreasonablePoints(IQueryBuilder queryBuilder) => queryBuilder
+                .Range(startTime, endTime)
+                .FilterTags(tags)
+                .TestQuality((uint)QualityFlags.Unreasonable)
+                .Aggregate("1d");
+
+            void QueryLatchedPoints(IQueryBuilder queryBuilder) => queryBuilder
+                .Range(startTime, endTime)
+                .FilterTags(tags)
+                .TestQuality((uint)QualityFlags.Latched)
+                .Aggregate("1d");
+
+            void QueryNoncongruentPoints(IQueryBuilder queryBuilder) => queryBuilder
+                .Range(startTime, endTime)
+                .FilterTags(tags)
+                .TestQuality((uint)QualityFlags.Noncongruent)
+                .Aggregate("1d");
+
+            void QueryAllPoints(IQueryBuilder queryBuilder) => queryBuilder
+                .Range(startTime, endTime)
+                .FilterTags(tags)
+                .Aggregate("1d");
+
+            IAsyncEnumerable<PointCount> unreasonableCounts = hids.ReadPointCountAsync(QueryUnreasonablePoints);
+            IAsyncEnumerable<PointCount> latchedCounts = hids.ReadPointCountAsync(QueryLatchedPoints);
+            IAsyncEnumerable<PointCount> noncongruentCounts = hids.ReadPointCountAsync(QueryNoncongruentPoints);
+            IAsyncEnumerable<PointCount> totalPointCounts = hids.ReadPointCountAsync(QueryAllPoints);
+
+            static Func<T1, T2> ToSelector<T1, T2>(Func<T1, T2> func) => func;
+            var countSelector = ToSelector((PointCount count) => new { count.Tag, count.Timestamp });
+
+            static Task<ulong> SumAsync(IAsyncEnumerable<PointCount> counts) => counts
+                .AggregateAsync(0Lu, (total, count) => total + count.Count)
+                .AsTask();
+
+            return Enumerable.Range(0, (int)endTime.Subtract(startTime).TotalDays)
+                .Select(days => startTime.AddDays(days))
+                .SelectMany(date => trendingGroups.Keys.Select(Channel => new { Key = new { Tag = Channel.ID.ToString("x8"), Timestamp = date }, Channel }))
+                .ToAsyncEnumerable()
+                .GroupJoin(unreasonableCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, UnreasonableCountTask = SumAsync(counts) })
+                .GroupJoin(latchedCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, LatchedCountTask = SumAsync(counts) })
+                .GroupJoin(noncongruentCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, record.LatchedCountTask, NoncongruentCountTask = SumAsync(counts) })
+                .GroupJoin(totalPointCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, record.LatchedCountTask, record.NoncongruentCountTask, TotalCountTask = SumAsync(counts) })
+                .SelectAwait(async record =>
+                {
+                    ulong unreasonableCount = await record.UnreasonableCountTask;
+                    ulong latchedCount = await record.LatchedCountTask;
+                    ulong noncongruentCount = await record.NoncongruentCountTask;
+                    ulong totalCount = await record.TotalCountTask;
+                    ulong expectedCount = (ulong)(24.0D * record.Channel.SamplesPerHour);
+
+                    return new ChannelDataQualitySummary()
+                    {
+                        ChannelID = Convert.ToInt32(record.Key.Tag, 16),
+                        Date = record.Key.Timestamp,
+                        UnreasonablePoints = (int)unreasonableCount,
+                        LatchedPoints = (int)latchedCount,
+                        NoncongruentPoints = (int)noncongruentCount,
+                        GoodPoints = (int)(totalCount - unreasonableCount - latchedCount - noncongruentCount),
+                        ExpectedPoints = (int)expectedCount
+                    };
+                });
         }
 
         private void ProcessDataQualityRangeLimits(MeterDataSet meterDataSet)
@@ -335,13 +295,7 @@ namespace FaultData.DataOperations
             return dataQualityRangeLimits;
         }
 
-        #endregion
-
-        #region [ Static ]
-
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataQualityOperation));
-
-        #endregion
     }
 }

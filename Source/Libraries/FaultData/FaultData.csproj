@@ -65,9 +65,8 @@
       <HintPath>..\..\Dependencies\NuGet\MathNet.Numerics.3.17.0\lib\net40\MathNet.Numerics.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\openHistorian\Source\Dependencies\GSF\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\Dependencies\GSF\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -109,10 +108,8 @@
     <Compile Include="DataOperations\BreakerRestrikeOperation.cs" />
     <Compile Include="DataOperations\BreakerTimingOperation.cs" />
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
-    <Compile Include="DataOperations\DailySummaryOperation.cs" />
     <Compile Include="DataOperations\DataOperationBase.cs" />
     <Compile Include="DataOperations\DataPusherOperation.cs" />
-    <Compile Include="DataOperations\DataQualityOperation.cs" />
     <Compile Include="DataOperations\GTC\MeterDataQualityOverride.cs" />
     <Compile Include="DataOperations\LightningDataOperation.cs" />
     <Compile Include="DataOperations\PQube\PQubeClassificationOverride.cs" />
@@ -120,7 +117,6 @@
     <Compile Include="DataOperations\StatisticOperation.cs" />
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
-    <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
     <Compile Include="DataOperations\TVA\EPRICapBankAnalytics.cs" />
     <Compile Include="DataOperations\TVA\StructureQueryOperation.cs" />
     <Compile Include="DataReaders\SELLDPReader.cs" />

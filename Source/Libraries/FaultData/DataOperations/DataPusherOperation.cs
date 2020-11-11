@@ -123,7 +123,7 @@ namespace FaultData.DataOperations
         #region [ Static ]
 
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(TrendingDataSummaryOperation));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherOperation));
 
         #endregion        
     }
