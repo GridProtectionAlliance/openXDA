@@ -1009,7 +1009,7 @@ namespace openXDA
                 int n = 1;
                 foreach (CapBankRelay relay in relays)
                 {
-                    lines.Add($"{n + 65} fileKeyRelay4Cap{{{n}}} = {relay.AssetKey}");
+                    lines.Add($"{n + 65} fileKeyRelay4Cap{{{n}}} = Relay{relay.ID}");
                     n++;
                 }
                 lines.Add("");
@@ -1124,7 +1124,7 @@ namespace openXDA
                 datafolder = Path.GetDirectoryName(datafolder);
 
 
-                string dstFile = $"{relay.AssetKey}-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
+                string dstFile = $"Relay{relay.ID}-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
                 List<string> lines = new List<string>();
 
                 lines.Add($"\"{relay.AssetKey} - {evt.StartTime:MM/dd/yyyy HH:mm:ss.ffff} \"");
