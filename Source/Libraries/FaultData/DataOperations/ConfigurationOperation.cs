@@ -208,7 +208,6 @@ namespace FaultData.DataOperations
                 triggerTrendingMatch = connection.ExecuteScalar<string>("SELECT VALUE FROM Setting WHERE Name = 'TrendingData.Trigger.FolderPath'");
             }
 
-
             if (rmsTrendingMatch != null)
             {
                 Regex rmsTrendingRegex = new Regex(rmsTrendingMatch, RegexOptions.Compiled);
@@ -255,7 +254,6 @@ namespace FaultData.DataOperations
             // are combinations of the parsed series
             List<DataSeries> calculatedDataSeriesList = new List<DataSeries>();
 
-
             if (isRMSTrending)
             {
                 // Only get Trending Data for Voltages and Currents
@@ -280,12 +278,9 @@ namespace FaultData.DataOperations
                 foreach (Series series in seriesList.Where(series => (!string.IsNullOrEmpty(series.SourceIndexes)) &&
                     (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsRMSTrend))))
                     AddRMSTrendSeries(calculatedDataSeriesList, meterDataSet, series);
-                
             }
-
             else if (isFlkrTrending)
             {
-                
                 // Only get Trending Data for Voltages and Currents
                 List<Channel> powChannels = dbMeter.Channels.Where(channel =>
                     (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") && channel.MeasurementCharacteristic.Name == "Instantaneous")
@@ -308,10 +303,7 @@ namespace FaultData.DataOperations
                     foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
                     (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsFLKRTrend))))
                         AddFlkrTrendSeries(calculatedDataSeriesList, meterDataSet, series);
-
-                
             }
-
             else if (isTriggerTrending)
             {
                 List<Channel> powChannels = dbMeter.Channels.Where(channel =>
@@ -337,9 +329,7 @@ namespace FaultData.DataOperations
                 foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
                     (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsTriggerTrend))))
                     AddTriggerTrendSeries(calculatedDataSeriesList, meterDataSet, series);
-
             }
-
             //remove Channels with RMS Trending Data Series
             else
             {
@@ -387,9 +377,7 @@ namespace FaultData.DataOperations
                 // configuration by assuming the meter monitors only one line
                 AddUndefinedChannels(meterDataSet);
 
-                 
                 FixUpdatedChannelInfo(meterDataSet, parsedMeter);
-
             }
         }
 
@@ -670,7 +658,6 @@ namespace FaultData.DataOperations
                 }
             }
         }
-
         
         private void FixUpdatedChannelInfo(MeterDataSet meterDataSet, Meter parsedMeter)
         {
@@ -1156,7 +1143,6 @@ namespace FaultData.DataOperations
 
         }
 
-
         /// <summary>
         /// Adds the Processed Flicker Trend Data
         /// </summary>
@@ -1241,6 +1227,7 @@ namespace FaultData.DataOperations
 
             return SourceIndex.Parse(translated, seriesNames);
         }
+
         #endregion
 
         #region [ Static ]
