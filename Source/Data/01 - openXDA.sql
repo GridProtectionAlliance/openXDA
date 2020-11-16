@@ -1141,6 +1141,8 @@ CREATE TABLE Channel
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
     Name VARCHAR(200) NOT NULL,
+    Adder FLOAT NOT NULL DEFAULT 0,
+    Multiplier FLOAT NOT NULL DEFAULT 1,
     SamplesPerHour FLOAT NOT NULL,
     PerUnitValue FLOAT NULL,
     HarmonicGroup INT NOT NULL,

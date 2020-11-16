@@ -379,6 +379,8 @@ namespace FaultData.DataOperations
 
                 FixUpdatedChannelInfo(meterDataSet, parsedMeter);
             }
+
+            ApplySeriesAdjustments(meterDataSet.DataSeries);
         }
 
         private Meter LoadMeterFromDatabase(MeterDataSet meterDataSet)
@@ -477,6 +479,25 @@ namespace FaultData.DataOperations
 
             dataSeries.SeriesInfo = series;
             calculatedDataSeriesList.Add(dataSeries);
+        }
+
+        private void ApplySeriesAdjustments(List<DataSeries> definedSeries)
+        {
+            for (int i = 0; i < definedSeries.Count; i++)
+            {
+                DataSeries series = definedSeries[i];
+                double adder = series.SeriesInfo.Channel.Adder;
+                double multiplier = series.SeriesInfo.Channel.Multiplier;
+
+                DataSeries adderSeries = series.Copy();
+
+                foreach (DataPoint point in adderSeries.DataPoints)
+                    point.Value = adder;
+
+                definedSeries[i] = series
+                    .Multiply(multiplier)
+                    .Add(adderSeries);
+            }
         }
 
         private void AddUndefinedChannels(MeterDataSet meterDataSet)

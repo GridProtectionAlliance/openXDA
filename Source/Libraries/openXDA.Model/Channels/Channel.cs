@@ -23,12 +23,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Transactions;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
-using System.Transactions;
 
 namespace openXDA.Model
 {
@@ -149,6 +150,11 @@ namespace openXDA.Model
         [StringLength(200)]
         [Searchable]
         public string Name { get; set; }
+
+        public double Adder { get; set; }
+
+        [DefaultValue(1.0D)]
+        public double Multiplier { get; set; }
 
         public double SamplesPerHour { get; set; }
 
