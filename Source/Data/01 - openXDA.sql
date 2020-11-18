@@ -447,24 +447,6 @@ CREATE TABLE TransformerAttributes
 )
 GO
 
--- Channel Group and Type
-CREATE TABLE ChannelGroup
-(
-	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	Name VARCHAR(200) NOT NULL,
-	Description VARCHAR(MAX) NULL
-)
-GO
-
-CREATE TABLE ChannelGroupType
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    ChannelGroupID INT NOT NULL REFERENCES ChannelGroup(ID),
-    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
-    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
-	DisplayName VARCHAR(20) NOT NULL
-)
-GO
 
 -- Correspoding Views and Trigger 
 CREATE VIEW Line AS
@@ -1132,6 +1114,25 @@ CREATE TABLE MeasurementCharacteristic
     Name VARCHAR(200) NOT NULL UNIQUE,
     Description VARCHAR(MAX) NULL,
     Display BIT NOT NULL DEFAULT 0
+)
+GO
+
+-- Channel Group and Type
+CREATE TABLE ChannelGroup
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	Name VARCHAR(200) NOT NULL,
+	Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE ChannelGroupType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelGroupID INT NOT NULL REFERENCES ChannelGroup(ID),
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
+	DisplayName VARCHAR(20) NOT NULL
 )
 GO
 
@@ -3051,6 +3052,14 @@ CREATE TABLE AlarmType
 )
 GO
 
+CREATE TABLE AlarmSeverity
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Color VARCHAR(10) NOT NULL
+)
+GO
+
 CREATE TABLE AlarmGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -3071,6 +3080,29 @@ SELECT
 	0 AS Meters,
 	0 AS AlarmSeverityID
 	FROM AlarmGroup
+GO
+
+-- Defaults --
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Upper Limit', 'Triggered when setpoint is exceeded')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Lower Limit', 'Triggered when value is below setpoint')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('In Range', 'Triggered when value is oustide specified Range')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Out of Range', 'Triggered when Value is within specified Range')
+GO
+
+INSERT INTO AlarmSeverity(Name, Color) VALUES ('Severe', '#ED1C16')
+GO
+INSERT INTO AlarmSeverity(Name, Color) VALUES ('Alert', '#F65314')
+GO
+INSERT INTO AlarmSeverity(Name, Color) VALUES ('Warning', '#FFBB00')
+GO
+INSERT INTO AlarmSeverity(Name, Color) VALUES ('Info', '#3B5998')
 GO
 
 
@@ -3240,21 +3272,6 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_AlarmLog_Severity
 ON AlarmLog(Severity ASC)
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('Latched', 'Latched value')
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('Non-congruent', 'Average value outside of minimum and maximum')
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('Unreasonable', 'Value outside of reasonable limits')
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('OffNormal', 'Value was outside of normal range for a given hour of the week')
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('Alarm', 'Value exceeded regulatory limits')
 GO
 
 CREATE TABLE FaultNote
