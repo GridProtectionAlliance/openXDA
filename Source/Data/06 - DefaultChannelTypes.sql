@@ -212,6 +212,10 @@ INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('Trigg
 GO
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PLTSlide', 'PLTSlide', 0)
 GO
+GO
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('KFactor', 'KFactor', 0)
+GO
+
 
 
 INSERT INTO Phase(Name, Description) VALUES('AN', 'A-phase to neutral')
