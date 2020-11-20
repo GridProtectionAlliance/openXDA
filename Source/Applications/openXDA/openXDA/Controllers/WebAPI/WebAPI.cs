@@ -21,10 +21,14 @@
 //
 //******************************************************************************************************
 
+using GSF.Web.Security;
 using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Web;
 using System.Web.Http;
 
@@ -33,6 +37,21 @@ namespace openXDA.Controllers.WebAPI
     public class WebAPI
     {
     }
+
+    [RoutePrefix("api/rvht")]
+    public class RequestVerificationHeaderTokenController: ApiController
+    {
+        [HttpGet,Route("")]
+        public HttpResponseMessage Get()
+        {
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(Request.GenerateRequestVerficationHeaderToken(), Encoding.UTF8, "text/plain")
+            };
+        }
+
+    }
+
 
     [RoutePrefix("api/Meter")]
     public class MeterController : ModelController<Meter> { }
@@ -51,4 +70,11 @@ namespace openXDA.Controllers.WebAPI
 
     [RoutePrefix("api/MeasurementCharacteristic")]
     public class MeasurementCharacteristicController : ModelController<MeasurementCharacteristic> { }
+
+    [RoutePrefix("api/ChannelGroup")]
+    public class ChannelGroupController : ModelController<ChannelGroup> { }
+
+    [RoutePrefix("api/ChannelGroupType")]
+    public class ChannelGroupTypeController : ModelController<ChannelGroupType> { }
+
 }

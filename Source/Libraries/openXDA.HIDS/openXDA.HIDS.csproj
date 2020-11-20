@@ -178,6 +178,7 @@
     <Compile Include="HIDSSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QualityFlags.cs" />
+    <Compile Include="TrendingDataQuery.cs" />
     <Compile Include="TrendingDataSummaryOperation.cs" />
   </ItemGroup>
   <ItemGroup>
