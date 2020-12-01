@@ -519,6 +519,7 @@
       <ComponentRef Id="Owin" />
       <ComponentRef Id="RazorEngine" />
       <ComponentRef Id="System.Web.Razor" />
+      <ComponentRef Id="System.Net.Http" />
       <ComponentRef Id="System.Net.Http.Formatting" />
       <ComponentRef Id="System.Web.Helpers" />
       <ComponentRef Id="System.Web.Mvc" />

@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using FaultData.DataAnalysis;
 using FaultData.DataOperations;
 using FaultData.DataResources;
@@ -62,16 +64,16 @@ namespace openXDA.HIDS
 
         #region [ Methods ]
 
-        public IAsyncEnumerable<Point> Query(List<int> channelIDs, DateTime startTime, DateTime endTime )
+        public async Task<List<Point>> Query(List<int> channelIDs, DateTime startTime, DateTime endTime, CancellationToken cancellationToken )
         {
             using (API hids = new API())
             {
                 hids.Configure(HIDSSettings);
 
-                return hids.ReadPointsAsync((t) => {
-                    t.FilterTags(channelIDs.Select(cid => cid.ToString()));
+                return await hids.ReadPointsAsync((t) => {
+                    t.FilterTags(channelIDs.Select(cid => cid.ToString("x8")));
                     t.Range(startTime, endTime);
-                 });
+                 }, cancellationToken).ToListAsync();
             }
         }
 

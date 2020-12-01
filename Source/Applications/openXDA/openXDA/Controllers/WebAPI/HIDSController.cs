@@ -23,27 +23,72 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
+using GSF.Data;
+using GSF.Web.Security;
 using HIDS;
+using Newtonsoft.Json.Linq;
+
 namespace openXDA.Controllers.WebAPI
 {
-    public class HIDSPost { 
-        public string ChannelIDs { get; set; }
+    public class HIDSPost {
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
+        public string By { get; set; }
+        public List<int> IDs { get; set; }
+        public List<int> Phases { get; set; }
+        public List<int> Groups { get; set; }
+        public List<int> Types { get; set; }
     }
     [RoutePrefix("api/HIDS")]
-    public class HIDSController : ApiController { 
-        public IAsyncEnumerable<Point> Post([FromBody] HIDSPost post, CancellationToken cancellationToken)
+    public class HIDSController : ApiController {
+        [HttpGet, Route("")]
+        public IHttpActionResult Get() {
+            return Ok("Hello!");
+        }
+
+        [HttpPost, Route("")]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        public IHttpActionResult Post([FromBody] HIDSPost post, CancellationToken cancellationToken)
         {
-            HIDS.TrendingDataQuery hids = new HIDS.TrendingDataQuery();
-            return hids.Query(post.ChannelIDs.Split(',').Select(x => int.Parse(x)).ToList(), post.StartTime, post.EndTime);
-            
-            
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+                DataTable ids = connection.RetrieveData(@"
+                    SELECT 
+	                    DISTINCT Channel.ID, Meter.Name as Meter, Asset.AssetName as Asset, Phase.Name as Phase,  
+                        Channel.Name, MeasurementCharacteristic.Name as Characteristic, MeasurementType.Name as Type, 
+                        Channel.HarmonicGroup as Harmonic, Location.Name as Station, Location.Latitude, Location.Longitude
+                    FROM 
+	                    Channel JOIN
+	                    Meter ON Meter.ID = Channel.MeterID JOIN
+	                    Asset ON Asset.ID = Channel.AssetID JOIN
+	                    Phase ON Phase.ID = Channel.PhaseID JOIN
+                        Location ON Location.ID = Meter.LocationID JOIN
+	                    MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID JOIN
+	                    MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID JOIN
+	                    ChannelGroupType ON ChannelGroupType.MeasurementCharacteristicID = Channel.MeasurementCharacteristicID AND ChannelGroupType.MeasurementTypeID = Channel.MeasurementTypeID
+                    WHERE 
+	                    " + post.By + @".ID IN (" + string.Join(",", post.IDs)+ @") AND
+	                    Phase.ID IN (" + string.Join(",", post.Phases) + @") AND
+	                    ChannelGroupType.ID IN (" + string.Join(",", post.Types) + @")
+                ");
+
+                HIDS.TrendingDataQuery hids = new HIDS.TrendingDataQuery();
+                List<Point> result = hids.Query(ids.Select().Select(x => int.Parse(x["ID"].ToString())).ToList(), post.StartTime, post.EndTime, cancellationToken).Result;
+                JArray json = JArray.FromObject(ids);
+                var groups = result.GroupBy(r => int.Parse(r.Tag, System.Globalization.NumberStyles.HexNumber));
+
+                foreach (JObject j in json) {
+                    j["Data"] = JArray.FromObject(result.Where(r => int.Parse(r.Tag, System.Globalization.NumberStyles.HexNumber) == j["ID"].ToObject<int>()));
+                }
+
+                return Ok(json);
+            }          
         }
     }
 }
