@@ -294,7 +294,7 @@ namespace openXDA.Controllers
 
                 List<int> meterIds = postedData["MeterID"].ToObject<List<int>>();
                 int measurmentTypeId = postedData["MeasurmentTypeID"].ToObject<int>();
-                List<int> baseVoltages = postedData["BaseVoltage"].ToObject<List<int>>();
+                List<double> baseVoltages = postedData["BaseVoltage"].ToObject<List<double>>();
                 List<int> phaseID = postedData["PhaseID"].ToObject<List<int>>();
 
                 if (meterIds.Count == 0 || baseVoltages.Count == 0 || phaseID.Count == 0)
@@ -350,7 +350,7 @@ namespace openXDA.Controllers
 
                 List<int> meterIds = postedData["MeterID"].ToObject<List<int>>();
                 int measurmentTypeId = postedData["MeasurmentTypeID"].ToObject<int>();
-                List<int> baseVoltages = postedData["BaseVoltage"].ToObject<List<int>>();
+                List<double> baseVoltages = postedData["BaseVoltage"].ToObject<List<double>>();
                 List<int> phaseID = postedData["PhaseID"].ToObject<List<int>>();
 
                 if (meterIds.Count == 0 || baseVoltages.Count == 0 || phaseID.Count == 0)
