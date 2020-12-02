@@ -187,8 +187,8 @@ const StaticSetPoint = (props: IProps) => {
                                         RemovePlot(-1)
                                 }}>All Channels Overview</a>
                                 <div className="dropdown-divider"></div>
-                                {MeterList.map(item =>
-                                    <div className="dropdown-submenu dropdown-item">
+                                {MeterList.map((item, mi) =>
+                                    <div key={mi} className="dropdown-submenu dropdown-item">
                                         <a data-toggle="dropdown">{item.Name}</a>
                                         <ul className="dropdown-menu">
                                             {item.Channels.map((ch, i) =>
@@ -261,7 +261,7 @@ const HelpWindow = (props: {loading: boolean}) => {
                     <div className={"alert alert-" + (isInfo ? 'info' : isSuccess ? 'success' : 'danger')} role="alert">
                         <div className="row" style={{ margin: 0 }}>
                             <div className="col">
-                                    <div className="float-left"> <h4 className="alert-heading">{(props.loading ? title: 'Evaluating Expression...')}</h4> </div>
+                                    <div className="float-left"> <h4 className="alert-heading">{(props.loading ? 'Evaluating Expression...' : title)}</h4> </div>
                                     {props.loading ? <div className="spinner-border float-right" role="status" style={{ margin: 'auto' }}></div> : null}
                             </div>
                         </div>
