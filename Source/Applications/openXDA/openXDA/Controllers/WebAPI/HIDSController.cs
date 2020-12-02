@@ -45,6 +45,10 @@ namespace openXDA.Controllers.WebAPI
         public List<int> Phases { get; set; }
         public List<int> Groups { get; set; }
         public List<int> Types { get; set; }
+        public ulong Hours { get; set; }
+        public ulong Days { get; set; }
+        public ulong Weeks { get; set; }
+        public ulong Months { get; set; }
     }
     [RoutePrefix("api/HIDS")]
     public class HIDSController : ApiController {
@@ -79,7 +83,7 @@ namespace openXDA.Controllers.WebAPI
                 ");
 
                 HIDS.TrendingDataQuery hids = new HIDS.TrendingDataQuery();
-                List<Point> result = hids.Query(ids.Select().Select(x => int.Parse(x["ID"].ToString())).ToList(), post.StartTime, post.EndTime, cancellationToken).Result;
+                List<Point> result = hids.Query(ids.Select().Select(x => int.Parse(x["ID"].ToString())).ToList(), post.StartTime, post.EndTime, cancellationToken, post.Hours, post.Days, post.Weeks, post.Months).Result;
                 JArray json = JArray.FromObject(ids);
                 var groups = result.GroupBy(r => int.Parse(r.Tag, System.Globalization.NumberStyles.HexNumber));
 
