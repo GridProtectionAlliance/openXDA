@@ -239,6 +239,8 @@ namespace openXDA.Controllers
                     List<int> meterIds = postedData["MeterID"].ToObject<List<int>>();
                     int measurmentTypeId = postedData["MeasurmentTypeID"].ToObject<int>();
 
+                    if (meterIds.Count == 0 )
+                        return Ok(new List<int>());
 
                     string sql = $@"SELECT DISTINCT Asset.VoltageKV
                             FROM Channel LEFT JOIN 
