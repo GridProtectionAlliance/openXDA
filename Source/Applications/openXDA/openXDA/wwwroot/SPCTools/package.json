@@ -30,8 +30,8 @@
     "webpack-cli": "3.3.0"
   },
   "dependencies": {
-    "@gpa-gemstone/react-table": "^1.0.5",
     "@gpa-gemstone/react-forms": "^1.1.3",
+    "@gpa-gemstone/react-table": "^1.0.5",
     "@reduxjs/toolkit": "1.4.0",
     "@types/d3": "^4.13.2",
     "@types/jquery": "3.3.1",
@@ -39,6 +39,7 @@
     "@types/moment": "^2",
     "@types/react": "^16.8.15",
     "@types/react-dom": "^16.8.3",
+    "@types/react-redux": "^7.1.11",
     "@types/react-router": "^5.1.8",
     "@types/react-router-dom": "^5.1.3",
     "history": "4.7.2",

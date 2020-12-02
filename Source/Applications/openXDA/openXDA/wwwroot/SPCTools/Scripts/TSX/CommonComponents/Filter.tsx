@@ -29,7 +29,7 @@ import { CheckBox, Select } from '@gpa-gemstone/react-forms'
 interface IField<T> { label: string, key: keyof T, type: FieldType, enum?: Map<number,string> }
 export type FieldType = ('string' | 'number' | 'enum' | 'integer' | 'datetime' | 'boolean')
 type OperatorType = ('=' | '<>' | '>' | '<' | '>=' | '<=' | 'LIKE' | 'NOT LIKE' | 'IN' | 'NOT IN')
-interface IProps<T> { CollumnList: Array<IField<T>>, Id: string, SetFilter: (filters: Array<IFilter<T>>) => void }
+interface IProps<T> { CollumnList: Array<IField<T>>, Id: string, SetFilter: (filters: Array<IFilter<T>>) => void, defaultCollumn?: IField<T> }
 interface IFilter<T> { FieldName: keyof T, SearchText: string, Operator: OperatorType, Type: FieldType }
 
 export default function Filter<T>(props: IProps<T>) {
@@ -37,13 +37,43 @@ export default function Filter<T>(props: IProps<T>) {
     const [filters, setFilters] = React.useState<Array<IFilter<T>>>([]);
     const [filter, setFilter] = React.useState<IFilter<T>>({ FieldName: props.CollumnList[0].key, SearchText: '', Operator: 'LIKE', Type: props.CollumnList[0].type });
 
+    const [search, setSearch] = React.useState<string>("");
+    const [searchFilter, setSearchFilter] = React.useState<IFilter<T>>(null);
+
+    // Update SearchFilter if there are 3+ Character and only do it every 500ms to avoid hammering the server while typing
+    React.useEffect(() => {
+        let handle = null;
+        if (search.length > 3)
+            handle = setTimeout(() => {
+                setSearchFilter({ FieldName: props.defaultCollumn.key, Operator: 'LIKE', Type: props.defaultCollumn.type, SearchText: (search + '*') })
+            }, 500);
+        else
+            handle = setTimeout(() => {
+                setSearchFilter(null)
+            }, 500);
+
+        return () => { if (handle != undefined) clearTimeout(handle); };
+    }, [search]);
+
+    // Call props.setFilter when SearchFilter updates
+    React.useEffect(() => {
+        if (searchFilter != undefined)
+            props.SetFilter([...filters, searchFilter]);
+        else
+            props.SetFilter(filters);
+        return () => { }
+    }, [searchFilter])
+
     function deleteFilter(f: IFilter<T>) {
         let index = filters.findIndex(fs => fs == f);
         let filts = _.cloneDeep(filters);
         filts.splice(index, 1);
         setFilters(filts);
         setHover(false);
-        props.SetFilter(filts);
+        if (props.defaultCollumn != undefined && searchFilter != undefined)
+            props.SetFilter([...filts, searchFilter]);
+        else
+            props.SetFilter(filts);
     }
 
     function addFilter() {
@@ -51,9 +81,14 @@ export default function Filter<T>(props: IProps<T>) {
         oldFilters.push(filter);
         setFilters(oldFilters);
         setFilter({ FieldName: props.CollumnList[0].key, SearchText: '', Operator: 'LIKE', Type: props.CollumnList[0].type });
-        props.SetFilter(oldFilters);
-    }
+        if (props.defaultCollumn != undefined && searchFilter != undefined)
+            props.SetFilter([...oldFilters, searchFilter]);
+        else
+            props.SetFilter(oldFilters);
 
+        ($('#' + props.Id) as any).modal('hide')
+        
+    }
 
 
     return (
@@ -61,9 +96,15 @@ export default function Filter<T>(props: IProps<T>) {
             <nav className="navbar navbar-expand-lg navbar-light bg-light">
                 <div className="collapse navbar-collapse" style={{ width: '100%' }}>
                     <ul className="navbar-nav mr-auto" style={{ width: '100%' }}>
+                        <li className="nav-item" style={{ width: '85%', paddingRight: 10 }}>
+                            {props.defaultCollumn != undefined ?
+                                <div className="form-inline my-2 my-lg-0">
+                                    <input className="form-control mr-sm-2" type="search" placeholder={"Search " + props.defaultCollumn.label} onChange={(event) => setSearch(event.target.value as string)} />
+                                </div> : null}
+                        </li>
                         <li className="nav-item" style={{ width: '15%', paddingRight: 10 }}>
                             <div style={{ position: 'relative', display: 'inline-block' }}>
-                                <button className="btn btn-primary" data-toggle='modal' data-target={'#' + props.Id} onClick={(evt) => evt.preventDefault()} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>Add Filter</button>
+                                <button className="btn btn-primary" onClick={(evt) => { evt.preventDefault(); ($('#' + props.Id) as any).modal('toggle');}} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>Add Filter</button>
                                 <div style={{ width: window.innerWidth / 3, display: hover ? 'block' : 'none', position: 'absolute', backgroundColor: '#f1f1f1', boxShadow: '0px 8px 16px 0px rgba(0,0,0,0.2)', zIndex: 1 }} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
                                     <table className='table'>
                                         <thead>
@@ -86,7 +127,7 @@ export default function Filter<T>(props: IProps<T>) {
                     <div className="modal-content">
                         <div className="modal-header">
                             <h4 className="modal-title">Add Filter</h4>
-                            <button type="button" className="close" data-dismiss="modal">&times;</button>
+                            <button type="button" className="close" onClick={() => ($('#' + props.Id)as any).modal('hide')}>&times;</button>
                         </div>
                         <div className="modal-body">
                             <Select<IFilter<T>> Record={filter} Field='FieldName' Options={props.CollumnList.map(fl => ({ Value: fl.key as string, Label: fl.label }))} Setter={(record) => {
@@ -101,8 +142,8 @@ export default function Filter<T>(props: IProps<T>) {
                         </div>
 
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-primary" data-dismiss="modal" onClick={() => addFilter()} >Add</button>
-                            <button type="button" className="btn btn-danger" data-dismiss="modal">Close</button>
+                            <button type="button" className="btn btn-primary" onClick={() => addFilter()} >Add</button>
+                            <button type="button" className="btn btn-danger" onClick={() => ($('#' + props.Id) as any).modal('hide')}>Close</button>
                         </div>
 
                     </div>
@@ -223,3 +264,11 @@ function FilterCreator<T>(props: IPropsFilterCreator<T> ) {
         );
     }
 }
+
+/* Custom React Hook for using functions with Cleanup => it will call whatever the function returns before it calls the function again 
+  function useFunctionEffect(fxn) {
+    const [flag, setFlag] = React.useState<boolean>(true);
+    React.useEffect(() => { let cleanup = fxn(); return cleanup; }, [flag]);
+
+    return () => setFlag(!flag)
+}*/

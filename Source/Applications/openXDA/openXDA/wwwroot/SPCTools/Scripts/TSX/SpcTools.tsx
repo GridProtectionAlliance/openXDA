@@ -26,27 +26,40 @@ import * as ReactDOM from 'react-dom';
 import NavBar from './NavBar';
 import { SPCTools } from './global';
 import AlarmGroupHome from './AlarmGroup/AlarmGroup';
+import StaticAlarmHome from './StaticAlarm/StaticAlarm';
+import { Provider, useSelector, useDispatch } from 'react-redux';
+import store from './Store/Store';
+import { fetchAlarmTypes, fetchMeasurmentTypes, fetchSeverities } from './Store/GeneralSettingsSlice';
+import { selectPage, setPage } from './Store/GeneralSettingsSlice';
+import { ResetWizzard } from './StaticAlarm/StaticWizzardSlice';
+
 
 declare var homePath: string;
 declare var userIsAdmin: boolean;
 
-const SPCTools: React.FunctionComponent = (props: {}) => {
-    const [page, setPage] = React.useState<SPCTools.Page>('Home');
 
+const SPCTools: React.FunctionComponent = (props: {}) => {
+    const page = useSelector(selectPage);
+    const dispatch = useDispatch();
+
+    function switchPage(pg: SPCTools.Page) {
+        if (pg == 'Static') dispatch(ResetWizzard());
+        dispatch(setPage(pg))
+
+    }
+   
     return (
         <>
-            <NavBar page={page} pageSetter={(pg) => setPage(pg)} />
+            <NavBar page={page} pageSetter={(pg) => switchPage(pg)} />
             <div className="container theme-showcase" role="main" id="bodyContainer">
-                <div className="screen" style={{ height: (window.innerHeight - 66), width: (window.innerWidth), position: 'absolute', top: '66px', left: '0px'}}>
-                   
-                            <React.Suspense fallback={<div>Loading...</div>}>
-                                {(page == 'Home' ? <AlarmGroupHome /> : null)}
-                                {(page == 'Static' ? <p> New static Alarm </p> : null)}
-                                {(page == 'Dynamic' ? <p> New Dynamic Alarm </p> : null)}
-                                {(page == 'Meter' ? <p> Meter Overview </p> : null)}
-                                {(page == 'Channel' ? <p> Channel Overview </p> : null)}                               
-                            </React.Suspense>
-                       
+                <div className="screen" style={{ height: (window.innerHeight - 66), width: '100%', position: 'absolute', top: '66px', left: '0px'}}>
+                    <React.Suspense fallback={<div>Loading...</div>}>
+                        {(page == 'Home' ? <AlarmGroupHome /> : null)}
+                        {(page == 'Static' ? <StaticAlarmHome /> : null)}
+                        {(page == 'Dynamic' ? <p> New Dynamic Alarm </p> : null)}
+                        {(page == 'Meter' ? <p> Meter Overview </p> : null)}
+                        {(page == 'Channel' ? <p> Channel Overview </p> : null)}                               
+                    </React.Suspense>
                 </div>
             </div>
         </>
@@ -54,4 +67,11 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
     );
 }
 
-ReactDOM.render(<SPCTools/>, document.getElementById('body'));
+//Load General Options
+store.dispatch(fetchAlarmTypes());
+store.dispatch(fetchMeasurmentTypes());
+store.dispatch(fetchSeverities());
+
+
+
+ReactDOM.render(<Provider store={store}><SPCTools/></Provider>, document.getElementById('body'));

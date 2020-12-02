@@ -75,13 +75,33 @@
     <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
     <meta http-equiv="pragma" content="no-cache" />
 
-    <link href="@Url.Content("~/@GSF/Web/Shared/Content/bootstrap4.css")" rel="stylesheet">
+    <link href="@Url.Content("~/SPCTools/Scripts/Bootstrap/CSS/bootstrap.min.css")" rel="stylesheet">
     <link href="@Url.Content("~/@GSF/Web/Shared/Content/font-awesome.css")" rel="stylesheet">
 
 </head>
 <body>
     <style>
-       
+    .dropdown-submenu{
+        position: relative;
+    }
+    .dropdown-submenu a::after{
+        transform: rotate(-90deg);
+        position: absolute;
+        right: 3px;
+        top: 40%;
+    }
+    .dropdown-submenu:hover .dropdown-menu, .dropdown-submenu:focus .dropdown-menu{
+        display: flex;
+        flex-direction: column;
+        position: absolute !important;
+        margin-top: -30px;
+        left: 100%;
+    }
+
+    .dropdown-menu .dropdown-submenu{
+        width: auto;
+    }
+}
     </style>
     <div id="body"></div>
     <script>
@@ -100,7 +120,7 @@
     <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/moment.js")"></script>
 
     <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/popper.js")"></script>
-    <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/bootstrap4.js")"></script>
+    <script src="@Url.Content("~/SPCTools/Scripts/Bootstrap/js/bootstrap.js")"></script>
 
     @if (debug)
     {
@@ -113,7 +133,6 @@
         <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/react-dom.production.min.js")"></script>
     }
 
-    <script src="@Url.Content("~/SPCTools/Scripts/ReactDependencies/react-router-dom.min.js")"></script>
     <script src="@Url.Content("~/SPCTools/Scripts/D3/d3.js")"></script>
 
     <script src="@Url.Content("~/SPCTools/Scripts/js/SPCTools.js")"></script>

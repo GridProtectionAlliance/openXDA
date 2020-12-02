@@ -235,7 +235,11 @@
     <Compile Include="Controllers\Config\QueryController.cs" />
     <Compile Include="Controllers\DataPusher\DataPusherController.cs" />
     <Compile Include="Controllers\ModelController.cs" />
+    <Compile Include="Controllers\SPCTools\AlarmGroupTestController.cs" />
+    <Compile Include="Controllers\SPCTools\Token.cs" />
+    <Compile Include="Controllers\SPCTools\ChannelSelectionController.cs" />
     <Compile Include="Controllers\SPCTools\AlarmGroupController.cs" />
+    <Compile Include="Controllers\SPCTools\AssetGroupController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
     <Compile Include="DataObjectWrapper.cs" />
@@ -4124,6 +4128,22 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="wwwroot\SPCTools\index.cshtml" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.css" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.min.css" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.css" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.min.css" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.css" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.min.css" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.js.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.min.js.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.js.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.min.js.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.min.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.min.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.min.css.map" />
     <None Include="wwwroot\WorkBench\AuditLog.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -4231,20 +4251,36 @@
     <None Include="Web.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.js" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.min.js" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.js" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.min.js" />
     <Content Include="wwwroot\SPCTools\Scripts\D3\d3.js" />
     <Content Include="wwwroot\SPCTools\Scripts\js\SPCTools.js" />
-    <Content Include="wwwroot\SPCTools\Scripts\ReactDependencies\react-router-dom.min.js" />
     <Content Include="XDA.ico" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Graph.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\RadioBox.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\MultiSelectTable.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Filter.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\global.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\AlarmGroup\AlarmGroup.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\NavBar.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\SpcTools.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\Test.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\SetPoint.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\SelectHistory.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\GenSettings.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\StaticAlarm.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\StaticWizzardSlice.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\HistoryTestSlice.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\RequestHandle.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\GeneralSettingsSlice.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\store.tsx" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

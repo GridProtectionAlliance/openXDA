@@ -53,4 +53,5 @@ namespace openXDA.Controllers
         protected override bool ViewOnly => true;
         protected override bool AllowSearch => true;
     }
+
 }

@@ -3069,6 +3069,41 @@ CREATE TABLE AlarmGroup
 )
 GO
 
+CREATE TABLE Alarm
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AlarmGroupID  INT NOT NULL REFERENCES AlarmGroup(ID),
+    SeriesID INT NOT NULL REFERENCES Series(ID)
+)
+GO
+
+CREATE TABLE AlarmFactor
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AlarmID  INT NOT NULL REFERENCES Alarm(ID),
+    Factor FLOAT NOT NULL DEFAULT(1.0),
+    SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID)
+)
+GO
+
+CREATE TABLE AlarmDay
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name  VARCHAR(25)
+)
+GO
+
+CREATE TABLE AlarmValue
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AlarmID  INT NOT NULL REFERENCES Alarm(ID),
+    AlarmDayID  INT NOT NULL REFERENCES AlarmDay(ID),
+    StartHour INT NOT NULL,
+    EndHour INT NULL,
+    Value FLOAT NOT NULL
+)
+GO
+
 -- Views for UI --
 CREATE VIEW AlarmGroupView AS 
 SELECT 
@@ -3273,6 +3308,8 @@ GO
 CREATE NONCLUSTERED INDEX IX_AlarmLog_Severity
 ON AlarmLog(Severity ASC)
 GO
+
+/* ----End Alarm Structure ---- */
 
 CREATE TABLE FaultNote
 (

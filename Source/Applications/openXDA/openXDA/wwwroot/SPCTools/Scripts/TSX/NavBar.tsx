@@ -42,7 +42,7 @@ const NavBar = (props: IProps ) => {
                 <ul className="navbar-nav mr-auto">
                     <li className={'nav-item' + (props.page == 'Home' ? ' active' : '')} > <a className='nav-link' onClick={() => props.pageSetter('Home')}>Home</a></li>
                     <li className={"nav-item dropdown" + (props.page == 'Dynamic' || props.page == 'Static' ? ' active' : '')}>
-                        <a className="nav-link dropdown-toggle" data-toggle="dropdown" href="#">New Alarm Group <span className="caret"></span> </a>
+                        <a className="nav-link dropdown-toggle" data-toggle="dropdown" >New Alarm Group <span className="caret"></span> </a>
                         <div className="dropdown-menu">
                             <a className="dropdown-item" onClick={() => props.pageSetter('Static')}>New Static Alarm Group</a>
                             <a className="dropdown-item" onClick={() => props.pageSetter('Dynamic')}>New Dynamic Alarm Group</a>

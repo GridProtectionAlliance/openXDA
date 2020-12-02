@@ -59,7 +59,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alarms\AlarmGroups\AlarmDay.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmValue.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmFactor.cs" />
+    <Compile Include="Alarms\AlarmGroups\Alarm.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmGroup.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmSeverity.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmType.cs" />
     <Compile Include="Alarms\ChannelsWithNormalLimits.cs" />
     <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
