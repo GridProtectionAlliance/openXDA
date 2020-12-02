@@ -37,6 +37,13 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/Meter")]
     public class MeterController : ModelController<Meter> { }
 
+    [RoutePrefix("api/Channel")]
+    public class ChannelController : ModelController<ChannelDetail> 
+    {
+        protected override bool HasParent => true;
+        protected override string ParentKey => "MeterID";
+    }
+
     [RoutePrefix("api/Asset")]
     public class AssetController : ModelController<Asset> { }
 
@@ -51,4 +58,15 @@ namespace openXDA.Controllers.WebAPI
 
     [RoutePrefix("api/MeasurementCharacteristic")]
     public class MeasurementCharacteristicController : ModelController<MeasurementCharacteristic> { }
+
+    [RoutePrefix("api/ChannelGroupType")]
+    public class ChannelGroupTypeController : ModelController<ChannelGroupType> { }
+
+    [RoutePrefix("api/AlarmType")]
+    public class AlarmTypeController : ModelController<AlarmType> { }
+
+    [RoutePrefix("api/MeterDetail")]
+    public class MeterDetailController : ModelController<MeterDetail> {
+        protected override bool AllowSearch => true;
+    }
 }
