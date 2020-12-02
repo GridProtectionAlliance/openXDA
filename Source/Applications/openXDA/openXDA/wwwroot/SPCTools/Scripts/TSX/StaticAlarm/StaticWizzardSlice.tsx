@@ -315,7 +315,7 @@ export const selectTokenizerRequest = createSelector(
 export const selectErrors = createSelector(
     (state: SPCTools.RootState) => state.StaticWizzard.Step,
     (state: SPCTools.RootState) => state.StaticWizzard.SelectedChannelCount > 0,
-    (state: SPCTools.RootState) => state.StaticWizzard.AlarmGroup.Name.length > 0,
+    (state: SPCTools.RootState) => state.StaticWizzard.AlarmGroup.Name != undefined && state.StaticWizzard.AlarmGroup.Name.length > 0,
     (state: SPCTools.RootState) => state.StaticWizzard.SelectedMeterID.length > 0,
     (state: SPCTools.RootState) => state.StaticWizzard.SelectedVoltages.some(i => i),
     (state: SPCTools.RootState) => state.StaticWizzard.SelectedPhases.some(i => i),

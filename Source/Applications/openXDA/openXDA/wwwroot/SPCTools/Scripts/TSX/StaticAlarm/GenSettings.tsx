@@ -91,7 +91,7 @@ const GeneralSettings = (props: IProps) => {
                         Field={'Name'}
                         Setter={(r) => dispatch(updateAlarmGroup(r))}
                         Label={'Alarm Group Name'}
-                        Valid={() => (group.Name.length > 0 ? true : false)} />
+                        Valid={() => (group.Name != undefined && group.Name.length > 0 ? true : false)} />
                 </div>
                 <div className="col" style={{ width: '50%' }}>
                 </div>
