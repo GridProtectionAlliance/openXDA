@@ -159,7 +159,7 @@ const StaticSetPoint = (props: IProps) => {
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             <div className="btn-group mr-2" role="group" style={{ padding: '5px' }}>
-                                <button type="button" className="btn btn-secondary" disabled={factors.length > 4} onClick={() => dispatch(addFactor())}> Add Level</button>
+                                <button type="button" className="btn btn-secondary" disabled={factors.length > 2} onClick={() => dispatch(addFactor())}> Add Level</button>
                             </div>
                         </div>
                     </div>
