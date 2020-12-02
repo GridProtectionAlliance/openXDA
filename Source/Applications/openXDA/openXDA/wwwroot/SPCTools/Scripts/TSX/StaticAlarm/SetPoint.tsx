@@ -320,7 +320,7 @@ const GraphCard = (props: { ChannelID: number, Title: string, Threshhold: number
 
     function getData(channelId: number): JQuery.jqXHR<Array<number[]>> {
         let handle = $.ajax({
-            type: "GET",
+            type: "POST",
             url: `${apiHomePath}api/SPCTools/StaticAlarmCreation/GetData/${channelId}?start=${startDate}&end=${endDate}`,
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify(dataFilter),

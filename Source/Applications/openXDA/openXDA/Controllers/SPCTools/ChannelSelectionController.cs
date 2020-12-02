@@ -469,7 +469,7 @@ namespace openXDA.Controllers
         /// Gets the Channel Data requested for Plots 
         /// </summary>
         /// <returns>List of all DataPoints for the Channel  </returns>
-        [HttpGet, Route("GetData/{ChannelId}")]
+        [HttpPost, Route("GetData/{ChannelId}")]
         public IHttpActionResult getChannelData(int ChannelId, [FromBody] DataFilter postedFilter)
         {
             NameValueCollection queryParameters = Request.RequestUri.ParseQueryString();
