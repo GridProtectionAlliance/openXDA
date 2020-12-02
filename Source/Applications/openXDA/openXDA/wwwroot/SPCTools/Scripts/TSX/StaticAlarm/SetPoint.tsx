@@ -255,17 +255,29 @@ const HelpWindow = (props: {loading: boolean}) => {
     const text = (error != undefined && error.Valid && !error.IsScalar &&  !allowSlice)? "A single threshold is required for all Channels because some Channels are not seletced as historic data source." : (error != undefined? error.Message : "Expression can not be empty")
     
     return (
-        <div className="row" style={{ margin: 0 }}>
-            <div className="col">
-                <div className={"alert alert-" + (isInfo ? 'info' : isSuccess? 'success' : 'danger')} role="alert">
-                    <div style={{width: '100%'}}>
-                        <div className="float-left"> <h4 className="alert-heading">{(props.loading ? title: 'Evaluating Expression...')}</h4> </div>
-                        {props.loading ? <div className="spinner-border float-right" role="status" style={{ margin: 'auto' }}></div> : null}
+        <>
+            <div className="row" style={{ margin: 0 }}>
+                <div className="col">
+                    <div className={"alert alert-" + (isInfo ? 'info' : isSuccess ? 'success' : 'danger')} role="alert">
+                        <div className="row" style={{ margin: 0 }}>
+                            <div className="col">
+                                    <div className="float-left"> <h4 className="alert-heading">{(props.loading ? title: 'Evaluating Expression...')}</h4> </div>
+                                    {props.loading ? <div className="spinner-border float-right" role="status" style={{ margin: 'auto' }}></div> : null}
+                            </div>
+                        </div>
+                        <div className="row" style={{ margin: 0 }}>
+                            <div className="col">
+                               <p>
+                                    {(props.loading ? null : text)}
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    {(props.loading ? null : text)}
+
                 </div>
             </div>
-        </div>)
+
+        </>)
 }
 
 const FactorRow = (props: { Factor: SPCTools.IFactor, index: number }) => {
