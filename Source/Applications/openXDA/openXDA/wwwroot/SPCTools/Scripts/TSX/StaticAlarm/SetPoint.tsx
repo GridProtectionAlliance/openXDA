@@ -184,8 +184,8 @@ const StaticSetPoint = (props: IProps) => {
                                     <div className="dropdown-submenu dropdown-item">
                                         <a data-toggle="dropdown">{item.Name}</a>
                                         <ul className="dropdown-menu">
-                                            {item.Channels.map(ch =>
-                                                <li>
+                                            {item.Channels.map((ch, i) =>
+                                                <li key={i}>
                                                     <a className={"dropdown-item" + (plot.findIndex(p => p.ChannelID == ch.ID) > -1 ? ' active' : '')}
                                                         onClick={() => {
                                                             if (plot.findIndex(p => p.ChannelID == ch.ID) == -1)
