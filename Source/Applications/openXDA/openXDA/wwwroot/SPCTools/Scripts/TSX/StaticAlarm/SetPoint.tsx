@@ -75,7 +75,7 @@ const StaticSetPoint = (props: IProps) => {
     function AddPlot(channel: openXDA.IChannel) {
         setPlot((old) => {
             let updated = cloneDeep(old);
-            updated.push({ ChannelID: channel.ID, Title: channel.Name, Threshhold: 0 })
+            updated.push({ ChannelID: channel.ID, Title: (channel.MeterName + " - " + channel.Name), Threshhold: 0 })
             return updated;
         })
     }
@@ -315,6 +315,9 @@ const GraphCard = (props: { ChannelID: number, Title: string, Threshhold: number
     const dataFilter = useSelector(selectdataFilter)
     const allchannels = useSelector(selectHistoricChannelList)
 
+    const secerityID = useSelector(selectSeverity);
+    const severities = useSelector(selectSeverities)
+    const factors = useSelector(selectfactors);
 
     React.useEffect(() => {
         setData([]);
@@ -328,7 +331,32 @@ const GraphCard = (props: { ChannelID: number, Title: string, Threshhold: number
         }
     }, [props.ChannelID])
 
+    React.useEffect(() => {
 
+        const Tstart = (data.length > 0 ? data[0].data[0][0] : 0);
+        const Tend = (data.length > 0 ? data[0].data[data[0].data.length - 1][0] : 1500);
+
+        let sp = {
+            color: severities.find(item => item.ID == secerityID).Color,
+            includeLegend: false,
+            label: "",
+            lineStyle: ':',
+            data: [[Tstart, props.Threshhold], [Tend, props.Threshhold]],
+            opacity: 1.0
+        } as ITrendSeries;
+
+        setThreshold([sp, ...factors.filter(f => f.Value != 1.0).map(f => {
+            return {
+                color: severities.find(item => item.ID == f.SeverityID).Color,
+                includeLegend: false,
+                label: "",
+                lineStyle: ':',
+                data: [[Tstart, props.Threshhold * f.Value], [Tend, props.Threshhold * f.Value]],
+                opacity: 1.0
+            } as ITrendSeries;
+        })])
+
+    }, [props.Threshhold, secerityID,])
 
     function getData(channelId: number): JQuery.jqXHR<Array<number[]>> {
         let handle = $.ajax({
