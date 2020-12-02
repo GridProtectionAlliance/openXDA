@@ -122,7 +122,7 @@ const Requirements = (props: StaticWizzard.IRequirement) => {
                     <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z" />
                 </svg>)
         }
-        <p>{props.text}</p>
+        {props.text.split('<br>').map((item, i) => <p key={i}>{item}</p>)}
     </div>
 }
 
