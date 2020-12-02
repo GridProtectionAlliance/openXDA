@@ -340,14 +340,14 @@ export const selectErrors = createSelector(
             result.push({ text: "A valid end date has to be selected", complete: (endDate ? 'complete' : 'required') })
             result.push({ text: "At least 1 Channel needs to be selected", complete: (selectedhistory ? 'complete' : 'required') })
             if (!fullHistory)
-                result.push({ text: "A single threshhold will be required for all Channels <br> since there are some Channels that are not selected as historic datasource", complete: 'warning' })
+                result.push({ text: "A single threshhold will be required for all Channels <br>Not all Channels are used as historic datasource", complete: 'warning' })
         }
         else if (step == 'setpoint') {
             result.push({ text: "A valid setpoint Expression is Required", complete: (setPoint ? 'complete' : 'required') });
             if (!fullHistory)
                 result.push({ text: "A single scalar setpoint is required for all Channels", complete: (scalarSetpoint ? 'complete' : 'required') })
             else if (!scalarSetpoint)
-                result.push({ text: "The setpoint expression will result in a different threshold for each Channel", complete: 'warning' })
+                result.push({ text: "The setpoint expression will result in different threshold for each Channel", complete: 'warning' })
             
         }
         return result;
