@@ -20,7 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction, createSelector, Selector } from '@reduxjs/toolkit';
 import { SPCTools, StaticWizzard, openXDA } from '../global';
 import { stringify } from 'querystring';
 import { dispatch } from 'd3';
@@ -313,20 +313,19 @@ export const selectTokenizerRequest = createSelector(
     });
 
 export const selectErrors = createSelector(
-    (state: SPCTools.RootState) => state.StaticWizzard.Step,
-    (state: SPCTools.RootState) => state.StaticWizzard.SelectedChannelCount > 0,
-    (state: SPCTools.RootState) => state.StaticWizzard.AlarmGroup.Name != undefined && state.StaticWizzard.AlarmGroup.Name.length > 0,
-    (state: SPCTools.RootState) => state.StaticWizzard.SelectedMeterID.length > 0,
-    (state: SPCTools.RootState) => state.StaticWizzard.SelectedVoltages.some(i => i),
-    (state: SPCTools.RootState) => state.StaticWizzard.SelectedPhases.some(i => i),
-    (state: SPCTools.RootState) => state.StaticWizzard.StatSource.StartDate != "",
-    (state: SPCTools.RootState) => state.StaticWizzard.StatSource.EndDate != "",
-    (state: SPCTools.RootState) => state.StaticWizzard.StatChannels.length > 0,
-    (state: SPCTools.RootState) => state.StaticWizzard.StatChannels.length == state.StaticWizzard.SelectedChannelCount,
-    (state: SPCTools.RootState) => state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.Valid ,
-    (state: SPCTools.RootState) => state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.IsScalar,
-    (step, channelCount, name, meterCount, voltageCount, phaseCount,
-        startDate, endDate, selectedhistory, fullHistory, setPoint, scalarSetpoint) => {
+    ((state: SPCTools.RootState) => (state.StaticWizzard.Step)) as Selector<SPCTools.RootState,SPCTools.WizzardTab>,
+    (state: SPCTools.RootState) => (state.StaticWizzard.SelectedChannelCount > 0),
+    (state: SPCTools.RootState) => (state.StaticWizzard.AlarmGroup.Name != undefined && state.StaticWizzard.AlarmGroup.Name.length > 0),
+    (state: SPCTools.RootState) => (state.StaticWizzard.SelectedMeterID.length > 0),
+    (state: SPCTools.RootState) => (state.StaticWizzard.SelectedVoltages.some(i => i)),
+    (state: SPCTools.RootState) => (state.StaticWizzard.SelectedPhases.some(i => i)),
+    (state: SPCTools.RootState) => (state.StaticWizzard.StatSource),
+    (state: SPCTools.RootState) => (state.StaticWizzard.StatChannels.length > 0),
+    (state: SPCTools.RootState) => (state.StaticWizzard.StatChannels.length == state.StaticWizzard.SelectedChannelCount),
+    (state: SPCTools.RootState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.Valid) ,
+    (state: SPCTools.RootState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.IsScalar),
+    (state: SPCTools.RootState) => (state.StaticWizzard.AlarmFactors),
+    (step, channelCount, name, meterCount, voltageCount, phaseCount,  statSource, selectedhistory, fullHistory, setPoint, scalarSetpoint, alarmFactors) => {
         let result = [] as StaticWizzard.IRequirement[];
         if (step == 'general') {
             result.push({ text: "A Name is required", complete: (name ? 'complete' : 'required') });
@@ -336,8 +335,8 @@ export const selectErrors = createSelector(
             result.push({ text: "The Selection needs to result in at least 1 Channel", complete: (channelCount ? 'complete' : 'required') });
         }
         else if (step == 'selectData') {
-            result.push({ text: "A valid start date has to be selected", complete: (startDate ? 'complete' : 'required') });
-            result.push({ text: "A valid end date has to be selected", complete: (endDate ? 'complete' : 'required') })
+            result.push({ text: "A valid start date has to be selected", complete: (statSource.StartDate != "" ? 'complete' : 'required') });
+            result.push({ text: "A valid end date has to be selected", complete: (statSource.EndDate != "" ? 'complete' : 'required') })
             result.push({ text: "At least 1 Channel needs to be selected", complete: (selectedhistory ? 'complete' : 'required') })
             if (!fullHistory)
                 result.push({ text: "A single threshhold will be required for all Channels <br>Not all Channels are used as historic datasource", complete: 'warning' })
@@ -348,7 +347,8 @@ export const selectErrors = createSelector(
                 result.push({ text: "A single scalar setpoint is required for all Channels", complete: (scalarSetpoint ? 'complete' : 'required') })
             else if (!scalarSetpoint)
                 result.push({ text: "The setpoint expression will result in different threshold for each Channel", complete: 'warning' })
-            
+            if (alarmFactors.length > 0)
+                result.push({ text: "No level can not be applied at the original SetPoint", complete: (!alarmFactors.some(item => item.Value == 1.0) ? 'complete' : 'required') })
         }
         return result;
 
