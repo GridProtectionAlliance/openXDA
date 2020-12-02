@@ -241,11 +241,11 @@ const HelpWindow = (props: {loading: boolean}) => {
     const allowSlice = useSelector(selectfullHistoricDataSet)
 
     // This is to check whether we selected all Channels when we selected Historic channels when we have a slice
-    const isInfo = props.loading || (!error.IsScalar && error.Valid && allowSlice)
-    const isSuccess = (error.Valid && error.IsScalar)
+    const isInfo = props.loading || (error != undefined && !error.IsScalar && error.Valid && allowSlice)
+    const isSuccess = (error != undefined && error.Valid && error.IsScalar)
 
     const title = (isSuccess ? "Setpoint Expression is Valid" : "Setpoint Expression is invalid");
-    const text = (error.Valid && !error.IsScalar &&  !allowSlice)? "A single threshold is required for all Channels because some Channels are not seletced as historic data source." : error.Message
+    const text = (error != undefined && error.Valid && !error.IsScalar &&  !allowSlice)? "A single threshold is required for all Channels because some Channels are not seletced as historic data source." : (error != undefined? error.Message : "Expression can not be empty")
     
     return (
         <div className="row" style={{ margin: 0 }}>
