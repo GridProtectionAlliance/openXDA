@@ -101,6 +101,13 @@ const StaticSetPoint = (props: IProps) => {
     }, [setPoint])
 
     function loadTokenizer() {
+
+        if (setPoint == undefined || setPoint == "") {
+            setLoadingSetpoint(false);
+            return undefined;
+        }
+            
+
         let handle = $.ajax({
             type: "POST",
             url: `${apiHomePath}api/SPCTools/StaticAlarmCreation/ParseSetPoint`,
