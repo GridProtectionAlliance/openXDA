@@ -64,7 +64,7 @@ export namespace SPCTools {
     export interface ITokenizerResponse { Valid: boolean, Message: string, IsScalar: boolean, Value: number[] }
 
     
-    export interface IChannelTest { ChannelID: number, Threshhold: number, FactorTest: IFactorTest[] }
+    export interface IChannelTest { ChannelID: number, Threshhold: number, FactorTests: IFactorTest[] }
 
     export interface IFactorTest { NumberRaised: number, TimeInAlarm: number, Factor: number }
 

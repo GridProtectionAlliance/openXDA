@@ -65,11 +65,11 @@ const TestGroup = (props: IProps) => {
 
     React.useEffect(() => {
         let lst = testResult.map(item => {
-            let bindex = item.FactorTest.findIndex(d => d.Factor == 1.0)
+            let bindex = item.FactorTests.findIndex(d => d.Factor == 1.0)
             let cindex = allChannels.findIndex(c => item.ChannelID == c.ID)
             return {
-                TimeInAlarm: item.FactorTest[bindex].TimeInAlarm,
-                NumberRaised: item.FactorTest[bindex].NumberRaised,
+                TimeInAlarm: item.FactorTests[bindex].TimeInAlarm,
+                NumberRaised: item.FactorTests[bindex].NumberRaised,
                 ID: item.ChannelID,
                 Name: (cindex == -1 ? '' : allChannels[cindex].Name),
                 MeterName: (cindex == -1 ? '' : allChannels[cindex].MeterName),
@@ -83,16 +83,16 @@ const TestGroup = (props: IProps) => {
     let resultSummary: IResultTable[] = [
         {
             Severity: severities.find(item => item.ID == severityID).Name,
-            NumberRaised: testResult.map(ch => { return ch.FactorTest.find(i => i.Factor == 1.0).NumberRaised }).reduce((a, b) => a + b, 0),
-            TimeInAlarm: (testResult.map(ch => { return ch.FactorTest.find(i => i.Factor == 1.0).TimeInAlarm }).reduce((a, b) => a + b, 0) / testResult.length),
+            NumberRaised: testResult.map(ch => { return ch.FactorTests.find(i => i.Factor == 1.0).NumberRaised }).reduce((a, b) => a + b, 0),
+            TimeInAlarm: (testResult.map(ch => { return ch.FactorTests.find(i => i.Factor == 1.0).TimeInAlarm }).reduce((a, b) => a + b, 0) / testResult.length),
             Threshhold: undefined
         },
         ...factors.map(f => {
             return {
 
                 Severity: severities.find(item => item.ID == f.SeverityID).Name,
-                NumberRaised: testResult.map(ch => { return ch.FactorTest.find(i => i.Factor == f.Value).NumberRaised }).reduce((a, b) => a + b, 0),
-                TimeInAlarm: (testResult.map(ch => { return ch.FactorTest.find(i => i.Factor == f.Value).TimeInAlarm }).reduce((a, b) => a + b, 0) / testResult.length),
+                NumberRaised: testResult.map(ch => { return ch.FactorTests.find(i => i.Factor == f.Value).NumberRaised }).reduce((a, b) => a + b, 0),
+                TimeInAlarm: (testResult.map(ch => { return ch.FactorTests.find(i => i.Factor == f.Value).TimeInAlarm }).reduce((a, b) => a + b, 0) / testResult.length),
                 Threshhold: undefined
             }
         })

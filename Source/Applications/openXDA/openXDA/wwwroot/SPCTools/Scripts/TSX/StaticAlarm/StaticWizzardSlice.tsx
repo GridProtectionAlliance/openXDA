@@ -427,9 +427,9 @@ function getChannelCount(state: StaticWizzard.IState): JQuery.jqXHR<number> {
 function saveGroup(state: SPCTools.RootState): JQuery.jqXHR {
     let request = {
         AlarmGroup: state.StaticWizzard.AlarmGroup,
-        TokenizerRequest: {},
+        TokenizerRequest: selectTokenizerRequest(state),
         IntervallDataType: state.StaticWizzard.SelectedIntervallDataType,
-        ChannelID: selectAffectedChannels(state),
+        ChannelID: selectAffectedChannels(state).map(ch => ch.ID),
         AlarmFactor: selectfactors(state),
         SeverityID: selectSeverity(state)
     };

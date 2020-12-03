@@ -514,7 +514,7 @@ namespace openXDA.Controllers
                     AlarmGroup group = request.AlarmGroup;
 
                     if (group.ID == -1)
-                        group = new TableOperations<AlarmGroup>(connection).QueryRecord("Name = {0}", group.Name);
+                        group = new TableOperations<AlarmGroup>(connection).QueryRecordWhere("Name = {0}", group.Name);
 
                     // Start by Getting Setpoint
                     Token root = new Token(request.TokenizerRequest.Value, DateTime.Parse(request.TokenizerRequest.StartDate), DateTime.Parse(request.TokenizerRequest.EndDate), request.TokenizerRequest.Channels);
