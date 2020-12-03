@@ -229,7 +229,7 @@ const StaticSetPoint = (props: IProps) => {
 
 const SetPointWindow = (props: { type: StaticWizzard.setPointType, setter: (value: string) => void }) => {
     const [text, setText] = React.useState<string>("");
-
+    const alarmGroup = useSelector((state: SPCTools.RootState) => state.StaticWizzard.AlarmGroup);
     React.useEffect(() => {
         let handle = setTimeout(() => {
            props.setter(text)
@@ -238,6 +238,11 @@ const SetPointWindow = (props: { type: StaticWizzard.setPointType, setter: (valu
         return () => { clearTimeout(handle); }
 
     }, [text])
+
+    //set intial Text to existing Formula if it exists
+    React.useEffect(() => {
+        setText(alarmGroup.Formula)
+    }, [])
 
     return (
         <div className="row" style={{ margin: 0 }}>
