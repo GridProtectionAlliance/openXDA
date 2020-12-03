@@ -86,7 +86,7 @@
     <Compile Include="Dashboard\ContourClasses.cs" />
     <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
-    <Compile Include="Alarms\AlarmLog.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
     <Compile Include="Emails\EmailTemplateUser.cs" />
     <Compile Include="Emails\UserEmailTemplate.cs" />

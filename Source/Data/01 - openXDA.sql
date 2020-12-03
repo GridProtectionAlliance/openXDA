@@ -3105,6 +3105,17 @@ CREATE TABLE AlarmValue
 )
 GO
 
+
+CREATE TABLE AlarmLog
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AlarmID  INT NOT NULL REFERENCES Alarm(ID),
+    AlarmFactorID  INT NULL REFERENCES AlarmFactor(ID),
+    StartTime DATETIME NOT NULL,
+    EndTime DATETIME NULL,
+)
+GO
+
 -- Views for UI --
 CREATE VIEW AlarmGroupView AS 
 SELECT 
@@ -3281,34 +3292,7 @@ CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_ChannelID_Date
 ON ChannelAlarmSummary(ChannelID ASC, Date ASC)
 GO
 
-CREATE TABLE AlarmLog
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    ChannelID INT NOT NULL REFERENCES Channel(ID),
-    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
-    Time DATETIME NOT NULL,
-    Severity INT NOT NULL,
-    LimitHigh FLOAT NULL,
-    LimitLow FLOAT NULL,
-    Value FLOAT NOT NULL
-)
-GO
 
-CREATE NONCLUSTERED INDEX IX_AlarmLog_ChannelID
-ON AlarmLog(ChannelID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_AlarmLog_AlarmTypeID
-ON AlarmLog(AlarmTypeID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_AlarmLog_Time
-ON AlarmLog(Time ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_AlarmLog_Severity
-ON AlarmLog(Severity ASC)
-GO
 
 /* ----End Alarm Structure ---- */
 

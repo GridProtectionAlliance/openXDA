@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  06/22/2017 - Billy Ernest
 //       Generated original version of source code.
+//  12/03/2020 - C. Lackner
+//       Changed to new AlarmLog Model.
 //
 //******************************************************************************************************
 
@@ -31,18 +33,12 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int ChannelID { get; set; }
+        public int AlarmID { get; set; }
 
-        public int AlarmTypeID { get; set; }
+        public int? AlarmFactorID { get; set; }
 
-        public DateTime Time { get; set; }
+        public DateTime StartTime { get; set; }
 
-        public int Severity { get; set; }
-
-        public double LimitHigh { get; set; }
-
-        public double LimitLow { get; set; }
-
-        public double Value { get; set; }
+        public DateTime? EndTime { get; set; }
     }
 }
