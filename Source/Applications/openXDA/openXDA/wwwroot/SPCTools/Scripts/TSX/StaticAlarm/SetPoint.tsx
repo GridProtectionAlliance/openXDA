@@ -376,7 +376,7 @@ const GraphCard = (props: { ChannelID: number, Title: string, Threshhold: number
             } as ITrendSeries;
         })])
 
-    }, [props.Threshhold, secerityID, factors, severities])
+    }, [props.Threshhold, secerityID, factors, severities, data])
 
     function getData(channelId: number): JQuery.jqXHR<Array<number[]>> {
         let handle = $.ajax({

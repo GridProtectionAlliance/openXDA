@@ -69,7 +69,9 @@ const TestGroup = (props: IProps) => {
 
 
     React.useEffect(() => {
-        let lst = testResult.map(item => {
+        let lst = [];
+        if (testResult != undefined)
+          lst = testResult.map(item => {
             let bindex = item.FactorTests.findIndex(d => d.Factor == 1.0)
             let cindex = allChannels.findIndex(c => item.ChannelID == c.ID)
             return {
@@ -320,7 +322,7 @@ const GraphCard = (props: { ChannelID: number, startDate: string, endDate: strin
             } as ITrendSeries;
         })])
 
-    }, [props])
+    }, [data])
 
     function getData(channelId: number): JQuery.jqXHR<Array<number[]>> {
         let handle = $.ajax({
