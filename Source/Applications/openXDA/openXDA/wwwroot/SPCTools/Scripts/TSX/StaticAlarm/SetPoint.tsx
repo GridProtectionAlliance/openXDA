@@ -51,6 +51,7 @@ const StaticSetPoint = (props: IProps) => {
     const [loadingSetpoint, setLoadingSetpoint] = React.useState<boolean>(false);
     
     const tokenizerRequest = useSelector(selectTokenizerRequest);
+    const tokenizerResponse = useSelector(selectTokenizerResponse);
 
     const dispatch = useDispatch();
 
@@ -75,7 +76,13 @@ const StaticSetPoint = (props: IProps) => {
     function AddPlot(channel: openXDA.IChannel) {
         setPlot((old) => {
             let updated = cloneDeep(old);
-            updated.push({ ChannelID: channel.ID, Title: (channel.MeterName + " - " + channel.Name), Threshhold: 0 })
+            let threshold = 0;
+            if (tokenizerResponse != undefined && tokenizerResponse.Valid) {
+                let index = tokenizerRequest.Channels.findIndex(i => i == channel.ID)
+                threshold = (index > -1 ? tokenizerResponse.Value[index] : 0);
+            }
+            
+            updated.push({ ChannelID: channel.ID, Title: (channel.MeterName + " - " + channel.Name), Threshhold: threshold })
             return updated;
         })
     }
@@ -107,20 +114,21 @@ const StaticSetPoint = (props: IProps) => {
             return undefined;
         }
             
-
+        let f = setPoint
         let handle = $.ajax({
             type: "POST",
             url: `${apiHomePath}api/SPCTools/StaticAlarmCreation/ParseSetPoint`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
-            data: JSON.stringify({ ...tokenizerRequest, Value: setPoint }),
+            data: JSON.stringify({ ...tokenizerRequest, Value: f }),
             cache: false,
             async: true
         });
 
+        
         handle.done((d: SPCTools.ITokenizerResponse) => {
             setLoadingSetpoint(false);
-            dispatch(updateSetPointEval(d));
+            dispatch(updateSetPointEval({ response: d, setPoint: f }));
             if (d.Valid && d.IsScalar)
                 setPlot((old) => {
                     return  old.map(item => { return { ...item, Threshhold: d.Value[0] } })
@@ -168,7 +176,7 @@ const StaticSetPoint = (props: IProps) => {
             <div className="row" style={{ margin: 0 }}>
                 <div className="col">
                     <div className="row" style={{ margin: 0, }}>
-                        {plot.map(item => <GraphCard {...item} remove={() => RemovePlot(item.ChannelID)} />)}
+                        {plot.map((item, index) => <GraphCard key={index} {...item} remove={() => RemovePlot(item.ChannelID)} />)}
                     </div>
                     <div className="row" style={{ margin: 0, }}>
                         <div className="col dropdown" style={{ padding: 0 }}>
@@ -180,7 +188,11 @@ const StaticSetPoint = (props: IProps) => {
                                     if (plot.findIndex(p => p.ChannelID == -1) == -1)
                                         setPlot((old) => {
                                             let updated = cloneDeep(old);
-                                            updated.push({ ChannelID: -1, Title: 'Overview', Threshhold: 0 })
+                                            let threshold = 0;
+                                            if (tokenizerResponse != undefined && tokenizerResponse.Valid && tokenizerResponse.IsScalar)
+                                                threshold = tokenizerResponse.Value[0];
+                                            
+                                            updated.push({ ChannelID: -1, Title: 'Overview', Threshhold: threshold })
                                             return updated;
                                         })
                                     else
@@ -251,9 +263,17 @@ const HelpWindow = (props: {loading: boolean}) => {
     const isInfo = props.loading || (error != undefined && !error.IsScalar && error.Valid && allowSlice)
     const isSuccess = (error != undefined && error.Valid && error.IsScalar)
 
-    const title = (isSuccess ? "Setpoint Expression is Valid" : "Setpoint Expression is invalid");
-    const text = (error != undefined && error.Valid && !error.IsScalar &&  !allowSlice)? "A single threshold is required for all Channels because some Channels are not seletced as historic data source." : (error != undefined? error.Message : "Expression can not be empty")
-    
+    const title = (isSuccess || isInfo ? "Setpoint Expression is Valid" : "Setpoint Expression is invalid");
+    let text = "";
+    if (error == undefined)
+        text = "Expression can not be empty."
+    else if (error.Valid && !error.IsScalar && !allowSlice)
+        text = "A single threshold is required for all Channels because some Channels are not seletced as historic data source.";
+    else if (error.Valid && !error.IsScalar && allowSlice)
+        text = "A sepperate Threshhold will be computed for each Channel. if that is not intended an aggregation function such as MIN or MAX needs to be used."
+    else
+        text = error.Message;
+  
     return (
         <>
             <div className="row" style={{ margin: 0 }}>
@@ -356,7 +376,7 @@ const GraphCard = (props: { ChannelID: number, Title: string, Threshhold: number
             } as ITrendSeries;
         })])
 
-    }, [props.Threshhold, secerityID,])
+    }, [props.Threshhold, secerityID, factors, severities])
 
     function getData(channelId: number): JQuery.jqXHR<Array<number[]>> {
         let handle = $.ajax({
@@ -384,44 +404,6 @@ const GraphCard = (props: { ChannelID: number, Title: string, Threshhold: number
         }))
         return handle;
     }
-
-    /*function getThresHold(channelId: number, request): JQuery.jqXHR<Array<number[]>> {
-        let handle = $.ajax({
-            type: "POST",
-            url: `${apiHomePath}api/SPCTools/StaticAlarmCreation/EvalSetpoint/${channelId}`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            data: JSON.stringify(request),
-            cache: false,
-            async: true
-        });
-
-        handle.done((scalarThreshold) => setThreshold(() => {
-            
-            let series: ITrendSeries = {
-                color: severities.find(item => item.ID == setPointSettings.SeverityID).Color,
-                includeLegend: false,
-                label: "",
-                lineStyle: ':',
-                data: [[data[0].data[0][0], scalarThreshold], [data[0].data[data[0].data.length - 1][0], scalarThreshold]]
-            }
-            if (setPointSettings.Factors.length == 0)
-                return [series];
-            let additions = setPointSettings.Factors.map(f => {
-                return {
-                    color: severities.find(item => item.ID == f.SeverityID).Color,
-                    includeLegend: false,
-                    label: "",
-                    lineStyle: ':',
-                    data: [[data[0].data[0][0], scalarThreshold * f.Value], [data[0].data[data[0].data.length - 1][0], scalarThreshold * f.Value]]
-                } as ITrendSeries
-            })
-
-            return [series, ...additions];
-        }))
-        return handle;
-    }*/
-
 
     let Tstart = (data.length > 0? data[0].data[0][0] : 0);
     let Tend = (data.length > 0 ? data[0].data[data[0].data.length - 1][0] : 1500);

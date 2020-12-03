@@ -29,7 +29,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectAffectedChannels, selectfactors, selectSeverity } from './StaticWizzardSlice';
 import _ from 'lodash';
 import TrendingCard, { ITrendSeries } from '../CommonComponents/Graph';
-import { selectDateRange, setDate, selectResultSummary } from '../Store/HistoryTestSlice';
+import { selectDateRange, setDate, selectResultSummary, selectIsLoading } from '../Store/HistoryTestSlice';
 import { selectSeverities } from '../Store/GeneralSettingsSlice';
 
 declare var homePath: string;
@@ -57,6 +57,8 @@ const TestGroup = (props: IProps) => {
     const factors = useSelector(selectfactors);
     const severityID = useSelector(selectSeverity);
     const severities = useSelector(selectSeverities)
+
+    const loading = useSelector(selectIsLoading);
 
     // Plot Data is Local since it is not used anywhere else
     const [selectedChannel, setSelectedChannel] = React.useState<number>(-1);
@@ -112,31 +114,35 @@ const TestGroup = (props: IProps) => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            { }
-                            <Table<IChannelList>
-                                tableStyle={{ height: '100%' }}
-                                cols={[
-                                    { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'Name', label: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'TimeInAlarm', label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'NumberRaised', label: 'Raised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                ]}
-                                tableClass="table table-hover"
-                                data={channelList}
-                                sortField={sort}
-                                ascending={asc}
-                                onSort={(d) => {
-                                    if (sort === d.col)
-                                        setAsc(!asc)
-                                    else
-                                        setSort(d.col)
-                                }}
-                                onClick={(d) => setSelectedChannel(d.row.ID)}
-                                theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
-                                rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                selected={(item) => item.ID == selectedChannel}
-                            />
+                            {loading ?
+                                <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
+                                    <div className="spinner-border" role="status"></div>
+                                </div> :
+                                <Table<IChannelList>
+                                    tableStyle={{ height: '100%' }}
+                                    cols={[
+                                        { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'Name', label: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'TimeInAlarm', label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'NumberRaised', label: 'Raised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                    ]}
+                                    tableClass="table table-hover"
+                                    data={channelList}
+                                    sortField={sort}
+                                    ascending={asc}
+                                    onSort={(d) => {
+                                        if (sort === d.col)
+                                            setAsc(!asc)
+                                        else
+                                            setSort(d.col)
+                                    }}
+                                    onClick={(d) => setSelectedChannel(d.row.ID)}
+                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    selected={(item) => item.ID == selectedChannel}
+                                />
+                            }
                         </div>
                     </div>
                 </div>

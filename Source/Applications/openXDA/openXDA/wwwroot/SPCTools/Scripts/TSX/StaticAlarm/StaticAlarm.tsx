@@ -31,6 +31,7 @@ import StaticSetPoint from './SetPoint';
 import TestGroup from './Test';
 import { SPCTools, StaticWizzard } from '../global';
 import ReactTooltip from 'react-tooltip';
+import { loadTest } from '../Store/HistoryTestSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -56,6 +57,15 @@ const StaticAlarmHome: React.FunctionComponent = (props: {}) => {
         }
     })
 
+    function Continue() {
+        
+        if (!errors.some(item => (item.complete == 'required'))) {
+            if (tab == 'setpoint')
+                dispatch(loadTest(-1))
+            dispatch(next());
+        }
+    
+    }
     
 
     return (
@@ -87,7 +97,7 @@ const StaticAlarmHome: React.FunctionComponent = (props: {}) => {
                 <div className="col" style={{width: '100%'}}>
                     <div className="btn-group mr-2 float-right" role="group">
                         <button type="button" className={"btn btn-success" + (errors.some(item => (item.complete == 'required')) ? ' disabled' : '')}
-                            onClick={() => { if (!errors.some(item => (item.complete == 'required'))) dispatch(next()); }} data-tip data-for="registerTip">
+                            onClick={() => Continue() } data-tip data-for="registerTip">
                             {loading == 'loading' ? <span className="spinner-border spinner-border-sm"></span> : (tab == "test" ? "Save" : "Continue")}
                         </button> 
                     </div>
@@ -98,7 +108,8 @@ const StaticAlarmHome: React.FunctionComponent = (props: {}) => {
                     </div>
                 </div>
             </div>
-            <ReactTooltip id={'registerTip'} effect="solid" getContent={() => {
+
+            <ReactTooltip id={'registerTip'} place={'top'} effect="solid" getContent={() => {
                 return (<div style={{ width: '600px' }}> {errors.map((item, index) => <Requirements {...item} key={index} />)} </div>)
             }}>
             </ReactTooltip>

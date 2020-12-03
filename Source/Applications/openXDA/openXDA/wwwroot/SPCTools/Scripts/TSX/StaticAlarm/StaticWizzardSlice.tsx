@@ -191,8 +191,10 @@ export const StaticWizzardSlice = createSlice({
         removeFactor: (state, action: PayloadAction<number>) => {
             state.AlarmFactors.splice(action.payload, 1)
         },
-        updateSetPointEval: (state, action: PayloadAction<SPCTools.ITokenizerResponse>) => {
-            state.SetPointEvaluation = action.payload;
+        updateSetPointEval: (state, action: PayloadAction<{ response: SPCTools.ITokenizerResponse, setPoint: string }>) => {
+            state.SetPointEvaluation = action.payload.response;
+            if (action.payload.response.Valid)
+                state.AlarmGroup.Formula = action.payload.setPoint
         },
     },
      extraReducers: (builder) => {

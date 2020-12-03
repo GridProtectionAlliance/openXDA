@@ -24,6 +24,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SPCTools, StaticWizzard, openXDA } from '../global';
 import RequestHandle from './RequestHandle';
 import _ from 'lodash';
+import { selectTokenizerRequest, selectAffectedChannels } from '../StaticAlarm/StaticWizzardSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -66,7 +67,7 @@ export const HistoryTestSlice = createSlice({
          builder.addCase(loadTest.fulfilled, (state, action) => {
              state.loading = false;
              state.alarmGroupID = action.meta.arg;
-
+             state.result = action.payload
              return state
          });
          builder.addCase(loadTest.rejected, (state, action) => {
@@ -89,10 +90,13 @@ export const selectDateRange = (state: SPCTools.RootState) => state.HistoryTest.
 
 // Async Functions
 
-function loadStaticWizzardTest(state: SPCTools.RootState): JQuery.jqXHR<string> {
+function loadStaticWizzardTest(state: SPCTools.RootState): JQuery.jqXHR<SPCTools.IChannelTest[]> {
     let request = {
         AlarmFactors: state.StaticWizzard.AlarmFactors.map(i => i.Value),
-        
+        SetPointRequest: selectTokenizerRequest(state),
+        Start: state.HistoryTest.time.start,
+        End: state.HistoryTest.time.end,
+        ChannelID: selectAffectedChannels(state).map(channel => channel.ID)
     };
 
     let handle = $.ajax({
