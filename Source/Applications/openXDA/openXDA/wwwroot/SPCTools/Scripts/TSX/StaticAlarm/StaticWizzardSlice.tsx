@@ -275,7 +275,7 @@ export const selectIntervallDataType = (state: SPCTools.RootState) => state.Stat
 export const selectLoadingVoltages = (state: SPCTools.RootState) => state.StaticWizzard.LoadingVoltages;
 export const selectAvailableVoltages = (state: SPCTools.RootState) => state.StaticWizzard.AvailableVoltages;
 export const selectCurrentVoltages = (state: SPCTools.RootState) => state.StaticWizzard.SelectedVoltages;
-
+export const selectSelectedMeterId = (state: SPCTools.RootState) => state.StaticWizzard.SelectedMeterID;
 
 export const selectLoadingPhases = (state: SPCTools.RootState) => state.StaticWizzard.LoadingPhases;
 export const selectAvailablePhases = (state: SPCTools.RootState) => state.StaticWizzard.AvailablePhases;
