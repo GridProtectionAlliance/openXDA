@@ -113,7 +113,7 @@ namespace openXDA.Controllers
             {
                 // Start by Getting Setpoint
                 Dictionary<int, List<Point>> Tokendata = StaticAlarmCreationController.createTokenData(postedRequest.SetPointRequest.Channels, DateTime.Parse(postedRequest.SetPointRequest.StartDate), DateTime.Parse(postedRequest.SetPointRequest.EndDate));
-                Token root = new Token(postedRequest.SetPointRequest.Value, Tokendata, postedRequest.SetPointRequest.Channels);
+                Token root = new Token(postedRequest.SetPointRequest.Value, Tokendata, postedRequest.SetPointRequest.Channels, postedRequest.SetPointRequest.DataFilter);
 
                 if (!root.Valid || (!root.isScalar && !root.isSlice))
                     return InternalServerError(new Exception("Setpoint Expression is not Valid"));

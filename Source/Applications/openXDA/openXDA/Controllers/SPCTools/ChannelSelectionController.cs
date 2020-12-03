@@ -53,17 +53,7 @@ namespace openXDA.Controllers
     {
         #region [internal Classes]
 
-        /// <summary>
-        /// Filter for Data when Loading or when applying Setpoints
-        /// </summary>
-        public class DataFilter
-        {
-            public bool FilterZero { get; set; }
-            public bool FilterUpper { get; set; }
-            public double UpperLimit { get; set; }
-            public bool FilterLower { get; set; }
-            public double LowerLimit { get; set; }
-        }
+        
 
         /// <summary>
         /// Request for Parsing a setpoint 
@@ -467,7 +457,7 @@ namespace openXDA.Controllers
             try
             {
                 Dictionary<int, List<Point>> Tokendata = StaticAlarmCreationController.createTokenData(request.Channels, DateTime.Parse(request.StartDate), DateTime.Parse(request.EndDate));
-                Token root = new Token(request.Value, Tokendata, request.Channels);
+                Token root = new Token(request.Value, Tokendata, request.Channels, request.DataFilter);
 
                 TokenizerResponse result = new TokenizerResponse()
                 {
@@ -526,7 +516,7 @@ namespace openXDA.Controllers
 
                     // Start by Getting Setpoint
                     Dictionary<int, List<Point>> Tokendata = StaticAlarmCreationController.createTokenData(request.TokenizerRequest.Channels, DateTime.Parse(request.TokenizerRequest.StartDate), DateTime.Parse(request.TokenizerRequest.EndDate));
-                    Token root = new Token(request.TokenizerRequest.Value, Tokendata, request.TokenizerRequest.Channels);
+                    Token root = new Token(request.TokenizerRequest.Value, Tokendata, request.TokenizerRequest.Channels, request.TokenizerRequest.DataFilter);
 
                     if (!root.Valid || (!root.isScalar && !root.isSlice))
                         return InternalServerError(new Exception("Setpoint Expression is not Valid"));
@@ -633,7 +623,7 @@ namespace openXDA.Controllers
             try
             {
 
-                Token token1 = new Token(token, createTokenData(new List<int>() { 1, 2, 3 }, DateTime.Now.Subtract(new TimeSpan(31, 0, 0, 0, 0)), DateTime.Now),new List<int>() { 1, 2, 3 });
+                Token token1 = new Token(token, createTokenData(new List<int>() { 1, 2, 3 }, DateTime.Now.Subtract(new TimeSpan(31, 0, 0, 0, 0)), DateTime.Now),new List<int>() { 1, 2, 3 },null);
                 return Ok();
 
             }

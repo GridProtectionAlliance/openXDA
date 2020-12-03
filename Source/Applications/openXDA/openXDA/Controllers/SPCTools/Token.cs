@@ -64,6 +64,18 @@ namespace openXDA.Controllers
         public DateTime Timestamp { get; set; }
     }
 
+    /// <summary>
+    /// Filter for Data when applying Setpoints
+    /// </summary>
+    public class DataFilter
+    {
+        public bool FilterZero { get; set; }
+        public bool FilterUpper { get; set; }
+        public double UpperLimit { get; set; }
+        public bool FilterLower { get; set; }
+        public double LowerLimit { get; set; }
+    }
+
     public enum TokenType
     {
         Scalar,
@@ -98,8 +110,9 @@ namespace openXDA.Controllers
 
         private Dictionary<int, List<Point>> m_data;
         private List<int> m_channels;
+        private DataFilter m_filter;
 
-        public Token(string formula, Dictionary<int,List<Point>> data, List<int> channels)
+        public Token(string formula, Dictionary<int,List<Point>> data, List<int> channels, DataFilter filter)
         {
            m_isValid = true;
 
@@ -110,7 +123,7 @@ namespace openXDA.Controllers
             children = new List<Token>();
            
             m_channels = channels;
-
+            m_filter = filter;
           
             Match chars = s_Char.Match(m_formula);
             if (chars.Success)
@@ -210,7 +223,7 @@ namespace openXDA.Controllers
                 }
                 List<string> parameters = m_formula.Substring(m_formula.IndexOf('(') + 1, m_formula.Length - m_formula.IndexOf('(') - 2).Split(',').Select(item => item.Trim()).ToList();
 
-                children = parameters.Select( item => new Token(item,m_data,m_channels)).ToList();
+                children = parameters.Select( item => new Token(item,m_data,m_channels,m_filter)).ToList();
 
                 if (children.Count == 0)
                 {
@@ -299,9 +312,9 @@ namespace openXDA.Controllers
                                 int Tin = untokenized.IndexOf("T");
                                 untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula +  untokenized.Substring(Tin+1);
                             }
-                            return new Token(untokenized, m_data, m_channels);
+                            return new Token(untokenized, m_data, m_channels, m_filter);
                         }
-                        return new Token(item, m_data, m_channels);
+                        return new Token(item, m_data, m_channels, m_filter);
                     }).ToList();
 
                     // Set Output Type and Validtiy
@@ -339,9 +352,9 @@ namespace openXDA.Controllers
                                 int Tin = untokenized.IndexOf("T");
                                 untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin+1);
                             }
-                            return new Token(untokenized, m_data, m_channels);
+                            return new Token(untokenized, m_data, m_channels, m_filter);
                         }
-                        return new Token(item, m_data, m_channels);
+                        return new Token(item, m_data, m_channels, m_filter);
                     }).ToList();
 
                     // Set Output Type and Validtiy
@@ -380,9 +393,9 @@ namespace openXDA.Controllers
                                 int Tin = untokenized.IndexOf("T");
                                 untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin+1);
                             }
-                            return new Token(untokenized, m_data, m_channels);
+                            return new Token(untokenized, m_data, m_channels, m_filter);
                         }
-                        return new Token(item, m_data, m_channels);
+                        return new Token(item, m_data, m_channels, m_filter);
                     }).ToList();
 
                     // Set Output Type and Validtiy
@@ -439,11 +452,11 @@ namespace openXDA.Controllers
 
                 while (j > 0 && (input[j] != '*' && input[j] != '/' && input[j] != '+' && input[j] != '-' && input[j] != '(' && input[j] != ' '))
                     j--;
-                children.Add(new Token(input.Substring(j , i - j ), m_data, m_channels));
+                children.Add(new Token(input.Substring(j , i - j ), m_data, m_channels, m_filter));
 
                 return input.Substring(0, j) + "T" + input.Substring(i);
             }
-            children.Add(new Token(input.Substring(start+1,i-start-2), m_data, m_channels));
+            children.Add(new Token(input.Substring(start+1,i-start-2), m_data, m_channels, m_filter));
 
             return input.Substring(0,start) + "T" + input.Substring(i); 
         }
@@ -569,7 +582,18 @@ namespace openXDA.Controllers
 
         private double ApplyDataFilter(double input)
         {
-            return input;
+            if (m_filter == null)
+                return input;
+            double output = input;
+
+            if (m_filter.FilterZero && output == 0.0D)
+                output = double.NaN ;
+            if (m_filter.FilterLower && output < m_filter.LowerLimit)
+                output =  double.NaN;
+            if (m_filter.FilterUpper && output > m_filter.UpperLimit)
+                output = double.NaN;
+
+            return output;
         }
         public List<List<double[]>> ComputeMatrix() 
         {
