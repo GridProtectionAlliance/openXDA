@@ -525,9 +525,9 @@ namespace openXDA.Controllers
             if (m_action == ComputationAction.Multiplication)
                 return children.Select(item => item.ComputeScalar()).Aggregate((a,b) => a*b);
             if (m_action == ComputationAction.Max)
-                return children.Max(item => item.ComputeMatrix().Max(i => i.Max(pt => pt[1])));
+                return children.Max(item => item.ComputeMatrix().Max(i => i.Where(pt => !double.IsNaN(pt[1])).Max(pt => pt[1])));
             if (m_action == ComputationAction.Min)
-                return children.Min(item => item.ComputeMatrix().Min(i => i.Min(pt => pt[1])));
+                return children.Min(item => item.ComputeMatrix().Min(i => i.Where(pt =>!double.IsNaN(pt[1])).Min(pt => pt[1])));
             if (m_action == ComputationAction.Mean)
                 return (children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1]))))/ children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1)))));
             if (m_action == ComputationAction.StdDev)
