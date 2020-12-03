@@ -674,7 +674,7 @@ namespace openXDA.Controllers
             try
             {
 
-                Token token1 = new Token(token,new DateTime().Subtract(new TimeSpan(365, 0, 0, 0, 0)), new DateTime(),new List<int>() { 1, 2, 3 });
+                Token token1 = new Token(token, DateTime.Now.Subtract(new TimeSpan(31, 0, 0, 0, 0)), DateTime.Now,new List<int>() { 1, 2, 3 });
                 return Ok();
 
             }
