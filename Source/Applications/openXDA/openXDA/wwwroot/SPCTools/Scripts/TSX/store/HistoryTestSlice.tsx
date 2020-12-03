@@ -63,6 +63,7 @@ export const HistoryTestSlice = createSlice({
 
          builder.addCase(loadTest.pending, (state, action) => {
              state.loading = true;
+             state.result = undefined;
         });
          builder.addCase(loadTest.fulfilled, (state, action) => {
              state.loading = false;
