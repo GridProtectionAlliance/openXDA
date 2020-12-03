@@ -24,19 +24,30 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.Web.Security;
 using HIDS;
+using log4net;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace openXDA.Controllers.WebAPI
 {
+
+
     public class HIDSPost {
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
@@ -49,18 +60,30 @@ namespace openXDA.Controllers.WebAPI
         public ulong Days { get; set; }
         public ulong Weeks { get; set; }
         public ulong Months { get; set; }
+        public string Aggregate { get; set; }
+
     }
+
     [RoutePrefix("api/HIDS")]
     public class HIDSController : ApiController {
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(HIDSController));
+
         [HttpGet, Route("")]
         public IHttpActionResult Get() {
             return Ok("Hello!");
+        }
+
+        private class thingy { 
+        
         }
 
         [HttpPost, Route("")]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult Post([FromBody] HIDSPost post, CancellationToken cancellationToken)
         {
+            //Stopwatch stopwatch = new Stopwatch();
+            //stopwatch.Start();
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
                 DataTable ids = connection.RetrieveData(@"
                     SELECT 
@@ -81,18 +104,60 @@ namespace openXDA.Controllers.WebAPI
 	                    Phase.ID IN (" + string.Join(",", post.Phases) + @") AND
 	                    ChannelGroupType.ID IN (" + string.Join(",", post.Types) + @")
                 ");
+                //Log.Error($"Database Query Complete  = {stopwatch.Elapsed}");
 
                 HIDS.TrendingDataQuery hids = new HIDS.TrendingDataQuery();
-                List<Point> result = hids.Query(ids.Select().Select(x => int.Parse(x["ID"].ToString())).ToList(), post.StartTime, post.EndTime, cancellationToken, post.Hours, post.Days, post.Weeks, post.Months).Result;
+                List<Point> results = hids.Query(ids.Select().Select(x => int.Parse(x["ID"].ToString())).ToList(), post.StartTime, post.EndTime, post.Aggregate,  cancellationToken, post.Hours, post.Days, post.Weeks, post.Months).Result;
+                //Log.Error($"HIDS Query Complete  = {stopwatch.Elapsed}");
                 JArray json = JArray.FromObject(ids);
-                var groups = result.GroupBy(r => int.Parse(r.Tag, System.Globalization.NumberStyles.HexNumber));
 
-                foreach (JObject j in json) {
-                    j["Data"] = JArray.FromObject(result.Where(r => int.Parse(r.Tag, System.Globalization.NumberStyles.HexNumber) == j["ID"].ToObject<int>()));
-                }
+                var groupjoin = json.GroupJoin(results, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) => {
+                    JObject jObject = JObject.FromObject(row);
+                    jObject["Data"] = JArray.FromObject(resultcollection);
+                    return jObject;
+                });
+                //Log.Error($"GroupJoin Complete  = {stopwatch.Elapsed}");
 
-                return Ok(json);
+                return Ok(JsonConvert.SerializeObject(groupjoin));
+
+                //HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+                //response.Content = new PushStreamContent((stream, content, context) =>
+                //{
+                //    // write your output here
+                //    SerializeJsonIntoStream(groupjoin, stream);
+                //});
+
+                //Log.Error($"Stream write Complete  = {stopwatch.Elapsed}");
+
+                //return response;
             }          
+        }
+
+        private static void SerializeJsonIntoStream(object value, Stream stream)
+        {
+            using (var sw = new StreamWriter(stream, new UTF8Encoding(false), 1024, true))
+            using (var jtw = new JsonTextWriter(sw) { Formatting = Formatting.None })
+            {
+                var js = new JsonSerializer();
+                js.Serialize(jtw, value);
+                jtw.Flush();
+            }
+        }
+
+        private static HttpContent CreateHttpContent(object content)
+        {
+            HttpContent httpContent = null;
+
+            if (content != null)
+            {
+                var ms = new MemoryStream();
+                SerializeJsonIntoStream(content, ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                httpContent = new StreamContent(ms);
+                httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            }
+
+            return httpContent;
         }
     }
 }

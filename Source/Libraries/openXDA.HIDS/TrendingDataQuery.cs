@@ -72,7 +72,7 @@ namespace openXDA.HIDS
 
         #region [ Methods ]
 
-        public async Task<List<Point>> Query(List<int> channelIDs, DateTime startTime, DateTime endTime, CancellationToken cancellationToken, ulong validHours = ValidHours, ulong validDays = ValidDays, ulong validWeeks = ValidWeeks, ulong validMonths = ValidMonths)
+        public async Task<List<Point>> Query(List<int> channelIDs, DateTime startTime, DateTime endTime, string aggregate, CancellationToken cancellationToken, ulong validHours = ValidHours, ulong validDays = ValidDays, ulong validWeeks = ValidWeeks, ulong validMonths = ValidMonths)
         {
             IEnumerable<TimeFilter> hours = Enumerable.Range(0, 24).Where(index => (~validHours & (1Lu << index)) > 0).Select(h => TimeFilter.Hour00 + h);
             IEnumerable<TimeFilter> days = Enumerable.Range(0, 7).Where(index => (~validDays & (1Lu << index)) > 0).Select(h => TimeFilter.Sunday + h);
@@ -86,6 +86,7 @@ namespace openXDA.HIDS
                     t.FilterTags(channelIDs.Select(cid => cid.ToString("x8")));
                     t.Range(startTime, endTime);
                     t.FilterTime(hours.Concat(days).Concat(weeks).Concat(months));
+                    if (aggregate != null && aggregate != string.Empty) t.Aggregate(aggregate);
 
                  }, cancellationToken).ToListAsync();
             }
