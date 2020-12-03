@@ -466,7 +466,8 @@ namespace openXDA.Controllers
         {
             try
             {
-                Token root = new Token(request.Value, DateTime.Parse(request.StartDate), DateTime.Parse(request.EndDate), request.Channels);
+                Dictionary<int, List<Point>> Tokendata = StaticAlarmCreationController.createTokenData(request.Channels, DateTime.Parse(request.StartDate), DateTime.Parse(request.EndDate));
+                Token root = new Token(request.Value, Tokendata, request.Channels);
 
                 TokenizerResponse result = new TokenizerResponse()
                 {
@@ -524,7 +525,8 @@ namespace openXDA.Controllers
                         group = new TableOperations<AlarmGroup>(connection).QueryRecordWhere("Name = {0}", group.Name);
 
                     // Start by Getting Setpoint
-                    Token root = new Token(request.TokenizerRequest.Value, DateTime.Parse(request.TokenizerRequest.StartDate), DateTime.Parse(request.TokenizerRequest.EndDate), request.TokenizerRequest.Channels);
+                    Dictionary<int, List<Point>> Tokendata = StaticAlarmCreationController.createTokenData(request.TokenizerRequest.Channels, DateTime.Parse(request.TokenizerRequest.StartDate), DateTime.Parse(request.TokenizerRequest.EndDate));
+                    Token root = new Token(request.TokenizerRequest.Value, Tokendata, request.TokenizerRequest.Channels);
 
                     if (!root.Valid || (!root.isScalar && !root.isSlice))
                         return InternalServerError(new Exception("Setpoint Expression is not Valid"));
@@ -605,6 +607,19 @@ namespace openXDA.Controllers
             return data;
         }
 
+        public static Dictionary<int, List<Point>> createTokenData(List<int> channels, DateTime start, DateTime end)
+        {
+            Dictionary<int, List<Point>> result = new Dictionary<int, List<Point>>();
+            channels.ForEach(id => { result.Add(id, createData(id, start, end).Select(pt => new Point() {
+                Minimum = pt[1] - 0.5,
+                Maximum = pt[1] + 0.5,
+                Average = pt[1],
+                Timestamp = m_epoch.AddMilliseconds(pt[0]),
+            }).ToList()); });
+
+            return result;
+        }
+
         #endregion
 
         private static DateTime m_epoch = new DateTime(1970, 1, 1);
@@ -618,7 +633,7 @@ namespace openXDA.Controllers
             try
             {
 
-                Token token1 = new Token(token, DateTime.Now.Subtract(new TimeSpan(31, 0, 0, 0, 0)), DateTime.Now,new List<int>() { 1, 2, 3 });
+                Token token1 = new Token(token, createTokenData(new List<int>() { 1, 2, 3 }, DateTime.Now.Subtract(new TimeSpan(31, 0, 0, 0, 0)), DateTime.Now),new List<int>() { 1, 2, 3 });
                 return Ok();
 
             }
