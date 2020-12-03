@@ -92,7 +92,7 @@ export const StaticWizzardSlice = createSlice({
         LoadingPhases: false,
         LoadingChannelCount: false,
 
-        SelectedIntervallDataType: 'Min',
+        SelectedIntervallDataType: 'Minimum',
         SelectedMeasurmentTypeID: 0,
 
         SelectedMeterID: [],
@@ -121,7 +121,7 @@ export const StaticWizzardSlice = createSlice({
             state.AvailablePhases = []
             state.SelectedPhases = []
             state.SelectedChannelCount = 0
-            state.SelectedIntervallDataType = 'Min'
+            state.SelectedIntervallDataType = 'Minimum'
             state.SelectedMeasurmentTypeID = measurmentTypeID
             state.SelectedMeterID = [];
             state.StatSource = {

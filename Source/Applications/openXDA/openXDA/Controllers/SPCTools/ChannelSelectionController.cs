@@ -508,12 +508,18 @@ namespace openXDA.Controllers
 
                 using (AdoDataConnection connection = new AdoDataConnection(Connection))
                 {
-
-                    new TableOperations<AlarmGroup>(connection).AddNewOrUpdateRecord(request.AlarmGroup);
-
                     AlarmGroup group = request.AlarmGroup;
-
                     if (group.ID == -1)
+                        group = new AlarmGroup()
+                        {
+                            AlarmTypeID = request.AlarmGroup.AlarmTypeID,
+                            Formula = request.AlarmGroup.Formula,
+                            Name = request.AlarmGroup.Name
+                        };
+
+                    new TableOperations<AlarmGroup>(connection).AddNewOrUpdateRecord(group);
+
+                    if (request.AlarmGroup.ID == -1)
                         group = new TableOperations<AlarmGroup>(connection).QueryRecordWhere("Name = {0}", group.Name);
 
                     // Start by Getting Setpoint
@@ -540,11 +546,11 @@ namespace openXDA.Controllers
                     request.ChannelID.ForEach(chID =>
                     {
 
-                        Series series = seriesTbl.QueryRecordWhere("ChannelID = {0} AND SeriesID = {1}", chID, seriesType.ID);
+                        Series series = seriesTbl.QueryRecordWhere("ChannelID = {0} AND SeriesTypeID = {1}", chID, seriesType.ID);
                         Alarm alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", group.ID, series.ID);
                         if (alarm == null)
                         {
-                            alarmTbl.AddNewOrUpdateRecord(new Alarm() { AlarmGroupID = group.ID, SeriesID = chID, SeverityID = request.SeverityID });
+                            alarmTbl.AddNewOrUpdateRecord(new Alarm() { AlarmGroupID = group.ID, SeriesID = series.ID, SeverityID = request.SeverityID });
                             alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", group.ID, series.ID);
                         }
 

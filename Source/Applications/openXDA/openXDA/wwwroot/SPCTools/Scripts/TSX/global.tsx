@@ -31,7 +31,7 @@ export namespace SPCTools {
 
     export type WizzardTab = ('general' | 'selectData' | 'setpoint' | 'test')
 
-    export type IntervallDataType = ('Min' | 'Max' | 'Avg');
+    export type IntervallDataType = ('Minimum' | 'Maximum' | 'Average');
 
     export interface IAlarmGroupView { ID: number, Name: string, AlarmTypeID: number, Formula: string, Channels: number, Meters: number, AlarmSeverityID: number }
 

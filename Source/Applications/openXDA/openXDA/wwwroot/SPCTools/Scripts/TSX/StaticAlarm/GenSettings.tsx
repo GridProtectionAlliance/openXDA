@@ -488,9 +488,9 @@ const IntervallDataSelect = (props: {}) => {
     const intervallData = useSelector(selectIntervallDataType);
 
     let options = [
-        { ID: 'Min', Label: 'Minimum' },
-        { ID: 'Max', Label: 'Maximum' },
-        { ID: 'Avg', Label: 'Average' },
+        { ID: 'Minimum', Label: 'Minimum' },
+        { ID: 'Maximum', Label: 'Maximum' },
+        { ID: 'Average', Label: 'Average' },
     ];
 
     return (
