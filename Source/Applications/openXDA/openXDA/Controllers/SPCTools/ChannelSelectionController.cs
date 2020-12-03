@@ -53,71 +53,6 @@ namespace openXDA.Controllers
     {
         #region [internal Classes]
 
-       
-
-        public class GeneralSettings
-        {
-            public int ID { get; set; }
-            public string Name { get; set; }
-            public int AlarmTypeID { get; set; }
-            public List<int>  MeterIDs { get; set; }
-            public int  MeasurementTypeID { get; set; }
-            public List<int> PhaseIDs { get; set; }
-            public List<double>  BaseVoltages { get; set; }
-            public string IntervallDataType { get; set; }
-        }
-
-        public class ParsedResults
-        {
-            public bool isScalar { get; set; }
-            public bool isValid { get; set; }
-            public List<string> error { get; set; }
-        }
-
-        public class SetpointEvaluation
-        {
-            public List<int> channelIds { get; set; }
-            public string setPoint { get; set; }
-            public DateTime startTime { get; set; }
-            public DateTime endTime { get; set; }
-        }
-
-        public class TestGroup 
-        {
-            public GeneralSettings generalSettings;
-
-            public SetpointEvaluation setpointEvaluation;
-
-            public DateTime start { get; set; }
-
-            public DateTime end { get; set; }
-
-            public List<Factor> factorList { get; set; }
-        }
-
-        public class ChannelTestResult: ChannelDetail
-        {
-            public double TimeInAlarm;
-            public int NumberRaised;
-            public double Threshhold;
-            public List<FactorTest> FactorTests;
-        }
-
-        public class FactorTest
-        {
-            public double TimeInAlarm;
-            public int NumberRaised;
-        }
-
-        public class Factor
-        {
-            public int ID { get; set; }
-            public int SeverityID { get; set; }
-            public double Value { get; set; }
-        }
-
-        // this is a mess everything above is getting replaced
-
         /// <summary>
         /// Filter for Data when Loading or when applying Setpoints
         /// </summary>
@@ -151,6 +86,18 @@ namespace openXDA.Controllers
             public string Message { get; set; }
             public bool IsScalar { get; set; }
             public List<double> Value { get; set; }
+        }
+
+        /// <summary>
+        /// Requset for saving AlarmGroup
+        /// </summary>
+        public class SaveRequest
+        {
+            public AlarmGroup AlarmGroup { get; set; }
+            public TokenizerRequest TokenizerRequest { get; set; }
+            public string IntervallDataType { get; set; }
+            public List<int> ChannelID { get; set; }
+            public List<AlarmFactor> AlarmFactor { get; set; }
         }
 
     #endregion
@@ -545,7 +492,87 @@ namespace openXDA.Controllers
 
         }
 
+        /// <summary>
+        /// Parses a setpoint and Returns any errors that need to be displayed
+        /// </summary>
+        [HttpPost, Route("CreateAlarmgroup")]
+        public IHttpActionResult SaveAlarmGroup([FromBody] SaveRequest request)
+        {
+            try
+            {
+                // Figure out Channels
+                if (request == null)
+                    return InternalServerError();
 
+                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                {
+
+                    new TableOperations<AlarmGroup>(connection).AddNewOrUpdateRecord(request.AlarmGroup);
+
+                    AlarmGroup group = request.AlarmGroup;
+
+                    if (group.ID == -1)
+                        group = new TableOperations<AlarmGroup>(connection).QueryRecord("Name = {0}", group.Name);
+
+                    // Start by Getting Setpoint
+                    Token root = new Token(request.TokenizerRequest.Value, DateTime.Parse(request.TokenizerRequest.StartDate), DateTime.Parse(request.TokenizerRequest.EndDate), request.TokenizerRequest.Channels);
+
+                    if (!root.Valid || (!root.isScalar && !root.isSlice))
+                        return InternalServerError(new Exception("Setpoint Expression is not Valid"));
+
+                    if (request.ChannelID.Count != request.TokenizerRequest.Channels.Count && root.isSlice)
+                        return InternalServerError(new Exception("Unable to compute Setpoints for every Channel"));
+
+                   
+                    List<double> setPoint = root.ComputeSlice();
+
+                    //Create alarms, Alarmvalues and AlarmFactors
+                    TableOperations<Alarm> alarmTbl = new TableOperations<Alarm>(connection);
+                    TableOperations<Series> seriesTbl = new TableOperations<Series>(connection);
+                    TableOperations<AlarmFactor> factorTbl = new TableOperations<AlarmFactor>(connection);
+                    TableOperations<AlarmValue> valueTbl = new TableOperations<AlarmValue>(connection);
+
+
+                    SeriesType seriesType = new TableOperations<SeriesType>(connection).QueryRecordWhere("Name = {0}", request.IntervallDataType);
+                    
+                    request.ChannelID.ForEach(chID =>
+                    {
+
+                        Series series = seriesTbl.QueryRecordWhere("ChannelID = {0} AND SeriesID = {1}", chID, seriesType.ID);
+                        Alarm alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", group.ID, series.ID);
+                        if (alarm == null)
+                        {
+                            alarmTbl.AddNewOrUpdateRecord(new Alarm() { AlarmGroupID = group.ID, SeriesID = chID });
+                            alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", group.ID, series.ID);
+                        }
+
+                        // Add Factors
+                        request.AlarmFactor.ForEach(factor => {
+                            factor.AlarmID = alarm.ID;
+                            factorTbl.AddNewRecord(factor);
+                        });
+
+                        double threshhold = setPoint[0];
+                        if (!root.isScalar)
+                        {
+                            int index = request.TokenizerRequest.Channels.IndexOf(chID);
+                            threshhold = setPoint[index];
+                        }
+                        // Add Values
+                        valueTbl.AddNewRecord(new AlarmValue() { AlarmID = alarm.ID, AlarmdayID = null, EndHour = null, StartHour = 0, Value = threshhold });
+                    });
+
+
+
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+
+        }
         #endregion
 
         #region [ HIDS Data Functions ]

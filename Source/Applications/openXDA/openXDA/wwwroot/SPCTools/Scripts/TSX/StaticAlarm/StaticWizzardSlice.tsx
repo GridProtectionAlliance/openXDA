@@ -425,28 +425,23 @@ function getChannelCount(state: StaticWizzard.IState): JQuery.jqXHR<number> {
 
 
 function saveGroup(state: SPCTools.RootState): JQuery.jqXHR {
-    /*let setpointEval = {
-        startTime: state.StaticWizzard.HistoricData.StartDate,
-        endTime: state.StaticWizzard.HistoricData.EndDate,
-        channelIds: state.StaticWizzard.HistoricData.ChannelList.map((item: openXDA.IChannel) => item.ID),
-        setPoint: state.StaticWizzard.SetPoints[0].text
+    let request = {
+        AlarmGroup: state.StaticWizzard.AlarmGroup,
+        TokenizerRequest: {},
+        IntervallDataType: state.StaticWizzard.SelectedIntervallDataType,
+        ChannelID: selectAffectedChannels(state),
+        AlarmFactor: selectfactors(state),
     };
-
+    
     let handle = $.ajax({
         type: "POST",
-        url: `${apiHomePath}api/SPCTools/StaticAlarmCreation/SaveGroup`,
+        url: `${apiHomePath}api/SPCTools/StaticAlarmCreation/CreateAlarmgroup`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify({
-            generalSettings: state.StaticWizzard.AlarmGroup,
-            setpointEvaluation: setpointEval,
-            start: state.StaticWizzard.TestResults.StartDate,
-            end: state.StaticWizzard.TestResults.EndDate,
-            factorList: [...state.StaticWizzard.SeverityOptions.Factors, { SeverityID: state.StaticWizzard.SeverityOptions.SeverityID, Value: 1.0, ID: -1 }]
-        }),
+        data: JSON.stringify(request),
         cache: false,
         async: true
     });
-    return handle;*/
+    return handle;
     return null;
 }

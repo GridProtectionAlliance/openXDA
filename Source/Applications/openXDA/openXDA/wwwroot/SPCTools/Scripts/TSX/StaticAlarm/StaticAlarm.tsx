@@ -25,13 +25,14 @@ import * as React from 'react';
 import GeneralSettings from './GenSettings';
 import * as ReactDOM from 'react-dom';
 import SelectHistoricData from './SelectHistory';
-import {selectStatus, next, back, SelectTab, selectErrors} from './StaticWizzardSlice'
+import {selectStatus, next, back, SelectTab, selectErrors, SaveAlarmGroup} from './StaticWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 import StaticSetPoint from './SetPoint';
 import TestGroup from './Test';
 import { SPCTools, StaticWizzard } from '../global';
 import ReactTooltip from 'react-tooltip';
 import { loadTest } from '../Store/HistoryTestSlice';
+import { setPage } from '../Store/GeneralSettingsSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -62,6 +63,12 @@ const StaticAlarmHome: React.FunctionComponent = (props: {}) => {
         if (!errors.some(item => (item.complete == 'required'))) {
             if (tab == 'setpoint')
                 dispatch(loadTest(-1))
+            if (tab == 'test') {
+                dispatch(SaveAlarmGroup());
+                dispatch(setPage("Home"))
+            }
+                
+
             dispatch(next());
         }
     
