@@ -435,15 +435,16 @@ namespace openXDA.Controllers
 
                 List<double[]> data = createData(ChannelId, start, end);
 
-                data = data.Select(pt => {
-                    if (postedFilter.FilterZero && pt[1] == 0.0D)
-                        return new double[] { pt[0], double.NaN };
-                    if (postedFilter.FilterLower && pt[1] < postedFilter.LowerLimit)
-                        return new double[] { pt[0], double.NaN };
-                    if (postedFilter.FilterUpper && pt[1] > postedFilter.UpperLimit)
-                        return new double[] { pt[0], double.NaN };
-                    return pt;
-                }).ToList();
+                if (postedFilter != null)
+                    data = data.Select(pt => {
+                        if (postedFilter.FilterZero && pt[1] == 0.0D)
+                            return new double[] { pt[0], double.NaN };
+                        if (postedFilter.FilterLower && pt[1] < postedFilter.LowerLimit)
+                            return new double[] { pt[0], double.NaN };
+                        if (postedFilter.FilterUpper && pt[1] > postedFilter.UpperLimit)
+                            return new double[] { pt[0], double.NaN };
+                        return pt;
+                    }).ToList();
 
                 return Ok(data);
             }
