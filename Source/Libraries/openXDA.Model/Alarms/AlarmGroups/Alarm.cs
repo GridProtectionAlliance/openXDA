@@ -38,6 +38,7 @@ namespace openXDA.Model
         public int AlarmGroupID { get; set; }
 
         public int SeriesID { get; set; }
+        public int SeverityID { get; set; }
     }
 
     

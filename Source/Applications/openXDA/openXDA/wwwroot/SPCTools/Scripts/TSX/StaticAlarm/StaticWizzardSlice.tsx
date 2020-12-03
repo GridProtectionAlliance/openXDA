@@ -431,6 +431,7 @@ function saveGroup(state: SPCTools.RootState): JQuery.jqXHR {
         IntervallDataType: state.StaticWizzard.SelectedIntervallDataType,
         ChannelID: selectAffectedChannels(state),
         AlarmFactor: selectfactors(state),
+        SeverityID: selectSeverity(state)
     };
     
     let handle = $.ajax({

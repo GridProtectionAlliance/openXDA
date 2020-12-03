@@ -98,6 +98,8 @@ namespace openXDA.Controllers
             public string IntervallDataType { get; set; }
             public List<int> ChannelID { get; set; }
             public List<AlarmFactor> AlarmFactor { get; set; }
+
+            public int SeverityID { get; set; }
         }
 
     #endregion
@@ -542,7 +544,7 @@ namespace openXDA.Controllers
                         Alarm alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", group.ID, series.ID);
                         if (alarm == null)
                         {
-                            alarmTbl.AddNewOrUpdateRecord(new Alarm() { AlarmGroupID = group.ID, SeriesID = chID });
+                            alarmTbl.AddNewOrUpdateRecord(new Alarm() { AlarmGroupID = group.ID, SeriesID = chID, SeverityID = request.SeverityID });
                             alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", group.ID, series.ID);
                         }
 
