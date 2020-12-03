@@ -29,7 +29,7 @@ import Table from '@gpa-gemstone/react-table';
 import { cloneDeep, clone } from 'lodash';
 import { Input, Select } from '@gpa-gemstone/react-forms';
 import MultiSelectTable from '../CommonComponents/MultiSelectTable';
-import {  selectChannelCount, updateAlarmGroup, updateSelectedMeters, updateMeasurementType, selectMeasurmentTypeId, updateChannelCount, selectIntervallDataType, updateIntervalldataType, updateVoltageOptions, updatePhaseOptions, selectLoadingPhases, selectAvailablePhases, selectCurrentPhases, selectPhases, selectAvailableVoltages, selectCurrentVoltages, selectVoltages, selectLoadingVoltages } from './StaticWizzardSlice'
+import {  selectChannelCount, updateAlarmGroup, updateSelectedMeters, updateMeasurementType, selectMeasurmentTypeId, updateChannelCount, selectIntervallDataType, updateIntervalldataType, updateVoltageOptions, updatePhaseOptions, selectLoadingPhases, selectAvailablePhases, selectCurrentPhases, selectPhases, selectAvailableVoltages, selectCurrentVoltages, selectVoltages, selectLoadingVoltages, selectSelectedMeterId } from './StaticWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAlarmTypes, selectMeasurmentTypes } from '../Store/GeneralSettingsSlice';
 
@@ -51,13 +51,23 @@ const GeneralSettings = (props: IProps) => {
 
     const [selectedMeter, setSelectedMeter] = React.useState<Array<openXDA.IMeter>>([]);
 
-    React.useEffect(() => {
-        dispatch(updateSelectedMeters(selectedMeter))
-    }, [selectedMeter])
+    const [initFlag, setInitFlag] = React.useState<boolean>(false)
+    const selectedMeterIDs = useSelector(selectSelectedMeterId);
 
     React.useEffect(() => {
-        dispatch(updateSelectedMeters(selectedMeter))
-    }, [selectedMeter])
+        if (initFlag)
+            dispatch(updateSelectedMeters(selectedMeter))
+    }, [selectedMeter, initFlag])
+
+    //Inital Rednering to allow loacl initalization of states based on React States
+    React.useEffect(() => {
+
+        let handles = [];
+        handles = selectedMeterIDs.map(id => loadMeter(id));
+
+        Promise.all(handles).then(d => setInitFlag(true));
+
+    }, [])
 
     function AddMeters(meters: Array<openXDA.IMeter>) {
         setSelectedMeter((old) => {
@@ -80,6 +90,21 @@ const GeneralSettings = (props: IProps) => {
 
             return result;
         })
+    }
+
+    function loadMeter(id: number): JQuery.jqXHR<openXDA.IMeter> {
+        let handle = $.ajax({
+            type: "GET",
+            url: `${apiHomePath}api/MeterDetail/One/${id}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: false,
+            async: true
+        });
+
+        handle.done((d) => setSelectedMeter(old => [...old, JSON.parse(d)]));
+
+        return handle;
     }
 
     return (
