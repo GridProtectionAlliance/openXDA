@@ -29,7 +29,8 @@ import { CheckBox, Select } from '@gpa-gemstone/react-forms'
 interface IField<T> { label: string, key: keyof T, type: FieldType, enum?: Map<number,string> }
 export type FieldType = ('string' | 'number' | 'enum' | 'integer' | 'datetime' | 'boolean')
 type OperatorType = ('=' | '<>' | '>' | '<' | '>=' | '<=' | 'LIKE' | 'NOT LIKE' | 'IN' | 'NOT IN')
-interface IProps<T> { CollumnList: Array<IField<T>>, Id: string, SetFilter: (filters: Array<IFilter<T>>) => void, defaultCollumn?: IField<T> }
+interface IProps<T> {
+    CollumnList: Array<IField<T>>, Id: string, SetFilter: (filters: Array<IFilter<T>>) => void, defaultCollumn?: IField<T>, Direction?: 'left' | 'right'}
 interface IFilter<T> { FieldName: keyof T, SearchText: string, Operator: OperatorType, Type: FieldType }
 
 export default function Filter<T>(props: IProps<T>) {
@@ -105,7 +106,7 @@ export default function Filter<T>(props: IProps<T>) {
                         <li className="nav-item" style={{ width: '15%', paddingRight: 10 }}>
                             <div style={{ position: 'relative', display: 'inline-block' }}>
                                 <button className="btn btn-primary" onClick={(evt) => { evt.preventDefault(); ($('#' + props.Id) as any).modal('toggle');}} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>Add Filter</button>
-                                <div style={{ width: window.innerWidth / 3, display: hover ? 'block' : 'none', position: 'absolute', backgroundColor: '#f1f1f1', boxShadow: '0px 8px 16px 0px rgba(0,0,0,0.2)', zIndex: 1 }} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+                                <div style={{ width: window.innerWidth / 3, display: hover ? 'block' : 'none', position: 'absolute', backgroundColor: '#f1f1f1', boxShadow: '0px 8px 16px 0px rgba(0,0,0,0.2)', zIndex: 1, right: (props.Direction == 'right' ? 0 : null), left: (props.Direction == 'left' ? 0: null) }} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
                                     <table className='table'>
                                         <thead>
                                             <tr><th>Column</th><th>Operator</th><th>Search Text</th><th>Remove</th></tr>

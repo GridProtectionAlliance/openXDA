@@ -53,6 +53,7 @@ namespace openXDA.Model
         public int Meters { get; set; }
 
         public int AlarmSeverityID { get; set; }
+        public string AlarmSeverity { get; set; }
 
     }
 

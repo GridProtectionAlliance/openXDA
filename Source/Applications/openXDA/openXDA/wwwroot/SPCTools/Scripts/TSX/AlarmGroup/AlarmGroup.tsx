@@ -27,12 +27,6 @@ import Filter, { FieldType } from '../CommonComponents/Filter';
 import { SPCTools } from '../global';
 import Table from '@gpa-gemstone/react-table';
 
-
-declare var homePath: string;
-declare var apiHomePath: string;
-
-declare var userIsAdmin: boolean;
-
 const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
     const [filters, setFilters] = React.useState<Array<any>>([]);
     const [alarmGroupList, setAlarmGroupList] = React.useState<Array<SPCTools.IAlarmGroupView>>([]);
@@ -71,45 +65,45 @@ const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
     let searchCollumns = [{ label: 'Name', key: 'Name' as keyof SPCTools.IAlarmGroupView, type: 'string' as FieldType }]
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Filter<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchCollumns} SetFilter={setFilters}/>
-                <div style={{ width: '100%' }}>
-                    <div className="row" style={{ margin: 0 }}>
-                    <div className="col" style={{ width: '75%', height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
-                        <Table<SPCTools.IAlarmGroupView>
-                            cols={[
-                                { key: 'Name', label: 'Alarm Group', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Meters', label: 'Number of Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Channels', label: 'Number of Channels', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'AlarmSeverityID', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },    
-                                { key: null, label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: () => 'N/A' },
-                            ]}
-                            tableClass="table table-hover"
-                            data={alarmGroupList}
-                            sortField={sort}
-                            ascending={asc}
-                            onSort={(d) => {
-                                if (d.col == sort) {
-                                    setAsc(!asc);
-                                }
-                                else {
-                                    setAsc(asc);
-                                    setSort(d.col);
-                                }
-                            }}
-                            onClick={(d) => {  }}
-                            theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
-                            rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            selected={(item) => false }
-                        />
-                        </div>
-                        <div className="col" style={{ width: '25%', height: 'calc( 100% - 136px)', padding: 0 }}>
-                        {/* This is where we will put the details eventually */}
-                        </div>
+            <Filter<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchCollumns} SetFilter={setFilters} Direction='right'/>
+            <div style={{ width: '100%' }}>
+                <div className="row" style={{ margin: 0 }}>
+                <div className="col-8" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
+                    <Table<SPCTools.IAlarmGroupView>
+                        cols={[
+                            { key: 'Name', label: 'Alarm Group', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                            { key: 'Meters', label: 'Number of Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                            { key: 'Channels', label: 'Number of Channels', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                            { key: 'AlarmSeverity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },    
+                            { key: null, label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: () => 'N/A' },
+                        ]}
+                        tableClass="table table-hover"
+                        data={alarmGroupList}
+                        sortField={sort}
+                        ascending={asc}
+                        onSort={(d) => {
+                            if (d.col == sort) {
+                                setAsc(!asc);
+                            }
+                            else {
+                                setAsc(asc);
+                                setSort(d.col);
+                            }
+                        }}
+                        onClick={(d) => {  }}
+                        theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                        rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        selected={(item) => false }
+                    />
                     </div>
-
                 </div>
-            </div>      
+                <div className="col-4" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
+                    {/* This is where we will put the details eventually */}
+                </div>
+
+            </div>
+        </div>      
     );
 }
 
