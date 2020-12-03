@@ -99,7 +99,7 @@ namespace openXDA.Controllers
 
         public Token(string formula, DateTime start, DateTime end, List<int> channels)
         {
-            m_isValid = true;
+           m_isValid = true;
 
             // this needs to be replaced by HIDDS request but for now it's Ok
             m_NumPoints = 1000;
@@ -112,6 +112,13 @@ namespace openXDA.Controllers
 
             m_computation = ComputationType.Function;
 
+            Match chars = s_Char.Match(m_formula);
+            if (chars.Success)
+            {
+                m_isValid = false;
+                m_error = "'"+ chars.Groups[1] + "' is not a valid Character.";
+                return;
+            }
             // If ( does not match ) it is invalid....
             if (m_formula.CharCount('(') != m_formula.CharCount(')'))
             {
@@ -143,6 +150,7 @@ namespace openXDA.Controllers
                     m_computation = ComputationType.Number;
                     OutputType = TokenType.Scalar;
                     m_isValid = true;
+                    return;
                 }
 
                 // look for VoltageBase
@@ -153,6 +161,7 @@ namespace openXDA.Controllers
                     m_computation = ComputationType.Variable;
                     OutputType = TokenType.Slice;
                     m_isValid = true;
+                    return;
                 }
 
                 // look for Xmax
@@ -163,6 +172,7 @@ namespace openXDA.Controllers
                     m_computation = ComputationType.Variable;
                     OutputType = TokenType.Matrix;
                     m_isValid = true;
+                    return;
                 }
 
                 // look for Xmin
@@ -173,6 +183,7 @@ namespace openXDA.Controllers
                     m_computation = ComputationType.Variable;
                     OutputType = TokenType.Matrix;
                     m_isValid = true;
+                    return;
                 }
                 // look for Xavg
                 match = s_Xavg.Match(m_formula);
@@ -197,8 +208,12 @@ namespace openXDA.Controllers
                     m_action = ComputationAction.Mean;
                 else if (m_formula.StartsWith("stdev"))
                     m_action = ComputationAction.StdDev;
-
-                List<string> parameters = m_formula.Substring(m_formula.IndexOf('(') + 1, m_formula.Length - m_formula.IndexOf('(') - 2).Split(',').ToList();
+                else
+                {
+                    m_isValid = false;
+                    m_error = "'" + m_formula.Substring(0,m_formula.IndexOf('('))  +"' is not a valid Function. Available functions include Min(), Max(), Mean(), StDev().";
+                }
+                List<string> parameters = m_formula.Substring(m_formula.IndexOf('(') + 1, m_formula.Length - m_formula.IndexOf('(') - 2).Split(',').Select(item => item.Trim()).ToList();
 
                 children = parameters.Select( item => new Token(item,m_start,m_end,m_channels)).ToList();
 
@@ -270,7 +285,7 @@ namespace openXDA.Controllers
                     m_action = ComputationAction.Addition;
                     List<Token> oldOrder = children.ToList();
 
-                    List<string> vars = tokenized.Split('+').ToList();
+                    List<string> vars = tokenized.Split('+').Select(item => item.Trim()).ToList();
                     int originalIndex = 0;
                     children = vars.Select((item, index) =>
                     {
@@ -278,6 +293,18 @@ namespace openXDA.Controllers
                         {
                             originalIndex++;
                             return oldOrder[originalIndex - 1];
+                        }
+                        else if (item.Contains("T"))
+                        {
+                            int count = item.CharCount('T');
+                            string untokenized = item;
+                            for (int i=0; i<count; i++)
+                            {
+                                originalIndex++;
+                                int Tin = untokenized.IndexOf("T");
+                                untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula +  untokenized.Substring(Tin+1);
+                            }
+                            return new Token(untokenized, m_start, m_end, m_channels);
                         }
                         return new Token(item,m_start,m_end,m_channels);
                     }).ToList();
@@ -298,7 +325,7 @@ namespace openXDA.Controllers
                     m_action = ComputationAction.Subtraction;
                     List<Token> oldOrder = children.ToList();
 
-                    List<string> vars = tokenized.Split('-').ToList();
+                    List<string> vars = tokenized.Split('-').Select(item => item.Trim()).ToList();
                     int originalIndex = 0;
                     children = vars.Select((item, index) =>
                     {
@@ -306,6 +333,18 @@ namespace openXDA.Controllers
                         {
                             originalIndex++;
                             return oldOrder[originalIndex - 1];
+                        }
+                        else if (item.Contains("T"))
+                        {
+                            int count = item.CharCount('T');
+                            string untokenized = item;
+                            for (int i = 0; i < count; i++)
+                            {
+                                originalIndex++;
+                                int Tin = untokenized.IndexOf("T");
+                                untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin+1);
+                            }
+                            return new Token(untokenized, m_start, m_end, m_channels);
                         }
                         return new Token(item, m_start, m_end, m_channels);
                     }).ToList();
@@ -327,7 +366,7 @@ namespace openXDA.Controllers
                     m_action = ComputationAction.Multiplication;
                     List<Token> oldOrder = children.ToList();
 
-                    List<string> vars = tokenized.Split('*').ToList();
+                    List<string> vars = tokenized.Split('*').Select(item => item.Trim()).ToList();
                     int originalIndex = 0;
                     children = vars.Select((item, index) =>
                     {
@@ -335,6 +374,18 @@ namespace openXDA.Controllers
                         {
                             originalIndex++;
                             return oldOrder[originalIndex - 1];
+                        }
+                        else if (item.Contains("T"))
+                        {
+                            int count = item.CharCount('T');
+                            string untokenized = item;
+                            for (int i = 0; i < count; i++)
+                            {
+                                originalIndex++;
+                                int Tin = untokenized.IndexOf("T");
+                                untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin+1);
+                            }
+                            return new Token(untokenized, m_start, m_end, m_channels);
                         }
                         return new Token(item, m_start, m_end, m_channels);
                     }).ToList();
@@ -358,16 +409,20 @@ namespace openXDA.Controllers
         {
             int i = 0;
 
+            bool funcToken = false;
+
             while (i < input.Length)
             {
-                if (input[i] == '(' && !isFunction(input.Substring(0, i)))
+                if (input[i] == '(')
                     break;
                 i++;
             }
-
+            
             // No () Token Found
             if (i == input.Length)
                 return input;
+
+            funcToken = isFunction(input.Substring(0, i));
 
             int nPrent = 1;
 
@@ -383,7 +438,17 @@ namespace openXDA.Controllers
             }
 
             //This is where we should add a Child Token
-            children.Add(new Token(input.Substring(start,i-start),m_start,m_end,m_channels));
+            if (funcToken)
+            {
+             int j = start-1;
+
+                while (j > 0 && (input[j] != '*' && input[j] != '/' && input[j] != '+' && input[j] != '-' && input[j] != '(' && input[j] != ' '))
+                    j--;
+                children.Add(new Token(input.Substring(j , i - j ), m_start, m_end, m_channels));
+
+                return input.Substring(0, j) + "T" + input.Substring(i);
+            }
+            children.Add(new Token(input.Substring(start+1,i-start-2),m_start,m_end,m_channels));
 
             return input.Substring(0,start) + "T" + input.Substring(i); 
         }
@@ -577,13 +642,15 @@ namespace openXDA.Controllers
 
         public bool isSlice => OutputType == TokenType.Slice;
 
+        public string Formula => m_formula;
+
         private static readonly Regex s_IsNumber = new Regex("^[0-9.]*$", RegexOptions.Compiled| RegexOptions.IgnoreCase);
-        private static readonly Regex s_isFunction = new Regex("^((max)|(min)|(mean)|(stdev))\\(.*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex s_isFunction = new Regex("^([^*\\-+\\/]+)\\(.*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_Vbase = new Regex("^Vbase$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_Xmin = new Regex("^Xmin", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_Xmax = new Regex("^Xmax", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_Xavg = new Regex("^Xavg", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
+        private static readonly Regex s_Char = new Regex("[^a-z0-9*\\-+\\s\\(\\)]", RegexOptions.Compiled);
 
     }
 
