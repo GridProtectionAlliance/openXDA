@@ -163,7 +163,7 @@ const StaticSetPoint = (props: IProps) => {
                             <SeveritySelect />
                         </div>
                     </div>
-                    {factors.map((item, i) => < FactorRow Factor={item} index={i} />)}
+                    {factors.map((item, i) => <FactorRow key={i} Factor={item} index={i} />)}
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             <div className="btn-group mr-2" role="group" style={{ padding: '5px' }}>
