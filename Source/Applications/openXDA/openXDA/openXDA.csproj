@@ -4402,6 +4402,8 @@
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\GenSettings.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\StaticAlarm.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\StaticWizzardSlice.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmDaySlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmDayGroupSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\ChannelAlarmGroupSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\ChannelOverviewSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\HistoryTestSlice.tsx" />

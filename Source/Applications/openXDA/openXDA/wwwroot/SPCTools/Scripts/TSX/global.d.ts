@@ -34,7 +34,9 @@ export namespace Redux {
         ChannelAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
         StaticWizzard: StaticWizzard.IState,
         GeneralSettings: SPCTools.ISettingsState,
-        HistoryTest: SPCTools.IHistoryTestState
+        HistoryTest: SPCTools.IHistoryTestState,
+        AlarmDay: State<DynamicWizzard.IAlarmDay>,
+        AlarmDayGroup: State<DynamicWizzard.IAlarmDayGroup>
     }
 
 
@@ -171,6 +173,13 @@ export namespace StaticWizzard {
     export type setPointType = ('upper'|'lower')
 }
 
+export namespace DynamicWizzard {
+
+    export interface IAlarmDayGroup { ID: number, Description: string, AlarmDayIDs: number[] }
+
+    export interface IAlarmDay { ID: number, Name: string }
+
+}
 export namespace openXDA {
 
     // The following openXDA Modles are partial only since We don't neccesarrily need everything in SPC Tools

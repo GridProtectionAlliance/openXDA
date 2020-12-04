@@ -30,6 +30,8 @@ import GeneralSettingsReducer from './GeneralSettingsSlice';
 import HistoryTestReducer from './HistoryTestSlice';
 import ChannelOverviewReducer from './ChannelOverviewSlice';
 import ChannelAlarmGroupReducer from './ChannelAlarmGroupSlice';
+import AlarmDayReducer from './AlarmDaySlice';
+import AlarmDayGroupReducer from './AlarmDayGroupSlice'
 
 export default configureStore({
     reducer: {
@@ -38,6 +40,8 @@ export default configureStore({
         HistoryTest: HistoryTestReducer,
         ChannelOverview: ChannelOverviewReducer,
         ChannelAlarmGroup: ChannelAlarmGroupReducer,
+        AlarmDay: AlarmDayReducer,
+        AlarmDayGroup: AlarmDayGroupReducer
 
     }
 });

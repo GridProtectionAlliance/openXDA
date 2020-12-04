@@ -39,6 +39,13 @@ namespace openXDA.Model
 
     }
 
-    
+    /// <summary>
+    /// View of <see cref="AlarmDayGroup"/> for UI
+    /// </summary>
+    public class AlarmDayGroupView: AlarmDayGroup
+    {
+        public int? AlarmDayID { get; set; }
+    }
+
 
 }

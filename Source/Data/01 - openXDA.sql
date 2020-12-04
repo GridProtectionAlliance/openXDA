@@ -3138,6 +3138,8 @@ CREATE TABLE ALarmDayGroupAlarmDay (
 )
 GO
 
+
+
 -- Views for UI --
 CREATE VIEW AlarmGroupView AS 
 SELECT 
@@ -3199,6 +3201,15 @@ FROM
 	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
 	AlarmSeverity ON Alarm.SeverityID = AlarmSeverity.ID
 GO
+
+CREATE VIEW AlarmDayGroupView AS SELECT
+	AlarmDayGroup.ID,
+	Description,
+	AlarmDayID
+	FROM
+	ALarmDayGroupAlarmDay LEFT JOIN AlarmDayGroup ON ALarmDayGroupAlarmDay.AlarmDayGroupID = AlarmDayGroup.ID
+GO
+
 -- Defaults --
 
 INSERT INTO AlarmType(Name, Description) VALUES ('Upper Limit', 'Triggered when setpoint is exceeded')
@@ -4332,26 +4343,15 @@ GO
 CREATE VIEW ChannelDetail
 AS
 SELECT
-    Channel.ID,
-     Channel.MeterID,
+    Channel.*,
      Meter.AssetKey AS MeterKey,
      Meter.Name AS MeterName,
-     Channel.AssetID,
      Asset.AssetKey AS AssetKey,
      Asset.AssetName,
-     Channel.MeasurementTypeID,
      MeasurementType.Name AS MeasurementType,
-     Channel.MeasurementCharacteristicID,
      MeasurementCharacteristic.Name AS MeasurementCharacteristic,
-     Channel.PhaseID,
      Phase.Name AS Phase,
-     Channel.Name,
-     Channel.SamplesPerHour,
-     Channel.PerUnitValue,
-     Channel.HarmonicGroup,
      Series.SourceIndexes AS Mapping,
-     Channel.Description,
-     Channel.Enabled,
      Series.SeriesTypeID,
      SeriesType.Name AS SeriesType
  FROM

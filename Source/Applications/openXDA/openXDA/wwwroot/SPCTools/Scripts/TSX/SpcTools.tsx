@@ -34,6 +34,8 @@ import store from './Store/Store';
 import { fetchAlarmTypes, fetchMeasurmentTypes, fetchSeverities } from './Store/GeneralSettingsSlice';
 import { selectPage, setPage } from './Store/GeneralSettingsSlice';
 import { ResetWizzard } from './StaticAlarm/StaticWizzardSlice';
+import { FetchAlarmDay } from './Store/AlarmDaySlice';
+import { FetchAlarmDayGroup } from './Store/AlarmDayGroupSlice';
 
 
 declare var homePath: string;
@@ -73,7 +75,8 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
 store.dispatch(fetchAlarmTypes());
 store.dispatch(fetchMeasurmentTypes());
 store.dispatch(fetchSeverities());
-
+store.dispatch(FetchAlarmDay());
+store.dispatch(FetchAlarmDayGroup());
 
 
 ReactDOM.render(<Provider store={store}><SPCTools/></Provider>, document.getElementById('body'));

@@ -91,4 +91,18 @@ namespace openXDA.Controllers.WebAPI
     public class MeterDetailController : ModelController<MeterDetail> {
         protected override bool AllowSearch => true;
     }
+
+    [RoutePrefix("api/AlarmDay")]
+    public class AlarmDayController : ModelController<AlarmDay>
+    {
+        protected override bool ViewOnly => true;
+    }
+
+    [RoutePrefix("api/AlarmDayGroup")]
+    public class AlarmDayGroupController : ModelController<AlarmDayGroupView>
+    {
+        protected override bool ViewOnly => true;
+    } 
+
+
 }
