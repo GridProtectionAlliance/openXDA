@@ -60,6 +60,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Alarms\AlarmGroups\AlarmDay.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmDayGroup.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmDayGroupAlarmDay.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmValue.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmFactor.cs" />
     <Compile Include="Alarms\AlarmGroups\Alarm.cs" />

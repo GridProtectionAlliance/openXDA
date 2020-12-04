@@ -3125,6 +3125,19 @@ CREATE TABLE AlarmLog
 )
 GO
 
+CREATE TABLE ALarmDayGroup (
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	Description  VARCHAR(50)
+)
+GO
+
+CREATE TABLE ALarmDayGroupAlarmDay (
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	AlarmDayID INT NULL References AlarmDay(ID),
+	AlarmDayGroupID INT NOT NULL References AlarmDayGroup(ID)
+)
+GO
+
 -- Views for UI --
 CREATE VIEW AlarmGroupView AS 
 SELECT 
