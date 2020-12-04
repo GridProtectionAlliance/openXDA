@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { SPCTools, StaticWizzard, openXDA } from '../global';
+import { SPCTools, StaticWizzard, openXDA, Redux } from '../global';
 import { Select } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import { addFactor, removeFactor, selectSeverity, updateSeverity, selectfactors, updateFactor, selectAlarmType, selectHistoricChannelList, selectStatStart, selectStatEnd, selectdataFilter, selectTokenizerRequest, updateSetPointEval, selectTokenizerResponse, selectfullHistoricDataSet } from './StaticWizzardSlice';
@@ -229,7 +229,7 @@ const StaticSetPoint = (props: IProps) => {
 
 const SetPointWindow = (props: { type: StaticWizzard.setPointType, setter: (value: string) => void }) => {
     const [text, setText] = React.useState<string>("");
-    const alarmGroup = useSelector((state: SPCTools.RootState) => state.StaticWizzard.AlarmGroup);
+    const alarmGroup = useSelector((state: Redux.StoreState) => state.StaticWizzard.AlarmGroup);
     React.useEffect(() => {
         let handle = setTimeout(() => {
            props.setter(text)

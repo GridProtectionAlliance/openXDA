@@ -24,7 +24,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import Filter, { FieldType } from '../CommonComponents/Filter';
-import { SPCTools, openXDA } from '../global';
+import { SPCTools, openXDA, Redux } from '../global';
 import Table from '@gpa-gemstone/react-table';
 import { cloneDeep, clone } from 'lodash';
 import { Input, Select } from '@gpa-gemstone/react-forms';
@@ -42,7 +42,7 @@ interface IProps {}
 
 // I think we can determine the setpoint type based on Formulas used so I will skip this for now - might have to re-visit this later
 const GeneralSettings = (props: IProps) => {
-    const group = useSelector((state: SPCTools.RootState) => state.StaticWizzard.AlarmGroup);
+    const group = useSelector((state: Redux.StoreState) => state.StaticWizzard.AlarmGroup);
     const channelCount = useSelector(selectChannelCount);
 
     const alarmTypes = useSelector(selectAlarmTypes);

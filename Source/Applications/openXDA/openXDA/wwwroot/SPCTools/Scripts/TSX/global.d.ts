@@ -32,6 +32,9 @@ export namespace Redux {
     export interface StoreState {
         ChannelOverview: State<SPCTools.IChannelOverview>,
         ChannelAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
+        StaticWizzard: StaticWizzard.IState,
+        GeneralSettings: SPCTools.ISettingsState,
+        HistoryTest: SPCTools.IHistoryTestState
     }
 
 
@@ -97,12 +100,6 @@ export namespace SPCTools {
 
     //Billy called this ChannelGroupType but that just gets confusing in context of SPC Tools since it is just a single dropdown and we don't actually care about Channel Groups in this context
     export interface IMeasurementType { ID: number, DisplayName: string, MeasurementTypeID: number, MeasurementCharacteristicID: number }
-
-    export interface RootState {
-        StaticWizzard: StaticWizzard.IState,
-        GeneralSettings: ISettingsState,
-        HistoryTest: IHistoryTestState
-    }
 
     export interface ISettingsState {
         Tab: Page,

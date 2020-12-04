@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { SPCTools, StaticWizzard, openXDA } from '../global';
+import { SPCTools, StaticWizzard, openXDA, Redux } from '../global';
 import RequestHandle from './RequestHandle';
 import _ from 'lodash';
 import { selectTokenizerRequest, selectAffectedChannels } from '../StaticAlarm/StaticWizzardSlice';
@@ -34,7 +34,7 @@ declare var userIsAdmin: boolean;
 //Thunks to load general data
 export const loadTest = createAsyncThunk('HistoryTest/loadTest', async (arg: number, thunkAPI) => {
     if (arg == -1)
-        return await loadStaticWizzardTest((thunkAPI.getState() as SPCTools.RootState))
+        return await loadStaticWizzardTest((thunkAPI.getState() as Redux.StoreState))
     else
         return
     //Eventually we can also load Tests for AlarmGroups out of the DB here
@@ -85,13 +85,13 @@ export default HistoryTestSlice.reducer;
 export const { setDate } = HistoryTestSlice.actions;
 
 //Selectors
-export const selectIsLoading = (state: SPCTools.RootState) => state.HistoryTest.loading;
-export const selectResultSummary = (state: SPCTools.RootState) => state.HistoryTest.result;
-export const selectDateRange = (state: SPCTools.RootState) => state.HistoryTest.time;
+export const selectIsLoading = (state: Redux.StoreState) => state.HistoryTest.loading;
+export const selectResultSummary = (state: Redux.StoreState) => state.HistoryTest.result;
+export const selectDateRange = (state: Redux.StoreState) => state.HistoryTest.time;
 
 // Async Functions
 
-function loadStaticWizzardTest(state: SPCTools.RootState): JQuery.jqXHR<SPCTools.IChannelTest[]> {
+function loadStaticWizzardTest(state: Redux.StoreState): JQuery.jqXHR<SPCTools.IChannelTest[]> {
     let request = {
         AlarmFactors: state.StaticWizzard.AlarmFactors.map(i => i.Value),
         SetPointRequest: selectTokenizerRequest(state),

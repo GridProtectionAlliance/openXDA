@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { SPCTools, StaticWizzard, openXDA } from '../global';
+import { SPCTools, StaticWizzard, openXDA, Redux } from '../global';
 import RequestHandle from './RequestHandle';
 import _ from 'lodash';
 
@@ -109,13 +109,13 @@ export default GeneralSettingsSlice.reducer;
 export const { setPage } = GeneralSettingsSlice.actions;
 
 //Selectors
-export const selectIsLoading = (state: SPCTools.RootState) => state.GeneralSettings.loadingAlarmTypes || state.GeneralSettings.loadingMeasurementTypes || state.GeneralSettings.loadingSeverities;
+export const selectIsLoading = (state: Redux.StoreState) => state.GeneralSettings.loadingAlarmTypes || state.GeneralSettings.loadingMeasurementTypes || state.GeneralSettings.loadingSeverities;
 
-export const selectPage = (state: SPCTools.RootState) => state.GeneralSettings.Tab;
+export const selectPage = (state: Redux.StoreState) => state.GeneralSettings.Tab;
 
-export const selectAlarmTypes = (state: SPCTools.RootState) => state.GeneralSettings.AlarmTypes;
-export const selectMeasurmentTypes = (state: SPCTools.RootState) => state.GeneralSettings.MeasurementTypes;
-export const selectSeverities = (state: SPCTools.RootState) => state.GeneralSettings.Severities;
+export const selectAlarmTypes = (state: Redux.StoreState) => state.GeneralSettings.AlarmTypes;
+export const selectMeasurmentTypes = (state: Redux.StoreState) => state.GeneralSettings.MeasurementTypes;
+export const selectSeverities = (state: Redux.StoreState) => state.GeneralSettings.Severities;
 // Async Functions
 
 function getMeasurementTypes(): JQuery.jqXHR<string> {

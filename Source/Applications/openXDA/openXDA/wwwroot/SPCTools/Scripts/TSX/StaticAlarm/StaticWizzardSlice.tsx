@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 import { createSlice, createAsyncThunk, PayloadAction, createSelector, Selector } from '@reduxjs/toolkit';
-import { SPCTools, StaticWizzard, openXDA } from '../global';
+import { SPCTools, StaticWizzard, openXDA, Redux } from '../global';
 import { stringify } from 'querystring';
 import { dispatch } from 'd3';
 import RequestHandle from '../store/RequestHandle';
@@ -36,14 +36,14 @@ const handles = new RequestHandle();
 
 // Thunk For Reseting Wizzar
 export const ResetWizzard = createAsyncThunk('StaticWizzard/ResetWizzard', (_, thunkAPI) => {
-    thunkAPI.dispatch(StaticWizzardSlice.actions.reset((thunkAPI.getState() as SPCTools.RootState).GeneralSettings));
+    thunkAPI.dispatch(StaticWizzardSlice.actions.reset((thunkAPI.getState() as Redux.StoreState).GeneralSettings));
 
 })
 
 //Thunk for Updating MeterList
 export const updateSelectedMeters = createAsyncThunk('StaticWizzard/updateSelectedMeters', (meters: openXDA.IMeter[], thunkAPI) => {
     // Update meters
-    if (meters.length == (thunkAPI.getState() as SPCTools.RootState).StaticWizzard.SelectedMeterID.length)
+    if (meters.length == (thunkAPI.getState() as Redux.StoreState).StaticWizzard.SelectedMeterID.length)
         return;
 
     thunkAPI.dispatch(StaticWizzardSlice.actions.updateSelectedMeters(meters.map(m => m.ID)));
@@ -56,22 +56,22 @@ export const updateSelectedMeters = createAsyncThunk('StaticWizzard/updateSelect
 
 //extra thunks to update Voltage and BaseKV
 export const updateVoltageOptions = createAsyncThunk('StaticWizzard/updateVoltageOptions', async (_, thunkAPI) => {
-    return await getVoltages((thunkAPI.getState() as SPCTools.RootState).StaticWizzard.SelectedMeterID, (thunkAPI.getState() as SPCTools.RootState).StaticWizzard.SelectedMeasurmentTypeID) 
+    return await getVoltages((thunkAPI.getState() as Redux.StoreState).StaticWizzard.SelectedMeterID, (thunkAPI.getState() as Redux.StoreState).StaticWizzard.SelectedMeasurmentTypeID) 
 })
 
 export const updatePhaseOptions = createAsyncThunk('StaticWizzard/updatePhaseOptions', async (_, thunkAPI) => {
-    return await getPhases((thunkAPI.getState() as SPCTools.RootState).StaticWizzard.SelectedMeterID, (thunkAPI.getState() as SPCTools.RootState).StaticWizzard.SelectedMeasurmentTypeID)
+    return await getPhases((thunkAPI.getState() as Redux.StoreState).StaticWizzard.SelectedMeterID, (thunkAPI.getState() as Redux.StoreState).StaticWizzard.SelectedMeasurmentTypeID)
 })
 
 //Thunk For Updating channelCount
 export const updateChannelCount = createAsyncThunk('StaticWizzard/updateChannelCount', async (_, thunkAPI) => {
-    return await getChannelCount((thunkAPI.getState() as SPCTools.RootState).StaticWizzard)
+    return await getChannelCount((thunkAPI.getState() as Redux.StoreState).StaticWizzard)
 })
 
 
 // Thunk to Save AlarmGroup
 export const SaveAlarmGroup = createAsyncThunk('StaticWizzard/Save', async (_, thunkAPI) => {
-    return await saveGroup(thunkAPI.getState() as SPCTools.RootState);
+    return await saveGroup(thunkAPI.getState() as Redux.StoreState);
 
 })
 
@@ -263,70 +263,70 @@ export const {
 export default StaticWizzardSlice.reducer;
 
 // Selectors
-export const SelectTab = (state: SPCTools.RootState) => state.StaticWizzard.Step;
+export const SelectTab = (state: Redux.StoreState) => state.StaticWizzard.Step;
 
-export const selectStatus = (state: SPCTools.RootState) => (selectIsLoading(state) ? 'loading' : 'idle') as SPCTools.LoadingState;
+export const selectStatus = (state: Redux.StoreState) => (selectIsLoading(state) ? 'loading' : 'idle') as SPCTools.LoadingState;
 
-export const selectChannelCount = (state: SPCTools.RootState) => (state.StaticWizzard.LoadingChannelCount? -1 : state.StaticWizzard.SelectedChannelCount);
+export const selectChannelCount = (state: Redux.StoreState) => (state.StaticWizzard.LoadingChannelCount? -1 : state.StaticWizzard.SelectedChannelCount);
 
-export const selectMeasurmentTypeId = (state: SPCTools.RootState) => state.StaticWizzard.SelectedMeasurmentTypeID;
-export const selectIntervallDataType = (state: SPCTools.RootState) => state.StaticWizzard.SelectedIntervallDataType;
+export const selectMeasurmentTypeId = (state: Redux.StoreState) => state.StaticWizzard.SelectedMeasurmentTypeID;
+export const selectIntervallDataType = (state: Redux.StoreState) => state.StaticWizzard.SelectedIntervallDataType;
 
-export const selectLoadingVoltages = (state: SPCTools.RootState) => state.StaticWizzard.LoadingVoltages;
-export const selectAvailableVoltages = (state: SPCTools.RootState) => state.StaticWizzard.AvailableVoltages;
-export const selectCurrentVoltages = (state: SPCTools.RootState) => state.StaticWizzard.SelectedVoltages;
-export const selectSelectedMeterId = (state: SPCTools.RootState) => state.StaticWizzard.SelectedMeterID;
+export const selectLoadingVoltages = (state: Redux.StoreState) => state.StaticWizzard.LoadingVoltages;
+export const selectAvailableVoltages = (state: Redux.StoreState) => state.StaticWizzard.AvailableVoltages;
+export const selectCurrentVoltages = (state: Redux.StoreState) => state.StaticWizzard.SelectedVoltages;
+export const selectSelectedMeterId = (state: Redux.StoreState) => state.StaticWizzard.SelectedMeterID;
 
-export const selectLoadingPhases = (state: SPCTools.RootState) => state.StaticWizzard.LoadingPhases;
-export const selectAvailablePhases = (state: SPCTools.RootState) => state.StaticWizzard.AvailablePhases;
-export const selectCurrentPhases = (state: SPCTools.RootState) => state.StaticWizzard.SelectedPhases;
+export const selectLoadingPhases = (state: Redux.StoreState) => state.StaticWizzard.LoadingPhases;
+export const selectAvailablePhases = (state: Redux.StoreState) => state.StaticWizzard.AvailablePhases;
+export const selectCurrentPhases = (state: Redux.StoreState) => state.StaticWizzard.SelectedPhases;
 
-export const selectStatisticSettings = (state: SPCTools.RootState) => state.StaticWizzard.StatSource;
+export const selectStatisticSettings = (state: Redux.StoreState) => state.StaticWizzard.StatSource;
 
-export const selectSeverity = (state: SPCTools.RootState) => state.StaticWizzard.SelectedSeverityID;
-export const selectfactors = (state: SPCTools.RootState) => state.StaticWizzard.AlarmFactors;
+export const selectSeverity = (state: Redux.StoreState) => state.StaticWizzard.SelectedSeverityID;
+export const selectfactors = (state: Redux.StoreState) => state.StaticWizzard.AlarmFactors;
 export const selectAlarmType = createSelector(
-    (state: SPCTools.RootState) => state.StaticWizzard.AlarmGroup.AlarmTypeID,
-    (state: SPCTools.RootState) => state.GeneralSettings.AlarmTypes,
+    (state: Redux.StoreState) => state.StaticWizzard.AlarmGroup.AlarmTypeID,
+    (state: Redux.StoreState) => state.GeneralSettings.AlarmTypes,
     (selectedID, alarmTypes) => {
         return alarmTypes.find(item => item.ID == selectedID)
     });
 
-export const selectHistoricChannelList = (state: SPCTools.RootState) => state.StaticWizzard.StatChannels;
+export const selectHistoricChannelList = (state: Redux.StoreState) => state.StaticWizzard.StatChannels;
 
-export const selectStatStart = (state: SPCTools.RootState) => state.StaticWizzard.StatSource.StartDate;
-export const selectStatEnd = (state: SPCTools.RootState) => state.StaticWizzard.StatSource.EndDate;
-export const selectdataFilter = (state: SPCTools.RootState) => state.StaticWizzard.StatSource.DataFilter;
+export const selectStatStart = (state: Redux.StoreState) => state.StaticWizzard.StatSource.StartDate;
+export const selectStatEnd = (state: Redux.StoreState) => state.StaticWizzard.StatSource.EndDate;
+export const selectdataFilter = (state: Redux.StoreState) => state.StaticWizzard.StatSource.DataFilter;
 
-export const selectTokenizerResponse = (state: SPCTools.RootState) => state.StaticWizzard.SetPointEvaluation;
+export const selectTokenizerResponse = (state: Redux.StoreState) => state.StaticWizzard.SetPointEvaluation;
 
-export const selectfullHistoricDataSet = (state: SPCTools.RootState) => state.StaticWizzard.StatChannels.length == state.StaticWizzard.SelectedChannelCount;
+export const selectfullHistoricDataSet = (state: Redux.StoreState) => state.StaticWizzard.StatChannels.length == state.StaticWizzard.SelectedChannelCount;
 
-export const selectAffectedChannels = (state: SPCTools.RootState) => state.StaticWizzard.AffectedChannels;
+export const selectAffectedChannels = (state: Redux.StoreState) => state.StaticWizzard.AffectedChannels;
 
 export const selectTokenizerRequest = createSelector(
-    (state: SPCTools.RootState) => state.StaticWizzard.StatSource.DataFilter,
-    (state: SPCTools.RootState) => state.StaticWizzard.StatChannels,
-    (state: SPCTools.RootState) => state.StaticWizzard.StatSource.StartDate,
-    (state: SPCTools.RootState) => state.StaticWizzard.StatSource.EndDate,
-    (state: SPCTools.RootState) => state.StaticWizzard.AlarmGroup.Formula,
+    (state: Redux.StoreState) => state.StaticWizzard.StatSource.DataFilter,
+    (state: Redux.StoreState) => state.StaticWizzard.StatChannels,
+    (state: Redux.StoreState) => state.StaticWizzard.StatSource.StartDate,
+    (state: Redux.StoreState) => state.StaticWizzard.StatSource.EndDate,
+    (state: Redux.StoreState) => state.StaticWizzard.AlarmGroup.Formula,
     (filter, channels, start, end, value) => {
         return { Value: value, Channels: channels.map(item => item.ID), DataFilter: filter, EndDate: end, StartDate: start } as SPCTools.ITokenizerRequest;
     });
 
 export const selectErrors = createSelector(
-    ((state: SPCTools.RootState) => (state.StaticWizzard.Step)) as Selector<SPCTools.RootState,SPCTools.WizzardTab>,
-    (state: SPCTools.RootState) => (state.StaticWizzard.SelectedChannelCount > 0),
-    (state: SPCTools.RootState) => (state.StaticWizzard.AlarmGroup.Name != undefined && state.StaticWizzard.AlarmGroup.Name.length > 0),
-    (state: SPCTools.RootState) => (state.StaticWizzard.SelectedMeterID.length > 0),
-    (state: SPCTools.RootState) => (state.StaticWizzard.SelectedVoltages.some(i => i)),
-    (state: SPCTools.RootState) => (state.StaticWizzard.SelectedPhases.some(i => i)),
-    (state: SPCTools.RootState) => (state.StaticWizzard.StatSource),
-    (state: SPCTools.RootState) => (state.StaticWizzard.StatChannels.length > 0),
-    (state: SPCTools.RootState) => (state.StaticWizzard.StatChannels.length == state.StaticWizzard.SelectedChannelCount),
-    (state: SPCTools.RootState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.Valid) ,
-    (state: SPCTools.RootState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.IsScalar),
-    (state: SPCTools.RootState) => (state.StaticWizzard.AlarmFactors),
+    ((state: Redux.StoreState) => (state.StaticWizzard.Step)) as Selector<Redux.StoreState,SPCTools.WizzardTab>,
+    (state: Redux.StoreState) => (state.StaticWizzard.SelectedChannelCount > 0),
+    (state: Redux.StoreState) => (state.StaticWizzard.AlarmGroup.Name != undefined && state.StaticWizzard.AlarmGroup.Name.length > 0),
+    (state: Redux.StoreState) => (state.StaticWizzard.SelectedMeterID.length > 0),
+    (state: Redux.StoreState) => (state.StaticWizzard.SelectedVoltages.some(i => i)),
+    (state: Redux.StoreState) => (state.StaticWizzard.SelectedPhases.some(i => i)),
+    (state: Redux.StoreState) => (state.StaticWizzard.StatSource),
+    (state: Redux.StoreState) => (state.StaticWizzard.StatChannels.length > 0),
+    (state: Redux.StoreState) => (state.StaticWizzard.StatChannels.length == state.StaticWizzard.SelectedChannelCount),
+    (state: Redux.StoreState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.Valid) ,
+    (state: Redux.StoreState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.IsScalar),
+    (state: Redux.StoreState) => (state.StaticWizzard.AlarmFactors),
     (step, channelCount, name, meterCount, voltageCount, phaseCount,  statSource, selectedhistory, fullHistory, setPoint, scalarSetpoint, alarmFactors) => {
         let result = [] as StaticWizzard.IRequirement[];
         if (step == 'general') {
@@ -357,12 +357,12 @@ export const selectErrors = createSelector(
     });
 
 export const selectChannelRequest = createSelector(
-    (state: SPCTools.RootState) => state.StaticWizzard.SelectedMeterID,
-    (state: SPCTools.RootState) => state.StaticWizzard.SelectedMeasurmentTypeID,
-    (state: SPCTools.RootState) => state.StaticWizzard.AvailableVoltages,
-    (state: SPCTools.RootState) => state.StaticWizzard.SelectedVoltages,
-    (state: SPCTools.RootState) => state.StaticWizzard.AvailablePhases,
-    (state: SPCTools.RootState) => state.StaticWizzard.SelectedPhases,
+    (state: Redux.StoreState) => state.StaticWizzard.SelectedMeterID,
+    (state: Redux.StoreState) => state.StaticWizzard.SelectedMeasurmentTypeID,
+    (state: Redux.StoreState) => state.StaticWizzard.AvailableVoltages,
+    (state: Redux.StoreState) => state.StaticWizzard.SelectedVoltages,
+    (state: Redux.StoreState) => state.StaticWizzard.AvailablePhases,
+    (state: Redux.StoreState) => state.StaticWizzard.SelectedPhases,
 
     (MeterID, MeasurmentTypeID, availableVoltages, selectedVoltages, availablePhases, selectedPhases) => {
         return {
@@ -424,7 +424,7 @@ function getChannelCount(state: StaticWizzard.IState): JQuery.jqXHR<number> {
 
 
 
-function saveGroup(state: SPCTools.RootState): JQuery.jqXHR {
+function saveGroup(state: Redux.StoreState): JQuery.jqXHR {
     let request = {
         AlarmGroup: state.StaticWizzard.AlarmGroup,
         TokenizerRequest: selectTokenizerRequest(state),
