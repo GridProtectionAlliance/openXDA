@@ -23,46 +23,16 @@
 
 using GSF;
 using GSF.Data;
-using GSF.Data.Model;
-using GSF.Identity;
-using GSF.TimeSeries.Adapters;
-using GSF.Web;
-using GSF.Web.Model;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using openHistorian.XDALink;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Data;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web.Http;
+using HIDS;
+
 
 namespace openXDA.Controllers
 {
-
-    /// <summary>
-    /// Temporary Points until master gets merged in with HIDDS DATA
-    /// </summary>
-    public class Point
-    {
-        public string Tag { get; set; }
-        public double Minimum { get; set; }
-        public double Maximum { get; set; }
-        public double Average { get; set; }
-        public uint QualityFlags { get; set; }
-        public DateTime Timestamp { get; set; }
-    }
 
     /// <summary>
     /// Filter for Data when applying Setpoints
