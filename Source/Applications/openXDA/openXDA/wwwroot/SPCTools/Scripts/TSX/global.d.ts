@@ -19,12 +19,35 @@
 //  10/20/2020 - C. Lackner
 //       Generated original version of source code.
 //
-//******************************************************************************************************
 
-declare var homePath: string;
-declare var userIsAdmin: boolean;
+
+//******************************************************************************************************
+declare global {
+    var homePath: string;
+    var userIsAdmin: boolean;
+    var apiHomePath: string;
+}
+
+export namespace Redux {
+    export interface StoreState {
+        ChannelOverview: State<SPCTools.IChannelOverview>,
+        ChannelAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
+    }
+
+
+    interface State<T> {
+        Status: SPCTools.Status,
+        Data: T[],
+        Error: null | string,
+        SortField: keyof T,
+        Ascending: boolean,
+        Filters?: { key: keyof T, Value: string }[]
+    }
+}
 
 export namespace SPCTools {
+    export type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
+
     export type Page = ('Home' | 'Static' | 'Dynamic' | 'Meter' | 'Channel');
 
     export type LoadingState = ('loading' | 'idle' | 'error')
@@ -33,7 +56,11 @@ export namespace SPCTools {
 
     export type IntervallDataType = ('Minimum' | 'Maximum' | 'Average');
 
-    export interface IAlarmGroupView { ID: number, Name: string, AlarmTypeID: number, Formula: string, Channels: number, Meters: number, AlarmSeverityID: number }
+    export interface IAlarmGroupView { ID: number, Name: string, AlarmTypeID: number, Formula: string, Channels: number, Meters: number, AlarmSeverityID: number, AlarmSeverity: string }
+
+    export interface IChannelOverview { ID: number, Meter: string, Channel: string, Type: string, Phase: string, Asset: string }
+
+    export interface IChannelAlarmGroup { ID: number, ChannelID: number, Name: string, AlarmSeverityID: number, AlarmSeverity: string, TimeInAlarm: string }
 
     export interface IAlarmGroup { ID: number, Name: string, AlarmTypeID: number, Formula: string }
 

@@ -83,6 +83,8 @@
     <Compile Include="Channels\ChannelData.cs" />
     <Compile Include="Channels\ChannelGroup.cs" />
     <Compile Include="Channels\ChannelGroupType.cs" />
+    <Compile Include="Channels\ChannelAlarmGroup.cs" />
+    <Compile Include="Channels\ChannelOverview.cs" />
     <Compile Include="Dashboard\ContourClasses.cs" />
     <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />

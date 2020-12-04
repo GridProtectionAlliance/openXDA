@@ -26,6 +26,8 @@ import * as ReactDOM from 'react-dom';
 import NavBar from './NavBar';
 import { SPCTools } from './global';
 import AlarmGroupHome from './AlarmGroup/AlarmGroup';
+import ChannelOverview from './ChannelOverview/ChannelOverview';
+
 import StaticAlarmHome from './StaticAlarm/StaticAlarm';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import store from './Store/Store';
@@ -58,7 +60,7 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
                         {(page == 'Static' ? <StaticAlarmHome /> : null)}
                         {(page == 'Dynamic' ? <p> New Dynamic Alarm </p> : null)}
                         {(page == 'Meter' ? <p> Meter Overview </p> : null)}
-                        {(page == 'Channel' ? <p> Channel Overview </p> : null)}                               
+                        {(page == 'Channel' ? <ChannelOverview/> : null)}                               
                     </React.Suspense>
                 </div>
             </div>

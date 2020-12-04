@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  store.tsx - Gbtc
+//  Controllers.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,28 +16,39 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  10/29/2020 - C. Lackner
+//  12/03/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-declare var homePath: string;
-declare var userIsAdmin: boolean;
+using openXDA.Model;
+using System.Web.Http;
 
-import { configureStore } from '@reduxjs/toolkit';
-import StaticWizzardReducer from '../StaticAlarm/StaticWizzardSlice';
-import GeneralSettingsReducer from './GeneralSettingsSlice';
-import HistoryTestReducer from './HistoryTestSlice';
-import ChannelOverviewReducer from './ChannelOverviewSlice';
-import ChannelAlarmGroupReducer from './ChannelAlarmGroupSlice';
-
-export default configureStore({
-    reducer: {
-        StaticWizzard: StaticWizzardReducer,
-        GeneralSettings: GeneralSettingsReducer,
-        HistoryTest: HistoryTestReducer,
-        ChannelOverview: ChannelOverviewReducer,
-        ChannelAlarmGroup: ChannelAlarmGroupReducer,
-
+namespace openXDA.Controllers
+{
+    [RoutePrefix("api/SPCTools/AlarmGroupView")]
+    public class AlarmGroupViewController : ModelController<AlarmGroupView>
+    {
+        protected override bool ViewOnly => true;
+        protected override bool AllowSearch => true;
     }
-});
+
+    [RoutePrefix("api/SPCTools/ChannelOverview")]
+    public class ChannelOverviewController : ModelController<ChannelOverview>
+    {
+        protected override bool ViewOnly => true;
+        protected override bool AllowSearch => true;
+    }
+
+    [RoutePrefix("api/SPCTools/ChannelAlarmGroup")]
+    public class ChannelAlarmGroupController : ModelController<ChannelAlarmGroup>
+    {
+        protected override bool ViewOnly => true;
+        protected override bool AllowSearch => false;
+        protected override bool HasParent => true;
+        protected override string ParentKey => "ChannelID";
+    }
+
+
+
+}

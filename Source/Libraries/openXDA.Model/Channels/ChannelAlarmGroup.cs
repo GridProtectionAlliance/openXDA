@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  SPCTools/AlarmGroupController.cs - Gbtc
+//  ChannelAlarmGroup.cs - Gbtc
 //
-//  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,42 +16,29 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  10/23/2020 - C. Lackner
+//  12/03/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Data;
+
 using GSF.Data.Model;
-using GSF.Identity;
-using GSF.Web;
-using GSF.Web.Model;
-using Newtonsoft.Json;
-using openHistorian.XDALink;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Data;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Http;
 
-namespace openXDA.Controllers
+namespace openXDA.Model
 {
-    [RoutePrefix("api/SPCTools/AlarmGroupView")]
-    public class AlarmGroupViewController : ModelController<AlarmGroupView>
+    [TableName("ChannelAlarmGroupView")]
+    public class ChannelAlarmGroup
     {
-        protected override bool ViewOnly => true;
-        protected override bool AllowSearch => true;
+        public int ID { get; set; }
+        public int ChannelID { get; set; }
+        public string Name { get; set; }
+        public string AlarmSeverity { get; set; }
+        public string TimeInAlarm { get; set; }
+        public int AlarmSeverityID { get; set; }
     }
-
 }

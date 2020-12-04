@@ -3123,12 +3123,60 @@ SELECT
 	AlarmGroup.Name,
 	AlarmGroup.AlarmTypeID,
 	AlarmGroup.Formula,
-	0 AS Channels,
-	0 AS Meters,
-	0 AS AlarmSeverityID
-	FROM AlarmGroup
+	AlarmSeverity.ID as AlarmSeverityID,
+	AlarmSeverity.Name as AlarmSeverity,
+	COUNT(DISTINCT Channel.ID) as Channels,
+	COUNT(DISTINCT Channel.MeterID) as Meters
+	 
+FROM 
+	Alarm LEFT JOIN
+	AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
+	AlarmType ON AlarmGroup.AlarmTypeID = AlarmType.ID LEFT JOIN
+	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
+	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
+	AlarmSeverity ON Alarm.SeverityID = AlarmSeverity.ID
+GROUP BY
+	AlarmGroup.ID,
+	AlarmGroup.Name,
+	AlarmGroup.AlarmTypeID,
+	AlarmGroup.Formula,
+	AlarmSeverity.ID,
+	AlarmSeverity.Name
 GO
 
+CREATE VIEW ChannelOverviewView AS
+SELECT
+	Channel.ID,
+	Meter.Name as Meter,
+	Channel.Name as Channel,
+	MeasurementType.Name + ' ' + MeasurementCharacteristic.Name as Type,
+	Phase.Name as Phase,
+	Asset.AssetName as Asset
+FROM
+	Channel JOIN
+	Meter ON Meter.ID = Channel.MeterID JOIN
+	Asset ON Asset.ID = Channel.AssetID JOIN
+	Phase ON Phase.ID = Channel.PhaseID JOIN
+	MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID JOIN
+	MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID
+GO
+
+CREATE VIEW ChannelAlarmGroupView AS
+SELECT 
+	AlarmGroup.ID,
+	AlarmGroup.Name,
+	AlarmSeverity.ID as AlarmSeverityID,
+	AlarmSeverity.Name as AlarmSeverity,
+	Channel.ID as ChannelID,
+	'N/A' as TimeInAlarm
+	 
+FROM 
+	Alarm LEFT JOIN
+	AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
+	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
+	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
+	AlarmSeverity ON Alarm.SeverityID = AlarmSeverity.ID
+GO
 -- Defaults --
 
 INSERT INTO AlarmType(Name, Description) VALUES ('Upper Limit', 'Triggered when setpoint is exceeded')

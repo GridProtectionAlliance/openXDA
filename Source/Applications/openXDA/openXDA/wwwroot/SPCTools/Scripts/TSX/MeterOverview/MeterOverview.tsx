@@ -27,6 +27,12 @@ import Filter, { FieldType } from '../CommonComponents/Filter';
 import { SPCTools } from '../global';
 import Table from '@gpa-gemstone/react-table';
 
+
+declare var homePath: string;
+declare var apiHomePath: string;
+
+declare var userIsAdmin: boolean;
+
 const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
     const [filters, setFilters] = React.useState<Array<any>>([]);
     const [alarmGroupList, setAlarmGroupList] = React.useState<Array<SPCTools.IAlarmGroupView>>([]);
@@ -65,7 +71,7 @@ const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
     let searchCollumns = [{ label: 'Name', key: 'Name' as keyof SPCTools.IAlarmGroupView, type: 'string' as FieldType }]
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Filter<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchCollumns} SetFilter={setFilters} Direction='right'/>
+            <Filter<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchCollumns} SetFilter={setFilters}/>
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                 <div className="col-8" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
