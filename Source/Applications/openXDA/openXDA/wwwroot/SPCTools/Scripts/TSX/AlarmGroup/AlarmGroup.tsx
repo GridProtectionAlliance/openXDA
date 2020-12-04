@@ -23,8 +23,8 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import Filter, { FieldType } from '../CommonComponents/Filter';
-import { SPCTools } from '../global';
+import FilterObject from '../CommonComponents/Filter';
+import { SPCTools, Filter } from '../global';
 import Table from '@gpa-gemstone/react-table';
 
 const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
@@ -62,10 +62,10 @@ const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
 
 
 
-    let searchCollumns = [{ label: 'Name', key: 'Name' as keyof SPCTools.IAlarmGroupView, type: 'string' as FieldType }]
+    let searchColumns = [{ label: 'Name', key: 'Name', type: 'string' }] as Filter.IField<SPCTools.IAlarmGroupView>[]
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Filter<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchCollumns} SetFilter={setFilters} Direction='right'/>
+            <FilterObject<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchColumns} SetFilter={setFilters} Direction='right'/>
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                 <div className="col-8" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>

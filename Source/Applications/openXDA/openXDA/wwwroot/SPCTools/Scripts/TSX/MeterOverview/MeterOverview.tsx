@@ -22,8 +22,8 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import Filter, { FieldType } from '../CommonComponents/Filter';
-import { SPCTools, openXDA } from '../global';
+import FilterObject from '../CommonComponents/Filter';
+import { SPCTools, openXDA, Filter } from '../global';
 import Table from '@gpa-gemstone/react-table';
 import { useSelector, useDispatch } from 'react-redux';
 import { SortMeters, FilterMeters, SelectMeters, SelectMetersFilters, SelectMetersStatus, SelectMetersSortField, SelectMetersAscending, FetchMeters } from '../store/MeterSlice';
@@ -61,13 +61,13 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
     }, [MeterID]);
 
     let searchCollumns = [
-        { label: 'Meter', key: 'Name' as keyof openXDA.IMeter, type: 'string' as FieldType },
-        { label: 'Type', key: 'Make' as keyof openXDA.IMeter, type: 'string' as FieldType },
-    ];
+        { label: 'Meter', key: 'Name', type: 'string'},
+        { label: 'Type', key: 'Make', type: 'string'},
+    ] as Filter.IField<openXDA.IMeter>[];
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Filter<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} SetFilter={(filter) => dispatch(FilterMeters(filter))} Direction='right' />
+            <FilterObject<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} SetFilter={(filter) => dispatch(FilterMeters(filter))} Direction='right' />
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                     <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
