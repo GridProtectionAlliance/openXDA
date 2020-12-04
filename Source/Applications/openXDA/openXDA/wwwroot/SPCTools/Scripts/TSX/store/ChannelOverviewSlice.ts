@@ -61,7 +61,7 @@ export const ChannelOverviewSlice = createSlice({
             state.Status = 'idle';
             state.Error = null;
 
-            state.Data = action.payload as SPCTools.IChannelOverview[];
+            state.Data = JSON.parse(action.payload) as SPCTools.IChannelOverview[];
 
         });
         builder.addCase(FetchChannelOverviews.pending, (state, action) => {
@@ -93,7 +93,7 @@ export const SelectChannelOverviewsFilters = (state: Redux.StoreState) => state.
 
 // #region [ Async Functions ]
 
-function GetChannelOverview(filters, sort, asc): JQuery.jqXHR<SPCTools.IChannelOverview[]> {
+function GetChannelOverview(filters, sort, asc): JQuery.jqXHR<string> {
     return $.ajax({
         type: "POST",
         url: `${apiHomePath}api/SPCTools/ChannelOverview/SearchableList`,

@@ -22,8 +22,8 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import Filter, { FieldType } from '../CommonComponents/Filter';
-import { SPCTools } from '../global';
+import FilterObject from '../CommonComponents/Filter';
+import { SPCTools, Filter } from '../global';
 import Table from '@gpa-gemstone/react-table';
 import { useSelector, useDispatch } from 'react-redux';
 import { SortChannelOverviews, FilterChannelOverviews, SelectChannelOverviews, SelectChannelOverviewsFilters,SelectChannelOverviewsStatus, SelectChannelOverviewsSortField, SelectChannelOverviewsAscending, FetchChannelOverviews } from '../store/ChannelOverviewSlice';
@@ -60,17 +60,17 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
         dispatch(ChangeStatusChannelAlarmGroups());
     }, [channelID]);
 
-    let searchCollumns = [
-        { label: 'Meter', key: 'Meter' as keyof SPCTools.IChannelOverview, type: 'string' as FieldType },
-        { label: 'Channel', key: 'Channel' as keyof SPCTools.IChannelOverview, type: 'string' as FieldType },
-        { label: 'Type', key: 'Type' as keyof SPCTools.IChannelOverview, type: 'string' as FieldType },
-        { label: 'Phase', key: 'Phase' as keyof SPCTools.IChannelOverview, type: 'string' as FieldType },
-        { label: 'Asset', key: 'Asset' as keyof SPCTools.IChannelOverview, type: 'string' as FieldType },
-    ];
+    let searchColumns = [
+        { label: 'Meter', key: 'Meter', type: 'string' },
+        { label: 'Channel', key: 'Channel', type: 'string'},
+        { label: 'Type', key: 'Type', type: 'string' },
+        { label: 'Phase', key: 'Phase', type: 'string'},
+        { label: 'Asset', key: 'Asset', type: 'string'},
+    ] as Filter.IField<SPCTools.IChannelOverview>[];
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Filter<SPCTools.IChannelOverview> Id='Filter' CollumnList={searchCollumns} SetFilter={(filter) => dispatch(FilterChannelOverviews(filter))} Direction='right'/>
+            <FilterObject<SPCTools.IChannelOverview> Id='Filter' CollumnList={searchColumns} SetFilter={(filter) => dispatch(FilterChannelOverviews(filter))} Direction='right'/>
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                     <div className="col" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
@@ -112,7 +112,7 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
                             sortField={agSort}
                             ascending={agAsc}
                             onSort={(d) => {
-                                if (d.col == coSort)
+                                if (d.col == agSort)
                                     dispatch(SortChannelAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
                                 else
                                     dispatch(SortChannelAlarmGroups({ SortField: d.col, Ascending: agAsc }));

@@ -43,6 +43,9 @@ export namespace Redux {
         WizardPhaseOption: OptionState<openXDA.IPhase>,
         WizardVoltageOption: OptionState<number>,
         SeriesType: State<openXDA.ISeriesType>
+        Meter: State<openXDA.IMeter>,
+        MeterAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
+        AlarmGroupView: State<SPCTools.IAlarmGroupView>,
     }
 
 
@@ -52,16 +55,23 @@ export namespace Redux {
         Error: null | string,
         SortField: keyof T,
         Ascending: boolean,
-        Filters?: { key: keyof T, Value: string }[]
+        Filters?: Filter.IFilter<T>[]
     }
+}
 
+export namespace Filter {
+    export type FieldType = ('string' | 'number' | 'enum' | 'integer' | 'datetime' | 'boolean')
+    export interface IField<T> { label: string, key: keyof T, type: FieldType, enum?: Map<number, string> }
+    export type OperatorType = ('=' | '<>' | '>' | '<' | '>=' | '<=' | 'LIKE' | 'NOT LIKE' | 'IN' | 'NOT IN')
+    export interface IFilter<T> { FieldName: keyof T, SearchText: string, Operator: Filter.OperatorType, Type: Filter.FieldType }
 
-    interface OptionState<T> {
-        Status: SPCTools.Status,
-        Data: T[],
-        Error: null | string,
-        Selected: boolean[]
-    }
+}
+
+interface OptionState<T> {
+    Status: SPCTools.Status,
+    Data: T[],
+    Error: null | string,
+    Selected: boolean[]
 }
 
 export namespace SPCTools {

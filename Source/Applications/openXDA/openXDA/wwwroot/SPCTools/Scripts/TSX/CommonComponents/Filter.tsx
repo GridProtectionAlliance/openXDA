@@ -25,21 +25,18 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import _ from 'lodash';
 import { CheckBox, Select } from '@gpa-gemstone/react-forms'
+import { Filter } from '../global';
 
-interface IField<T> { label: string, key: keyof T, type: FieldType, enum?: Map<number,string> }
-export type FieldType = ('string' | 'number' | 'enum' | 'integer' | 'datetime' | 'boolean')
-type OperatorType = ('=' | '<>' | '>' | '<' | '>=' | '<=' | 'LIKE' | 'NOT LIKE' | 'IN' | 'NOT IN')
 interface IProps<T> {
-    CollumnList: Array<IField<T>>, Id: string, SetFilter: (filters: Array<IFilter<T>>) => void, defaultCollumn?: IField<T>, Direction?: 'left' | 'right'}
-interface IFilter<T> { FieldName: keyof T, SearchText: string, Operator: OperatorType, Type: FieldType }
+    CollumnList: Array<Filter.IField<T>>, Id: string, SetFilter: (filters: Filter.IFilter<T>[]) => void, defaultCollumn?: Filter.IField<T>, Direction?: 'left' | 'right'}
 
 export default function Filter<T>(props: IProps<T>) {
     const [hover, setHover] = React.useState<boolean>(false);
-    const [filters, setFilters] = React.useState<Array<IFilter<T>>>([]);
-    const [filter, setFilter] = React.useState<IFilter<T>>({ FieldName: props.CollumnList[0].key, SearchText: '', Operator: 'LIKE', Type: props.CollumnList[0].type });
+    const [filters, setFilters] = React.useState<Filter.IFilter<T>[]>([]);
+    const [filter, setFilter] = React.useState<Filter.IFilter<T>>({ FieldName: props.CollumnList[0].key, SearchText: '', Operator: 'LIKE', Type: props.CollumnList[0].type });
 
     const [search, setSearch] = React.useState<string>("");
-    const [searchFilter, setSearchFilter] = React.useState<IFilter<T>>(null);
+    const [searchFilter, setSearchFilter] = React.useState<Filter.IFilter<T>>(null);
 
     // Update SearchFilter if there are 3+ Character and only do it every 500ms to avoid hammering the server while typing
     React.useEffect(() => {
@@ -65,7 +62,7 @@ export default function Filter<T>(props: IProps<T>) {
         return () => { }
     }, [searchFilter])
 
-    function deleteFilter(f: IFilter<T>) {
+    function deleteFilter(f: Filter.IFilter<T>) {
         let index = filters.findIndex(fs => fs == f);
         let filts = _.cloneDeep(filters);
         filts.splice(index, 1);
@@ -131,7 +128,7 @@ export default function Filter<T>(props: IProps<T>) {
                             <button type="button" className="close" onClick={() => ($('#' + props.Id)as any).modal('hide')}>&times;</button>
                         </div>
                         <div className="modal-body">
-                            <Select<IFilter<T>> Record={filter} Field='FieldName' Options={props.CollumnList.map(fl => ({ Value: fl.key as string, Label: fl.label }))} Setter={(record) => {
+                            <Select<Filter.IFilter<T>> Record={filter} Field='FieldName' Options={props.CollumnList.map(fl => ({ Value: fl.key as string, Label: fl.label }))} Setter={(record) => {
                                 let operator = "IN" as any;
                                 let column = props.CollumnList.find(fl => fl.key == record.FieldName)
                                 if (column.type == 'string')
@@ -156,7 +153,7 @@ export default function Filter<T>(props: IProps<T>) {
     );
 }
 
-interface IPropsFilterCreator<T> { Filter: IFilter<T>, Setter: (filter: React.SetStateAction<IFilter<T>>) => void, Field: IField<T> }
+interface IPropsFilterCreator<T> { Filter: Filter.IFilter<T>, Setter: (filter: React.SetStateAction<Filter.IFilter<T>>) => void, Field: Filter.IField<T> }
 
 function FilterCreator<T>(props: IPropsFilterCreator<T> ) {
 
@@ -218,7 +215,7 @@ function FilterCreator<T>(props: IPropsFilterCreator<T> ) {
         );
     }
     else if (props.Field.type == "boolean") {
-        return <CheckBox Record={props.Filter} Field='SearchText' Setter={(filter: IFilter<T>) => {
+        return <CheckBox Record={props.Filter} Field='SearchText' Setter={(filter: Filter.IFilter<T>) => {
             props.Setter((prevFilter) => ({ ...prevFilter, Operator: '=', SearchText: filter.SearchText.toString() == 'true' ? '1' : '0' }))
         }} Label="Column type is boolean. Yes/On is checked." />
     }

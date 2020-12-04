@@ -29,7 +29,7 @@ import { addFactor, removeFactor, selectSeverity, updateSeverity, selectfactors,
 import { cloneDeep } from 'lodash';
 import _ from 'lodash';
 import TrendingCard, { ITrendSeries } from '../CommonComponents/Graph';
-import { selectSeverities, selectAlarmTypes } from '../Store/GeneralSettingsSlice';
+import { selectSeverities, selectAlarmTypes } from '../store/GeneralSettingsSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;

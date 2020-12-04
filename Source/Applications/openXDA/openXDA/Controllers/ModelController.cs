@@ -170,6 +170,37 @@ namespace openXDA.Controllers
             }
 
         }
+        [HttpGet, Route("{sort}/{ascending:int}")]
+        public virtual IHttpActionResult Get(string sort, int ascending)
+        {
+            if (GetRoles == string.Empty || User.IsInRole(GetRoles))
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                {
+                    string orderByExpression = GetOrderByExpression;
+
+                    if (sort != null && sort != string.Empty)
+                        orderByExpression = $"{sort} {(ascending == 1 ? "ASC" : "DESC")}";
+
+                    try
+                    {
+                        IEnumerable<T> result = new TableOperations<T>(connection).QueryRecords(orderByExpression);
+
+                        return Ok(JsonConvert.SerializeObject(result));
+                    }
+                    catch (Exception ex)
+                    {
+                        return InternalServerError(ex);
+                    }
+                }
+            }
+            else
+            {
+                return Unauthorized();
+            }
+
+        }
+
 
         [HttpGet, Route("{parentID}/{sort}/{ascending:int}")]
         public virtual IHttpActionResult Get(string parentID, string sort, int ascending)
@@ -281,7 +312,7 @@ namespace openXDA.Controllers
                             {
                                 object uniqueKey = prop.GetValue(newRecord);
                                 newRecord = new TableOperations<T>(connection).QueryRecordWhere(UniqueKeyField + " = {0}", uniqueKey);
-                                return Ok(newRecord);
+                                return Ok(JsonConvert.SerializeObject(newRecord));
                             }
 
                         }
@@ -416,7 +447,7 @@ namespace openXDA.Controllers
                     
                     DataTable table = connection.RetrieveData(sql, "");
 
-                    return Ok(table);
+                    return Ok(JsonConvert.SerializeObject(table));
                 }
             }
             catch (Exception ex)

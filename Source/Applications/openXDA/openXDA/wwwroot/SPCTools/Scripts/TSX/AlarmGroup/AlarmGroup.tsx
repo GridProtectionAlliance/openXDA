@@ -23,49 +23,38 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import Filter, { FieldType } from '../CommonComponents/Filter';
-import { SPCTools } from '../global';
+import FilterObject from '../CommonComponents/Filter';
+import { SPCTools, Filter } from '../global';
 import Table from '@gpa-gemstone/react-table';
+import { useSelector, useDispatch } from 'react-redux';
+import { SortAlarmGroups, FilterAlarmGroups, SelectAlarmGroups, SelectAlarmGroupsFilters, SelectAlarmGroupsStatus, SelectAlarmGroupsSortField, SelectAlarmGroupsAscending, FetchAlarmGroupViews } from '../store/AlarmGroupViewSlice';
 
 const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
-    const [filters, setFilters] = React.useState<Array<any>>([]);
-    const [alarmGroupList, setAlarmGroupList] = React.useState<Array<SPCTools.IAlarmGroupView>>([]);
-    const [sort, setSort] = React.useState < keyof SPCTools.IAlarmGroupView>("Name");
-    const [asc, setAsc] = React.useState<boolean>(false);
+    const dispatch = useDispatch();
+
+    const alarmGroups = useSelector(SelectAlarmGroups);
+    const agStatus = useSelector(SelectAlarmGroupsStatus);
+    const filters = useSelector(SelectAlarmGroupsFilters);
+    const agSort = useSelector(SelectAlarmGroupsSortField);
+    const agAsc = useSelector(SelectAlarmGroupsAscending);
 
     React.useEffect(() => {
-        let handle = getList();
-        
-        return () => {
-            if (handle != undefined && handle.abort != undefined)
-                handle.abort();
-        }
-    }, [filters, sort, asc])
-
-    function getList(): JQuery.jqXHR<Array<SPCTools.IAlarmGroupView>> {
-        let handle = $.ajax({
-            type: "POST",
-            url: `${apiHomePath}api/SPCTools/AlarmGroupView/SearchableList`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            data: JSON.stringify({ Searches: filters, OrderBy: sort, Ascending: asc }),
-            cache: false,
-            async: true
-        });
-
-        handle.done((data: Array<SPCTools.IAlarmGroupView>) => {
-            setAlarmGroupList(data)
-        });
-
-        return handle;
-    }
+        if (agStatus != 'unitiated' && agStatus != 'changed') return;
+        dispatch(FetchAlarmGroupViews({ filter: filters, sort: agSort, ascending: agAsc }));
+    }, [dispatch, agStatus]);
 
 
 
-    let searchCollumns = [{ label: 'Name', key: 'Name' as keyof SPCTools.IAlarmGroupView, type: 'string' as FieldType }]
+    let searchColumns = [
+        { label: 'Name', key: 'Name', type: 'string' },
+        { label: 'Number of Meters', key: 'Meters', type: 'integer' },
+        { label: 'Number of Channels', key: 'Channels', type: 'integer' },
+        { label: 'Severity', key: 'AlarmSeverity', type: 'string' },
+
+    ] as Filter.IField<SPCTools.IAlarmGroupView>[]
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Filter<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchCollumns} SetFilter={setFilters} Direction='right'/>
+            <FilterObject<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchColumns} SetFilter={(filter) => dispatch(FilterAlarmGroups(filter))} Direction='right'/>
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                 <div className="col-8" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
@@ -78,17 +67,14 @@ const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
                             { key: null, label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: () => 'N/A' },
                         ]}
                         tableClass="table table-hover"
-                        data={alarmGroupList}
-                        sortField={sort}
-                        ascending={asc}
+                        data={alarmGroups}
+                        sortField={agSort}
+                        ascending={agAsc}
                         onSort={(d) => {
-                            if (d.col == sort) {
-                                setAsc(!asc);
-                            }
-                            else {
-                                setAsc(asc);
-                                setSort(d.col);
-                            }
+                            if (d.col == agSort)
+                                dispatch(SortAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
+                            else
+                                dispatch(SortAlarmGroups({ SortField: d.col, Ascending: agAsc }));
                         }}
                         onClick={(d) => {  }}
                         theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}

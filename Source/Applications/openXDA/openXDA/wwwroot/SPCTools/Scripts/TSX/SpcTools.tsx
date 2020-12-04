@@ -27,20 +27,21 @@ import NavBar from './NavBar';
 import { SPCTools } from './global';
 import AlarmGroupHome from './AlarmGroup/AlarmGroup';
 import ChannelOverview from './ChannelOverview/ChannelOverview';
+import MeterOverview from './MeterOverview/MeterOverview';
 
 import StaticAlarmHome from './StaticAlarm/StaticAlarm';
 import { Provider, useSelector, useDispatch } from 'react-redux';
-import store from './Store/Store';
-import { fetchAlarmTypes, fetchMeasurmentTypes, fetchSeverities } from './Store/GeneralSettingsSlice';
-import { selectPage, setPage } from './Store/GeneralSettingsSlice';
+import store from './store/store';
+import { fetchAlarmTypes, fetchMeasurmentTypes, fetchSeverities } from './store/GeneralSettingsSlice';
+import { selectPage, setPage } from './store/GeneralSettingsSlice';
 import { ResetWizzard as ResetStatic} from './StaticAlarm/StaticWizzardSlice';
 import { ResetWizzard as RestDynamic } from './DynamicAlarm/DynamicWizzardSlice';
-import { FetchAlarmDay } from './Store/AlarmDaySlice';
+import { FetchAlarmDay } from './store/AlarmDaySlice';
 import { FetchAlarmDayGroup } from './Store/AlarmDayGroupSlice';
 import DynamicAlarmHome from './DynamicAlarm/DynamicAlarm';
-import { FetchMeasurmentTypes } from './Store/MeasurmentTypeSlice';
-import { FetchSeriesType } from './Store/SeriesTypeSlice';
-import { FetchAlarmType } from './Store/AlarmTypeSlice';
+import { FetchMeasurmentTypes } from './store/MeasurmentTypeSlice';
+import { FetchSeriesType } from './store/SeriesTypeSlice';
+import { FetchAlarmType } from './store/AlarmTypeSlice';
 
 
 declare var homePath: string;
@@ -67,7 +68,7 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
                         {(page == 'Home' ? <AlarmGroupHome /> : null)}
                         {(page == 'Static' ? <StaticAlarmHome /> : null)}
                         {(page == 'Dynamic' ? <DynamicAlarmHome /> : null)}
-                        {(page == 'Meter' ? <p> Meter Overview </p> : null)}
+                        {(page == 'Meter' ? <MeterOverview /> : null)}
                         {(page == 'Channel' ? <ChannelOverview/> : null)}                               
                     </React.Suspense>
                 </div>
