@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  SPCTools.tsx - Gbtc
+//  MeterOverview.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,101 +16,114 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  10/20/2020 - C. Lackner
+//  12/03/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import Filter, { FieldType } from '../CommonComponents/Filter';
-import { SPCTools } from '../global';
+import { SPCTools, openXDA } from '../global';
 import Table from '@gpa-gemstone/react-table';
+import { useSelector, useDispatch } from 'react-redux';
+import { SortMeters, FilterMeters, SelectMeters, SelectMetersFilters, SelectMetersStatus, SelectMetersSortField, SelectMetersAscending, FetchMeters } from '../store/MeterSlice';
+import { ChangeStatusMeterAlarmGroups, SortMeterAlarmGroups, SelectMeterAlarmGroups, SelectMeterAlarmGroupsStatus, SelectMeterAlarmGroupsSortField, SelectMeterAlarmGroupsAscending, FetchMeterAlarmGroups } from '../store/MeterAlarmGroupSlice';
 
 
-declare var homePath: string;
-declare var apiHomePath: string;
+const MeterOverview: React.FunctionComponent = (props: {}) => {
+    const dispatch = useDispatch();
 
-declare var userIsAdmin: boolean;
+    const meters = useSelector(SelectMeters);
+    const mStatus = useSelector(SelectMetersStatus);
+    const filters = useSelector(SelectMetersFilters);
+    const mSort = useSelector(SelectMetersSortField);
+    const mAsc = useSelector(SelectMetersAscending);
 
-const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
-    const [filters, setFilters] = React.useState<Array<any>>([]);
-    const [alarmGroupList, setAlarmGroupList] = React.useState<Array<SPCTools.IAlarmGroupView>>([]);
-    const [sort, setSort] = React.useState < keyof SPCTools.IAlarmGroupView>("Name");
-    const [asc, setAsc] = React.useState<boolean>(false);
+    const alarmGroups = useSelector(SelectMeterAlarmGroups);
+    const agStatus = useSelector(SelectMeterAlarmGroupsStatus);
+    const agSort = useSelector(SelectMeterAlarmGroupsSortField);
+    const agAsc = useSelector(SelectMeterAlarmGroupsAscending);
+
+    const [MeterID, setMeterID] = React.useState<number>(0);
 
     React.useEffect(() => {
-        let handle = getList();
-        
-        return () => {
-            if (handle != undefined && handle.abort != undefined)
-                handle.abort();
-        }
-    }, [filters, sort, asc])
+        if (mStatus != 'unitiated' && mStatus != 'changed') return;
+        dispatch(FetchMeters({ filter: filters, sort: mSort, ascending: mAsc }));
+    }, [dispatch, mStatus]);
 
-    function getList(): JQuery.jqXHR<Array<SPCTools.IAlarmGroupView>> {
-        let handle = $.ajax({
-            type: "POST",
-            url: `${apiHomePath}api/SPCTools/AlarmGroupView/SearchableList`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            data: JSON.stringify({ Searches: filters, OrderBy: sort, Ascending: asc }),
-            cache: false,
-            async: true
-        });
+    React.useEffect(() => {
+        if (agStatus != 'unitiated' && agStatus != 'changed') return;
+        dispatch(FetchMeterAlarmGroups({ MeterID: MeterID, sort: agSort, ascending: agAsc }));
+    }, [dispatch, agStatus]);
 
-        handle.done((data: Array<SPCTools.IAlarmGroupView>) => {
-            setAlarmGroupList(data)
-        });
+    React.useEffect(() => {
+        dispatch(ChangeStatusMeterAlarmGroups());
+    }, [MeterID]);
 
-        return handle;
-    }
+    let searchCollumns = [
+        { label: 'Meter', key: 'Name' as keyof openXDA.IMeter, type: 'string' as FieldType },
+        { label: 'Type', key: 'Make' as keyof openXDA.IMeter, type: 'string' as FieldType },
+    ];
 
-
-
-    let searchCollumns = [{ label: 'Name', key: 'Name' as keyof SPCTools.IAlarmGroupView, type: 'string' as FieldType }]
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Filter<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchCollumns} SetFilter={setFilters}/>
+            <Filter<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} SetFilter={(filter) => dispatch(FilterMeters(filter))} Direction='right' />
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
-                <div className="col-8" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
-                    <Table<SPCTools.IAlarmGroupView>
-                        cols={[
-                            { key: 'Name', label: 'Alarm Group', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                            { key: 'Meters', label: 'Number of Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                            { key: 'Channels', label: 'Number of Channels', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                            { key: 'AlarmSeverity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },    
-                            { key: null, label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: () => 'N/A' },
-                        ]}
-                        tableClass="table table-hover"
-                        data={alarmGroupList}
-                        sortField={sort}
-                        ascending={asc}
-                        onSort={(d) => {
-                            if (d.col == sort) {
-                                setAsc(!asc);
-                            }
-                            else {
-                                setAsc(asc);
-                                setSort(d.col);
-                            }
-                        }}
-                        onClick={(d) => {  }}
-                        theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
-                        rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        selected={(item) => false }
-                    />
+                    <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
+                        <Table<openXDA.IMeter>
+                            cols={[
+                                { key: 'Name', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Make', label: 'Type', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                            ]}
+                            tableClass="table table-hover"
+                            data={meters}
+                            sortField={mSort}
+                            ascending={mAsc}
+                            onSort={(d) => {
+                                if (d.col == mSort)
+                                    dispatch(SortMeters({ SortField: mSort, Ascending: !mAsc }));
+                                else
+                                    dispatch(SortMeters({ SortField: d.col, Ascending: mAsc }));
+                            }}
+                            onClick={(d) => setMeterID(d.row.ID)}
+                            theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
+                            rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            selected={(item) => item.ID == MeterID}
+                        />
                     </div>
-                </div>
-                <div className="col-4" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
-                    {/* This is where we will put the details eventually */}
+
+                    <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
+                        <Table<SPCTools.IChannelAlarmGroup>
+                            cols={[
+                                { key: 'Name', label: 'AlarmGroup', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'AlarmSeverity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'TimeInAlarm', label: 'Time In Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                            ]}
+                            tableClass="table table-hover"
+                            data={alarmGroups}
+                            sortField={agSort}
+                            ascending={agAsc}
+                            onSort={(d) => {
+                                if (d.col == agSort)
+                                    dispatch(SortMeterAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
+                                else
+                                    dispatch(SortMeterAlarmGroups({ SortField: d.col, Ascending: agAsc }));
+                            }}
+                            onClick={(d) => { }}
+                            theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
+                            rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            selected={(item) => false}
+                        />
+
+                    </div>
                 </div>
 
             </div>
-        </div>      
+        </div>
     );
 }
 
-export default AlarmGroupHome
+export default MeterOverview

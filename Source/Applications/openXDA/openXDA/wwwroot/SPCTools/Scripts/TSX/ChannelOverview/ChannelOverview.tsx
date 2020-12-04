@@ -112,7 +112,7 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
                             sortField={agSort}
                             ascending={agAsc}
                             onSort={(d) => {
-                                if (d.col == coSort)
+                                if (d.col == agSort)
                                     dispatch(SortChannelAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
                                 else
                                     dispatch(SortChannelAlarmGroups({ SortField: d.col, Ascending: agAsc }));

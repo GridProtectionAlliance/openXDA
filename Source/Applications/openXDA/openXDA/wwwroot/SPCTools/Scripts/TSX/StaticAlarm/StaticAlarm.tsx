@@ -31,8 +31,8 @@ import StaticSetPoint from './SetPoint';
 import TestGroup from './Test';
 import { SPCTools, StaticWizzard } from '../global';
 import ReactTooltip from 'react-tooltip';
-import { loadTest } from '../Store/HistoryTestSlice';
-import { setPage } from '../Store/GeneralSettingsSlice';
+import { loadTest } from '../store/HistoryTestSlice';
+import { setPage } from '../store/GeneralSettingsSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;

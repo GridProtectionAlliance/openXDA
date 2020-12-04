@@ -27,15 +27,16 @@ import NavBar from './NavBar';
 import { SPCTools } from './global';
 import AlarmGroupHome from './AlarmGroup/AlarmGroup';
 import ChannelOverview from './ChannelOverview/ChannelOverview';
+import MeterOverview from './MeterOverview/MeterOverview';
 
 import StaticAlarmHome from './StaticAlarm/StaticAlarm';
 import { Provider, useSelector, useDispatch } from 'react-redux';
-import store from './Store/Store';
-import { fetchAlarmTypes, fetchMeasurmentTypes, fetchSeverities } from './Store/GeneralSettingsSlice';
-import { selectPage, setPage } from './Store/GeneralSettingsSlice';
+import store from './store/store';
+import { fetchAlarmTypes, fetchMeasurmentTypes, fetchSeverities } from './store/GeneralSettingsSlice';
+import { selectPage, setPage } from './store/GeneralSettingsSlice';
 import { ResetWizzard } from './StaticAlarm/StaticWizzardSlice';
-import { FetchAlarmDay } from './Store/AlarmDaySlice';
-import { FetchAlarmDayGroup } from './Store/AlarmDayGroupSlice';
+import { FetchAlarmDay } from './store/AlarmDaySlice';
+import { FetchAlarmDayGroup } from './store/AlarmDayGroupSlice';
 
 
 declare var homePath: string;
@@ -61,7 +62,7 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
                         {(page == 'Home' ? <AlarmGroupHome /> : null)}
                         {(page == 'Static' ? <StaticAlarmHome /> : null)}
                         {(page == 'Dynamic' ? <p> New Dynamic Alarm </p> : null)}
-                        {(page == 'Meter' ? <p> Meter Overview </p> : null)}
+                        {(page == 'Meter' ? <MeterOverview /> : null)}
                         {(page == 'Channel' ? <ChannelOverview/> : null)}                               
                     </React.Suspense>
                 </div>

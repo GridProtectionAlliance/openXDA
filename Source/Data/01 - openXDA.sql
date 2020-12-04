@@ -3192,6 +3192,7 @@ SELECT
 	AlarmSeverity.ID as AlarmSeverityID,
 	AlarmSeverity.Name as AlarmSeverity,
 	Channel.ID as ChannelID,
+	Meter.ID as MeterID,
 	'N/A' as TimeInAlarm
 	 
 FROM 
@@ -3199,6 +3200,7 @@ FROM
 	AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
 	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
 	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
+	Meter ON Channel.MeterID = Meter.ID LEFT JOIN
 	AlarmSeverity ON Alarm.SeverityID = AlarmSeverity.ID
 GO
 

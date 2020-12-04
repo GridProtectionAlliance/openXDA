@@ -26,7 +26,7 @@ import { stringify } from 'querystring';
 import { dispatch } from 'd3';
 import RequestHandle from '../store/RequestHandle';
 import _ from 'lodash';
-import { selectIsLoading } from '../Store/GeneralSettingsSlice';
+import { selectIsLoading } from '../store/GeneralSettingsSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;

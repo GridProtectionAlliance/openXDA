@@ -31,7 +31,7 @@ import { Input, Select } from '@gpa-gemstone/react-forms';
 import MultiSelectTable from '../CommonComponents/MultiSelectTable';
 import {  selectChannelCount, updateAlarmGroup, updateSelectedMeters, updateMeasurementType, selectMeasurmentTypeId, updateChannelCount, selectIntervallDataType, updateIntervalldataType, updateVoltageOptions, updatePhaseOptions, selectLoadingPhases, selectAvailablePhases, selectCurrentPhases, selectPhases, selectAvailableVoltages, selectCurrentVoltages, selectVoltages, selectLoadingVoltages, selectSelectedMeterId } from './StaticWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
-import { selectAlarmTypes, selectMeasurmentTypes } from '../Store/GeneralSettingsSlice';
+import { selectAlarmTypes, selectMeasurmentTypes } from '../store/GeneralSettingsSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;

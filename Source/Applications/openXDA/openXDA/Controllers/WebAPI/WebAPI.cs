@@ -54,7 +54,9 @@ namespace openXDA.Controllers.WebAPI
 
 
     [RoutePrefix("api/Meter")]
-    public class MeterController : ModelController<Meter> { }
+    public class MeterController : ModelController<Meter> {
+        protected override bool AllowSearch => true;
+    }
 
     [RoutePrefix("api/Channel")]
     public class ChannelController : ModelController<ChannelDetail> 

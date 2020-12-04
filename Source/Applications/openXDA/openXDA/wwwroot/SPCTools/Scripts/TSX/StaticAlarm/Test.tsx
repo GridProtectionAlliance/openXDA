@@ -29,8 +29,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectAffectedChannels, selectfactors, selectSeverity, selectTokenizerResponse, selectTokenizerRequest } from './StaticWizzardSlice';
 import _, { cloneDeep } from 'lodash';
 import TrendingCard, { ITrendSeries } from '../CommonComponents/Graph';
-import { selectDateRange, setDate, selectResultSummary, selectIsLoading } from '../Store/HistoryTestSlice';
-import { selectSeverities } from '../Store/GeneralSettingsSlice';
+import { selectDateRange, setDate, selectResultSummary, selectIsLoading } from '../store/HistoryTestSlice';
+import { selectSeverities } from '../store/GeneralSettingsSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;

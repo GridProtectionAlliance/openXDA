@@ -49,6 +49,14 @@ namespace openXDA.Controllers
         protected override string ParentKey => "ChannelID";
     }
 
+    [RoutePrefix("api/SPCTools/MeterAlarmGroup")]
+    public class MeterAlarmGroupController : ModelController<MeterAlarmGroup>
+    {
+        protected override bool ViewOnly => true;
+        protected override bool AllowSearch => false;
+        protected override bool HasParent => true;
+        protected override string ParentKey => "MeterID";
+    }
 
 
 }

@@ -36,7 +36,10 @@ export namespace Redux {
         GeneralSettings: SPCTools.ISettingsState,
         HistoryTest: SPCTools.IHistoryTestState,
         AlarmDay: State<DynamicWizzard.IAlarmDay>,
-        AlarmDayGroup: State<DynamicWizzard.IAlarmDayGroup>
+        AlarmDayGroup: State<DynamicWizzard.IAlarmDayGroup>,
+        Meter: State<openXDA.IMeter>,
+        MeterAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
+
     }
 
 
