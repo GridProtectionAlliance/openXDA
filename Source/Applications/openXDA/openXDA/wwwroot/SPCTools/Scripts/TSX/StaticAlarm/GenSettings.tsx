@@ -215,7 +215,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
         }
     }, [filters, sort, asc])
 
-    function getList(): JQuery.jqXHR<Array<openXDA.IMeter>> {
+    function getList(): JQuery.jqXHR<string> {
         let handle = $.ajax({
             type: "POST",
             url: `${apiHomePath}api/MeterDetail/SearchableList`,
@@ -226,8 +226,8 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
             async: true
         });
 
-        handle.done((data: Array<openXDA.IMeter>) => {
-            setMeterList(data)
+        handle.done((data: string) => {
+            setMeterList(JSON.parse(data))
         });
 
         return handle;
@@ -324,7 +324,7 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
 
     }, [selectedAssetGroupID])
 
-    function getList(): JQuery.jqXHR<Array<openXDA.IAssetGroup>> {
+    function getList(): JQuery.jqXHR<string> {
         let handle = $.ajax({
             type: "POST",
             url: `${apiHomePath}api/SPCTools/AssetGroupView/SearchableList`,
@@ -335,8 +335,8 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
             async: true
         });
 
-        handle.done((data: Array<openXDA.IAssetGroup>) => {
-            setAssetGroupList(data)
+        handle.done((data: string) => {
+            setAssetGroupList(JSON.parse(data))
         });
 
         return handle;

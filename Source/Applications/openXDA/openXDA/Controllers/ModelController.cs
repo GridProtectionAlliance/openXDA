@@ -312,7 +312,7 @@ namespace openXDA.Controllers
                             {
                                 object uniqueKey = prop.GetValue(newRecord);
                                 newRecord = new TableOperations<T>(connection).QueryRecordWhere(UniqueKeyField + " = {0}", uniqueKey);
-                                return Ok(newRecord);
+                                return Ok(JsonConvert.SerializeObject(newRecord));
                             }
 
                         }
@@ -447,7 +447,7 @@ namespace openXDA.Controllers
                     
                     DataTable table = connection.RetrieveData(sql, "");
 
-                    return Ok(table);
+                    return Ok(JsonConvert.SerializeObject(table));
                 }
             }
             catch (Exception ex)

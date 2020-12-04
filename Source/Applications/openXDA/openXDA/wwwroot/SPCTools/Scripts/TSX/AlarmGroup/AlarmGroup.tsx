@@ -42,7 +42,7 @@ const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
         }
     }, [filters, sort, asc])
 
-    function getList(): JQuery.jqXHR<Array<SPCTools.IAlarmGroupView>> {
+    function getList(): JQuery.jqXHR<string> {
         let handle = $.ajax({
             type: "POST",
             url: `${apiHomePath}api/SPCTools/AlarmGroupView/SearchableList`,
@@ -53,8 +53,8 @@ const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
             async: true
         });
 
-        handle.done((data: Array<SPCTools.IAlarmGroupView>) => {
-            setAlarmGroupList(data)
+        handle.done((data: string) => {
+            setAlarmGroupList(JSON.parse(data))
         });
 
         return handle;

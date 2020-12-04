@@ -61,7 +61,7 @@ export const MeterSlice = createSlice({
             state.Status = 'idle';
             state.Error = null;
 
-            state.Data = action.payload as openXDA.IMeter[];
+            state.Data = JSON.parse(action.payload) as openXDA.IMeter[];
 
         });
         builder.addCase(FetchMeters.pending, (state, action) => {
@@ -93,7 +93,7 @@ export const SelectMetersFilters = (state: Redux.StoreState) => state.Meter.Filt
 
 // #region [ Async Functions ]
 
-function GetMeter(filters, sort, asc): JQuery.jqXHR<openXDA.IMeter[]> {
+function GetMeter(filters, sort, asc): JQuery.jqXHR<string> {
     return $.ajax({
         type: "POST",
         url: `${apiHomePath}api/Meter/SearchableList`,
