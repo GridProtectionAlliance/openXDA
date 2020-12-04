@@ -67,7 +67,10 @@ namespace openXDA.Controllers.WebAPI
     public class AssetController : ModelController<Asset> { }
 
     [RoutePrefix("api/Phase")]
-    public class PhaseController : ModelController<Phase> { }
+    public class PhaseController : ModelController<Phase> 
+    {
+        protected override bool AllowSearch => true;
+    }
 
     [RoutePrefix("api/EventType")]
     public class EventTypeController : ModelController<EventType> { }
@@ -85,7 +88,10 @@ namespace openXDA.Controllers.WebAPI
     public class ChannelGroupTypeController : ModelController<ChannelGroupType> { }
 
     [RoutePrefix("api/AlarmType")]
-    public class AlarmTypeController : ModelController<AlarmType> { }
+    public class AlarmTypeController : ModelController<AlarmType> 
+    {
+        protected override bool AllowSearch => true;
+    }
 
     [RoutePrefix("api/MeterDetail")]
     public class MeterDetailController : ModelController<MeterDetail> {
@@ -102,7 +108,13 @@ namespace openXDA.Controllers.WebAPI
     public class AlarmDayGroupController : ModelController<AlarmDayGroupView>
     {
         protected override bool ViewOnly => true;
-    } 
+    }
+
+    [RoutePrefix("api/SeriesType")]
+    public class SeriesTypeController : ModelController<SeriesType>
+    {
+        protected override bool AllowSearch => true;
+    }
 
 
 }

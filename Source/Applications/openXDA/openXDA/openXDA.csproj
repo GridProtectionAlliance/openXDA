@@ -4387,6 +4387,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\ChannelOverview\ChannelOverview.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Requirments.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Graph.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\RadioBox.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\MultiSelectTable.tsx" />
@@ -4396,12 +4397,20 @@
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\MeterOverview\MeterOverview.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\NavBar.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\SpcTools.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\GenSettings.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\DynamicAlarm.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\DynamicWizzardSlice.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\Test.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\SetPoint.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\SelectHistory.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\GenSettings.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\StaticAlarm.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\StaticWizzardSlice.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\SeriesTypeSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmTypeSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\WizardVoltageOptionSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\WizzardPhaseOptionSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\MeasurmentTypeSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmDaySlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmDayGroupSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\ChannelAlarmGroupSlice.ts" />

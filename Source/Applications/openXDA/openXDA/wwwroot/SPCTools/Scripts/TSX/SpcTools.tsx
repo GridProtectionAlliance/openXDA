@@ -33,9 +33,14 @@ import { Provider, useSelector, useDispatch } from 'react-redux';
 import store from './Store/Store';
 import { fetchAlarmTypes, fetchMeasurmentTypes, fetchSeverities } from './Store/GeneralSettingsSlice';
 import { selectPage, setPage } from './Store/GeneralSettingsSlice';
-import { ResetWizzard } from './StaticAlarm/StaticWizzardSlice';
+import { ResetWizzard as ResetStatic} from './StaticAlarm/StaticWizzardSlice';
+import { ResetWizzard as RestDynamic } from './DynamicAlarm/DynamicWizzardSlice';
 import { FetchAlarmDay } from './Store/AlarmDaySlice';
 import { FetchAlarmDayGroup } from './Store/AlarmDayGroupSlice';
+import DynamicAlarmHome from './DynamicAlarm/DynamicAlarm';
+import { FetchMeasurmentTypes } from './Store/MeasurmentTypeSlice';
+import { FetchSeriesType } from './Store/SeriesTypeSlice';
+import { FetchAlarmType } from './Store/AlarmTypeSlice';
 
 
 declare var homePath: string;
@@ -47,7 +52,8 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
     const dispatch = useDispatch();
 
     function switchPage(pg: SPCTools.Page) {
-        if (pg == 'Static') dispatch(ResetWizzard());
+        if (pg == 'Static') dispatch(ResetStatic());
+        if (pg == 'Dynamic') dispatch(RestDynamic());
         dispatch(setPage(pg))
 
     }
@@ -60,7 +66,7 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
                     <React.Suspense fallback={<div>Loading...</div>}>
                         {(page == 'Home' ? <AlarmGroupHome /> : null)}
                         {(page == 'Static' ? <StaticAlarmHome /> : null)}
-                        {(page == 'Dynamic' ? <p> New Dynamic Alarm </p> : null)}
+                        {(page == 'Dynamic' ? <DynamicAlarmHome /> : null)}
                         {(page == 'Meter' ? <p> Meter Overview </p> : null)}
                         {(page == 'Channel' ? <ChannelOverview/> : null)}                               
                     </React.Suspense>
@@ -75,8 +81,11 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
 store.dispatch(fetchAlarmTypes());
 store.dispatch(fetchMeasurmentTypes());
 store.dispatch(fetchSeverities());
+
 store.dispatch(FetchAlarmDay());
 store.dispatch(FetchAlarmDayGroup());
-
+store.dispatch(FetchMeasurmentTypes());
+store.dispatch(FetchAlarmType());
+store.dispatch(FetchSeriesType());
 
 ReactDOM.render(<Provider store={store}><SPCTools/></Provider>, document.getElementById('body'));

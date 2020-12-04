@@ -36,7 +36,13 @@ export namespace Redux {
         GeneralSettings: SPCTools.ISettingsState,
         HistoryTest: SPCTools.IHistoryTestState,
         AlarmDay: State<DynamicWizzard.IAlarmDay>,
-        AlarmDayGroup: State<DynamicWizzard.IAlarmDayGroup>
+        AlarmDayGroup: State<DynamicWizzard.IAlarmDayGroup>,
+        DynamicWizzard: DynamicWizzard.IState,
+        MeasurmentType: State<SPCTools.IMeasurementType>,
+        AlarmType: State<SPCTools.IAlarmType>,
+        WizardPhaseOption: OptionState<openXDA.IPhase>,
+        WizardVoltageOption: OptionState<number>,
+        SeriesType: State<openXDA.ISeriesType>
     }
 
 
@@ -47,6 +53,14 @@ export namespace Redux {
         SortField: keyof T,
         Ascending: boolean,
         Filters?: { key: keyof T, Value: string }[]
+    }
+
+
+    interface OptionState<T> {
+        Status: SPCTools.Status,
+        Data: T[],
+        Error: null | string,
+        Selected: boolean[]
     }
 }
 
@@ -120,6 +134,7 @@ export namespace SPCTools {
         result: IChannelTest[],
         
     }
+
 }
 
 export namespace StaticWizzard {
@@ -175,6 +190,19 @@ export namespace StaticWizzard {
 
 export namespace DynamicWizzard {
 
+    export interface IState {
+        Step: SPCTools.WizzardTab,
+        Status: SPCTools.Status,
+
+        AlarmGroup: SPCTools.IAlarmGroup,
+        SelectedMeter: openXDA.IMeter[],
+        SelectedMeterSort: keyof openXDA.IMeter,
+        SelectedMeterASC: boolean,
+
+        MeasurmentTypeID: number,
+        SeriesTypeID: number,
+    }
+
     export interface IAlarmDayGroup { ID: number, Description: string, AlarmDayIDs: number[] }
 
     export interface IAlarmDay { ID: number, Name: string }
@@ -191,4 +219,6 @@ export namespace openXDA {
     export interface IPhase { ID: number, Name: string, Description: string }
 
     export interface IChannel { ID: number, MeterID: number, Name: string, AssetKey: string, MeterName: string, Phase: string }
+
+    interface ISeriesType {ID: number, Name: string, Description: string}
 }

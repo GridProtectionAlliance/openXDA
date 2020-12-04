@@ -31,7 +31,13 @@ import HistoryTestReducer from './HistoryTestSlice';
 import ChannelOverviewReducer from './ChannelOverviewSlice';
 import ChannelAlarmGroupReducer from './ChannelAlarmGroupSlice';
 import AlarmDayReducer from './AlarmDaySlice';
-import AlarmDayGroupReducer from './AlarmDayGroupSlice'
+import AlarmDayGroupReducer from './AlarmDayGroupSlice';
+import DynamicWizzardReducer from '../DynamicAlarm/DynamicWizzardSlice';
+import MeasurementTypeReducer from './MeasurmentTypeSlice';
+import AlarmTypeReducer from './AlarmTypeSlice';
+import WizardPhaseOptionReducer from './WizzardPhaseOptionSlice';
+import WizardVoltageOptionReducer from './WizardVoltageOptionSlice';
+import SeriesTypeReducer from './SeriesTypeSlice';
 
 export default configureStore({
     reducer: {
@@ -41,7 +47,12 @@ export default configureStore({
         ChannelOverview: ChannelOverviewReducer,
         ChannelAlarmGroup: ChannelAlarmGroupReducer,
         AlarmDay: AlarmDayReducer,
-        AlarmDayGroup: AlarmDayGroupReducer
-
+        AlarmDayGroup: AlarmDayGroupReducer,
+        DynamicWizzard: DynamicWizzardReducer,
+        MeasurmentType: MeasurementTypeReducer,
+        AlarmType: AlarmTypeReducer,
+        WizardPhaseOption: WizardPhaseOptionReducer,
+        WizardVoltageOption: WizardVoltageOptionReducer,
+        SeriesType: SeriesTypeReducer,
     }
 });
