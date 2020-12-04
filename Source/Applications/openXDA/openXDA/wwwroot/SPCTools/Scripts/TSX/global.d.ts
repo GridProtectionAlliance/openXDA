@@ -39,7 +39,7 @@ export namespace Redux {
         AlarmDayGroup: State<DynamicWizzard.IAlarmDayGroup>,
         Meter: State<openXDA.IMeter>,
         MeterAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
-
+        AlarmGroupView: State<SPCTools.IAlarmGroupView>,
     }
 
 

@@ -31,6 +31,7 @@ import AlarmDayReducer from './AlarmDaySlice';
 import AlarmDayGroupReducer from './AlarmDayGroupSlice'
 import MeterReducer from './MeterSlice';
 import MeterAlarmGroupReducer from './MeterAlarmGroupSlice';
+import AlarmGroupViewReducer from './AlarmGroupViewSlice';
 
 export default configureStore({
     reducer: {
@@ -42,6 +43,7 @@ export default configureStore({
         AlarmDay: AlarmDayReducer,
         AlarmDayGroup: AlarmDayGroupReducer,
         Meter: MeterReducer,
-        MeterAlarmGroup: MeterAlarmGroupReducer
+        MeterAlarmGroup: MeterAlarmGroupReducer,
+        AlarmGroupView: AlarmGroupViewReducer
     }
 });
