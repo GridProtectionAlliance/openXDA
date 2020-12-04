@@ -5976,6 +5976,11 @@
             Gets the server URI.
             </summary>
         </member>
+        <member name="P:GSF.PhasorProtocols.MultiProtocolFrameParser.SharedUdpClientReference.ServerIndex">
+            <summary>
+            Gets the current server index, when multiple server end points are defined.
+            </summary>
+        </member>
         <member name="P:GSF.PhasorProtocols.MultiProtocolFrameParser.SharedUdpClientReference.TextEncoding">
             <summary>
             Gets or sets the <see cref="T:System.Text.Encoding"/> to be used for the text sent to the server.
@@ -6503,6 +6508,11 @@
         <member name="P:GSF.PhasorProtocols.MultiProtocolFrameParser.IsConnected">
             <summary>
             Gets a flag that determines if the currently selected <see cref="P:GSF.PhasorProtocols.MultiProtocolFrameParser.TransportProtocol"/> is connected.
+            </summary>
+        </member>
+        <member name="P:GSF.PhasorProtocols.MultiProtocolFrameParser.ServerIndex">
+            <summary>
+            Gets the current server index, when multiple server end points are defined.
             </summary>
         </member>
         <member name="P:GSF.PhasorProtocols.MultiProtocolFrameParser.ConnectionInfo">
@@ -14766,6 +14776,15 @@
             <summary>
             Start the data parser.
             </summary>
+        </member>
+        <member name="M:GSF.PhasorProtocols.IEEEC37_118.FrameParser.ParseFrame(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Output type specific frame parsing algorithm.
+            </summary>
+            <param name="buffer">Buffer containing data to parse.</param>
+            <param name="offset">Offset index into buffer that represents where to start parsing.</param>
+            <param name="length">Maximum length of valid data from offset.</param>
+            <returns>The length of the data that was parsed.</returns>
         </member>
         <member name="M:GSF.PhasorProtocols.IEEEC37_118.FrameParser.ParseCommonHeader(System.Byte[],System.Int32,System.Int32)">
             <summary>

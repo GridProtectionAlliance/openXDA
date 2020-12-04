@@ -56,6 +56,9 @@ GO
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('IT', 'IT', 0)
 GO
 
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('KFactor', 'Transformer K factor', 0)
+GO
+
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('None', 'None', 0)
 GO
 
@@ -81,6 +84,9 @@ INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PHarm
 GO
 
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PIntg', 'Active power integrated over time', 0)
+GO
+
+INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PLTSlide', 'Sliding PLT', 0)
 GO
 
 INSERT INTO MeasurementCharacteristic(Name, Description, Display) VALUES ('PPeakDemand', 'Peak active power demand', 0)

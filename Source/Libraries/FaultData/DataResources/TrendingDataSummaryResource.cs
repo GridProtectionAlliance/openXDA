@@ -23,17 +23,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.Collections;
-using GSF.Configuration;
 using log4net;
-using openHistorian.XDALink;
 using openXDA.Model;
-using TrendingDataPoint = openHistorian.XDALink.TrendingDataPoint;
 
 namespace FaultData.DataResources
 {
@@ -59,8 +54,6 @@ namespace FaultData.DataResources
             public double UnreasonableValue;
             public double HighLimit;
             public double LowLimit;
-
-            public bool IsDuplicate;
 
             #endregion
 
@@ -129,40 +122,11 @@ namespace FaultData.DataResources
             #endregion
         }
 
-        // Fields
-        private HistorianSettings m_historianSettings;
-        private Dictionary<Channel, List<TrendingDataSummary>> m_trendingDataSummaries;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        public TrendingDataSummaryResource()
-        {
-            m_historianSettings = new HistorianSettings();
-        }
-
         #endregion
 
         #region [ Properties ]
 
-        [Category]
-        [SettingName(HistorianSettings.CategoryName)]
-        public HistorianSettings HistorianSettings
-        {
-            get
-            {
-                return m_historianSettings;
-            }
-        }
-
-        public Dictionary<Channel, List<TrendingDataSummary>> TrendingDataSummaries
-        {
-            get
-            {
-                return m_trendingDataSummaries;
-            }
-        }
+        public Dictionary<Channel, List<TrendingDataSummary>> TrendingDataSummaries { get; private set; }
 
         #endregion
 
@@ -170,32 +134,18 @@ namespace FaultData.DataResources
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
-            Dictionary<Channel, List<DataGroup>> trendingGroups;
-            HashSet<Tuple<int, SeriesID, DateTime>> existingTrendingPoints;
+            TrendingDataSummaries = new Dictionary<Channel, List<TrendingDataSummary>>();
 
-            Dictionary<string, DataSeries> seriesLookup;
-            DataSeries minSeries;
-            DataSeries maxSeries;
-            DataSeries avgSeries;
-
-            List<TrendingDataSummary> summaries;
-            TrendingDataSummary summary;
-
-            m_trendingDataSummaries = new Dictionary<Channel, List<TrendingDataSummary>>();
-            trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
-
-            using (Historian historian = new Historian(m_historianSettings.Server, m_historianSettings.InstanceName))
-            {
-                existingTrendingPoints = FindExistingTrendingPoints(meterDataSet, historian);
-            }
+            TrendingGroupsResource trendingGroupsResource = meterDataSet.GetResource<TrendingGroupsResource>();
+            Dictionary<Channel, List<DataGroup>> trendingGroups = trendingGroupsResource.TrendingGroups;
 
             foreach (KeyValuePair<Channel, List<DataGroup>> trendingGroup in trendingGroups)
             {
-                summaries = m_trendingDataSummaries.GetOrAdd(trendingGroup.Key, channel => new List<TrendingDataSummary>());
+                List<TrendingDataSummary> summaries = TrendingDataSummaries.GetOrAdd(trendingGroup.Key, channel => new List<TrendingDataSummary>());
 
                 foreach (DataGroup dataGroup in trendingGroup.Value)
                 {
-                    seriesLookup = dataGroup.DataSeries
+                    Dictionary<string, DataSeries> seriesLookup = dataGroup.DataSeries
                         .GroupBy(series => series.SeriesInfo.SeriesType.Name)
                         .ToDictionary(grouping => grouping.Key, grouping =>
                         {
@@ -205,9 +155,9 @@ namespace FaultData.DataResources
                             return grouping.First();
                         });
 
-                    seriesLookup.TryGetValue("Minimum", out minSeries);
-                    seriesLookup.TryGetValue("Maximum", out maxSeries);
-                    seriesLookup.TryGetValue("Average", out avgSeries);
+                    seriesLookup.TryGetValue("Minimum", out DataSeries minSeries);
+                    seriesLookup.TryGetValue("Maximum", out DataSeries maxSeries);
+                    seriesLookup.TryGetValue("Average", out DataSeries avgSeries);
 
                     // By the time we exit this if statement,
                     // the min series will have been defined
@@ -261,7 +211,7 @@ namespace FaultData.DataResources
 
                     for (int i = 0; i < dataGroup.Samples; i++)
                     {
-                        summary = new TrendingDataSummary();
+                        TrendingDataSummary summary = new TrendingDataSummary();
 
                         // Get the date-time of the summary
                         summary.Time = minSeries.DataPoints[i].Time;
@@ -280,49 +230,10 @@ namespace FaultData.DataResources
                         if (double.IsNaN(summary.Minimum) || double.IsNaN(summary.Maximum) || double.IsNaN(summary.Average))
                             continue;
 
-                        summary.IsDuplicate = SeriesIDs.Any(seriesID => !existingTrendingPoints.Add(Tuple.Create(trendingGroup.Key.ID, seriesID, summary.Time)));
-
                         summaries.Add(summary);
                     }
                 }
             }
-        }
-
-        private HashSet<Tuple<int, SeriesID, DateTime>> FindExistingTrendingPoints(MeterDataSet meterDataSet, Historian historian)
-        {
-            HashSet<Tuple<int, SeriesID, DateTime>> existingTrendingPoints = new HashSet<Tuple<int, SeriesID, DateTime>>();
-            Dictionary<Channel, List<DataGroup>> trendingDataGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
-
-            IEnumerable<IGrouping<Tuple<DateTime, DateTime>, TrendingRange>> channelGroups = trendingDataGroups
-                .SelectMany(kvp => kvp.Value.Select(dataGroup => new TrendingRange(kvp.Key, dataGroup)))
-                .GroupBy(trendingRange => Tuple.Create(trendingRange.StartTime, trendingRange.EndTime));
-
-            foreach (IGrouping<Tuple<DateTime, DateTime>, TrendingRange> channelGroup in channelGroups)
-            {
-                DateTime startTime = channelGroup.Key.Item1;
-                DateTime stopTime = channelGroup.Key.Item2;
-                IEnumerable<int> channels = channelGroup.Select(trendingRange => trendingRange.Channel.ID);
-                IEnumerable<TrendingDataPoint> trendingPoints = null;
-
-                try
-                {
-                    trendingPoints = historian.Read(channels, startTime, stopTime);
-
-                    foreach (TrendingDataPoint trendingPoint in trendingPoints)
-                        existingTrendingPoints.Add(GetKey(trendingPoint));
-                }
-                finally
-                {
-                    (trendingPoints as IDisposable)?.Dispose();
-                }
-            }
-
-            return existingTrendingPoints;
-        }
-
-        private Tuple<int, SeriesID, DateTime> GetKey(TrendingDataPoint trendingDataPoint)
-        {
-            return Tuple.Create(trendingDataPoint.ChannelID, trendingDataPoint.SeriesID, trendingDataPoint.Timestamp);
         }
 
         #endregion
@@ -330,10 +241,6 @@ namespace FaultData.DataResources
         #region [ Static ]
 
         // Static Fields
-        private static readonly List<SeriesID> SeriesIDs = Enum.GetValues(typeof(SeriesID))
-            .Cast<SeriesID>()
-            .ToList();
-
         private static readonly ILog Log = LogManager.GetLogger(typeof(TrendingDataSummaryResource));
 
         #endregion

@@ -368,27 +368,29 @@ CREATE TABLE CapacitorBankAttributes
     PosReactanceTol FLOAT NOT NULL,
     Nparalell INT NOT NULL,
     Nseries INT NOT NULL,
-    NSeriesGroup INT NOT NULL,
-    NParalellGroup INT NOT NULL,
+    NSeriesGroup INT NOT NULL DEFAULT(0),
+    NParalellGroup INT NOT NULL DEFAULT(0),
     Fused BIT NOT NULL,
-    VTratioBus FLOAT NOT NULL,
-    NumberLVCaps INT NOT NULL,
-    NumberLVUnits INT NOT NULL,
-    LVKVAr FLOAT NOT NULL,
-    LVKV FLOAT NOT NULL,
-    LVNegReactanceTol FLOAT NOT NULL,
-    LVPosReactanceTol FLOAT NOT NULL,
-    UpperXFRRatio FLOAT NOT NULL,
-    LowerXFRRatio FLOAT NOT NULL,
+    VTratioBus FLOAT NOT NULL DEFAULT(0),
+    NumberLVCaps INT NOT NULL DEFAULT(0),
+    NumberLVUnits INT NOT NULL DEFAULT(0),
+    LVKVAr FLOAT NOT NULL DEFAULT(0),
+    LVKV FLOAT NOT NULL DEFAULT(0),
+    LVNegReactanceTol FLOAT NOT NULL DEFAULT(0),
+    LVPosReactanceTol FLOAT NOT NULL DEFAULT(0),
+    UpperXFRRatio FLOAT NOT NULL DEFAULT(0),
+    LowerXFRRatio FLOAT NOT NULL DEFAULT(0),
     Nshorted FLOAT NOT NULL,
-    BlownFuses INT NOT NULL,
-    BlownGroups INT NOT NULL,
-    RelayPTRatio VARCHAR(50) NOT NULL,
-    Rv FLOAT NOT NULL,
-    Rh FLOAT NOT NULL,
+    BlownFuses INT NOT NULL DEFAULT(0),
+    BlownGroups INT NOT NULL DEFAULT(0),
+    RelayPTRatioPrimary INT NULL DEFAULT(0),
+    RelayPTRatioSecondary INT NULL DEFAULT(0),
+    Rv FLOAT NOT NULL DEFAULT(0),
+    Rh FLOAT NOT NULL DEFAULT(0),
     Compensated BIT NOT NULL,
     NLowerGroups INT NOT NULL,
-    ShortedGroups FLOAT NOT NULL
+    ShortedGroups FLOAT NOT NULL DEFAULT(0),
+    Sh FLOAT NOT NULL DEFAULT(0)
 )
 GO
 
@@ -447,6 +449,24 @@ CREATE TABLE TransformerAttributes
 )
 GO
 
+-- Channel Group and Type
+CREATE TABLE ChannelGroup
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	Name VARCHAR(200) NOT NULL,
+	Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE ChannelGroupType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelGroupID INT NOT NULL REFERENCES ChannelGroup(ID),
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
+	DisplayName VARCHAR(20) NOT NULL
+)
+GO
 
 -- Correspoding Views and Trigger 
 CREATE VIEW Line AS
@@ -773,7 +793,9 @@ CREATE VIEW CapBank AS
         Nshorted,
         BlownFuses,
         BlownGroups,
-        RelayPTRatio,
+        RelayPTRatioPrimary,
+        RelayPTRatioSecondary,
+        Sh,
         Rv,
         Rh,
         Compensated,
@@ -798,7 +820,7 @@ BEGIN
 	INSERT INTO CapacitorBankAttributes (AssetID, CapacitancePerBank, NumberOfBanks, CktSwitcher, MaxKV, UnitKV, UnitKVAr, NegReactanceTol,
         PosReactanceTol, Nparalell, Nseries, NSeriesGroup, NParalellGroup, Fused, VTratioBus, NumberLVCaps, NumberLVUnits, LVKVAr,
         LVKV, LVNegReactanceTol, LVPosReactanceTol, UpperXFRRatio, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups,
-        RelayPTRatio, Rv, Rh, Compensated, NLowerGroups, ShortedGroups)
+        RelayPTRatioPrimary, RelayPTRatioSecondary,Rv, Rh, Compensated, NLowerGroups, ShortedGroups,Sh)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			CapacitancePerBank AS CapacitancePerBank,
@@ -826,12 +848,14 @@ BEGIN
             Nshorted AS Nshorted,
             BlownFuses AS BlownFuses,
             BlownGroups AS BlownGroups,
-            RelayPTRatio AS RelayPTRatio,
+            RelayPTRatioPrimary AS RelayPTRatioPrimary,
+            RelayPTRatioSecondary AS RelayPTRatioPrimary,
             Rv AS Rv,
             Rh AS Rh,
             Compensated AS Compensated,
             NLowerGroups AS NLowerGroups,
-            ShortedGroups AS ShortedGroups
+            ShortedGroups AS ShortedGroups,
+            Sh as Sh
 	    FROM INSERTED
 END
 GO
@@ -882,12 +906,14 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             CapacitorBankAttributes.Nshorted = INSERTED.Nshorted,
             CapacitorBankAttributes.BlownFuses = INSERTED.BlownFuses,
             CapacitorBankAttributes.BlownGroups = INSERTED.BlownGroups,
-            CapacitorBankAttributes.RelayPTRatio = INSERTED.RelayPTRatio,
+            CapacitorBankAttributes.RelayPTRatioPrimary = INSERTED.RelayPTRatioPrimary,
+            CapacitorBankAttributes.RelayPTRatioSecondary = INSERTED.RelayPTRatioSecondary,
             CapacitorBankAttributes.Rv = INSERTED.Rv,
             CapacitorBankAttributes.Rh = INSERTED.Rh,
             CapacitorBankAttributes.Compensated = INSERTED.Compensated,
             CapacitorBankAttributes.NLowerGroups = INSERTED.NLowerGroups,
-            CapacitorBankAttributes.ShortedGroups = INSERTED.ShortedGroups
+            CapacitorBankAttributes.ShortedGroups = INSERTED.ShortedGroups,
+            CapacitorBankAttributes.Sh = INSERTED.Sh
 		FROM
 			CapacitorBankAttributes 
 	INNER JOIN
@@ -1117,25 +1143,6 @@ CREATE TABLE MeasurementCharacteristic
 )
 GO
 
--- Channel Group and Type
-CREATE TABLE ChannelGroup
-(
-	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	Name VARCHAR(200) NOT NULL,
-	Description VARCHAR(MAX) NULL
-)
-GO
-
-CREATE TABLE ChannelGroupType
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    ChannelGroupID INT NOT NULL REFERENCES ChannelGroup(ID),
-    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
-    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
-	DisplayName VARCHAR(20) NOT NULL
-)
-GO
-
 CREATE TABLE Phase
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -1153,6 +1160,8 @@ CREATE TABLE Channel
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
     Name VARCHAR(200) NOT NULL,
+    Adder FLOAT NOT NULL DEFAULT 0,
+    Multiplier FLOAT NOT NULL DEFAULT 1,
     SamplesPerHour FLOAT NOT NULL,
     PerUnitValue FLOAT NULL,
     HarmonicGroup INT NOT NULL,
@@ -3386,6 +3395,10 @@ GO
 INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Location', 'Location')
 GO
 INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Customer', 'Customer')
+GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('User', 'UserAccount')
+GO
+INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Company', 'Company')
 GO
 
 

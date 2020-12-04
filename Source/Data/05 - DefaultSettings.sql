@@ -112,7 +112,7 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.VThreshhold', '500', '500')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Delay', '1200', '1200')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Delay', '1200000', '1200000')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.Enabled', 'False', 'False')
