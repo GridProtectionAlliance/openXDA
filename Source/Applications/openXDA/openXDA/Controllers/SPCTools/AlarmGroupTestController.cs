@@ -26,7 +26,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web.Http;
+using GSF.Data;
+using GSF.Data.Model;
 using HIDS;
+using openXDA.Model;
 
 namespace openXDA.Controllers
 {
@@ -46,6 +49,8 @@ namespace openXDA.Controllers
             public string Start { get; set; }
             public string End { get; set; }
             public List<int> ChannelID { get; set; }
+            public string IntervallDataType { get; set; }
+            public int AlarmTypeID { get; set; }
         }
 
         /// <summary>
@@ -111,13 +116,12 @@ namespace openXDA.Controllers
                 {
                     double threshhold = (root.isScalar ? setPoint[0] : setPoint[index]);
 
+
                     ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = threshhold };
-                    List<double[]> data = StaticAlarmCreationController.createData(id, DateTime.Parse(postedRequest.Start), DateTime.Parse(postedRequest.End));
+                    List<double> data = StaticAlarmCreationController.createData(id, DateTime.Parse(postedRequest.Start), DateTime.Parse(postedRequest.End)).Select(pt => pt[1]).ToList();
 
-                    test.FactorTests = postedRequest.AlarmFactors.Select(f => new FactorTest() { TimeInAlarm = 0, NumberRaised = 1, Factor = f }).ToList();
-                    test.FactorTests.Add(new FactorTest() { TimeInAlarm = 0, NumberRaised = 1, Factor = 1.0 });
+                    return TestChannel(id, data, threshhold, postedRequest.AlarmFactors, postedRequest.AlarmTypeID);
 
-                    return test;
                 }).ToList();
 
                 return Ok(result);
@@ -130,7 +134,45 @@ namespace openXDA.Controllers
 
         }
 
+        private ChannelTestResponse TestChannel(int channelID, List<double> data, double threshhold, List<double> factors, int alarmtypeID)
+        {
 
+            bool upper = false;
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            {
+                AlarmType alarmType = new TableOperations<AlarmType>(connection).QueryRecordWhere("ID = {0}", alarmtypeID);
+                if (alarmType.Name == "Lower Limit")
+                    upper = false;
+            }
+
+            ChannelTestResponse result = new ChannelTestResponse()
+            {
+                ChannelID = channelID,
+                Threshhold = threshhold,
+                FactorTests = factors.Select(f => new FactorTest() { TimeInAlarm = 0, NumberRaised = 0, Factor = f }).ToList()
+            };
+            result.FactorTests.Add(new FactorTest() { TimeInAlarm = 0, NumberRaised = 0, Factor = 1.0 });
+
+            int i = 1;
+            int jF = 0;
+
+            for (i=1; i < data.Count; i++)
+            {
+                for (jF = 0; jF < result.FactorTests.Count; jF++)
+                {
+                    double p1 = (data[i - 1] - threshhold*result.FactorTests[jF].Factor) * (upper? 1.0D : -1.0D);
+                    double p2 = (data[i] - threshhold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D);
+
+                    if (p2 > 0)
+                        result.FactorTests[jF].NumberRaised++;
+                    if ((p1*p2) < 0 && p2 > 0)
+                        result.FactorTests[jF].NumberRaised++;
+                }
+            }
+
+            return result;
+
+        }
         #endregion
 
     }

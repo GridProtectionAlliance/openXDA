@@ -24,7 +24,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SPCTools, StaticWizzard, openXDA, Redux } from '../global';
 import RequestHandle from './RequestHandle';
 import _ from 'lodash';
-import { selectTokenizerRequest, selectAffectedChannels } from '../StaticAlarm/StaticWizzardSlice';
+import { selectTokenizerRequest, selectAffectedChannels, selectIntervallDataType } from '../StaticAlarm/StaticWizzardSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -97,7 +97,9 @@ function loadStaticWizzardTest(state: Redux.StoreState): JQuery.jqXHR<SPCTools.I
         SetPointRequest: selectTokenizerRequest(state),
         Start: state.HistoryTest.time.start,
         End: state.HistoryTest.time.end,
-        ChannelID: selectAffectedChannels(state).map(channel => channel.ID)
+        ChannelID: selectAffectedChannels(state).map(channel => channel.ID),
+        IntervallDataType: selectIntervallDataType(state),
+        AlarmTypeID: state.StaticWizzard.AlarmGroup.AlarmTypeID
     };
 
     let handle = $.ajax({
