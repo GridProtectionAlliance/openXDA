@@ -23,8 +23,8 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import Filter, { FieldType } from '../CommonComponents/Filter';
-import { SPCTools, openXDA, Redux } from '../global';
+import FilterWindow from '../CommonComponents/Filter';
+import { SPCTools, openXDA, Redux, Filter } from '../global';
 import Table from '@gpa-gemstone/react-table';
 import { cloneDeep, clone } from 'lodash';
 import { Input, Select } from '@gpa-gemstone/react-forms';
@@ -193,11 +193,11 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
 
 
     let searchCollumns = [
-        { label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as FieldType },
-        { label: 'Substation', key: 'Location' as keyof openXDA.IMeter, type: 'string' as FieldType },
-        { label: 'Make', key: 'Make' as keyof openXDA.IMeter, type: 'string' as FieldType },
-        { label: 'Model', key: 'Model' as keyof openXDA.IMeter, type: 'string' as FieldType },
-        { label: 'AssetKey', key: 'AssetKey' as keyof openXDA.IMeter, type: 'string' as FieldType },
+        { label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
+        { label: 'Substation', key: 'Location' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
+        { label: 'Make', key: 'Make' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
+        { label: 'Model', key: 'Model' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
+        { label: 'AssetKey', key: 'AssetKey' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
     ]
 
 
@@ -210,7 +210,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                         <button type="button" className="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div className="modal-body">
-                        <Filter<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as FieldType}} SetFilter={setFilters} />
+                        <FilterWindow<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType }} SetFilter={setFilters} />
                         <MultiSelectTable<openXDA.IMeter>
                             cols={[
                                 { key: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
@@ -316,8 +316,8 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
     }
 
     let searchCollumns = [
-        { label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as FieldType },
-        { label: 'Num of Meters', key: 'Meters' as keyof openXDA.IAssetGroup, type: 'integer' as FieldType },
+        { label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType },
+        { label: 'Num of Meters', key: 'Meters' as keyof openXDA.IAssetGroup, type: 'integer' as Filter.FieldType },
     ]
 
 
@@ -330,7 +330,7 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                         <button type="button" className="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div className="modal-body">
-                        <Filter<openXDA.IAssetGroup> Id='FilterAssetGroup' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as FieldType }} SetFilter={setFilters} />
+                        <FilterWindow<openXDA.IAssetGroup> Id='FilterAssetGroup' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType }} SetFilter={setFilters} />
                         <Table<openXDA.IAssetGroup>
                             cols={[
                                 { key: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },

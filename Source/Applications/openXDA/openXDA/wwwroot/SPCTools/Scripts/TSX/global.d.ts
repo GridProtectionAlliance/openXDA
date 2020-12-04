@@ -57,6 +57,14 @@ export namespace Redux {
         Ascending: boolean,
         Filters?: Filter.IFilter<T>[]
     }
+
+    interface OptionState<T> {
+        Status: SPCTools.Status,
+        Data: T[],
+        Error: null | string,
+        Selected: boolean[]
+    }
+
 }
 
 export namespace Filter {
@@ -67,12 +75,6 @@ export namespace Filter {
 
 }
 
-interface OptionState<T> {
-    Status: SPCTools.Status,
-    Data: T[],
-    Error: null | string,
-    Selected: boolean[]
-}
 
 export namespace SPCTools {
     export type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
