@@ -496,8 +496,11 @@ const IntervallDataSelect = (props: {}) => {
     const dispatch = useDispatch();
     const seriesTypes = useSelector(SelectSeriesTypes);
     const loading = useSelector(SelectSeriesTypeStatus);
-    const alarmGroup = useSelector(selectSeriesTypeID);
+    const seriesTypeID = useSelector(selectSeriesTypeID);
 
+    React.useEffect(() => {
+        dispatch(FetchAffectedChannels());
+    }, [seriesTypeID])
 
     return (
     <fieldset className="border" style={{ padding: '10px' }}>
@@ -509,7 +512,7 @@ const IntervallDataSelect = (props: {}) => {
                             <input
                                 className="form-check-input"
                                 type="radio"
-                                checked={alarmGroup == cb.ID}
+                                checked={seriesTypeID == cb.ID}
                                 onChange={(evt) => dispatch(updateSeriesTypeID(cb.ID))}
                             />
                             <label className="form-check-label">{cb.Name}</label>
