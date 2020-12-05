@@ -51,20 +51,30 @@ export const DynamicWizzardSlice = createSlice({
         MeasurmentTypeID: 0,
         SeriesTypeID: 0,
         AlarmDayGroupID: 0,
+        StatisticsRange: { start: '', end: '' },
+        StatisticsFilter: { FilterLower: false, FilterUpper: false, FilterZero: true, LowerLimit: 0, UpperLimit: 0 },
+        StatisticsChannelIDs: [],
         
     } as DynamicWizzard.IState,
     reducers: {
         reset: (state, action: PayloadAction<SPCTools.ISettingsState>) => {
 
-            let alarmTypeID = 1
+            let dt = new Date();
+
             state.Step = 'general'
-            state.AlarmGroup = { AlarmTypeID: alarmTypeID, Formula: "", ID: -1, Name: "" }
+            state.AlarmGroup = { AlarmTypeID: 1, Formula: "", ID: -1, Name: "" }
             state.Status = 'idle'
             state.SelectedMeter = []
             state.MeasurmentTypeID = 1
             state.SeriesTypeID = 1
             state.AlarmDayGroupID = 1
-            
+            state.StatisticsRange = {
+                start: `${dt.getFullYear() - 1}-${(dt.getMonth() + 1).toString().padStart(2, '0')}-${dt.getDate().toString().padStart(2, '0')}`,
+                end: `${dt.getFullYear()}-${(dt.getMonth() + 1).toString().padStart(2, '0')}-${dt.getDate().toString().padStart(2, '0')}`
+            }
+            state.StatisticsFilter = { FilterLower: false, FilterUpper: false, FilterZero: true, LowerLimit: 0, UpperLimit: 0 }
+            state.StatisticsChannelIDs = []
+
         },
         next: (state) => {
             if (state.Step == 'general')
@@ -104,8 +114,18 @@ export const DynamicWizzardSlice = createSlice({
         },
         updateAlarmDayGroupID: (state, action: PayloadAction<number>) => {
             state.AlarmDayGroupID = action.payload
+        },
+        updateStatisticsRange: (state, action: PayloadAction<SPCTools.IDateRange>) => {
+            state.StatisticsRange = action.payload
+        },
+        updateStatisticsFilter: (state, action: PayloadAction<SPCTools.IDataFilter>) => {
+            state.StatisticsFilter = action.payload
+        },
+        updateStatisticChannels: (state, action: PayloadAction<openXDA.IChannel[]>) => {
+            state.StatisticsChannelIDs = action.payload.map(ch => ch.ID)
         }
     },
+    
      extraReducers: (builder) => {
 
 
@@ -119,8 +139,9 @@ export const {
     sortSelectedMeters,
     addMeter, removeMeter,
     updateMeasurmentTypeID,
-    updateSeriesTypeID, updateAlarmDayGroupID
-
+    updateSeriesTypeID, updateAlarmDayGroupID,
+    updateStatisticsRange, updateStatisticsFilter,
+    updateStatisticChannels
 
 } = DynamicWizzardSlice.actions
 
@@ -139,6 +160,8 @@ export const selectSeriesTypeID = (state: Redux.StoreState) => state.DynamicWizz
 export const selectAlarmGroup = (state: Redux.StoreState) => state.DynamicWizzard.AlarmGroup;
 export const selectAlarmDayGroupID = (state: Redux.StoreState) => state.DynamicWizzard.AlarmDayGroupID;
 
+export const SelectStatisticsrange = (state: Redux.StoreState) => state.DynamicWizzard.StatisticsRange;
+export const SelectStatisticsFilter = (state: Redux.StoreState) => state.DynamicWizzard.StatisticsFilter;
 
 
 export const selectErrors = createSelector(
@@ -148,13 +171,13 @@ export const selectErrors = createSelector(
     (state: Redux.StoreState) => (state.DynamicWizzard.SelectedMeter.length > 0),
     (state: Redux.StoreState) => SelectSelectedPhases(state).some(i => i),
     (state: Redux.StoreState) => SelectSelectedVoltages(state).some(i => i),
-//    (state: Redux.StoreState) => (state.StaticWizzard.StatSource),
-//    (state: Redux.StoreState) => (state.StaticWizzard.StatChannels.length > 0),
+    SelectStatisticsrange,
+    (state: Redux.StoreState) => state.DynamicWizzard.StatisticsChannelIDs.length,
 //    (state: Redux.StoreState) => (state.StaticWizzard.StatChannels.length == state.StaticWizzard.SelectedChannelCount),
 //    (state: Redux.StoreState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.Valid) ,
 //    (state: Redux.StoreState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.IsScalar),
 //    (state: Redux.StoreState) => (state.StaticWizzard.AlarmFactors),
-    (step, channelCount, name, meterCount, phaseCount, voltageCount) => {
+    (step, channelCount, name, meterCount, phaseCount, voltageCount, statisticsRange, statisticsChannelCount) => {
         let result = [] as StaticWizzard.IRequirement[];
         if (step == 'general') {
             result.push({ text: "A Name is required", complete: (name ? 'complete' : 'required') });
@@ -164,11 +187,11 @@ export const selectErrors = createSelector(
             result.push({ text: "The Selection needs to result in at least 1 Channel", complete: (channelCount ? 'complete' : 'required') });
         }
         else if (step == 'selectData') {
-            //result.push({ text: "A valid start date has to be selected", complete: (statSource.StartDate != "" ? 'complete' : 'required') });
-            //result.push({ text: "A valid end date has to be selected", complete: (statSource.EndDate != "" ? 'complete' : 'required') })
-            //result.push({ text: "At least 1 Channel needs to be selected", complete: (selectedhistory ? 'complete' : 'required') })
-            //if (!fullHistory)
-            //    result.push({ text: "A single threshhold will be required for all Channels <br>Not all Channels are used as historic datasource", complete: 'warning' })
+            result.push({ text: "A valid start date has to be selected", complete: (statisticsRange.start != "" ? 'complete' : 'required') });
+            result.push({ text: "A valid end date has to be selected", complete: (statisticsRange.end != "" ? 'complete' : 'required') })
+            result.push({ text: "At least 1 Channel needs to be selected", complete: (statisticsChannelCount > 0 ? 'complete' : 'required') })
+            if (!(statisticsChannelCount == channelCount))
+                result.push({ text: "A single threshhold will be required for all Channels. Not all Channels are used as historic datasource", complete: 'warning' })
         }
         else if (step == 'setpoint') {
             //result.push({ text: "A valid setpoint Expression is Required", complete: (setPoint ? 'complete' : 'required') });

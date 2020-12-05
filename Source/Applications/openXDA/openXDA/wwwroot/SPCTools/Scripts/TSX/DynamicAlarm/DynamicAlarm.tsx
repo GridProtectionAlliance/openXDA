@@ -33,6 +33,7 @@ import ReactTooltip from 'react-tooltip';
 import { loadTest } from '../Store/HistoryTestSlice';
 import { setPage } from '../Store/GeneralSettingsSlice';
 import { Requirements } from '../CommonComponents/Requirments';
+import SelectStatisticsData from './SelectStatisticsData';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -89,8 +90,8 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
                 {status == 'idle' ?
                     <>
                         {tab == 'general' ? <GeneralSettings /> : null}
-                        {/*{tab == 'selectData' ? <SelectHistoricData /> : null}
-                        //{tab == 'setpoint' ? <StaticSetPoint /> : null}
+                        {tab == 'selectData' ? <SelectStatisticsData /> : null}
+                        {/*//{tab == 'setpoint' ? <StaticSetPoint /> : null}
                         //{tab == 'test' ? <TestGroup /> : null}*/}
                     </> : null
                 }

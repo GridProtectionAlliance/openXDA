@@ -178,9 +178,7 @@ export namespace StaticWizzard {
         AlarmFactors: SPCTools.IFactor[],
         SetPointEvaluation: SPCTools.ITokenizerResponse,
 
-        AffectedChannels: openXDA.IChannel[]
-        //SetPoints: ISetpoint[],
-        
+        AffectedChannels: openXDA.IChannel[] 
         //HistoricData: SPCTools.IExtendedHistorySettings,
         //TestResults: SPCTools.IExtendedTestSettings,
         
@@ -215,6 +213,12 @@ export namespace DynamicWizzard {
         MeasurmentTypeID: number,
         SeriesTypeID: number,
         AlarmDayGroupID: number,
+
+
+        StatisticsRange: SPCTools.IDateRange,
+        StatisticsFilter: SPCTools.IDataFilter,
+        StatisticsChannelIDs: number[]
+        //SetPoints: ISetpoint[],
 
     }
 

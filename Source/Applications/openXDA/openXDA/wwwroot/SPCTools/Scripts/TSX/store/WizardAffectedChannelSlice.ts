@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SPCTools, Redux, openXDA } from '../global';
 import _ from 'lodash';
 import { selectSelectedMeter, selectMeasurmentTypeID, selectSeriesTypeID } from '../DynamicAlarm/DynamicWizzardSlice';
@@ -56,9 +56,9 @@ export const WizardAffectedChannelSlice = createSlice({
         Filters: []
     } as Redux.State<openXDA.IChannel>,
     reducers: {
-        SortAffectedChanels: (state, action) => {
+        SortAffectedChanels: (state, action: PayloadAction<{Ascending: boolean, SortField: string}>) => {
             state.Ascending = action.payload.Ascending;
-            state.SortField = action.payload.SortField;
+            state.SortField = action.payload.SortField as keyof openXDA.IChannel;
             state.Data = _.sortBy(state.Data, state.SortField, (state.Ascending ? "ASC" : "DES"));
         }
     },
@@ -90,11 +90,12 @@ export default WizardAffectedChannelSlice.reducer;
 
 // #region [ Selectors ]
 export const SelectAffectedChannels = (state: Redux.StoreState) => state.WizardAffectedChannel.Data;
-export const SelectAffectedChannelByID = (state: Redux.StoreState, id) => state.WizardAffectedChannel.Data.find(ds => ds.ID === id);
+export const SelectAffectedChannelByID = (state: Redux.StoreState, id: number) => state.WizardAffectedChannel.Data.find(ds => ds.ID === id);
 export const SelectAffectedChannelStatus = (state: Redux.StoreState) => state.WizardAffectedChannel.Status;
 export const SelectAffectedChannelSortField = (state: Redux.StoreState) => state.WizardAffectedChannel.SortField;
 export const SelectAffectedChannelAscending = (state: Redux.StoreState) => state.WizardAffectedChannel.Ascending;
 export const SelectAffectedChannelCount = (state: Redux.StoreState) => state.WizardAffectedChannel.Data.length;
+export const SelectAffectedChannelsByIDs = (state: Redux.StoreState, id: number[]) => state.WizardAffectedChannel.Data.find(ds => id.findIndex(j => j == ds.ID) > -1);
 
 // #endregion
 
