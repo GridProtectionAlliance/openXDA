@@ -241,7 +241,7 @@ const SetPointWindow = (props: { type: StaticWizzard.setPointType, setter: (valu
 
     //set intial Text to existing Formula if it exists
     React.useEffect(() => {
-        setText(alarmGroup.Formula)
+        setText("")
     }, [])
 
     return (

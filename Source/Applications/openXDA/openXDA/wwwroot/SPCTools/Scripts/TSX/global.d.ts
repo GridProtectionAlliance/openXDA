@@ -82,20 +82,24 @@ export namespace SPCTools {
 
     export type Page = ('Home' | 'Static' | 'Dynamic' | 'Meter' | 'Channel');
 
+    //r
     export type LoadingState = ('loading' | 'idle' | 'error')
 
     export type WizzardTab = ('general' | 'selectData' | 'setpoint' | 'test')
 
+    //r
     export type IntervallDataType = ('Minimum' | 'Maximum' | 'Average');
 
-    export interface IAlarmGroupView { ID: number, Name: string, AlarmTypeID: number, Formula: string, Channels: number, Meters: number, AlarmSeverityID: number, AlarmSeverity: string }
+    export interface IAlarmGroupView extends IAlarmGroup { Channels: number, Meters: number, AlarmSeverityID: number, AlarmSeverity: string }
 
     export interface IChannelOverview { ID: number, Meter: string, Channel: string, Type: string, Phase: string, Asset: string }
 
+    //r
     export interface IChannelAlarmGroup { ID: number, ChannelID: number, Name: string, AlarmSeverityID: number, AlarmSeverity: string, TimeInAlarm: string }
 
-    export interface IAlarmGroup { ID: number, Name: string, AlarmTypeID: number, Formula: string }
+    export interface IAlarmGroup { ID: number, Name: string, AlarmTypeID: number, SeverityID: number }
 
+    //r
     export interface IStatisticData { StartDate: string, EndDate: string, DataFilter: IDataFilter }
 
     export interface IDataFilter { FilterZero: boolean, FilterUpper: boolean, UpperLimit: number, FilterLower: boolean, LowerLimit: number }

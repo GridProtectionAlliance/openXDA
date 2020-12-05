@@ -114,7 +114,7 @@ export const StaticWizzardSlice = createSlice({
             let endDate = `${dt.getFullYear()}-${(dt.getMonth() + 1).toString().padStart(2, '0')}-${dt.getDate().toString().padStart(2, '0')}`;
 
             state.Step = 'general'
-            state.AlarmGroup = { AlarmTypeID: alarmTypeID, Formula: "", ID: -1, Name: "" }
+            state.AlarmGroup = { AlarmTypeID: alarmTypeID, SeverityID: 0, ID: -1, Name: "" }
 
             state.AvailableVoltages = []
             state.SelectedVoltages = []
@@ -193,8 +193,6 @@ export const StaticWizzardSlice = createSlice({
         },
         updateSetPointEval: (state, action: PayloadAction<{ response: SPCTools.ITokenizerResponse, setPoint: string }>) => {
             state.SetPointEvaluation = action.payload.response;
-            if (action.payload.response.Valid)
-                state.AlarmGroup.Formula = action.payload.setPoint
         },
     },
      extraReducers: (builder) => {
@@ -309,7 +307,7 @@ export const selectTokenizerRequest = createSelector(
     (state: Redux.StoreState) => state.StaticWizzard.StatChannels,
     (state: Redux.StoreState) => state.StaticWizzard.StatSource.StartDate,
     (state: Redux.StoreState) => state.StaticWizzard.StatSource.EndDate,
-    (state: Redux.StoreState) => state.StaticWizzard.AlarmGroup.Formula,
+    (state: Redux.StoreState) => "",
     (filter, channels, start, end, value) => {
         return { Value: value, Channels: channels.map(item => item.ID), DataFilter: filter, EndDate: end, StartDate: start } as SPCTools.ITokenizerRequest;
     });
