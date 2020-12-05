@@ -59,9 +59,9 @@ export const WizardPhaseOptionSlice = createSlice({
         builder.addCase(FetchAvailablePhases.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            let oldState = state.Data;
+            let oldState = state.Data.map(ch => ch.ID);
             state.Data = JSON.parse(action.payload) as openXDA.IPhase[];
-            state.Selected = state.Data.map(ph => oldState.findIndex(item => item.ID == ph.ID) > -1)
+            state.Selected = state.Data.map(ph => oldState.findIndex(item => item == ph.ID) > -1)
         });
         builder.addCase(FetchAvailablePhases.pending, (state, action) => {
             state.Status = 'loading';
