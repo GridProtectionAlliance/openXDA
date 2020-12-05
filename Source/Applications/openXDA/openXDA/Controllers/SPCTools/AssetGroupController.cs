@@ -64,7 +64,7 @@ namespace openXDA.Controllers
 
                     IEnumerable<MeterDetail> records = new TableOperations<MeterDetail>(connection).QueryRecordsWhere($"ID in ({string.Join(",", connectionRecords.Select(item => item.MeterID))})");
 
-                    return Ok(records);
+                    return Ok(JsonConvert.SerializeObject(records));
                 }
                 catch (Exception ex)
                 {

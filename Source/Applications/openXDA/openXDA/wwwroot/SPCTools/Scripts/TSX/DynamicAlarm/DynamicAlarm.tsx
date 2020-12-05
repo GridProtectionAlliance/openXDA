@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import GeneralSettings from './GenSettings';
+import GeneralSettings from './GeneralSettings';
 import * as ReactDOM from 'react-dom';
 
 import {selectStatus, next, back, selectTab, selectErrors} from './DynamicWizzardSlice'

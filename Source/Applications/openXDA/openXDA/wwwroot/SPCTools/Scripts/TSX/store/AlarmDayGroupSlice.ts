@@ -27,7 +27,7 @@ import _ from 'lodash';
 
 // #region [ Thunks ]
 export const FetchAlarmDayGroup = createAsyncThunk('AlarmDayGroup/FetchAlarmdayGroup', async (_, { dispatch }) => {
-    return await GetChannelAlarmGroup();
+    return await GetAlarmDayGroup();
 });
 // #endregion
 
@@ -80,17 +80,16 @@ export default AlarmDayGroupSlice.reducer;
 // #endregion
 
 // #region [ Selectors ]
-export const SelectChannelAlarmGroups = (state: Redux.StoreState) => state.ChannelAlarmGroup.Data;
-export const SelectChannelAlarmGroupByID = (state: Redux.StoreState, id) => state.ChannelAlarmGroup.Data.find(ds => ds.ID === id) as SPCTools.IChannelAlarmGroup;
-export const SelectChannelAlarmGroupsStatus = (state: Redux.StoreState) => state.ChannelAlarmGroup.Status;
-export const SelectChannelAlarmGroupsSortField = (state: Redux.StoreState) => state.ChannelAlarmGroup.SortField;
-export const SelectChannelAlarmGroupsAscending = (state: Redux.StoreState) => state.ChannelAlarmGroup.Ascending;
+export const SelectAlarmDayGroups = (state: Redux.StoreState) => state.AlarmDayGroup.Data;
+export const SelectAlarmDayGroupByID = (state: Redux.StoreState, id) => state.AlarmDayGroup.Data.find(ds => ds.ID === id);
+export const SelectAlarmDayGroupsStatus = (state: Redux.StoreState) => state.AlarmDayGroup.Status;
+
 
 // #endregion
 
 // #region [ Async Functions ]
 
-function GetChannelAlarmGroup(): JQuery.jqXHR<string> {
+function GetAlarmDayGroup(): JQuery.jqXHR<string> {
     return $.ajax({
         type: "GET",
         url: `${apiHomePath}api/AlarmDayGroup`,

@@ -23,16 +23,20 @@
 import { createSlice, createAsyncThunk, PayloadAction, createSelector, Selector } from '@reduxjs/toolkit';
 import { SPCTools, StaticWizzard, openXDA, Redux, DynamicWizzard } from '../global';
 import _ from 'lodash';
+import { FetchAffectedChannels, SelectAffectedChannelCount } from '../store/WizardAffectedChannelSlice';
+import { SelectSelectedPhases } from '../store/WizardPhaseOptionSlice';
+import { SelectSelectedVoltages } from '../store/WizardVoltageOptionSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;
 declare var userIsAdmin: boolean;
 
-// Thunk For Reseting Wizzar
-export const ResetWizzard = createAsyncThunk('DynamicWizzard/ResetWizzard', (_, thunkAPI) => {
-    thunkAPI.dispatch(DynamicWizzardSlice.actions.reset((thunkAPI.getState() as Redux.StoreState).GeneralSettings));
-
+// Thunk For Reseting Wizrd
+export const ResetWizzard = createAsyncThunk('DynamicWizzard/ResetWizzard', (_, { dispatch, getState }) => {
+    dispatch(DynamicWizzardSlice.actions.reset((getState() as Redux.StoreState).GeneralSettings));
+    dispatch(FetchAffectedChannels());
 })
+
 
 export const DynamicWizzardSlice = createSlice({
     name: 'DynamicWizzard',
@@ -46,7 +50,8 @@ export const DynamicWizzardSlice = createSlice({
 
         MeasurmentTypeID: 0,
         SeriesTypeID: 0,
-       
+        AlarmDayGroupID: 0,
+        
     } as DynamicWizzard.IState,
     reducers: {
         reset: (state, action: PayloadAction<SPCTools.ISettingsState>) => {
@@ -58,6 +63,7 @@ export const DynamicWizzardSlice = createSlice({
             state.SelectedMeter = []
             state.MeasurmentTypeID = 1
             state.SeriesTypeID = 1
+            state.AlarmDayGroupID = 1
             
         },
         next: (state) => {
@@ -95,6 +101,9 @@ export const DynamicWizzardSlice = createSlice({
         },
         updateSeriesTypeID: (state, action: PayloadAction<number>) => {
             state.SeriesTypeID = action.payload
+        },
+        updateAlarmDayGroupID: (state, action: PayloadAction<number>) => {
+            state.AlarmDayGroupID = action.payload
         }
     },
      extraReducers: (builder) => {
@@ -110,7 +119,7 @@ export const {
     sortSelectedMeters,
     addMeter, removeMeter,
     updateMeasurmentTypeID,
-    updateSeriesTypeID
+    updateSeriesTypeID, updateAlarmDayGroupID
 
 
 } = DynamicWizzardSlice.actions
@@ -128,30 +137,31 @@ export const selectSelectedMeterSort = (state: Redux.StoreState) => state.Dynami
 export const selectMeasurmentTypeID = (state: Redux.StoreState) => state.DynamicWizzard.MeasurmentTypeID;
 export const selectSeriesTypeID = (state: Redux.StoreState) => state.DynamicWizzard.SeriesTypeID;
 export const selectAlarmGroup = (state: Redux.StoreState) => state.DynamicWizzard.AlarmGroup;
+export const selectAlarmDayGroupID = (state: Redux.StoreState) => state.DynamicWizzard.AlarmDayGroupID;
 
 
 
 export const selectErrors = createSelector(
     ((state: Redux.StoreState) => (state.DynamicWizzard.Step)),
-//    (state: Redux.StoreState) => (state.StaticWizzard.SelectedChannelCount > 0),
+    SelectAffectedChannelCount,
     (state: Redux.StoreState) => (state.DynamicWizzard.AlarmGroup.Name != undefined && state.DynamicWizzard.AlarmGroup.Name.length > 0),
     (state: Redux.StoreState) => (state.DynamicWizzard.SelectedMeter.length > 0),
-//    (state: Redux.StoreState) => (state.StaticWizzard.SelectedVoltages.some(i => i)),
- //   (state: Redux.StoreState) => (state.StaticWizzard.SelectedPhases.some(i => i)),
+    (state: Redux.StoreState) => SelectSelectedPhases(state).some(i => i),
+    (state: Redux.StoreState) => SelectSelectedVoltages(state).some(i => i),
 //    (state: Redux.StoreState) => (state.StaticWizzard.StatSource),
 //    (state: Redux.StoreState) => (state.StaticWizzard.StatChannels.length > 0),
 //    (state: Redux.StoreState) => (state.StaticWizzard.StatChannels.length == state.StaticWizzard.SelectedChannelCount),
 //    (state: Redux.StoreState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.Valid) ,
 //    (state: Redux.StoreState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.IsScalar),
 //    (state: Redux.StoreState) => (state.StaticWizzard.AlarmFactors),
-    (step, name, meterCount) => {
+    (step, channelCount, name, meterCount, phaseCount, voltageCount) => {
         let result = [] as StaticWizzard.IRequirement[];
         if (step == 'general') {
             result.push({ text: "A Name is required", complete: (name ? 'complete' : 'required') });
             result.push({ text: "At least 1 Meter needs to be selected", complete: (meterCount ? 'complete' : 'required') });
-            //result.push({ text: "At least 1 Phase needs to be selected", complete: (phaseCount ? 'complete' : 'required') });
-            //result.push({ text: "At least 1 Base Voltage needs to be selected", complete: (voltageCount ? 'complete' : 'required') });
-            //result.push({ text: "The Selection needs to result in at least 1 Channel", complete: (channelCount ? 'complete' : 'required') });
+            result.push({ text: "At least 1 Phase needs to be selected", complete: (phaseCount ? 'complete' : 'required') });
+            result.push({ text: "At least 1 Base Voltage needs to be selected", complete: (voltageCount ? 'complete' : 'required') });
+            result.push({ text: "The Selection needs to result in at least 1 Channel", complete: (channelCount ? 'complete' : 'required') });
         }
         else if (step == 'selectData') {
             //result.push({ text: "A valid start date has to be selected", complete: (statSource.StartDate != "" ? 'complete' : 'required') });
@@ -176,34 +186,7 @@ export const selectErrors = createSelector(
 
 // Async Functions
 
-function getPhases(meterIDs: number[], measurmentTypeID: number): JQuery.jqXHR<Array<openXDA.IPhase>> {
 
-    let handle = $.ajax({
-        type: "POST",
-        url: `${apiHomePath}api/SPCTools/StaticAlarmCreation/AvailablePhases`,
-        contentType: "application/json; charset=utf-8",
-        dataType: 'json',
-        data: JSON.stringify({ MeterID: meterIDs, MeasurmentTypeID: measurmentTypeID }),
-        cache: false,
-        async: true
-    });
-    return handle;
-}
-
-function getVoltages(meterIDs: number[], measurmentTypeID: number): JQuery.jqXHR<Array<number>> {
-
-    let handle = $.ajax({
-        type: "POST",
-        url: `${apiHomePath}api/SPCTools/StaticAlarmCreation/AvailableVoltages`,
-        contentType: "application/json; charset=utf-8",
-        dataType: 'json',
-        data: JSON.stringify({ MeterID: meterIDs, MeasurmentTypeID: measurmentTypeID }),
-        cache: false,
-        async: true
-    });
-
-    return handle;
-}
 
 function getChannelCount(state: StaticWizzard.IState): JQuery.jqXHR<number> {
     

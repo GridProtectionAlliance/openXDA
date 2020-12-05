@@ -32,12 +32,13 @@ import AlarmDayGroupReducer from './AlarmDayGroupSlice';
 import DynamicWizzardReducer from '../DynamicAlarm/DynamicWizzardSlice';
 import MeasurementTypeReducer from './MeasurmentTypeSlice';
 import AlarmTypeReducer from './AlarmTypeSlice';
-import WizardPhaseOptionReducer from './WizzardPhaseOptionSlice';
+import WizardPhaseOptionReducer from './WizardPhaseOptionSlice';
 import WizardVoltageOptionReducer from './WizardVoltageOptionSlice';
 import SeriesTypeReducer from './SeriesTypeSlice';
 import MeterReducer from './MeterSlice';
 import MeterAlarmGroupReducer from './MeterAlarmGroupSlice';
 import AlarmGroupViewReducer from './AlarmGroupViewSlice';
+import WizardAffectedChannelReducer from './WizardAffectedChannelSlice';
 
 export default configureStore({
     reducer: {
@@ -56,6 +57,7 @@ export default configureStore({
         SeriesType: SeriesTypeReducer,
         Meter: MeterReducer,
         MeterAlarmGroup: MeterAlarmGroupReducer,
-        AlarmGroupView: AlarmGroupViewReducer
+        AlarmGroupView: AlarmGroupViewReducer,
+        WizardAffectedChannel: WizardAffectedChannelReducer,
     }
 });

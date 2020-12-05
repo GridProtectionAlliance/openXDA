@@ -46,6 +46,7 @@ export namespace Redux {
         Meter: State<openXDA.IMeter>,
         MeterAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
         AlarmGroupView: State<SPCTools.IAlarmGroupView>,
+        WizardAffectedChannel: State<openXDA.IChannel>
     }
 
 
@@ -213,6 +214,8 @@ export namespace DynamicWizzard {
 
         MeasurmentTypeID: number,
         SeriesTypeID: number,
+        AlarmDayGroupID: number,
+
     }
 
     export interface IAlarmDayGroup { ID: number, Description: string, AlarmDayIDs: number[] }
@@ -232,5 +235,6 @@ export namespace openXDA {
 
     export interface IChannel { ID: number, MeterID: number, Name: string, AssetKey: string, MeterName: string, Phase: string }
 
-    interface ISeriesType {ID: number, Name: string, Description: string}
+    interface ISeriesType { ID: number, Name: string, Description: string }
+
 }

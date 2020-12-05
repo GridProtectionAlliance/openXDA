@@ -63,10 +63,14 @@ namespace openXDA.Controllers.WebAPI
     {
         protected override bool HasParent => true;
         protected override string ParentKey => "MeterID";
+        protected override bool AllowSearch => true;
     }
 
     [RoutePrefix("api/Asset")]
-    public class AssetController : ModelController<Asset> { }
+    public class AssetController : ModelController<Asset> 
+    {
+        protected override bool AllowSearch => true;
+    }
 
     [RoutePrefix("api/Phase")]
     public class PhaseController : ModelController<Phase> 

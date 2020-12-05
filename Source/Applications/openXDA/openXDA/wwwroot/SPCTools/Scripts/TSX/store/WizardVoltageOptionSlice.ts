@@ -24,13 +24,15 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SPCTools, Redux, openXDA } from '../global';
 import _ from 'lodash';
-import { selectSelectedMeter, selectMeasurmentTypeID } from '../DynamicAlarm/DynamicWizzardSlice';
+import { selectSelectedMeter, selectMeasurmentTypeID, selectSeriesTypeID } from '../DynamicAlarm/DynamicWizzardSlice';
+import { SelectSeriesTypes } from './SeriesTypeSlice';
 
 // #region [ Thunks ]
 export const FetchAvailableVoltages = createAsyncThunk('WizardVoltageOption/FetchAvailableVoltages', async (_, { getState }) => {
     let meterIDs = selectSelectedMeter(getState() as Redux.StoreState).map(m => m.ID);
-    let measurmentTypeID = selectMeasurmentTypeID(getState() as Redux.StoreState)
-    return await getAvailableVoltages(meterIDs, measurmentTypeID);
+    let measurmentTypeID = selectMeasurmentTypeID(getState() as Redux.StoreState);
+    let seriesTypeID = SelectSeriesTypes(getState() as Redux.StoreState).map(item => item.ID)
+    return await getAvailableVoltages(meterIDs, measurmentTypeID, seriesTypeID);
 });
 // #endregion
 
@@ -42,6 +44,7 @@ export const WizardVoltageOptionSlice = createSlice({
         Status: 'unitiated',
         Data: [],
         Error: null,
+        Selected: [],
         
     } as Redux.OptionState<number>,
     reducers: {
@@ -57,7 +60,7 @@ export const WizardVoltageOptionSlice = createSlice({
             state.Status = 'idle';
             state.Error = null;
             let oldState = state.Data;
-            state.Data = [345, 118]//action.payload as number[];
+            state.Data = _.uniq(JSON.parse(action.payload).map(item => item.VoltageKV) as number[]);
             state.Selected = state.Data.map(ph => oldState.findIndex(item => item == ph) > -1)
         });
         builder.addCase(FetchAvailableVoltages.pending, (state, action) => {
@@ -87,15 +90,25 @@ export const SelectAvailableVoltageStatus = (state: Redux.StoreState) => state.W
 
 // #region [ Async Functions ]
 
-function getAvailableVoltages(meterIDs: number[], measurementTypeID: number): JQuery.jqXHR<openXDA.IPhase[]> {
+function getAvailableVoltages(meterIDs: number[], measurementTypeID: number, seriesTypeID: number[]): JQuery.jqXHR<string> {
+    let sqlFilter = `(SELECT Channel.AssetID FROM Channel WHERE Channel.MeterID in (${(meterIDs.length > 0 ? meterIDs.join(',') : 0)}) AND `
+    sqlFilter = sqlFilter + `Channel.MeasurementTypeID = (SELECT ChannelGroupType.MeasurementTypeID FROM ChannelGroupType WHERE ID = ${measurementTypeID}) AND `
+    sqlFilter = sqlFilter + `Channel.MeasurementCharacteristicID = (SELECT ChannelGroupType.MeasurementCharacteristicID FROM ChannelGroupType WHERE ID = ${measurementTypeID}) AND `
+    sqlFilter = sqlFilter + `(SELECT COUNT(Series.ID) FROM SERIES WHERE Series.ChannelID = Channel.ID AND Series.SeriesTypeID IN (${(seriesTypeID.length > 0 ? seriesTypeID.join(',') : 0)})) > 0)`
 
-    let filters = []
+    let filter = [{
+        FieldName: "ID",
+        SearchText: `(${sqlFilter})`,
+        Operator: "IN",
+        Type: "integer"
+    }];
+
     return $.ajax({
         type: "POST",
-        url: `${apiHomePath}api/Phase`,
+        url: `${apiHomePath}api/Asset/SearchableList`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify({ Searches: filters }),
+        data: JSON.stringify({ Searches: filter, OrderBy: 'VoltageKV', Ascending: true }),
         cache: false,
         async: true
     });
