@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using System;
-using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -34,11 +34,11 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-
         public int AlarmGroupID { get; set; }
-
         public int SeriesID { get; set; }
-        public int SeverityID { get; set; }
+
+        [DefaultValue(false)]
+        public bool Manual { get; set; }
     }
 
     

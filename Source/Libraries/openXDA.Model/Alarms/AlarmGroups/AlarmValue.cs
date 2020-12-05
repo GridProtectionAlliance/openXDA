@@ -44,6 +44,8 @@ namespace openXDA.Model
         public int? EndHour { get; set; }
 
         public double Value { get; set; }
+
+        public string Formula { get; set; }
     }
 
     

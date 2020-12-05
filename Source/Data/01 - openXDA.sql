@@ -3074,7 +3074,7 @@ CREATE TABLE AlarmGroup
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NOT NULL,
     AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
-	Formula VARCHAR(MAX) NOT NULL
+    SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID)
 )
 GO
 
@@ -3083,14 +3083,15 @@ CREATE TABLE Alarm
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AlarmGroupID  INT NOT NULL REFERENCES AlarmGroup(ID),
     SeriesID INT NOT NULL REFERENCES Series(ID),
-    SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID)
+    [Manual] Bit NOT NULL DEFAULT(0)
+    
 )
 GO
 
 CREATE TABLE AlarmFactor
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    AlarmID  INT NOT NULL REFERENCES Alarm(ID),
+    AlarmGroupID  INT NOT NULL REFERENCES AlarmGroup(ID),
     Factor FLOAT NOT NULL DEFAULT(1.0),
     SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID)
 )
@@ -3110,7 +3111,8 @@ CREATE TABLE AlarmValue
     AlarmDayID  INT NULL REFERENCES AlarmDay(ID),
     StartHour INT NOT NULL,
     EndHour INT NULL,
-    Value FLOAT NOT NULL
+    Value FLOAT NOT NULL,
+    Formula VARCHAR(MAX) NOT NULL
 )
 GO
 
@@ -3158,7 +3160,7 @@ FROM
 	AlarmType ON AlarmGroup.AlarmTypeID = AlarmType.ID LEFT JOIN
 	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
 	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
-	AlarmSeverity ON Alarm.SeverityID = AlarmSeverity.ID
+	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID
 GROUP BY
 	AlarmGroup.ID,
 	AlarmGroup.Name,
@@ -3201,7 +3203,7 @@ FROM
 	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
 	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
 	Meter ON Channel.MeterID = Meter.ID LEFT JOIN
-	AlarmSeverity ON Alarm.SeverityID = AlarmSeverity.ID
+	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID
 GO
 
 CREATE VIEW AlarmDayGroupView AS SELECT
@@ -3235,7 +3237,36 @@ GO
 INSERT INTO AlarmSeverity(Name, Color) VALUES ('Info', '#3B5998')
 GO
 
+INSERT INTO AlarmDay(Name) VALUES
+('Weekday'),
+('Weekend'),
+('Monday'),
+('Tuesday'),
+('Wednesday'),
+('Thursday'),
+('Friday'),
+('Saturday'),
+('Sunday')
+GO
 
+INSERT INTO AlarmDayGroup(Description) VALUES
+('Daily'),
+('Weekly'),
+('Workday/Weekend')
+GO
+
+INSERT INTO AlarmDayGroupAlarmDay (AlarmDayID, AlarmDayGroupID) VALUES
+(NULL, (SELECT ID FROM AlarmDayGroup WHERE Description = 'Daily')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Weekend'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Workday/Weekend')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Weekday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Workday/Weekend')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Monday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Tuesday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Wednesday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Thursday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Friday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Saturday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Sunday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly'))
+GO
 -- Old Alarm Structure (pre SPC Tool) --
 CREATE TABLE DefaultAlarmRangeLimit
 (

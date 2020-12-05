@@ -493,7 +493,6 @@ namespace openXDA.Controllers
                         group = new AlarmGroup()
                         {
                             AlarmTypeID = request.AlarmGroup.AlarmTypeID,
-                            Formula = request.AlarmGroup.Formula,
                             Name = request.AlarmGroup.Name
                         };
 
@@ -531,13 +530,13 @@ namespace openXDA.Controllers
                         Alarm alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", group.ID, series.ID);
                         if (alarm == null)
                         {
-                            alarmTbl.AddNewOrUpdateRecord(new Alarm() { AlarmGroupID = group.ID, SeriesID = series.ID, SeverityID = request.SeverityID });
+                            alarmTbl.AddNewOrUpdateRecord(new Alarm() { AlarmGroupID = group.ID, SeriesID = series.ID });
                             alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", group.ID, series.ID);
                         }
 
                         // Add Factors
                         request.AlarmFactor.ForEach(factor => {
-                            factor.AlarmID = alarm.ID;
+                            factor.AlarmGroupID = alarm.ID;
                             factorTbl.AddNewRecord(factor);
                         });
 

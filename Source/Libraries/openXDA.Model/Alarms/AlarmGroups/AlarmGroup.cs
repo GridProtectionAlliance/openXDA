@@ -40,7 +40,7 @@ namespace openXDA.Model
 
         public int AlarmTypeID { get; set; }
 
-        public string Formula { get; set; }
+        public int SeverityID { get; set; }
     }
 
     /// <summary>

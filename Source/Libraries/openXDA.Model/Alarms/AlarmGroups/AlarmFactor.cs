@@ -35,7 +35,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int AlarmID { get; set; }
+        public int AlarmGroupID { get; set; }
 
         public double Factor {get; set;}
 
