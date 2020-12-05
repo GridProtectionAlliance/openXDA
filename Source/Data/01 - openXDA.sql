@@ -1,3 +1,4 @@
+
 -- The following commented statements are used to create a database
 -- from scratch and create a new user with access to the database.
 --
@@ -3148,7 +3149,7 @@ SELECT
 	AlarmGroup.ID,
 	AlarmGroup.Name,
 	AlarmGroup.AlarmTypeID,
-	AlarmGroup.Formula,
+	AlarmGroup.SeverityID,
 	AlarmSeverity.ID as AlarmSeverityID,
 	AlarmSeverity.Name as AlarmSeverity,
 	COUNT(DISTINCT Channel.ID) as Channels,
@@ -3165,7 +3166,7 @@ GROUP BY
 	AlarmGroup.ID,
 	AlarmGroup.Name,
 	AlarmGroup.AlarmTypeID,
-	AlarmGroup.Formula,
+	AlarmGroup.SeverityID,
 	AlarmSeverity.ID,
 	AlarmSeverity.Name
 GO
