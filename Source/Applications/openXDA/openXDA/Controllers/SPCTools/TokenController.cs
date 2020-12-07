@@ -35,6 +35,7 @@ using System.Web.Http;
 using HIDS;
 using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
+using System.Runtime.Caching;
 
 namespace openXDA.Controllers
 {
@@ -68,10 +69,20 @@ namespace openXDA.Controllers
         protected virtual string Connection { get; } = "systemSettings";
         protected virtual string GetRoles { get; } = "Viewer,Administrator";
 
-        private static DateTime m_epoch = new DateTime(1970, 1, 1);
+        private static DateTime s_epoch = new DateTime(1970, 1, 1);
+
+        private static MemoryCache s_memoryCache;
+        private static readonly double s_cacheExipry = 0; 
 
         #endregion
 
+        #region [ Constructor ]
+
+        static TokenController()
+        {
+            s_memoryCache = new MemoryCache("SPCToolsHIDSData");
+        }
+        #endregion
         #region [HTTPRequests]
 
         /// <summary>
@@ -127,21 +138,44 @@ namespace openXDA.Controllers
         // This needs to change before TVA deployment
         private Dictionary<int,List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
         {
+
             HIDSSettings settings = new HIDSSettings();
             settings.Load();
 
+            Dictionary<int, List<Point>> result = new Dictionary<int, List<Point>>();
 
-            List<Point> data;
+            string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
+            List<string> dataToGet = new List<string>();
+            channelID.ForEach(item =>
+            {
+                int tmp = 4;
+
+                if (s_memoryCache.Contains(cachTarget + tmp.ToString("x8")))
+                    result.Add(item, (List<Point>)s_memoryCache.Get(cachTarget + tmp.ToString("x8")));
+                else
+                    dataToGet.Add(tmp.ToString("x8"));
+
+            });
+
+            if (dataToGet.Count == 0)
+                return result;
+
+            dataToGet = new List<string>() { "00000003" };
+
+            List <Point> data;
             using (API hids = new API())
             {
                 hids.Configure(settings);
-                data = hids.ReadPointsAsync(new List<string>() { "00000003" },start,end).ToListAsync().Result;
+                data = hids.ReadPointsAsync(dataToGet, start,end).ToListAsync().Result;
             }
+
+            dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });
 
             return channelID.ToDictionary(item => item, item => data);
 
 
         }
+
         #endregion
     }
 }
