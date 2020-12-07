@@ -84,9 +84,8 @@ namespace openXDA.Controllers
 
         public Token(string formula, Dictionary<int,List<Point>> data, List<int> channels, DataFilter filter)
         {
-           m_isValid = true;
+            m_isValid = true;
 
-            // this needs to be replaced by HIDDS request but for now it's Ok
             m_data = data;
 
             m_formula = formula.Trim().ToLower();

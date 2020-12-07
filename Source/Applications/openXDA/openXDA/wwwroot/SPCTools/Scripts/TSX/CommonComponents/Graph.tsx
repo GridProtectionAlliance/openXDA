@@ -185,6 +185,7 @@ export default class TrendingCard extends React.Component<IProps, IState>{
 
         this.yExp = svg.append("text")
             .style("text-anchor", "end")
+            .style("font-size", "10px")
             .text("");
 
         this.updateAxisLabel();

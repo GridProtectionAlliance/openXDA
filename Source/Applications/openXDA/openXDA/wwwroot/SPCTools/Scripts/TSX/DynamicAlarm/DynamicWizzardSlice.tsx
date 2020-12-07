@@ -22,10 +22,13 @@
 //******************************************************************************************************
 import { createSlice, createAsyncThunk, PayloadAction, createSelector, Selector } from '@reduxjs/toolkit';
 import { SPCTools, StaticWizzard, openXDA, Redux, DynamicWizzard } from '../global';
-import _ from 'lodash';
-import { FetchAffectedChannels, SelectAffectedChannelCount } from '../store/WizardAffectedChannelSlice';
+import _, { update } from 'lodash';
+import { FetchAffectedChannels, SelectAffectedChannelCount, SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSelectedPhases } from '../store/WizardPhaseOptionSlice';
 import { SelectSelectedVoltages } from '../store/WizardVoltageOptionSlice';
+import { SelectAlarmDayGroups } from '../store/AlarmDayGroupSlice';
+import { SelectAlarmDays } from '../store/AlarmDaySlice';
+import { FetchParsedSetPoint } from '../store/SetPointParseSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -37,6 +40,13 @@ export const ResetWizzard = createAsyncThunk('DynamicWizzard/ResetWizzard', (_, 
     dispatch(FetchAffectedChannels());
 })
 
+// Thunk For Updating AlarmValues and sending Data to Tokenizer
+export const UpdateFormula = createAsyncThunk('DynamicWizzard/UpdateFormula', (arg: { alarmDayID: number, startHour: number, formula: string }, { dispatch, getState }) => {
+    const alarmValue = SelectActiveAlarmValue((getState() as Redux.StoreState), arg.alarmDayID, arg.startHour);
+    dispatch(updateAlarmValueContent({ ...alarmValue, Formula: arg.formula }));
+    dispatch(FetchParsedSetPoint({ AlarmDayID: arg.alarmDayID, StartHour: arg.startHour }));
+
+});
 
 export const DynamicWizzardSlice = createSlice({
     name: 'DynamicWizzard',
@@ -54,7 +64,10 @@ export const DynamicWizzardSlice = createSlice({
         StatisticsRange: { start: '', end: '' },
         StatisticsFilter: { FilterLower: false, FilterUpper: false, FilterZero: true, LowerLimit: 0, UpperLimit: 0 },
         StatisticsChannelIDs: [],
-        
+        AlarmFactors: [],
+        AlarmValues: [],
+        AlarmValueResults: [],
+
     } as DynamicWizzard.IState,
     reducers: {
         reset: (state, action: PayloadAction<SPCTools.ISettingsState>) => {
@@ -74,13 +87,15 @@ export const DynamicWizzardSlice = createSlice({
             }
             state.StatisticsFilter = { FilterLower: false, FilterUpper: false, FilterZero: true, LowerLimit: 0, UpperLimit: 0 }
             state.StatisticsChannelIDs = []
-
+            state.AlarmFactors = []
+            state.AlarmValues = []
+            state.AlarmValueResults = []
         },
         next: (state) => {
             if (state.Step == 'general')
                 state.Step = 'selectData'
-            else if (state.Step == 'selectData')
-                state.Step = 'setpoint'
+            else if (state.Step == 'selectData') 
+                state.Step = 'setpoint';                
             else if (state.Step == 'setpoint')
                 state.Step = 'test'
         },
@@ -97,7 +112,7 @@ export const DynamicWizzardSlice = createSlice({
             state.AlarmGroup = action.payload;
         },
         sortSelectedMeters: (state, action: PayloadAction<{ field: keyof openXDA.IMeter, asc: boolean }>) => {
-            // Implement later since nor neccesarry
+            // Implement later since not strictly neccesarry for now
         },
         addMeter: (state, action: PayloadAction<openXDA.IMeter[]>) => {
             state.SelectedMeter.push(...action.payload);
@@ -123,7 +138,40 @@ export const DynamicWizzardSlice = createSlice({
         },
         updateStatisticChannels: (state, action: PayloadAction<openXDA.IChannel[]>) => {
             state.StatisticsChannelIDs = action.payload.map(ch => ch.ID)
-        }
+        },
+        updateFactor: (state, action: PayloadAction<{ index: number, factor: SPCTools.IFactor }>) => {
+            state.AlarmFactors[action.payload.index] = action.payload.factor
+        },
+        addFactor: (state) => {
+            state.AlarmFactors.push({ ID: -1, SeverityID: state.AlarmGroup.SeverityID, Value: 1.2 });
+        },
+        removeFactor: (state, action: PayloadAction<number>) => {
+            state.AlarmFactors.splice(action.payload, 1)
+        },
+        updateAlarmValues: (state, action: PayloadAction<{ alarmDayID: number, alarmValues: DynamicWizzard.IAlarmvalue[] }>) => {
+            if (action.payload.alarmDayID == undefined) {
+                state.AlarmValues = [];
+                state.AlarmValueResults = [];
+            }
+            else {
+                state.AlarmValues = state.AlarmValues.filter(v => v.AlarmDayID != action.payload.alarmDayID);
+                state.AlarmValueResults = state.AlarmValueResults.filter(v => v.AlarmDayID != action.payload.alarmDayID);
+            }
+
+            state.AlarmValues.push(...action.payload.alarmValues);
+            state.AlarmValueResults.push(...action.payload.alarmValues.map(item => { return { AlarmDayID: item.AlarmDayID, StartHour: item.StartHour, Value: [] } }));
+
+        },
+        updateAlarmValueContent: (state, action: PayloadAction<DynamicWizzard.IAlarmvalue>) => {
+            let index = state.AlarmValues.findIndex(item => item.StartHour == action.payload.StartHour && item.AlarmDayID == action.payload.AlarmDayID);
+            if (index == -1) {
+                state.AlarmValues.push(action.payload);
+                state.AlarmValueResults.push({ AlarmDayID: action.payload.AlarmDayID, StartHour: action.payload.StartHour, Value: [] });
+            }
+            else {
+                state.AlarmValues[index] = action.payload;
+            }
+        },
     },
     
      extraReducers: (builder) => {
@@ -141,7 +189,9 @@ export const {
     updateMeasurmentTypeID,
     updateSeriesTypeID, updateAlarmDayGroupID,
     updateStatisticsRange, updateStatisticsFilter,
-    updateStatisticChannels
+    updateStatisticChannels,
+    updateFactor, addFactor, removeFactor,
+    updateAlarmValues, updateAlarmValueContent
 
 } = DynamicWizzardSlice.actions
 
@@ -162,6 +212,20 @@ export const selectAlarmDayGroupID = (state: Redux.StoreState) => state.DynamicW
 
 export const SelectStatisticsrange = (state: Redux.StoreState) => state.DynamicWizzard.StatisticsRange;
 export const SelectStatisticsFilter = (state: Redux.StoreState) => state.DynamicWizzard.StatisticsFilter;
+export const SelectStatisticsChannels = createSelector(SelectAffectedChannels, (state: Redux.StoreState) => state.DynamicWizzard.StatisticsChannelIDs, (channels, ids) => channels.filter(item => ids.findIndex(i => i == item.ID) > -1));
+export const SelectAlarmFactors = (state: Redux.StoreState) => state.DynamicWizzard.AlarmFactors;
+
+export const SelectSetPointAlarmDays = createSelector(selectAlarmDayGroupID, SelectAlarmDayGroups, SelectAlarmDays, (id, alarmDayGroups, alarmDays) => {
+    let grp = alarmDayGroups.find(item => item.ID == id);
+    return alarmDays.filter(item => grp.AlarmDayIDs.findIndex(i => i == item.ID) > -1);
+});
+
+export const SelectAlarmValues = (state: Redux.StoreState, alarmDayId: number) => state.DynamicWizzard.AlarmValues.filter(item => item.AlarmDayID == alarmDayId);
+export const SelectActiveAlarmValue = (state: Redux.StoreState, alarmDayId: number, alarmStartHour: number) => state.DynamicWizzard.AlarmValues.find(item => (alarmDayId == null || item.AlarmDayID == alarmDayId) && item.StartHour == alarmStartHour);
+
+export const SelectActiveFormula = (state: Redux.StoreState, alarmDayId: number, alarmStartHour: number) => (SelectActiveAlarmValue(state, alarmDayId, alarmStartHour) != undefined ? SelectActiveAlarmValue(state, alarmDayId, alarmStartHour).Formula : "");
+
+export const SelectAllowSlice = createSelector(SelectAffectedChannelCount, SelectStatisticsChannels, (countAll, statisticsChannels) => (countAll == statisticsChannels.length ));
 
 
 export const selectErrors = createSelector(

@@ -42,6 +42,7 @@ import DynamicAlarmHome from './DynamicAlarm/DynamicAlarm';
 import { FetchMeasurmentTypes } from './store/MeasurmentTypeSlice';
 import { FetchSeriesType } from './store/SeriesTypeSlice';
 import { FetchAlarmType } from './store/AlarmTypeSlice';
+import { FetchSeverities } from './store/SeveritySlice';
 
 
 declare var homePath: string;
@@ -88,5 +89,6 @@ store.dispatch(FetchAlarmDayGroup());
 store.dispatch(FetchMeasurmentTypes());
 store.dispatch(FetchAlarmType());
 store.dispatch(FetchSeriesType());
+store.dispatch(FetchSeverities());
 
 ReactDOM.render(<Provider store={store}><SPCTools/></Provider>, document.getElementById('body'));

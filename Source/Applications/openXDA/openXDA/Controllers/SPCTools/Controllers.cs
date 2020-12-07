@@ -58,5 +58,9 @@ namespace openXDA.Controllers
         protected override string ParentKey => "MeterID";
     }
 
-
+    [RoutePrefix("api/SPCTools/AlarmSeverity")]
+    public class AlarmSeverityController : ModelController<AlarmSeverity>
+    {
+        protected override bool AllowSearch => false;
+    }
 }

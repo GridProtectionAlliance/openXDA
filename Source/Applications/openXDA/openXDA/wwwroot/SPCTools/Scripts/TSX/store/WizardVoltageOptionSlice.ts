@@ -59,7 +59,7 @@ export const WizardVoltageOptionSlice = createSlice({
         builder.addCase(FetchAvailableVoltages.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            let oldState = _.cloneDeep(state.Data);
+            let oldState =state.Data.filter((v,i) => state.Selected[i]);
             state.Data = _.uniq(JSON.parse(action.payload).map(item => item.VoltageKV) as number[]);
             state.Selected = state.Data.map(ph => oldState.findIndex(item => item == ph) > -1)
         });

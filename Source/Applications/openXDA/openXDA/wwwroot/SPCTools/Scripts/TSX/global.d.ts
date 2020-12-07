@@ -46,7 +46,9 @@ export namespace Redux {
         Meter: State<openXDA.IMeter>,
         MeterAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
         AlarmGroupView: State<SPCTools.IAlarmGroupView>,
-        WizardAffectedChannel: State<openXDA.IChannel>
+        WizardAffectedChannel: State<openXDA.IChannel>,
+        Severity: State<SPCTools.ISeverity>,
+        SetPointParse: DynamicWizzard.ISetPointParseState,
     }
 
 
@@ -221,15 +223,37 @@ export namespace DynamicWizzard {
 
         StatisticsRange: SPCTools.IDateRange,
         StatisticsFilter: SPCTools.IDataFilter,
-        StatisticsChannelIDs: number[]
+        StatisticsChannelIDs: number[],
+
+        AlarmFactors: SPCTools.IFactor[],
+        AlarmValues: IAlarmvalue[],
+        AlarmValueResults: IAlarmValueChannel[],
+
+
         //SetPoints: ISetpoint[],
 
+    }
+
+    export interface ISetPointParseState {
+        Status: SPCTools.Status,
+        Error: null | string,
+        Response: ITokenParseResponse
+    }
+
+    export interface ITokenParseResponse {
+        Valid: boolean,
+        IsScalar: boolean,
+        Message: string,
+        Value: number[],
     }
 
     export interface IAlarmDayGroup { ID: number, Description: string, AlarmDayIDs: number[] }
 
     export interface IAlarmDay { ID: number, Name: string }
 
+    export interface IAlarmvalue { ID: number, AlarmID: number, AlarmDayID: number, StartHour: number, EndHour: number, Value: number, Formula: string }
+
+    export interface IAlarmValueChannel { AlarmDayID: number, StartHour: number, Value: {ChannelID: number, Value: number }[] }
 }
 export namespace openXDA {
 

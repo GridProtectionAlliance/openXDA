@@ -34,6 +34,8 @@ import { loadTest } from '../Store/HistoryTestSlice';
 import { setPage } from '../Store/GeneralSettingsSlice';
 import { Requirements } from '../CommonComponents/Requirments';
 import SelectStatisticsData from './SelectStatisticsData';
+import SetPointCreator from './SetPointCreator';
+import { FunctionHelp } from '../CommonComponents/FunctionHelp';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -73,7 +75,7 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
                     </ol>
                 </nav>
             </div>
-            <div className="row" style={{ marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: '15px', height: "calc(100% - 132px)" }}>
+            <div className="row" style={{ marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: '15px', height: "calc(100% - 132px)", overflowY: 'scroll' }}>
                 {status == 'loading' ?
                     <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
                         <div className="spinner-border" role="status"></div>
@@ -91,8 +93,8 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
                     <>
                         {tab == 'general' ? <GeneralSettings /> : null}
                         {tab == 'selectData' ? <SelectStatisticsData /> : null}
-                        {/*//{tab == 'setpoint' ? <StaticSetPoint /> : null}
-                        //{tab == 'test' ? <TestGroup /> : null}*/}
+                        {tab == 'setpoint' ? <SetPointCreator /> : null}
+                        {/*//{tab == 'test' ? <TestGroup /> : null}*/}
                     </> : null
                 }
                 
@@ -118,6 +120,7 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
                 }}>
                 </ReactTooltip>
                 : null}
+            {tab == 'setpoint' ? <FunctionHelp type={'static'} /> : null}
         </div>      
     );
 }

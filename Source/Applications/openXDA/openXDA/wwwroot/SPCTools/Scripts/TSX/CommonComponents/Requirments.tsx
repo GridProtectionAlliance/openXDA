@@ -29,8 +29,8 @@ import { StaticWizzard } from '../global';
 
 export const Requirements = (props: StaticWizzard.IRequirement) => {
     return <div>
-        <p>
-            {props.complete == 'complete' ? <i style={{ marginRight: '10px', color: '#dc3545' }} className="fa fa-check-circle"></i> : (props.complete == 'required' ? <i style={{ marginRight: '10px' }} className="fa fa-exclamation-circle"></i> : <i style={{ marginRight: '10px' }} className="fa fa-exclamation-triangle"></i>)}
+        <p style={{ width: '350px'}}>
+            {props.complete == 'complete' ? <i style={{ marginRight: '10px', color: '#28A745' }} className="fa fa-check-circle"></i> : (props.complete == 'required' ? <i style={{ marginRight: '10px', color: '#dc3545' }} className="fa fa-exclamation-circle"></i> : <i style={{ marginRight: '10px', color: '#ffc107' }} className="fa fa-exclamation-triangle"></i>)}
             {props.text}
         </p>
     </div>

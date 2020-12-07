@@ -350,6 +350,8 @@
     <Compile Include="Controllers\Config\QueryController.cs" />
     <Compile Include="Controllers\DataPusher\DataPusherController.cs" />
     <Compile Include="Controllers\ModelController.cs" />
+    <Compile Include="Controllers\SPCTools\TokenController.cs" />
+    <Compile Include="Controllers\SPCTools\DataController.cs" />
     <Compile Include="Controllers\SPCTools\Controllers.cs" />
     <Compile Include="Controllers\SPCTools\AlarmGroupTestController.cs" />
     <Compile Include="Controllers\SPCTools\Token.cs" />
@@ -4387,12 +4389,16 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\ChannelOverview\ChannelOverview.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\AlarmTrendingCard.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\FunctionHelp.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\DynamicTimeRange.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Requirments.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Graph.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\RadioBox.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\MultiSelectTable.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Filter.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\SelectStatisticsData.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\SetPointCreator.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\global.d.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\AlarmGroup\AlarmGroup.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\MeterOverview\MeterOverview.tsx" />
@@ -4407,6 +4413,8 @@
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\GenSettings.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\StaticAlarm.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\StaticAlarm\StaticWizzardSlice.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\SeveritySlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\SetpointParseSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\WizardAffectedChannelSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\SeriesTypeSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmTypeSlice.ts" />

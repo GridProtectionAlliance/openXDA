@@ -39,6 +39,8 @@ import MeterReducer from './MeterSlice';
 import MeterAlarmGroupReducer from './MeterAlarmGroupSlice';
 import AlarmGroupViewReducer from './AlarmGroupViewSlice';
 import WizardAffectedChannelReducer from './WizardAffectedChannelSlice';
+import SeverityReducer from './SeveritySlice';
+import SetPointParseReducer from './SetPointParseSlice';
 
 export default configureStore({
     reducer: {
@@ -59,5 +61,7 @@ export default configureStore({
         MeterAlarmGroup: MeterAlarmGroupReducer,
         AlarmGroupView: AlarmGroupViewReducer,
         WizardAffectedChannel: WizardAffectedChannelReducer,
+        Severity: SeverityReducer,
+        SetPointParse: SetPointParseReducer,
     }
 });

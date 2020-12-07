@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AlarmDaySlice.ts - Gbtc
+//  SeveritySlice.ts - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -26,38 +26,38 @@ import { SPCTools, Redux, DynamicWizzard } from '../global';
 import _ from 'lodash';
 
 // #region [ Thunks ]
-export const FetchAlarmDay = createAsyncThunk('AlarmDay/FetchAlarmday', async (_, { dispatch }) => {
-    return await GetAlarmDay();
+export const FetchSeverities = createAsyncThunk('Severity/FetchSeverities', async (_, { dispatch }) => {
+    return await GetAlarmSeverities();
 });
 // #endregion
 
 
 // #region [ Slice ]
-export const AlarmDaySlice = createSlice({
-    name: 'AlarmDay',
+export const SeveritySlice = createSlice({
+    name: 'Severity',
     initialState: {
         Status: 'unitiated',
         Data: [],
         Error: null,
         SortField: 'Name',
         Ascending: true
-    } as Redux.State<DynamicWizzard.IAlarmDay>,
+    } as Redux.State<SPCTools.ISeverity>,
     reducers: {
        
 
     },
     extraReducers: (builder) => {
 
-        builder.addCase(FetchAlarmDay.fulfilled, (state, action) => {
+        builder.addCase(FetchSeverities.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            state.Data = JSON.parse(action.payload) as DynamicWizzard.IAlarmDay[];
+            state.Data = JSON.parse(action.payload) as SPCTools.ISeverity[];
 
         });
-        builder.addCase(FetchAlarmDay.pending, (state, action) => {
+        builder.addCase(FetchSeverities.pending, (state, action) => {
             state.Status = 'loading';
         });
-        builder.addCase(FetchAlarmDay.rejected, (state, action) => {
+        builder.addCase(FetchSeverities.rejected, (state, action) => {
             state.Status = 'error';
             state.Error = action.error.message;
 
@@ -67,22 +67,22 @@ export const AlarmDaySlice = createSlice({
 
 });
 
-export default AlarmDaySlice.reducer;
+export default SeveritySlice.reducer;
 // #endregion
 
 // #region [ Selectors ]
-export const SelectAlarmDays = (state: Redux.StoreState) => state.AlarmDay.Data;
-export const SelectAlarmDayByID = (state: Redux.StoreState, id) => state.AlarmDay.Data.find(ds => ds.ID === id);
-
+export const SelectSeverities = (state: Redux.StoreState) => state.Severity.Data;
+export const SelectSeverityByID = (state: Redux.StoreState, id) => state.Severity.Data.find(ds => ds.ID === id);
+export const SelectSeverityStatus = (state: Redux.StoreState) => state.Severity.Status;
 
 // #endregion
 
 // #region [ Async Functions ]
 
-function GetAlarmDay(): JQuery.jqXHR<string> {
+function GetAlarmSeverities(): JQuery.jqXHR<string> {
     return $.ajax({
         type: "GET",
-        url: `${apiHomePath}api/AlarmDay`,
+        url: `${apiHomePath}api/SPCTools/AlarmSeverity`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         cache: false,
