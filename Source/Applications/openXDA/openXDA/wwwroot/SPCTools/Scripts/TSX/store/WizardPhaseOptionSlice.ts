@@ -108,7 +108,7 @@ function getAvailablePhases(meterIDs: number[], measurementTypeID: number, serie
         url: `${apiHomePath}api/Phase/SearchableList`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify({ Searches: filter, OrderBy: 'Name', Ascending: false }),
+        data: JSON.stringify({ Searches: filter, OrderBy: 'Name', Ascending: true }),
         cache: false,
         async: true
     });

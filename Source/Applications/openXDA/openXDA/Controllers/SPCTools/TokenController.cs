@@ -72,7 +72,7 @@ namespace openXDA.Controllers
         private static DateTime s_epoch = new DateTime(1970, 1, 1);
 
         private static MemoryCache s_memoryCache;
-        private static readonly double s_cacheExipry = 0; 
+        private static readonly double s_cacheExipry = 5; 
 
         #endregion
 

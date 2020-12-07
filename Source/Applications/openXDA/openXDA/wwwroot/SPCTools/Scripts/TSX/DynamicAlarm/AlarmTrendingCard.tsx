@@ -26,7 +26,11 @@ import * as React from 'react';
 import { useSelector } from "react-redux";
 import { openXDA } from "../global";
 import { SelectAffectedChannelByID } from "../store/WizardAffectedChannelSlice";
-import { SelectStatisticsFilter } from "./DynamicWizzardSlice";
+import { SelectStatisticsFilter, SelectThresholdValues, selectAlarmGroup, SelectAlarmFactors, SelectAllowSlice, SelectStatisticsChannels } from "./DynamicWizzardSlice";
+import _ from "lodash";
+import moment from "moment";
+import { SelectSeverities } from "../store/SeveritySlice";
+import { SelectAlarmDays } from "../store/AlarmDaySlice";
 
 
 interface IProps { ChannelID: number, Remove: () => void, Tstart: string, Tend: string }
@@ -39,11 +43,19 @@ export const AlarmTrendingCard = (props: IProps) => {
             return (state) => null
     }, [props.ChannelID])
 
+    const allChannels = useSelector(SelectStatisticsChannels)
     const [data, setData] = React.useState<Array<ITrendSeries>>([]);
     const [threshhold, setThreshold] = React.useState<Array<ITrendSeries>>([]);
+    const alarmValueResults = useSelector(SelectThresholdValues);
+
     const channel = useSelector(memChannelSelector)
     const [loading, setLoading] = React.useState<boolean>(false);
     const dataFilter = useSelector(SelectStatisticsFilter);
+
+    const severities = useSelector(SelectSeverities);
+    const alarmGroup = useSelector(selectAlarmGroup)
+    const alarmFactors = useSelector(SelectAlarmFactors)
+    const alarmDays = useSelector(SelectAlarmDays)
 
     React.useEffect(() => {
         setData([]);
@@ -51,7 +63,7 @@ export const AlarmTrendingCard = (props: IProps) => {
 
         let handle = [];
         if (channel == null)
-            handle = [];
+            handle = allChannels.map(item => getData(item.ID));
         else
             handle.push(getData(props.ChannelID));
 
@@ -61,6 +73,155 @@ export const AlarmTrendingCard = (props: IProps) => {
             handle.forEach(h => { if (h != undefined && h.abort != undefined) h.abort();})
         }
     }, [channel])
+
+    React.useEffect(() => {
+        CreateThreshhold();
+    }, [data, alarmValueResults, severities, alarmGroup, alarmFactors]) 
+
+    function CreateThreshhold() {
+        if (alarmValueResults.length == 0 || data.length == 0)
+            setThreshold([]);
+
+        let T0 = moment(props.Tstart).startOf('day').valueOf();
+        // Start By attempting to grab a single threshhold for any Day
+        let regularday = CreateDailyThreshold(T0, undefined);
+
+        //if (moment(props.Tstart).day() == 0 || moment(props.Tstart).day() == 6) {
+        let weekday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "WeekDay") == undefined ? -1 : alarmDays.find(item => item.Name == "WeekDay").ID));
+        let weekend = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "WeekEnd") == undefined ? -1 : alarmDays.find(item => item.Name == "WeekEnd").ID));
+        let sunday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Sunday") == undefined ? -1 : alarmDays.find(item => item.Name == "Sunday").ID));
+        let monday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Monday") == undefined ? -1 : alarmDays.find(item => item.Name == "Monday").ID));
+        let tuesday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Tuesday") == undefined ? -1 : alarmDays.find(item => item.Name == "Tuesday").ID));
+        let wednesday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Wednesday") == undefined ? -1 : alarmDays.find(item => item.Name == "Wednesday").ID));
+        let thursday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Thursday") == undefined ? -1 : alarmDays.find(item => item.Name == "Thursday").ID));
+        let friday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Friday") == undefined ? -1 : alarmDays.find(item => item.Name == "Friday").ID));
+        let saturday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Saturday") == undefined ? -1 : alarmDays.find(item => item.Name == "Saturday").ID));
+
+        //  Form a full week
+        let weeklyThreshold = [];
+        let i = 0;
+        let Toff = 0;
+        for (i = 0; i < 7; i = i + 1)
+        {
+            let d = (moment(props.Tstart).day() + i)%7
+            if (d == 0) {
+                if (sunday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...sunday.map(pt => [pt[0] + Toff, pt[1]]));
+                else if (weekend.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...weekend.map(pt => [pt[0] + Toff, pt[1]]));
+                else
+                    weeklyThreshold.push(...regularday.map(pt => [pt[0] + Toff, pt[1]]));
+            }
+            else if (d == 1) {
+                if (monday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...monday.map(pt => [pt[0] + Toff, pt[1]]));
+                else if (weekday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...weekday.map(pt => [pt[0] + Toff, pt[1]]));
+                else
+                    weeklyThreshold.push(...regularday.map(pt => [pt[0] + Toff, pt[1]]));
+            }
+            else if (d == 2) {
+                if (tuesday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...tuesday.map(pt => [pt[0] + Toff, pt[1]]));
+                else if (weekday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...weekday.map(pt => [pt[0] + Toff, pt[1]]));
+                else
+                    weeklyThreshold.push(...regularday.map(pt => [pt[0] + Toff, pt[1]]));
+            }
+            else if (d == 3) {
+                if (wednesday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...wednesday.map(pt => [pt[0] + Toff, pt[1]]));
+                else if (weekday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...weekday.map(pt => [pt[0] + Toff, pt[1]]));
+                else
+                    weeklyThreshold.push(...regularday.map(pt => [pt[0] + Toff, pt[1]]));
+            }
+            else if (d == 4) {
+                if (thursday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...thursday.map(pt => [pt[0] + Toff, pt[1]]));
+                else if (weekday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...weekday.map(pt => [pt[0] + Toff, pt[1]]));
+                else
+                    weeklyThreshold.push(...regularday.map(pt => [pt[0] + Toff, pt[1]]));
+            }
+            else if (d == 5) {
+                if (friday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...friday.map(pt => [pt[0] + Toff, pt[1]]));
+                else if (weekday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...weekday.map(pt => [pt[0] + Toff, pt[1]]));
+                else
+                    weeklyThreshold.push(...regularday.map(pt => [pt[0] + Toff, pt[1]]));
+            }
+            else if (d == 6) {
+                if (saturday.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...saturday.map(pt => [pt[0] + Toff, pt[1]]));
+                else if (weekend.some(pt => !isNaN(pt[1])))
+                    weeklyThreshold.push(...weekend.map(pt => [pt[0] + Toff, pt[1]]));
+                else
+                    weeklyThreshold.push(...regularday.map(pt => [pt[0] + Toff, pt[1]]));
+            }
+            Toff = Toff + 86400000;
+        }
+
+        // For now try to do Regular Days...
+        let nWeeks = Math.ceil((moment(props.Tend).valueOf() - moment(props.Tstart).valueOf()) / 604800000.0);
+
+        let fullResult = [];
+        
+        for (i = 0; i < nWeeks; i = i + 1) {
+            fullResult.push(...weeklyThreshold.map(item => [item[0] + i * 604800000, item[1]]))
+        }
+
+        setThreshold([{
+            lineStyle: ':',
+            color: severities.find(item => item.ID == alarmGroup.SeverityID).Color,
+            includeLegend: false,
+            label: '',
+            opacity: 1,
+            data: fullResult
+        }, ...alarmFactors.map(factorItem => {
+            return {
+                lineStyle: ':',
+                color: severities.find(item => item.ID == factorItem.SeverityID).Color,
+                includeLegend: false,
+                label: '',
+                opacity: 1,
+                data: fullResult.map(pt => [pt[0], pt[1] * factorItem.Value])
+            } as ITrendSeries
+        })]);
+    }
+
+    function CreateDailyThreshold(Tday, alarmDayId): number[][] {
+        let alarmValues = alarmValueResults.filter(item => (item.AlarmDayID == alarmDayId) || (alarmDayId == undefined && item.AlarmDayID == undefined));
+        if (alarmValues.length == 0)
+            return [[Tday, NaN], [Tday + 86400000, NaN]]
+
+        _.sortBy(alarmValues, item => item.StartHour);
+        let channelIndex = alarmValues[0].Value.findIndex(item => item.ChannelID == props.ChannelID);
+        if (channelIndex == -1 && props.ChannelID != -1)
+            return [[Tday, NaN], [Tday + 86400000, NaN]];
+        if (props.ChannelID == -1 && !alarmValues[0].IsScalar)
+            return [[Tday, NaN], [Tday + 86400000, NaN]];
+
+        if (props.ChannelID == -1)
+            channelIndex = 0;
+
+
+        let result = [];
+        let i = 0;
+        for (i = 0; i < (alarmValues.length - 1); i = i + 1) {
+            let lim = alarmValues[i].Value[channelIndex];
+
+            result.push([Tstart + alarmValues[i].StartHour * 3600000, (lim == undefined ? NaN : lim.Value)]);
+            result.push([Tstart + alarmValues[i + 1].StartHour * 3600000, (lim == undefined ? NaN : lim.Value)]);
+        }
+
+        let lim = alarmValues[alarmValues.length - 1].Value[channelIndex];
+        result.push([Tstart + alarmValues[alarmValues.length - 1].StartHour * 3600000, (lim == undefined ? NaN : lim.Value)]);
+        result.push([Tstart + 24 * 3600000, (lim == undefined ? NaN : lim.Value)]);
+
+        return result
+    }
 /*
     React.useEffect(() => {
 
@@ -129,7 +290,7 @@ export const AlarmTrendingCard = (props: IProps) => {
                         <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
                             <div className="spinner-border" role="status"></div>
                         </div> :
-                        <TrendingCard keyString={'Graph-' + props.ChannelID} allowZoom={false} height={125} xLabel={"Time"} Tstart={Tstart} Tend={Tend} data={[...data, ...threshhold]} />
+                        <TrendingCard keyString={'Graph-' + props.ChannelID} allowZoom={true} height={125} xLabel={"Time"} Tstart={Tstart} Tend={Tend} data={[...data, ...threshhold]} />
                     }
                 </div>
             </div>

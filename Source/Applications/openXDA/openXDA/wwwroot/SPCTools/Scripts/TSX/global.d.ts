@@ -227,9 +227,6 @@ export namespace DynamicWizzard {
 
         AlarmFactors: SPCTools.IFactor[],
         AlarmValues: IAlarmvalue[],
-        AlarmValueResults: IAlarmValueChannel[],
-
-
         //SetPoints: ISetpoint[],
 
     }
@@ -237,7 +234,8 @@ export namespace DynamicWizzard {
     export interface ISetPointParseState {
         Status: SPCTools.Status,
         Error: null | string,
-        Response: ITokenParseResponse
+        Response: ITokenParseResponse,
+        AlarmValueResults: IAlarmValueChannel[],
     }
 
     export interface ITokenParseResponse {
@@ -253,7 +251,7 @@ export namespace DynamicWizzard {
 
     export interface IAlarmvalue { ID: number, AlarmID: number, AlarmDayID: number, StartHour: number, EndHour: number, Value: number, Formula: string }
 
-    export interface IAlarmValueChannel { AlarmDayID: number, StartHour: number, Value: {ChannelID: number, Value: number }[] }
+    export interface IAlarmValueChannel { AlarmDayID: number, StartHour: number, Value: {ChannelID: number, Value: number }[] , IsScalar: boolean}
 }
 export namespace openXDA {
 

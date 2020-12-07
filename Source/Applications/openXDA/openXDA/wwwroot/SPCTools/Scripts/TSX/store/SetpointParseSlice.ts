@@ -26,6 +26,7 @@ import { SPCTools, Redux, openXDA, DynamicWizzard } from '../global';
 import _ from 'lodash';
 import { SelectStatisticsFilter, SelectStatisticsrange, SelectStatisticsChannels, SelectActiveAlarmValue } from '../DynamicAlarm/DynamicWizzardSlice';
 
+interface ParsedSetpointParam { content: DynamicWizzard.ITokenParseResponse, channelIDs: number[] }
 // #region [ Thunks ]
 export const FetchParsedSetPoint = createAsyncThunk('SetPointParse/FetchParsedSetPoint', async (param: { AlarmDayID: number, StartHour: number }, { getState, dispatch }) => {
     let dataFilter = SelectStatisticsFilter(getState() as Redux.StoreState);
@@ -35,12 +36,12 @@ export const FetchParsedSetPoint = createAsyncThunk('SetPointParse/FetchParsedSe
     let token = SelectActiveAlarmValue(getState() as Redux.StoreState, param.AlarmDayID, param.StartHour);
 
     if (token == undefined)
-        return Promise.resolve({ Valid: false, IsScalar: false, Message: "An unidentified error occured when parsing the setpoint", Value: [] });
+        return Promise.resolve({ content: { Valid: false, IsScalar: false, Message: "An unidentified error occured when parsing the setpoint", Value: [] }, channelIDs: channelIDs } as ParsedSetpointParam);
     if (token.Formula == "") {
-        return Promise.resolve({ Valid: false, IsScalar: false, Message: "Expression can not be empty.", Value: [] });
+        return Promise.resolve({ content: { Valid: false, IsScalar: false, Message: "Expression can not be empty.", Value: [] }, channelIDs: channelIDs } as ParsedSetpointParam);
     }
-        
-    return await GetParsedSetPoint(token, dataFilter, timeRange.start, timeRange.end, channelIDs);
+    let handle = await GetParsedSetPoint(token, dataFilter, timeRange.start, timeRange.end, channelIDs);
+    return { content: handle, channelIDs: channelIDs };
 });
 
 // #endregion
@@ -50,13 +51,28 @@ export const FetchParsedSetPoint = createAsyncThunk('SetPointParse/FetchParsedSe
 export const SetpointParseSlice = createSlice({
     name: 'SetPointParse',
     initialState: {
-        Status: 'unitiated',
+        Status: 'idle',
         Response: undefined,
         Error: null,
-        
+        AlarmValueResults: []
+
     } as DynamicWizzard.ISetPointParseState,
     reducers: {
-       
+        Reset: (state) => {
+            state.AlarmValueResults = [];
+        },
+        UpdateAlarmValueContent: (state, action: PayloadAction<DynamicWizzard.IAlarmvalue >) => {
+            let index = state.AlarmValueResults.findIndex(item => item.StartHour == action.payload.StartHour && item.AlarmDayID == action.payload.AlarmDayID);
+            if (index == -1)
+                state.AlarmValueResults.push({ AlarmDayID: action.payload.AlarmDayID, StartHour: action.payload.StartHour, Value: [], IsScalar: true });
+        },
+        UpdateAlarmValues: (state, action: PayloadAction<{ alarmDayID: number, alarmValues: DynamicWizzard.IAlarmvalue[] }>) => {
+            if (action.payload.alarmDayID == undefined) 
+                state.AlarmValueResults = [];
+            else 
+                state.AlarmValueResults = state.AlarmValueResults.filter(v => v.AlarmDayID != action.payload.alarmDayID);
+            state.AlarmValueResults.push(...action.payload.alarmValues.map(item => { return { AlarmDayID: item.AlarmDayID, StartHour: item.StartHour, Value: [], IsScalar: true } }));
+        },
     },
     extraReducers: (builder) => {
 
@@ -64,9 +80,18 @@ export const SetpointParseSlice = createSlice({
             state.Status = 'idle';
             state.Error = null;
 
-            state.Response = action.payload;
-           
+            state.Response = action.payload.content;
 
+            let index = state.AlarmValueResults.findIndex(item => item.StartHour == action.meta.arg.StartHour && item.AlarmDayID == action.meta.arg.AlarmDayID);
+            if (index > -1)
+                state.AlarmValueResults[index] = {
+                    AlarmDayID: action.meta.arg.AlarmDayID,
+                    StartHour: action.meta.arg.StartHour,
+                    Value: action.payload.channelIDs.map((chID, index) => { return { ChannelID: chID, Value: (action.payload.content.Valid ? action.payload.content.Value[index] : NaN) } }),
+                    IsScalar: action.payload.content.IsScalar
+                };
+            
+               
         });
         builder.addCase(FetchParsedSetPoint.pending, (state, action) => {
             state.Status = 'loading';
@@ -82,7 +107,13 @@ export const SetpointParseSlice = createSlice({
 });
 
 export default SetpointParseSlice.reducer;
+
+
 // #endregion
+
+export const {
+    Reset, UpdateAlarmValueContent, UpdateAlarmValues
+} = SetpointParseSlice.actions
 
 // #region [ Selectors ]
 export const SelectSetPointParseStatus = (state: Redux.StoreState) => state.SetPointParse.Status;

@@ -24,16 +24,15 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import _ from 'lodash';
-import { StaticWizzard, DynamicWizzard } from '../global';
-import Table from '@gpa-gemstone/react-table';
+import { DynamicWizzard } from '../global';
 import { useSelector, useDispatch } from 'react-redux';
-import { SelectAlarmValues, updateAlarmValues } from './DynamicWizzardSlice';
-import { select } from 'd3';
+import { SelectAlarmValues, updateAlarmValues, SelectThresholdValues, SelectAllowSlice } from './DynamicWizzardSlice';
 
 
 export const DynamicTimeRange = (props: { alarmDayID: number, setter: ((selectedStartHour: number) => void) }) => {
     const dispatch = useDispatch();
 
+    const allowSlice = useSelector(SelectAllowSlice)
     const [edit, setEdit] = React.useState<boolean>(false);
     const [editTstart, setEditTstart] = React.useState<number>(undefined);
     const [editTend, setEditTend] = React.useState<number>(undefined);
@@ -43,6 +42,8 @@ export const DynamicTimeRange = (props: { alarmDayID: number, setter: ((selected
 
     const memAlarValuesSelector = React.useMemo<(state) => DynamicWizzard.IAlarmvalue[]>( () =>  (state) => SelectAlarmValues(state, props.alarmDayID), [props.alarmDayID])
     const savedAlarmValues = useSelector(memAlarValuesSelector)
+
+    const alarmValueThresholds = useSelector(SelectThresholdValues);
 
     React.useEffect(() => {
         let tmp = savedAlarmValues
@@ -106,7 +107,7 @@ export const DynamicTimeRange = (props: { alarmDayID: number, setter: ((selected
                 result[prevJ].EndHour = editTstart;
 
             result[updateSelected].StartHour = editTstart;
-            result.splice(prevJ + 1, (selected - prevJ));
+            result.splice(prevJ + 1, (selected - prevJ - 1));
         }
         // If user edited the intial StartTime
         if (editTstart != data[selected].StartHour && selected == 0) {
@@ -124,7 +125,7 @@ export const DynamicTimeRange = (props: { alarmDayID: number, setter: ((selected
             props.setter(data[selected].StartHour)
     }, [selected, data])
 
-    const TendInValid = (editTend == undefined || editTend < 1 || editTend > 24 || editTend < editTstart);
+    const TendInValid = (editTend == undefined || editTend < 1 || editTend > 24 || (!(editTend > editTstart)));
     const TstartInValid = (editTstart == undefined || editTstart < 0 || editTstart > 23);
 
 
@@ -150,7 +151,11 @@ export const DynamicTimeRange = (props: { alarmDayID: number, setter: ((selected
                     </div>
                     :
                     <p>
-                        <i style={{ marginRight: '10px', color: '#28A745' }} className="fa fa-check-circle"></i>
+                        {alarmValueThresholds.find(threshold => threshold.AlarmDayID == props.alarmDayID && threshold.StartHour == item.StartHour) != undefined &&
+                            alarmValueThresholds.find(threshold => threshold.AlarmDayID == props.alarmDayID && threshold.StartHour == item.StartHour).Value.some(item => !isNaN(item.Value)) &&
+                            (alarmValueThresholds.find(threshold => threshold.AlarmDayID == props.alarmDayID && threshold.StartHour == item.StartHour).IsScalar || allowSlice) ?
+                            <i style={{ marginRight: '10px', color: '#28A745' }} className="fa fa-check-circle"></i> :
+                            <i style={{ marginRight: '10px', color: '#dc3545' }} className="fa fa-exclamation-circle"></i>}
                         {(item.StartHour < 10 ? '0' : '') + item.StartHour}:00 - {(item.EndHour == undefined ? '24' : ((item.EndHour < 10 ? '0' : '') + item.EndHour))}:00
                         <i style={{ marginLeft: '10px' }} className="fa fa-edit" onClick={() => setEdit(true)}></i>
                     </p>}

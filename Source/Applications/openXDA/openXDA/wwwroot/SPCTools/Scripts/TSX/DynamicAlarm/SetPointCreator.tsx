@@ -47,18 +47,18 @@ interface IChannelGraphProps {ChannelID: number}
 
 const SetPointCreator = (props: IProps) => {
     const isDynamic = true;
-
+    const alarmDays = useSelector(SelectSetPointAlarmDays);
     const [plot, setPlot] = React.useState<Array<IChannelGraphProps>>([]);
     const [MeterList, setMeterList] = React.useState<Array<DropDownMeter>>([]);
 
-    const [activeDayID, setActiveDayID] = React.useState<number>(undefined);
+    const [activeDayID, setActiveDayID] = React.useState<number>(alarmDays.length > 0 ? alarmDays[0].ID : undefined);
     const [activeHour, setActiveHour] = React.useState<number>(undefined);
 
     const dispatch = useDispatch();
 
     const factors = useSelector(SelectAlarmFactors);
     const availableChannels = useSelector(SelectStatisticsChannels)
-    const alarmDays = useSelector(SelectSetPointAlarmDays);
+    
     const statisticsTime = useSelector(SelectStatisticsrange);
 
     // This only triggers on First render to create a List of Available Meters for the Graph DropDown
@@ -259,7 +259,7 @@ const SetPointMessage = (props: {}) => {
     if (response == undefined)
         text = "An error occured."
     else if (response.Valid && !response.IsScalar && !allowSlice)
-        text = "A single threshold is required for all Channels because some Channels are not seletced as historic data source.";
+        text = "A single threshold is required for all channels because some channels are not selected as historic data source.";
     else if (response.Valid && !response.IsScalar && allowSlice)
         text = "A sepperate Threshhold will be computed for each Channel. if that is not intended an aggregation function such as MIN or MAX needs to be used."
     else

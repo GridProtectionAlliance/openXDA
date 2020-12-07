@@ -29,6 +29,7 @@ import { SelectSelectedVoltages } from '../store/WizardVoltageOptionSlice';
 import { SelectAlarmDayGroups } from '../store/AlarmDayGroupSlice';
 import { SelectAlarmDays } from '../store/AlarmDaySlice';
 import { FetchParsedSetPoint } from '../store/SetPointParseSlice';
+import { Reset as ResetParsedSetpoint, UpdateAlarmValues as UpdateAlarmValuesParsedSetpoint, UpdateAlarmValueContent as UpdateAlarmValueContentParsedSetpoint } from '../store/SetPointParseSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -38,6 +39,7 @@ declare var userIsAdmin: boolean;
 export const ResetWizzard = createAsyncThunk('DynamicWizzard/ResetWizzard', (_, { dispatch, getState }) => {
     dispatch(DynamicWizzardSlice.actions.reset((getState() as Redux.StoreState).GeneralSettings));
     dispatch(FetchAffectedChannels());
+    dispatch(ResetParsedSetpoint());
 })
 
 // Thunk For Updating AlarmValues and sending Data to Tokenizer
@@ -46,6 +48,17 @@ export const UpdateFormula = createAsyncThunk('DynamicWizzard/UpdateFormula', (a
     dispatch(updateAlarmValueContent({ ...alarmValue, Formula: arg.formula }));
     dispatch(FetchParsedSetPoint({ AlarmDayID: arg.alarmDayID, StartHour: arg.startHour }));
 
+});
+
+// Thunk for Updating AlarmValues isnce we also have to update Results
+export const updateAlarmValues = createAsyncThunk('DynamicWizzard/updateLarmValueThunk', (arg: { alarmDayID: number, alarmValues: DynamicWizzard.IAlarmvalue[] }, { dispatch }) => {
+    dispatch(DynamicWizzardSlice.actions.updateAlarmValues(arg));
+    dispatch(UpdateAlarmValuesParsedSetpoint(arg));
+});
+
+export const updateAlarmValueContent = createAsyncThunk('DynamicWizzard/updateAlarmValueContentThunk', (arg: DynamicWizzard.IAlarmvalue, { dispatch }) => {
+    dispatch(DynamicWizzardSlice.actions.updateAlarmValueContent(arg));
+    dispatch(UpdateAlarmValueContentParsedSetpoint(arg));
 });
 
 export const DynamicWizzardSlice = createSlice({
@@ -66,7 +79,6 @@ export const DynamicWizzardSlice = createSlice({
         StatisticsChannelIDs: [],
         AlarmFactors: [],
         AlarmValues: [],
-        AlarmValueResults: [],
 
     } as DynamicWizzard.IState,
     reducers: {
@@ -89,7 +101,6 @@ export const DynamicWizzardSlice = createSlice({
             state.StatisticsChannelIDs = []
             state.AlarmFactors = []
             state.AlarmValues = []
-            state.AlarmValueResults = []
         },
         next: (state) => {
             if (state.Step == 'general')
@@ -149,29 +160,21 @@ export const DynamicWizzardSlice = createSlice({
             state.AlarmFactors.splice(action.payload, 1)
         },
         updateAlarmValues: (state, action: PayloadAction<{ alarmDayID: number, alarmValues: DynamicWizzard.IAlarmvalue[] }>) => {
-            if (action.payload.alarmDayID == undefined) {
+            if (action.payload.alarmDayID == undefined) 
                 state.AlarmValues = [];
-                state.AlarmValueResults = [];
-            }
-            else {
+            
+            else 
                 state.AlarmValues = state.AlarmValues.filter(v => v.AlarmDayID != action.payload.alarmDayID);
-                state.AlarmValueResults = state.AlarmValueResults.filter(v => v.AlarmDayID != action.payload.alarmDayID);
-            }
-
             state.AlarmValues.push(...action.payload.alarmValues);
-            state.AlarmValueResults.push(...action.payload.alarmValues.map(item => { return { AlarmDayID: item.AlarmDayID, StartHour: item.StartHour, Value: [] } }));
-
         },
         updateAlarmValueContent: (state, action: PayloadAction<DynamicWizzard.IAlarmvalue>) => {
             let index = state.AlarmValues.findIndex(item => item.StartHour == action.payload.StartHour && item.AlarmDayID == action.payload.AlarmDayID);
-            if (index == -1) {
+            if (index == -1)
                 state.AlarmValues.push(action.payload);
-                state.AlarmValueResults.push({ AlarmDayID: action.payload.AlarmDayID, StartHour: action.payload.StartHour, Value: [] });
-            }
-            else {
+            else           
                 state.AlarmValues[index] = action.payload;
-            }
         },
+        
     },
     
      extraReducers: (builder) => {
@@ -191,8 +194,7 @@ export const {
     updateStatisticsRange, updateStatisticsFilter,
     updateStatisticChannels,
     updateFactor, addFactor, removeFactor,
-    updateAlarmValues, updateAlarmValueContent
-
+    
 } = DynamicWizzardSlice.actions
 
 export default DynamicWizzardSlice.reducer;
@@ -225,8 +227,8 @@ export const SelectActiveAlarmValue = (state: Redux.StoreState, alarmDayId: numb
 
 export const SelectActiveFormula = (state: Redux.StoreState, alarmDayId: number, alarmStartHour: number) => (SelectActiveAlarmValue(state, alarmDayId, alarmStartHour) != undefined ? SelectActiveAlarmValue(state, alarmDayId, alarmStartHour).Formula : "");
 
-export const SelectAllowSlice = createSelector(SelectAffectedChannelCount, SelectStatisticsChannels, (countAll, statisticsChannels) => (countAll == statisticsChannels.length ));
-
+export const SelectAllowSlice = createSelector(SelectAffectedChannelCount, SelectStatisticsChannels, (countAll, statisticsChannels) => (countAll == statisticsChannels.length));
+export const SelectThresholdValues = (state: Redux.StoreState) => state.SetPointParse.AlarmValueResults;
 
 export const selectErrors = createSelector(
     ((state: Redux.StoreState) => (state.DynamicWizzard.Step)),
@@ -237,34 +239,36 @@ export const selectErrors = createSelector(
     (state: Redux.StoreState) => SelectSelectedVoltages(state).some(i => i),
     SelectStatisticsrange,
     (state: Redux.StoreState) => state.DynamicWizzard.StatisticsChannelIDs.length,
-//    (state: Redux.StoreState) => (state.StaticWizzard.StatChannels.length == state.StaticWizzard.SelectedChannelCount),
-//    (state: Redux.StoreState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.Valid) ,
 //    (state: Redux.StoreState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.IsScalar),
-//    (state: Redux.StoreState) => (state.StaticWizzard.AlarmFactors),
-    (step, channelCount, name, meterCount, phaseCount, voltageCount, statisticsRange, statisticsChannelCount) => {
+    (state: Redux.StoreState) => (state.StaticWizzard.AlarmFactors),
+    (state: Redux.StoreState) => state.SetPointParse.AlarmValueResults ,
+    (step, channelCount, name, meterCount, phaseCount, voltageCount, statisticsRange, statisticsChannelCount, alarmFactors, setPointResults) => {
         let result = [] as StaticWizzard.IRequirement[];
+
+        let setpointsValid = !setPointResults.some(item => item.Value.length == 0 || item.Value.some(pt => isNaN(pt.Value)));
+        let setPointScalar = !setPointResults.some(item => !item.IsScalar);
         if (step == 'general') {
             result.push({ text: "A Name is required", complete: (name ? 'complete' : 'required') });
             result.push({ text: "At least 1 Meter needs to be selected", complete: (meterCount ? 'complete' : 'required') });
             result.push({ text: "At least 1 Phase needs to be selected", complete: (phaseCount ? 'complete' : 'required') });
             result.push({ text: "At least 1 Base Voltage needs to be selected", complete: (voltageCount ? 'complete' : 'required') });
-            result.push({ text: "The Selection needs to result in at least 1 Channel", complete: (channelCount ? 'complete' : 'required') });
+            result.push({ text: "The selection needs to result in at least 1 channel", complete: (channelCount ? 'complete' : 'required') });
         }
         else if (step == 'selectData') {
             result.push({ text: "A valid start date has to be selected", complete: (statisticsRange.start != "" ? 'complete' : 'required') });
             result.push({ text: "A valid end date has to be selected", complete: (statisticsRange.end != "" ? 'complete' : 'required') })
-            result.push({ text: "At least 1 Channel needs to be selected", complete: (statisticsChannelCount > 0 ? 'complete' : 'required') })
+            result.push({ text: "At least 1 channel needs to be selected", complete: (statisticsChannelCount > 0 ? 'complete' : 'required') })
             if (!(statisticsChannelCount == channelCount))
-                result.push({ text: "A single threshhold will be required for all Channels. Not all Channels are used as historic datasource", complete: 'warning' })
+                result.push({ text: "A single threshhold will be required for all channels. Not all channels are used as historic datasource", complete: 'warning' })
         }
         else if (step == 'setpoint') {
-            //result.push({ text: "A valid setpoint Expression is Required", complete: (setPoint ? 'complete' : 'required') });
-            //if (!fullHistory)
-            //    result.push({ text: "A single scalar setpoint is required for all Channels", complete: (scalarSetpoint ? 'complete' : 'required') })
-            //else if (!scalarSetpoint)
-            //    result.push({ text: "The setpoint expression will result in different threshold for each Channel", complete: 'warning' })
-            //if (alarmFactors.length > 0)
-            //    result.push({ text: "No level can not be applied at the original SetPoint", complete: (!alarmFactors.some(item => item.Value == 1.0) ? 'complete' : 'required') })
+            result.push({ text: "A valid setpoint expression is required for every period", complete: (setpointsValid ? 'complete' : 'required') });
+            if (!(statisticsChannelCount == channelCount))
+                result.push({ text: "A single scalar setpoint is required for all channels", complete: (setPointScalar ? 'complete' : 'required') })
+            else if (!setPointScalar)
+                result.push({ text: "The setpoint expression will result in different threshold for each channel", complete: 'warning' })
+            if (alarmFactors.length > 0)
+                result.push({ text: "No level can not be applied at the original setpoint", complete: (!alarmFactors.some(item => item.Value == 1.0) ? 'complete' : 'required') })
         }
         return result;
 
@@ -273,24 +277,4 @@ export const selectErrors = createSelector(
 
 // Async Functions
 
-
-
-function getChannelCount(state: StaticWizzard.IState): JQuery.jqXHR<number> {
-    
-
-    let handle = $.ajax({
-        type: "POST",
-        url: `${apiHomePath}api/SPCTools/StaticAlarmCreation/AffectedChannels`,
-        contentType: "application/json; charset=utf-8",
-        dataType: 'json',
-        data: JSON.stringify({
-            MeterID: state.SelectedMeterID, MeasurmentTypeID: state.SelectedMeasurmentTypeID,
-            BaseVoltage: state.AvailableVoltages.filter((p, i) => state.SelectedVoltages[i]), PhaseID: state.AvailablePhases.filter((p, i) => state.SelectedPhases[i]).map(p => p.ID)
-        }),
-        cache: false,
-        async: true
-    });
-
-    return handle;
-}
 
