@@ -294,6 +294,16 @@ namespace openXDA.Controllers
                     List<Token> oldOrder = children.ToList();
 
                     List<string> vars = tokenized.Split('+').Select(item => item.Trim()).ToList();
+                    if (vars.Count == 0)
+                    {
+                        m_isValid = false;
+                        m_error = "A number or Variable is required";
+                        return;
+                    }
+                    if (vars.Count == 1)
+                    {
+                        vars.Add("0");
+                    }
                     int originalIndex = 0;
                     children = vars.Select((item, index) =>
                     {
@@ -316,7 +326,8 @@ namespace openXDA.Controllers
                         }
                         return new Token(item, m_data, m_channels, m_filter, m_timeFilter);
                     }).ToList();
-
+                   
+                        
                     // Set Output Type and Validtiy
                     if (children.Any(item => item.OutputType == TokenType.Matrix))
                         OutputType = TokenType.Matrix;
@@ -334,6 +345,17 @@ namespace openXDA.Controllers
                     List<Token> oldOrder = children.ToList();
 
                     List<string> vars = tokenized.Split('-').Select(item => item.Trim()).ToList();
+                    if (vars.Count == 0)
+                    {
+                        m_isValid = false;
+                        m_error = "A number or Variable is required";
+                        return;
+                    }
+                    if (vars.Count == 1)
+                    {
+                        vars.Add("0");
+                    }
+
                     int originalIndex = 0;
                     children = vars.Select((item, index) =>
                     {
@@ -375,6 +397,16 @@ namespace openXDA.Controllers
                     List<Token> oldOrder = children.ToList();
 
                     List<string> vars = tokenized.Split('*').Select(item => item.Trim()).ToList();
+                    if (vars.Count == 0)
+                    {
+                        m_isValid = false;
+                        m_error = "A number or Variable is required";
+                        return;
+                    }
+                    if (vars.Count == 1)
+                    {
+                        vars.Add("1");
+                    }
                     int originalIndex = 0;
                     children = vars.Select((item, index) =>
                     {
@@ -452,9 +484,9 @@ namespace openXDA.Controllers
 
                 while (j > 0 && (input[j] != '*' && input[j] != '/' && input[j] != '+' && input[j] != '-' && input[j] != '(' && input[j] != ' '))
                     j--;
-                children.Add(new Token(input.Substring(j , i - j ), m_data, m_channels, m_filter, m_timeFilter));
+                children.Add(new Token(input.Substring(j + 1 , i - j - 1), m_data, m_channels, m_filter, m_timeFilter));
 
-                return input.Substring(0, j) + "T" + input.Substring(i);
+                return input.Substring(0, j + 1) + "T" + input.Substring(i);
             }
             children.Add(new Token(input.Substring(start+1,i-start-2), m_data, m_channels, m_filter, m_timeFilter));
 
