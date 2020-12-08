@@ -83,6 +83,7 @@ namespace openXDA.Controllers
             s_memoryCache = new MemoryCache("SPCToolsHIDSData");
         }
         #endregion
+
         #region [HTTPRequests]
 
         /// <summary>

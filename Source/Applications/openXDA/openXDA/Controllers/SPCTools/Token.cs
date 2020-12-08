@@ -46,14 +46,33 @@ namespace openXDA.Controllers
         public double LowerLimit { get; set; }
     }
 
+    /// <summary>
+    /// Represents the output type of a <see cref="Token"/>
+    /// </summary>
     public enum TokenType
     {
+        /// <summary>
+        /// Single Number
+        /// </summary>
         Scalar,
+        /// <summary>
+        /// Time Series of Values
+        /// </summary>
         Series,
+        /// <summary>
+        /// Multiple Time Series
+        /// </summary>
         Matrix,
+        /// <summary>
+        /// Represents a Series of Scalars without Timestamp - e.g. BaseVoltages
+        /// </summary>
         Slice,
 
     }
+
+    /// <summary>
+    /// The Computational Action or Function taken but a <see cref="Token"/>
+    /// </summary>
     public enum ComputationAction
     {
         Addition,
@@ -66,9 +85,14 @@ namespace openXDA.Controllers
     }
 
 
+    /// <summary>
+    /// Represents a Tokenized version of a Setpoint Formula to Parse and compute and resolve any Functions and Variables
+    /// </summary>
     public class Token
     {
         private string m_formula;
+        Func<DateTime, bool> m_timeFilter;
+
         private TokenType OutputType;
         private bool m_isLeaf;
 
@@ -82,11 +106,18 @@ namespace openXDA.Controllers
         private List<int> m_channels;
         private DataFilter m_filter;
 
-        public Token(string formula, Dictionary<int,List<Point>> data, List<int> channels, DataFilter filter)
+        private double? m_scalar = null;
+        private List<double> m_slice = null;
+
+        public Token(string formula, Dictionary<int, List<Point>> data, List<int> channels, DataFilter filter) : this(formula, data, channels, filter, (DateTime input) => { return true; }) { }
+        
+
+        public Token(string formula, Dictionary<int, List<Point>> data, List<int> channels, DataFilter filter, Func<DateTime, bool> TimeFilter)
         {
             m_isValid = true;
 
             m_data = data;
+            m_timeFilter = TimeFilter;
 
             m_formula = formula.Trim().ToLower();
             children = new List<Token>();
@@ -192,7 +223,7 @@ namespace openXDA.Controllers
                 }
                 List<string> parameters = m_formula.Substring(m_formula.IndexOf('(') + 1, m_formula.Length - m_formula.IndexOf('(') - 2).Split(',').Select(item => item.Trim()).ToList();
 
-                children = parameters.Select( item => new Token(item,m_data,m_channels,m_filter)).ToList();
+                children = parameters.Select( item => new Token(item,m_data,m_channels,m_filter,m_timeFilter)).ToList();
 
                 if (children.Count == 0)
                 {
@@ -281,9 +312,9 @@ namespace openXDA.Controllers
                                 int Tin = untokenized.IndexOf("T");
                                 untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula +  untokenized.Substring(Tin+1);
                             }
-                            return new Token(untokenized, m_data, m_channels, m_filter);
+                            return new Token(untokenized, m_data, m_channels, m_filter, m_timeFilter);
                         }
-                        return new Token(item, m_data, m_channels, m_filter);
+                        return new Token(item, m_data, m_channels, m_filter, m_timeFilter);
                     }).ToList();
 
                     // Set Output Type and Validtiy
@@ -321,9 +352,9 @@ namespace openXDA.Controllers
                                 int Tin = untokenized.IndexOf("T");
                                 untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin+1);
                             }
-                            return new Token(untokenized, m_data, m_channels, m_filter);
+                            return new Token(untokenized, m_data, m_channels, m_filter, m_timeFilter);
                         }
-                        return new Token(item, m_data, m_channels, m_filter);
+                        return new Token(item, m_data, m_channels, m_filter, m_timeFilter);
                     }).ToList();
 
                     // Set Output Type and Validtiy
@@ -362,9 +393,9 @@ namespace openXDA.Controllers
                                 int Tin = untokenized.IndexOf("T");
                                 untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin+1);
                             }
-                            return new Token(untokenized, m_data, m_channels, m_filter);
+                            return new Token(untokenized, m_data, m_channels, m_filter, m_timeFilter);
                         }
-                        return new Token(item, m_data, m_channels, m_filter);
+                        return new Token(item, m_data, m_channels, m_filter, m_timeFilter);
                     }).ToList();
 
                     // Set Output Type and Validtiy
@@ -421,11 +452,11 @@ namespace openXDA.Controllers
 
                 while (j > 0 && (input[j] != '*' && input[j] != '/' && input[j] != '+' && input[j] != '-' && input[j] != '(' && input[j] != ' '))
                     j--;
-                children.Add(new Token(input.Substring(j , i - j ), m_data, m_channels, m_filter));
+                children.Add(new Token(input.Substring(j , i - j ), m_data, m_channels, m_filter, m_timeFilter));
 
                 return input.Substring(0, j) + "T" + input.Substring(i);
             }
-            children.Add(new Token(input.Substring(start+1,i-start-2), m_data, m_channels, m_filter));
+            children.Add(new Token(input.Substring(start+1,i-start-2), m_data, m_channels, m_filter, m_timeFilter));
 
             return input.Substring(0,start) + "T" + input.Substring(i); 
         }
@@ -614,6 +645,9 @@ namespace openXDA.Controllers
             return ComputeSlice().Select((item, index) => Enumerable.Repeat(new double[] { double.NaN, item }, m_data[m_channels[index]].Count).ToList()).ToList();
         }
 
+        public double Scalar => ((double)(m_scalar == null ? m_scalar = (double?)ComputeScalar() : (double)m_scalar));
+        public List<double> Slice => (m_slice == null ? m_slice = ComputeSlice() : m_slice);
+
         public bool Valid 
         { 
             get
@@ -641,6 +675,8 @@ namespace openXDA.Controllers
         public bool isSlice => OutputType == TokenType.Slice;
 
         public string Formula => m_formula;
+
+        public bool Applies(DateTime time) => m_timeFilter(time);
 
         private static readonly Regex s_IsNumber = new Regex("^[0-9.]*$", RegexOptions.Compiled| RegexOptions.IgnoreCase);
         private static readonly Regex s_isFunction = new Regex("^([^*\\-+\\/]+)\\(.*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
