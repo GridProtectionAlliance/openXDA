@@ -168,7 +168,7 @@ namespace openXDA.Controllers
                     testData = LoadChannel(request.ChannelID, request.Start, request.End);
 
                 bool isDynamic = !(tokenList.Count == 1);
-                bool isScalar = request.ChannelID.Count == request.StatisticsChannelID.Count && tokenList.All(item => item.isScalar);
+                bool isScalar = tokenList.All(item => item.isScalar);
 
                 Func<Point, double> seriesTypeFilter = GetSeriesTypeFilter(seriesTypeID);
 
@@ -277,12 +277,13 @@ namespace openXDA.Controllers
                         double p2 = (getData(data[i]) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D);
 
                         if (p2 > 0)
-                            result.FactorTests[jF].NumberRaised++;
+                            result.FactorTests[jF].TimeInAlarm++;
                         if ((p1 * p2) < 0 && p2 > 0)
                             result.FactorTests[jF].NumberRaised++;
                     }
             }
-
+            
+            result.FactorTests = result.FactorTests.Select(f => new FactorTestResponse() { TimeInAlarm = (data.Count > 0? f.TimeInAlarm/data.Count : 0.0D), NumberRaised = f.NumberRaised, Factor = f.Factor }).ToList();
             return result;
 
         }

@@ -198,12 +198,10 @@ export const AlarmTrendingCard = (props: IProps) => {
 
         _.sortBy(alarmValues, item => item.StartHour);
         let channelIndex = alarmValues[0].Value.findIndex(item => item.ChannelID == props.ChannelID);
-        if (channelIndex == -1 && props.ChannelID != -1)
-            return [[Tday, NaN], [Tday + 86400000, NaN]];
-        if (props.ChannelID == -1 && !alarmValues[0].IsScalar)
+        if (channelIndex == -1  && !alarmValues[0].IsScalar)
             return [[Tday, NaN], [Tday + 86400000, NaN]];
 
-        if (props.ChannelID == -1)
+        if (channelIndex == -1 && alarmValues[0].IsScalar)
             channelIndex = 0;
 
 
@@ -273,8 +271,8 @@ export const AlarmTrendingCard = (props: IProps) => {
         return handle;
     }
 
-    let Tstart = (data.length > 0? data[0].data[0][0] : 0);
-    let Tend = (data.length > 0 ? data[0].data[data[0].data.length - 1][0] : 1500);
+    let Tstart = (data.length > 0? (data[0].data.length > 0? data[0].data[0][0] : 0) : 0);
+    let Tend = (data.length > 0 ? (data[0].data.length > 0? data[0].data[data[0].data.length - 1][0] : 1500) : 1500);
 
     return (
         <>

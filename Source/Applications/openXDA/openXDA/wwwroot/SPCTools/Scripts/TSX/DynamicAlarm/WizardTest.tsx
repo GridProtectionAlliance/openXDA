@@ -28,9 +28,10 @@ import { DateRangePicker } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
 import TrendingCard, { ITrendSeries } from '../CommonComponents/Graph';
-import { selectAlarmGroup, selectSeriesTypeID, SelectAlarmFactors } from './DynamicWizzardSlice';
+import { selectAlarmGroup, selectSeriesTypeID, SelectAlarmFactors, SelectStatisticsFilter, SelectStatisticsChannels, SelectStatisticsrange, SelectAllAlarmValues } from './DynamicWizzardSlice';
 import { SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSeverities } from '../store/SeveritySlice';
+import { AlarmTrendingCard } from './AlarmTrendingCard';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -47,18 +48,22 @@ const defaultTimeRange = {
 } as SPCTools.IDateRange
 
 
-const TestGroup = (props: IProps) => {
+const WizardTest = (props: IProps) => {
     const handle = React.useRef<JQuery.jqXHR>(undefined);
 
     const [loading, setLoading] = React.useState<SPCTools.Status>('unitiated');
     const [error, setError] = React.useState<string>('');
     const [response, setResponse] = React.useState<SPCTools.IChannelTest[]>([])
-    const [timeRange, setTimeRange] = React.useState<SPCTools.IDateRange>(defaultTimeRange)
+    const [timeRange, setTimeRange] = React.useState<SPCTools.IDateRange>(defaultTimeRange);
+    const [effectiveTimeRange, setEffectiveTimeRange] = React.useState<SPCTools.IDateRange>(defaultTimeRange)
 
     const alarmGroup = useSelector(selectAlarmGroup);
     const seriesTypeID = useSelector(selectSeriesTypeID);
     const allChannels = useSelector(SelectAffectedChannels);
-
+    const statFilter = useSelector(SelectStatisticsFilter);
+    const statChannels = useSelector(SelectStatisticsChannels);
+    const statTimeRange = useSelector(SelectStatisticsrange);
+    const alarmVaues = useSelector(SelectAllAlarmValues);
 
     //const testResult = useSelector(selectResultSummary)
 
@@ -93,8 +98,20 @@ const TestGroup = (props: IProps) => {
     function LoadTest(): JQuery.jqXHR {
 
         setLoading('loading');
+        setEffectiveTimeRange(timeRange);
 
-        let request = {};
+        let request = {
+            AlarmFactors: alarmFactors.map(item => item.Value),
+            Start: timeRange.start,
+            End: timeRange.end,
+            ChannelID: allChannels.map(item => item.ID),
+            TokenValues: alarmVaues,
+            StatisticsFilter: statFilter,
+            StatisticsStart: statTimeRange.start,
+            StatisticsEnd: statTimeRange.end,
+            StatisticsChannelID: statChannels.map(item => item.ID),
+            AlarmTypeID: alarmGroup.AlarmTypeID
+        };
 
         let h = $.ajax({
             type: "POST",
@@ -106,16 +123,15 @@ const TestGroup = (props: IProps) => {
             async: true
         });
 
-        h.fail((_, status) => {
+        h.then((data) => updateData(data)).catch((_, status) => {
             setLoading('error');
             setError(status);
         });
-
-        h.done((data) => updateData(data));
         return h;
     }
 
     function updateData(data) {
+        setLoading('idle');
         setChannelList(data.map(item => {
             let bindex = item.FactorTests.findIndex(d => d.Factor == 1.0)
             let cindex = allChannels.findIndex(c => item.ChannelID == c.ID)
@@ -181,6 +197,7 @@ const TestGroup = (props: IProps) => {
             })
         ])
     }
+
     return (
         <div style={{ width: '100%', height: '100%' }}>
             <div className="row" style={{ margin: 0 }}>
@@ -193,18 +210,23 @@ const TestGroup = (props: IProps) => {
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             <DateRangePicker<SPCTools.IDateRange> Label={''} Record={timeRange} FromField={'start'} ToField={'end'} Setter={(r) => { setLoading('changed'); setTimeRange(r); }} Disabled={loading == 'loading'} />
-                            <button type="button" className={"btn btn-primary"} disabled={loading != 'changed'} onClick={() => {
-                                if (handle.current != undefined && handle.current.abort != undefined)
-                                    handle.current.abort();
-                                handle.current = LoadTest();
-                            }}>
-                                Test
-                            </button>
                         </div>
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            {loading ?
+                            <button type="button" className={"btn btn-primary btn-block"} disabled={loading != 'changed'} onClick={() => {
+                                if (handle.current != undefined && handle.current.abort != undefined)
+                                    handle.current.abort();
+                                handle.current = LoadTest();
+                            }}>
+                                    Test
+                            </button>
+                        </div>
+                        
+                    </div>
+                    <div className="row" style={{ margin: 0 }}>
+                        <div className="col">
+                            {loading == 'loading' ?
                                 <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
                                     <div className="spinner-border" role="status"></div>
                                 </div> :
@@ -239,7 +261,7 @@ const TestGroup = (props: IProps) => {
                 <div className="col-6">
                     <div className="row">
                         <div className="col">
-                            {loading ? 
+                            {loading == 'loading' ? 
                                 <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
                                     <div className="spinner-border" role="status"></div>
                                 </div> :
@@ -269,7 +291,7 @@ const TestGroup = (props: IProps) => {
 
                     <div className="row">
                         <div className="col">
-                            {loading ?
+                            {loading == 'loading' ?
                                 <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
                                     <div className="spinner-border" role="status"></div>
                                 </div> :
@@ -301,7 +323,7 @@ const TestGroup = (props: IProps) => {
             </div>
             <div className="row" style={{ margin: 0 }}>
                 <div className="col">
-                    {selectedChannel != -1 ? null : null}
+                    {selectedChannel != -1 && (loading == 'idle' || loading == 'changed') ? <AlarmTrendingCard Tend={effectiveTimeRange.end} Tstart={effectiveTimeRange.start} ChannelID={selectedChannel} Remove={() => { }} /> : null}
                 </div>
             </div>
             
@@ -311,4 +333,4 @@ const TestGroup = (props: IProps) => {
     );
 }
 
-export default TestGroup
+export default WizardTest

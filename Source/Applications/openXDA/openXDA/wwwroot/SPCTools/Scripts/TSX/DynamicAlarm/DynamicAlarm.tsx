@@ -28,7 +28,6 @@ import * as ReactDOM from 'react-dom';
 import {selectStatus, next, back, selectTab, selectErrors} from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 
-import { SPCTools, StaticWizzard } from '../global';
 import ReactTooltip from 'react-tooltip';
 import { loadTest } from '../Store/HistoryTestSlice';
 import { setPage } from '../Store/GeneralSettingsSlice';
@@ -36,6 +35,7 @@ import { Requirements } from '../CommonComponents/Requirments';
 import SelectStatisticsData from './SelectStatisticsData';
 import SetPointCreator from './SetPointCreator';
 import { FunctionHelp } from '../CommonComponents/FunctionHelp';
+import WizardTest from './WizardTest';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -51,8 +51,7 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
     function Continue() {
         
         if (!errors.some(item => (item.complete == 'required'))) {
-            if (tab == 'setpoint')
-                dispatch(loadTest(-1))
+
             if (tab == 'test') {
                 //dispatch(SaveAlarmGroup());
                 dispatch(setPage("Home"))
@@ -94,7 +93,7 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
                         {tab == 'general' ? <GeneralSettings /> : null}
                         {tab == 'selectData' ? <SelectStatisticsData /> : null}
                         {tab == 'setpoint' ? <SetPointCreator /> : null}
-                        {/*//{tab == 'test' ? <TestGroup /> : null}*/}
+                        {tab == 'test' ? <WizardTest /> : null}
                     </> : null
                 }
                 

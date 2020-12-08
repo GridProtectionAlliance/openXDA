@@ -229,6 +229,7 @@ export const SelectActiveFormula = (state: Redux.StoreState, alarmDayId: number,
 
 export const SelectAllowSlice = createSelector(SelectAffectedChannelCount, SelectStatisticsChannels, (countAll, statisticsChannels) => (countAll == statisticsChannels.length));
 export const SelectThresholdValues = (state: Redux.StoreState) => state.SetPointParse.AlarmValueResults;
+export const SelectAllAlarmValues = (state: Redux.StoreState) => state.DynamicWizzard.AlarmValues;
 
 export const selectErrors = createSelector(
     ((state: Redux.StoreState) => (state.DynamicWizzard.Step)),
