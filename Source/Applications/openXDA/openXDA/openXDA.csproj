@@ -4400,6 +4400,7 @@
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Filter.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\SelectStatisticsData.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\SetPointCreator.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\DynamicAlarm\WizardTest.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\global.d.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\AlarmGroup\AlarmGroup.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\MeterOverview\MeterOverview.tsx" />
