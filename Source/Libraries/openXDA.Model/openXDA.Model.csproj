@@ -117,6 +117,7 @@
     <Compile Include="Links\PQViewSite.cs" />
     <Compile Include="Links\EDNAPoint.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
+    <Compile Include="Meters\MeterAlarmGroup.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="Meters\MeterConfiguration.cs" />
     <Compile Include="Note.cs" />
