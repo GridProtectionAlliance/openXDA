@@ -62,7 +62,8 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
 
     let searchCollumns = [
         { label: 'Meter', key: 'Name', type: 'string'},
-        { label: 'Type', key: 'Make', type: 'string'},
+        { label: 'Make', key: 'Make', type: 'string' },
+        { label: 'Model', key: 'Make', type: 'string' },
     ] as Filter.IField<openXDA.IMeter>[];
 
     return (
@@ -74,7 +75,8 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
                         <Table<openXDA.IMeter>
                             cols={[
                                 { key: 'Name', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Make', label: 'Type', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Make', label: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Model', label: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                             ]}
                             tableClass="table table-hover"
                             data={meters}
@@ -95,10 +97,11 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
                     </div>
 
                     <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
-                        <Table<SPCTools.IChannelAlarmGroup>
+                        <Table<SPCTools.IMeterAlarmGroup>
                             cols={[
                                 { key: 'Name', label: 'AlarmGroup', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                 { key: 'AlarmSeverity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Channel', label: 'Num. of Channels', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                 { key: 'TimeInAlarm', label: 'Time In Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                             ]}
                             tableClass="table table-hover"

@@ -44,7 +44,7 @@ export namespace Redux {
         WizardVoltageOption: OptionState<number>,
         SeriesType: State<openXDA.ISeriesType>
         Meter: State<openXDA.IMeter>,
-        MeterAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
+        MeterAlarmGroup: State<SPCTools.IMeterAlarmGroup>,
         AlarmGroupView: State<SPCTools.IAlarmGroupView>,
         WizardAffectedChannel: State<openXDA.IChannel>,
         Severity: State<SPCTools.ISeverity>,
@@ -96,8 +96,9 @@ export namespace SPCTools {
 
     export interface IChannelOverview { ID: number, Meter: string, Channel: string, Type: string, Phase: string, Asset: string }
 
-    //r
+    
     export interface IChannelAlarmGroup { ID: number, ChannelID: number, Name: string, AlarmSeverityID: number, AlarmSeverity: string, TimeInAlarm: string }
+    export interface IMeterAlarmGroup { ID: number, Channel: number, Name: string, AlarmSeverity: string, TimeInAlarm: string }
 
     export interface IAlarmGroup { ID: number, Name: string, AlarmTypeID: number, SeverityID: number }
 

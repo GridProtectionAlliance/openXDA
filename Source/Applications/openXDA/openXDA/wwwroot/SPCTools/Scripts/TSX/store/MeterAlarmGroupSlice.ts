@@ -41,7 +41,7 @@ export const MeterAlarmGroupSlice = createSlice({
         Error: null,
         SortField: 'Name',
         Ascending: true
-    } as Redux.State<SPCTools.IChannelAlarmGroup>,
+    } as Redux.State<SPCTools.IMeterAlarmGroup>,
     reducers: {
         SortMeterAlarmGroups: (state, action) => {
             state.Status = 'changed';
@@ -58,7 +58,7 @@ export const MeterAlarmGroupSlice = createSlice({
         builder.addCase(FetchMeterAlarmGroups.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            state.Data = JSON.parse(action.payload) as SPCTools.IChannelAlarmGroup[];
+            state.Data = JSON.parse(action.payload) as SPCTools.IMeterAlarmGroup[];
 
         });
         builder.addCase(FetchMeterAlarmGroups.pending, (state, action) => {
@@ -89,7 +89,7 @@ export const SelectMeterAlarmGroupsAscending = (state: Redux.StoreState) => stat
 
 // #region [ Async Functions ]
 
-function GetMeterAlarmGroup(MeterID: number, sort: keyof SPCTools.IChannelAlarmGroup, asc: boolean): JQuery.jqXHR<string> {
+function GetMeterAlarmGroup(MeterID: number, sort: keyof SPCTools.IMeterAlarmGroup, asc: boolean): JQuery.jqXHR<string> {
     return $.ajax({
         type: "GET",
         url: `${apiHomePath}api/SPCTools/MeterAlarmGroup/${MeterID}/${sort}/${asc ? 1 : 0}`,

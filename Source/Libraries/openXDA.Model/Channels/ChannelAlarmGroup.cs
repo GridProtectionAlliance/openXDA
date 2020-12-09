@@ -43,8 +43,15 @@ namespace openXDA.Model
         public int AlarmSeverityID { get; set; }
     }
 
-    [TableName("ChannelAlarmGroupView")]
-    public class MeterAlarmGroup : ChannelAlarmGroup
-    {}
+    [TableName("MeterAlarmGroupView")]
+    public class MeterAlarmGroup
+    {
+        public int ID { get; set; }
+        public int Channel { get; set; }
+        public int MeterID { get; set; }
+        public string Name { get; set; }
+        public string AlarmSeverity { get; set; }
+        public string TimeInAlarm { get; set; }
+    }
 
 }

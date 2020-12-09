@@ -3219,6 +3219,28 @@ FROM
 	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID
 GO
 
+CREATE VIEW MeterAlarmGroupView AS
+SELECT 
+	AlarmGroup.ID,
+	AlarmGroup.Name,
+	AlarmSeverity.Name as AlarmSeverity,
+	Meter.ID as MeterID,
+	COUNT(Channel.ID) AS Channel,
+	'N/A' as TimeInAlarm
+	 
+FROM 
+	Alarm LEFT JOIN
+	AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
+	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
+	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
+	Meter ON Channel.MeterID = Meter.ID LEFT JOIN
+	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID
+GROUP BY
+	AlarmGroup.ID,
+	AlarmGroup.Name, AlarmSeverity.Name,
+	Meter.ID
+GO
+
 CREATE VIEW AlarmDayGroupView AS SELECT
 	AlarmDayGroup.ID,
 	Description,
