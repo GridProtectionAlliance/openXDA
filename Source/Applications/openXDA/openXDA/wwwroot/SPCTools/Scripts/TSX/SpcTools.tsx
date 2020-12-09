@@ -37,7 +37,7 @@ import { selectPage, setPage } from './store/GeneralSettingsSlice';
 import { ResetWizzard as ResetStatic} from './StaticAlarm/StaticWizzardSlice';
 import { ResetWizzard as RestDynamic } from './DynamicAlarm/DynamicWizzardSlice';
 import { FetchAlarmDay } from './store/AlarmDaySlice';
-import { FetchAlarmDayGroup } from './Store/AlarmDayGroupSlice';
+import { FetchAlarmDayGroup } from './store/AlarmDayGroupSlice';
 import DynamicAlarmHome from './DynamicAlarm/DynamicAlarm';
 import { FetchMeasurmentTypes } from './store/MeasurmentTypeSlice';
 import { FetchSeriesType } from './store/SeriesTypeSlice';

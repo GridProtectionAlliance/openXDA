@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { SPCTools, Redux, DynamicWizzard } from '../global';
+import { Redux, DynamicWizzard } from '../global';
 import _ from 'lodash';
 
 // #region [ Thunks ]
@@ -60,8 +60,6 @@ export const AlarmDayGroupSlice = createSlice({
                     AlarmDayIDs: grp[id].map(a => a.AlarmDayID as number)
                 } as DynamicWizzard.IAlarmDayGroup;
             })
-            //JSON.parse(action.payload) as DynamicWizzard.IAlarmDayGroup[];
-
         });
         builder.addCase(FetchAlarmDayGroup.pending, (state, action) => {
             state.Status = 'loading';

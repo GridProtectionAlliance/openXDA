@@ -46,15 +46,19 @@ namespace openXDA.Model
     /// <summary>
     /// Represents a detailed view of <see cref="AlarmGroup"/> inlcuding some summary Numbers
     /// </summary>
-    public class AlarmGroupView : AlarmGroup
+    public class AlarmGroupView 
     {
-        public int Channels { get; set; }
-
-        public int Meters { get; set; }
-
-        public int AlarmSeverityID { get; set; }
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public string Name { get; set; }
         public string AlarmSeverity { get; set; }
-
+        public int Channels { get; set; }
+        public int Meters { get; set; }
+        public DateTime LastAlarmStart { get; set; }
+        public DateTime LastAlarmEnd { get; set; }
+        public string LastChannel { get; set; }
+        public string LastMeter { get; set; }
+        public string AlarmType { get; set; }
     }
 
 }

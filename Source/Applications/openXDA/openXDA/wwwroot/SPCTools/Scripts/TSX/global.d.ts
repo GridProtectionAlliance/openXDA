@@ -92,7 +92,7 @@ export namespace SPCTools {
     //r
     export type IntervallDataType = ('Minimum' | 'Maximum' | 'Average');
 
-    export interface IAlarmGroupView extends IAlarmGroup { Channels: number, Meters: number, AlarmSeverityID: number, AlarmSeverity: string }
+    export interface IAlarmGroupView { ID: number, Name: string, Channels: number, Meters: number,  AlarmSeverity: string, LastAlarmStart: string, LastAlarmEnd: string, LastChannel: string, LastMeter: string, AlarmType: string }
 
     export interface IChannelOverview { ID: number, Meter: string, Channel: string, Type: string, Phase: string, Asset: string }
 

@@ -3148,27 +3148,39 @@ CREATE VIEW AlarmGroupView AS
 SELECT 
 	AlarmGroup.ID,
 	AlarmGroup.Name,
-	AlarmGroup.AlarmTypeID,
-	AlarmGroup.SeverityID,
-	AlarmSeverity.ID as AlarmSeverityID,
 	AlarmSeverity.Name as AlarmSeverity,
 	COUNT(DISTINCT Channel.ID) as Channels,
-	COUNT(DISTINCT Channel.MeterID) as Meters
+	COUNT(DISTINCT Channel.MeterID) as Meters,
+	MAX(AlarmLog.StartTime) AS LastAlarmStart,
+	(SELECT AL2.EndTime 
+		FROM AlarmLog AL2 
+		WHERE AL2.StartTime = MAX(AlarmLog.StartTime) AND AL2.AlarmID IN (SELECT ID FROM ALARM AL WHERE AL.AlarmGroupID = Alarmgroup.ID) AND AL2.AlarmFactorID IS NULL
+		) AS LastAlarmEnd,
+	(SELECT CH.Name 
+		FROM AlarmLog AL2 LEFT JOIN Channel CH ON AL2.AlarmID IN (SELECT A.ID FROM Alarm A LEFT JOIN Series S ON A.SeriesID = S.ID WHERE S.ChannelID = CH.ID)
+		WHERE AL2.StartTime = MAX(AlarmLog.StartTime) AND AL2.AlarmID IN (SELECT ID FROM ALARM AL WHERE AL.AlarmGroupID = Alarmgroup.ID) AND AL2.AlarmFactorID IS NULL
+		) AS LastChannel,
+	(SELECT M.Name 
+		FROM AlarmLog AL2 LEFT JOIN Channel CH ON AL2.AlarmID IN (SELECT A.ID FROM Alarm A LEFT JOIN Series S ON A.SeriesID = S.ID WHERE S.ChannelID = CH.ID)
+			LEFT JOIN Meter M ON M.ID = Ch.MeterID
+		WHERE AL2.StartTime = MAX(AlarmLog.StartTime) AND AL2.AlarmID IN (SELECT ID FROM ALARM AL WHERE AL.AlarmGroupID = Alarmgroup.ID) AND AL2.AlarmFactorID IS NULL
+		) AS LastMeter,
+	AlarmType.Description AS AlarmType
 	 
 FROM 
-	Alarm LEFT JOIN
-	AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
+	AlarmGroup LEFT JOIN
+	Alarm ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
 	AlarmType ON AlarmGroup.AlarmTypeID = AlarmType.ID LEFT JOIN
 	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
 	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
-	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID
+	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID LEFT JOIN
+	AlarmLog ON AlarmLog.AlarmID = Alarm.ID
+WHERE AlarmLog.AlarmFactorID IS NULL
 GROUP BY
 	AlarmGroup.ID,
 	AlarmGroup.Name,
-	AlarmGroup.AlarmTypeID,
-	AlarmGroup.SeverityID,
-	AlarmSeverity.ID,
-	AlarmSeverity.Name
+	AlarmSeverity.Name,
+	AlarmType.Description
 GO
 
 CREATE VIEW ChannelOverviewView AS
