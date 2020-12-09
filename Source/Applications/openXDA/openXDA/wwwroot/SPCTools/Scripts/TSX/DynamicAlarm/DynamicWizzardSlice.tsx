@@ -22,7 +22,7 @@
 //******************************************************************************************************
 import { createSlice, createAsyncThunk, PayloadAction, createSelector, Selector } from '@reduxjs/toolkit';
 import { SPCTools, StaticWizzard, openXDA, Redux, DynamicWizzard } from '../global';
-import _, { update } from 'lodash';
+import _ from 'lodash';
 import { FetchAffectedChannels, SelectAffectedChannelCount, SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSelectedPhases } from '../store/WizardPhaseOptionSlice';
 import { SelectSelectedVoltages } from '../store/WizardVoltageOptionSlice';
@@ -50,7 +50,7 @@ export const UpdateFormula = createAsyncThunk('DynamicWizzard/UpdateFormula', (a
 
 });
 
-// Thunk for Updating AlarmValues isnce we also have to update Results
+// Thunk for Updating AlarmValues since we also have to update Results
 export const updateAlarmValues = createAsyncThunk('DynamicWizzard/updateLarmValueThunk', (arg: { alarmDayID: number, alarmValues: DynamicWizzard.IAlarmvalue[] }, { dispatch }) => {
     dispatch(DynamicWizzardSlice.actions.updateAlarmValues(arg));
     dispatch(UpdateAlarmValuesParsedSetpoint(arg));
@@ -59,6 +59,11 @@ export const updateAlarmValues = createAsyncThunk('DynamicWizzard/updateLarmValu
 export const updateAlarmValueContent = createAsyncThunk('DynamicWizzard/updateAlarmValueContentThunk', (arg: DynamicWizzard.IAlarmvalue, { dispatch }) => {
     dispatch(DynamicWizzardSlice.actions.updateAlarmValueContent(arg));
     dispatch(UpdateAlarmValueContentParsedSetpoint(arg));
+});
+
+// Thunk for Saving Wizard result
+export const SaveWizard = createAsyncThunk('DynamicWizzard/SaveWizard', async (_, { getState }) => {
+    return await GetSave(getState() as Redux.StoreState);
 });
 
 export const DynamicWizzardSlice = createSlice({
@@ -70,7 +75,7 @@ export const DynamicWizzardSlice = createSlice({
         SelectedMeter: [],
         SelectedMeterSort: 'Name',
         SelectedMeterASC: true,
-
+        Error: null,
         MeasurmentTypeID: 0,
         SeriesTypeID: 0,
         AlarmDayGroupID: 0,
@@ -154,7 +159,7 @@ export const DynamicWizzardSlice = createSlice({
             state.AlarmFactors[action.payload.index] = action.payload.factor
         },
         addFactor: (state) => {
-            state.AlarmFactors.push({ ID: -1, SeverityID: state.AlarmGroup.SeverityID, Value: 1.2 });
+            state.AlarmFactors.push({ ID: -1, SeverityID: state.AlarmGroup.SeverityID, Value: 1.05 });
         },
         removeFactor: (state, action: PayloadAction<number>) => {
             state.AlarmFactors.splice(action.payload, 1)
@@ -178,6 +183,20 @@ export const DynamicWizzardSlice = createSlice({
     },
     
      extraReducers: (builder) => {
+         builder.addCase(SaveWizard.fulfilled, (state, action) => {
+             state.Status = 'idle';
+             state.Error = null;
+             state.Step = 'done'
+
+         });
+         builder.addCase(SaveWizard.pending, (state, action) => {
+             state.Status = 'loading';
+         });
+         builder.addCase(SaveWizard.rejected, (state, action) => {
+             state.Status = 'error';
+             state.Error = action.error.message;
+
+         });
 
 
     }
@@ -231,6 +250,8 @@ export const SelectAllowSlice = createSelector(SelectAffectedChannelCount, Selec
 export const SelectThresholdValues = (state: Redux.StoreState) => state.SetPointParse.AlarmValueResults;
 export const SelectAllAlarmValues = (state: Redux.StoreState) => state.DynamicWizzard.AlarmValues;
 
+export const selectWizardEror = (state: Redux.StoreState) => state.DynamicWizzard.Error;
+
 export const selectErrors = createSelector(
     ((state: Redux.StoreState) => (state.DynamicWizzard.Step)),
     SelectAffectedChannelCount,
@@ -276,6 +297,31 @@ export const selectErrors = createSelector(
     });
 
 
-// Async Functions
+// #region [ Async Functions ]
+
+function GetSave(state: Redux.StoreState): JQuery.jqXHR<string> {
+    let request = {
+        AlarmGroup: selectAlarmGroup(state),
+        AlarmValues: SelectAllAlarmValues(state),
+        AlarmFactors: SelectAlarmFactors(state),
+        ChannelIDs: SelectAffectedChannels(state).map(ch => ch.ID),
+        StatisticChannelsID: SelectStatisticsChannels(state).map(ch => ch.ID),
+        StatisticsStart: SelectStatisticsrange(state).start,
+        StatisticsEnd: SelectStatisticsrange(state).end,
+        StatisticsFilter: SelectStatisticsFilter(state),
+        SeriesTypeID: selectSeriesTypeID(state)
+    }
+
+    return $.ajax({
+        type: "POST",
+        url: `${apiHomePath}api/SPCTools/Wizard/Save`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        data: JSON.stringify(request),
+        cache: false,
+        async: true
+    });
+}
 
 
+// #endregion

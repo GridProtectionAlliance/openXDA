@@ -238,7 +238,7 @@ namespace openXDA.Controllers
         private ChannelTestResponse TestChannel(int channelIndex, List<Point> data, List<Token> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData )
         {
 
-            bool upper = false;
+            bool upper = true;
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 AlarmType alarmType = new TableOperations<AlarmType>(connection).QueryRecordWhere("ID = {0}", alarmtypeID);

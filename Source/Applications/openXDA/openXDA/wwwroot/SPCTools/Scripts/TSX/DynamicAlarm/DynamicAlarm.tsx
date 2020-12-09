@@ -25,7 +25,7 @@ import * as React from 'react';
 import GeneralSettings from './GeneralSettings';
 import * as ReactDOM from 'react-dom';
 
-import {selectStatus, next, back, selectTab, selectErrors} from './DynamicWizzardSlice'
+import {selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror} from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 
 import ReactTooltip from 'react-tooltip';
@@ -47,20 +47,23 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
     const tab = useSelector(selectTab);
     const dispatch = useDispatch();
     const errors = useSelector(selectErrors);
+    const wizardError = useSelector(selectWizardEror);
 
     function Continue() {
         
         if (!errors.some(item => (item.complete == 'required'))) {
 
             if (tab == 'test') {
-                //dispatch(SaveAlarmGroup());
-                dispatch(setPage("Home"))
+                dispatch(SaveWizard());
+                return;
             }
+            
             dispatch(next());
         }
     
     }
-    
+
+    React.useEffect(() => { if (tab == 'done') dispatch(setPage("Home")); }, [tab])
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
@@ -84,7 +87,7 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
                         <div className="alert alert-danger" role="alert">
                             <h4 className="alert-heading">An Error Occured</h4>
                             <hr/>
-                            <p>{status == 'error'? 'Error should not be possible': 'Wizard Failed to start.'}</p>
+                            <p>{status == 'error'? wizardError: 'Wizard Failed to start.'}</p>
                             
                         </div>
                     </div>: null}

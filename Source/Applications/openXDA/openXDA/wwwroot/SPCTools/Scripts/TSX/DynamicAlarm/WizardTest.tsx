@@ -136,7 +136,7 @@ const WizardTest = (props: IProps) => {
             let bindex = item.FactorTests.findIndex(d => d.Factor == 1.0)
             let cindex = allChannels.findIndex(c => item.ChannelID == c.ID)
             return {
-                TimeInAlarm: item.FactorTests[bindex].TimeInAlarm,
+                TimeInAlarm: item.FactorTests[bindex].TimeInAlarm * 100.0,
                 NumberRaised: item.FactorTests[bindex].NumberRaised,
                 ID: item.ChannelID,
                 Name: (cindex == -1 ? '' : allChannels[cindex].Name),
@@ -148,7 +148,7 @@ const WizardTest = (props: IProps) => {
             {
                 Severity: severities.find(item => item.ID == alarmGroup.SeverityID).Name,
                 NumberRaised: data.map(ch => { return ch.FactorTests.find(i => i.Factor == 1.0).NumberRaised }).reduce((a, b) => a + b, 0),
-                TimeInAlarm: (data.map(ch => { return ch.FactorTests.find(i => i.Factor == 1.0).TimeInAlarm }).reduce((a, b) => a + b, 0) / data.length),
+                TimeInAlarm: (data.map(ch => { return ch.FactorTests.find(i => i.Factor == 1.0).TimeInAlarm }).reduce((a, b) => a + b, 0) / data.length) * 100.0,
                 Threshhold: undefined
             },
             ...alarmFactors.map(f => {
@@ -156,7 +156,7 @@ const WizardTest = (props: IProps) => {
 
                     Severity: severities.find(item => item.ID == f.SeverityID).Name,
                     NumberRaised: data.map(ch => { return ch.FactorTests.find(i => i.Factor == f.Value).NumberRaised }).reduce((a, b) => a + b, 0),
-                    TimeInAlarm: (data.map(ch => { return ch.FactorTests.find(i => i.Factor == f.Value).TimeInAlarm }).reduce((a, b) => a + b, 0) / data.length),
+                    TimeInAlarm: (data.map(ch => { return ch.FactorTests.find(i => i.Factor == f.Value).TimeInAlarm }).reduce((a, b) => a + b, 0) / data.length) * 100.0,
                     Threshhold: undefined
                 }
             })
@@ -183,7 +183,7 @@ const WizardTest = (props: IProps) => {
             {
                 Severity: severities.find(item => item.ID == alarmGroup.SeverityID).Name,
                 NumberRaised: response[index].FactorTests.find(i => i.Factor == 1.0).NumberRaised,
-                TimeInAlarm: response[index].FactorTests.find(i => i.Factor == 1.0).TimeInAlarm,
+                TimeInAlarm: response[index].FactorTests.find(i => i.Factor == 1.0).TimeInAlarm *100.0,
                 Threshhold: undefined
             },
             ...alarmFactors.map(f => {
@@ -191,7 +191,7 @@ const WizardTest = (props: IProps) => {
 
                     Severity: severities.find(item => item.ID == f.SeverityID).Name,
                     NumberRaised: response[index].FactorTests.find(i => i.Factor == f.Value).NumberRaised,
-                    TimeInAlarm: response[index].FactorTests.find(i => i.Factor == f.Value).TimeInAlarm,
+                    TimeInAlarm: response[index].FactorTests.find(i => i.Factor == f.Value).TimeInAlarm * 100.0,
                     Threshhold: undefined
                 }
             })
@@ -235,8 +235,9 @@ const WizardTest = (props: IProps) => {
                                     cols={[
                                         { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                         { key: 'Name', label: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                         { key: 'NumberRaised', label: 'Raised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)' , headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        
                                     ]}
                                     tableClass="table table-hover"
                                     data={channelList}
@@ -259,6 +260,13 @@ const WizardTest = (props: IProps) => {
                     </div>
                 </div>
                 <div className="col-6">
+                    
+                    <div className="row" style={{ margin: 0 }}>
+                        <div className="col">
+                            <h3>Overview Alarm:</h3 >
+                        </div>
+                    </div>
+
                     <div className="row">
                         <div className="col">
                             {loading == 'loading' ? 
@@ -270,8 +278,8 @@ const WizardTest = (props: IProps) => {
                                     cols={[
                                         { key: 'Severity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p> },
                                         { key: 'Threshhold', label: 'Threshhold', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => (item.Threshhold == undefined ? "N/A" : item.Threshhold) },
-                                        { key: 'NumberRaised', label: 'Triggered', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
+                                        { key: 'NumberRaised', label: 'Raised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
                                     ]}
                                     tableClass="table thead-dark table-striped"
                                     data={resultSummary}
@@ -288,7 +296,11 @@ const WizardTest = (props: IProps) => {
                             }
                         </div>
                     </div>
-
+                    <div className="row" style={{ margin: 0 }}>
+                        <div className="col">
+                            {selectedChannel > -1 ? <h3>{channelList[selectedChannel].MeterName} - {channelList[selectedChannel].Name}:</h3> : null}
+                        </div>
+                    </div>
                     <div className="row">
                         <div className="col">
                             {loading == 'loading' ?
@@ -300,8 +312,8 @@ const WizardTest = (props: IProps) => {
                                     cols={[
                                         { key: 'Severity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p> },
                                         { key: 'Threshhold', label: 'Threshhold', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => (item.Threshhold == undefined ? "N/A" : item.Threshhold) },
-                                        { key: 'NumberRaised', label: 'Triggered', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + " %" },
+                                        { key: 'NumberRaised', label: 'Raised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + " %" },
                                     ]}
                                     tableClass="table thead-dark table-striped"
                                     data={channelSummary}

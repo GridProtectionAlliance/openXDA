@@ -87,7 +87,7 @@ export namespace SPCTools {
     //r
     export type LoadingState = ('loading' | 'idle' | 'error')
 
-    export type WizzardTab = ('general' | 'selectData' | 'setpoint' | 'test')
+    export type WizzardTab = ('general' | 'selectData' | 'setpoint' | 'test' | 'done')
 
     //r
     export type IntervallDataType = ('Minimum' | 'Maximum' | 'Average');
@@ -210,6 +210,7 @@ export namespace DynamicWizzard {
     export interface IState {
         Step: SPCTools.WizzardTab,
         Status: SPCTools.Status,
+        Error: (string | null),
 
         AlarmGroup: SPCTools.IAlarmGroup,
         SelectedMeter: openXDA.IMeter[],
