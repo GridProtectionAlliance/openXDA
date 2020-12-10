@@ -55,10 +55,10 @@ export const FunctionHelp = (props: {}) => {
                         { key: 'Name', label: 'Function', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key) => <p> {item.Name}</p> },
                         { key: 'Description', label: 'Description', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key) => <p> {item.Description}</p> },
                         { key: 'Example', label: 'Example', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key) => <p style={codeStyle}> {item.Example}</p> },
-                        
+
                     ]}
                         tableClass="table table-striped"
-                        data={staticData}
+                        data={(type == 'dynamic' ? [...staticData, ...dynamicData] : staticData)}
                         sortField={''}
                         ascending={true}
                         onSort={() => { }}
@@ -86,4 +86,11 @@ const staticData = [
     { Name: 'Max', Description: 'Finds the Maximum Value in the entire Dataset', Example: 'Max(Vbase*Xmin)' },
     { Name: 'Mean', Description: 'Finds the Average Value in the entire Datasete', Example: 'Mean(Vbase*Xmax)' },
     { Name: 'StDev', Description: 'Finds the Standard Deviation of the entire Dataset', Example: 'StDev(Xmin+5)' },
+] as IDocumentation[]
+
+const dynamicData = [
+    { Name: 'WindowMin', Description: 'Finds the Minimum Value in the selected timeframe', Example: 'WindowMin(Vbase*Xmax)' },
+    { Name: 'WindowMax', Description: 'Finds the Maximum Value in the selected timeframe', Example: 'WindowMax(Vbase*Xmin)' },
+    { Name: 'WindowMean', Description: 'Finds the Average Value in the selected timeframe', Example: 'WindowMean(Vbase*Xmax)' },
+    { Name: 'WindowStDev', Description: 'Finds the Standard Deviation of the selected timeframe', Example: 'WindowStDev(Xmin+5)' },
 ] as IDocumentation[]
