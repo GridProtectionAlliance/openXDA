@@ -265,7 +265,7 @@ namespace openXDA.Controllers
             }
 
             //Find number of alarms
-            for (int i = 1; i < data.Count; i++)
+            for (int i = 0; i < data.Count; i++)
             {
                 int hourofWeek = (int)data[i].Timestamp.DayOfWeek * 24 + data[i].Timestamp.Hour;
                 double threshold = threshholds[hourofWeek];
@@ -273,16 +273,18 @@ namespace openXDA.Controllers
                 if (!double.IsNaN(threshold))
                     for (int jF = 0; jF < result.FactorTests.Count; jF++)
                     {
-                        double p1 = (getData(data[i - 1]) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D);
+                        double p1 = (i==0? 0 : (getData(data[i - 1]) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D));
                         double p2 = (getData(data[i]) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D);
 
                         if (p2 > 0)
                             result.FactorTests[jF].TimeInAlarm++;
-                        if ((p1 * p2) < 0 && p2 > 0)
+                        if ((p1 * p2) < 0 && p2 > 0 && i > 0)
                             result.FactorTests[jF].NumberRaised++;
                     }
             }
             
+            
+
             result.FactorTests = result.FactorTests.Select(f => new FactorTestResponse() { TimeInAlarm = (data.Count > 0? f.TimeInAlarm/data.Count : 0.0D), NumberRaised = f.NumberRaised, Factor = f.Factor }).ToList();
             return result;
 
