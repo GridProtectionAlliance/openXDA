@@ -4251,6 +4251,8 @@
     <None Include="wwwroot\Scripts\TrendingDataDisplay.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="wwwroot\Images\dDSPCtools.png" />
+    <Content Include="wwwroot\Images\SPCTools.png" />
     <Content Include="wwwroot\SPCTools\index.cshtml" />
     <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.css" />
     <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.min.css" />
