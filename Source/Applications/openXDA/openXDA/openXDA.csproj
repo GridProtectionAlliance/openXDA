@@ -355,9 +355,7 @@
     <Compile Include="Controllers\SPCTools\TokenController.cs" />
     <Compile Include="Controllers\SPCTools\DataController.cs" />
     <Compile Include="Controllers\SPCTools\Controllers.cs" />
-    <Compile Include="Controllers\SPCTools\AlarmGroupTestController.cs" />
     <Compile Include="Controllers\SPCTools\Token.cs" />
-    <Compile Include="Controllers\SPCTools\ChannelSelectionController.cs" />
     <Compile Include="Controllers\SPCTools\AssetGroupController.cs" />
     <Compile Include="Controllers\WebAPI\HIDSController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
