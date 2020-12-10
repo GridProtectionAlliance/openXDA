@@ -81,7 +81,11 @@ namespace openXDA.Controllers
         Mean,
         Min,
         Max,
-        StdDev
+        StdDev,
+        WindowMin,
+        WindowMax,
+        WindowMean,
+        WindowStdDev
     }
 
 
@@ -216,6 +220,14 @@ namespace openXDA.Controllers
                     m_action = ComputationAction.Mean;
                 else if (m_formula.StartsWith("stdev"))
                     m_action = ComputationAction.StdDev;
+                else if (m_formula.StartsWith("windowmin"))
+                    m_action = ComputationAction.WindowMin;
+                else if (m_formula.StartsWith("windowmax"))
+                    m_action = ComputationAction.WindowMax;
+                else if (m_formula.StartsWith("windowmean"))
+                    m_action = ComputationAction.WindowMean;
+                else if (m_formula.StartsWith("windowstdev"))
+                    m_action = ComputationAction.WindowStdDev;
                 else
                 {
                     m_isValid = false;
@@ -233,7 +245,7 @@ namespace openXDA.Controllers
                 else
                 {
                     // process Individual function for parameter number and Type
-                    if (m_action == ComputationAction.Min)
+                    if (m_action == ComputationAction.Min || m_action == ComputationAction.WindowMin)
                     {
                         if (children.Count > 1)
                         {
@@ -242,7 +254,7 @@ namespace openXDA.Controllers
                         }
                         OutputType = TokenType.Scalar;
                     }
-                    else if (m_action == ComputationAction.Max)
+                    else if (m_action == ComputationAction.Max || m_action == ComputationAction.WindowMax)
                     {
                         if (children.Count > 1)
                         {
@@ -253,7 +265,7 @@ namespace openXDA.Controllers
                         OutputType = TokenType.Scalar;
 
                     }
-                    else if (m_action == ComputationAction.Mean)
+                    else if (m_action == ComputationAction.Mean || m_action == ComputationAction.WindowMean)
                     {
                         if (children.Count > 1)
                         {
@@ -263,7 +275,7 @@ namespace openXDA.Controllers
                        
                         OutputType = TokenType.Scalar;
                     }
-                    else if (m_action == ComputationAction.StdDev)
+                    else if (m_action == ComputationAction.StdDev || m_action == ComputationAction.WindowStdDev)
                     {
                         if (children.Count > 1)
                         {
@@ -568,9 +580,26 @@ namespace openXDA.Controllers
                 double x = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1]))));
                 int N = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1))));
 
-                return x2 + 2.0D * x * x / ((double)N) + x / ((double)(N * N));
+                return Math.Sqrt((x2 -  x * x / ((double)N))/(double)N);
             }
-                
+
+            // Window Function
+            if (m_action == ComputationAction.WindowMax)
+                return children.Max(item => item.ComputeMatrix().Max(i => i.Where(pt => !double.IsNaN(ApplyWindowFilter(pt))).Max(pt => pt[1])));
+            if (m_action == ComputationAction.WindowMin)
+                return children.Min(item => item.ComputeMatrix().Min(i => i.Where(pt => !double.IsNaN(ApplyWindowFilter(pt))).Min(pt => pt[1])));
+            if (m_action == ComputationAction.WindowMean)
+                return (children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0.0d : pt[1])))) / children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0 : 1)))));
+            if (m_action == ComputationAction.WindowStdDev)
+            {
+                double x2 = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0.0d : pt[1] * pt[1]))));
+                double x = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0.0d : pt[1]))));
+                int N = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0 : 1))));
+
+                return Math.Sqrt((x2 - x * x / ((double)N)) / (double)N);
+            }
+
+
 
             return double.NaN;
         }
@@ -627,6 +656,18 @@ namespace openXDA.Controllers
 
             return output;
         }
+
+        private double ApplyWindowFilter(double[] input)
+        {
+            if (double.IsNaN(input[0]))
+                return double.NaN;
+
+            DateTime dt = m_epoch.AddMilliseconds(input[0]);
+            if (m_timeFilter(dt))
+                return input[1];
+            return double.NaN;
+        }
+
         public List<List<double[]>> ComputeMatrix() 
         {
             if (!m_isValid)

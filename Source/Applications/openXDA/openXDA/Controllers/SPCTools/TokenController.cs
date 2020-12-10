@@ -99,7 +99,7 @@ namespace openXDA.Controllers
             try
             {
                 Dictionary<int, List<Point>> data = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd );
-                Token root = new Token(request.TokeValue.Formula, data, request.StatisticsChannelID, request.StatisticsFilter);
+                Token root = new Token(request.TokeValue.Formula, data, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(request.TokeValue));
 
                 TokenParseResponse result = new TokenParseResponse()
                 {
@@ -177,6 +177,22 @@ namespace openXDA.Controllers
 
         }
 
+        private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)
+        {
+            AlarmDay day;
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            {
+                day = new TableOperations<AlarmDay>(connection).QueryRecordWhere("ID = {0}", alarmValue.AlarmdayID);
+            }
+            if (day == null)
+                return (DateTime input) => { return (input.Hour >= alarmValue.StartHour && input.Hour < alarmValue.EndHour); };
+            if (day.Name == "WeekEnd")
+                return (DateTime input) => { return (input.Hour >= alarmValue.StartHour && input.Hour < alarmValue.EndHour && (input.DayOfWeek == DayOfWeek.Sunday || input.DayOfWeek == DayOfWeek.Saturday)); };
+            if (day.Name == "WeekDay")
+                return (DateTime input) => { return (input.Hour >= alarmValue.StartHour && input.Hour < alarmValue.EndHour && !(input.DayOfWeek == DayOfWeek.Sunday || input.DayOfWeek == DayOfWeek.Saturday)); };
+
+            return (DateTime input) => { return (input.Hour >= alarmValue.StartHour && input.Hour < alarmValue.EndHour); };
+        }
         #endregion
     }
 }
