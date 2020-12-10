@@ -497,6 +497,7 @@ namespace FaultData.DataOperations
                 definedSeries[i] = series
                     .Multiply(multiplier)
                     .Add(adderSeries);
+                definedSeries[i].SeriesInfo = series.SeriesInfo;
             }
         }
 
