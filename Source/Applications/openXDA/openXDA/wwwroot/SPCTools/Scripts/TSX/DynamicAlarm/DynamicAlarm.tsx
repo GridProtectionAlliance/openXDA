@@ -23,14 +23,12 @@
 
 import * as React from 'react';
 import GeneralSettings from './GeneralSettings';
-import * as ReactDOM from 'react-dom';
 
 import {selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror} from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 
 import ReactTooltip from 'react-tooltip';
-import { loadTest } from '../Store/HistoryTestSlice';
-import { setPage } from '../Store/GeneralSettingsSlice';
+import { setPage } from '../store/GeneralSettingsSlice';
 import { Requirements } from '../CommonComponents/Requirments';
 import SelectStatisticsData from './SelectStatisticsData';
 import SetPointCreator from './SetPointCreator';
