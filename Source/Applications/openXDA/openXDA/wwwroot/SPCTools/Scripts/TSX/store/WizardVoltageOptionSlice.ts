@@ -24,7 +24,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SPCTools, Redux, openXDA } from '../global';
 import _ from 'lodash';
-import { selectSelectedMeter, selectMeasurmentTypeID, selectSeriesTypeID } from '../DynamicAlarm/DynamicWizzardSlice';
+import { selectSelectedMeter, selectMeasurmentTypeID } from '../Wizard/DynamicWizzardSlice';
 import { SelectSeriesTypes } from './SeriesTypeSlice';
 
 // #region [ Thunks ]

@@ -24,7 +24,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SPCTools, Redux, openXDA } from '../global';
 import _ from 'lodash';
-import { selectSelectedMeter, selectMeasurmentTypeID, selectSeriesTypeID } from '../DynamicAlarm/DynamicWizzardSlice';
+import { selectSelectedMeter, selectMeasurmentTypeID, selectSeriesTypeID } from '../Wizard/DynamicWizzardSlice';
 import { SelectSelectedPhases, SelectAvailablePhases } from './WizardPhaseOptionSlice';
 import { SelectAvailableVoltages, SelectSelectedVoltages } from './WizardVoltageOptionSlice';
 

@@ -24,7 +24,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SPCTools, Redux, openXDA, DynamicWizzard } from '../global';
 import _ from 'lodash';
-import { SelectStatisticsFilter, SelectStatisticsrange, SelectStatisticsChannels, SelectActiveAlarmValue } from '../DynamicAlarm/DynamicWizzardSlice';
+import { SelectStatisticsFilter, SelectStatisticsrange, SelectStatisticsChannels, SelectActiveAlarmValue } from '../Wizard/DynamicWizzardSlice';
 
 interface ParsedSetpointParam { content: DynamicWizzard.ITokenParseResponse, channelIDs: number[] }
 // #region [ Thunks ]

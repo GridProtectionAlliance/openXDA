@@ -26,11 +26,14 @@ import * as ReactDOM from 'react-dom';
 import _ from 'lodash';
 import { StaticWizzard } from '../global';
 import Table from '@gpa-gemstone/react-table';
+import { useSelector } from 'react-redux';
+import { SelectWizardType } from '../Wizard/DynamicWizzardSlice';
 
 
 interface IDocumentation { Name: string, Description: string, Example: string }
 
-export const FunctionHelp = (props: {type: ('static'|'dynamic')}) => {
+export const FunctionHelp = (props: {}) => {
+    const type = useSelector(SelectWizardType);
 
     const codeStyle = {
         borderRadius: '5px',

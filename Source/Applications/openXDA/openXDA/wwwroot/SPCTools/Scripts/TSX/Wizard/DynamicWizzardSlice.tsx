@@ -36,10 +36,12 @@ declare var apiHomePath: string;
 declare var userIsAdmin: boolean;
 
 // Thunk For Reseting Wizrd
-export const ResetWizzard = createAsyncThunk('DynamicWizzard/ResetWizzard', (_, { dispatch, getState }) => {
-    dispatch(DynamicWizzardSlice.actions.reset((getState() as Redux.StoreState).GeneralSettings));
+export const ResetWizzard = createAsyncThunk('DynamicWizzard/ResetWizzard', (arg: DynamicWizzard.WizardType, { dispatch, getState }) => {
+    dispatch(DynamicWizzardSlice.actions.reset(arg));
     dispatch(FetchAffectedChannels());
     dispatch(ResetParsedSetpoint());
+    if (arg == 'static')
+        dispatch(updateAlarmValues({ alarmDayID: null, alarmValues: [{ StartHour: 0, EndHour: 24, AlarmDayID: null, Formula: '', Value: NaN, ID: -1, AlarmID: -1 }] }))
 })
 
 // Thunk For Updating AlarmValues and sending Data to Tokenizer
@@ -84,10 +86,11 @@ export const DynamicWizzardSlice = createSlice({
         StatisticsChannelIDs: [],
         AlarmFactors: [],
         AlarmValues: [],
+        Type: 'static'
 
     } as DynamicWizzard.IState,
     reducers: {
-        reset: (state, action: PayloadAction<SPCTools.ISettingsState>) => {
+        reset: (state, action: PayloadAction<DynamicWizzard.WizardType>) => {
 
             let dt = new Date();
 
@@ -106,6 +109,8 @@ export const DynamicWizzardSlice = createSlice({
             state.StatisticsChannelIDs = []
             state.AlarmFactors = []
             state.AlarmValues = []
+            state.Type = action.payload
+            
         },
         next: (state) => {
             if (state.Step == 'general')
@@ -221,6 +226,8 @@ export default DynamicWizzardSlice.reducer;
 // Selectors
 export const selectTab = (state: Redux.StoreState) => state.DynamicWizzard.Step;
 export const selectStatus = (state: Redux.StoreState) => state.DynamicWizzard.Status;
+export const SelectWizardType = (state: Redux.StoreState) => state.DynamicWizzard.Type;
+
 
 export const selectSelectedMeter = (state: Redux.StoreState) => state.DynamicWizzard.SelectedMeter;
 export const selectSelectedMeterASC = (state: Redux.StoreState) => state.DynamicWizzard.SelectedMeterASC;
@@ -261,8 +268,7 @@ export const selectErrors = createSelector(
     (state: Redux.StoreState) => SelectSelectedVoltages(state).some(i => i),
     SelectStatisticsrange,
     (state: Redux.StoreState) => state.DynamicWizzard.StatisticsChannelIDs.length,
-//    (state: Redux.StoreState) => (state.StaticWizzard.SetPointEvaluation == undefined ? false : state.StaticWizzard.SetPointEvaluation.IsScalar),
-    (state: Redux.StoreState) => (state.StaticWizzard.AlarmFactors),
+    (state: Redux.StoreState) => (state.DynamicWizzard.AlarmFactors),
     (state: Redux.StoreState) => state.SetPointParse.AlarmValueResults ,
     (step, channelCount, name, meterCount, phaseCount, voltageCount, statisticsRange, statisticsChannelCount, alarmFactors, setPointResults) => {
         let result = [] as StaticWizzard.IRequirement[];
@@ -290,7 +296,7 @@ export const selectErrors = createSelector(
             else if (!setPointScalar)
                 result.push({ text: "The setpoint expression will result in different threshold for each channel", complete: 'warning' })
             if (alarmFactors.length > 0)
-                result.push({ text: "No level can not be applied at the original setpoint", complete: (!alarmFactors.some(item => item.Value == 1.0) ? 'complete' : 'required') })
+                result.push({ text: "No level can be applied at the original setpoint", complete: (!alarmFactors.some(item => item.Value == 1.0) ? 'complete' : 'required') })
         }
         return result;
 

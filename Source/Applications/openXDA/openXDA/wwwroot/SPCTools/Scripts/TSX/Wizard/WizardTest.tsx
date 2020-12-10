@@ -236,7 +236,7 @@ const WizardTest = (props: IProps) => {
                                         { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                         { key: 'Name', label: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                         { key: 'NumberRaised', label: 'Raised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)' , headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
                                         
                                     ]}
                                     tableClass="table table-hover"
@@ -298,7 +298,7 @@ const WizardTest = (props: IProps) => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            {selectedChannel > -1 ? <h3>{channelList[selectedChannel].MeterName} - {channelList[selectedChannel].Name}:</h3> : null}
+                            {selectedChannel > -1 ? <h3>{channelList.find(item => item.ID == selectedChannel).MeterName} - {channelList.find(item => item.ID == selectedChannel).Name}:</h3> : null}
                         </div>
                     </div>
                     <div className="row">

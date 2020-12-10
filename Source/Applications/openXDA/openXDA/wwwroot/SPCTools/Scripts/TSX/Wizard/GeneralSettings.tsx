@@ -29,7 +29,7 @@ import Table from '@gpa-gemstone/react-table';
 import { cloneDeep, clone } from 'lodash';
 import { Input, Select } from '@gpa-gemstone/react-forms';
 import MultiSelectTable from '../CommonComponents/MultiSelectTable';
-import {  updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID } from './DynamicWizzardSlice'
+import {  updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID, SelectWizardType } from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 import { SelectMeasurmentTypes } from '../store/MeasurmentTypeSlice';
 import { SelectAlarmTypes } from '../store/AlarmTypeSlice';
@@ -49,7 +49,7 @@ interface IProps {}
 
 // I think we can determine the setpoint type based on Formulas used so I will skip this for now - might have to re-visit this later
 const GeneralSettings = (props: IProps) => {
-    const isDynamic = true;
+    const isDynamic = useSelector(SelectWizardType);
 
     const group = useSelector(selectAlarmGroup);
     const alarmTypes = useSelector(SelectAlarmTypes);
@@ -93,7 +93,7 @@ const GeneralSettings = (props: IProps) => {
                     />
                 </div>
                 <div className="col" style={{ width: '50%' }}>
-                    {isDynamic ? <RepeatabilityTypeSelect /> : null}
+                    {isDynamic == 'dynamic' ? <RepeatabilityTypeSelect /> : null}
                 </div>
             </div>
             <div className="row" style={{ margin: 0 }}>
@@ -335,7 +335,7 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                         <button type="button" className="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div className="modal-body">
-                        <FilterWindow<openXDA.IAssetGroup> Id='FilterAssetGroup' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType }} SetFilter={setFilters} />
+                        <FilterWindow<openXDA.IAssetGroup> Id='FilterAssetGroup' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType }} SetFilter={setFilters} Direction={'right'} />
                         <Table<openXDA.IAssetGroup>
                             cols={[
                                 { key: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },

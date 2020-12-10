@@ -28,8 +28,7 @@ import { cloneDeep } from 'lodash';
 import _ from 'lodash';
 import TrendingCard, { ITrendSeries } from '../CommonComponents/Graph';
 import { SelectSeverities } from '../store/SeveritySlice';
-import { selectAlarmGroup, updateFactor, removeFactor, SelectAlarmFactors, SelectStatisticsChannels, addFactor, SelectSetPointAlarmDays, SelectStatisticsrange, SelectActiveFormula, UpdateFormula, SelectActiveAlarmValue, SelectAllowSlice } from './DynamicWizzardSlice';
-import { updateAlarmGroup } from '../StaticAlarm/StaticWizzardSlice';
+import { selectAlarmGroup, updateFactor, removeFactor, SelectAlarmFactors, SelectStatisticsChannels, addFactor, SelectSetPointAlarmDays, SelectStatisticsrange, SelectActiveFormula, UpdateFormula, SelectActiveAlarmValue, SelectAllowSlice, updateAlarmGroup, SelectWizardType } from './DynamicWizzardSlice';
 import { DynamicTimeRange } from './DynamicTimeRange';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
 import { SelectAlarmDayByID } from '../store/AlarmDaySlice';
@@ -46,7 +45,7 @@ interface DropDownMeter { MeterId: number, Name: string, Channels: Array<openXDA
 interface IChannelGraphProps {ChannelID: number}
 
 const SetPointCreator = (props: IProps) => {
-    const isDynamic = true;
+    const isDynamic = useSelector(SelectWizardType);
     const alarmDays = useSelector(SelectSetPointAlarmDays);
     const [plot, setPlot] = React.useState<Array<IChannelGraphProps>>([]);
     const [MeterList, setMeterList] = React.useState<Array<DropDownMeter>>([]);
@@ -61,7 +60,7 @@ const SetPointCreator = (props: IProps) => {
     
     const statisticsTime = useSelector(SelectStatisticsrange);
 
-    // This only triggers on First render to create a List of Available Meters for the Graph DropDown
+    // This only triggers on First render to create a List of Available Meters for the Graph Dropdown
     React.useEffect(() => {
         let meterIds = _.uniq(availableChannels.map((item) => item.MeterID))
 
@@ -95,7 +94,7 @@ const SetPointCreator = (props: IProps) => {
             <div className="row" style={{ margin: 0 }}>
                 <div className="col-9">
                     <div className="row" style={{ margin: 0 }}>
-                        {isDynamic ?
+                        {isDynamic== 'dynamic' ?
                             <>
                                 {alarmDays.length == 0 ? null :
                                     <div className="col-2" style={{ marginBottom: '16px' }}>
@@ -117,7 +116,7 @@ const SetPointCreator = (props: IProps) => {
                                 </div>
                             </>
                             :
-                            <SetPointEditor alarmDayID={null} startHour={0}/>}
+                            <SetPointEditor alarmDayID={null} startHour={0} label={''} />}
                     </div>
                     
                     <SetPointMessage />
@@ -184,7 +183,7 @@ const SetPointCreator = (props: IProps) => {
     );
 }
 
-const SetPointEditor = (props: { alarmDayID: number, startHour: number }) => {
+const SetPointEditor = (props: { alarmDayID: number, startHour: number, label?: string }) => {
     const dispatch = useDispatch();
 
     const [text, setText] = React.useState<string>("");
@@ -218,22 +217,17 @@ const SetPointEditor = (props: { alarmDayID: number, startHour: number }) => {
         setText(activeFormula)
     }, [activeFormula])
 
-    // This guarantees an update at the end to avoid not saving if the timer does not expire
-    //React.useEffect(() => {
-    //    if (activeFormula != undefined && props.startHour != undefined)
-    //    return () => {
-    //        dispatch(UpdateFormula({ alarmDayID: props.alarmDayID, startHour: props.startHour, formula: text }))
-    //    }
-    //}, [props])
-
+   
+    const lbl = (props.label == undefined ? ('(' + (alarmDay == undefined ? '' : (alarmDay.Name + ' ')) + 
+        (props.startHour < 10 ? '0' : '') + props.startHour + ' - ' +
+        (alarmValue != undefined ? (alarmValue.EndHour != undefined ? ((alarmValue.EndHour > 9 ? '' : '0') + alarmValue.EndHour) : 24) : '') +  ')')
+    : props.label)
 
     return (
         
             <div className="col">
             <div className="form-group">
-                <label>SetPoint ({alarmDay == undefined ? '' : alarmDay.Name}&nbsp;
-                    {(props.startHour < 10 ? '0' : '') + props.startHour}&nbsp;-&nbsp;
-                    {(alarmValue != undefined ? (alarmValue.EndHour != undefined ? ((alarmValue.EndHour > 9 ? '' : '0') + alarmValue.EndHour) : 24) : '')})
+                <label>SetPoint {lbl}
                 </label>
                     <textarea
                         rows={2}

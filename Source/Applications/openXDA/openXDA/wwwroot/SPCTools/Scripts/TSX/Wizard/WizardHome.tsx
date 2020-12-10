@@ -28,24 +28,27 @@ import {selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWiz
 import { useSelector, useDispatch } from 'react-redux';
 
 import ReactTooltip from 'react-tooltip';
-import { setPage } from '../store/GeneralSettingsSlice';
 import { Requirements } from '../CommonComponents/Requirments';
 import SelectStatisticsData from './SelectStatisticsData';
 import SetPointCreator from './SetPointCreator';
 import { FunctionHelp } from '../CommonComponents/FunctionHelp';
 import WizardTest from './WizardTest';
+import { SPCTools } from '../global';
 
 declare var homePath: string;
 declare var apiHomePath: string;
 
 declare var userIsAdmin: boolean;
 
-const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
+interface IProps { complete: () => void }
+
+const WizardHome = (props: IProps) => {
     const status = useSelector(selectStatus);
     const tab = useSelector(selectTab);
     const dispatch = useDispatch();
     const errors = useSelector(selectErrors);
     const wizardError = useSelector(selectWizardEror);
+
 
     function Continue() {
         
@@ -61,7 +64,7 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
     
     }
 
-    React.useEffect(() => { if (tab == 'done') dispatch(setPage("Home")); }, [tab])
+    React.useEffect(() => { if (tab == 'done') props.complete(); }, [tab])
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
@@ -120,11 +123,11 @@ const DynamicAlarmHome: React.FunctionComponent = (props: {}) => {
                 }}>
                 </ReactTooltip>
                 : null}
-            {tab == 'setpoint' ? <FunctionHelp type={'static'} /> : null}
+            {tab == 'setpoint' ? <FunctionHelp /> : null}
         </div>      
     );
 }
 
 
 
-export default DynamicAlarmHome
+export default WizardHome

@@ -32,9 +32,6 @@ export namespace Redux {
     export interface StoreState {
         ChannelOverview: State<SPCTools.IChannelOverview>,
         ChannelAlarmGroup: State<SPCTools.IChannelAlarmGroup>,
-        StaticWizzard: StaticWizzard.IState,
-        GeneralSettings: SPCTools.ISettingsState,
-        HistoryTest: SPCTools.IHistoryTestState,
         AlarmDay: State<DynamicWizzard.IAlarmDay>,
         AlarmDayGroup: State<DynamicWizzard.IAlarmDayGroup>,
         DynamicWizzard: DynamicWizzard.IState,
@@ -209,6 +206,7 @@ export namespace StaticWizzard {
 export namespace DynamicWizzard {
 
     export interface IState {
+        Type: WizardType,
         Step: SPCTools.WizzardTab,
         Status: SPCTools.Status,
         Error: (string | null),
@@ -253,7 +251,9 @@ export namespace DynamicWizzard {
 
     export interface IAlarmvalue { ID: number, AlarmID: number, AlarmDayID: number, StartHour: number, EndHour: number, Value: number, Formula: string }
 
-    export interface IAlarmValueChannel { AlarmDayID: number, StartHour: number, Value: {ChannelID: number, Value: number }[] , IsScalar: boolean}
+    export interface IAlarmValueChannel { AlarmDayID: number, StartHour: number, Value: { ChannelID: number, Value: number }[], IsScalar: boolean }
+
+    export type WizardType = ('dynamic'|'static')
 }
 export namespace openXDA {
 

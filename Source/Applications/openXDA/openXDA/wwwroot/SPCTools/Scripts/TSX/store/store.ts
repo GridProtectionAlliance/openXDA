@@ -22,14 +22,11 @@
 //******************************************************************************************************
 
 import { configureStore } from '@reduxjs/toolkit';
-import StaticWizzardReducer from '../StaticAlarm/StaticWizzardSlice';
-import GeneralSettingsReducer from './GeneralSettingsSlice';
-import HistoryTestReducer from './HistoryTestSlice';
 import ChannelOverviewReducer from './ChannelOverviewSlice';
 import ChannelAlarmGroupReducer from './ChannelAlarmGroupSlice';
 import AlarmDayReducer from './AlarmDaySlice';
 import AlarmDayGroupReducer from './AlarmDayGroupSlice';
-import DynamicWizzardReducer from '../DynamicAlarm/DynamicWizzardSlice';
+import DynamicWizzardReducer from '../Wizard/DynamicWizzardSlice';
 import MeasurementTypeReducer from './MeasurmentTypeSlice';
 import AlarmTypeReducer from './AlarmTypeSlice';
 import WizardPhaseOptionReducer from './WizardPhaseOptionSlice';
@@ -44,9 +41,6 @@ import SetPointParseReducer from './SetPointParseSlice';
 
 export default configureStore({
     reducer: {
-        StaticWizzard: StaticWizzardReducer,
-        GeneralSettings: GeneralSettingsReducer,
-        HistoryTest: HistoryTestReducer,
         ChannelOverview: ChannelOverviewReducer,
         ChannelAlarmGroup: ChannelAlarmGroupReducer,
         AlarmDay: AlarmDayReducer,

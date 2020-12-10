@@ -29,16 +29,12 @@ import AlarmGroupHome from './AlarmGroup/AlarmGroup';
 import ChannelOverview from './ChannelOverview/ChannelOverview';
 import MeterOverview from './MeterOverview/MeterOverview';
 
-import StaticAlarmHome from './StaticAlarm/StaticAlarm';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import store from './store/store';
-import { fetchAlarmTypes, fetchMeasurmentTypes, fetchSeverities } from './store/GeneralSettingsSlice';
-import { selectPage, setPage } from './store/GeneralSettingsSlice';
-import { ResetWizzard as ResetStatic} from './StaticAlarm/StaticWizzardSlice';
-import { ResetWizzard as RestDynamic } from './DynamicAlarm/DynamicWizzardSlice';
+import { ResetWizzard } from './Wizard/DynamicWizzardSlice';
 import { FetchAlarmDay } from './store/AlarmDaySlice';
 import { FetchAlarmDayGroup } from './store/AlarmDayGroupSlice';
-import DynamicAlarmHome from './DynamicAlarm/DynamicAlarm';
+import WizardHome from './Wizard/WizardHome';
 import { FetchMeasurmentTypes } from './store/MeasurmentTypeSlice';
 import { FetchSeriesType } from './store/SeriesTypeSlice';
 import { FetchAlarmType } from './store/AlarmTypeSlice';
@@ -50,14 +46,14 @@ declare var userIsAdmin: boolean;
 
 
 const SPCTools: React.FunctionComponent = (props: {}) => {
-    const page = useSelector(selectPage);
     const dispatch = useDispatch();
+    const [page, setPage] = React.useState<SPCTools.Page>('Home')
+
 
     function switchPage(pg: SPCTools.Page) {
-        if (pg == 'Static') dispatch(ResetStatic());
-        if (pg == 'Dynamic') dispatch(RestDynamic());
-        dispatch(setPage(pg))
-
+        if (pg == 'Static') dispatch(ResetWizzard('static'));
+        if (pg == 'Dynamic') dispatch(ResetWizzard('dynamic'));
+        setPage(pg);
     }
    
     return (
@@ -67,8 +63,8 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
                 <div className="screen" style={{ height: (window.innerHeight - 66), width: '100%', position: 'absolute', top: '66px', left: '0px'}}>
                     <React.Suspense fallback={<div>Loading...</div>}>
                         {(page == 'Home' ? <AlarmGroupHome /> : null)}
-                        {(page == 'Static' ? <StaticAlarmHome /> : null)}
-                        {(page == 'Dynamic' ? <DynamicAlarmHome /> : null)}
+                        {(page == 'Static' ? <WizardHome complete={() => setPage("Home")} /> : null)}
+                        {(page == 'Dynamic' ? <WizardHome complete={() => setPage("Home")} /> : null)}
                         {(page == 'Meter' ? <MeterOverview /> : null)}
                         {(page == 'Channel' ? <ChannelOverview/> : null)}                               
                     </React.Suspense>
@@ -80,9 +76,6 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
 }
 
 //Load General Options
-store.dispatch(fetchAlarmTypes());
-store.dispatch(fetchMeasurmentTypes());
-store.dispatch(fetchSeverities());
 
 store.dispatch(FetchAlarmDay());
 store.dispatch(FetchAlarmDayGroup());
