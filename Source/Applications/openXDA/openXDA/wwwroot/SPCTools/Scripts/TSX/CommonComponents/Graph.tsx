@@ -405,7 +405,7 @@ export default class TrendingCard extends React.Component<IProps, IState>{
     }
 
     formatTimeTick(d: number) {
-        let TS = moment(d);
+        let TS = moment.utc(d);
         let h = this.state.Tend - this.state.Tstart
         h = h / 1000.0;
 
