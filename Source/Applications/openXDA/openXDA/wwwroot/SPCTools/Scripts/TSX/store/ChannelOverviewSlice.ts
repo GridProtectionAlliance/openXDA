@@ -94,12 +94,20 @@ export const SelectChannelOverviewsFilters = (state: Redux.StoreState) => state.
 // #region [ Async Functions ]
 
 function GetChannelOverview(filters, sort, asc): JQuery.jqXHR<string> {
+    let expandedFilter = [
+        {
+            FieldName: '(SELECT COUNT(Alarm.ID) FROM Alarm LEFT JOIN Series ON Alarm.SeriesID = Series.ID WHERE Series.channelID = ChannelOverviewView.ID)',
+            SearchText: '0',
+            Operator: '>',
+            Type: 'integer'
+        }, ...filters]
+
     return $.ajax({
         type: "POST",
         url: `${apiHomePath}api/SPCTools/ChannelOverview/SearchableList`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify({ Searches: filters, OrderBy: sort, Ascending: asc }),
+        data: JSON.stringify({ Searches: expandedFilter, OrderBy: sort, Ascending: asc }),
         cache: false,
         async: true
     });

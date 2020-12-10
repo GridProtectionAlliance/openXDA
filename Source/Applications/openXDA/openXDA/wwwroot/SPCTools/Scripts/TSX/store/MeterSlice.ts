@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { SPCTools, Redux, openXDA } from '../global';
+import { SPCTools, Redux, openXDA, Filter } from '../global';
 import _ from 'lodash';
 
 // #region [ Thunks ]
@@ -93,13 +93,20 @@ export const SelectMetersFilters = (state: Redux.StoreState) => state.Meter.Filt
 
 // #region [ Async Functions ]
 
-function GetMeter(filters, sort, asc): JQuery.jqXHR<string> {
+function GetMeter(filters: Filter.IFilter<openXDA.IMeter>[], sort, asc): JQuery.jqXHR<string> {
+    let expandedFilter = [
+        {
+            FieldName: '(SELECT COUNT(Alarm.ID) FROM Alarm LEFT JOIN Series ON Alarm.SeriesID = Series.ID LEFT JOIN Channel ON Series.ChannelID = Channel.ID WHERE Channel.MeterID = Meter.ID)',
+            SearchText: '0',
+            Operator: '>',
+            Type: 'integer'
+        }, ...filters]
     return $.ajax({
         type: "POST",
         url: `${apiHomePath}api/Meter/SearchableList`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify({ Searches: filters, OrderBy: sort, Ascending: asc }),
+        data: JSON.stringify({ Searches: expandedFilter, OrderBy: sort, Ascending: asc }),
         cache: false,
         async: true
     });
