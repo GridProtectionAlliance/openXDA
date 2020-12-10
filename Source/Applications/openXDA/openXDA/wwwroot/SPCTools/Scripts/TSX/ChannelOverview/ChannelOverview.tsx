@@ -70,7 +70,7 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <FilterObject<SPCTools.IChannelOverview> Id='Filter' CollumnList={searchColumns} SetFilter={(filter) => dispatch(FilterChannelOverviews(filter))} Direction='right'/>
+            <FilterObject<SPCTools.IChannelOverview> Id='Filter' CollumnList={searchColumns} SetFilter={(filter) => dispatch(FilterChannelOverviews(filter))} Direction='left'/>
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                     <div className="col" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>

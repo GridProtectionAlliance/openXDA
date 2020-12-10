@@ -79,7 +79,7 @@ const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
     ] as Filter.IField<SPCTools.IAlarmGroupView>[]
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <FilterObject<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchColumns} SetFilter={(filter) => dispatch(FilterAlarmGroups(filter))} Direction='right'/>
+            <FilterObject<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchColumns} SetFilter={(filter) => dispatch(FilterAlarmGroups(filter))} Direction='left'/>
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                         <div className="col-8">

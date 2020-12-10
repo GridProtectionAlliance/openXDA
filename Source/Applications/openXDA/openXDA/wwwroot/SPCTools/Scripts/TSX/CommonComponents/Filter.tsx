@@ -94,12 +94,13 @@ export default function Filter<T>(props: IProps<T>) {
             <nav className="navbar navbar-expand-lg navbar-light bg-light">
                 <div className="collapse navbar-collapse" style={{ width: '100%' }}>
                     <ul className="navbar-nav mr-auto" style={{ width: '100%' }}>
-                        <li className="nav-item" style={{ width: '85%', paddingRight: 10 }}>
-                            {props.defaultCollumn != undefined ?
-                                <div className="form-inline my-2 my-lg-0">
-                                    <input className="form-control mr-sm-2" type="search" placeholder={"Search " + props.defaultCollumn.label} onChange={(event) => setSearch(event.target.value as string)} />
-                                </div> : null}
-                        </li>
+                        {props.Direction == 'right' ?
+                            <li className="nav-item" style={{ width: '85%', paddingRight: 10 }}>
+                                {props.defaultCollumn != undefined ?
+                                    <div className="form-inline my-2 my-lg-0">
+                                        <input className="form-control mr-sm-2" type="search" placeholder={"Search " + props.defaultCollumn.label} onChange={(event) => setSearch(event.target.value as string)} />
+                                    </div> : null}
+                            </li> : null}
                         <li className="nav-item" style={{ width: '15%', paddingRight: 10 }}>
                             <div style={{ position: 'relative', display: 'inline-block' }}>
                                 <button className="btn btn-primary" onClick={(evt) => { evt.preventDefault(); ($('#' + props.Id) as any).modal('toggle');}} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>Add Filter</button>
@@ -116,6 +117,13 @@ export default function Filter<T>(props: IProps<T>) {
                                 </div>
                             </div>
                         </li>
+                        {props.Direction == 'left' ?
+                            <li className="nav-item" style={{ width: '85%', paddingLeft: 10 }}>
+                                {props.defaultCollumn != undefined ?
+                                    <div className="form-inline my-2 my-lg-0">
+                                        <input className="form-control mr-sm-2" type="search" placeholder={"Search " + props.defaultCollumn.label} onChange={(event) => setSearch(event.target.value as string)} />
+                                    </div> : null}
+                            </li> : null}
                     </ul>
                 </div>
             </nav>

@@ -68,7 +68,7 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <FilterObject<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} SetFilter={(filter) => dispatch(FilterMeters(filter))} Direction='right' />
+            <FilterObject<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} SetFilter={(filter) => dispatch(FilterMeters(filter))} Direction='left' />
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                     <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
