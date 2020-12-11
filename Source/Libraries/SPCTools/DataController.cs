@@ -36,9 +36,8 @@ using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
 using System.Runtime.Caching;
 using System.Net.Http;
-using SPCTools;
 
-namespace openXDA.Controllers
+namespace SPCTools
 {
     
     [RoutePrefix("api/SPCTools/Data")]
