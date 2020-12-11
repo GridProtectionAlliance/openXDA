@@ -31,7 +31,7 @@ using System.Text.RegularExpressions;
 using HIDS;
 
 
-namespace openXDA.Controllers
+namespace SPCTools
 {
 
     /// <summary>
@@ -114,7 +114,7 @@ namespace openXDA.Controllers
         private List<double> m_slice = null;
 
         public Token(string formula, Dictionary<int, List<Point>> data, List<int> channels, DataFilter filter) : this(formula, data, channels, filter, (DateTime input) => { return true; }) { }
-        
+
 
         public Token(string formula, Dictionary<int, List<Point>> data, List<int> channels, DataFilter filter, Func<DateTime, bool> TimeFilter)
         {
@@ -125,15 +125,15 @@ namespace openXDA.Controllers
 
             m_formula = formula.Trim().ToLower();
             children = new List<Token>();
-           
+
             m_channels = channels;
             m_filter = filter;
-          
+
             Match chars = s_Char.Match(m_formula);
             if (chars.Success)
             {
                 m_isValid = false;
-                m_error = "'"+ chars.Groups[1] + "' is not a valid Character.";
+                m_error = "'" + chars.Groups[1] + "' is not a valid Character.";
                 return;
             }
             // If ( does not match ) it is invalid....
@@ -149,7 +149,7 @@ namespace openXDA.Controllers
                 return;
             }
 
-           
+
             // Check if it is a single token i.e. no + * or (
             if (!m_formula.Contains("+") && !m_formula.Contains("*") && !m_formula.Contains("(") && !m_formula.Contains("-") && !m_formula.Contains("/"))
                 m_isLeaf = true;
@@ -210,7 +210,7 @@ namespace openXDA.Controllers
             }
             else if (isLeafFunction(m_formula))
             {
-                
+
                 // Take appart into Paramters and set Action Properly
                 if (m_formula.StartsWith("min"))
                     m_action = ComputationAction.Min;
@@ -231,11 +231,11 @@ namespace openXDA.Controllers
                 else
                 {
                     m_isValid = false;
-                    m_error = "'" + m_formula.Substring(0,m_formula.IndexOf('('))  +"' is not a valid Function. Available functions include Min(), Max(), Mean(), StDev().";
+                    m_error = "'" + m_formula.Substring(0, m_formula.IndexOf('(')) + "' is not a valid Function. Available functions include Min(), Max(), Mean(), StDev().";
                 }
                 List<string> parameters = m_formula.Substring(m_formula.IndexOf('(') + 1, m_formula.Length - m_formula.IndexOf('(') - 2).Split(',').Select(item => item.Trim()).ToList();
 
-                children = parameters.Select( item => new Token(item,m_data,m_channels,m_filter,m_timeFilter)).ToList();
+                children = parameters.Select(item => new Token(item, m_data, m_channels, m_filter, m_timeFilter)).ToList();
 
                 if (children.Count == 0)
                 {
@@ -261,7 +261,7 @@ namespace openXDA.Controllers
                             m_isValid = false;
                             m_error = "'MAX' requires one parameter such as a Variable";
                         }
-                      
+
                         OutputType = TokenType.Scalar;
 
                     }
@@ -272,7 +272,7 @@ namespace openXDA.Controllers
                             m_isValid = false;
                             m_error = "'MEAN' requires one parameter such as a Variable";
                         }
-                       
+
                         OutputType = TokenType.Scalar;
                     }
                     else if (m_action == ComputationAction.StdDev || m_action == ComputationAction.WindowStdDev)
@@ -289,7 +289,7 @@ namespace openXDA.Controllers
             }
             else
             {
-                
+
                 // if it is not a single leave start by tokenizing ()
                 string original = m_formula;
                 string tokenized = FindToken(original);
@@ -328,18 +328,18 @@ namespace openXDA.Controllers
                         {
                             int count = item.CharCount('T');
                             string untokenized = item;
-                            for (int i=0; i<count; i++)
+                            for (int i = 0; i < count; i++)
                             {
                                 originalIndex++;
                                 int Tin = untokenized.IndexOf("T");
-                                untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula +  untokenized.Substring(Tin+1);
+                                untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin + 1);
                             }
                             return new Token(untokenized, m_data, m_channels, m_filter, m_timeFilter);
                         }
                         return new Token(item, m_data, m_channels, m_filter, m_timeFilter);
                     }).ToList();
-                   
-                        
+
+
                     // Set Output Type and Validtiy
                     if (children.Any(item => item.OutputType == TokenType.Matrix))
                         OutputType = TokenType.Matrix;
@@ -384,7 +384,7 @@ namespace openXDA.Controllers
                             {
                                 originalIndex++;
                                 int Tin = untokenized.IndexOf("T");
-                                untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin+1);
+                                untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin + 1);
                             }
                             return new Token(untokenized, m_data, m_channels, m_filter, m_timeFilter);
                         }
@@ -435,7 +435,7 @@ namespace openXDA.Controllers
                             {
                                 originalIndex++;
                                 int Tin = untokenized.IndexOf("T");
-                                untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin+1);
+                                untokenized = untokenized.Substring(0, Tin) + oldOrder[originalIndex - 1].Formula + untokenized.Substring(Tin + 1);
                             }
                             return new Token(untokenized, m_data, m_channels, m_filter, m_timeFilter);
                         }
@@ -469,7 +469,7 @@ namespace openXDA.Controllers
                     break;
                 i++;
             }
-            
+
             // No () Token Found
             if (i == input.Length)
                 return input;
@@ -492,17 +492,17 @@ namespace openXDA.Controllers
             //This is where we should add a Child Token
             if (funcToken)
             {
-             int j = start-1;
+                int j = start - 1;
 
                 while (j > 0 && (input[j] != '*' && input[j] != '/' && input[j] != '+' && input[j] != '-' && input[j] != '(' && input[j] != ' '))
                     j--;
-                children.Add(new Token(input.Substring(j + 1 , i - j - 1), m_data, m_channels, m_filter, m_timeFilter));
+                children.Add(new Token(input.Substring(j + 1, i - j - 1), m_data, m_channels, m_filter, m_timeFilter));
 
                 return input.Substring(0, j + 1) + "T" + input.Substring(i);
             }
-            children.Add(new Token(input.Substring(start+1,i-start-2), m_data, m_channels, m_filter, m_timeFilter));
+            children.Add(new Token(input.Substring(start + 1, i - start - 2), m_data, m_channels, m_filter, m_timeFilter));
 
-            return input.Substring(0,start) + "T" + input.Substring(i); 
+            return input.Substring(0, start) + "T" + input.Substring(i);
         }
 
         private bool isFunction(string test)
@@ -567,20 +567,20 @@ namespace openXDA.Controllers
             if (m_action == ComputationAction.Subtraction)
                 return children[0].ComputeScalar() - children.Skip(1).Sum(item => item.ComputeScalar());
             if (m_action == ComputationAction.Multiplication)
-                return children.Select(item => item.ComputeScalar()).Aggregate((a,b) => a*b);
+                return children.Select(item => item.ComputeScalar()).Aggregate((a, b) => a * b);
             if (m_action == ComputationAction.Max)
                 return children.Max(item => item.ComputeMatrix().Max(i => i.Where(pt => !double.IsNaN(pt[1])).Max(pt => pt[1])));
             if (m_action == ComputationAction.Min)
-                return children.Min(item => item.ComputeMatrix().Min(i => i.Where(pt =>!double.IsNaN(pt[1])).Min(pt => pt[1])));
+                return children.Min(item => item.ComputeMatrix().Min(i => i.Where(pt => !double.IsNaN(pt[1])).Min(pt => pt[1])));
             if (m_action == ComputationAction.Mean)
-                return (children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1]))))/ children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1)))));
+                return (children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1])))) / children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1)))));
             if (m_action == ComputationAction.StdDev)
             {
-                double x2 = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1]*pt[1]))));
+                double x2 = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1] * pt[1]))));
                 double x = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1]))));
                 int N = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1))));
 
-                return Math.Sqrt((x2 -  x * x / ((double)N))/(double)N);
+                return Math.Sqrt((x2 - x * x / ((double)N)) / (double)N);
             }
 
             // Window Function
@@ -609,11 +609,11 @@ namespace openXDA.Controllers
             if (!m_isValid)
                 return new List<double>();
 
-            if (OutputType != TokenType.Scalar && OutputType != TokenType.Slice )
+            if (OutputType != TokenType.Scalar && OutputType != TokenType.Slice)
                 throw new Exception("Token is not a Slice");
 
             if (OutputType == TokenType.Scalar)
-                return Enumerable.Repeat(ComputeScalar(),m_channels.Count).ToList();
+                return Enumerable.Repeat(ComputeScalar(), m_channels.Count).ToList();
 
             if (m_isLeaf)
             {
@@ -625,7 +625,7 @@ namespace openXDA.Controllers
                                                 Asset ON Channel.AssetID = Asset.ID
                                             WHERE Channel.ID = {0}";
 
-                    return m_channels.Select(item => connection.ExecuteScalar<double>(String.Format(VbaseRequest,item))).ToList();
+                    return m_channels.Select(item => connection.ExecuteScalar<double>(String.Format(VbaseRequest, item))).ToList();
                 }
             }
 
@@ -648,9 +648,9 @@ namespace openXDA.Controllers
             double output = input;
 
             if (m_filter.FilterZero && output == 0.0D)
-                output = double.NaN ;
+                output = double.NaN;
             if (m_filter.FilterLower && output < m_filter.LowerLimit)
-                output =  double.NaN;
+                output = double.NaN;
             if (m_filter.FilterUpper && output > m_filter.UpperLimit)
                 output = double.NaN;
 
@@ -668,17 +668,17 @@ namespace openXDA.Controllers
             return double.NaN;
         }
 
-        public List<List<double[]>> ComputeMatrix() 
+        public List<List<double[]>> ComputeMatrix()
         {
             if (!m_isValid)
                 return new List<List<double[]>>();
 
             if (OutputType == TokenType.Slice || OutputType == TokenType.Scalar)
-                return ComputeSlice().Select((item,index) => Enumerable.Repeat(new double[] { double.NaN, item }, m_data[m_channels[index]].Count).ToList()).ToList();
+                return ComputeSlice().Select((item, index) => Enumerable.Repeat(new double[] { double.NaN, item }, m_data[m_channels[index]].Count).ToList()).ToList();
 
             if (m_isLeaf)
             {
-                
+
                 Match match = s_Xmax.Match(m_formula);
 
                 //start.Subtract(m_epoch).TotalMilliseconds
@@ -706,7 +706,7 @@ namespace openXDA.Controllers
             }
 
             if (m_action == ComputationAction.Addition)
-                return children.Select(item => item.ComputeMatrix()).Aggregate((a,b) => a.Select( (row, ir) => row.Select( (pt, ip) => (new double[] {(double.IsNaN(pt[0])? b[ir][ip][0] : pt[0]), pt[1] + b[ir][ip][1] }) ).ToList()).ToList()) ;
+                return children.Select(item => item.ComputeMatrix()).Aggregate((a, b) => a.Select((row, ir) => row.Select((pt, ip) => (new double[] { (double.IsNaN(pt[0]) ? b[ir][ip][0] : pt[0]), pt[1] + b[ir][ip][1] })).ToList()).ToList());
             if (m_action == ComputationAction.Subtraction)
             {
                 List<List<double[]>> sm = children.Skip(1).Select(item => item.ComputeMatrix()).Aggregate((a, b) => a.Select((row, ir) => row.Select((pt, ip) => (new double[] { (double.IsNaN(pt[0]) ? b[ir][ip][0] : pt[0]), pt[1] + b[ir][ip][1] })).ToList()).ToList());
@@ -721,12 +721,12 @@ namespace openXDA.Controllers
         public double Scalar => ((double)(m_scalar == null ? m_scalar = (double?)ComputeScalar() : (double)m_scalar));
         public List<double> Slice => (m_slice == null ? m_slice = ComputeSlice() : m_slice);
 
-        public bool Valid 
-        { 
+        public bool Valid
+        {
             get
             {
                 return m_isValid && children.TrueForAll(item => item.Valid);
-            } 
+            }
         }
 
         public string Error
@@ -751,7 +751,7 @@ namespace openXDA.Controllers
 
         public bool Applies(DateTime time) => m_timeFilter(time);
 
-        private static readonly Regex s_IsNumber = new Regex("^[0-9.]*$", RegexOptions.Compiled| RegexOptions.IgnoreCase);
+        private static readonly Regex s_IsNumber = new Regex("^[0-9.]*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_isFunction = new Regex("^([^*\\-+\\/]+)\\(.*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_Vbase = new Regex("^Vbase$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_Xmin = new Regex("^Xmin", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -763,5 +763,5 @@ namespace openXDA.Controllers
 
     }
 
-    
+
 }

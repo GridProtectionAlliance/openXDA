@@ -30,15 +30,17 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
-using System.Net.Http;
 using System.Web.Http;
 using HIDS;
 using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
 using System.Runtime.Caching;
+using System.Net.Http;
+using SPCTools;
 
 namespace openXDA.Controllers
 {
+    
     [RoutePrefix("api/SPCTools/Data")]
     public class DataController : ApiController
     {
@@ -124,7 +126,7 @@ namespace openXDA.Controllers
                 Func<Point, double> flattenData = GetSeriesTypeFilter(SeriesTypeID);
 
                 IEnumerable<double[]> data = LoadChannel(new List<int>() { ChannelId }, start, end)[ChannelId].Select(pt => new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) }); ;
-               
+
                 if (postedFilter != null)
                     data = data.Select(pt => {
                         if (postedFilter.FilterZero && pt[1] == 0.0D)
@@ -172,9 +174,9 @@ namespace openXDA.Controllers
 
                 Func<Point, double> seriesTypeFilter = GetSeriesTypeFilter(seriesTypeID);
 
-                List <ChannelTestResponse> result = request.ChannelID.Select((id, index) =>
+                List<ChannelTestResponse> result = request.ChannelID.Select((id, index) =>
                 {
-                    ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = (isDynamic? double.NaN : (isScalar? tokenList[0].Scalar : tokenList[0].Slice[index]))};
+                    ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = (isDynamic ? double.NaN : (isScalar ? tokenList[0].Scalar : tokenList[0].Slice[index])) };
 
                     return TestChannel(index, testData[id], tokenList, request.AlarmFactors, request.AlarmTypeID, test, seriesTypeFilter);
 
@@ -235,7 +237,7 @@ namespace openXDA.Controllers
 
         }
 
-        private ChannelTestResponse TestChannel(int channelIndex, List<Point> data, List<Token> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData )
+        private ChannelTestResponse TestChannel(int channelIndex, List<Point> data, List<Token> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData)
         {
 
             bool upper = true;
@@ -255,7 +257,7 @@ namespace openXDA.Controllers
 
             // start with any Sunday 
             DateTime dt = new DateTime(2020, 11, 1);
-            for (int i =0; i < 168; i++)
+            for (int i = 0; i < 168; i++)
             {
                 int tokeIndex = tokenList.FindIndex(item => item.Applies(dt.AddHours(i)));
                 if (tokeIndex == -1)
@@ -273,7 +275,7 @@ namespace openXDA.Controllers
                 if (!double.IsNaN(threshold))
                     for (int jF = 0; jF < result.FactorTests.Count; jF++)
                     {
-                        double p1 = (i==0? 0 : (getData(data[i - 1]) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D));
+                        double p1 = (i == 0 ? 0 : (getData(data[i - 1]) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D));
                         double p2 = (getData(data[i]) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D);
 
                         if (p2 > 0)
@@ -282,15 +284,15 @@ namespace openXDA.Controllers
                             result.FactorTests[jF].NumberRaised++;
                     }
             }
-            
-            
 
-            result.FactorTests = result.FactorTests.Select(f => new FactorTestResponse() { TimeInAlarm = (data.Count > 0? f.TimeInAlarm/data.Count : 0.0D), NumberRaised = f.NumberRaised, Factor = f.Factor }).ToList();
+
+
+            result.FactorTests = result.FactorTests.Select(f => new FactorTestResponse() { TimeInAlarm = (data.Count > 0 ? f.TimeInAlarm / data.Count : 0.0D), NumberRaised = f.NumberRaised, Factor = f.Factor }).ToList();
             return result;
 
         }
 
-        private Func<DateTime,bool> GetTimeFilter(AlarmValue alarmValue)
+        private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)
         {
             AlarmDay day;
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
@@ -321,5 +323,5 @@ namespace openXDA.Controllers
             }
         }
         #endregion
-    }
+    } 
 }

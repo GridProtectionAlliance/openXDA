@@ -351,12 +351,11 @@
     <Compile Include="Controllers\Config\QueryController.cs" />
     <Compile Include="Controllers\DataPusher\DataPusherController.cs" />
     <Compile Include="Controllers\ModelController.cs" />
-    <Compile Include="Controllers\SPCTools\WizardController.cs" />
-    <Compile Include="Controllers\SPCTools\TokenController.cs" />
-    <Compile Include="Controllers\SPCTools\DataController.cs" />
     <Compile Include="Controllers\SPCTools\Controllers.cs" />
-    <Compile Include="Controllers\SPCTools\Token.cs" />
     <Compile Include="Controllers\SPCTools\AssetGroupController.cs" />
+    <Compile Include="Controllers\SPCTools\DataController.cs" />
+    <Compile Include="Controllers\SPCTools\TokenController.cs" />
+    <Compile Include="Controllers\SPCTools\WizardController.cs" />
     <Compile Include="Controllers\WebAPI\HIDSController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
@@ -472,6 +471,10 @@
     <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
       <Name>PQMark.DataAggregator</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\SPCTools\SPCTools.csproj">
+      <Project>{5017948c-141e-48b5-9915-ef81775aacb2}</Project>
+      <Name>SPCTools</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

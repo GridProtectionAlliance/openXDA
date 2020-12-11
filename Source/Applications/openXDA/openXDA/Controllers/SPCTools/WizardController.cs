@@ -35,10 +35,10 @@ using System.Web.Http;
 using HIDS;
 using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
-using System.Runtime.Caching;
 
-namespace openXDA.Controllers
+namespace SPCTools
 {
+    
     [RoutePrefix("api/SPCTools/Wizard")]
     public class WizardController : ApiController
     {
@@ -79,7 +79,7 @@ namespace openXDA.Controllers
         /// Saves a new or existing AlarmGroup with all associated Parts
         /// </summary>
         [HttpPost, Route("Save")]
-        public IHttpActionResult SaveAlarmGroup( [FromBody] SaveRequest request)
+        public IHttpActionResult SaveAlarmGroup([FromBody] SaveRequest request)
         {
             if ((SaveRoles != string.Empty && !User.IsInRole(SaveRoles)))
                 return Unauthorized();
@@ -122,7 +122,7 @@ namespace openXDA.Controllers
 
                     // Alarm (attaches to Channel and AlarmGroup)
                     TableOperations<Alarm> alarmTbl = new TableOperations<Alarm>(connection);
-                    List<Tuple<int,int>> updateAlarmID = new List<Tuple<int, int>>();
+                    List<Tuple<int, int>> updateAlarmID = new List<Tuple<int, int>>();
 
                     request.ChannelIDs.ForEach(item =>
                     {
@@ -147,8 +147,8 @@ namespace openXDA.Controllers
                             alarmID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                         }
                         if (!alarm.Manual)
-                            updateAlarmID.Add(new Tuple<int,int>(alarmID, item));
-                        
+                            updateAlarmID.Add(new Tuple<int, int>(alarmID, item));
+
                     });
 
                     // AlarmValue (attaches to Alarm)
@@ -165,19 +165,20 @@ namespace openXDA.Controllers
                             {
                                 connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmdayID == null ? "IS NULL" : ("= " + value.AlarmdayID.ToString()))}");
                             }
-                            AlarmValue alarmValue = new AlarmValue() {
+                            AlarmValue alarmValue = new AlarmValue()
+                            {
                                 StartHour = value.StartHour,
                                 EndHour = value.EndHour,
                                 AlarmdayID = value.AlarmdayID,
                                 AlarmID = alarmID.Item1,
                                 Formula = value.Formula,
-                                Value = (token.isScalar? token.Scalar : token.Slice[request.StatisticChannelsID.FindIndex(item => item == alarmID.Item2) ])
+                                Value = (token.isScalar ? token.Scalar : token.Slice[request.StatisticChannelsID.FindIndex(item => item == alarmID.Item2)])
                             };
 
                             alarmValueTbl.AddNewRecord(alarmValue);
 
                         });
-                        
+
 
                     });
 
@@ -208,7 +209,7 @@ namespace openXDA.Controllers
 
             string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
             List<string> dataToGet = channelID.Select(item => item.ToString("x8")).ToList();
-           
+
 
             dataToGet = new List<string>() { "00000003" };
 
@@ -219,7 +220,7 @@ namespace openXDA.Controllers
                 data = hids.ReadPointsAsync(dataToGet, start, end).ToListAsync().Result;
             }
 
-            
+
             return channelID.ToDictionary(item => item, item => data);
 
 
@@ -244,4 +245,5 @@ namespace openXDA.Controllers
 
         #endregion
     }
+
 }

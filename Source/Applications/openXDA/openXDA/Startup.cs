@@ -102,7 +102,7 @@ namespace openXDA
             ControllerConfig.Register(httpConfig);
 
             // Load new GSF web page controllers app.UseWebPageController
-            
+
             // Load the WebPageController class and assign its routes
             app.UseWebApi(httpConfig);
 

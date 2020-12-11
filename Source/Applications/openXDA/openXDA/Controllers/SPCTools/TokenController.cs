@@ -37,8 +37,9 @@ using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
 using System.Runtime.Caching;
 
-namespace openXDA.Controllers
+namespace SPCTools
 {
+    
     [RoutePrefix("api/SPCTools/Token")]
     public class TokenController : ApiController
     {
@@ -72,7 +73,7 @@ namespace openXDA.Controllers
         private static DateTime s_epoch = new DateTime(1970, 1, 1);
 
         private static MemoryCache s_memoryCache;
-        private static readonly double s_cacheExipry = 5; 
+        private static readonly double s_cacheExipry = 5;
 
         #endregion
 
@@ -98,7 +99,7 @@ namespace openXDA.Controllers
 
             try
             {
-                Dictionary<int, List<Point>> data = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd );
+                Dictionary<int, List<Point>> data = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
                 Token root = new Token(request.TokeValue.Formula, data, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(request.TokeValue));
 
                 TokenParseResponse result = new TokenParseResponse()
@@ -137,7 +138,7 @@ namespace openXDA.Controllers
 
         // Note for now this only pulls Channel 3 because We are still looking at two different DataBases (one for HIDS and one local for testing).
         // This needs to change before TVA deployment
-        private Dictionary<int,List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
         {
 
             HIDSSettings settings = new HIDSSettings();
@@ -163,11 +164,11 @@ namespace openXDA.Controllers
 
             dataToGet = new List<string>() { "00000003" };
 
-            List <Point> data;
+            List<Point> data;
             using (API hids = new API())
             {
                 hids.Configure(settings);
-                data = hids.ReadPointsAsync(dataToGet, start,end).ToListAsync().Result;
+                data = hids.ReadPointsAsync(dataToGet, start, end).ToListAsync().Result;
             }
 
             dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });
