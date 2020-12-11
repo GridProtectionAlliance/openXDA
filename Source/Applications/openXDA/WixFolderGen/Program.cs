@@ -9,6 +9,7 @@ using GSF.IO.Checksums;
 
 namespace WixFolderGen
 {
+    
     class Solution
     {
         public string ProjectName { get; set; }
@@ -42,6 +43,9 @@ namespace WixFolderGen
     }
     class Program
     {
+        public static List<string> ExcludeFolders = new List<string>() { "SPCTools\\node_modules\\", "SPCTools\\Scripts\\TSX\\" };
+        public static List<string> ExcludeFiles = new List<string>() { ".tsx" };
+
         static void Main()
         {
             List<Solution> solutions = new List<Solution>()
@@ -175,9 +179,13 @@ namespace WixFolderGen
 
             foreach (string folder in Directory.EnumerateDirectories(path))
             {
+               
                 name = FilePath.AddPathSuffix(rootPath + FilePath.GetLastDirectoryName(FilePath.AddPathSuffix(folder)));
-                folderList.Add(name);
-                BuildFolderList(folderList, folder, name);
+                if (!ExcludeFolders.Contains(name))
+                {
+                    folderList.Add(name);
+                    BuildFolderList(folderList, folder, name);
+                }
             }
         }
 
