@@ -4249,15 +4249,33 @@
     <None Include="wwwroot\Scripts\TrendingDataDisplay.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="wwwroot\Images\dDSPCtools.png" />
-    <Content Include="wwwroot\Images\SPCTools.png" />
-    <Content Include="wwwroot\SPCTools\index.cshtml" />
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.css" />
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.min.css" />
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.css" />
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.min.css" />
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.css" />
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.min.css" />
+    <Content Include="wwwroot\Images\dDSPCtools.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\Images\SPCTools.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\index.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.js.map" />
     <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.min.js.map" />
     <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.js.map" />
@@ -4377,12 +4395,24 @@
     <None Include="Web.config">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.js" />
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.min.js" />
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.js" />
-    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.min.js" />
-    <Content Include="wwwroot\SPCTools\Scripts\D3\d3.js" />
-    <Content Include="wwwroot\SPCTools\Scripts\js\SPCTools.js" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\D3\d3.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\js\SPCTools.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="wwwroot\SPCTools\webpack.config.js" />
     <Content Include="XDA.ico" />
   </ItemGroup>

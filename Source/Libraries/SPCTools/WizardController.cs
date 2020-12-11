@@ -210,9 +210,6 @@ namespace SPCTools
             string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
             List<string> dataToGet = channelID.Select(item => item.ToString("x8")).ToList();
 
-
-            dataToGet = new List<string>() { "00000003" };
-
             List<Point> data;
             using (API hids = new API())
             {
@@ -221,7 +218,7 @@ namespace SPCTools
             }
 
 
-            return channelID.ToDictionary(item => item, item => data);
+            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
 
 
         }

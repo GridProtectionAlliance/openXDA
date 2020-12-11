@@ -194,8 +194,7 @@ namespace SPCTools
         #endregion
 
         #region [ HelperFunction ]
-        // Note for now this only pulls Channel 3 because We are still looking at two different DataBases (one for HIDS and one local for testing).
-        // This needs to change before TVA deployment
+
         private Dictionary<int, List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
         {
 
@@ -208,20 +207,16 @@ namespace SPCTools
             List<string> dataToGet = new List<string>();
             channelID.ForEach(item =>
             {
-                int tmp = 4;
-
-                if (s_memoryCache.Contains(cachTarget + tmp.ToString("x8")))
-                    result.Add(item, (List<Point>)s_memoryCache.Get(cachTarget + tmp.ToString("x8")));
+                if (s_memoryCache.Contains(cachTarget + item.ToString("x8")))
+                    result.Add(item, (List<Point>)s_memoryCache.Get(cachTarget + item.ToString("x8")));
                 else
-                    dataToGet.Add(tmp.ToString("x8"));
-
+                    dataToGet.Add(item.ToString("x8"));
             });
 
             if (dataToGet.Count == 0)
                 return result;
 
-            dataToGet = new List<string>() { "00000003" };
-
+         
             List<Point> data;
             using (API hids = new API())
             {
@@ -229,9 +224,9 @@ namespace SPCTools
                 data = hids.ReadPointsAsync(dataToGet, start, end).ToListAsync().Result;
             }
 
-            dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });
+            dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data.Where(pt => pt.Tag == item).ToList(), new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });
 
-            return channelID.ToDictionary(item => item, item => data);
+            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
 
 
         }
