@@ -159,6 +159,16 @@
     </Directory>
     <Directory Id="wwwroot_SCRIPTSTSXFOLDER" Name="TSX" />
   </Directory>
+  <Directory Id="wwwroot_SPCTOOLSFOLDER" Name="SPCTools">
+    <Directory Id="wwwroot_SPCTOOLSSCRIPTSFOLDER" Name="Scripts">
+      <Directory Id="wwwroot_SPCTOOLSSCRIPTSBOOTSTRAPFOLDER" Name="Bootstrap">
+        <Directory Id="wwwroot_SPCTOOLSSCRIPTSBOOTSTRAPCSSFOLDER" Name="css" />
+        <Directory Id="wwwroot_SPCTOOLSSCRIPTSBOOTSTRAPJSFOLDER" Name="js" />
+      </Directory>
+      <Directory Id="wwwroot_SPCTOOLSSCRIPTSD3FOLDER" Name="D3" />
+      <Directory Id="wwwroot_SPCTOOLSSCRIPTSJSFOLDER" Name="js" />
+    </Directory>
+  </Directory>
   <Directory Id="wwwroot_WORKBENCHFOLDER" Name="WorkBench" />
 </Directory>
 </Include>
