@@ -90,6 +90,14 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.HIDS\openXDA.HIDS.csproj">
+      <Name>openXDA.HIDS</Name>
+      <Project>{2528ec50-0be9-4a9f-8ac3-77fc42afe8ce}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.PQTrendingWebReport\openXDA.PQTrendingWebReport.csproj">
       <Name>openXDA.PQTrendingWebReport</Name>
       <Project>{2635efe2-ef6f-4110-9229-8d91f02df143}</Project>
@@ -149,6 +157,14 @@
     <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Name>PQMark.DataAggregator</Name>
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\SPCTools\SPCTools.csproj">
+      <Name>SPCTools</Name>
+      <Project>{5017948c-141e-48b5-9915-ef81775aacb2}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
