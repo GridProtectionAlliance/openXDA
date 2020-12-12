@@ -39,6 +39,7 @@ import { FetchMeasurmentTypes } from './store/MeasurmentTypeSlice';
 import { FetchSeriesType } from './store/SeriesTypeSlice';
 import { FetchAlarmType } from './store/AlarmTypeSlice';
 import { FetchSeverities } from './store/SeveritySlice';
+import EPRINote from './Wizard/EPRINote';
 
 
 declare var homePath: string;
@@ -52,7 +53,6 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
 
     function switchPage(pg: SPCTools.Page) {
         if (pg == 'Static') dispatch(ResetWizzard('static'));
-        if (pg == 'Dynamic') dispatch(ResetWizzard('dynamic'));
         setPage(pg);
     }
    
@@ -64,7 +64,7 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
                     <React.Suspense fallback={<div>Loading...</div>}>
                         {(page == 'Home' ? <AlarmGroupHome /> : null)}
                         {(page == 'Static' ? <WizardHome complete={() => setPage("Home")} /> : null)}
-                        {(page == 'Dynamic' ? <WizardHome complete={() => setPage("Home")} /> : null)}
+                        {(page == 'Dynamic' ? <EPRINote /> : null)}
                         {(page == 'Meter' ? <MeterOverview /> : null)}
                         {(page == 'Channel' ? <ChannelOverview/> : null)}                               
                     </React.Suspense>

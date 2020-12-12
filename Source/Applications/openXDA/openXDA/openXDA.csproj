@@ -4252,6 +4252,7 @@
     <Content Include="wwwroot\Images\dDSPCtools.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="wwwroot\Images\EPRILogo.png" />
     <Content Include="wwwroot\Images\SPCTools.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4431,6 +4432,7 @@
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Filter.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\SelectStatisticsData.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\SetPointCreator.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\EPRINote.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\WizardTest.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\global.d.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\AlarmGroup\AlarmGroup.tsx" />
