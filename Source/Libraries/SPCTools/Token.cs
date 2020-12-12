@@ -82,10 +82,6 @@ namespace SPCTools
         Min,
         Max,
         StdDev,
-        WindowMin,
-        WindowMax,
-        WindowMean,
-        WindowStdDev
     }
 
 
@@ -220,15 +216,6 @@ namespace SPCTools
                     m_action = ComputationAction.Mean;
                 else if (m_formula.StartsWith("stdev"))
                     m_action = ComputationAction.StdDev;
-                else if (m_formula.StartsWith("windowmin"))
-                    m_action = ComputationAction.WindowMin;
-                else if (m_formula.StartsWith("windowmax"))
-                    m_action = ComputationAction.WindowMax;
-                else if (m_formula.StartsWith("windowmean"))
-                    m_action = ComputationAction.WindowMean;
-                else if (m_formula.StartsWith("windowstdev"))
-                    m_action = ComputationAction.WindowStdDev;
-                else
                 {
                     m_isValid = false;
                     m_error = "'" + m_formula.Substring(0, m_formula.IndexOf('(')) + "' is not a valid Function. Available functions include Min(), Max(), Mean(), StDev().";
@@ -245,7 +232,7 @@ namespace SPCTools
                 else
                 {
                     // process Individual function for parameter number and Type
-                    if (m_action == ComputationAction.Min || m_action == ComputationAction.WindowMin)
+                    if (m_action == ComputationAction.Min)
                     {
                         if (children.Count > 1)
                         {
@@ -254,7 +241,7 @@ namespace SPCTools
                         }
                         OutputType = TokenType.Scalar;
                     }
-                    else if (m_action == ComputationAction.Max || m_action == ComputationAction.WindowMax)
+                    else if (m_action == ComputationAction.Max)
                     {
                         if (children.Count > 1)
                         {
@@ -265,7 +252,7 @@ namespace SPCTools
                         OutputType = TokenType.Scalar;
 
                     }
-                    else if (m_action == ComputationAction.Mean || m_action == ComputationAction.WindowMean)
+                    else if (m_action == ComputationAction.Mean)
                     {
                         if (children.Count > 1)
                         {
@@ -275,7 +262,7 @@ namespace SPCTools
 
                         OutputType = TokenType.Scalar;
                     }
-                    else if (m_action == ComputationAction.StdDev || m_action == ComputationAction.WindowStdDev)
+                    else if (m_action == ComputationAction.StdDev)
                     {
                         if (children.Count > 1)
                         {
@@ -582,24 +569,6 @@ namespace SPCTools
 
                 return Math.Sqrt((x2 - x * x / ((double)N)) / (double)N);
             }
-
-            // Window Function
-            if (m_action == ComputationAction.WindowMax)
-                return children.Max(item => item.ComputeMatrix().Max(i => i.Where(pt => !double.IsNaN(ApplyWindowFilter(pt))).Max(pt => pt[1])));
-            if (m_action == ComputationAction.WindowMin)
-                return children.Min(item => item.ComputeMatrix().Min(i => i.Where(pt => !double.IsNaN(ApplyWindowFilter(pt))).Min(pt => pt[1])));
-            if (m_action == ComputationAction.WindowMean)
-                return (children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0.0d : pt[1])))) / children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0 : 1)))));
-            if (m_action == ComputationAction.WindowStdDev)
-            {
-                double x2 = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0.0d : pt[1] * pt[1]))));
-                double x = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0.0d : pt[1]))));
-                int N = children.Sum(item => item.ComputeMatrix().Sum(i => i.Sum(pt => (double.IsNaN(ApplyWindowFilter(pt)) ? 0 : 1))));
-
-                return Math.Sqrt((x2 - x * x / ((double)N)) / (double)N);
-            }
-
-
 
             return double.NaN;
         }
