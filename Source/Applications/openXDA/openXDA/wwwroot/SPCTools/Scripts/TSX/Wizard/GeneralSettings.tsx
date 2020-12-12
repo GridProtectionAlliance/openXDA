@@ -47,7 +47,6 @@ declare var userIsAdmin: boolean;
 
 interface IProps {}
 
-// I think we can determine the setpoint type based on Formulas used so I will skip this for now - might have to re-visit this later
 const GeneralSettings = (props: IProps) => {
     const isDynamic = useSelector(SelectWizardType);
 
@@ -125,7 +124,7 @@ const GeneralSettings = (props: IProps) => {
                                 onSort={(d) => { dispatch(sortSelectedMeters({ field: d.col, asc: d.ascending })) }}
                                 onClick={(d) => { }}
                                 theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                                tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 300, width: '100%' }}
                                 rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                 selected={(item) => false}
                                 />

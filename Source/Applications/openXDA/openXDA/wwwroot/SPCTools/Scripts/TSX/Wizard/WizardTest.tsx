@@ -251,7 +251,7 @@ const WizardTest = (props: IProps) => {
                                     }}
                                     onClick={(d) => setSelectedChannel(d.row.ID)}
                                     theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 400, width: '100%' }}
                                     rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     selected={(item) => item.ID == selectedChannel}
                                 />
@@ -289,7 +289,7 @@ const WizardTest = (props: IProps) => {
                                     }}
                                     onClick={(d) => { }}
                                     theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
                                     rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     selected={(item) => false}
                                 />
@@ -323,7 +323,7 @@ const WizardTest = (props: IProps) => {
                                     }}
                                     onClick={(d) => { }}
                                     theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
                                     rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     selected={(item) => false}
                                 />

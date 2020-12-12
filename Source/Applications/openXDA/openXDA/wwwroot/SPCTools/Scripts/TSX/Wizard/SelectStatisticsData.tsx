@@ -250,7 +250,7 @@ const ChannelTable = (props: { selectAll: boolean }) => {
                 onSort={(d) => dispatch(SortAffectedChanels({ Ascending: d.ascending, SortField: d.col }))}
                 onClick={(d) => { }}
                 theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 400, width: '100%' }}
                 rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                 selected={(item) => false}
                 primaryKey={'ID'}
