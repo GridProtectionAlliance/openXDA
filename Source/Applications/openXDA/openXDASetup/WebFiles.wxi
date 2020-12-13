@@ -568,6 +568,9 @@
   <Component Id="wwwroot_Images_dDSplashBackground_png">
     <File Id="wwwroot_Images_dDSplashBackground.png" Name="dDSplashBackground.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dDSplashBackground.png" />
   </Component>
+  <Component Id="wwwroot_Images_EPRILogo_png">
+    <File Id="wwwroot_Images_EPRILogo.png" Name="EPRILogo.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\EPRILogo.png" />
+  </Component>
   <Component Id="wwwroot_Images_GPA_Logo_30_pix_on_white_png">
     <File Id="wwwroot_Images_GPA_Logo_30_pix_on_white.png" Name="GPA-Logo---30-pix(on-white).png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\GPA-Logo---30-pix(on-white).png" />
   </Component>
