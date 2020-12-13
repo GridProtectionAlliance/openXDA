@@ -143,7 +143,7 @@ namespace SPCTools
                         int alarmID = 0;
                         if (!isNew)
                         {
-                            alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND ChannelID = {1}", alarmgroupID, seriesID);
+                            alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", alarmgroupID, seriesID);
                             alarmID = alarm.ID;
 
                         }
@@ -175,7 +175,8 @@ namespace SPCTools
                         {
                             if (!isNew)
                             {
-                                connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmdayID == null ? "IS NULL" : ("= " + value.AlarmdayID.ToString()))}");
+                                connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID.Item1} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmdayID == null ? "IS NULL" : ("= " + value.AlarmdayID.ToString()))}");
+                            
                             }
                             AlarmValue alarmValue = new AlarmValue()
                             {
