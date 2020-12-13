@@ -29,10 +29,11 @@ import Table from '@gpa-gemstone/react-table';
 import { useSelector, useDispatch } from 'react-redux';
 import { SortAlarmGroups, FilterAlarmGroups, SelectAlarmGroups, SelectAlarmGroupsFilters, SelectAlarmGroupsStatus, SelectAlarmGroupsSortField, SelectAlarmGroupsAscending, FetchAlarmGroupViews } from '../store/AlarmGroupViewSlice';
 import moment from 'moment';
+import { LoadWizard } from '../Wizard/DynamicWizzardSlice';
 
 interface IDetailRow {Content: string, Value: string}
 
-const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
+const AlarmGroupHome = (props: {loadAlarm: () => void}) => {
     const dispatch = useDispatch();
 
     const alarmGroups = useSelector(SelectAlarmGroups);
@@ -110,22 +111,35 @@ const AlarmGroupHome: React.FunctionComponent = (props: {}) => {
                         </div>
 
                     <div className="col-4" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
-                        <Table<IDetailRow>
-                            cols={[
-                                { key: 'Content', label: '', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Value', label: '', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } }
-                            ]}
-                            tableClass="table thead-dark table-striped"
-                            data={detailedData}
-                            sortField={'Content'}
-                            ascending={false}
-                            onSort={(d) => { }}
-                            onClick={(d) => { }}
-                            theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
-                            rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            selected={(item) => false}
-                        />
+                        <div className="row">
+                            <div className="col">
+                                <Table<IDetailRow>
+                                    cols={[
+                                        { key: 'Content', label: '', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'Value', label: '', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } }
+                                    ]}
+                                    tableClass="table thead-dark table-striped"
+                                    data={detailedData}
+                                    sortField={'Content'}
+                                    ascending={false}
+                                    onSort={(d) => { }}
+                                    onClick={(d) => { }}
+                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    selected={(item) => false}
+                                        />
+                            </div>
+                        </div>
+                        {selectedAlarmGroup != undefined? < div className="row">
+                            <div className="col">
+                                <div className="btn-group mr-2" role="group">
+                                    <button type="button" className="btn btn-primary" onClick={() => { dispatch(LoadWizard(selectedAlarmGroup.ID)); props.loadAlarm() }}>
+                                        Edit AlarmGroup
+                                    </button>
+                                </div>
+                            </div>
+                        </div> : null}
                     </div>
                 </div>
             </div>

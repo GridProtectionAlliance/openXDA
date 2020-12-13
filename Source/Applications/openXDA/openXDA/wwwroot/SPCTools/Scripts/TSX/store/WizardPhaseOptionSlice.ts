@@ -34,6 +34,10 @@ export const FetchAvailablePhases = createAsyncThunk('WizardPhaseOption/FetchCha
     let seriesTypeID = SelectSeriesTypes(getState() as Redux.StoreState).map(item => item.ID)
     return await getAvailablePhases(meterIDs, measurmentTypeID, seriesTypeID);
 });
+
+export const LoadSelectedPhase = createAsyncThunk('WizardPhaseOption/LoadSelectedPhase', async (arg: number, { }) => {
+    return await LoadSelectedPhases(arg);
+});
 // #endregion
 
 
@@ -67,6 +71,22 @@ export const WizardPhaseOptionSlice = createSlice({
             state.Status = 'loading';
         });
         builder.addCase(FetchAvailablePhases.rejected, (state, action) => {
+            state.Status = 'error';
+            state.Error = action.error.message;
+
+        });
+
+        builder.addCase(LoadSelectedPhase.fulfilled, (state, action) => {
+            state.Status = 'idle';
+            state.Error = null;
+            
+            state.Data = JSON.parse(action.payload) as openXDA.IPhase[];
+            state.Selected = state.Data.map(ph => true)
+        });
+        builder.addCase(LoadSelectedPhase.pending, (state, action) => {
+            state.Status = 'loading';
+        });
+        builder.addCase(LoadSelectedPhase.rejected, (state, action) => {
             state.Status = 'error';
             state.Error = action.error.message;
 
@@ -114,5 +134,16 @@ function getAvailablePhases(meterIDs: number[], measurementTypeID: number, serie
     });
 }
 
+function LoadSelectedPhases(id: number): JQuery.jqXHR<string> {
+
+    return $.ajax({
+        type: "GET",
+        url: `${apiHomePath}api/SPCTools/Wizard/LoadPhases/${id}`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: false,
+        async: true
+    });
+}
 
 // #endregion

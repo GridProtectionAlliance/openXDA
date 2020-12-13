@@ -35,6 +35,7 @@ using System.Web.Http;
 using HIDS;
 using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
+using Newtonsoft.Json;
 
 namespace SPCTools
 {
@@ -61,6 +62,15 @@ namespace SPCTools
 
         }
 
+        public class LoadResponse
+        {
+            public AlarmGroup AlarmGroup { get; set; }
+            public int SeriesTypeID { get; set; }
+            public int MeasurementTypeID { get; set; }
+            public int AlarmDayGroupID { get; set; }
+            public List<MeterDetail> SelectedMeter { get; set; }
+
+        }
         #endregion
 
         #region [Properties]
@@ -193,6 +203,135 @@ namespace SPCTools
             }
 
 
+        }
+
+
+        /// <summary>
+        /// Loads The selected Voltages for an existing AlarmGroup
+        /// </summary>
+        [HttpGet, Route("LoadVoltages/{id}")]
+        public IHttpActionResult LoadVoltages(int id)
+        {
+            if ((SaveRoles != string.Empty && !User.IsInRole(SaveRoles)))
+                return Unauthorized();
+
+            try
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                {
+                    string voltageSQL = $@"SELECT DISTINCT Asset.VoltageKV 
+                        FROM 
+                            Alarm LEFT JOIN Series ON Series.ID = Alarm.SeriesID LEFT JOIN
+                            Channel ON CHannel.ID = Series.ChannelID LEFT JOIN
+                            Asset ON Asset.ID = Channel.AssetID 
+                        WHERE Alarm.AlarmGroupID = {id} AND Alarm.Manual = 0";
+
+                    DataTable tbl = connection.RetrieveData(voltageSQL);
+
+
+
+                return Ok(JsonConvert.SerializeObject(tbl));
+                }
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+        /// <summary>
+        /// Loads The selected Phases for an existing AlarmGroup
+        /// </summary>
+        [HttpGet, Route("LoadPhases/{id}")]
+        public IHttpActionResult LoadPhases(int id)
+        {
+            if ((SaveRoles != string.Empty && !User.IsInRole(SaveRoles)))
+                return Unauthorized();
+
+            try
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                {
+                    string phaseSQL = $@"SELECT * FROM Phase 
+                        WHERE ID IN 
+                            (SELECT Channel.PhaseID 
+                                FROM Alarm LEFT JOIN 
+                                Series on series.ID = Alarm.SeriesID 
+                                LEFT JOIN Channel ON CHannel.ID = Series.ChannelID
+                            WHERE Alarm.AlarmGroupID = 1 AND Alarm.Manual = 0)";
+
+                    DataTable tbl = connection.RetrieveData(phaseSQL);
+
+                    return Ok(JsonConvert.SerializeObject(tbl));
+                }
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+        // <summary>
+        /// Loads an existing AlarmGroup with all associated Parts
+        /// </summary>
+        [HttpGet, Route("Load/{id}")]
+        public IHttpActionResult LoadAlarmgroup(int id)
+        {
+            if ((SaveRoles != string.Empty && !User.IsInRole(SaveRoles)))
+                return Unauthorized();
+
+            try
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                {
+                    AlarmGroup alarmGroup = (new TableOperations<AlarmGroup>(connection)).LoadRecord(id);
+                    if (alarmGroup == null)
+                        return InternalServerError();
+
+                    int measurmentTypeID = connection.ExecuteScalar<int>($@"SELECT TOP 1 ChannelGroupType.ID
+                        FROM 
+                            Alarm LEFT JOIN Series ON Series.ID = Alarm.SeriesID LEFT JOIN
+                            Channel ON Channel.ID = Series.ChannelID LEFT JOIN
+                            ChannelGroupType ON Channel.MeasurementCharacteristicID = ChannelGroupType.MeasurementCharacteristicID AND
+                                Channel.MeasurementTypeID = ChannelGroupType.MeasurementTypeID 
+                        WHERE  AlarmGroupID = {id} AND Manual = 0");
+
+                    int seriesTypeID = connection.ExecuteScalar<int>($@"SELECT TOP 1 Series.SeriesTypeID
+                        FROM 
+                            Alarm LEFT JOIN Series ON Series.ID = Alarm.SeriesID
+                        WHERE AlarmGroupID = {id} AND Manual = 0");
+
+                    int alarmDayGroupID = connection.ExecuteScalar<int>($@"SELECT TOP 1 ALarmDayGroup.ID FROM AlarmValue LEFT JOIN 
+                        Alarm ON AlarmValue.AlarmID = Alarm.ID LEFT JOIN
+                        ALarmDayGroupAlarmDay ON ALarmDayGroupAlarmDay.AlarmDayID = AlarmValue.AlarmDayID OR
+                            (ALarmDayGroupAlarmDay.AlarmDayID IS NULL AND  AlarmValue.AlarmDayID IS NULL)  LEFT JOIN 
+                        ALarmDayGroup ON ALarmDayGroup.ID = ALarmDayGroupAlarmDay.AlarmDayGroupID 
+                        WHERE Alarm.AlarmGroupID = {id} AND Alarm.Manual = 0
+                        GROUP BY ALarmDayGroup.ID, ALarmDayGroup.Description
+                        ORDER BY COUNT(AlarmValue.ID) DESC
+                        ");
+
+                    string meterSQl = $@"ID IN (SELECT MeterID FROM ALARM LEFT JOIN
+                         Series ON Series.ID = Alarm.SeriesID LEFT JOIN
+                        Channel ON Series.ChannelID = Channel.ID WHERE Alarm.AlarmGroupID = {id}
+                        )";
+                    LoadResponse result = new LoadResponse()
+                    {
+                        AlarmGroup = alarmGroup,
+                        MeasurementTypeID = measurmentTypeID,
+                        SeriesTypeID = seriesTypeID,
+                        AlarmDayGroupID = alarmDayGroupID,
+                        SelectedMeter = (new TableOperations<MeterDetail>(connection).QueryRecordsWhere(meterSQl).ToList())
+                    };
+
+
+                    return Ok(JsonConvert.SerializeObject(result));
+                }
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
         }
 
         #endregion

@@ -24,8 +24,8 @@ import { createSlice, createAsyncThunk, PayloadAction, createSelector, Selector 
 import { SPCTools, StaticWizzard, openXDA, Redux, DynamicWizzard } from '../global';
 import _ from 'lodash';
 import { FetchAffectedChannels, SelectAffectedChannelCount, SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
-import { SelectSelectedPhases } from '../store/WizardPhaseOptionSlice';
-import { SelectSelectedVoltages } from '../store/WizardVoltageOptionSlice';
+import { LoadSelectedPhase, SelectSelectedPhases } from '../store/WizardPhaseOptionSlice';
+import { LoadSelectedVoltages, SelectSelectedVoltages } from '../store/WizardVoltageOptionSlice';
 import { SelectAlarmDayGroups } from '../store/AlarmDayGroupSlice';
 import { SelectAlarmDays } from '../store/AlarmDaySlice';
 import { FetchParsedSetPoint } from '../store/SetPointParseSlice';
@@ -67,6 +67,14 @@ export const updateAlarmValueContent = createAsyncThunk('DynamicWizzard/updateAl
 export const SaveWizard = createAsyncThunk('DynamicWizzard/SaveWizard', async (_, { getState }) => {
     return await GetSave(getState() as Redux.StoreState);
 });
+
+// Thunk for Loading An Existing AlarmGroup
+export const LoadWizard = createAsyncThunk('DynamicWizzard/LoadWizard', async (arg: number, { dispatch }) => {
+    dispatch(LoadSelectedVoltages(arg));
+    dispatch(LoadSelectedPhase(arg));
+    return await GetLoad(arg);
+});
+
 
 export const DynamicWizzardSlice = createSlice({
     name: 'DynamicWizzard',
@@ -202,7 +210,29 @@ export const DynamicWizzardSlice = createSlice({
              state.Error = action.error.message;
 
          });
+         builder.addCase(LoadWizard.fulfilled, (state, action) => {
+             state.Status = 'idle';
+             state.Error = null;
+             state.Step = 'general'
 
+             let loaded = JSON.parse(action.payload);
+             state.AlarmGroup = loaded.AlarmGroup as SPCTools.IAlarmGroup;
+             state.SelectedMeter = loaded.SelectedMeter as openXDA.IMeter[];
+             state.SeriesTypeID = loaded.SeriesTypeID;
+             state.MeasurmentTypeID = loaded.MeasurementTypeID;
+             state.AlarmDayGroupID = loaded.AlarmDayGroupID
+
+
+
+         });
+         builder.addCase(LoadWizard.pending, (state, action) => {
+             state.Status = 'loading';
+         });
+         builder.addCase(LoadWizard.rejected, (state, action) => {
+             state.Status = 'error';
+             state.Error = action.error.message;
+
+         });
 
     }
 
@@ -329,5 +359,16 @@ function GetSave(state: Redux.StoreState): JQuery.jqXHR<string> {
     });
 }
 
+function GetLoad(id: number): JQuery.jqXHR<string> {
+    
+    return $.ajax({
+        type: "GET",
+        url: `${apiHomePath}api/SPCTools/Wizard/Load/${id}`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: false,
+        async: true
+    });
+}
 
 // #endregion

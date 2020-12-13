@@ -34,6 +34,11 @@ export const FetchAvailableVoltages = createAsyncThunk('WizardVoltageOption/Fetc
     let seriesTypeID = SelectSeriesTypes(getState() as Redux.StoreState).map(item => item.ID)
     return await getAvailableVoltages(meterIDs, measurmentTypeID, seriesTypeID);
 });
+
+export const LoadSelectedVoltages = createAsyncThunk('WizardVoltageOption/LoadSelectedVoltages', async (arg: number, { }) => {
+    return await LoadSelectdVoltages(arg);
+});
+
 // #endregion
 
 
@@ -67,6 +72,22 @@ export const WizardVoltageOptionSlice = createSlice({
             state.Status = 'loading';
         });
         builder.addCase(FetchAvailableVoltages.rejected, (state, action) => {
+            state.Status = 'error';
+            state.Error = action.error.message;
+
+        });
+
+        builder.addCase(LoadSelectedVoltages.fulfilled, (state, action) => {
+            state.Status = 'idle';
+            state.Error = null;
+
+            state.Data = _.uniq(JSON.parse(action.payload).map(item => item.VoltageKV) as number[]);
+            state.Selected = state.Data.map(ph => true)
+        });
+        builder.addCase(LoadSelectedVoltages.pending, (state, action) => {
+            state.Status = 'loading';
+        });
+        builder.addCase(LoadSelectedVoltages.rejected, (state, action) => {
             state.Status = 'error';
             state.Error = action.error.message;
 
@@ -114,5 +135,15 @@ function getAvailableVoltages(meterIDs: number[], measurementTypeID: number, ser
     });
 }
 
+function LoadSelectdVoltages(id: number): JQuery.jqXHR<string> {
 
+    return $.ajax({
+        type: "GET",
+        url: `${apiHomePath}api/SPCTools/Wizard/LoadVoltages/${id}`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: false,
+        async: true
+    });
+}
 // #endregion

@@ -62,7 +62,7 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
             <div className="container theme-showcase" role="main" id="bodyContainer">
                 <div className="screen" style={{ height: (window.innerHeight - 66), width: '100%', position: 'absolute', top: '66px', left: '0px'}}>
                     <React.Suspense fallback={<div>Loading...</div>}>
-                        {(page == 'Home' ? <AlarmGroupHome /> : null)}
+                        {(page == 'Home' ? <AlarmGroupHome loadAlarm={() => setPage("Static")} /> : null)}
                         {(page == 'Static' ? <WizardHome complete={() => setPage("Home")} /> : null)}
                         {(page == 'Dynamic' ? <EPRINote /> : null)}
                         {(page == 'Meter' ? <MeterOverview /> : null)}
