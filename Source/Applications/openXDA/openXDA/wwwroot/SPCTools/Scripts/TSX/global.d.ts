@@ -104,7 +104,7 @@ export namespace SPCTools {
 
     export interface IDataFilter { FilterZero: boolean, FilterUpper: boolean, UpperLimit: number, FilterLower: boolean, LowerLimit: number }
 
-    export interface IFactor { SeverityID: number, Value: number, ID: number }
+    export interface IFactor { SeverityID: number, Factor: number, ID: number }
 
     export interface IAlarmType { ID: number, Name: string, Description: string }
 

@@ -298,10 +298,10 @@ const FactorRow = (props: { Factor: SPCTools.IFactor, index: number }) => {
         <div className="row" key={"r-" + props.index} style={{ margin: 0 }}>
                 <div className="col-4">
                 <div className="form-group">
-                    <input className={"form-control" + (props.Factor.Value == 1.0 ? ' is-invalid' : '')}
+                    <input className={"form-control" + (props.Factor.Factor == 1.0 ? ' is-invalid' : '')}
                         type={'number'}
-                        onChange={(evt) => dispatch(updateFactor({ index: props.index, factor: { ...props.Factor, Value: parseFloat(evt.target.value) } }))}
-                        value={props.Factor.Value} />
+                        onChange={(evt) => dispatch(updateFactor({ index: props.index, factor: { ...props.Factor, Factor: parseFloat(evt.target.value) } }))}
+                        value={props.Factor.Factor} />
                     </div>
                 </div>
                 <div className="col-6">

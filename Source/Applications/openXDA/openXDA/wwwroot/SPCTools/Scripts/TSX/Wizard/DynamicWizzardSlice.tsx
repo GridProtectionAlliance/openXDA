@@ -173,7 +173,7 @@ export const DynamicWizzardSlice = createSlice({
             state.AlarmFactors[action.payload.index] = action.payload.factor
         },
         addFactor: (state) => {
-            state.AlarmFactors.push({ ID: -1, SeverityID: state.AlarmGroup.SeverityID, Value: 1.05 });
+            state.AlarmFactors.push({ ID: -1, SeverityID: state.AlarmGroup.SeverityID, Factor: 1.05 });
         },
         removeFactor: (state, action: PayloadAction<number>) => {
             state.AlarmFactors.splice(action.payload, 1)
@@ -337,7 +337,7 @@ export const selectErrors = createSelector(
             else if (!setPointScalar)
                 result.push({ text: "The setpoint expression will result in different threshold for each channel", complete: 'warning' })
             if (alarmFactors.length > 0)
-                result.push({ text: "No level can be applied at the original setpoint", complete: (!alarmFactors.some(item => item.Value == 1.0) ? 'complete' : 'required') })
+                result.push({ text: "No level can be applied at the original setpoint", complete: (!alarmFactors.some(item => item.Factor == 1.0) ? 'complete' : 'required') })
         }
         return result;
 

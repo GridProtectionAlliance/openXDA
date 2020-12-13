@@ -186,7 +186,7 @@ export const AlarmTrendingCard = (props: IProps) => {
                 includeLegend: false,
                 label: '',
                 opacity: 1,
-                data: fullResult.map(pt => [pt[0], pt[1] * factorItem.Value])
+                data: fullResult.map(pt => [pt[0], pt[1] * factorItem.Factor])
             } as ITrendSeries
         })]);
     }

@@ -101,7 +101,7 @@ const WizardTest = (props: IProps) => {
         setEffectiveTimeRange(timeRange);
 
         let request = {
-            AlarmFactors: alarmFactors.map(item => item.Value),
+            AlarmFactors: alarmFactors.map(item => item.Factor),
             Start: timeRange.start,
             End: timeRange.end,
             ChannelID: allChannels.map(item => item.ID),
@@ -155,8 +155,8 @@ const WizardTest = (props: IProps) => {
                 return {
 
                     Severity: severities.find(item => item.ID == f.SeverityID).Name,
-                    NumberRaised: data.map(ch => { return ch.FactorTests.find(i => i.Factor == f.Value).NumberRaised }).reduce((a, b) => a + b, 0),
-                    TimeInAlarm: (data.map(ch => { return ch.FactorTests.find(i => i.Factor == f.Value).TimeInAlarm }).reduce((a, b) => a + b, 0) / data.length) * 100.0,
+                    NumberRaised: data.map(ch => { return ch.FactorTests.find(i => i.Factor == f.Factor).NumberRaised }).reduce((a, b) => a + b, 0),
+                    TimeInAlarm: (data.map(ch => { return ch.FactorTests.find(i => i.Factor == f.Factor).TimeInAlarm }).reduce((a, b) => a + b, 0) / data.length) * 100.0,
                     Threshhold: undefined
                 }
             })
@@ -190,8 +190,8 @@ const WizardTest = (props: IProps) => {
                 return {
 
                     Severity: severities.find(item => item.ID == f.SeverityID).Name,
-                    NumberRaised: response[index].FactorTests.find(i => i.Factor == f.Value).NumberRaised,
-                    TimeInAlarm: response[index].FactorTests.find(i => i.Factor == f.Value).TimeInAlarm * 100.0,
+                    NumberRaised: response[index].FactorTests.find(i => i.Factor == f.Factor).NumberRaised,
+                    TimeInAlarm: response[index].FactorTests.find(i => i.Factor == f.Factor).TimeInAlarm * 100.0,
                     Threshhold: undefined
                 }
             })
