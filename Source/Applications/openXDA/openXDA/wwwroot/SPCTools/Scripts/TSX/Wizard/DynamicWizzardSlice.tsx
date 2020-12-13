@@ -72,6 +72,7 @@ export const SaveWizard = createAsyncThunk('DynamicWizzard/SaveWizard', async (_
 export const LoadWizard = createAsyncThunk('DynamicWizzard/LoadWizard', async (arg: number, { dispatch }) => {
     dispatch(LoadSelectedVoltages(arg));
     dispatch(LoadSelectedPhase(arg));
+    dispatch(ResetParsedSetpoint());
     return await GetLoad(arg);
 });
 
@@ -211,9 +212,18 @@ export const DynamicWizzardSlice = createSlice({
 
          });
          builder.addCase(LoadWizard.fulfilled, (state, action) => {
+             let dt = new Date();
              state.Status = 'idle';
              state.Error = null;
              state.Step = 'general'
+             state.Type = 'static'
+             state.StatisticsRange = {
+                 start: `${dt.getFullYear() - 1}-${(dt.getMonth() + 1).toString().padStart(2, '0')}-${dt.getDate().toString().padStart(2, '0')}`,
+                 end: `${dt.getFullYear()}-${(dt.getMonth() + 1).toString().padStart(2, '0')}-${dt.getDate().toString().padStart(2, '0')}`
+             }
+             state.StatisticsFilter = { FilterLower: false, FilterUpper: false, FilterZero: true, LowerLimit: 0, UpperLimit: 0 }
+             state.StatisticsChannelIDs = []
+            
 
              let loaded = JSON.parse(action.payload);
              state.AlarmGroup = loaded.AlarmGroup as SPCTools.IAlarmGroup;
@@ -222,7 +232,8 @@ export const DynamicWizzardSlice = createSlice({
              state.MeasurmentTypeID = loaded.MeasurementTypeID;
              state.AlarmDayGroupID = loaded.AlarmDayGroupID
 
-
+             state.AlarmFactors = loaded.AlarmFactors
+             state.AlarmValues = loaded.AlarmValues
 
          });
          builder.addCase(LoadWizard.pending, (state, action) => {

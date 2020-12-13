@@ -69,6 +69,8 @@ namespace SPCTools
             public int MeasurementTypeID { get; set; }
             public int AlarmDayGroupID { get; set; }
             public List<MeterDetail> SelectedMeter { get; set; }
+            public List<AlarmValue> AlarmValues { get; set; }
+            public List<AlarmFactor> AlarmFactors { get; set; }
 
         }
         #endregion
@@ -315,13 +317,17 @@ namespace SPCTools
                          Series ON Series.ID = Alarm.SeriesID LEFT JOIN
                         Channel ON Series.ChannelID = Channel.ID WHERE Alarm.AlarmGroupID = {id}
                         )";
+
+                    string alarmValueSQL = $@"AlarmID = (SELECT TOP 1 Alarm.ID FROM ALARM WHERE AlarmGroupID = {id} AND Manual = 0)";
                     LoadResponse result = new LoadResponse()
                     {
                         AlarmGroup = alarmGroup,
                         MeasurementTypeID = measurmentTypeID,
                         SeriesTypeID = seriesTypeID,
                         AlarmDayGroupID = alarmDayGroupID,
-                        SelectedMeter = (new TableOperations<MeterDetail>(connection).QueryRecordsWhere(meterSQl).ToList())
+                        SelectedMeter = (new TableOperations<MeterDetail>(connection).QueryRecordsWhere(meterSQl).ToList()),
+                        AlarmValues = (new TableOperations<AlarmValue>(connection).QueryRecordsWhere(alarmValueSQL).ToList()),
+                        AlarmFactors = (new TableOperations<AlarmFactor>(connection).QueryRecordsWhere("AlarmGroupID = {0}",id).ToList()),
                     };
 
 
