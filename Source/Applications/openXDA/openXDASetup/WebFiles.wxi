@@ -4095,17 +4095,8 @@
   <Component Id="wwwroot_SPCTools_Index_cshtml">
     <File Id="wwwroot_SPCTools_Index.cshtml" Name="Index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Index.cshtml" />
   </Component>
-  <Component Id="wwwroot_SPCTools_package_lock_json">
-    <File Id="wwwroot_SPCTools_package_lock.json" Name="package-lock.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\package-lock.json" />
-  </Component>
-  <Component Id="wwwroot_SPCTools_package_json">
-    <File Id="wwwroot_SPCTools_package.json" Name="package.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\package.json" />
-  </Component>
   <Component Id="wwwroot_SPCTools_tsconfig_json">
     <File Id="wwwroot_SPCTools_tsconfig.json" Name="tsconfig.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\tsconfig.json" />
-  </Component>
-  <Component Id="wwwroot_SPCTools_webpack_config_js">
-    <File Id="wwwroot_SPCTools_webpack.config.js" Name="webpack.config.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\webpack.config.js" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_SPCTools_Scripts_Components" Directory="wwwroot_SPCTOOLSSCRIPTSFOLDER">
