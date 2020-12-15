@@ -385,7 +385,7 @@ const MeasurmentTypeSelect = (props: {}) => {
     }, [measurementTypeID]);
 
     return <div className="form-group">
-        <label>Measurment Type</label>
+        <label>Measurment</label>
         <select
             className="form-control"
             onChange={(evt) => dispatch(updateMeasurmentTypeID(parseInt(evt.target.value)))} 

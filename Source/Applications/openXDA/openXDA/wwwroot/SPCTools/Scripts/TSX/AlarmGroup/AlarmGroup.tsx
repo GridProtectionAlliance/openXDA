@@ -87,7 +87,7 @@ const AlarmGroupHome = (props: {loadAlarm: () => void}) => {
                             <Table<SPCTools.IAlarmGroupView>
                                 cols={[
                                     { key: 'Name', label: 'Alarm Group', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'Meters', label: 'Number of Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                    { key: 'Meters', label: 'Number of Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                     { key: 'Channels', label: 'Number of Channels', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                     { key: 'AlarmSeverity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },    
                                     { key: null, label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: () => 'N/A' },
