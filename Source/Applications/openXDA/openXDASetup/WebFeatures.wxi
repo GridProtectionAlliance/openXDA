@@ -111,6 +111,13 @@
   <ComponentGroupRef Id="wwwroot_Scripts_TS_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_TS_Services_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_TSX_Components" />
+  <ComponentGroupRef Id="wwwroot_SPCTools_Components" />
+  <ComponentGroupRef Id="wwwroot_SPCTools_Scripts_Components" />
+  <ComponentGroupRef Id="wwwroot_SPCTools_Scripts_Bootstrap_Components" />
+  <ComponentGroupRef Id="wwwroot_SPCTools_Scripts_Bootstrap_css_Components" />
+  <ComponentGroupRef Id="wwwroot_SPCTools_Scripts_Bootstrap_js_Components" />
+  <ComponentGroupRef Id="wwwroot_SPCTools_Scripts_D3_Components" />
+  <ComponentGroupRef Id="wwwroot_SPCTools_Scripts_js_Components" />
   <ComponentGroupRef Id="wwwroot_WorkBench_Components" />
 </Feature>
 </Include>

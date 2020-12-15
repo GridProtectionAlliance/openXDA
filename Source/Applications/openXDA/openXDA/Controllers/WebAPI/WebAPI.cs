@@ -54,13 +54,29 @@ namespace openXDA.Controllers.WebAPI
 
 
     [RoutePrefix("api/Meter")]
-    public class MeterController : ModelController<Meter> { }
+    public class MeterController : ModelController<Meter> {
+        protected override bool AllowSearch => true;
+    }
+
+    [RoutePrefix("api/Channel")]
+    public class ChannelController : ModelController<ChannelDetail> 
+    {
+        protected override bool HasParent => true;
+        protected override string ParentKey => "MeterID";
+        protected override bool AllowSearch => true;
+    }
 
     [RoutePrefix("api/Asset")]
-    public class AssetController : ModelController<Asset> { }
+    public class AssetController : ModelController<Asset> 
+    {
+        protected override bool AllowSearch => true;
+    }
 
     [RoutePrefix("api/Phase")]
-    public class PhaseController : ModelController<Phase> { }
+    public class PhaseController : ModelController<Phase> 
+    {
+        protected override bool AllowSearch => true;
+    }
 
     [RoutePrefix("api/EventType")]
     public class EventTypeController : ModelController<EventType> { }
@@ -76,5 +92,35 @@ namespace openXDA.Controllers.WebAPI
 
     [RoutePrefix("api/ChannelGroupType")]
     public class ChannelGroupTypeController : ModelController<ChannelGroupType> { }
+
+    [RoutePrefix("api/AlarmType")]
+    public class AlarmTypeController : ModelController<AlarmType> 
+    {
+        protected override bool AllowSearch => true;
+    }
+
+    [RoutePrefix("api/MeterDetail")]
+    public class MeterDetailController : ModelController<MeterDetail> {
+        protected override bool AllowSearch => true;
+    }
+
+    [RoutePrefix("api/AlarmDay")]
+    public class AlarmDayController : ModelController<AlarmDay>
+    {
+        protected override bool ViewOnly => true;
+    }
+
+    [RoutePrefix("api/AlarmDayGroup")]
+    public class AlarmDayGroupController : ModelController<AlarmDayGroupView>
+    {
+        protected override bool ViewOnly => true;
+    }
+
+    [RoutePrefix("api/SeriesType")]
+    public class SeriesTypeController : ModelController<SeriesType>
+    {
+        protected override bool AllowSearch => true;
+    }
+
 
 }

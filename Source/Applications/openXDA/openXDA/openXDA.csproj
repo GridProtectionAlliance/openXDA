@@ -260,6 +260,7 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
@@ -350,6 +351,8 @@
     <Compile Include="Controllers\Config\QueryController.cs" />
     <Compile Include="Controllers\DataPusher\DataPusherController.cs" />
     <Compile Include="Controllers\ModelController.cs" />
+    <Compile Include="Controllers\SPCTools\Controllers.cs" />
+    <Compile Include="Controllers\SPCTools\AssetGroupController.cs" />
     <Compile Include="Controllers\WebAPI\HIDSController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
@@ -465,6 +468,10 @@
     <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
       <Name>PQMark.DataAggregator</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\SPCTools\SPCTools.csproj">
+      <Project>{5017948c-141e-48b5-9915-ef81775aacb2}</Project>
+      <Name>SPCTools</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -4242,6 +4249,46 @@
     <None Include="wwwroot\Scripts\TrendingDataDisplay.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="wwwroot\Images\dDSPCtools.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\Images\EPRILogo.png" />
+    <Content Include="wwwroot\Images\SPCTools.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\index.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.js.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.min.js.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.js.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.min.js.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-grid.min.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap-reboot.min.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.css.map" />
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.min.css.map" />
+    <Content Include="wwwroot\SPCTools\package.json" />
+    <Content Include="wwwroot\SPCTools\tsconfig.json" />
     <None Include="wwwroot\WorkBench\AuditLog.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -4349,11 +4396,70 @@
     <None Include="Web.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\D3\d3.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\Scripts\js\SPCTools.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\SPCTools\webpack.config.js" />
     <Content Include="XDA.ico" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\ChannelOverview\ChannelOverview.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\AlarmTrendingCard.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\FunctionHelp.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\DynamicTimeRange.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Requirments.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Graph.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\RadioBox.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\MultiSelectTable.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Filter.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\SelectStatisticsData.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\SetPointCreator.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\EPRINote.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\WizardTest.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\global.d.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\AlarmGroup\AlarmGroup.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\MeterOverview\MeterOverview.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\NavBar.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\SpcTools.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\GeneralSettings.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\WizardHome.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\DynamicWizzardSlice.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\SeveritySlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\SetpointParseSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\WizardAffectedChannelSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\SeriesTypeSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmTypeSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\WizardVoltageOptionSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\WizardPhaseOptionSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\MeasurmentTypeSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmDaySlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmDayGroupSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmGroupViewSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\MeterAlarmGroupSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\ChannelAlarmGroupSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\MeterSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\ChannelOverviewSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\store.ts" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <Target Name="AfterBuild">

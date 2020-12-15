@@ -526,6 +526,22 @@
       <ComponentRef Id="System.Web.WebPages" />
       <ComponentRef Id="System.Web.WebPages.Razor" />
 
+      <!-- HIDS Dependencies -->
+      <ComponentRef Id="HIDS" />
+      <ComponentRef Id="openXDA.HIDS" />
+      <ComponentRef Id="System.Threading.Tasks.Extensions" />
+      <ComponentRef Id="Microsoft.Bcl.AsyncInterfaces" />
+      <ComponentRef Id="System.Linq.Async" />
+      <ComponentRef Id="InfluxDB.Client" />
+      <ComponentRef Id="InfluxDB.Client.Core" />
+      <ComponentRef Id="RestSharp" />
+      <ComponentRef Id="System.Runtime.CompilerServices.Unsafe" />
+      <ComponentRef Id="NodaTime" />
+      <ComponentRef Id="CSVHelper" />
+      
+      <!-- SPCTools Dependencies -->
+      <ComponentRef Id="SPCTools" />
+
       <ComponentRef Id="InstallFolderPermissions"/>
       
       <!-- Cleanup -->
@@ -714,6 +730,45 @@
         <File Id="MathNet.Numerics.dll" Name="MathNet.Numerics.dll" Source="$(var.SolutionDir)Dependencies\NuGet\MathNet.Numerics.3.17.0\lib\net40\MathNet.Numerics.dll" />
       </Component>
 
+      <!-- HIDS Dependencies -->
+      <Component Id="HIDS">
+        <File Id="HIDS.dll" Name="HIDS.dll"  Source="$(var.openXDA.TargetPath)" />
+      </Component>
+      <Component Id="openXDA.HIDS">
+        <File Id="openXDA.HIDS.dll" Name="$(var.openXDA.HIDS.TargetFileName)" Source="$(var.openXDA.HIDS.TargetPath)" />
+      </Component>
+      <Component Id="System.Threading.Tasks.Extensions">
+        <File Id="System.Threading.Tasks.Extensions.dll" Name="System.Threading.Tasks.Extensions.dll"  Source="$(var.openXDA.TargetPath)" />
+      </Component>
+      <Component Id="Microsoft.Bcl.AsyncInterfaces">
+        <File Id="Microsoft.Bcl.AsyncInterfaces.dll" Name="Microsoft.Bcl.AsyncInterfaces.dll" Source="$(var.openXDA.TargetPath)" />
+      </Component>
+      <Component Id="System.Linq.Async">
+        <File Id="System.Linq.Async.dll" Name="System.Linq.Async.dll" Source="$(var.openXDA.TargetPath)" />
+      </Component>
+      <Component Id="InfluxDB.Client">
+        <File Id="InfluxDB.Client.dll" Name="InfluxDB.Client.dll" Source="$(var.openXDA.TargetPath)" />
+      </Component>
+      <Component Id="InfluxDB.Client.Core">
+        <File Id="InfluxDB.Client.Core.dll" Name="InfluxDB.Client.Core.dll" Source="$(var.openXDA.TargetPath)" />
+      </Component>
+      <Component Id="RestSharp">
+        <File Id="RestSharp.dll" Name="RestSharp.dll" Source="$(var.openXDA.TargetPath)" />
+      </Component>
+      <Component Id="System.Runtime.CompilerServices.Unsafe">
+        <File Id="System.Runtime.CompilerServices.Unsafe.dll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.openXDA.TargetPath)" />
+      </Component>
+      <Component Id="NodaTime">
+        <File Id="NodaTime.dll" Name="NodaTime.dll" Source="$(var.openXDA.TargetPath)" />
+      </Component>
+      <Component Id="CSVHelper">
+        <File Id="CSVHelper.dll" Name="CSVHelper.dll" Source="$(var.openXDA.TargetPath)" />
+      </Component>
+
+      <!--SPC Tools Dependencies -->
+      <Component Id="SPCTools">
+        <File Id="SPCtools.dll" Name="$(var.SPCTools.TargetFileName)" Source="$(var.SPCTools.TargetPath)" />
+      </Component>
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (these are managed as NuGet dependencies to GSF.Web) -->
       <Component Id="Microsoft.AspNet.SignalR.Core">
         <File Id="Microsoft.AspNet.SignalR.Core.dll" Name="Microsoft.AspNet.SignalR.Core.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Microsoft.AspNet.SignalR.Core.dll" />
@@ -799,6 +854,8 @@
       <?endif ?>
     </ComponentGroup>
 
+    
+    
     <!-- File Watcher Service Components -->
     <ComponentGroup Id="FileWatcherServiceComponents" Directory="FILEWATCHERFOLDER">
       <!-- Service Applications -->

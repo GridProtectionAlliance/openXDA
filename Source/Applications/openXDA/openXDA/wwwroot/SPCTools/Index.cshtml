@@ -1,0 +1,140 @@
+﻿@*******************************************************************************************************
+    //  Index.cshtml - Gbtc
+    //
+    //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+    //
+    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+    //  not use this file except in compliance with the License. You may obtain a copy of the License at:
+    //
+    //      http://opensource.org/licenses/MIT
+    //
+    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+    //  License for the specific language governing permissions and limitations.
+    //
+    //  Code Modification History:
+    //  ----------------------------------------------------------------------------------------------------
+    //  10/20/2020 - C. Lackner
+    //       Generated original version of source code.
+    //
+    //*****************************************************************************************************@
+@using GSF.Web.Shared;
+@using GSF.Web.Model;
+@using GSF.Security
+@using GSF.Identity
+@using System.Threading
+@using openXDA.Model
+
+@inherits ExtendedTemplateBase<AppModel>
+@{ 
+#if DEBUG
+    bool debug = true;
+#else
+    bool debug = false;
+#endif
+}
+@functions {
+
+    public string GetCurrentUserID()
+    {
+        if (Thread.CurrentPrincipal.Identity == null)
+            return UserInfo.CurrentUserID;
+
+        return Thread.CurrentPrincipal.Identity.Name;
+    }
+
+    public bool UserIsAdmin()
+    {
+        SecurityPrincipal securityPrincipal = ViewBag.SecurityPrincipal as SecurityPrincipal;
+
+        if ((object)securityPrincipal == null)
+            return false;
+
+        return securityPrincipal.IsInRole("Administrator");
+    }
+
+    bool DetectIE(string userAgent)
+    {
+        return userAgent.Contains("MSIE") || userAgent.Contains("Trident/") || userAgent.Contains("Edge/");
+    }
+}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head id="Head1" runat="server">
+    <title>PQSPC Limits Configurator</title>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8" />
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link href="@Url.Content("~/SPCTools/Scripts/Bootstrap/CSS/bootstrap.min.css")" rel="stylesheet">
+    <link href="@Url.Content("~/@GSF/Web/Shared/Content/font-awesome.css")" rel="stylesheet">
+
+</head>
+<body>
+    <style>
+    .dropdown-submenu{
+        position: relative;
+    }
+    .dropdown-submenu a::after{
+        transform: rotate(-90deg);
+        position: absolute;
+        right: 3px;
+        top: 40%;
+    }
+    .dropdown-submenu:hover .dropdown-menu, .dropdown-submenu:focus .dropdown-menu{
+        display: flex;
+        flex-direction: column;
+        position: absolute !important;
+        margin-top: -30px;
+        left: 100%;
+    }
+
+    .dropdown-menu .dropdown-submenu{
+        width: auto;
+    }
+}
+    </style>
+    <div id="body"></div>
+    <script>
+        var homePath = '@Html.Raw(Url.Content("~/SPCTools/"))';
+        var apiHomePath = '@Html.Raw(Url.Content("~/"))';
+        var userIsAdmin = @Html.Raw((UserIsAdmin()? "true" : "false"));
+    </script>
+    @if (DetectIE(ViewBag.Request.Headers.UserAgent.ToString()))
+    {
+        @*<script src="https://polyfill.io/v3/polyfill.min.js?features=default%2Ces2015%2Ces2016%2Ces2017%2Ces5%2Ces6%2Ces7"></script>*@
+        <script src="@Url.Content("~/Scripts/default.polyfill.min.js")"></script>
+    }
+
+    <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/jquery.js")"></script>
+    <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/jquery-ui.js")"></script>
+    <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/moment.js")"></script>
+
+    <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/popper.js")"></script>
+    <script src="@Url.Content("~/SPCTools/Scripts/Bootstrap/js/bootstrap.js")"></script>
+
+    @if (debug)
+    {
+        <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/react.development.js")"></script>
+        <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/react-dom.development.js")"></script>
+    }
+    else
+    {
+        <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/react.production.min.js")"></script>
+        <script src="@Url.Content("~/@GSF/Web/Shared/Scripts/react-dom.production.min.js")"></script>
+    }
+
+    <script src="@Url.Content("~/SPCTools/Scripts/D3/d3.js")"></script>
+
+    <script src="@Url.Content("~/SPCTools/Scripts/js/SPCTools.js")"></script>
+</body>
+</html>

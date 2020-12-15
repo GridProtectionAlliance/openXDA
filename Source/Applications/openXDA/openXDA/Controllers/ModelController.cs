@@ -98,12 +98,17 @@ namespace openXDA.Controllers
         protected virtual string PatchRoles { get; } = "Administrator";
         protected virtual string DeleteRoles { get; } = "Administrator";
         protected virtual string GetOrderByExpression { get; } = null;
+        protected virtual bool ViewOnly { get; } = false;
+        protected virtual bool AllowSearch { get; } = false;
         #endregion
 
         #region [ Http Methods ]
         [HttpGet, Route("New")]
         public virtual IHttpActionResult GetNew()
         {
+            if (ViewOnly)
+                return Unauthorized();
+
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
                 using (AdoDataConnection connection = new AdoDataConnection(Connection))
@@ -165,6 +170,81 @@ namespace openXDA.Controllers
             }
 
         }
+        [HttpGet, Route("{sort}/{ascending:int}")]
+        public virtual IHttpActionResult Get(string sort, int ascending)
+        {
+            if (GetRoles == string.Empty || User.IsInRole(GetRoles))
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                {
+                    string orderByExpression = GetOrderByExpression;
+
+                    if (sort != null && sort != string.Empty)
+                        orderByExpression = $"{sort} {(ascending == 1 ? "ASC" : "DESC")}";
+
+                    try
+                    {
+                        IEnumerable<T> result = new TableOperations<T>(connection).QueryRecords(orderByExpression);
+
+                        return Ok(JsonConvert.SerializeObject(result));
+                    }
+                    catch (Exception ex)
+                    {
+                        return InternalServerError(ex);
+                    }
+                }
+            }
+            else
+            {
+                return Unauthorized();
+            }
+
+        }
+
+
+        [HttpGet, Route("{parentID}/{sort}/{ascending:int}")]
+        public virtual IHttpActionResult Get(string parentID, string sort, int ascending)
+        {
+            if (GetRoles == string.Empty || User.IsInRole(GetRoles))
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                {
+                    string orderByExpression = GetOrderByExpression;
+
+                    if (sort != null && sort != string.Empty)
+                        orderByExpression = $"{sort} {(ascending == 1 ? "ASC" : "DESC")}";
+
+                    try
+                    {
+                        IEnumerable<T> result;
+                        if (HasParent && parentID != null)
+                        {
+                            PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
+                            if (parentKey.PropertyType == typeof(int))
+                                result = new TableOperations<T>(connection).QueryRecords(orderByExpression, new RecordRestriction(ParentKey + " = {0}", int.Parse(parentID)));
+                            else if (parentKey.PropertyType == typeof(Guid))
+                                result = new TableOperations<T>(connection).QueryRecords(orderByExpression, new RecordRestriction(ParentKey + " = {0}", Guid.Parse(parentID)));
+                            else
+                                result = new TableOperations<T>(connection).QueryRecords(orderByExpression, new RecordRestriction(ParentKey + " = {0}", parentID));
+                        }
+                        else
+                            result = new TableOperations<T>(connection).QueryRecords(orderByExpression);
+
+                        return Ok(JsonConvert.SerializeObject(result));
+                    }
+                    catch (Exception ex)
+                    {
+                        return InternalServerError(ex);
+                    }
+                }
+            }
+            else
+            {
+                return Unauthorized();
+            }
+
+        }
+
         [HttpGet, Route("One/{id}")]
         public virtual IHttpActionResult GetOne(string id)
         {
@@ -213,6 +293,9 @@ namespace openXDA.Controllers
         [HttpPost, Route("Add")]
         public virtual IHttpActionResult Post([FromBody] JObject record)
         {
+            if (ViewOnly)
+                return Unauthorized();
+
             try
             {
                 if (PostRoles == string.Empty || User.IsInRole(PostRoles))
@@ -229,7 +312,7 @@ namespace openXDA.Controllers
                             {
                                 object uniqueKey = prop.GetValue(newRecord);
                                 newRecord = new TableOperations<T>(connection).QueryRecordWhere(UniqueKeyField + " = {0}", uniqueKey);
-                                return Ok(newRecord);
+                                return Ok(JsonConvert.SerializeObject(newRecord));
                             }
 
                         }
@@ -251,6 +334,9 @@ namespace openXDA.Controllers
         [HttpPatch, Route("Update")]
         public virtual IHttpActionResult Patch([FromBody] T record)
         {
+            if (ViewOnly)
+                return Unauthorized();
+
             try
             {
                 if (PatchRoles == string.Empty || User.IsInRole(PatchRoles))
@@ -278,6 +364,9 @@ namespace openXDA.Controllers
         [HttpDelete, Route("Delete")]
         public virtual IHttpActionResult Delete(T record)
         {
+            if (ViewOnly)
+                return Unauthorized();
+
             try
             {
                 if (DeleteRoles == string.Empty || User.IsInRole(DeleteRoles))
@@ -333,6 +422,39 @@ namespace openXDA.Controllers
             }
         }
 
+        [HttpPost, Route("SearchableList")]
+        public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData)
+        {
+            if (!AllowSearch || (GetRoles != string.Empty && !User.IsInRole(GetRoles)))
+                return Unauthorized();
+
+            try
+            {
+
+                string whereClause = BuildWhereClause(postData.Searches);
+
+                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                {
+                    string tableName = new TableOperations<T>(connection).TableName;
+
+                    string sql = $@"
+                    DECLARE @SQLStatement NVARCHAR(MAX) = N'
+                        SELECT * FROM {tableName}
+                        {whereClause.Replace("'", "''")}
+                        ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}
+                    '
+                    exec sp_executesql @SQLStatement";
+                    
+                    DataTable table = connection.RetrieveData(sql, "");
+
+                    return Ok(JsonConvert.SerializeObject(table));
+                }
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
         #endregion
 
         #region [Helper Methods]

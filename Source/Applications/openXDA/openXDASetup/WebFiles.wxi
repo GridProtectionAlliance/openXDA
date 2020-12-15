@@ -35,6 +35,9 @@
   <Component Id="wwwroot_Assets_Buss_cshtml">
     <File Id="wwwroot_Assets_Buss.cshtml" Name="Buss.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Buss.cshtml" />
   </Component>
+  <Component Id="wwwroot_Assets_CapacitorBankRelays_cshtml">
+    <File Id="wwwroot_Assets_CapacitorBankRelays.cshtml" Name="CapacitorBankRelays.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\CapacitorBankRelays.cshtml" />
+  </Component>
   <Component Id="wwwroot_Assets_CapacitorBanks_cshtml">
     <File Id="wwwroot_Assets_CapacitorBanks.cshtml" Name="CapacitorBanks.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\CapacitorBanks.cshtml" />
   </Component>
@@ -559,8 +562,14 @@
   <Component Id="wwwroot_Images_dDWorkbench_png">
     <File Id="wwwroot_Images_dDWorkbench.png" Name="dD Workbench.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Workbench.png" />
   </Component>
+  <Component Id="wwwroot_Images_dDSPCtools_png">
+    <File Id="wwwroot_Images_dDSPCtools.png" Name="dDSPCtools.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dDSPCtools.png" />
+  </Component>
   <Component Id="wwwroot_Images_dDSplashBackground_png">
     <File Id="wwwroot_Images_dDSplashBackground.png" Name="dDSplashBackground.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dDSplashBackground.png" />
+  </Component>
+  <Component Id="wwwroot_Images_EPRILogo_png">
+    <File Id="wwwroot_Images_EPRILogo.png" Name="EPRILogo.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\EPRILogo.png" />
   </Component>
   <Component Id="wwwroot_Images_GPA_Logo_30_pix_on_white_png">
     <File Id="wwwroot_Images_GPA_Logo_30_pix_on_white.png" Name="GPA-Logo---30-pix(on-white).png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\GPA-Logo---30-pix(on-white).png" />
@@ -594,6 +603,9 @@
   </Component>
   <Component Id="wwwroot_Images_openXDA_png">
     <File Id="wwwroot_Images_openXDA.png" Name="openXDA.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openXDA.png" />
+  </Component>
+  <Component Id="wwwroot_Images_SPCTools_png">
+    <File Id="wwwroot_Images_SPCTools.png" Name="SPCTools.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\SPCTools.png" />
   </Component>
   <Component Id="wwwroot_Images_sync_png">
     <File Id="wwwroot_Images_sync.png" Name="sync.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\sync.png" />
@@ -4077,6 +4089,101 @@
   </Component>
   <Component Id="wwwroot_Scripts_TSX_TrendingDataDisplay_tsx">
     <File Id="wwwroot_Scripts_TSX_TrendingDataDisplay.tsx" Name="TrendingDataDisplay.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\TrendingDataDisplay.tsx" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_SPCTools_Components" Directory="wwwroot_SPCTOOLSFOLDER">
+  <Component Id="wwwroot_SPCTools_Index_cshtml">
+    <File Id="wwwroot_SPCTools_Index.cshtml" Name="Index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Index.cshtml" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_package_lock_json">
+    <File Id="wwwroot_SPCTools_package_lock.json" Name="package-lock.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\package-lock.json" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_package_json">
+    <File Id="wwwroot_SPCTools_package.json" Name="package.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\package.json" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_tsconfig_json">
+    <File Id="wwwroot_SPCTools_tsconfig.json" Name="tsconfig.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\tsconfig.json" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_webpack_config_js">
+    <File Id="wwwroot_SPCTools_webpack.config.js" Name="webpack.config.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\webpack.config.js" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_SPCTools_Scripts_Components" Directory="wwwroot_SPCTOOLSSCRIPTSFOLDER">
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_SPCTools_Scripts_Bootstrap_Components" Directory="wwwroot_SPCTOOLSSCRIPTSBOOTSTRAPFOLDER">
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_SPCTools_Scripts_Bootstrap_css_Components" Directory="wwwroot_SPCTOOLSSCRIPTSBOOTSTRAPCSSFOLDER">
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_grid_css">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_grid.css" Name="bootstrap-grid.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap-grid.css" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_grid_css_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_grid.css.map" Name="bootstrap-grid.css.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap-grid.css.map" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_grid_min_css">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_grid.min.css" Name="bootstrap-grid.min.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap-grid.min.css" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_grid_min_css_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_grid.min.css.map" Name="bootstrap-grid.min.css.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap-grid.min.css.map" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_reboot_css">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_reboot.css" Name="bootstrap-reboot.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap-reboot.css" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_reboot_css_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_reboot.css.map" Name="bootstrap-reboot.css.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap-reboot.css.map" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_reboot_min_css">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_reboot.min.css" Name="bootstrap-reboot.min.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap-reboot.min.css" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_reboot_min_css_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_reboot.min.css.map" Name="bootstrap-reboot.min.css.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap-reboot.min.css.map" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_css">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap.css" Name="bootstrap.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap.css" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_css_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap.css.map" Name="bootstrap.css.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap.css.map" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_min_css">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap.min.css" Name="bootstrap.min.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap.min.css" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap_min_css_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_css_bootstrap.min.css.map" Name="bootstrap.min.css.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\css\bootstrap.min.css.map" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_SPCTools_Scripts_Bootstrap_js_Components" Directory="wwwroot_SPCTOOLSSCRIPTSBOOTSTRAPJSFOLDER">
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap_bundle_js">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap.bundle.js" Name="bootstrap.bundle.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.js" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap_bundle_js_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap.bundle.js.map" Name="bootstrap.bundle.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.js.map" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap_bundle_min_js">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap.bundle.min.js" Name="bootstrap.bundle.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.min.js" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap_bundle_min_js_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap.bundle.min.js.map" Name="bootstrap.bundle.min.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.bundle.min.js.map" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap_js">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap.js" Name="bootstrap.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.js" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap_js_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap.js.map" Name="bootstrap.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.js.map" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap_min_js">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap.min.js" Name="bootstrap.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.min.js" />
+  </Component>
+  <Component Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap_min_js_map">
+    <File Id="wwwroot_SPCTools_Scripts_Bootstrap_js_bootstrap.min.js.map" Name="bootstrap.min.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\Bootstrap\js\bootstrap.min.js.map" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_SPCTools_Scripts_D3_Components" Directory="wwwroot_SPCTOOLSSCRIPTSD3FOLDER">
+  <Component Id="wwwroot_SPCTools_Scripts_D3_d3_js">
+    <File Id="wwwroot_SPCTools_Scripts_D3_d3.js" Name="d3.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\D3\d3.js" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_SPCTools_Scripts_js_Components" Directory="wwwroot_SPCTOOLSSCRIPTSJSFOLDER">
+  <Component Id="wwwroot_SPCTools_Scripts_js_SPCTools_js">
+    <File Id="wwwroot_SPCTools_Scripts_js_SPCTools.js" Name="SPCTools.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SPCTools\Scripts\js\SPCTools.js" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_WorkBench_Components" Directory="wwwroot_WORKBENCHFOLDER">

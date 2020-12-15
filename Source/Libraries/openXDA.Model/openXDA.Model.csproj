@@ -59,6 +59,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActiveAlarm.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmDay.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmDayGroup.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmDayGroupAlarmDay.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmValue.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmFactor.cs" />
+    <Compile Include="Alarms\AlarmGroups\Alarm.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmGroup.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmSeverity.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmType.cs" />
     <Compile Include="Alarms\ChannelsWithNormalLimits.cs" />
     <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
     <Compile Include="Alarms\MetersWithNormalLimits.cs" />
@@ -76,12 +86,13 @@
     <Compile Include="Channels\ChannelData.cs" />
     <Compile Include="Channels\ChannelGroup.cs" />
     <Compile Include="Channels\ChannelGroupType.cs" />
+    <Compile Include="Channels\ChannelAlarmGroup.cs" />
+    <Compile Include="Channels\ChannelOverview.cs" />
     <Compile Include="Dashboard\ContourClasses.cs" />
     <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
-    <Compile Include="Alarms\AlarmLog.cs" />
+    <Compile Include="Alarms\AlarmGroups\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
-    <Compile Include="Alarms\AlarmType.cs" />
     <Compile Include="Emails\EmailTemplateUser.cs" />
     <Compile Include="Emails\UserEmailTemplate.cs" />
     <Compile Include="Emails\EmailType.cs" />
@@ -107,6 +118,7 @@
     <Compile Include="Links\PQViewSite.cs" />
     <Compile Include="Links\EDNAPoint.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
+    <Compile Include="Meters\MeterAlarmGroup.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="Meters\MeterConfiguration.cs" />
     <Compile Include="Note.cs" />

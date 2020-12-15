@@ -104,7 +104,6 @@
     <Compile Include="DataAnalysis\Transform.cs" />
     <Compile Include="DataAnalysis\VICycleDataGroup.cs" />
     <Compile Include="DataAnalysis\VIDataGroup.cs" />
-    <Compile Include="DataOperations\AlarmOperation.cs" />
     <Compile Include="DataOperations\BreakerRestrikeOperation.cs" />
     <Compile Include="DataOperations\BreakerTimingOperation.cs" />
     <Compile Include="DataOperations\ConfigurationOperation.cs" />

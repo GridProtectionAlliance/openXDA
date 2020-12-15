@@ -1,3 +1,4 @@
+
 -- The following commented statements are used to create a database
 -- from scratch and create a new user with access to the database.
 --
@@ -446,6 +447,25 @@ CREATE TABLE TransformerAttributes
 	SecondaryVoltageKV FLOAT NULL,
 	PrimaryVoltageKV FLOAT NULL,
 	Tap FLOAT NULL
+)
+GO
+
+-- Channel Group and Type
+CREATE TABLE ChannelGroup
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	Name VARCHAR(200) NOT NULL,
+	Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE ChannelGroupType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelGroupID INT NOT NULL REFERENCES ChannelGroup(ID),
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
+	DisplayName VARCHAR(20) NOT NULL
 )
 GO
 
@@ -1176,25 +1196,6 @@ CREATE TABLE AssetChannel
     ID INT IDENTITY(1, 1) NOT NULL,
     AssetID INT NOT NULL REFERENCES Asset(ID),
     ChannelID INT NOT NULL REFERENCES Channel(ID)
-)
-GO
-
--- Channel Group and Type
-CREATE TABLE ChannelGroup
-(
-	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	Name VARCHAR(200) NOT NULL,
-	Description VARCHAR(MAX) NULL
-)
-GO
-
-CREATE TABLE ChannelGroupType
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    ChannelGroupID INT NOT NULL REFERENCES ChannelGroup(ID),
-    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
-    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
-	DisplayName VARCHAR(20) NOT NULL
 )
 GO
 
@@ -3061,6 +3062,259 @@ CREATE TABLE AlarmType
 )
 GO
 
+CREATE TABLE AlarmSeverity
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Color VARCHAR(10) NOT NULL
+)
+GO
+
+CREATE TABLE AlarmGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+    SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID)
+)
+GO
+
+CREATE TABLE Alarm
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AlarmGroupID  INT NOT NULL REFERENCES AlarmGroup(ID),
+    SeriesID INT NOT NULL REFERENCES Series(ID),
+    [Manual] Bit NOT NULL DEFAULT(0)
+    
+)
+GO
+
+CREATE TABLE AlarmFactor
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AlarmGroupID  INT NOT NULL REFERENCES AlarmGroup(ID),
+    Factor FLOAT NOT NULL DEFAULT(1.0),
+    SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID)
+)
+GO
+
+CREATE TABLE AlarmDay
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name  VARCHAR(25)
+)
+GO
+
+CREATE TABLE AlarmValue
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AlarmID  INT NOT NULL REFERENCES Alarm(ID),
+    AlarmDayID  INT NULL REFERENCES AlarmDay(ID),
+    StartHour INT NOT NULL,
+    EndHour INT NULL,
+    Value FLOAT NOT NULL,
+    Formula VARCHAR(MAX) NOT NULL
+)
+GO
+
+
+CREATE TABLE AlarmLog
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AlarmID  INT NOT NULL REFERENCES Alarm(ID),
+    AlarmFactorID  INT NULL REFERENCES AlarmFactor(ID),
+    StartTime DATETIME NOT NULL,
+    EndTime DATETIME NULL,
+)
+GO
+
+CREATE TABLE ALarmDayGroup (
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	Description  VARCHAR(50)
+)
+GO
+
+CREATE TABLE ALarmDayGroupAlarmDay (
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	AlarmDayID INT NULL References AlarmDay(ID),
+	AlarmDayGroupID INT NOT NULL References AlarmDayGroup(ID)
+)
+GO
+
+
+
+-- Views for UI --
+CREATE VIEW AlarmGroupView AS 
+SELECT 
+	AlarmGroup.ID,
+	AlarmGroup.Name,
+	AlarmSeverity.Name as AlarmSeverity,
+	COUNT(DISTINCT Channel.ID) as Channels,
+	COUNT(DISTINCT Channel.MeterID) as Meters,
+	MAX(AlarmLog.StartTime) AS LastAlarmStart,
+	(SELECT AL2.EndTime 
+		FROM AlarmLog AL2 
+		WHERE AL2.StartTime = MAX(AlarmLog.StartTime) AND AL2.AlarmID IN (SELECT ID FROM ALARM AL WHERE AL.AlarmGroupID = Alarmgroup.ID) AND AL2.AlarmFactorID IS NULL
+		) AS LastAlarmEnd,
+	(SELECT CH.Name 
+		FROM AlarmLog AL2 LEFT JOIN Channel CH ON AL2.AlarmID IN (SELECT A.ID FROM Alarm A LEFT JOIN Series S ON A.SeriesID = S.ID WHERE S.ChannelID = CH.ID)
+		WHERE AL2.StartTime = MAX(AlarmLog.StartTime) AND AL2.AlarmID IN (SELECT ID FROM ALARM AL WHERE AL.AlarmGroupID = Alarmgroup.ID) AND AL2.AlarmFactorID IS NULL
+		) AS LastChannel,
+	(SELECT M.Name 
+		FROM AlarmLog AL2 LEFT JOIN Channel CH ON AL2.AlarmID IN (SELECT A.ID FROM Alarm A LEFT JOIN Series S ON A.SeriesID = S.ID WHERE S.ChannelID = CH.ID)
+			LEFT JOIN Meter M ON M.ID = Ch.MeterID
+		WHERE AL2.StartTime = MAX(AlarmLog.StartTime) AND AL2.AlarmID IN (SELECT ID FROM ALARM AL WHERE AL.AlarmGroupID = Alarmgroup.ID) AND AL2.AlarmFactorID IS NULL
+		) AS LastMeter,
+	AlarmType.Description AS AlarmType
+	 
+FROM 
+	AlarmGroup LEFT JOIN
+	Alarm ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
+	AlarmType ON AlarmGroup.AlarmTypeID = AlarmType.ID LEFT JOIN
+	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
+	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
+	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID LEFT JOIN
+	AlarmLog ON AlarmLog.AlarmID = Alarm.ID
+WHERE AlarmLog.AlarmFactorID IS NULL
+GROUP BY
+	AlarmGroup.ID,
+	AlarmGroup.Name,
+	AlarmSeverity.Name,
+	AlarmType.Description
+GO
+
+CREATE VIEW ChannelOverviewView AS
+SELECT
+	Channel.ID,
+	Meter.Name as Meter,
+	Channel.Name as Channel,
+	MeasurementType.Name + ' ' + MeasurementCharacteristic.Name as Type,
+	Phase.Name as Phase,
+	Asset.AssetName as Asset
+FROM
+	Channel JOIN
+	Meter ON Meter.ID = Channel.MeterID JOIN
+	Asset ON Asset.ID = Channel.AssetID JOIN
+	Phase ON Phase.ID = Channel.PhaseID JOIN
+	MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID JOIN
+	MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID
+GO
+
+CREATE VIEW ChannelAlarmGroupView AS
+SELECT 
+	AlarmGroup.ID,
+	AlarmGroup.Name,
+	AlarmSeverity.ID as AlarmSeverityID,
+	AlarmSeverity.Name as AlarmSeverity,
+	Channel.ID as ChannelID,
+	Meter.ID as MeterID,
+	'N/A' as TimeInAlarm
+	 
+FROM 
+	Alarm LEFT JOIN
+	AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
+	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
+	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
+	Meter ON Channel.MeterID = Meter.ID LEFT JOIN
+	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID
+GO
+
+CREATE VIEW MeterAlarmGroupView AS
+SELECT 
+	AlarmGroup.ID,
+	AlarmGroup.Name,
+	AlarmSeverity.Name as AlarmSeverity,
+	Meter.ID as MeterID,
+	COUNT(Channel.ID) AS Channel,
+	'N/A' as TimeInAlarm
+	 
+FROM 
+	Alarm LEFT JOIN
+	AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
+	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
+	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
+	Meter ON Channel.MeterID = Meter.ID LEFT JOIN
+	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID
+GROUP BY
+	AlarmGroup.ID,
+	AlarmGroup.Name, AlarmSeverity.Name,
+	Meter.ID
+GO
+
+CREATE VIEW AlarmDayGroupView AS SELECT
+	AlarmDayGroup.ID,
+	Description,
+	AlarmDayID
+	FROM
+	ALarmDayGroupAlarmDay LEFT JOIN AlarmDayGroup ON ALarmDayGroupAlarmDay.AlarmDayGroupID = AlarmDayGroup.ID
+GO
+
+CREATE VIEW ActiveAlarmView AS SELECT 
+	Alarm.ID AS AlarmID,
+	Alarm.AlarmGroupID AS AlarmGroupID,
+	AlarmGroup.AlarmTypeID AS AlarmTypeID,
+	AlarmFactor.ID as AlarmFactorID,
+	Alarm.SeriesID AS SeriesID,
+	AlarmFactor.Factor AS Value
+FROM
+(SELECT ID, Factor, AlarmGroupID FROM Alarmfactor UNION SELECT 0 AS ID, 1.0 as Factor, AlarmGroup.ID AS AlarmGroupID FROM AlarmGroup) AlarmFactor LEFT JOIN
+    Alarm ON AlarmFactor.AlarmGroupID = alarm.AlarmGroupID LEFT JOIN
+    AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID
+GO
+-- Defaults --
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Upper Limit', 'Triggered when setpoint is exceeded')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Lower Limit', 'Triggered when value is below setpoint')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('In Range', 'Triggered when value is oustide specified Range')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Out of Range', 'Triggered when Value is within specified Range')
+GO
+
+INSERT INTO AlarmSeverity(Name, Color) VALUES ('Severe', '#ED1C16')
+GO
+INSERT INTO AlarmSeverity(Name, Color) VALUES ('Alert', '#F65314')
+GO
+INSERT INTO AlarmSeverity(Name, Color) VALUES ('Warning', '#FFBB00')
+GO
+INSERT INTO AlarmSeverity(Name, Color) VALUES ('Info', '#3B5998')
+GO
+
+INSERT INTO AlarmDay(Name) VALUES
+('Weekday'),
+('Weekend'),
+('Monday'),
+('Tuesday'),
+('Wednesday'),
+('Thursday'),
+('Friday'),
+('Saturday'),
+('Sunday')
+GO
+
+INSERT INTO AlarmDayGroup(Description) VALUES
+('Daily'),
+('Weekly'),
+('Workday/Weekend')
+GO
+
+INSERT INTO AlarmDayGroupAlarmDay (AlarmDayID, AlarmDayGroupID) VALUES
+(NULL, (SELECT ID FROM AlarmDayGroup WHERE Description = 'Daily')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Weekend'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Workday/Weekend')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Weekday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Workday/Weekend')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Monday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Tuesday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Wednesday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Thursday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Friday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Saturday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
+((SELECT ID FROM AlarmDay WHERE Name = 'Sunday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly'))
+GO
+-- Old Alarm Structure (pre SPC Tool) --
 CREATE TABLE DefaultAlarmRangeLimit
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -3199,49 +3453,9 @@ CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_ChannelID_Date
 ON ChannelAlarmSummary(ChannelID ASC, Date ASC)
 GO
 
-CREATE TABLE AlarmLog
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    ChannelID INT NOT NULL REFERENCES Channel(ID),
-    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
-    Time DATETIME NOT NULL,
-    Severity INT NOT NULL,
-    LimitHigh FLOAT NULL,
-    LimitLow FLOAT NULL,
-    Value FLOAT NOT NULL
-)
-GO
 
-CREATE NONCLUSTERED INDEX IX_AlarmLog_ChannelID
-ON AlarmLog(ChannelID ASC)
-GO
 
-CREATE NONCLUSTERED INDEX IX_AlarmLog_AlarmTypeID
-ON AlarmLog(AlarmTypeID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_AlarmLog_Time
-ON AlarmLog(Time ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_AlarmLog_Severity
-ON AlarmLog(Severity ASC)
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('Latched', 'Latched value')
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('Non-congruent', 'Average value outside of minimum and maximum')
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('Unreasonable', 'Value outside of reasonable limits')
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('OffNormal', 'Value was outside of normal range for a given hour of the week')
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('Alarm', 'Value exceeded regulatory limits')
-GO
+/* ----End Alarm Structure ---- */
 
 CREATE TABLE FaultNote
 (
