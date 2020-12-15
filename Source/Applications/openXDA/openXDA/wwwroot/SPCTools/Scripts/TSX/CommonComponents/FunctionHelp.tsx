@@ -43,8 +43,8 @@ export const FunctionHelp = (props: {}) => {
         border: '1px solid'
     }
 
-    return <div className="modal modal-xl" id='FunctionHelp' >
-        <div className="modal-dialog" >
+    return <div className="modal" id='FunctionHelp' >
+        <div className="modal-dialog" style={{ maxWidth: window.innerWidth - 200 }}>
             <div className="modal-content" >
                 <div className="modal-header" >
                     <h4 className="modal-title" >Setpoint Computation Functions </h4>
@@ -64,7 +64,7 @@ export const FunctionHelp = (props: {}) => {
                         onSort={() => { }}
                         onClick={(d) => { }}
                         theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 500, width: '100%' }}
                         rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                         selected={(item) => false}
                     />
@@ -81,11 +81,15 @@ const staticData = [
     { Name: 'Xmin', Description: 'The Minimum Value during the Trend Data Intervall as Reported by the Field Device', Example: 'Mean(Xmin+5)' },
     { Name: 'Xavg', Description: 'The Average Value during the Trend Data Intervall as Reported by the Field Device', Example: 'Min(Xmin+5)' },
     { Name: 'Xmax', Description: 'The Maximum Value during the Trend Data Intervall as Reported by the Field Device', Example: 'Min(Xmin+5)' },
-
+    { Name: 'Abs', Description: 'Gets the absolute value of the content', Example: 'Abs(Vbase)' },
     { Name: 'Min', Description: 'Finds the Minimum Value in the entire Dataset', Example: 'Min(Vbase)' },
     { Name: 'Max', Description: 'Finds the Maximum Value in the entire Dataset', Example: 'Max(Vbase*Xmin)' },
     { Name: 'Mean', Description: 'Finds the Average Value in the entire Datasete', Example: 'Mean(Vbase*Xmax)' },
     { Name: 'StDev', Description: 'Finds the Standard Deviation of the entire Dataset', Example: 'StDev(Xmin+5)' },
+    { Name: 'ChannelMin', Description: 'Finds the Minimum Value in the entire Dataset for each channel Seperately', Example: 'ChannelMin(Vbase)' },
+    { Name: 'ChannelMax', Description: 'Finds the Maximum Value in the entire Dataset for each channel Seperately', Example: 'ChannelMax(Vbase*Xmin)' },
+    { Name: 'ChannelMean', Description: 'Finds the Average Value in the entire Datasete for each channel Seperately', Example: 'ChannelMean(Vbase*Xmax)' },
+    { Name: 'ChannelStDev', Description: 'Finds the Standard Deviation of the entire Dataset for each channel Seperately', Example: 'ChannelStDev(Xmin+5)' },
 ] as IDocumentation[]
 
 const dynamicData = [

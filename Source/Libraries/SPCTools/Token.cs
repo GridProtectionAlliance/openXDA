@@ -78,10 +78,15 @@ namespace SPCTools
         Addition,
         Subtraction,
         Multiplication,
+        Abs,
         Mean,
         Min,
         Max,
         StdDev,
+        SeriesMin,
+        SeriesMax,
+        SeriesMean,
+        SeriesStdDev
     }
 
 
@@ -210,16 +215,26 @@ namespace SPCTools
                 // Take appart into Paramters and set Action Properly
                 if (m_formula.StartsWith("min"))
                     m_action = ComputationAction.Min;
+                else if (m_formula.StartsWith("abs"))
+                    m_action = ComputationAction.Abs;
                 else if (m_formula.StartsWith("max"))
                     m_action = ComputationAction.Max;
                 else if (m_formula.StartsWith("mean"))
                     m_action = ComputationAction.Mean;
                 else if (m_formula.StartsWith("stdev"))
                     m_action = ComputationAction.StdDev;
+                else if (m_formula.StartsWith("channelmin"))
+                    m_action = ComputationAction.SeriesMin;
+                else if (m_formula.StartsWith("channelsmax"))
+                    m_action = ComputationAction.SeriesMax;
+                else if (m_formula.StartsWith("channelmean"))
+                    m_action = ComputationAction.SeriesMean;
+                else if (m_formula.StartsWith("channelstdev"))
+                    m_action = ComputationAction.SeriesStdDev;        
                 else
                 {
                     m_isValid = false;
-                    m_error = "'" + m_formula.Substring(0, m_formula.IndexOf('(')) + "' is not a valid Function. Available functions include Min(), Max(), Mean(), StDev().";
+                    m_error = "'" + m_formula.Substring(0, m_formula.IndexOf('(')) + "' is not a valid Function. Available functions include Min(), Max(), Mean(), StDev(), Abs()...";
                 }
                 List<string> parameters = m_formula.Substring(m_formula.IndexOf('(') + 1, m_formula.Length - m_formula.IndexOf('(') - 2).Split(',').Select(item => item.Trim()).ToList();
 
@@ -233,7 +248,16 @@ namespace SPCTools
                 else
                 {
                     // process Individual function for parameter number and Type
-                    if (m_action == ComputationAction.Min)
+                    if (m_action == ComputationAction.Abs)
+                    {
+                        if (children.Count > 1)
+                        {
+                            m_error = "'ABS' requires one parameter such as a Variable";
+                            m_isValid = false;
+                        }
+                        OutputType = children[0].OutputType;
+                    }
+                    else if (m_action == ComputationAction.Min)
                     {
                         if (children.Count > 1)
                         {
@@ -272,6 +296,46 @@ namespace SPCTools
                         }
 
                         OutputType = TokenType.Scalar;
+                    }
+                    else if (m_action == ComputationAction.SeriesMean)
+                    {
+                        if (children.Count > 1)
+                        {
+                            m_isValid = false;
+                            m_error = "'ChannelMEAN' requires one parameter such as a Variable";
+                        }
+
+                        OutputType = TokenType.Slice;
+                    }
+                    else if (m_action == ComputationAction.SeriesMax)
+                    {
+                        if (children.Count > 1)
+                        {
+                            m_isValid = false;
+                            m_error = "'ChannelMAX' requires one parameter such as a Variable";
+                        }
+
+                        OutputType = TokenType.Slice;
+                    }
+                    else if (m_action == ComputationAction.SeriesMin)
+                    {
+                        if (children.Count > 1)
+                        {
+                            m_isValid = false;
+                            m_error = "'ChannelMIN' requires one parameter such as a Variable";
+                        }
+
+                        OutputType = TokenType.Slice;
+                    }
+                    else if (m_action == ComputationAction.SeriesStdDev)
+                    {
+                        if (children.Count > 1)
+                        {
+                            m_isValid = false;
+                            m_error = "'ChannelSTDEV' requires one parameter such as a Variable";
+                        }
+
+                        OutputType = TokenType.Slice;
                     }
                 }
             }
@@ -505,6 +569,8 @@ namespace SPCTools
                 return true;
             if (test.EndsWith("stdev"))
                 return true;
+            if (test.EndsWith("abs"))
+                return true;
             return false;
         }
 
@@ -550,6 +616,8 @@ namespace SPCTools
                 return (double.Parse(m_formula));
             }
 
+            if (m_action == ComputationAction.Abs)
+                return Math.Abs(children[0].ComputeScalar());
             if (m_action == ComputationAction.Addition)
                 return children.Sum(item => item.ComputeScalar());
             if (m_action == ComputationAction.Subtraction)
@@ -599,13 +667,32 @@ namespace SPCTools
                 }
             }
 
+            if (m_action == ComputationAction.Abs)
+                return children[0].ComputeSlice().Select(item => Math.Abs(item)).ToList();
             if (m_action == ComputationAction.Addition)
                 return children.Select(item => item.ComputeSlice()).Aggregate((a, b) => a.Select((p, i) => p + b[i]).ToList());
             if (m_action == ComputationAction.Subtraction)
                 return children.Select(item => item.ComputeSlice()).Aggregate((a, b) => a.Select((p, i) => p - b[i]).ToList());
             if (m_action == ComputationAction.Multiplication)
                 return children.Select(item => item.ComputeSlice()).Aggregate((a, b) => a.Select((p, i) => p * b[i]).ToList());
+            if (m_action == ComputationAction.SeriesMax)
+                return children[0].ComputeMatrix().Select(item => item.Where(pt => !double.IsNaN(pt[1])).Max(pt => pt[1])).ToList();
+            if (m_action == ComputationAction.SeriesMin)
+                return children[0].ComputeMatrix().Select(item => item.Where(pt => !double.IsNaN(pt[1])).Min(pt => pt[1])).ToList();
+            if (m_action == ComputationAction.SeriesMean)
+            {
+                List<double> sum = children[0].ComputeMatrix().Select(item => item.Where(pt => !double.IsNaN(pt[1])).Sum(pt => pt[1])).ToList();
+                List<int> N = children[0].ComputeMatrix().Select(item => item.Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1))).ToList();
+                return sum.Select((pt,index) => pt/(double)N[index]).ToList();
+            }
+            if (m_action == ComputationAction.SeriesStdDev)
+            {
+                List<double> x2 = children[0].ComputeMatrix().Select(item => item.Where(pt => !double.IsNaN(pt[1])).Sum(pt => pt[1]*pt[1])).ToList();
+                List<double> x = children[0].ComputeMatrix().Select(item => item.Where(pt => !double.IsNaN(pt[1])).Sum(pt => pt[1])).ToList();
+                List<int> N = children[0].ComputeMatrix().Select(item => item.Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1))).ToList();
 
+                return x2.Select((pt,index) => Math.Sqrt((pt - x[index] * x[index] / ((double)N[index])) / (double)N[index])).ToList();
+            }
             return Enumerable.Repeat(0.0D, m_channels.Count).ToList();
 
 
@@ -675,6 +762,8 @@ namespace SPCTools
                 return ComputeSlice().Select((item, index) => Enumerable.Repeat(new double[] { double.NaN, item }, m_data[m_channels[index]].Count).ToList()).ToList();
             }
 
+            if (m_action == ComputationAction.Abs)
+                return children[0].ComputeMatrix().Select(item => item.Select(pt => new double[] {pt[0], Math.Abs(pt[1]) }).ToList()).ToList();
             if (m_action == ComputationAction.Addition)
                 return children.Select(item => item.ComputeMatrix()).Aggregate((a, b) => a.Select((row, ir) => row.Select((pt, ip) => (new double[] { (double.IsNaN(pt[0]) ? b[ir][ip][0] : pt[0]), pt[1] + b[ir][ip][1] })).ToList()).ToList());
             if (m_action == ComputationAction.Subtraction)
