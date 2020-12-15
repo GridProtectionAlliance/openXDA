@@ -160,7 +160,7 @@ namespace SPCTools
             {
                 //Grab Data For Setpoint Computation
                 Dictionary<int, List<Point>> statisticsData = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
-                List<Token> tokenList = request.TokenValues.Select(value => new Token(value.Formula, statisticsData, request.ChannelID, request.StatisticsFilter, GetTimeFilter(value))).ToList();
+                List<Token> tokenList = request.TokenValues.Select(value => new Token(value.Formula, statisticsData, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(value))).ToList();
 
                 Dictionary<int, List<Point>> testData;
                 if (request.Start == request.StatisticsStart && request.End == request.StatisticsEnd && request.ChannelID.Count == request.StatisticsChannelID.Count)
@@ -175,7 +175,8 @@ namespace SPCTools
 
                 List<ChannelTestResponse> result = request.ChannelID.Select((id, index) =>
                 {
-                    ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = (isDynamic ? double.NaN : (isScalar ? tokenList[0].Scalar : tokenList[0].Slice[index])) };
+                    int statIndex = request.StatisticsChannelID.FindIndex(item => item == id);
+                    ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = (isDynamic ? double.NaN : (isScalar ? tokenList[0].Scalar : tokenList[0].Slice[statIndex])) };
 
                     return TestChannel(index, testData[id], tokenList, request.AlarmFactors, request.AlarmTypeID, test, seriesTypeFilter);
 
