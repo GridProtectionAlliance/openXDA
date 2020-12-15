@@ -475,7 +475,7 @@ const RepeatabilityTypeSelect = (props: {}) => {
     }, [alarmDayGroupID]);
 
     return <div className="form-group">
-        <label>Alarm Repeat Period</label>
+        <label>Alarm Cycle</label>
         <select
             className="form-control"
             onChange={(evt) => dispatch(updateAlarmDayGroupID(parseInt(evt.target.value)))}
