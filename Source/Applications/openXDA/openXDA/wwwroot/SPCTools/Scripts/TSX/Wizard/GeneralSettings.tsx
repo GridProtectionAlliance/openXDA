@@ -206,8 +206,8 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
 
 
     return (
-        <div className="modal modal-xl" id='AddMeter'>
-            <div className="modal-dialog">
+        <div className="modal" id='AddMeter'>
+            <div className="modal-dialog" style={{ maxWidth: window.innerWidth - 200 }}>
                 <div className="modal-content">
                     <div className="modal-header">
                         <h4 className="modal-title">Add Meter</h4>
@@ -237,7 +237,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                             }}
                             onClick={(d) => { }}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 500, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             selected={(item) => false}
                             primaryKey={'ID'}
@@ -326,8 +326,8 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
 
 
     return (
-        <div className="modal modal-lg" id='AddAssetGroup'>
-            <div className="modal-dialog">
+        <div className="modal" id='AddAssetGroup'>
+            <div className="modal-dialog" style={{ maxWidth: window.innerWidth - 200 }}>
                 <div className="modal-content">
                     <div className="modal-header">
                         <h4 className="modal-title">Add Asset Group</h4>
@@ -356,7 +356,7 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                             }}
                             onClick={(d) => { setSelectedAssetGroupID(d.row.ID) }}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
+                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 500, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             selected={(item) => item.ID == selectedAssetGroupID}
                         />
