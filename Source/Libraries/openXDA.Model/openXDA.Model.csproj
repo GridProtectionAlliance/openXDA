@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActiveAlarm.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmDay.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmDayGroup.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmDayGroupAlarmDay.cs" />

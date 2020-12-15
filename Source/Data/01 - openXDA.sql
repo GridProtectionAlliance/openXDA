@@ -3249,6 +3249,18 @@ CREATE VIEW AlarmDayGroupView AS SELECT
 	ALarmDayGroupAlarmDay LEFT JOIN AlarmDayGroup ON ALarmDayGroupAlarmDay.AlarmDayGroupID = AlarmDayGroup.ID
 GO
 
+CREATE VIEW ActiveAlarmView AS SELECT 
+	Alarm.ID AS AlarmID,
+	Alarm.AlarmGroupID AS AlarmGroupID,
+	AlarmGroup.AlarmTypeID AS AlarmTypeID,
+	AlarmFactor.ID as AlarmFactorID,
+	Alarm.SeriesID AS SeriesID,
+	AlarmFactor.Factor AS Value
+FROM
+(SELECT ID, Factor, AlarmGroupID FROM Alarmfactor UNION SELECT 0 AS ID, 1.0 as Factor, AlarmGroup.ID AS AlarmGroupID FROM AlarmGroup) AlarmFactor LEFT JOIN
+    Alarm ON AlarmFactor.AlarmGroupID = alarm.AlarmGroupID LEFT JOIN
+    AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID
+GO
 -- Defaults --
 
 INSERT INTO AlarmType(Name, Description) VALUES ('Upper Limit', 'Triggered when setpoint is exceeded')
