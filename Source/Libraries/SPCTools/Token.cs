@@ -216,6 +216,7 @@ namespace SPCTools
                     m_action = ComputationAction.Mean;
                 else if (m_formula.StartsWith("stdev"))
                     m_action = ComputationAction.StdDev;
+                else
                 {
                     m_isValid = false;
                     m_error = "'" + m_formula.Substring(0, m_formula.IndexOf('(')) + "' is not a valid Function. Available functions include Min(), Max(), Mean(), StDev().";
