@@ -44,7 +44,7 @@ namespace WixFolderGen
     class Program
     {
         public static List<string> ExcludeFolders = new List<string>() { "SPCTools\\node_modules\\", "SPCTools\\Scripts\\TSX\\" };
-        public static List<string> ExcludeFiles = new List<string>() { ".tsx" };
+        public static List<string> ExcludeFiles = new List<string>() { "package.json", "package-lock.json", "tsconfid.json","webpack.config.js" };
 
         static void Main()
         {
@@ -140,10 +140,12 @@ namespace WixFolderGen
             {
                 string fileName = FilePath.GetFileName(file);
                 string fileSource = $"$(var.SolutionDir){Path.Combine(solution.SolutionRelativeRootFolder, fileName)}";
-
-                componentGroupTags.Add($"  <Component Id=\"{GetComponentID(solution, fileName)}\">");
-                componentGroupTags.Add($"    <File Id=\"{GetFileID(solution, fileName)}\" Name=\"{fileName}\" Source=\"{fileSource}\" />");
-                componentGroupTags.Add("  </Component>");
+                if (!ExcludeFiles.Contains(fileName))
+                {
+                    componentGroupTags.Add($"  <Component Id=\"{GetComponentID(solution, fileName)}\">");
+                    componentGroupTags.Add($"    <File Id=\"{GetFileID(solution, fileName)}\" Name=\"{fileName}\" Source=\"{fileSource}\" />");
+                    componentGroupTags.Add("  </Component>");
+                }
             }
 
             componentGroupTags.Add("</ComponentGroup>");
@@ -161,9 +163,12 @@ namespace WixFolderGen
                         string fileID = folder + "_" + fileName;
                         string fileSource = $"$(var.SolutionDir){Path.Combine(solution.SolutionRelativeRootFolder, folder, fileName)}";
 
-                        componentGroupTags.Add($"  <Component Id=\"{GetComponentID(solution, fileID)}\">");
-                        componentGroupTags.Add($"    <File Id=\"{GetFileID(solution, fileID)}\" Name=\"{fileName}\" Source=\"{fileSource}\" />");
-                        componentGroupTags.Add("  </Component>");
+                        if (!ExcludeFiles.Contains(fileName))
+                        {
+                            componentGroupTags.Add($"  <Component Id=\"{GetComponentID(solution, fileID)}\">");
+                            componentGroupTags.Add($"    <File Id=\"{GetFileID(solution, fileID)}\" Name=\"{fileName}\" Source=\"{fileSource}\" />");
+                            componentGroupTags.Add("  </Component>");
+                        }
                     }
                 }
 
