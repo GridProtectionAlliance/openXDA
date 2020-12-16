@@ -628,6 +628,18 @@ CREATE TABLE UserAccountAssetGroup
 )
 GO
 
+CREATE TRIGGER UserAccountAssetGroup_Defaults
+ON UserAccountAssetGroup
+AFTER INSERT AS
+BEGIN
+    UPDATE UserAccountAssetGroup
+    SET
+        Dashboard = 1,
+        Email = 1
+    WHERE ID IN (SELECT ID FROM inserted)
+END
+GO
+
 CREATE TRIGGER UserAccount_AugmentAllAssetsGroup
 ON UserAccount
 AFTER INSERT
