@@ -4566,8 +4566,8 @@ BEGIN
     SET NOCOUNT ON;
 
 DECLARE @counter INT = 0
-DECLARE @eventDate DATE = (Select max(CAST(Time AS Date)) from AlarmLog)
-DECLARE @numberOfDays INT = DATEDIFF ( day , (Select min(CAST(Time AS Date)) from AlarmLog), @eventDate)
+DECLARE @eventDate DATE = (Select max(CAST(StartTime AS Date)) from AlarmLog)
+DECLARE @numberOfDays INT = DATEDIFF ( day , (Select min(CAST(StartTime AS Date)) from AlarmLog), @eventDate)
 
 SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
 

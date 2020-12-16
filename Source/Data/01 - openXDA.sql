@@ -450,24 +450,6 @@ CREATE TABLE TransformerAttributes
 )
 GO
 
--- Channel Group and Type
-CREATE TABLE ChannelGroup
-(
-	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	Name VARCHAR(200) NOT NULL,
-	Description VARCHAR(MAX) NULL
-)
-GO
-
-CREATE TABLE ChannelGroupType
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    ChannelGroupID INT NOT NULL REFERENCES ChannelGroup(ID),
-    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
-    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
-	DisplayName VARCHAR(20) NOT NULL
-)
-GO
 
 -- Correspoding Views and Trigger 
 CREATE VIEW Line AS
@@ -1190,6 +1172,26 @@ GO
 CREATE NONCLUSTERED INDEX IX_Channel_MeterID_MeasurementTypeID_MeasurementCharacteristicID_PhaseID_HarmonicGroup
 ON Channel(MeterID ASC, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup)
 GO
+
+-- Channel Group and Type
+CREATE TABLE ChannelGroup
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	Name VARCHAR(200) NOT NULL,
+	Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE ChannelGroupType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelGroupID INT NOT NULL REFERENCES ChannelGroup(ID),
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
+	DisplayName VARCHAR(20) NOT NULL
+)
+GO
+
 
 CREATE TABLE AssetChannel
 (
