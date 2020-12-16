@@ -3395,6 +3395,7 @@ SELECT
     Event.SamplesPerSecond,
     Event.SamplesPerCycle,
     Event.Description,
+    Event.FileVersion,
     Event.UpdatedBy,
     MeterLine.LineName,
     Meter.Name AS MeterName,
