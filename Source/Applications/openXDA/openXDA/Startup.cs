@@ -93,7 +93,7 @@ namespace openXDA
             HowlCSVUploadHandler.LogExceptionHandler = Program.Host.HandleException;
 
             // Load ServiceHub SignalR class
-            app.MapSignalR(hubConfig);
+            app.MapSignalR("/signalr",hubConfig);
 
             // Set configuration to use reflection to setup routes
             httpConfig.MapHttpAttributeRoutes(new CustomDirectRouteProvider());

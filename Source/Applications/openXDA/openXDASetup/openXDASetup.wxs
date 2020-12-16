@@ -441,6 +441,7 @@
       <!-- XDA Libraries -->
       <ComponentRef Id="FaultAlgorithms" />
       <ComponentRef Id="FaultData" />
+      <ComponentRef Id="Reports" />
       <ComponentRef Id="openXDA.Adapters" />
       <ComponentRef Id="openXDA.ArcGIS" />
       <ComponentRef Id="openXDA.EMCB" />
@@ -501,7 +502,9 @@
       <ComponentRef Id="EzDNAServApiNet64" />
 
       <!-- Local NuGet Dependencies -->
+      <ComponentRef Id="MathNet.Filtering" />
       <ComponentRef Id="MathNet.Numerics" />
+      <ComponentRef Id="HtmlAgilityPack" />
 
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (provided via GSF.Web) -->
       <ComponentRef Id="Microsoft.AspNet.SignalR.Core" />
@@ -519,12 +522,20 @@
       <ComponentRef Id="Owin" />
       <ComponentRef Id="RazorEngine" />
       <ComponentRef Id="System.Web.Razor" />
+      <ComponentRef Id="System.Net.Http" />
       <ComponentRef Id="System.Net.Http.Formatting" />
       <ComponentRef Id="System.Web.Helpers" />
       <ComponentRef Id="System.Web.Mvc" />
       <ComponentRef Id="System.Web.WebPages.Deployment" />
       <ComponentRef Id="System.Web.WebPages" />
       <ComponentRef Id="System.Web.WebPages.Razor" />
+      <ComponentRef Id="System.Security.AccessControl"/>
+      <ComponentRef Id="System.Security.Cryptography.Algorithms"/>
+      <ComponentRef Id="System.Security.Cryptography.Encoding"/>
+      <ComponentRef Id="System.Security.Cryptography.Primitives"/>
+      <ComponentRef Id="System.Security.Cryptography.X509Certificates"/>
+      <ComponentRef Id="System.Security.Permissions"/>
+      <ComponentRef Id="System.Security.Principal.Windows"/>
 
       <!-- HIDS Dependencies -->
       <ComponentRef Id="HIDS" />
@@ -537,10 +548,24 @@
       <ComponentRef Id="RestSharp" />
       <ComponentRef Id="System.Runtime.CompilerServices.Unsafe" />
       <ComponentRef Id="NodaTime" />
+      <ComponentRef Id="NodaTime.Serialization.JsonNet" />
       <ComponentRef Id="CSVHelper" />
-      
+      <ComponentRef Id="System.Buffers"/>
+      <ComponentRef Id="System.Collections.Immutable"/>
+      <ComponentRef Id="System.Configuration.ConfigurationManager"/>
+      <ComponentRef Id="System.IO"/>
+      <ComponentRef Id="System.Memory"/>
+      <ComponentRef Id="System.Numerics.Vectors"/>
+      <ComponentRef Id="System.Reactive"/>
+      <ComponentRef Id="System.Runtime"/>
+      <ComponentRef Id="System.ValueTuple"/>
+
       <!-- SPCTools Dependencies -->
       <ComponentRef Id="SPCTools" />
+      <ComponentRef Id="JsonSubTypes" />
+      <ComponentRef Id="Microsoft.Extensions.Primitives"/>
+      <ComponentRef Id="Microsoft.Extensions.ObjectPool"/>
+      <ComponentRef Id="Microsoft.Net.Http.Headers"/>
 
       <ComponentRef Id="InstallFolderPermissions"/>
       
@@ -583,6 +608,10 @@
       <Component Id="FaultData">
         <File Id="FaultData.dll" Name="$(var.FaultData.TargetFileName)" Source="$(var.FaultData.TargetPath)" />
       </Component>
+      <Component Id="Reports">
+        <File Id="Reports.dll" Name="Reports.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\Report.NET.0.09.06\lib\net46\Reports.dll" />
+      </Component>
+
       <Component Id="openXDA.Adapters">
         <File Id="openXDA.Adapters.dll" Name="$(var.openXDA.Adapters.TargetFileName)" Source="$(var.openXDA.Adapters.TargetPath)" />
       </Component>
@@ -726,52 +755,124 @@
       </Component>
 
       <!-- Local NuGet Depedencies -->
-      <Component Id="MathNet.Numerics">
-        <File Id="MathNet.Numerics.dll" Name="MathNet.Numerics.dll" Source="$(var.SolutionDir)Dependencies\NuGet\MathNet.Numerics.3.17.0\lib\net40\MathNet.Numerics.dll" />
+      <Component Id="MathNet.Filtering">
+        <File Id="MathNet.Filtering.dll" Name="MathNet.Filtering.dll" Source="$(var.openXDA.TargetDir)MathNet.Filtering.dll" />
       </Component>
+      <Component Id="MathNet.Numerics">
+        <File Id="MathNet.Numerics.dll" Name="MathNet.Numerics.dll" Source="$(var.openXDA.TargetDir)MathNet.Numerics.dll" />
+      </Component>
+      <Component Id="HtmlAgilityPack">
+        <File Id="HtmlAgilityPack.dll" Name="HtmlAgilityPack.dll" Source="$(var.openXDA.TargetDir)HtmlAgilityPack.dll" />
+      </Component>
+      <Component Id="System.Security.AccessControl">
+        <File Id="System.Security.AccessControl.dll" Name="System.Security.AccessControl.dll" Source="$(var.openXDA.TargetDir)System.Security.AccessControl.dll" />
+      </Component>
+      <Component Id="System.Security.Cryptography.Algorithms">
+        <File Id="System.Security.Cryptography.Algorithms.dll" Name="System.Security.Cryptography.Algorithms.dll" Source="$(var.openXDA.TargetDir)System.Security.Cryptography.Algorithms.dll" />
+      </Component>
+      <Component Id="System.Security.Cryptography.Encoding">
+        <File Id="System.Security.Cryptography.Encoding.dll" Name="System.Security.Cryptography.Encoding.dll" Source="$(var.openXDA.TargetDir)System.Security.Cryptography.Encoding.dll" />
+      </Component>
+      <Component Id="System.Security.Cryptography.Primitives">
+        <File Id="System.Security.Cryptography.Primitives.dll" Name="System.Security.Cryptography.Primitives.dll" Source="$(var.openXDA.TargetDir)System.Security.Cryptography.Primitives.dll" />
+      </Component>
+      <Component Id="System.Security.Cryptography.X509Certificates">
+        <File Id="System.Security.Cryptography.X509Certificates.dll" Name="System.Security.Cryptography.X509Certificates.dll" Source="$(var.openXDA.TargetDir)System.Security.Cryptography.X509Certificates.dll" />
+      </Component>
+      <Component Id="System.Security.Permissions">
+        <File Id="System.Security.Permissions.dll" Name="System.Security.Permissions.dll" Source="$(var.openXDA.TargetDir)System.Security.Permissions.dll" />
+      </Component>
+      <Component Id="System.Security.Principal.Windows">
+        <File Id="System.Security.Principal.Windows.dll" Name="System.Security.Principal.Windows.dll" Source="$(var.openXDA.TargetDir)System.Security.Principal.Windows.dll" />
+      </Component>
+
 
       <!-- HIDS Dependencies -->
       <Component Id="HIDS">
-        <File Id="HIDS.dll" Name="HIDS.dll"  Source="$(var.openXDA.TargetPath)" />
+        <File Id="HIDS.dll" Name="HIDS.dll"  Source="$(var.openXDA.TargetDir)HIDS.dll" />
       </Component>
       <Component Id="openXDA.HIDS">
         <File Id="openXDA.HIDS.dll" Name="$(var.openXDA.HIDS.TargetFileName)" Source="$(var.openXDA.HIDS.TargetPath)" />
       </Component>
       <Component Id="System.Threading.Tasks.Extensions">
-        <File Id="System.Threading.Tasks.Extensions.dll" Name="System.Threading.Tasks.Extensions.dll"  Source="$(var.openXDA.TargetPath)" />
+        <File Id="System.Threading.Tasks.Extensions.dll" Name="System.Threading.Tasks.Extensions.dll"  Source="$(var.openXDA.TargetDir)System.Threading.Tasks.Extensions.dll" />
       </Component>
       <Component Id="Microsoft.Bcl.AsyncInterfaces">
-        <File Id="Microsoft.Bcl.AsyncInterfaces.dll" Name="Microsoft.Bcl.AsyncInterfaces.dll" Source="$(var.openXDA.TargetPath)" />
+        <File Id="Microsoft.Bcl.AsyncInterfaces.dll" Name="Microsoft.Bcl.AsyncInterfaces.dll" Source="$(var.openXDA.TargetDir)Microsoft.Bcl.AsyncInterfaces.dll" />
       </Component>
       <Component Id="System.Linq.Async">
-        <File Id="System.Linq.Async.dll" Name="System.Linq.Async.dll" Source="$(var.openXDA.TargetPath)" />
+        <File Id="System.Linq.Async.dll" Name="System.Linq.Async.dll" Source="$(var.openXDA.TargetDir)System.Linq.Async.dll" />
       </Component>
       <Component Id="InfluxDB.Client">
-        <File Id="InfluxDB.Client.dll" Name="InfluxDB.Client.dll" Source="$(var.openXDA.TargetPath)" />
+        <File Id="InfluxDB.Client.dll" Name="InfluxDB.Client.dll" Source="$(var.openXDA.TargetDir)InfluxDB.Client.dll" />
       </Component>
       <Component Id="InfluxDB.Client.Core">
-        <File Id="InfluxDB.Client.Core.dll" Name="InfluxDB.Client.Core.dll" Source="$(var.openXDA.TargetPath)" />
+        <File Id="InfluxDB.Client.Core.dll" Name="InfluxDB.Client.Core.dll" Source="$(var.openXDA.TargetDir)InfluxDB.Client.Core.dll" />
       </Component>
       <Component Id="RestSharp">
-        <File Id="RestSharp.dll" Name="RestSharp.dll" Source="$(var.openXDA.TargetPath)" />
+        <File Id="RestSharp.dll" Name="RestSharp.dll" Source="$(var.openXDA.TargetDir)RestSharp.dll" />
+      </Component>
+      <Component Id="System.Runtime">
+        <File Id="System.Runtime.dll" Name="System.Runtime.dll" Source="$(var.openXDA.TargetDir)System.Runtime.dll" />
       </Component>
       <Component Id="System.Runtime.CompilerServices.Unsafe">
-        <File Id="System.Runtime.CompilerServices.Unsafe.dll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.openXDA.TargetPath)" />
+        <File Id="System.Runtime.CompilerServices.Unsafe.dll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.openXDA.TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
       </Component>
       <Component Id="NodaTime">
-        <File Id="NodaTime.dll" Name="NodaTime.dll" Source="$(var.openXDA.TargetPath)" />
+        <File Id="NodaTime.dll" Name="NodaTime.dll" Source="$(var.openXDA.TargetDir)NodaTime.dll" />
+      </Component>
+      <Component Id="NodaTime.Serialization.JsonNet">
+        <File Id="NodaTime.Serialization.JsonNet.dll" Name="NodaTime.Serialization.JsonNet.dll" Source="$(var.openXDA.TargetDir)NodaTime.Serialization.JsonNet.dll" />
       </Component>
       <Component Id="CSVHelper">
-        <File Id="CSVHelper.dll" Name="CSVHelper.dll" Source="$(var.openXDA.TargetPath)" />
+        <File Id="CsvHelper.dll" Name="CsvHelper.dll" Source="$(var.openXDA.TargetDir)CsvHelper.dll" />
       </Component>
+      <Component Id="System.Buffers">
+        <File Id="System.Buffers.dll" Name="System.Buffers.dll" Source="$(var.openXDA.TargetDir)System.Buffers.dll" />
+      </Component>
+      <Component Id="System.Collections.Immutable">
+        <File Id="System.Collections.Immutable.dll" Name="System.Collections.Immutable.dll" Source="$(var.openXDA.TargetDir)System.Collections.Immutable.dll" />
+      </Component>
+      <Component Id="System.Configuration.ConfigurationManager">
+        <File Id="System.Configuration.ConfigurationManager.dll" Name="System.Configuration.ConfigurationManager.dll" Source="$(var.openXDA.TargetDir)System.Configuration.ConfigurationManager.dll" />
+      </Component>
+      <Component Id="System.IO">
+        <File Id="System.IO.dll" Name="System.IO.dll" Source="$(var.openXDA.TargetDir)System.IO.dll" />
+      </Component>
+      <Component Id="System.Memory">
+        <File Id="System.Memory.dll" Name="System.Memory.dll" Source="$(var.openXDA.TargetDir)System.Memory.dll" />
+      </Component>
+      <Component Id="System.Numerics.Vectors">
+        <File Id="System.Numerics.Vectors.dll" Name="System.Numerics.Vectors.dll" Source="$(var.openXDA.TargetDir)System.Numerics.Vectors.dll" />
+      </Component>
+      <Component Id="System.Reactive">
+        <File Id="System.Reactive.dll" Name="System.Reactive.dll" Source="$(var.openXDA.TargetDir)System.Reactive.dll" />
+      </Component>
+      <Component Id="System.ValueTuple">
+        <File Id="System.ValueTuple.dll" Name="System.ValueTuple.dll" Source="$(var.openXDA.TargetDir)System.ValueTuple.dll" />
+      </Component>
+
 
       <!--SPC Tools Dependencies -->
       <Component Id="SPCTools">
         <File Id="SPCtools.dll" Name="$(var.SPCTools.TargetFileName)" Source="$(var.SPCTools.TargetPath)" />
       </Component>
+      <Component Id="Microsoft.Extensions.Primitives">
+        <File Id="Microsoft.Extensions.Primitives.dll" Name="Microsoft.Extensions.Primitives.dll" Source="$(var.openXDA.TargetDir)Microsoft.Extensions.Primitives.dll" />
+      </Component>
+      <Component Id="Microsoft.Extensions.ObjectPool">
+        <File Id="Microsoft.Extensions.ObjectPool.dll" Name="Microsoft.Extensions.ObjectPool.dll" Source="$(var.openXDA.TargetDir)Microsoft.Extensions.ObjectPool.dll" />
+      </Component>
+      <Component Id="Microsoft.Net.Http.Headers">
+        <File Id="Microsoft.Net.Http.Headers.dll" Name="Microsoft.Net.Http.Headers.dll" Source="$(var.openXDA.TargetDir)Microsoft.Net.Http.Headers.dll" />
+      </Component>
+
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (these are managed as NuGet dependencies to GSF.Web) -->
       <Component Id="Microsoft.AspNet.SignalR.Core">
         <File Id="Microsoft.AspNet.SignalR.Core.dll" Name="Microsoft.AspNet.SignalR.Core.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Microsoft.AspNet.SignalR.Core.dll" />
+      </Component>
+      <Component Id="System.Net.Http">
+        <File Id="System.Net.Http.dll" Name="System.Net.Http.dll" Source="$(var.openXDA.TargetDir)System.Net.Http.dll" />
       </Component>
       <Component Id="System.Net.Http.Formatting">
         <File Id="System.Net.Http.Formatting.dll" Name="System.Net.Http.Formatting.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Net.Http.Formatting.dll" />
@@ -809,6 +910,10 @@
       <Component Id="Newtonsoft.Json">
         <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Newtonsoft.Json.dll" />
       </Component>
+      <Component Id="JsonSubTypes">
+        <File Id="JsonSubTypes.dll" Name="JsonSubTypes.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\JsonSubTypes.1.5.2\lib\net47\JsonSubTypes.dll" />
+      </Component>
+
       <Component Id="Owin">
         <File Id="Owin.dll" Name="Owin.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Owin.dll" />
       </Component>
