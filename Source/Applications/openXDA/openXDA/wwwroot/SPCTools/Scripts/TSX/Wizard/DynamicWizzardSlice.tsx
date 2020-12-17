@@ -316,6 +316,9 @@ export const selectErrors = createSelector(
 
         let setpointsValid = !setPointResults.some(item => item.Value.length == 0 || item.Value.some(pt => isNaN(pt.Value)));
         let setPointScalar = !setPointResults.some(item => !item.IsScalar);
+        let validStartDate = !isNaN(new Date(statisticsRange.start).getTime()) && statisticsRange.start != null;
+        let validEndDate = !isNaN(new Date(statisticsRange.end).getTime()) && statisticsRange.end != null &&
+            (new Date(statisticsRange.end).getDate() > new Date(statisticsRange.start).getDate() || !validStartDate)
         if (step == 'general') {
             result.push({ text: "A Name is required", complete: (name ? 'complete' : 'required') });
             result.push({ text: "At least 1 Meter needs to be selected", complete: (meterCount ? 'complete' : 'required') });
@@ -324,8 +327,9 @@ export const selectErrors = createSelector(
             result.push({ text: "The selection needs to result in at least 1 channel", complete: (channelCount ? 'complete' : 'required') });
         }
         else if (step == 'selectData') {
-            result.push({ text: "A valid start date has to be selected", complete: (statisticsRange.start != "" ? 'complete' : 'required') });
-            result.push({ text: "A valid end date has to be selected", complete: (statisticsRange.end != "" ? 'complete' : 'required') })
+
+            result.push({ text: "A valid start date has to be selected", complete: (validStartDate ? 'complete' : 'required') });
+            result.push({ text: "A valid end date has to be selected", complete: (validEndDate ? 'complete' : 'required') })
             result.push({ text: "At least 1 channel needs to be selected", complete: (statisticsChannelCount > 0 ? 'complete' : 'required') })
             if (!(statisticsChannelCount == channelCount))
                 result.push({ text: "A single threshhold will be required for all channels. Not all channels are used as historic datasource", complete: 'warning' })
@@ -336,8 +340,10 @@ export const selectErrors = createSelector(
                 result.push({ text: "A single scalar setpoint is required for all channels", complete: (setPointScalar ? 'complete' : 'required') })
             else if (!setPointScalar)
                 result.push({ text: "The setpoint expression will result in different threshold for each channel", complete: 'warning' })
-            if (alarmFactors.length > 0)
-                result.push({ text: "No level can be applied at the original setpoint", complete: (!alarmFactors.some(item => item.Factor == 1.0) ? 'complete' : 'required') })
+            if (alarmFactors.length > 0) {
+                result.push({ text: "No level can be applied at the original setpoint", complete: (!alarmFactors.some(item => item.Factor == 1.0) ? 'complete' : 'required') });
+                result.push({ text: "2 levels can note be applied at the same setpoint", complete: (_.uniq(alarmFactors.map(item => item.Factor)).length == alarmFactors.length ? 'complete' : 'required') })
+            }
         }
         return result;
 
