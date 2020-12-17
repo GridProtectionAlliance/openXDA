@@ -78,18 +78,18 @@ export const FunctionHelp = (props: {}) => {
 
 const staticData = [
     { Name: 'Vbase', Description: 'The Base Voltage of the Channel  in kiloVolts (L-L)', Example: 'Vbase+5' },
-    { Name: 'Xmin', Description: 'The Minimum Value during the Trend Data Intervall as Reported by the Field Device', Example: 'Mean(Xmin+5)' },
-    { Name: 'Xavg', Description: 'The Average Value during the Trend Data Intervall as Reported by the Field Device', Example: 'Min(Xmin+5)' },
-    { Name: 'Xmax', Description: 'The Maximum Value during the Trend Data Intervall as Reported by the Field Device', Example: 'Min(Xmin+5)' },
+    { Name: 'Xmin', Description: 'The Minimum Value during the Trend Data Interval  as Reported by the Field Device', Example: 'Mean(Xmin+5)' },
+    { Name: 'Xavg', Description: 'The Average Value during the Trend Data Interval  as Reported by the Field Device', Example: 'Min(Xmin+5)' },
+    { Name: 'Xmax', Description: 'The Maximum Value during the Trend Data Interval  as Reported by the Field Device', Example: 'Min(Xmin+5)' },
     { Name: 'Abs', Description: 'Gets the absolute value of the content', Example: 'Abs(Vbase)' },
     { Name: 'Min', Description: 'Finds the Minimum Value in the entire Dataset', Example: 'Min(Vbase)' },
     { Name: 'Max', Description: 'Finds the Maximum Value in the entire Dataset', Example: 'Max(Vbase*Xmin)' },
-    { Name: 'Mean', Description: 'Finds the Average Value in the entire Datasete', Example: 'Mean(Vbase*Xmax)' },
+    { Name: 'Mean', Description: 'Finds the Average Value in the entire Dataset', Example: 'Mean(Vbase*Xmax)' },
     { Name: 'StDev', Description: 'Finds the Standard Deviation of the entire Dataset', Example: 'StDev(Xmin+5)' },
-    { Name: 'ChannelMin', Description: 'Finds the Minimum Value in the entire Dataset for each channel Seperately', Example: 'ChannelMin(Vbase)' },
-    { Name: 'ChannelMax', Description: 'Finds the Maximum Value in the entire Dataset for each channel Seperately', Example: 'ChannelMax(Vbase*Xmin)' },
-    { Name: 'ChannelMean', Description: 'Finds the Average Value in the entire Datasete for each channel Seperately', Example: 'ChannelMean(Vbase*Xmax)' },
-    { Name: 'ChannelStDev', Description: 'Finds the Standard Deviation of the entire Dataset for each channel Seperately', Example: 'ChannelStDev(Xmin+5)' },
+    { Name: 'ChannelMin', Description: 'Finds the Minimum Value in the entire Dataset for each channel separately', Example: 'ChannelMin(Vbase)' },
+    { Name: 'ChannelMax', Description: 'Finds the Maximum Value in the entire Dataset for each channel separately', Example: 'ChannelMax(Vbase*Xmin)' },
+    { Name: 'ChannelMean', Description: 'Finds the Average Value in the entire Dataset for each channel separately', Example: 'ChannelMean(Vbase*Xmax)' },
+    { Name: 'ChannelStDev', Description: 'Finds the Standard Deviation of the entire Dataset for each channel separately', Example: 'ChannelStDev(Xmin+5)' },
 ] as IDocumentation[]
 
 const dynamicData = [
