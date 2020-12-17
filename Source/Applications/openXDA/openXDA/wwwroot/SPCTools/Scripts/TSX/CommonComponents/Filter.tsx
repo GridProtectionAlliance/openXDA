@@ -41,7 +41,7 @@ export default function Filter<T>(props: IProps<T>) {
     // Update SearchFilter if there are 3+ Character and only do it every 500ms to avoid hammering the server while typing
     React.useEffect(() => {
         let handle = null;
-        if (search.length > 3)
+        if (search.length > 0)
             handle = setTimeout(() => {
                 setSearchFilter({ FieldName: props.defaultCollumn.key, Operator: 'LIKE', Type: props.defaultCollumn.type, SearchText: (search + '*') })
             }, 500);
