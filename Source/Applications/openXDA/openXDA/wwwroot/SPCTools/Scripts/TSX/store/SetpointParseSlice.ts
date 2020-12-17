@@ -54,7 +54,8 @@ export const SetpointParseSlice = createSlice({
         Status: 'idle',
         Response: undefined,
         Error: null,
-        AlarmValueResults: []
+        AlarmValueResults: [],
+        RequestID: ''
 
     } as DynamicWizzard.ISetPointParseState,
     reducers: {
@@ -77,10 +78,6 @@ export const SetpointParseSlice = createSlice({
     extraReducers: (builder) => {
 
         builder.addCase(FetchParsedSetPoint.fulfilled, (state, action) => {
-            state.Status = 'idle';
-            state.Error = null;
-
-            state.Response = action.payload.content;
 
             let index = state.AlarmValueResults.findIndex(item => item.StartHour == action.meta.arg.StartHour && item.AlarmDayID == action.meta.arg.AlarmDayID);
             if (index > -1)
@@ -91,12 +88,21 @@ export const SetpointParseSlice = createSlice({
                     IsScalar: action.payload.content.IsScalar
                 };
             
-               
+            if (state.RequestID != action.meta.requestId)
+                return state;
+
+            state.Status = 'idle';
+            state.Error = null;
+
+            state.Response = action.payload.content;
         });
         builder.addCase(FetchParsedSetPoint.pending, (state, action) => {
             state.Status = 'loading';
+            state.RequestID = action.meta.requestId;
         });
         builder.addCase(FetchParsedSetPoint.rejected, (state, action) => {
+            if (state.RequestID != action.meta.requestId)
+                return state
             state.Status = 'error';
             state.Error = action.error.message;
 
