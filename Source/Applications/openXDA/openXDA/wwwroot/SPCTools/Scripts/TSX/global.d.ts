@@ -236,6 +236,7 @@ export namespace DynamicWizzard {
         Error: null | string,
         Response: ITokenParseResponse,
         AlarmValueResults: IAlarmValueChannel[],
+        RequestID: string
     }
 
     export interface ITokenParseResponse {
