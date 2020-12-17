@@ -67,6 +67,12 @@ const GeneralSettings = (props: IProps) => {
 
     }, [selectedMeter]);
 
+    //Set Alarm Parameters to valid start Values
+    React.useEffect(() => {
+        if (alarmTypes.findIndex(item => item.ID == group.AlarmTypeID) == -1)
+            dispatch(updateAlarmGroup({ ...group, AlarmTypeID: alarmTypes[0].ID }));
+    }, [])
+
     return (
         <div style={{ width: '100%', height: '100%' }}>
             <div className="row" style={{ margin: 0 }}>
@@ -214,7 +220,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                         <button type="button" className="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div className="modal-body">
-                        <FilterWindow<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType }} SetFilter={setFilters} />
+                        <FilterWindow<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType }} Direction={'right'} SetFilter={setFilters} />
                         <MultiSelectTable<openXDA.IMeter>
                             cols={[
                                 { key: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
@@ -384,6 +390,12 @@ const MeasurmentTypeSelect = (props: {}) => {
         dispatch(FetchAvailableVoltages());
     }, [measurementTypeID]);
 
+    //Set Alarm Parameters to valid start Values
+    React.useEffect(() => {
+        if (measurementTypes.findIndex(item => item.ID == measurementTypeID) == -1)
+            dispatch(updateMeasurmentTypeID(measurementTypes[0].ID));
+    }, [])
+
     return <div className="form-group">
         <label>Measurment</label>
         <select
@@ -500,6 +512,12 @@ const IntervallDataSelect = (props: {}) => {
     React.useEffect(() => {
         dispatch(FetchAffectedChannels());
     }, [seriesTypeID])
+
+    //Set Alarm Parameters to valid start Values
+    React.useEffect(() => {
+        if (seriesTypes.findIndex(item => item.ID == seriesTypeID) == -1)
+            dispatch(updateSeriesTypeID(seriesTypes[0].ID));
+    }, [])
 
     return (
     <fieldset className="border" style={{ padding: '10px' }}>
