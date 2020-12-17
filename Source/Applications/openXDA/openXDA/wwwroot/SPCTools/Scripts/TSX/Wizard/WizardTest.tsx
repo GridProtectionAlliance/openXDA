@@ -335,7 +335,7 @@ const WizardTest = (props: IProps) => {
             </div>
             <div className="row" style={{ margin: 0 }}>
                 <div className="col">
-                    {selectedChannel != -1 && (loading == 'idle' || loading == 'changed') ? <AlarmTrendingCard Tend={effectiveTimeRange.end} Tstart={effectiveTimeRange.start} ChannelID={selectedChannel} Remove={() => { }} /> : null}
+                    {selectedChannel != -1 && (loading == 'idle' || loading == 'changed') ? <AlarmTrendingCard Tend={effectiveTimeRange.end} Tstart={effectiveTimeRange.start} ChannelID={selectedChannel} /> : null}
                 </div>
             </div>
             

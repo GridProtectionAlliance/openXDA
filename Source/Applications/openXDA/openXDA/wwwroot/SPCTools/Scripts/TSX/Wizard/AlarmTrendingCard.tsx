@@ -33,7 +33,7 @@ import { SelectSeverities } from "../store/SeveritySlice";
 import { SelectAlarmDays } from "../store/AlarmDaySlice";
 
 
-interface IProps { ChannelID: number, Remove: () => void, Tstart: string, Tend: string }
+interface IProps { ChannelID: number, Remove?: () => void, Tstart: string, Tend: string }
 
 export const AlarmTrendingCard = (props: IProps) => {
     const memChannelSelector = React.useMemo<(state) => openXDA.IChannel>(() => {
@@ -220,34 +220,7 @@ export const AlarmTrendingCard = (props: IProps) => {
 
         return result
     }
-/*
-    React.useEffect(() => {
 
-        const Tstart = (data.length > 0 ? data[0].data[0][0] : 0);
-        const Tend = (data.length > 0 ? data[0].data[data[0].data.length - 1][0] : 1500);
-
-        let sp = {
-            color: severities.find(item => item.ID == secerityID).Color,
-            includeLegend: false,
-            label: "",
-            lineStyle: ':',
-            data: [[Tstart, props.Threshhold], [Tend, props.Threshhold]],
-            opacity: 1.0
-        } as ITrendSeries;
-
-        setThreshold([sp, ...factors.filter(f => f.Value != 1.0).map(f => {
-            return {
-                color: severities.find(item => item.ID == f.SeverityID).Color,
-                includeLegend: false,
-                label: "",
-                lineStyle: ':',
-                data: [[Tstart, props.Threshhold * f.Value], [Tend, props.Threshhold * f.Value]],
-                opacity: 1.0
-            } as ITrendSeries;
-        })])
-
-    }, [props.Threshhold, secerityID, factors, severities, data])
-    */
     function getData(channelId: number): JQuery.jqXHR<Array<number[]>> {
         let handle = $.ajax({
             type: "POST",
@@ -279,7 +252,7 @@ export const AlarmTrendingCard = (props: IProps) => {
             <div className="row" style={{ margin: 0, width: '100%', textAlign: 'center', background: '#bbbbbb',}}>
                 <div className="col-12">
                     <h5 className='float-left'> {(channel != undefined ? channel.MeterName + "-" + channel.Name : "Overview")}</h5>
-                    <p className='float-right'> <i className="fa fa-trash-o" onClick={() => props.Remove()}></i> </p>
+                    <p className='float-right'> {props.Remove != undefined? <i className="fa fa-trash-o" onClick={() => props.Remove()}></i> : null} </p>
                 </div>
             </div>
             <div className="row" style={{ margin: 0, width: '100%', textAlign: 'center', background: '#bbbbbb', }}>
