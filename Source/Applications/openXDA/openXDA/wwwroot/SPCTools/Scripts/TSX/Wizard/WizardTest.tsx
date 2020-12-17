@@ -198,6 +198,10 @@ const WizardTest = (props: IProps) => {
         ])
     }
 
+    let validStartDate = !isNaN(new Date(timeRange.start).getTime()) && timeRange.start != null;
+    let validEndDate = !isNaN(new Date(timeRange.end).getTime()) && timeRange.end != null &&
+        (new Date(timeRange.end).getDate() > new Date(timeRange.start).getDate() || !validStartDate)
+
     return (
         <div style={{ width: '100%', height: '100%' }}>
             <div className="row" style={{ margin: 0 }}>
@@ -214,7 +218,7 @@ const WizardTest = (props: IProps) => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            <button type="button" className={"btn btn-primary btn-block"} disabled={loading != 'changed'} onClick={() => {
+                            <button type="button" className={"btn btn-primary btn-block"} disabled={loading != 'changed' || !validEndDate || !validStartDate} onClick={() => {
                                 if (handle.current != undefined && handle.current.abort != undefined)
                                     handle.current.abort();
                                 handle.current = LoadTest();
