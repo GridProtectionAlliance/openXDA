@@ -48,8 +48,7 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="TCSAM">
-      <HintPath>..\..\..\..\..\Program Files\EPRI\TCSAM\application\TCSAM.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>C:\Program Files\EPRI\TCSAM\application\TCSAM.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
