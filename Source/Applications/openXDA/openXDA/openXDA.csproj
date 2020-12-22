@@ -198,6 +198,10 @@
     <Reference Include="Owin">
       <HintPath>..\..\..\Dependencies\GSF\Owin.dll</HintPath>
     </Reference>
+    <Reference Include="RazorEngine, Version=3.10.0.0, Culture=neutral, PublicKeyToken=9ee697374c7e744a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Dependencies\GSF\RazorEngine.dll</HintPath>
+    </Reference>
     <Reference Include="RestSharp, Version=106.6.10.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\RestSharp.106.6.10\lib\net452\RestSharp.dll</HintPath>
     </Reference>
@@ -339,8 +343,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppModel.cs" />
-    <Compile Include="Configuration\CategorizedSetting.cs" />
-    <Compile Include="Configuration\FileShare.cs" />
     <Compile Include="Controllers\Config\EmailTemplateController.cs" />
     <Compile Include="Controllers\Config\QueryController.cs" />
     <Compile Include="Controllers\DataPusher\DataPusherController.cs" />
@@ -351,19 +353,21 @@
     <Compile Include="Controllers\WebAPI\HIDSController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
-    <Compile Include="DataObjectWrapper.cs" />
+    <Compile Include="DatabaseConnectionFactory.cs" />
     <Compile Include="DebugHost.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="DebugHost.Designer.cs">
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
-    <Compile Include="CapBankAnalyticEngine.cs" />
-    <Compile Include="EventEmailEngine.cs" />
-    <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
     <Compile Include="Logging\FileSkippedExceptionFilter.cs" />
     <Compile Include="ServiceConnection.cs" />
     <Compile Include="ServiceHub.cs" />
+    <Compile Include="WebHosting\HostAuthenticationMiddleware.cs" />
+    <Compile Include="WebHosting\UseWhenExtensions.cs" />
+    <Compile Include="WebHosting\XDAWebHost.cs" />
+    <Compile Include="WebHosting\XDAControllerActivator.cs" />
+    <Compile Include="WebHosting\XDAControllerSelector.cs" />
     <Compile Include="wwwroot\Config\EmailTemplateHandler.ashx.cs">
       <DependentUpon>EmailTemplateHandler.ashx</DependentUpon>
     </Compile>
@@ -380,8 +384,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Configuration\SystemSettings.cs" />
-    <Compile Include="Startup.cs" />
     <Compile Include="wwwroot\Config\HowlCSVDownloadHandler.ashx.cs">
       <DependentUpon>HowlCSVDownloadHandler.ashx</DependentUpon>
     </Compile>
@@ -431,6 +433,10 @@
       <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
       <Name>openHistorian.XDALink</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Configuration\openXDA.Configuration.csproj">
+      <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
+      <Name>openXDA.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.HIDS\openXDA.HIDS.csproj">
       <Project>{2528ec50-0be9-4a9f-8ac3-77fc42afe8ce}</Project>
       <Name>openXDA.HIDS</Name>
@@ -446,6 +452,10 @@
     <ProjectReference Include="..\..\..\Libraries\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Nodes\openXDA.Nodes.csproj">
+      <Project>{565e38b7-24c0-48b6-9f28-2521b2ccd87d}</Project>
+      <Name>openXDA.Nodes</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.PQTrendingWebReport\openXDA.PQTrendingWebReport.csproj">
       <Project>{2635efe2-ef6f-4110-9229-8d91f02df143}</Project>

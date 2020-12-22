@@ -23,25 +23,25 @@
 
 using System;
 using System.Threading.Tasks;
+using log4net;
 using Microsoft.AspNet.SignalR;
 
 namespace openXDA
 {
     public class ServiceHub : Hub
     {
-        #region [ Members ]
-
-        // Fields
-        private readonly ServiceConnection m_serviceConnection;
-
-        #endregion
-
         #region [ Constructors ]
 
         public ServiceHub()
         {
-            m_serviceConnection = ServiceConnection.Default;
+            ServiceConnection = ServiceConnection.Default;
         }
+
+        #endregion
+
+        #region [ Properties ]
+
+        private ServiceConnection ServiceConnection { get; }
 
         #endregion
 
@@ -50,7 +50,7 @@ namespace openXDA
         public override Task OnConnected()
         {
             s_connectCount++;
-            Program.Host.LogStatusMessage($"ServiceHub connect by {Context.User?.Identity?.Name ?? "Undefined User"} [{Context.ConnectionId}] - count = {s_connectCount}");
+            Log.Info($"ServiceHub connect by {Context.User?.Identity?.Name ?? "Undefined User"} [{Context.ConnectionId}] - count = {s_connectCount}");
             return base.OnConnected();
         }
 
@@ -59,8 +59,8 @@ namespace openXDA
             if (stopCalled)
             {
                 s_connectCount--;
-                m_serviceConnection.Disconnect(Context.ConnectionId);
-                Program.Host.LogStatusMessage($"ServiceHub disconnect by {Context.User?.Identity?.Name ?? "Undefined User"} [{Context.ConnectionId}] - count = {s_connectCount}");
+                ServiceConnection.Disconnect(Context.ConnectionId);
+                Log.Info($"ServiceHub disconnect by {Context.User?.Identity?.Name ?? "Undefined User"} [{Context.ConnectionId}] - count = {s_connectCount}");
             }
 
             return base.OnDisconnected(stopCalled);
@@ -76,22 +76,22 @@ namespace openXDA
         /// Gets current performance statistics for service.
         /// </summary>
         /// <returns>Current performance statistics for service.</returns>
-        public string GetPerformanceStatistics() => Program.Host.PerformanceStatistics;
+        public Task<string> GetPerformanceStatistics() =>
+            ServiceConnection.Host.QueryEngineStatusAsync();
 
         /// <summary>
         /// Sends a service command.
         /// </summary>
         /// <param name="command">Command string.</param>
-        public void SendCommand(string command)
-        {
-            m_serviceConnection.SendCommand(Context.ConnectionId, Context.User, command);
-        }
+        public void SendCommand(string command) =>
+            ServiceConnection.SendCommand(Context.ConnectionId, Context.User, command);
 
         #endregion
 
         #region [ Static ]
 
         // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ServiceHub));
         private static volatile int s_connectCount;
 
         #endregion

@@ -33,7 +33,6 @@
   <ItemGroup>
     <Reference Include="EzDNAApiNet64">
       <HintPath>..\..\Dependencies\eDNA\EzDNAApiNet64.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="GSF.COMTRADE">
       <HintPath>..\..\Dependencies\GSF\GSF.COMTRADE.dll</HintPath>
@@ -84,13 +83,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration\BreakerSettings.cs" />
-    <Compile Include="Configuration\COMTRADESettings.cs" />
-    <Compile Include="Configuration\EDNASettings.cs" />
-    <Compile Include="Configuration\EmailSettings.cs" />
-    <Compile Include="Configuration\EMAXSettings.cs" />
-    <Compile Include="Configuration\FaultLocationSettings.cs" />
-    <Compile Include="Configuration\HistorianSettings.cs" />
     <Compile Include="Configuration\MeterSettingsSheet.cs" />
     <Compile Include="DataAnalysis\CycleDataGroup.cs" />
     <Compile Include="DataAnalysis\DataGroup.cs" />
@@ -118,11 +110,11 @@
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TVA\EPRICapBankAnalytics.cs" />
     <Compile Include="DataOperations\TVA\StructureQueryOperation.cs" />
+    <Compile Include="DataReaders\DataReaderFactory.cs" />
     <Compile Include="DataReaders\SELLDPReader.cs" />
     <Compile Include="DataReaders\PQubeTrendingDataCSVReader.cs" />
     <Compile Include="DataReaders\IGridPQDIFReader.cs" />
     <Compile Include="DataReaders\PQube\PQubeReader.cs" />
-    <Compile Include="DataReaders\PQViewDIFReader.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />
     <Compile Include="DataResources\BreakerDataResource.cs" />
     <Compile Include="DataResources\GTC\BreakerRestrikeResource.cs" />
@@ -161,8 +153,8 @@
     <Compile Include="DataWriters\PQIGenerator.cs" />
     <None Include="DataWriters\XMLWriter.cs" />
     <Compile Include="DataSets\MeterDataSet.cs" />
-    <Compile Include="Configuration\IConfigurationLoader.cs" />
     <Compile Include="DataWriters\StructureLocationGenerator.cs" />
+    <Compile Include="PluginFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -184,9 +176,9 @@
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\openXDA.DataPusher\openXDA.DataPusher.csproj">
-      <Project>{666EB8A6-FBA9-454C-8537-9113C2EE68D4}</Project>
-      <Name>openXDA.DataPusher</Name>
+    <ProjectReference Include="..\openXDA.Configuration\openXDA.Configuration.csproj">
+      <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
+      <Name>openXDA.Configuration</Name>
     </ProjectReference>
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
@@ -202,7 +194,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Dependencies\eDNA\*" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <None Include="..\..\Dependencies\eDNA\*" Exclude="..\..\Dependencies\eDNA\EzDNAApiNet64.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <EmbeddedResource Include="DataOperations\TVA\SmartFawg.sql" />
     <Content Include="DataWriters\DisturbanceEmailTemplate.xslt" />
     <Content Include="DataWriters\FaultEmailTemplate.xslt">

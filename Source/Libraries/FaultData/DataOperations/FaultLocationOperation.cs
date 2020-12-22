@@ -23,16 +23,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.ComponentModel;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Collections;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
-using openXDA.DataPusher;
+using openXDA.Configuration;
 using openXDA.Model;
 using Fault = FaultData.DataAnalysis.Fault;
 using FaultGroup = FaultData.DataAnalysis.FaultGroup;
@@ -291,24 +292,15 @@ namespace FaultData.DataOperations
 
         // Fields
         private FaultSummarizer m_faultSummarizer;
-        private double m_systemFrequency;
 
         #endregion
 
         #region [ Properties ]
 
-        [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
         #endregion
 
@@ -322,7 +314,7 @@ namespace FaultData.DataOperations
 
             Log.Info("Executing operation to load fault location data into the database...");
 
-            m_faultSummarizer = new FaultSummarizer(m_systemFrequency);
+            m_faultSummarizer = new FaultSummarizer(DataAnalysisSettings.SystemFrequency);
             m_faultSummarizer.MeterDataSet = meterDataSet;
 
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)

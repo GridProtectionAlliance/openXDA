@@ -22,7 +22,11 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using GSF.Data.Model;
+using GSF.IO.Checksums;
 
 namespace openXDA.Model
 {
@@ -46,5 +50,43 @@ namespace openXDA.Model
         public DateTime LastWriteTime { get; set; }
 
         public DateTime LastAccessTime { get; set; }
+
+        [NonRecordField]
+        public FileBlob FileBlob { get; set; }
+
+        public static int GetHash(string filePath)
+        {
+            Encoding utf8 = new UTF8Encoding(false);
+            byte[] pathData = utf8.GetBytes(filePath);
+            return unchecked((int)Crc32.Compute(pathData, 0, pathData.Length));
+        }
+    }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static DataFile QueryDataFile(this TableOperations<DataFile> dataFileTable, string filePath)
+        {
+            int hashCode = DataFile.GetHash(filePath);
+            DataFile dataFile = QueryDataFile(dataFileTable, filePath, hashCode);
+
+            if (dataFile != null)
+                return dataFile;
+
+            int legacyHashCode = filePath.GetHashCode();
+            dataFile = QueryDataFile(dataFileTable, filePath, legacyHashCode);
+
+            if (dataFile == null)
+                return null;
+
+            dataFile.FilePathHash = hashCode;
+            dataFileTable.UpdateRecord(dataFile);
+            return dataFile;
+        }
+
+        private static DataFile QueryDataFile(TableOperations<DataFile> dataFileTable, string filePath, int hashCode)
+        {
+            IEnumerable<DataFile> dataFiles = dataFileTable.QueryRecordsWhere("FilePathHash = {0}", hashCode);
+            return dataFiles.FirstOrDefault(dataFile => dataFile.FilePath == filePath);
+        }
     }
 }

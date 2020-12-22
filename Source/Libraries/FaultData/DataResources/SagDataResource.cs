@@ -22,73 +22,30 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
-using System.Configuration;
+using System.ComponentModel;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using GSF.Configuration;
+using openXDA.Configuration;
 
 namespace FaultData.DataResources
 {
     public class SagDataResource : DataResourceBase<MeterDataSet>
     {
-        #region [ Members ]
-
-        // Fields
-        private double m_systemFrequency;
-        private double m_sagThreshold;
-        private double m_interruptionThreshold;
-
-        private Dictionary<DataGroup, List<Disturbance>> m_sags;
-
-        #endregion
-
         #region [ Properties ]
 
-        [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
-        [Setting]
-        public double SagThreshold
-        {
-            get
-            {
-                return m_sagThreshold;
-            }
-            set
-            {
-                m_sagThreshold = value;
-            }
-        }
+        public Dictionary<DataGroup, List<Disturbance>> Sags { get; private set; }
 
-        [Setting]
-        public double InterruptionThreshold
-        {
-            get
-            {
-                return m_interruptionThreshold;
-            }
-            set
-            {
-                m_interruptionThreshold = value;
-            }
-        }
+        private double SagThreshold =>
+            DataAnalysisSettings.SagThreshold;
 
-        public Dictionary<DataGroup, List<Disturbance>> Sags
-        {
-            get
-            {
-                return m_sags;
-            }
-        }
+        private double InterruptionThreshold =>
+            DataAnalysisSettings.InterruptionThreshold;
 
         #endregion
 
@@ -96,23 +53,19 @@ namespace FaultData.DataResources
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
-            VoltageDisturbanceAnalyzer voltageDisturbanceAnalyzer;
-
-            voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsSag, IsMoreSevere, EventClassification.Sag);
+            EventClassification classification = EventClassification.Sag;
+            VoltageDisturbanceAnalyzer voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsSag, IsMoreSevere, classification);
             voltageDisturbanceAnalyzer.Initialize(meterDataSet);
 
-            m_sags = voltageDisturbanceAnalyzer.Disturbances;
+            Sags = voltageDisturbanceAnalyzer.Disturbances;
         }
 
-        private bool IsSag(DataPoint dataPoint)
-        {
-            return m_interruptionThreshold < dataPoint.Value && dataPoint.Value <= m_sagThreshold;
-        }
+        private bool IsSag(DataPoint dataPoint) =>
+            InterruptionThreshold < dataPoint.Value &&
+            dataPoint.Value <= SagThreshold;
 
-        private bool IsMoreSevere(double mag1, double mag2)
-        {
-            return mag1 < mag2;
-        }
+        private bool IsMoreSevere(double mag1, double mag2) =>
+            mag1 < mag2;
 
         #endregion
     }

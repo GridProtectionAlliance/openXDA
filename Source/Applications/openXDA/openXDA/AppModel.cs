@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Text;
 using GSF.Data;
 using GSF.Data.Model;
@@ -36,45 +37,41 @@ namespace openXDA.Model
     /// <remarks>
     /// Custom view models should inherit from AppModel because the "Global" property is used by Layout.cshtml.
     /// </remarks>
-    public class AppModel
+    public class AppModel : IDisposable
     {
-        #region [Members]
+        #region [ Members ]
+
         private DataContext m_dataContext;
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new <see cref="AppModel"/>.
-        /// </summary>
-        public AppModel()
-        {
-            Global = (object)Program.Host.Model != null ? Program.Host.Model.Global : new GlobalSettings();
-        }
 
         #endregion
-        
+
         #region [ Properties ]
 
         /// <summary>
         /// Gets global settings for application.
         /// </summary>
-        public GlobalSettings Global
-        {
-            get;
-        }
+        public GlobalSettings Global { get; } = new GlobalSettings();
 
         // Gets reference to MiPlan context, creating it if needed
         public DataContext DataContext => m_dataContext ?? (m_dataContext = new DataContext("systemSettings"));
 
+        #endregion
+
+        #region [ Methods ]
+
+        public void Dispose() =>
+            m_dataContext?.Dispose();
+
+        public bool DetectIE(string userAgent) =>
+            userAgent.Contains("MSIE ") ||
+            userAgent.Contains("Trident/") ||
+            userAgent.Contains("Edge/");
 
         #endregion
 
-        #region [Methods]
-        protected void Dispose()
-        {
-            m_dataContext?.Dispose();
-        }
+        #region [ Static ]
+
+        // Static Methods
 
         /// <summary>
         /// Renders client-side Javascript function for looking up single values from a table.
@@ -112,14 +109,6 @@ namespace openXDA.Model
             return javascript.ToString();
         }
 
-
-        public bool DetectIE(string userAgent)
-        {
-            return userAgent.Contains("MSIE ") || userAgent.Contains("Trident/") || userAgent.Contains("Edge/");
-        }
-        #endregion
-
-        #region [ Static  ]
         public static bool ValidateAdminRequestForRole(string role, string userName)
         {
             string userid = UserInfo.UserNameToSID(userName);

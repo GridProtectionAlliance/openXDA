@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
@@ -36,6 +37,11 @@ namespace openXDA.Controllers.Config
     [RoutePrefix("api/Config/EmailTemplate")]
     public class EmailTemplateController : ApiController
     {
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
+        public EmailTemplateController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
         [Route("{templateID}"), HttpGet]
         public List<EventView> Get(int templateID)
         {
@@ -45,7 +51,7 @@ namespace openXDA.Controllers.Config
             if (!int.TryParse(countValue, out int count))
                 count = 50;
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 string getTriggerSQL =
                     "SELECT TriggersEmailSQL " +

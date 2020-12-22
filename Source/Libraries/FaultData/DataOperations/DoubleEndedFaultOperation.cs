@@ -24,11 +24,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using FaultAlgorithms;
-using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
@@ -37,6 +36,7 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 using CycleData = FaultAlgorithms.CycleData;
 using Fault = FaultData.DataAnalysis.Fault;
@@ -203,59 +203,19 @@ namespace FaultData.DataOperations
             #endregion
         }
 
-        // Fields
-        private double m_timeTolerance;
-        private double m_systemFrequency;
-        private FaultLocationSettings m_faultLocationSettings;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        public DoubleEndedFaultOperation()
-        {
-            m_faultLocationSettings = new FaultLocationSettings();
-        }
-
         #endregion
 
         #region [ Properties ]
 
-        [Setting]
-        public double TimeTolerance
-        {
-            get
-            {
-                return m_timeTolerance;
-            }
-            set
-            {
-                m_timeTolerance = value;
-            }
-        }
-
-        [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
         [Category]
-        [SettingName(FaultLocationSettings.CategoryName)]
-        public FaultLocationSettings FaultLocationSettings
-        {
-            get
-            {
-                return m_faultLocationSettings;
-            }
-        }
+        [SettingName(FaultLocationSection.CategoryName)]
+        public FaultLocationSection FaultLocationSettings { get; }
+            = new FaultLocationSection();
 
         #endregion
 
@@ -279,11 +239,12 @@ namespace FaultData.DataOperations
                 TableOperations<FaultCurve> faultCurveTable = new TableOperations<FaultCurve>(connection);
 
                 List<MappingNode> processedMappingNodes = new List<MappingNode>();
+                double timeTolerance = DataAnalysisSettings.TimeTolerance;
 
                 foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
                 {
                     // Get the full collection of events from the database that comprise the system event that overlaps this time range
-                    List<Event> dbSystemEvent = eventTable.GetSystemEvent(systemEvent.StartTime, systemEvent.EndTime, m_timeTolerance);
+                    List<Event> dbSystemEvent = eventTable.GetSystemEvent(systemEvent.StartTime, systemEvent.EndTime, timeTolerance);
 
                     foreach (IGrouping<int, Event> lineGrouping in dbSystemEvent.GroupBy(evt => evt.AssetID))
                     {
@@ -373,8 +334,9 @@ namespace FaultData.DataOperations
                                 continue;
 
                             // Initialize the mappings with additional data needed for double-ended fault location
-                            mapping.Left.Initialize(connection, leftCycleDataGroup, m_systemFrequency);
-                            mapping.Right.Initialize(connection, rightCycleDataGroup, m_systemFrequency);
+                            double systemFrequency = DataAnalysisSettings.SystemFrequency;
+                            mapping.Left.Initialize(connection, leftCycleDataGroup, systemFrequency);
+                            mapping.Right.Initialize(connection, rightCycleDataGroup, systemFrequency);
 
                             // Execute the double-ended fault location algorithm
                             ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Left, mapping.Right);
@@ -438,7 +400,7 @@ namespace FaultData.DataOperations
                     // invalidated due to a high impedance so we only check whether it has been suppressed
                     bool faultValidationResult = !fault.IsSuppressed;
 
-                    if (faultDetectionResult == false || (m_faultLocationSettings.UseDefaultFaultDetectionLogic && !faultValidationResult))
+                    if (faultDetectionResult == false || (FaultLocationSettings.UseDefaultFaultDetectionLogic && !faultValidationResult))
                         return false;
                 }
 
@@ -558,7 +520,10 @@ namespace FaultData.DataOperations
             if ((object)evt == null)
                 return null;
 
-            List<byte[]> timeDomainData = ChannelData.DataFromEvent(eventID, "systemSettings");
+            IDbConnection dbConnection = connection.Connection;
+            Type adapterType = typeof(SqlDataAdapter);
+            Func<AdoDataConnection> connectionFactory = () => new AdoDataConnection(dbConnection, adapterType, false);
+            List<byte[]> timeDomainData = ChannelData.DataFromEvent(eventID, connectionFactory);
                         
 
             TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
@@ -571,7 +536,10 @@ namespace FaultData.DataOperations
 
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(meter, timeDomainData);
-            return Transform.ToVICycleDataGroup(new VIDataGroup(dataGroup), SystemFrequency);
+
+            VIDataGroup viDataGroup = new VIDataGroup(dataGroup);
+            double systemFrequency = DataAnalysisSettings.SystemFrequency;
+            return Transform.ToVICycleDataGroup(viDataGroup, systemFrequency);
         }
 
         private CycleData GetCycleAt(VICycleDataGroup viCycleDataGroup, int index)
@@ -611,8 +579,8 @@ namespace FaultData.DataOperations
 
         private bool IsValid(double faultDistance, double lineLength)
         {
-            double maxDistance = m_faultLocationSettings.MaxFaultDistanceMultiplier * lineLength;
-            double minDistance = m_faultLocationSettings.MinFaultDistanceMultiplier * lineLength;
+            double maxDistance = FaultLocationSettings.MaxFaultDistanceMultiplier * lineLength;
+            double minDistance = FaultLocationSettings.MinFaultDistanceMultiplier * lineLength;
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 

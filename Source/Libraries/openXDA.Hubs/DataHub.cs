@@ -26,41 +26,41 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
-using FaultData.DataAnalysis;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Identity;
+using GSF.Security;
 using GSF.Security.Model;
 using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
+using log4net;
 using Microsoft.AspNet.SignalR;
+using Newtonsoft.Json.Linq;
 using openHistorian.XDALink;
 using openXDA.DataPusher;
 using openXDA.Model;
+using Asset = openXDA.Model.Asset;
 using Channel = openXDA.Model.Channel;
 using ChannelDetail = openXDA.Model.ChannelDetail;
 using Disturbance = openXDA.Model.Disturbance;
 using Event = openXDA.Model.Event;
 using Fault = openXDA.Model.Fault;
-using Asset = openXDA.Model.Asset;
-using Meter = openXDA.Model.Meter;
-using MeterDetail = openXDA.Model.MeterDetail;
-using MeterAsset = openXDA.Model.MeterAsset;
 using Location = openXDA.Model.Location;
+using Meter = openXDA.Model.Meter;
+using MeterAsset = openXDA.Model.MeterAsset;
 using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
+using MeterDetail = openXDA.Model.MeterDetail;
 using Setting = openXDA.Model.Setting;
-using GSF.Security;
-using Newtonsoft.Json.Linq;
-using System.Text.RegularExpressions;
-using System.Collections;
 
 namespace openXDA.Hubs
 {
@@ -69,40 +69,17 @@ namespace openXDA.Hubs
     {
         // Client-side script functionality
         #region [ Constructor ]
-        public DataHub() : base(OnLogStatusMessage, OnLogExceptionMessage) { }
+
+        public DataHub()
+            : base((message, _) => Log.Info(message), ex => Log.Error(ex.Message, ex))
+        {
+        }
+
         #endregion
 
         #region [ Static ]
 
-        public static event EventHandler ReloadSystemSettingsEvent;
-
-        private static void OnReloadSystemSettings()
-        {
-            ReloadSystemSettingsEvent?.Invoke(new object(), null);
-        }
-
-
-        public static event EventHandler<EventArgs<string, UpdateType>> LogStatusMessageEvent;
-                
-        private static void OnLogStatusMessage(string message, UpdateType updateType = UpdateType.Information)
-        {
-            LogStatusMessageEvent?.Invoke(new object(),new EventArgs<string, UpdateType>(message, updateType));
-        }
-
-        public static event EventHandler<EventArgs<int, int, bool>> ReprocessFilesEvent;
-
-        private static void OnReprocessFile(int fileGroupId, int meterId, bool loadHistoricConfiguration)
-        {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int, int, bool>(fileGroupId, meterId, loadHistoricConfiguration));
-        }
-
-        public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
-
-        private static void OnLogExceptionMessage(Exception exception)
-        {
-            LogExceptionMessage?.Invoke(new object(), new EventArgs<Exception>(exception));
-        }
-
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DataHub));
 
         public static string LocalXDAInstance
         {
@@ -175,7 +152,8 @@ namespace openXDA.Hubs
         #region [ Index Page ]
         public void ReloadSystemSetting()
         {
-            OnReloadSystemSettings();
+            // TODO: Replace this with something
+            //OnReloadSystemSettings();
         }
 
         #endregion
@@ -5025,15 +5003,16 @@ namespace openXDA.Hubs
 
 
                     //This is only to get old Data Migrated we will not be using the output, but calling 
-                    // DataFromEvent will cause all of the data to be migrated to the new schema 
-                    List<byte[]> timeSeries = ChannelData.DataFromEvent(record.ID, "systemSettings");
+                    // DataFromEvent will cause all of the data to be migrated to the new schema
+                    Func<AdoDataConnection> connectionFactory = () => new AdoDataConnection("systemSettings");
+                    List<byte[]> timeSeries = ChannelData.DataFromEvent(record.ID, connectionFactory);
 
                     if (propagate)
                     {
                         IEnumerable<Event> events = eventTable.QueryRecords(restriction: new RecordRestriction("FileGroupID = {0} AND ID <> {1}", record.FileGroupID, record.ID));
                         foreach (Event e in events)
                         {
-                            timeSeries = ChannelData.DataFromEvent(e.ID, "systemSettings");
+                            timeSeries = ChannelData.DataFromEvent(e.ID, connectionFactory);
                         }
                     }
 
@@ -5071,7 +5050,7 @@ namespace openXDA.Hubs
                     }
                     catch (Exception ex)
                     {
-                        OnLogStatusMessage(ex.ToString());
+                        LogException(ex);
                     }
                 }
 
@@ -7491,70 +7470,6 @@ namespace openXDA.Hubs
             {
                 string ids = String.Join(",", fileGroupIds);
                 return new TableOperations<Event>(connection).QueryRecords(restriction: new RecordRestriction($"FileGroupID IN ({ids})")).ToList();
-            }
-        }
-
-
-        public void ReprocessFiles(List<int> meterIDs, Tuple<DateTime, DateTime> dateRange)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-
-                string commaSeparatedMeters = string.Join(",", meterIDs);
-                string eventFilter = $"MeterID IN ({commaSeparatedMeters}) AND StartTime >= '{dateRange.Item1}' AND StartTime <= '{dateRange.Item2}'";
-
-                List<Event> events = new TableOperations<Event>(connection)
-                    .QueryRecords(new RecordRestriction(eventFilter))
-                    .ToList();
-
-                List<Tuple<int, int>> fileGroupIDs = events
-                    .Select(evt => Tuple.Create(evt.FileGroupID, evt.MeterID))
-                    .Distinct()
-                    .ToList();
-
-                foreach (Tuple<int, int> fileGroupID in fileGroupIDs)
-                {
-                    CascadeDelete("Event", $"FileGroupID = {fileGroupID}");
-                    CascadeDelete("EventData", $"FileGroupID = {fileGroupID}");
-                    OnReprocessFile(fileGroupID.Item1, fileGroupID.Item2, true);
-                }
-            }
-        }
-
-        public void ReprocessFile(int fileGroupID, bool loadHistoricConfiguration)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                int? meterID = connection.ExecuteScalar<int?>("SELECT MeterID FROM Event WHERE FileGroupID = {0}", fileGroupID);
-
-                if (meterID == null)
-                {
-                    string[] files = new TableOperations<DataFile>(connection)
-                        .QueryRecordsWhere("FileGroupID = {0}", fileGroupID)
-                        .Select(dataFile => dataFile.FilePath)
-                        .ToArray();
-
-                    string filePattern = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'FilePattern'")
-                        ?? @"(?<AssetKey>[^\\]+)\\[^\\]+$";
-
-                    string meterKey = files
-                        .Select(file => Regex.Match(file, filePattern))
-                        .Where(match => match.Success)
-                        .Select(match => match.Groups["AssetKey"]?.Value)
-                        .Where(assetKey => assetKey != null)
-                        .FirstOrDefault();
-
-                    if (meterKey != null)
-                        meterID = connection.ExecuteScalar<int?>("SELECT ID FROM Meter WHERE AssetKey = {0}", meterKey);
-                }
-
-                if (meterID == null)
-                    return;
-
-                CascadeDelete("Event", $"FileGroupID = {fileGroupID}");
-                CascadeDelete("EventData", $"FileGroupID = {fileGroupID}");
-
-                OnReprocessFile(fileGroupID, meterID.GetValueOrDefault(), loadHistoricConfiguration);
             }
         }
 

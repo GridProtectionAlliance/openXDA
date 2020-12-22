@@ -57,6 +57,12 @@ namespace openXDA.HIDS
                 return;
             }
 
+            if (string.IsNullOrEmpty(HIDSSettings.Host))
+            {
+                Log.Debug($"No HIDS instance defined; skipping {nameof(DailySummaryOperation)}.");
+                return;
+            }
+
             using AdoDataConnection connection = meterDataSet.CreateDbConnection();
             TableOperations<DailyTrendingSummary> dailyTrendingSummaryTable = new TableOperations<DailyTrendingSummary>(connection);
 

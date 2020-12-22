@@ -44,8 +44,10 @@ namespace FaultData.DataOperations.TVA
         #region [ Members ]
 
         // Nested Types
-        public class StructureQuerySettings
+        public class StructureQuerySection
         {
+            public const string CategoryName = "StructureQuery";
+
             [Setting]
             [DefaultValue("http://server/site/neareststructure?station={0}&line={1}&distance={2}")]
             public string URLFormat { get; set; }
@@ -70,8 +72,9 @@ namespace FaultData.DataOperations.TVA
         #region [ Properties ]
 
         [Category]
-        [SettingName("StructureQuery")]
-        public StructureQuerySettings Settings { get; } = new StructureQuerySettings();
+        [SettingName(StructureQuerySection.CategoryName)]
+        public StructureQuerySection Settings { get; }
+            = new StructureQuerySection();
 
         private Func<string, string> FieldMappingLookup
         {

@@ -56,7 +56,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EmailSettings.cs" />
     <Compile Include="EmailWriter.cs" />
     <Compile Include="AllBreakersReport.cs" />
     <Compile Include="IndividualBreakerReport.cs" />
@@ -68,6 +67,10 @@
     <ProjectReference Include="..\openHistorian.XDALink\openHistorian.XDALink.csproj">
       <Project>{7F731255-FA83-4DBF-9E0F-C22AE4845E76}</Project>
       <Name>openHistorian.XDALink</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\openXDA.Configuration\openXDA.Configuration.csproj">
+      <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
+      <Name>openXDA.Configuration</Name>
     </ProjectReference>
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{A1A0BC13-50ED-4DC9-8C1E-3293B0B69281}</Project>

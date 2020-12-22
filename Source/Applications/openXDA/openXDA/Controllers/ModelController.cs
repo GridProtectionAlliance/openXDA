@@ -31,9 +31,7 @@ using System.Web.Http;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Identity;
 using GSF.Reflection;
-using GSF.Web.Security;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -41,7 +39,7 @@ namespace openXDA.Controllers
 {
     public class ModelController<T> : ApiController where T : class, new()
     {
-        #region [Members ]
+        #region [ Members ]
 
         public class Search
         {
@@ -62,22 +60,34 @@ namespace openXDA.Controllers
         #endregion
 
         #region [ Constructor ]
-        public ModelController()
+
+        public ModelController(Func<AdoDataConnection> connectionFactory)
         {
+            if (connectionFactory is null)
+                throw new ArgumentNullException(nameof(connectionFactory));
+
+            ConnectionFactory = connectionFactory;
         }
 
-        public ModelController(bool hasParent, string parentKey, string primaryKeyField = "ID")
+        public ModelController(Func<AdoDataConnection> connectionFactory, bool hasParent, string parentKey, string primaryKeyField = "ID")
         {
+            if (connectionFactory is null)
+                throw new ArgumentNullException(nameof(connectionFactory));
+
+            ConnectionFactory = connectionFactory;
             HasParent = hasParent;
             ParentKey = parentKey;
             HasUniqueKey = false;
             UniqueKeyField = "";
-            PrimaryKeyField = "ID";
-
+            PrimaryKeyField = primaryKeyField;
         }
 
-        public ModelController(bool hasParent, string parentKey, bool hasUniqueKey, string uniqueKey)
+        public ModelController(Func<AdoDataConnection> connectionFactory, bool hasParent, string parentKey, bool hasUniqueKey, string uniqueKey)
         {
+            if (connectionFactory is null)
+                throw new ArgumentNullException(nameof(connectionFactory));
+
+            ConnectionFactory = connectionFactory;
             HasParent = hasParent;
             ParentKey = parentKey;
             HasUniqueKey = hasUniqueKey;
@@ -87,12 +97,12 @@ namespace openXDA.Controllers
         #endregion
 
         #region [ Properties ]
+
         protected virtual bool HasParent { get; } = false;
         protected virtual string ParentKey { get; } = "";
         protected virtual string PrimaryKeyField { get; } = "ID";
         protected virtual bool HasUniqueKey { get; } = false;
         protected virtual string UniqueKeyField { get; } = "";
-        protected virtual string Connection { get; } = "systemSettings";
         protected virtual string GetRoles { get; } = "Viewer,Administrator";
         protected virtual string PostRoles { get; } = "Administrator";
         protected virtual string PatchRoles { get; } = "Administrator";
@@ -100,9 +110,13 @@ namespace openXDA.Controllers
         protected virtual string GetOrderByExpression { get; } = null;
         protected virtual bool ViewOnly { get; } = false;
         protected virtual bool AllowSearch { get; } = false;
+
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
         #endregion
 
         #region [ Http Methods ]
+
         [HttpGet, Route("New")]
         public virtual IHttpActionResult GetNew()
         {
@@ -111,7 +125,7 @@ namespace openXDA.Controllers
 
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
 
                     try
@@ -137,7 +151,7 @@ namespace openXDA.Controllers
         {
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
 
                     try
@@ -170,12 +184,13 @@ namespace openXDA.Controllers
             }
 
         }
+
         [HttpGet, Route("{sort}/{ascending:int}")]
         public virtual IHttpActionResult Get(string sort, int ascending)
         {
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     string orderByExpression = GetOrderByExpression;
 
@@ -201,13 +216,12 @@ namespace openXDA.Controllers
 
         }
 
-
         [HttpGet, Route("{parentID}/{sort}/{ascending:int}")]
         public virtual IHttpActionResult Get(string parentID, string sort, int ascending)
         {
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     string orderByExpression = GetOrderByExpression;
 
@@ -250,7 +264,7 @@ namespace openXDA.Controllers
         {
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     try
                     {
@@ -289,7 +303,6 @@ namespace openXDA.Controllers
 
         }
 
-
         [HttpPost, Route("Add")]
         public virtual IHttpActionResult Post([FromBody] JObject record)
         {
@@ -300,7 +313,7 @@ namespace openXDA.Controllers
             {
                 if (PostRoles == string.Empty || User.IsInRole(PostRoles))
                 {
-                    using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                    using (AdoDataConnection connection = ConnectionFactory())
                     {
 
                         T newRecord = record.ToObject<T>();
@@ -342,7 +355,7 @@ namespace openXDA.Controllers
                 if (PatchRoles == string.Empty || User.IsInRole(PatchRoles))
                 {
 
-                    using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                    using (AdoDataConnection connection = ConnectionFactory())
                     {
                         int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(record);
                         return Ok(result);
@@ -372,7 +385,7 @@ namespace openXDA.Controllers
                 if (DeleteRoles == string.Empty || User.IsInRole(DeleteRoles))
                 {
 
-                    using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                    using (AdoDataConnection connection = ConnectionFactory())
                     {
                         TableNameAttribute tableNameAttribute;
                         string tableName;
@@ -433,7 +446,7 @@ namespace openXDA.Controllers
 
                 string whereClause = BuildWhereClause(postData.Searches);
 
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     string tableName = new TableOperations<T>(connection).TableName;
 
@@ -457,12 +470,14 @@ namespace openXDA.Controllers
         }
         #endregion
 
-        #region [Helper Methods]
+        #region [ Helper Methods ]
+
+        protected AdoDataConnection CreateDbConnection() => ConnectionFactory();
 
         protected string BuildWhereClause(IEnumerable<Search> searches)
         {
-
-            string whereClause = string.Join(" AND ", searches.Select(search => {
+            string whereClause = string.Join(" AND ", searches.Select(search =>
+            {
                 if (search.SearchText == string.Empty) search.SearchText = "%";
                 else search.SearchText = search.SearchText.Replace("*", "%");
 
@@ -484,6 +499,7 @@ namespace openXDA.Controllers
 
             return whereClause;
         }
+
         #endregion
     }
 }

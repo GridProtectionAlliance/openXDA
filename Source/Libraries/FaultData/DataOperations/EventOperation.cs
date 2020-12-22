@@ -23,20 +23,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Collections;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 using DbDisturbance = openXDA.Model.Disturbance;
 using Disturbance = FaultData.DataAnalysis.Disturbance;
-using PQDPhase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataOperations
 {
@@ -51,25 +52,18 @@ namespace FaultData.DataOperations
 
         #region [ Properties ]
 
-        [Setting]
-        public double MaxEventDuration
-        {
-            get => MaxEventDurationSpan.TotalSeconds;
-            set => MaxEventDurationSpan = TimeSpan.FromSeconds(value);
-        }
+        [Category]
+        [SettingName(SystemSection.CategoryName)]
+        public SystemSection SystemSettings { get; }
+            = new SystemSection();
 
-        [Setting]
-        public double SystemFrequency { get; set; }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
-        [Setting]
-        public string XDATimeZone
-        {
-            get => TimeZone.Id;
-            set => TimeZone = TimeZoneInfo.FindSystemTimeZoneById(value);
-        }
-
-        private TimeSpan MaxEventDurationSpan { get; set; }
-        private TimeZoneInfo TimeZone { get; set; }
+        private TimeSpan MaxEventDurationSpan =>
+            TimeSpan.FromSeconds(DataAnalysisSettings.MaxEventDuration);
 
         #endregion
 
@@ -185,6 +179,7 @@ namespace FaultData.DataOperations
                 int maintenanceWindowCount = maintenanceWindowTable.QueryRecordCountWhere("MeterID = {0} AND (StartTime IS NULL OR StartTime <= {1}) AND (EndTime IS NULL OR EndTime >= {1})", meterDataSet.Meter.ID, DateTime.UtcNow);
                 string eventTypeName = (maintenanceWindowCount == 0) ? eventClassification.ToString() : "Test";
                 EventType eventType = eventTypeTable.GetOrAdd(eventTypeName);
+                TimeZoneInfo xdaTimeZone = SystemSettings.XDATimeZoneInfo;
 
                 Event evt = new Event()
                 {
@@ -197,7 +192,7 @@ namespace FaultData.DataOperations
                     StartTime = dataGroup.StartTime,
                     EndTime = dataGroup.EndTime,
                     Samples = dataGroup.Samples,
-                    TimeZoneOffset = (int)TimeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes,
+                    TimeZoneOffset = (int)xdaTimeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes,
                     SamplesPerSecond = 0,
                     SamplesPerCycle = 0,
                     FileVersion = meterDataSet.FileGroup.ProcessingVersion
@@ -219,7 +214,7 @@ namespace FaultData.DataOperations
                    }).ToList();
 
                     evt.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
-                    evt.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+                    evt.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
                 }
 
                 evt.Disturbances.AddRange(GetDisturbances(connection, meterDataSet, dataGroup));
@@ -345,7 +340,7 @@ namespace FaultData.DataOperations
             dbDisturbance.StartTime = disturbance.StartTime;
             dbDisturbance.EndTime = disturbance.EndTime;
             dbDisturbance.DurationSeconds = disturbance.DurationSeconds;
-            dbDisturbance.DurationCycles = disturbance.GetDurationCycles(SystemFrequency);
+            dbDisturbance.DurationCycles = disturbance.GetDurationCycles(DataAnalysisSettings.SystemFrequency);
             dbDisturbance.StartIndex = disturbance.StartIndex;
             dbDisturbance.EndIndex = disturbance.EndIndex;
 

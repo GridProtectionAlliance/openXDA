@@ -23,20 +23,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Security;
-using System.Threading;
 using System.Xml.Linq;
-using FaultData.Configuration;
-using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Xml;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace FaultData.DataWriters
@@ -45,38 +43,33 @@ namespace FaultData.DataWriters
     {
         #region [ Members ]
 
-        // Fields
-        private Func<AdoDataConnection> m_connectionFactory;
-        private string m_connectionString;
+        // Nested Types
+        private class Settings
+        {
+            public Settings(Action<object> configure) =>
+                configure(this);
+
+            [Category]
+            [SettingName(EmailSection.CategoryName)]
+            public EmailSection EmailSettings { get; } = new EmailSection();
+        }
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public EmailService(Func<AdoDataConnection> connectionFactory, Action<object> configure)
+        {
+            ConnectionFactory = connectionFactory;
+            Configure = configure;
+        }
 
         #endregion
 
         #region [ Properties ]
 
-        public Func<AdoDataConnection> ConnectionFactory
-        {
-            get => Interlocked.CompareExchange(ref m_connectionFactory, null, null);
-            set => Interlocked.Exchange(ref m_connectionFactory, value);
-        }
-
-        public string ConnectionString
-        {
-            get => Interlocked.CompareExchange(ref m_connectionString, null, null);
-            set => Interlocked.Exchange(ref m_connectionString, value);
-        }
-
-        private Dictionary<string, string> Settings =>
-            (ConnectionString ?? "").ParseKeyValuePairs();
-
-        private string TimeZoneID =>
-            Settings.TryGetValue("XDATimeZone", out string timeZoneID)
-                ? timeZoneID
-                : "UTC";
-
-        private string EmailConnectionString =>
-            Settings.TryGetValue(EmailSettings.CategoryName, out string emailConnectionString)
-                ? emailConnectionString
-                : string.Empty;
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+        private Action<object> Configure { get; }
 
         #endregion
 
@@ -120,12 +113,10 @@ namespace FaultData.DataWriters
             }
         }
 
-        public int LoadSentEmail(List<string> recipients, XDocument htmlDocument)
+        public int LoadSentEmail(DateTime now, List<string> recipients, XDocument htmlDocument)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(TimeZoneID);
-                DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
                 string toLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
                 string subject = GetSubject(htmlDocument);
                 string body = GetBody(htmlDocument);
@@ -136,22 +127,14 @@ namespace FaultData.DataWriters
 
         public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
         {
-            EmailSettings emailSettings = GetEmailSettings();
+            Settings settings = new Settings(Configure);
+            EmailSection emailSettings = settings.EmailSettings;
             string smtpServer = emailSettings.SMTPServer;
 
             if (string.IsNullOrEmpty(smtpServer))
                 return;
 
-            string[] smtpServerParts = smtpServer.Split(':');
-            string host = smtpServerParts[0];
-            int port;
-
-            Func<SmtpClient> clientFactory = () => new SmtpClient(host);
-
-            if (smtpServerParts.Length > 1 && int.TryParse(smtpServerParts[1], out port))
-                clientFactory = () => new SmtpClient(host, port);
-
-            using (SmtpClient smtpClient = clientFactory())
+            using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
             using (MailMessage emailMessage = new MailMessage())
             {
                 string username = emailSettings.Username;
@@ -192,22 +175,14 @@ namespace FaultData.DataWriters
 
         public void SendAdminEmail(string subject, string message, List<string> replyToRecipients)
         {
-            const int DefaultSMTPPort = 25;
-
-            EmailSettings emailSettings = GetEmailSettings();
+            Settings settings = new Settings(Configure);
+            EmailSection emailSettings = settings.EmailSettings;
             string smtpServer = emailSettings.SMTPServer;
 
             if (string.IsNullOrEmpty(smtpServer))
                 return;
 
-            string[] smtpServerParts = smtpServer.Split(':');
-            string host = smtpServerParts[0];
-            int port;
-
-            if (smtpServerParts.Length <= 1 || !int.TryParse(smtpServerParts[1], out port))
-                port = DefaultSMTPPort;
-
-            using (SmtpClient smtpClient = new SmtpClient(host, port))
+            using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
             using (MailMessage emailMessage = new MailMessage())
             {
                 string username = emailSettings.Username;
@@ -245,21 +220,21 @@ namespace FaultData.DataWriters
             return subject ?? DefaultSubject;
         }
 
-        private string GetBody(XDocument htmlDocument)
-        {
-            return htmlDocument
-                .ToString(SaveOptions.DisableFormatting)
-                .Replace("&amp;", "&")
-                .Replace("&lt;", "<")
-                .Replace("&gt;", ">");
-        }
+        private string GetBody(XDocument htmlDocument) => htmlDocument
+            .ToString(SaveOptions.DisableFormatting)
+            .Replace("&amp;", "&")
+            .Replace("&lt;", "<")
+            .Replace("&gt;", ">");
 
-        private EmailSettings GetEmailSettings()
+        private SmtpClient CreateSmtpClient(string smtpServer)
         {
-            EmailSettings settings = new EmailSettings();
-            ConnectionStringParser<SettingAttribute> parser = new ConnectionStringParser<SettingAttribute>();
-            parser.ParseConnectionString(EmailConnectionString, settings);
-            return settings;
+            string[] smtpServerParts = smtpServer.Split(':');
+            string host = smtpServerParts[0];
+
+            if (smtpServerParts.Length > 1 && int.TryParse(smtpServerParts[1], out int port))
+                return new SmtpClient(host, port);
+
+            return new SmtpClient(host);
         }
 
         #endregion

@@ -125,7 +125,7 @@ namespace openXDA.Model
             {
                 return locationTable.QueryRecordWhere("ID = {0}", LocationID);
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }

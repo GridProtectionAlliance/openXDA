@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -31,7 +30,6 @@ using System.Net.Mail;
 using System.Text;
 using System.Xml.Linq;
 using FaultData.DataWriters.GTC;
-using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Xml;
@@ -41,67 +39,20 @@ namespace FaultData.DataWriters
 {
     public class EventEmailService
     {
-        #region [ Members ]
-
-        // Fields
-        private EmailService m_emailService;
-
-        #endregion
-
         #region [ Constructors ]
 
-        public EventEmailService()
+        public EventEmailService(Func<AdoDataConnection> connectionFactory, Action<object> configure)
         {
-            m_emailService = new EmailService();
-            TaggedEmails = new ConcurrentQueue<DateTime>();
+            EmailService = new EmailService(connectionFactory, configure);
+            ConnectionFactory = connectionFactory;
         }
 
         #endregion
 
         #region [ Properties ]
 
-        public string ConnectionString
-        {
-            get => m_emailService.ConnectionString;
-            set => m_emailService.ConnectionString = value;
-        }
-
-        public Func<AdoDataConnection> ConnectionFactory
-        {
-            get => m_emailService.ConnectionFactory;
-            set => m_emailService.ConnectionFactory = value;
-        }
-
-        public int MaxEmailCount =>
-            EventEmailSettings.TryGetValue(nameof(MaxEmailCount), out string setting) && int.TryParse(setting, out int maxEmailCount)
-                ? maxEmailCount
-                : 0;
-
-        public TimeSpan MaxEmailSpan =>
-            EventEmailSettings.TryGetValue(nameof(MaxEmailSpan), out string setting) && double.TryParse(setting, out double maxEmailSeconds)
-                ? TimeSpan.FromSeconds(maxEmailSeconds)
-                : TimeSpan.Zero;
-
-        public bool Enabled =>
-            EventEmailSettings.TryGetValue(nameof(Enabled), out string enabled)
-                ? enabled.ParseBoolean()
-                : false;
-
-        public int TaggedEmailCount => TaggedEmails.Count;
-
-        public bool Tripped { get; private set; }
-
-        public Action TripAction { get; set; }
-
-        private Dictionary<string, string> Settings =>
-            (ConnectionString ?? "").ParseKeyValuePairs();
-
-        private Dictionary<string, string> EventEmailSettings =>
-            Settings.TryGetValue("EventEmail", out string eventEmail)
-                ? eventEmail.ParseKeyValuePairs()
-                : new Dictionary<string, string>();
-
-        private ConcurrentQueue<DateTime> TaggedEmails { get; }
+        private EmailService EmailService { get; }
+        private Func<AdoDataConnection> ConnectionFactory { get; }
 
         #endregion
 
@@ -182,12 +133,12 @@ namespace FaultData.DataWriters
 
         public List<string> GetAllRecipients(EmailType emailType)
         {
-            return m_emailService.GetRecipients(emailType);
+            return EmailService.GetRecipients(emailType);
         }
 
         public XDocument ApplyTemplate(EmailType emailType, string templateData)
         {
-            XDocument htmlDocument = m_emailService.ApplyTemplate(emailType, templateData);
+            XDocument htmlDocument = EmailService.ApplyTemplate(emailType, templateData);
             TransformEventDataElements(htmlDocument);
             return htmlDocument;
         }
@@ -245,42 +196,18 @@ namespace FaultData.DataWriters
             });
         }
 
-        public int LoadSentEmail(List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
+        public int LoadSentEmail(DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
         {
-            if (!Enabled || Tripped)
-                return 0;
-
-            int sentEmailID = m_emailService.LoadSentEmail(recipients, htmlDocument);
+            int sentEmailID = EmailService.LoadSentEmail(now, recipients, htmlDocument);
             LoadEventSentEmail(sentEmailID, eventIDs);
             return sentEmailID;
         }
 
-        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
-        {
-            if (!Enabled || Tripped)
-                return;
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments) =>
+            EmailService.SendEmail(recipients, htmlDocument, attachments);
 
-            if (TripsMaxEmailThreshold())
-            {
-                TripAction?.Invoke();
-                return;
-            }
-
-            m_emailService.SendEmail(recipients, htmlDocument, attachments);
-        }
-
-        public void SendAdminEmail(string subject, string message, List<string> replyTo)
-        {
-            m_emailService.SendAdminEmail(subject, message, replyTo);
-        }
-
-        public void Restore()
-        {
-            while (!TaggedEmails.IsEmpty)
-                TaggedEmails.TryDequeue(out DateTime tag);
-
-            Tripped = false;
-        }
+        public void SendAdminEmail(string subject, string message, List<string> replyTo) =>
+            EmailService.SendAdminEmail(subject, message, replyTo);
 
         private void TransformEventDataElements(XDocument htmlDocument)
         {
@@ -310,30 +237,6 @@ namespace FaultData.DataWriters
                     eventSentEmailTable.AddNewRecord(eventSentEmail);
                 }
             }
-        }
-
-        private bool TripsMaxEmailThreshold()
-        {
-            DateTime now = DateTime.UtcNow;
-            int maxEmailCount = MaxEmailCount;
-            TimeSpan maxEmailSpan = MaxEmailSpan;
-
-            if (maxEmailCount <= 0 || maxEmailSpan <= TimeSpan.Zero)
-                return false;
-
-            DateTime oldestTag = now - maxEmailSpan;
-
-            while (TaggedEmails.TryPeek(out DateTime tag) && tag < oldestTag)
-                TaggedEmails.TryDequeue(out tag);
-
-            if (TaggedEmails.Count < maxEmailCount)
-            {
-                TaggedEmails.Enqueue(now);
-                return false;
-            }
-
-            Tripped = true;
-            return true;
         }
 
         #endregion

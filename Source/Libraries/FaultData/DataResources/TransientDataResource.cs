@@ -23,63 +23,30 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
+using System.ComponentModel;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF;
-using GSF.Data;
+using GSF.Configuration;
+using openXDA.Configuration;
 using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataResources
 {
     public class TransientDataResource : DataResourceBase<MeterDataSet>
     {
-        #region [ Members ]
-
-        // Fields
-        private double m_systemFrequency;
-        private double m_transientThreshold = 10.0D;
-
-        private Dictionary<DataGroup, List<Disturbance>> m_transients = new Dictionary<DataGroup, List<Disturbance>>();
-
-        #endregion
-
         #region [ Properties ]
 
-        [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
-        public double TransientThreshold
-        {
-            get
-            {
-                return m_transientThreshold;
-            }
-            set
-            {
-                m_transientThreshold = value;
-            }
-        }
+        public double TransientThreshold { get; } = 10.0D;
 
-        public Dictionary<DataGroup, List<Disturbance>> Transients
-        {
-            get
-            {
-                return m_transients;
-            }
-        }
+        public Dictionary<DataGroup, List<Disturbance>> Transients { get; }
+            = new Dictionary<DataGroup, List<Disturbance>>();
 
         #endregion
 
@@ -124,15 +91,18 @@ namespace FaultData.DataResources
                 worst.Phase = Phase.Worst;
             }
 
-            if(worst != null)
+            if (worst != null)
                 transientList.Add(worst);
 
             return transientList;
         }
 
-        private IEnumerable<Disturbance> DetectTransients(DataSeries waveform, Phase phase) {
+        private IEnumerable<Disturbance> DetectTransients(DataSeries waveform, Phase phase)
+        {
             if (waveform == null)
                 return Enumerable.Empty<Disturbance>();
+
+            double systemFrequency = DataAnalysisSettings.SystemFrequency;
 
             // Obtain a list of time gaps in the waveform
             List<int> gapIndexes = Enumerable.Range(0, waveform.DataPoints.Count - 1)
@@ -140,7 +110,7 @@ namespace FaultData.DataResources
                 {
                     DataPoint p1 = waveform[index];
                     DataPoint p2 = waveform[index + 1];
-                    double cycleDiff = (p2.Time - p1.Time).TotalSeconds * SystemFrequency;
+                    double cycleDiff = (p2.Time - p1.Time).TotalSeconds * systemFrequency;
 
                     // Detect gaps larger than a quarter cycle.
                     // Tolerance of 0.000062 calculated
@@ -150,7 +120,7 @@ namespace FaultData.DataResources
                 .ToList();
 
             double sampleRate = waveform.SampleRate;
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveform.SampleRate, SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveform.SampleRate, systemFrequency);
             double nominalVoltage = waveform.SeriesInfo.Channel.Asset.VoltageKV * 1000.0D;
 
             if (IsLineToNeutral(waveform.SeriesInfo.Channel.Phase.Name))

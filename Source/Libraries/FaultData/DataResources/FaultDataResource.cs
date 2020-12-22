@@ -24,14 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using FaultAlgorithms;
-using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF;
@@ -41,9 +39,9 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.Parsing;
 using GSF.Units;
-using InStep.eDNA.EzDNAApiNet;
 using log4net;
 using MathNet.Numerics.IntegralTransforms;
+using openXDA.Configuration;
 using openXDA.Model;
 using CycleData = FaultAlgorithms.CycleData;
 using Fault = FaultData.DataAnalysis.Fault;
@@ -241,49 +239,30 @@ namespace FaultData.DataResources
 
         #endregion
 
-        #region [ Constructors ]
-
-        public FaultDataResource()
-        {
-            FaultLocationSettings = new FaultLocationSettings();
-            BreakerSettings = new BreakerSettings();
-            FaultLookup = new Dictionary<DataGroup, FaultGroup>();
-        }
-
-        #endregion
-
         #region [ Properties ]
 
         public Dictionary<DataGroup, FaultGroup> FaultLookup { get; }
-
-        [Setting]
-        public double SystemFrequency { get; set; }
-
-        [Setting]
-        public double MaxVoltage { get; set; }
-
-        [Setting]
-        public double MaxCurrent { get; set; }
-
-        [Setting]
-        [SettingName(nameof(XDATimeZone))]
-        public string XDATimeZoneID { get; set; }
+            = new Dictionary<DataGroup, FaultGroup>();
 
         [Category]
-        [SettingName(FaultLocationSettings.CategoryName)]
-        public FaultLocationSettings FaultLocationSettings { get; }
+        [SettingName(SystemSection.CategoryName)]
+        public SystemSection SystemSettings { get; }
+            = new SystemSection();
 
         [Category]
-        [SettingName(BreakerSettings.CategoryName)]
-        public BreakerSettings BreakerSettings { get; }
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
-        private TimeZoneInfo XDATimeZone
-        {
-            get
-            {
-                return TimeZoneInfo.FindSystemTimeZoneById(XDATimeZoneID);
-            }
-        }
+        [Category]
+        [SettingName(FaultLocationSection.CategoryName)]
+        public FaultLocationSection FaultLocationSettings { get; }
+            = new FaultLocationSection();
+
+        [Category]
+        [SettingName(BreakerSection.CategoryName)]
+        public BreakerSection BreakerSettings { get; }
+            = new BreakerSection();
 
         private Func<Asset, DateTime, bool> AskSCADAIfBreakerOpened { get; set; }
 
@@ -431,7 +410,7 @@ namespace FaultData.DataResources
                 stopwatch.Restart();
 
                 FaultCurveGenerator faultCurveGenerator = new FaultCurveGenerator();
-                faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, SystemFrequency);
+                faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, DataAnalysisSettings.SystemFrequency);
                 faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
                 faultCurveGenerator.Faults = faults;
                 faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
@@ -608,14 +587,14 @@ namespace FaultData.DataResources
             };
 
             // Determine if any of the RMS voltages are unreasonably high
-            if (voltages.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > MaxVoltage)))
+            if (voltages.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > DataAnalysisSettings.MaxVoltage)))
             {
                 Log.Debug("Data unreasonable: voltage > maxVoltage");
                 return false;
             }
 
             // Determine if any of the RMS currents are unreasonably high
-            if (currents.Any(current => current != null && current.DataPoints.Any(dataPoint => dataPoint.Value > MaxCurrent)))
+            if (currents.Any(current => current != null && current.DataPoints.Any(dataPoint => dataPoint.Value > DataAnalysisSettings.MaxCurrent)))
             {
                 Log.Debug("Data unreasonable: current > maxCurrent");
                 return false;
@@ -626,7 +605,7 @@ namespace FaultData.DataResources
 
         private void Classify(Fault fault, Func<int, FaultType> getFaultType, Func<int, DateTime> getTime)
         {
-            TimeSpan minSegmentDuration = TimeSpan.FromSeconds(FaultLocationSettings.MinFaultSegmentCycles / SystemFrequency);
+            TimeSpan minSegmentDuration = TimeSpan.FromSeconds(FaultLocationSettings.MinFaultSegmentCycles / DataAnalysisSettings.SystemFrequency);
 
             Action<int, FaultType> UpdateSegments = new Func<Action<int, FaultType>>(() =>
             {
@@ -700,7 +679,7 @@ namespace FaultData.DataResources
 
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, DataAnalysisSettings.SystemFrequency);
             int startIndex = cycleIndex;
             int endIndex = cycleIndex + samplesPerCycle - 1;
             int prefaultIndex = Math.Max(0, startIndex - samplesPerCycle);
@@ -771,7 +750,7 @@ namespace FaultData.DataResources
 
         private int FindFaultInception(DataSeries waveForm, DataSeries rms, int cycleIndex)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, DataAnalysisSettings.SystemFrequency);
             int startIndex = -1;
 
             // Adjust cycleIndex using an adaptive threshhold
@@ -872,7 +851,7 @@ namespace FaultData.DataResources
 
         private int FindFaultClearing(DataSeries waveForm, int cycleIndex)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, DataAnalysisSettings.SystemFrequency);
             int startIndex = cycleIndex - 1;
             int endIndex = startIndex + samplesPerCycle - 1;
             int postfaultIndex = Math.Min(endIndex + samplesPerCycle, waveForm.DataPoints.Count - 1);
@@ -986,7 +965,7 @@ namespace FaultData.DataResources
 
         private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = dataGroup[0][fault.StartSample].Time;
             DateTime endTime = dataGroup[0][fault.EndSample].Time;
@@ -1095,7 +1074,7 @@ namespace FaultData.DataResources
 
         private double GetPrefaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
             int start = fault.StartSample - samplesPerCycle;
             int end = fault.StartSample;
 
@@ -1115,7 +1094,7 @@ namespace FaultData.DataResources
 
         private double GetPostfaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
             int start = fault.EndSample + 1;
             int end = fault.EndSample + samplesPerCycle;
 
@@ -1135,7 +1114,7 @@ namespace FaultData.DataResources
 
         private double GetPrefaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
             int start = fault.StartSample - 5 * samplesPerCycle;
             int end = fault.StartSample - samplesPerCycle - 1;
 
@@ -1155,7 +1134,7 @@ namespace FaultData.DataResources
 
         private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
             int start = fault.EndSample + samplesPerCycle + 1;
             int end = fault.EndSample + 5 * samplesPerCycle;
 
@@ -1501,7 +1480,7 @@ namespace FaultData.DataResources
         // Lightning
         private double GetLightningMilliseconds(Fault fault, List<ILightningStrike> lightningStrikes)
         {
-            DateTime inception = TimeZoneInfo.ConvertTimeToUtc(fault.InceptionTime, XDATimeZone);
+            DateTime inception = TimeZoneInfo.ConvertTimeToUtc(fault.InceptionTime, SystemSettings.XDATimeZoneInfo);
 
             return lightningStrikes
                 .Select(strike => inception - strike.UTCTime)
@@ -1700,7 +1679,7 @@ namespace FaultData.DataResources
             double ibPre = ibRMS[0].Value;
             double icPre = icRMS[0].Value;
 
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup[0], SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup[0], DataAnalysisSettings.SystemFrequency);
             int samplesPerHalfCycle = samplesPerCycle / 2;
 
             foreach (Fault fault in faults)
@@ -1870,7 +1849,7 @@ namespace FaultData.DataResources
             DataSeries vcRMS = ToPerUnit(viCycleDataGroup.VC.RMS);
             double nominalLineVoltage = dataGroup.Asset.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
 
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup[0], SystemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup[0], DataAnalysisSettings.SystemFrequency);
             int samplesPerHalfCycle = samplesPerCycle / 2;
 
             foreach (Fault fault in faults)

@@ -3,32 +3,12 @@
 -- from scratch and create a new user with access to the database.
 --
 --  * To change the database name, replace all [openXDA] with the desired database name.
---  * To change the username, replace all NewUser with the desired username.
---  * To change the password, replace all MyPassword with the desired password.
 
 --USE [master]
 --GO
 --CREATE DATABASE [openXDA]
 --GO
 --USE [openXDA]
---GO
-
---USE [master]
---GO
---IF  NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = N'NewUser')
---CREATE LOGIN [NewUser] WITH PASSWORD=N'MyPassword', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF
---GO
---USE [openXDA]
---GO
---CREATE USER [NewUser] FOR LOGIN [NewUser]
---GO
---CREATE ROLE [openXDARole] AUTHORIZATION [dbo]
---GO
---EXEC sp_addrolemember N'openXDAAdmin', N'NewUser'
---GO
---EXEC sp_addrolemember N'db_datareader', N'openXDAAdmin'
---GO
---EXEC sp_addrolemember N'db_datawriter', N'openXDAAdmin'
 --GO
 
 ----- TABLES -----
@@ -105,13 +85,24 @@ CREATE TABLE FileGroup
     ProcessingStartTime DATETIME2 NOT NULL,
     ProcessingEndTime DATETIME2 NOT NULL,
     ProcessingVersion INT NOT NULL DEFAULT 0,
-    Error INT NOT NULL DEFAULT 0,
-    FileHash INT
+    Error INT NOT NULL DEFAULT 0
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_FileGroup_FileHash
-ON FileGroup(FileHash ASC)
+CREATE NONCLUSTERED INDEX IX_FileGroup_DataStartTime
+ON FileGroup(DataStartTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroup_DataEndTime
+ON FileGroup(DataEndTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroup_ProcessingStartTime
+ON FileGroup(ProcessingStartTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroup_ProcessingEndTime
+ON FileGroup(ProcessingEndTime ASC)
 GO
 
 CREATE TABLE DataFile
@@ -185,6 +176,96 @@ CREATE TABLE Meter
     Model VARCHAR(200) NOT NULL,
     TimeZone VARCHAR(200) NULL,
     Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE HostRegistration
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    RegistrationKey VARCHAR(50) NOT NULL UNIQUE,
+    APIToken VARCHAR(50) NOT NULL,
+    URL VARCHAR(200) NOT NULL,
+    CheckedIn DATETIME NULL
+)
+GO
+
+CREATE TABLE HostSetting
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    HostRegistrationID INT NOT NULL REFERENCES HostRegistration(ID),
+    Name VARCHAR(50) NOT NULL,
+    Value VARCHAR(MAX) NOT NULL
+)
+GO
+
+CREATE TABLE NodeType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    AssemblyName VARCHAR(200) NOT NULL,
+    TypeName VARCHAR(200) NOT NULL
+)
+GO
+
+INSERT INTO NodeType VALUES('FileProcessor', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.FileProcessing.FileProcessorNode')
+GO
+
+INSERT INTO NodeType VALUES('Analysis', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Analysis.AnalysisNode')
+GO
+
+INSERT INTO NodeType VALUES('EventEmail', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Email.EventEmailNode')
+GO
+
+INSERT INTO NodeType VALUES('FilePruner', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.FilePruning.FilePrunerNode')
+GO
+
+INSERT INTO NodeType VALUES('EPRICapBankAnalysis', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.EPRICapBankAnalysis.EPRICapBankAnalysisNode')
+GO
+
+CREATE TABLE Node
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    NodeTypeID INT NOT NULL REFERENCES NodeType(ID),
+    HostRegistrationID INT NULL REFERENCES HostRegistration(ID),
+    Name VARCHAR(50) NOT NULL,
+    MinimumHostCount INT NOT NULL DEFAULT 1
+)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.FileProcessing.FileProcessorNode'), NULL, 'File Processor', 1)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.FilePruning.FilePrunerNode'), NULL, 'File Pruner', 1)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Email.EventEmailNode'), NULL, 'Emailer', 1)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, 'Analyzer', 1)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, 'Analyzer', 2)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, 'Analyzer', 4)
+GO
+
+CREATE TABLE NodeSetting
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    NodeID INT NOT NULL REFERENCES Node(ID),
+    Name VARCHAR(50) NOT NULL,
+    Value VARCHAR(MAX) NOT NULL
+)
+GO
+
+CREATE TABLE AnalysisTask
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    NodeID INT NULL REFERENCES Node(ID),
+    Priority INT NOT NULL
 )
 GO
 
@@ -1451,16 +1532,16 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 5)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 7)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('openXDA.HIDS.dll', 'openXDA.HIDS.TrendingDataSummaryOperation', 7)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailySummaryOperation', 8)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('openXDA.HIDS.dll', 'openXDA.HIDS.DailySummaryOperation', 8)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataQualityOperation', 9)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('openXDA.HIDS.dll', 'openXDA.HIDS.DataQualityOperation', 9)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 10)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('openXDA.HIDS.dll', 'openXDA.HIDS.HIDSAlarmOperation', 10)
 GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.StatisticOperation', 11)
@@ -1576,7 +1657,7 @@ GO
 INSERT INTO ApplicationRole(Name, Description) VALUES('Administrator', 'Admin Role')
 GO
 
-INSERT INTO SecurityGroup(Name, Description) VALUES('BUILTIN\Users', 'All Windows authenticated users')
+INSERT INTO SecurityGroup(Name, Description) VALUES('S-1-5-32-545', 'All Windows authenticated users')
 GO
 
 INSERT INTO ApplicationRoleSecurityGroup(ApplicationRoleID, SecurityGroupID) VALUES((SELECT ID FROM ApplicationRole), (SELECT ID FROM SecurityGroup))
@@ -4261,6 +4342,14 @@ GO
 
 
 ----- VIEWS -----
+
+CREATE VIEW ActiveHost AS
+SELECT *
+FROM HostRegistration
+WHERE
+    CheckedIn IS NOT NULL AND
+    CheckedIn > DATEADD(MINUTE, -5, GETUTCDATE())
+GO
 
 CREATE VIEW CBReportEventTable AS
 SELECT

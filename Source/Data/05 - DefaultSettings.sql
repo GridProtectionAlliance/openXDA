@@ -31,6 +31,39 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADE.WaitForINF', 'False', 'False')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.InterruptionThreshold', '0.1', '0.1')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.LengthUnits', 'miles', 'miles')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.MaxCurrent', '1000000.0', '1000000.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.MaxEventDuration', '0.0', '0.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.MaxTimeOffset', '0.0', '0.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.MaxVoltage', '2.0', '2.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.MinTimeOffset', '0.0', '0.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.SagThreshold', '0.9', '0.9')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.SwellThreshold', '1.1', '1.1')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.SystemFrequency', '60.0', '60.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataAnalysis.TimeTolerance', '0.5', '0.5')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.Enabled', 'False', 'False')
 GO
 
@@ -40,13 +73,7 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.TimeWindow', '72', '72')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DbTimeout', '120', '120')
-GO
-
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DefaultDisturbanceEnvelope', '1', '1')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DefaultMeterTimeZone', 'UTC', 'UTC')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.AdminAddress', 'xda-admin@gridprotectionalliance.org', 'xda-admin@gridprotectionalliance.org')
@@ -157,31 +184,37 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.WarnMissingDetectionLogic', 'False', 'False')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FilePattern', '(?<AssetKey>[^\\]+)\\[^\\]+$', '(?<AssetKey>[^\\]+)\\[^\\]+$')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileEnumerator.FolderExclusion', '', '')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileProcessorID', '4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D', '4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileEnumerator.OrderedEnumeration', 'False', 'False')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherBufferSize', '65536', '65536')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileEnumerator.Strategy', 'ParallelSubdirectories', 'ParallelSubdirectories')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherEnabled', 'True', 'True')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileProcessor.FilePattern', '(?<AssetKey>[^\\]+)\\[^\\]+$', '(?<AssetKey>[^\\]+)\\[^\\]+$')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherEnumerationStrategy', 'ParallelSubdirectories', 'ParallelSubdirectories')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileProcessor.MaxFileCreationTimeOffset', '0.0', '0.0')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherOrderedEnumeration', 'False', 'False')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileProcessor.MaxFileSize', '30.0', '30.0')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherInternalThreadCount', '0', '0')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FilePruner.RetentionPeriod', '0', '0')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherMaxFragmentation', '10', '10')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FilePruner.Schedule', '* 0 * * *', '* 0 * * *')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FolderExclusion', '', '')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.BufferSize', '65536', '65536')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.InternalThreadCount', '0', '0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.WatchDirectories', 'Watch', 'Watch')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.InstanceName', 'XDA', 'XDA')
@@ -193,40 +226,10 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.URL', 'http://127.0.0.1:8180', 'http://127.0.0.1:8180')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('InterruptionThreshold', '0.1', '0.1')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LengthUnits', 'miles', 'miles')
-GO
-
 INSERT INTO Setting (Name, Value, DefaultValue)VALUES ('LocalXDAInstance', 'http://127.0.0.1:8989', 'http://127.0.0.1:8989')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxCurrent', '1000000.0', '1000000.0')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxEventDuration', '0.0', '0.0')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxFileCreationTimeOffset', '0.0', '0.0')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxFileDuration', '0.0', '0.0')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxTimeOffset', '0.0', '0.0')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxVoltage', '2.0', '2.0')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MinTimeOffset', '0.0', '0.0')
-GO
-
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES ('OpenSEE.URL', 'http://localhost/OpenSEE', 'http://localhost/OpenSEE')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ProcessingThreadCount', '0', '0')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregation.Enabled', 'False', 'False')
@@ -250,15 +253,6 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ResultsPath', 'Results', 'Results')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SagThreshold', '0.9', '0.9')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SkipOnCRCHashMatch', 'True', 'True')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SwellThreshold', '1.1', '1.1')
-GO
-
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('StepChangeWebReport.Enabled', 'False', 'False')
 GO
 
@@ -268,25 +262,28 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('StepChangeWebReport.Verbose', 'False', 'False')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SystemFrequency', '60.0', '60.0')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('System.DbTimeout', '120', '120')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('System.DefaultMeterTimeZone', 'UTC', 'UTC')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('System.XDATimeZone', 'UTC', 'UTC')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SystemMVABase', '100.0', '100.0')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TimeTolerance', '0.5', '0.5')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TaskProcessor.MeterFilterQuery', 'SELECT * FROM Meter', 'SELECT * FROM Meter')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TaskProcessor.ProcessingThreadCount', '0', '0')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('UseDefaultFaultDetectionLogic', '1', '1')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('WatchDirectories', 'Watch', 'Watch')
-GO
-
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('WorkbenchTimeRangeInSeconds', '60', '60')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('XDATimeZone', 'UTC', 'UTC')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.RMS.FolderPath', 'Trms.dat', 'Trms.dat')

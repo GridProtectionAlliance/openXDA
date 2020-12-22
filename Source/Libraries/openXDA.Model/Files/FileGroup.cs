@@ -49,8 +49,6 @@ namespace openXDA.Model
 
         public int Error { get; set; }
 
-        public int FileHash { get; set; }
-
         [NonRecordField]
         public List<DataFile> DataFiles { get; set; } = new List<DataFile>();
 

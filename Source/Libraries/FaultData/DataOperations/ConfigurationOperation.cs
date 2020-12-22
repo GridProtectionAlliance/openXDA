@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -149,40 +148,6 @@ namespace FaultData.DataOperations
 
         // Constants
         private const double Sqrt3 = 1.7320508075688772935274463415059D;
-
-        // Fields
-        private string m_filePattern;
-        private double m_systemFrequency;
-
-        #endregion
-
-        #region [ Properties ]
-
-        [Setting]
-        public string FilePattern
-        {
-            get
-            {
-                return m_filePattern;
-            }
-            set
-            {
-                m_filePattern = value;
-            }
-        }
-
-        [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
 
         #endregion
 

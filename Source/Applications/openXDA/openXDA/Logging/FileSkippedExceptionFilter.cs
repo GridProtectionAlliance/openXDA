@@ -24,6 +24,7 @@
 using System;
 using log4net.Core;
 using log4net.Filter;
+using openXDA.Nodes.Types.FileProcessing;
 
 namespace openXDA.Logging
 {
@@ -62,7 +63,7 @@ namespace openXDA.Logging
         public override FilterDecision Decide(LoggingEvent loggingEvent)
         {
             Exception ex = loggingEvent.ExceptionObject ?? DefaultException;
-            bool fileSkipped = ExtensibleDisturbanceAnalysisEngine.IsFileSkippedException(ex);
+            bool fileSkipped = ex is FileSkippedException;
 
             if (m_excludeFileSkippedExceptions && fileSkipped)
                 return FilterDecision.Deny;

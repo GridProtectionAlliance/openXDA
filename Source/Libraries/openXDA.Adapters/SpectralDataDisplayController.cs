@@ -21,41 +21,41 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Data;
-using GSF.Data.Model;
-using GSF.Web;
-using GSF.Web.Model;
-using openHistorian.XDALink;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Caching;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using GSF.Data;
+using GSF.Data.Model;
+using GSF.Web;
+using openHistorian.XDALink;
+using openXDA.Model;
 using TrendingDataPoint = openHistorian.XDALink.TrendingDataPoint;
 
 namespace openXDA.Adapters
 {
     public class SpectralDataDisplayController : ApiController
     {
-        #region [ Static ]
-        private static MemoryCache s_memoryCache;
+        #region [ Constructors ]
 
-        static SpectralDataDisplayController()
-        {
-            s_memoryCache = new MemoryCache("SpectralDataDisplay");
-        }
+        public SpectralDataDisplayController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
         #endregion
 
+        #region [ Properties ]
+
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
+        #endregion
 
         #region [ Methods ]
+
         [HttpGet]
         public Task<string[][]> GetData(CancellationToken cancellationToken)
         {
@@ -69,7 +69,7 @@ namespace openXDA.Adapters
 
             return Task.Factory.StartNew(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     string target = "SpectralDataDisplay" + meterID.ToString() + startTime.ToString("yyyyMMdd") + level + type + phaseID.ToString();
                     List<List<string>> data = (List<List<string>>)s_memoryCache.Get(target);
@@ -88,16 +88,16 @@ namespace openXDA.Adapters
                         {
                             IEnumerable<IGrouping<DateTime, TrendingDataPoint>> points = historian.Read(channels.Select(x => x.ID).ToArray(), startTime, endTime).Where(x => x.SeriesID.ToString() == level).GroupBy(x => x.Timestamp);
 
-                            foreach(var grouping in points)
+                            foreach (var grouping in points)
                             {
                                 dict.Add(grouping.Key, new Dictionary<string, double>());
-                                foreach(TrendingDataPoint trendingDataPoint in grouping)
+                                foreach (TrendingDataPoint trendingDataPoint in grouping)
                                 {
-                                    dict[grouping.Key].Add(GetBucket(type, channels.First( x => x.ID == trendingDataPoint.ChannelID)), trendingDataPoint.Value);
+                                    dict[grouping.Key].Add(GetBucket(type, channels.First(x => x.ID == trendingDataPoint.ChannelID)), trendingDataPoint.Value);
                                 }
                             }
 
-                            foreach(var pair in dict)
+                            foreach (var pair in dict)
                             {
                                 List<string> row = new List<string>() { pair.Key.ToString() };
                                 foreach (string header in headers)
@@ -124,7 +124,7 @@ namespace openXDA.Adapters
             {
                 case "Interharmonic": return channel.HarmonicGroup.ToString();
                 case "HighResolution": return channel.Description.Split('-')[1].Split('k')[0];
-                case "LowResolution": return (double.Parse(channel.Name.Split(' ')[2])/1000).ToString();
+                case "LowResolution": return (double.Parse(channel.Name.Split(' ')[2]) / 1000).ToString();
                 default: return channel.HarmonicGroup.ToString();
             }
         }
@@ -144,7 +144,13 @@ namespace openXDA.Adapters
 
             return recordRestriction + recordRestriction2;
         }
+
         #endregion
 
+        #region [ Static ]
+
+        private static MemoryCache s_memoryCache = new MemoryCache("SpectralDataDisplay");
+
+        #endregion
     }
 }

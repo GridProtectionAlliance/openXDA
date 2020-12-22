@@ -69,54 +69,27 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Security.Principal;
+using System.Net.Http;
 using System.ServiceProcess;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using GSF;
-using GSF.Collections;
 using GSF.Configuration;
 using GSF.Console;
 using GSF.Data;
-using GSF.Data.Model;
-using GSF.Identity;
 using GSF.IO;
-using GSF.Reflection;
-using GSF.Security;
-using GSF.Security.Model;
 using GSF.ServiceProcess;
-using GSF.Web.Hosting;
-using GSF.Web.Model;
-using GSF.Web.Security;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Layout;
-using Microsoft.Owin.Hosting;
-using openXDA.Adapters;
-using openXDA.Configuration;
-using openXDA.DataPusher;
 using openXDA.Logging;
-using openXDA.Model;
-using openXDA.Reports;
-using openXDA.PQTrendingWebReport;
-using PQMark.DataAggregator;
-using Channel = openXDA.Model.Channel;
-using DataHub = openXDA.Hubs.DataHub;
-using Meter = openXDA.Model.Meter;
-using MeterAsset = openXDA.Model.MeterAsset;
-using Location = openXDA.Model.Location;
-using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
-using Setting = openXDA.Model.Setting;
-using openXDA.StepChangeWebReport;
-using System.Security;
-using System.Net;
+using openXDA.Nodes;
+using openXDA.Nodes.Types.FileProcessing;
+using openXDA.WebHosting;
 
 namespace openXDA
 {
@@ -124,51 +97,35 @@ namespace openXDA
     {
         #region [ Members ]
 
-        // Events
+        // Nested Types
+        private class CLIRegistry : ICLIRegistry
+        {
+            private ServiceHelper ServiceHelper { get; }
 
-        /// <summary>
-        /// Raised when there is a new status message reported to service.
-        /// </summary>
-        public event EventHandler<EventArgs<Guid, string, UpdateType>> UpdatedStatus;
+            public CLIRegistry(ServiceHelper serviceHelper) =>
+                ServiceHelper = serviceHelper;
 
-        /// <summary>
-        /// Raised when there is a new exception logged to service.
-        /// </summary>
-        public event EventHandler<EventArgs<Exception>> LoggedException;
+            public void RegisterScheduledProcess(Action process, string name, string schedule)
+            {
+                Action<string, object[]> processExecutionMethod = (_, __) => process();
+                ServiceHelper.RemoveScheduledProcess(name);
 
-        // Fields
-        private ServiceMonitors m_serviceMonitors;
-        private ExtensibleDisturbanceAnalysisEngine m_extensibleDisturbanceAnalysisEngine;
-        private DataPusherEngine m_dataPusherEngine;
-        private DataAggregationEngine m_dataAggregationEngine;
-        private ReportsEngine m_reportsEngine;
-        private PQTrendingWebReportEngine m_pqTrendingWebReportEngine;
-        private StepChangeWebReportEngine m_stepChangeWebReportEngine;
-        private Thread m_startEngineThread;
-        private bool m_serviceStopping;
-        private IDisposable m_webAppHost;
-        private bool m_disposed;
+                if (ServiceHelper.AddProcess(processExecutionMethod, name))
+                    ServiceHelper.ProcessScheduler.AddSchedule(name, schedule, true);
+            }
+
+            public void DeregisterScheduledProcess(string name) =>
+                ServiceHelper.RemoveScheduledProcess(name);
+        }
+
         #endregion
 
         #region [ Constructors ]
 
         public ServiceHost()
         {
-            // Make sure default service settings exist
-            ConfigurationFile configFile = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-            systemSettings.Add("DefaultCulture", "en-US", "Default culture to use for language, country/region and calendar formats.");
-
-            // Attempt to set default culture
-            string defaultCulture = systemSettings["DefaultCulture"].ValueAs("en-US");
-            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CreateSpecificCulture(defaultCulture);     // Defaults for date formatting, etc.
-            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CreateSpecificCulture(defaultCulture);   // Culture for resource strings, etc.
-
+            InitializeCultureSettings();
             InitializeComponent();
-
-            // Register event handlers.
-            m_serviceHelper.ServiceStarted += ServiceHelper_ServiceStarted;
-            m_serviceHelper.ServiceStopping += ServiceHelper_ServiceStopping;
         }
 
         public ServiceHost(IContainer container)
@@ -182,52 +139,125 @@ namespace openXDA
 
         #region [ Properties ]
 
-        /// <summary>
-        /// Gets the configured default web page for the application.
-        /// </summary>
-        public string DefaultWebPage
-        {
-            get;
-            private set;
-        }
+        public ServiceHelper Helper => m_serviceHelper;
+        private ConfigurationFile ConfigurationFile { get; set; }
+        private DatabaseConnectionFactory DatabaseConnectionFactory { get; set; }
+        private ServiceMonitors ServiceMonitors { get; set; }
+        private Host NodeHost { get; set; }
+        private XDAWebHost WebHost { get; set; }
 
-        /// <summary>
-        /// Gets the model used for the application.
-        /// </summary>
-        public AppModel Model
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets current performance statistics.
-        /// </summary>
-        public string PerformanceStatistics => m_extensibleDisturbanceAnalysisEngine.Status;
         #endregion
 
         #region [ Methods ]
 
-        private void WebServer_StatusMessage(object sender, EventArgs<string> e)
+        public async Task<string> QueryEngineStatusAsync()
         {
-            //DisplayStatusMessage(e.Argument, UpdateType.Information);
+            using (AdoDataConnection connection = DatabaseConnectionFactory.CreateDbConnection())
+            {
+                string nodeConfigurationStatus = QueryNodeConfigurationStatus(connection);
+                string fileNodeStatus = await QueryFileNodeStatusAsync(connection);
+                string analysisStatus = QueryAnalysisStatus(connection);
+
+                return new StringBuilder()
+                    .AppendLine("=== NODE CONFIGURATION ===")
+                    .AppendLine(nodeConfigurationStatus)
+                    .AppendLine()
+                    .AppendLine("=== FILE PROCESSORS ===")
+                    .AppendLine(fileNodeStatus)
+                    .AppendLine()
+                    .AppendLine("=== DATA PROCESSORS ===")
+                    .Append(analysisStatus)
+                    .ToString();
+            }
         }
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
-            ServiceHelperAppender serviceHelperAppender;
-            RollingFileAppender debugLogAppender;
-            RollingFileAppender skippedFilesAppender;
-
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
             // Set current working directory to fix relative paths
             Directory.SetCurrentDirectory(FilePath.GetAbsolutePath(""));
 
-            // Set up logging
-            serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
+            InitializeLogging();
 
-            debugLogAppender = new RollingFileAppender();
+            ConfigurationFile = ConfigurationFile.Current;
+            CategorizedSettingsSection categorizedSettings = ConfigurationFile.Settings;
+            CategorizedSettingsElementCollection systemSettings = categorizedSettings["systemSettings"];
+            systemSettings.Add("ConnectionString", "Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI", "Defines the connection to the openXDA database.");
+            systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter", "Configuration database ADO.NET data provider assembly type creation string used when ConfigurationType=Database");
+            systemSettings.Add("NodeID", "00000000-0000-0000-0000-000000000000", "Unique Node ID");
+            systemSettings.Add("CompanyName", "Grid Protection Alliance", "The acronym representing the company who owns this instance of openXDA.");
+            systemSettings.Add("CompanyAcronym", "GPA", "Default culture to use for language, country/region and calendar formats.");
+            systemSettings.Add("DateFormat", "MM/dd/yyyy", "The date format to use when rendering timestamps.");
+            systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The time format to use when rendering timestamps.");
+            systemSettings.Add("ConfigurationCachePath", string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar), "Defines the path used to cache serialized configurations");
+
+            CategorizedSettingsElementCollection securityProvider = categorizedSettings["securityProvider"];
+            securityProvider.Add("ConnectionString", "Eval(systemSettings.ConnectionString)", "Connection connection string to be used for connection to the backend security datastore.");
+            securityProvider.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
+
+            DatabaseConnectionFactory = new DatabaseConnectionFactory(ConfigurationFile);
+
+            // Set up heartbeat and client request handlers
+            m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Reconfigure", "Force host to reconfigure on demand", ReconfigureRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadWebHost", "Reloads web host with latest configuration", ReloadWebHostRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about file/analysis nodes", EngineStatusRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
+
+            // Set up adapter loader to load service monitors
+            ServiceMonitors = new ServiceMonitors();
+            ServiceMonitors.AdapterCreated += ServiceMonitors_AdapterCreated;
+            ServiceMonitors.AdapterLoaded += ServiceMonitors_AdapterLoaded;
+            ServiceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
+            ServiceMonitors.AdapterLoadException += (obj, args) => HandleException(args.Argument);
+            ServiceMonitors.Initialize();
+
+            // Initialize node host and web host in async loops to
+            // maintain a robust startup sequence and avoid timeouts
+            _ = Task.Run(async () =>
+            {
+                Func<AdoDataConnection> connectionFactory = DatabaseConnectionFactory.CreateDbConnection;
+                CLIRegistry cliRegistry = new CLIRegistry(m_serviceHelper);
+                NodeHost = await InitializeNodeHostAsync(connectionFactory, cliRegistry);
+                WebHost = await InitializeWebHostAsync(NodeHost);
+            });
+        }
+
+        private void ServiceHelper_ServiceStopping(object sender, EventArgs e)
+        {
+            // Dispose of adapter loader for service monitors
+            ServiceMonitors.AdapterLoaded -= ServiceMonitors_AdapterLoaded;
+            ServiceMonitors.AdapterUnloaded -= ServiceMonitors_AdapterUnloaded;
+            ServiceMonitors.Dispose();
+
+            // Save updated settings to the configuration file
+            ConfigurationFile.Save();
+
+            NodeHost?.Dispose();
+            WebHost?.Dispose();
+            components.Dispose();
+            Dispose();
+        }
+
+        private void InitializeCultureSettings()
+        {
+            // Make sure default service settings exist
+            ConfigurationFile configFile = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+            systemSettings.Add("DefaultCulture", "en-US", "Default culture to use for language, country/region and calendar formats.");
+
+            // Attempt to set default culture
+            string defaultCulture = systemSettings["DefaultCulture"].ValueAs("en-US");
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CreateSpecificCulture(defaultCulture);     // Defaults for date formatting, etc.
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CreateSpecificCulture(defaultCulture);   // Culture for resource strings, etc.
+        }
+
+        private void InitializeLogging()
+        {
+            ServiceHelperAppender serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
+
+            RollingFileAppender debugLogAppender = new RollingFileAppender();
             debugLogAppender.StaticLogFileName = false;
             debugLogAppender.AppendToFile = true;
             debugLogAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
@@ -237,7 +267,7 @@ namespace openXDA
             debugLogAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
             debugLogAppender.AddFilter(new FileSkippedExceptionFilter());
 
-            skippedFilesAppender = new RollingFileAppender();
+            RollingFileAppender skippedFilesAppender = new RollingFileAppender();
             skippedFilesAppender.StaticLogFileName = false;
             skippedFilesAppender.AppendToFile = true;
             skippedFilesAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
@@ -265,558 +295,61 @@ namespace openXDA
             debugLogAppender.ActivateOptions();
             skippedFilesAppender.ActivateOptions();
             BasicConfigurator.Configure(serviceHelperAppender, debugLogAppender, skippedFilesAppender);
-
-            // Set up heartbeat and client request handlers
-            m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
-            m_serviceHelper.AddScheduledProcess(ReloadConfigurationHandler, "ReloadConfiguration", "0 0 * * *");
-            m_serviceHelper.AddProcess(EnumerateWatchDirectoriesHandler, "EnumWatchDirectories");
-            m_serviceHelper.AddProcess(AutoFileDeletionHandler, "AutoFileDeletion");
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadSystemSettings", "Reloads system settings from the database", ReloadSystemSettingsRequestHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about the XDA engine", EngineStatusHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TweakFileProcessor", "Modifies the behavior of the file processor at runtime", TweakFileProcessorHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RestoreEventEmails", "Restores event email engine to a working state tripping", RestoreEventEmails));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PurgeData", "Deletes data from database beyond a sepecified date", PurgeDataHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQReport", "Issues a request to generate a monthly PQ report for a meter", PQReportHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcAD", "Creates aggregates for all data", OnProcessAllData));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcED", "Creates aggregates for missing monthly data", OnProcessAllEmptyData));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcMTD", "Creates aggregates for month to date data", OnProcessMonthToDateData));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQTrendingProcess", "Processes data for PQTrending Web Report", OnProcessPQTrending));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("StepChangeProcess", "Processes data for Step Change Web Report", OnProcessStepChange));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("BreakerReportProcess", "Processes data for Breaker Report", OnProcessProcessBreakerReport));
-
-            m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
-            m_serviceHelper.LoggedException += LoggedExceptionHandler;
-
-            // Set up adapter loader to load service monitors
-            m_serviceMonitors = new ServiceMonitors();
-            m_serviceMonitors.AdapterCreated += ServiceMonitors_AdapterCreated;
-            m_serviceMonitors.AdapterLoaded += ServiceMonitors_AdapterLoaded;
-            m_serviceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
-            m_serviceMonitors.AdapterLoadException += (obj, args) => HandleException(args.Argument);
-            m_serviceMonitors.Initialize();
-
-            // Set up the analysis engine
-            m_extensibleDisturbanceAnalysisEngine = new ExtensibleDisturbanceAnalysisEngine();
-
-            // Set up data pusher engine
-            m_dataPusherEngine = new DataPusherEngine();
-
-            // Set up data aggregation engine
-            m_dataAggregationEngine = new DataAggregationEngine();
-
-            // Set up data reports engine
-            m_reportsEngine = new ReportsEngine();
-
-            // Set up data reports engine
-            m_pqTrendingWebReportEngine = new PQTrendingWebReportEngine();
-
-            // Set up data reports engine
-            m_stepChangeWebReportEngine = new StepChangeWebReportEngine();
-
-
-            //Set up datahub callbacks
-            DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument1, Args.Argument2);
-            DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2, Args.Argument3);
-            DataHub.ReloadSystemSettingsEvent += (obj, Args) => OnReloadSystemSettingsRequestHandler();
-            DataHub.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
-
-            //Set up DataPusherEngine callbacks
-            DataPusherEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
-            DataPusherEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
-            DataPusherEngine.UpdateProgressForMeter += (obj, Args) => DataHub.ProgressUpdatedByMeter(obj, Args);
-            DataPusherEngine.UpdateProgressForInstance += (obj, Args) => DataHub.ProgressUpdatedByInstance(obj, Args);
-
-            //Set up PQMarkController callbacks
-            PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2);
-
-            //Set up DataAggregationEngine callbacks
-            DataAggregationEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
-            DataAggregationEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
-
-            // Set up separate thread to start the engine
-            m_startEngineThread = new Thread(() =>
-            {
-                const int RetryDelay = 1000;
-                const int SleepTime = 200;
-                const int LoopCount = RetryDelay / SleepTime;
-
-                bool engineStarted = false;
-                bool webUIStarted = false;
-                bool dataPusherEngineStarted = false;
-                bool dataAggregationEngineStarted = false;
-                bool reportsEngineStarted = false;
-                bool pqTrendingWebReportsEngineStarted = false;
-                bool statChangeWebReportsEngineStarted = false;
-
-                while (true)
-                {
-                    engineStarted = engineStarted || TryStartEngine();
-                    webUIStarted = webUIStarted || TryStartWebUI();
-                    dataPusherEngineStarted = dataPusherEngineStarted || TryStartDataPusherEngine();
-                    dataAggregationEngineStarted = dataAggregationEngineStarted || TryStartDataAggregationEngine();
-                    reportsEngineStarted = m_reportsEngine.Start();
-                    pqTrendingWebReportsEngineStarted = pqTrendingWebReportsEngineStarted || TryStartPQTrendingWebReportsEngine();
-                    statChangeWebReportsEngineStarted = statChangeWebReportsEngineStarted || TryStartStepChangeWebReportsEngine();
-
-                    if (engineStarted && webUIStarted && dataPusherEngineStarted && reportsEngineStarted && pqTrendingWebReportsEngineStarted && statChangeWebReportsEngineStarted)
-                        break;
-
-                    for (int i = 0; i < LoopCount; i++)
-                    {
-                        if (m_serviceStopping)
-                            return;
-
-                        Thread.Sleep(SleepTime);
-                    }
-                }
-            });
-
-            m_startEngineThread.Start();
         }
 
-        private void ServiceHelper_ServiceStopping(object sender, EventArgs e)
+        private async Task<Host> InitializeNodeHostAsync(Func<AdoDataConnection> connectionFactory, ICLIRegistry cliRegistry)
         {
-            if (!m_disposed)
+            while (true)
             {
                 try
                 {
-                   m_webAppHost?.Dispose();
+                    ConfigurationFile.Reload();
+
+                    CategorizedSettingsSection categorizedSettings = ConfigurationFile.Settings;
+                    CategorizedSettingsElementCollection systemSettings = categorizedSettings["systemSettings"];
+                    CategorizedSettingsElement hostRegistrationKeySetting = systemSettings["HostRegistrationKey"];
+                    string hostRegistrationKey = hostRegistrationKeySetting?.Value;
+
+                    if (string.IsNullOrEmpty(hostRegistrationKey))
+                        hostRegistrationKey = Environment.MachineName;
+
+                    DatabaseConnectionFactory.ReloadConfiguration();
+                    return new Host(hostRegistrationKey, connectionFactory, cliRegistry);
                 }
-                finally
+                catch (Exception ex)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose();    // Call base class Dispose().
+                    HandleException(ex);
                 }
-            }
 
-            // If the start engine thread is still
-            // running, wait for it to stop
-            m_serviceStopping = true;
-            m_startEngineThread.Join();
-            m_serviceHelper.UpdatedStatus -= UpdatedStatusHandler;
-            m_serviceHelper.LoggedException -= LoggedExceptionHandler;
-
-            // Dispose of adapter loader for service monitors
-            m_serviceMonitors.AdapterLoaded -= ServiceMonitors_AdapterLoaded;
-            m_serviceMonitors.AdapterUnloaded -= ServiceMonitors_AdapterUnloaded;
-            m_serviceMonitors.Dispose();
-
-            // Dispose of the analysis engine
-            m_extensibleDisturbanceAnalysisEngine.Stop();
-            m_extensibleDisturbanceAnalysisEngine.Dispose();
-
-            // Dispose of the data pusher engine
-            m_dataPusherEngine.Stop();
-            m_dataPusherEngine.Dispose();
-
-            // Save updated settings to the configuration file
-            ConfigurationFile.Current.Save();
-
-            Dispose();
-        }
-
-        // Attempts to start the engine and logs startup errors.
-        private bool TryStartEngine()
-        {
-            try
-            {
-                // Start the analysis engine
-                m_extensibleDisturbanceAnalysisEngine.Start();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                string message;
-
-                // Stop the analysis engine
-                m_extensibleDisturbanceAnalysisEngine.Stop();
-
-                // Log the exception
-                message = "Failed to start XDA engine due to exception: " + ex.Message;
-                HandleException(new InvalidOperationException(message, ex));
-
-                return false;
+                await Task.Delay(5000);
             }
         }
 
-        // Attempts to start the engine and logs startup errors.
-        private bool TryStartDataPusherEngine()
+        private async Task<XDAWebHost> InitializeWebHostAsync(Host nodeHost)
         {
-            try
+            ServiceConnection.InitializeDefaultInstance(this);
+
+            while (true)
             {
-                m_dataPusherEngine.Initialize();
-
-                string systemSettingsConnectionString = LoadSystemSettings();
-                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_dataPusherEngine);
-
-                if (m_dataPusherEngine.DataPusherSettings.Enabled)
-                    m_dataPusherEngine.Start();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                string message;
-
-                // Stop the analysis engine
-                m_dataPusherEngine.Stop();
-
-                // Log the exception
-                message = "Failed to start DataPusher engine due to exception: " + ex.Message;
-                HandleException(new InvalidOperationException(message, ex));
-
-                return false;
-            }
-        }
-
-        // Attempts to start the engine and logs startup errors.
-        private bool TryStartDataAggregationEngine()
-        {
-            try
-            {
-                m_dataAggregationEngine.Initialize();
-
-                string systemSettingsConnectionString = LoadSystemSettings();
-                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_dataAggregationEngine);
-
-                // Start the analysis engine
-                if (m_dataAggregationEngine.PQMarkAggregationSettings.Enabled)
-                    m_dataAggregationEngine.Start();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                string message;
-
-                // Stop the analysis engine
-                m_dataAggregationEngine.Stop();
-
-                // Log the exception
-                message = "Failed to start PQMark data aggregation engine due to exception: " + ex.Message;
-                HandleException(new InvalidOperationException(message, ex));
-
-                return false;
-            }
-        }
-
-        // Attempts to start the engine and logs startup errors.
-        private bool TryStartReportsEngine()
-        {
-            try
-            {
-                string systemSettingsConnectionString = LoadSystemSettings();
-                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_reportsEngine);
-
-                m_reportsEngine.Start();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                string message;
-
-                // Stop the reports engine
-                m_reportsEngine.Stop();
-
-                // Log the exception
-                message = "Failed to start Reports engine due to exception: " + ex.Message;
-                HandleException(new InvalidOperationException(message, ex));
-
-                return false;
-            }
-        }
-
-        // Attempts to start the engine and logs startup errors.
-        private bool TryStartPQTrendingWebReportsEngine()
-        {
-            try
-            {
-                string systemSettingsConnectionString = LoadSystemSettings();
-                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_pqTrendingWebReportEngine);
-
-                // Start the analysis engine
-                if (m_pqTrendingWebReportEngine.PQTrendingWebReportSettings.Enabled)
-                    m_pqTrendingWebReportEngine.Start();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                string message;
-
-                // Stop the analysis engine
-                m_pqTrendingWebReportEngine.Stop();
-
-                // Log the exception
-                message = "Failed to start reports engine due to exception: " + ex.Message;
-                HandleException(new InvalidOperationException(message, ex));
-
-                return false;
-            }
-        }
-
-        // Attempts to start the engine and logs startup errors.
-        private bool TryStartStepChangeWebReportsEngine()
-        {
-            try
-            {
-                string systemSettingsConnectionString = LoadSystemSettings();
-                ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_stepChangeWebReportEngine);
-
-                // Start the analysis engine
-                if (m_stepChangeWebReportEngine.StepChangeWebReportSettings.Enabled)
-                    m_stepChangeWebReportEngine.Start();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                string message;
-
-                // Stop the analysis engine
-                m_stepChangeWebReportEngine.Stop();
-
-                // Log the exception
-                message = "Failed to start reports engine due to exception: " + ex.Message;
-                HandleException(new InvalidOperationException(message, ex));
-
-                return false;
-            }
-        }
-
-
-        // Attempts to start the web UI and logs startup errors.
-        private bool TryStartWebUI()
-        {
-            // Define set of default anonymous web resources for this site
-            const string DefaultAnonymousResourceExpression = "^/@|^/Scripts/|^/Content/|^/Images/|^/fonts/|^/favicon.ico$";
-            const string DefaultAuthFailureRedirectResourceExpression = AuthenticationOptions.DefaultAuthFailureRedirectResourceExpression + "|^/grafana(?!/api/).*$";
-
-            try
-            {
-                ConfigurationFile.Current.Reload();
-                AdoDataConnection.ReloadConfigurationSettings();
-
-                CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-                CategorizedSettingsElementCollection securityProvider = ConfigurationFile.Current.Settings["securityProvider"];
-
-                systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter", "Configuration database ADO.NET data provider assembly type creation string used when ConfigurationType=Database");
-                systemSettings.Add("NodeID", "00000000-0000-0000-0000-000000000000", "Unique Node ID");
-                systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openXDA.");
-                systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openXDA.");
-                systemSettings.Add("WebHostURL", "http://+:8989", "The web hosting URL for remote system management.");
-                systemSettings.Add("DefaultWebPage", "index.cshtml", "The default web page for the hosted web server.");
-                systemSettings.Add("DateFormat", "MM/dd/yyyy", "The default date format to use when rendering timestamps.");
-                systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The default time format to use when rendering timestamps.");
-                systemSettings.Add("BootstrapTheme", "Content/bootstrap.min.css", "Path to Bootstrap CSS to use for rendering styles.");
-
-                systemSettings.Add("AuthenticationSchemes", AuthenticationOptions.DefaultAuthenticationSchemes, "Comma separated list of authentication schemes to use for clients accessing the hosted web server, e.g., Basic or NTLM.");
-                systemSettings.Add("AuthFailureRedirectResourceExpression", DefaultAuthFailureRedirectResourceExpression, "Expression that will match paths for the resources on the web server that should redirect to the LoginPage when authentication fails.");
-                systemSettings.Add("AnonymousResourceExpression", DefaultAnonymousResourceExpression, "Expression that will match paths for the resources on the web server that can be provided without checking credentials.");
-                systemSettings.Add("AuthenticationToken", SessionHandler.DefaultAuthenticationToken, "Defines the token used for identifying the authentication token in cookie headers.");
-                systemSettings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
-                systemSettings.Add("RequestVerificationToken", AuthenticationOptions.DefaultRequestVerificationToken, "Defines the token used for anti-forgery verification in HTTP request headers.");
-                systemSettings.Add("LoginPage", AuthenticationOptions.DefaultLoginPage, "Defines the login page used for redirects on authentication failure. Expects forward slash prefix.");
-                systemSettings.Add("AuthTestPage", AuthenticationOptions.DefaultAuthTestPage, "Defines the page name for the web server to test if a user is authenticated. Expects forward slash prefix.");
-                systemSettings.Add("Realm", "", "Case-sensitive identifier that defines the protection space for the web based authentication and is used to indicate a scope of protection.");
-                systemSettings.Add("ConfigurationCachePath", string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar), "Defines the path used to cache serialized configurations");
-
-                securityProvider.Add("ConnectionString", "Eval(systemSettings.ConnectionString)", "Connection connection string to be used for connection to the backend security datastore.");
-                securityProvider.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
-
-                using (AdoDataConnection connection = new AdoDataConnection("securityProvider"))
+                try
                 {
-                    ValidateAccountsAndGroups(connection);
+                    ConfigurationFile.Reload();
+                    DatabaseConnectionFactory.ReloadConfiguration();
+                    return new XDAWebHost(ConfigurationFile, nodeHost);
                 }
-
-                DefaultWebPage = systemSettings["DefaultWebPage"].Value;
-
-                // Load external WebController Dll to make sure they are in the application Domain before loading the Web controller
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                catch (Exception ex)
                 {
-                    try {
-                        TableOperations<Model.WebControllerExtension> extensionTable = new TableOperations<Model.WebControllerExtension>(connection);
-
-                        List<Model.WebControllerExtension> webExtensionDefinitions = extensionTable
-                            .QueryRecords("LoadOrder")
-                            .ToList();
-
-                        foreach (Model.WebControllerExtension webExtensionDefinition in webExtensionDefinitions)
-                        {
-                            try
-                            {
-                                System.Reflection.Assembly.Load(webExtensionDefinition.AssemblyName);
-
-                                LogStatusMessage($"[{webExtensionDefinition.AssemblyName}] Loading WebController...");
-                            }
-                            catch (Exception ex)
-                            {
-                                string message;
-
-                                // Log the exception
-                                message = $"Failed to load web Controller {webExtensionDefinition.AssemblyName} due to exception: " + ex.InnerException.Message;
-                                HandleException(new InvalidOperationException(message, ex));
-                            }
-                        }
-
-                    }
-                    catch (Exception ex) {
-                        HandleException(ex);
-                    }
+                    HandleException(ex);
                 }
 
-
-                Model = new AppModel();
-                Model.Global.CompanyName = systemSettings["CompanyName"].Value;
-                Model.Global.CompanyAcronym = systemSettings["CompanyAcronym"].Value;
-                Model.Global.ApplicationName = "openXDA";
-                Model.Global.ApplicationDescription = "open eXtensible Disturbance Analytics";
-                Model.Global.ApplicationKeywords = "open source, utility, software, meter, interrogation";
-                Model.Global.DateFormat = systemSettings["DateFormat"].Value;
-                Model.Global.TimeFormat = systemSettings["TimeFormat"].Value;
-                Model.Global.DateTimeFormat = $"{Model.Global.DateFormat} {Model.Global.TimeFormat}";
-                Model.Global.BootstrapTheme = systemSettings["BootstrapTheme"].Value;
-
-                // Attach to default web server events
-                WebServer webServer = WebServer.Default;
-                webServer.StatusMessage += WebServer_StatusMessage;
-
-                // Define types for Razor pages - self-hosted web service does not use view controllers so
-                // we must define configuration types for all paged view model based Razor views here:
-                webServer.PagedViewModelTypes.TryAdd("Config/Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/ProblematicUserAccounts.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/UsersEmailTemplates.cshtml", new Tuple<Type, Type>(typeof(UserEmailTemplate), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailTemplatesUsers.cshtml", new Tuple<Type, Type>(typeof(EmailTemplateUser), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/XSLTemplate.cshtml", new Tuple<Type, Type>(typeof(XSLTemplate), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/AssetGroups.cshtml", new Tuple<Type, Type>(typeof(AssetGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/AssetGroupAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(AssetGroupAssetGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/MeterAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterAssetGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/LineAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(AssetAssetGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/UserDashSettings.cshtml", new Tuple<Type, Type>(typeof(UserDashSettings), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/MetersWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithHourlyLimits), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/ChannelsWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(ChannelsWithHourlyLimits), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/MetersWithNormalLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithNormalLimits), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/ChannelsWithNormalLimits.cshtml", new Tuple<Type, Type>(typeof(ChannelsWithNormalLimits), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/HourOfWeekLimits.cshtml", new Tuple<Type, Type>(typeof(HourOfWeekLimit), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/UserAccountAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountAssetGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EventEmailConfiguration.cshtml", new Tuple<Type, Type>(typeof(EventEmailParameters), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/ExternalLinks/PQViewDataLoader.cshtml", new Tuple<Type, Type>(typeof(PQViewSite), typeof(DataHub)));
-
-                webServer.PagedViewModelTypes.TryAdd("Assets/Asset.cshtml", new Tuple<Type, Type>(typeof(Asset), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Sites.cshtml", new Tuple<Type, Type>(typeof(Location), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/LineSegments.cshtml", new Tuple<Type, Type>(typeof(LineSegment), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Buss.cshtml", new Tuple<Type, Type>(typeof(Bus), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/CapacitorBanks.cshtml", new Tuple<Type, Type>(typeof(CapBank), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/CapacitorBankRelays.cshtml", new Tuple<Type, Type>(typeof(CapBankRelay), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Transformers.cshtml", new Tuple<Type, Type>(typeof(Transformer), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Breakers.cshtml", new Tuple<Type, Type>(typeof(Breaker), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterAsset), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/AssetConnections.cshtml", new Tuple<Type, Type>(typeof(AssetConnection), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
-
-                webServer.PagedViewModelTypes.TryAdd("Assets/Customer.cshtml", new Tuple<Type, Type>(typeof(Customer), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/CustomerAsset.cshtml", new Tuple<Type, Type>(typeof(CustomerAsset), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/SpareAsset.cshtml", new Tuple<Type, Type>(typeof(AssetSpare), typeof(DataHub)));
-
-                webServer.PagedViewModelTypes.TryAdd("Workbench/Filters.cshtml", new Tuple<Type, Type>(typeof(WorkbenchFilter), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/Events.cshtml", new Tuple<Type, Type>(typeof(Event), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/Event.cshtml", new Tuple<Type, Type>(typeof(SingleEvent), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/Breaker.cshtml", new Tuple<Type, Type>(typeof(BreakerOperation), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/EventsForDate.cshtml", new Tuple<Type, Type>(typeof(EventForDate), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/EventsForDay.cshtml", new Tuple<Type, Type>(typeof(EventForDay), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/BreakersForDay.cshtml", new Tuple<Type, Type>(typeof(BreakersForDay), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/EventsForMeter.cshtml", new Tuple<Type, Type>(typeof(EventForMeter), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/MeterEventsByLine.cshtml", new Tuple<Type, Type>(typeof(MeterEventsByLine), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/FaultsDetailsByDate.cshtml", new Tuple<Type, Type>(typeof(FaultsDetailsByDate), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/DisturbancesForDay.cshtml", new Tuple<Type, Type>(typeof(DisturbancesForDay), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/DisturbancesForMeter.cshtml", new Tuple<Type, Type>(typeof(DisturbancesForMeter), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/FaultsForMeter.cshtml", new Tuple<Type, Type>(typeof(FaultForMeter), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/SiteSummaryPVM.cshtml", new Tuple<Type, Type>(typeof(SiteSummary), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/AuditLog.cshtml", new Tuple<Type, Type>(typeof(AuditLog), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/DataFiles.cshtml", new Tuple<Type, Type>(typeof(openXDA.Model.DataFile), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/StepChangeWebReportSettings.cshtml", new Tuple<Type, Type>(typeof(StepChangeMeasurement), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Workbench/PQTrendingWebReportSettings.cshtml", new Tuple<Type, Type>(typeof(PQMeasurement), typeof(DataHub)));
-
-                webServer.PagedViewModelTypes.TryAdd("DataPusher/RemoteXDAInstances.cshtml", new Tuple<Type, Type>(typeof(RemoteXDAInstance), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("DataPusher/MetersToDataPush.cshtml", new Tuple<Type, Type>(typeof(MetersToDataPush), typeof(DataHub)));
-
-                // Parse configured authentication schemes
-                if (!Enum.TryParse(systemSettings["AuthenticationSchemes"].ValueAs(AuthenticationOptions.DefaultAuthenticationSchemes.ToString()), true, out AuthenticationSchemes authenticationSchemes))
-                    authenticationSchemes = AuthenticationOptions.DefaultAuthenticationSchemes;
-
-                // Initialize web startup configuration
-                Startup.AuthenticationOptions.AuthenticationSchemes = authenticationSchemes;
-                Startup.AuthenticationOptions.AuthFailureRedirectResourceExpression = systemSettings["AuthFailureRedirectResourceExpression"].ValueAs(DefaultAuthFailureRedirectResourceExpression);
-                Startup.AuthenticationOptions.AnonymousResourceExpression = systemSettings["AnonymousResourceExpression"].ValueAs(DefaultAnonymousResourceExpression);
-                Startup.AuthenticationOptions.AuthenticationToken = systemSettings["AuthenticationToken"].ValueAs(SessionHandler.DefaultAuthenticationToken);
-                Startup.AuthenticationOptions.SessionToken = systemSettings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken);
-                Startup.AuthenticationOptions.RequestVerificationToken = systemSettings["RequestVerificationToken"].ValueAs(AuthenticationOptions.DefaultRequestVerificationToken);
-                Startup.AuthenticationOptions.LoginPage = systemSettings["LoginPage"].ValueAs(AuthenticationOptions.DefaultLoginPage);
-                Startup.AuthenticationOptions.AuthTestPage = systemSettings["AuthTestPage"].ValueAs(AuthenticationOptions.DefaultAuthTestPage);
-                Startup.AuthenticationOptions.Realm = systemSettings["Realm"].ValueAs("");
-                Startup.AuthenticationOptions.LoginHeader = $"<h3><img src=\"/Images/{Model.Global.ApplicationName}.png\"/> {Model.Global.ApplicationName}</h3>";
-
-                // Validate that configured authentication test page does not evaluate as an anonymous resource nor a authentication failure redirection resource
-                string authTestPage = Startup.AuthenticationOptions.AuthTestPage;
-
-                if (Startup.AuthenticationOptions.IsAnonymousResource(authTestPage))
-                    throw new SecurityException($"The configured authentication test page \"{authTestPage}\" evaluates as an anonymous resource. Modify \"AnonymousResourceExpression\" setting so that authorization test page is not a match.");
-
-                if (Startup.AuthenticationOptions.IsAuthFailureRedirectResource(authTestPage))
-                    throw new SecurityException($"The configured authentication test page \"{authTestPage}\" evaluates as an authentication failure redirection resource. Modify \"AuthFailureRedirectResourceExpression\" setting so that authorization test page is not a match.");
-
-                if (Startup.AuthenticationOptions.AuthenticationToken == Startup.AuthenticationOptions.SessionToken)
-                    throw new InvalidOperationException("Authentication token must be different from session token in order to differentiate the cookie values in the HTTP headers.");
-
-
-                // Create new web application hosting environment
-                m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
-
-                // Initiate pre-compile of base templates
-                if (AssemblyInfo.EntryAssembly.Debuggable)
-                {
-                    RazorEngine<CSharpDebug>.Default.PreCompile(HandleException);
-                    RazorEngine<VisualBasicDebug>.Default.PreCompile(HandleException);
-                }
-                else
-                {
-                    RazorEngine<CSharp>.Default.PreCompile(HandleException);
-                    RazorEngine<VisualBasic>.Default.PreCompile(HandleException);
-                }
-
-                return true;
-            }
-            catch (TargetInvocationException ex)
-            {
-                string message;
-
-                // Log the exception
-                message = "Failed to start web UI due to exception: " + ex.InnerException.Message;
-                HandleException(new InvalidOperationException(message, ex));
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                string message;
-
-                // Log the exception
-                message = "Failed to start web UI due to exception: " + ex.Message;
-                HandleException(new InvalidOperationException(message, ex));
-
-                return false;
+                await Task.Delay(5000);
             }
         }
 
         private void ServiceHeartbeatHandler(string s, object[] args)
         {
             // Go through all service monitors to notify of the heartbeat
-            foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+            foreach (IServiceMonitor serviceMonitor in ServiceMonitors.Adapters)
             {
                 try
                 {
@@ -832,334 +365,31 @@ namespace openXDA
             }
         }
 
-        private void ReloadConfigurationHandler(string s, object[] args)
+        // Force the host to reconfigure on demand.
+        private void ReconfigureRequestHandler(ClientRequestInfo requestInfo)
         {
-            m_extensibleDisturbanceAnalysisEngine.ReloadConfiguration();
-
-            using (AdoDataConnection connection = new AdoDataConnection("securityProvider"))
-            {
-                ValidateAccountsAndGroups(connection);
-            }
-        }
-
-        private void EnumerateWatchDirectoriesHandler(string s, object[] args)
-        {
-            m_extensibleDisturbanceAnalysisEngine.EnumerateWatchDirectories();
-        }
-
-        // Deletes old files from the XDA watch directories.
-        private void AutoFileDeletionHandler(string s, object[] args)
-        {
-            m_extensibleDisturbanceAnalysisEngine.AutoDeleteFiles();
-        }
-
-        // Reloads system settings from the database.
-        private void ReloadSystemSettingsRequestHandler(ClientRequestInfo requestInfo)
-        {
-            string connectionString = LoadSystemSettings();
-
-            m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
-            m_reportsEngine.ReloadSystemSettings(connectionString);
-
-            if (m_dataPusherEngine.Running && m_dataPusherEngine.DataPusherSettings.Enabled)
-                m_dataPusherEngine.ReloadSystemSettings();
-            else if (!m_dataPusherEngine.DataPusherSettings.Enabled)
-                m_dataPusherEngine.Stop();
-            else if (!m_dataPusherEngine.Running && m_dataPusherEngine.DataPusherSettings.Enabled)
-                m_dataPusherEngine.Start();
-            else
-                m_dataPusherEngine.Stop();
-
+            ConfigurationFile.Reload();
+            DatabaseConnectionFactory.ReloadConfiguration();
+            NodeHost.Reconfigure();
             SendResponse(requestInfo, true);
         }
 
-        // Reloads system settings from the database.
-        private void OnReloadSystemSettingsRequestHandler()
+        // Reloads web host from configuration in the config file.
+        private void ReloadWebHostRequestHandler(ClientRequestInfo requestInfo)
         {
-            m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
-
-            if (m_dataPusherEngine.Running && m_dataPusherEngine.DataPusherSettings.Enabled)
-                m_dataPusherEngine.ReloadSystemSettings();
-            else if (!m_dataPusherEngine.DataPusherSettings.Enabled)
-                m_dataPusherEngine.Stop();
-            else if (!m_dataPusherEngine.Running && m_dataPusherEngine.DataPusherSettings.Enabled)
-                m_dataPusherEngine.Start();
-            else
-                m_dataPusherEngine.Stop();
-
-            if (m_dataAggregationEngine.Running && m_dataAggregationEngine.PQMarkAggregationSettings.Enabled)
-                m_dataAggregationEngine.ReloadSystemSettings();
-            else if (!m_dataAggregationEngine.PQMarkAggregationSettings.Enabled)
-                m_dataAggregationEngine.Stop();
-            else if (!m_dataPusherEngine.Running && m_dataAggregationEngine.PQMarkAggregationSettings.Enabled)
-                m_dataAggregationEngine.Start();
-            else
-                m_dataAggregationEngine.Stop();
-
-
-            LogStatusMessage("Reload system settings complete...");
+            WebHost.Dispose();
+            ConfigurationFile.Reload();
+            DatabaseConnectionFactory.ReloadConfiguration();
+            WebHost = new XDAWebHost(ConfigurationFile, NodeHost);
+            SendResponse(requestInfo, true);
         }
-
 
         // Displays status information about the XDA engine.
-        private void EngineStatusHandler(ClientRequestInfo requestInfo)
+        private void EngineStatusRequestHandler(ClientRequestInfo requestInfo)
         {
-            if (m_extensibleDisturbanceAnalysisEngine != null)
-                DisplayResponseMessage(requestInfo, m_extensibleDisturbanceAnalysisEngine.Status);
-            else
-                SendResponseWithAttachment(requestInfo, false, null, "Engine is not ready.");
-        }
-
-        // Modifies the behavior of the file processor at runtime.
-        private void TweakFileProcessorHandler(ClientRequestInfo requestInfo)
-        {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                string helpMessage = m_extensibleDisturbanceAnalysisEngine.TweakFileProcessor(new string[] { "-?" });
-                DisplayResponseMessage(requestInfo, helpMessage);
-                return;
-            }
-
-            string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
-            string message = m_extensibleDisturbanceAnalysisEngine.TweakFileProcessor(args);
-            DisplayResponseMessage(requestInfo, message);
-        }
-
-        // Restores event email engine to a working state after a trip has occurred.
-        private void RestoreEventEmails(ClientRequestInfo requestInfo)
-        {
-            m_extensibleDisturbanceAnalysisEngine.RestoreEventEmails();
-        }
-
-        private void PurgeDataHandler(ClientRequestInfo requestInfo)
-        {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                string helpMessage = m_extensibleDisturbanceAnalysisEngine.PurgeData(new string[] { "-?" });
-                DisplayResponseMessage(requestInfo, helpMessage);
-                return;
-            }
-
-            string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
-            string message = m_extensibleDisturbanceAnalysisEngine.PurgeData(args);
-            DisplayResponseMessage(requestInfo, message);
-        }
-
-        // Executes process to generate a monthly PQ report.
-        private void PQReportHandler(ClientRequestInfo requestInfo)
-        {
-            string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
-
-            if (requestInfo.Request.Arguments.ContainsHelpRequest || args.Length != 2)
-            {
-                StringBuilder helpMessage = new StringBuilder();
-
-                helpMessage.Append("Executes process to generate a monthly PQ report.");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Usage:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       PQReport <MeterKey> <Month>");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("       PQReport -?");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Options:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       -?".PadRight(25));
-                helpMessage.Append("Displays this help message");
-
-                DisplayResponseMessage(requestInfo, helpMessage.ToString());
-            }
-
-            string meterKey = args[0];
-            string monthText = args[1];
-
-            if (!DateTime.TryParse(monthText, out DateTime month))
-                throw new FormatException($"Invalid date format: {monthText}");
-
-            Meter meter;
-
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
-                meter = meterTable.QueryRecordWhere("AssetKey = {0}", meterKey);
-            }
-
-            if (meter == null)
-                throw new ArgumentException($"Unable to find meter \"{meterKey}\" in the database.");
-
-            m_reportsEngine.ProcessMonthlyReport(meter, month);
-        }
-
-
-        public void OnProcessAllData(ClientRequestInfo requestInfo)
-        {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                string helpMessage = m_dataAggregationEngine.GetHelpMessage("PQMarkProcessAllData");
-                DisplayResponseMessage(requestInfo, helpMessage);
-                return;
-            }
-
-            try {
-                m_dataAggregationEngine.ProcessAllData(false);
-                SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating all data.");
-            }
-            catch (Exception ex) {
-                SendResponseWithAttachment(requestInfo, false, null, ex.ToString());
-            }
-        }
-
-        public void OnProcessAllEmptyData(ClientRequestInfo requestInfo)
-        {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                string helpMessage = m_dataAggregationEngine.GetHelpMessage("PQMarkProcessEmptyData");
-                DisplayResponseMessage(requestInfo, helpMessage);
-                return;
-            }
-
-            try
-            {
-                m_dataAggregationEngine.ProcessAllData(true);
-                SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating all empty data.");
-            }
-            catch (Exception ex)
-            {
-                SendResponseWithAttachment(requestInfo, false, null, ex.ToString());
-            }
-        }
-
-        public void OnProcessMonthToDateData(ClientRequestInfo requestInfo)
-        {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                string helpMessage = m_dataAggregationEngine.GetHelpMessage("PQMarkProcessMonthToDateData");
-                DisplayResponseMessage(requestInfo, helpMessage);
-                return;
-            }
-
-            try
-            {
-                m_dataAggregationEngine.ProcessMonthToDateData();
-                SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating  month to date  data.");
-            }
-            catch (Exception ex)
-            {
-                SendResponseWithAttachment(requestInfo, false, null, ex.ToString());
-            }
-        }
-
-        public void OnProcessPQTrending(ClientRequestInfo requestInfo)
-        {
-            DateTime? date = null;
-            int? meter = null;
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                string helpMessage = m_pqTrendingWebReportEngine.GetHelpMessage("PQTrendingProcess");
-                DisplayResponseMessage(requestInfo, helpMessage);
-                return;
-            }
-
-            if (requestInfo.Request.Arguments["date"] != null) {
-                try
-                {
-                    date = DateTime.Parse(requestInfo.Request.Arguments["date"]);
-                }
-                catch (Exception ex) {
-                    SendResponseWithAttachment(requestInfo, false, null, "Parameter is not a valid date string, use the following format - MM/DD/YYYY.");
-                    return;
-                }
-            }
-
-            if (requestInfo.Request.Arguments["meter"] != null)
-            {
-                try
-                {
-                    meter = int.Parse(requestInfo.Request.Arguments["meter"]);
-                }
-                catch (Exception ex)
-                {
-                    SendResponseWithAttachment(requestInfo, false, null, "Meter parameter is not a valid interger.");
-                }
-            }
-
-
-            if (m_pqTrendingWebReportEngine.Running)
-            {
-                try
-                {
-                    m_pqTrendingWebReportEngine.ProcessPQWebReport(date, meter);
-                    SendResponseWithAttachment(requestInfo, true, null, $"PQ Trending Web Report engine has begun aggregating data. {(date == null ? "" : $"-date={date.ToString()}")}{(meter == null ? "" : $"-meter={meter.ToString()}")}");
-
-                }
-                catch (Exception ex) {
-                    SendResponseWithAttachment(requestInfo, false, null, "There was an error runnign the PQ Trending Web Report.");
-                }
-            }
-            else
-                SendResponseWithAttachment(requestInfo, false, null, "PQ Trending Web Report is not running.");
-        }
-
-        public void OnProcessStepChange(ClientRequestInfo requestInfo)
-        {
-            DateTime? date = null;
-            int? meter = null;
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                string helpMessage = m_stepChangeWebReportEngine.GetHelpMessage("StepChangeProcess");
-                DisplayResponseMessage(requestInfo, helpMessage);
-                return;
-            }
-
-            if (requestInfo.Request.Arguments["date"] != null)
-            {
-                try
-                {
-                    date = DateTime.Parse(requestInfo.Request.Arguments["date"]);
-                }
-                catch (Exception ex)
-                {
-                    SendResponseWithAttachment(requestInfo, false, null, "Parameter is not a valid date string, use the following format - MM/DD/YYYY.");
-                    return;
-                }
-            }
-
-            if (requestInfo.Request.Arguments["meter"] != null)
-            {
-                try
-                {
-                    meter = int.Parse(requestInfo.Request.Arguments["meter"]);
-                }
-                catch (Exception ex)
-                {
-                    SendResponseWithAttachment(requestInfo, false, null, "Meter parameter is not a valid interger.");
-                }
-            }
-
-
-            if (m_pqTrendingWebReportEngine.Running)
-            {
-                try
-                {
-                    m_stepChangeWebReportEngine.ProcessStepChangeWebReport(date, meter);
-                    SendResponseWithAttachment(requestInfo, true, null, $"Step Change Web Report engine has begun aggregating data. {(date == null ? "" : $"-date={date.ToString()}")}{(meter == null ? "" : $"-meter={meter.ToString()}")}");
-
-                }
-                catch (Exception ex)
-                {
-                    SendResponseWithAttachment(requestInfo, false, null, "There was an error runnign the Step Change Web Report.");
-                }
-            }
-            else
-                SendResponseWithAttachment(requestInfo, false, null, "Step Change Web Report is not running.");
-        }
-
-        public void OnProcessProcessBreakerReport(ClientRequestInfo requestInfo)
-        {
-            m_reportsEngine.ProcessBreakerReportCommand();
+            Task<string> engineStatusTask = QueryEngineStatusAsync();
+            string engineStatus = engineStatusTask.GetAwaiter().GetResult();
+            DisplayResponseMessage(requestInfo, engineStatus);
         }
 
         // Send a message to the service monitors on request.
@@ -1193,7 +423,7 @@ namespace openXDA
                     .ToArray();
 
                 // Go through all service monitors and handle the message
-                foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+                foreach (IServiceMonitor serviceMonitor in ServiceMonitors.Adapters)
                 {
                     try
                     {
@@ -1213,14 +443,14 @@ namespace openXDA
         }
 
         // Send the error to the service helper, error logger, and each service monitor
-        public void HandleException(Exception ex)
+        private void HandleException(Exception ex)
         {
             string newLines = string.Format("{0}{0}", Environment.NewLine);
 
             m_serviceHelper.ErrorLogger.Log(ex);
             m_serviceHelper.UpdateStatus(UpdateType.Alarm, "{0}", ex.Message + newLines);
 
-            foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+            foreach (IServiceMonitor serviceMonitor in ServiceMonitors.Adapters)
             {
                 try
                 {
@@ -1237,158 +467,6 @@ namespace openXDA
             }
         }
 
-        /// <summary>
-        /// Validate accounts and groups to ensure that account names and group names are converted to SIDs.
-        /// </summary>
-        /// <param name="database">Data connection to use for database operations.</param>
-        private static void ValidateAccountsAndGroups(AdoDataConnection database)
-        {
-            const string SelectUserAccountQuery = "SELECT ID, Name, UseADAuthentication FROM UserAccount";
-            const string SelectSecurityGroupQuery = "SELECT ID, Name FROM SecurityGroup";
-            const string UpdateUserAccountFormat = "UPDATE UserAccount SET Name = '{0}' WHERE ID = '{1}'";
-            const string UpdateSecurityGroupFormat = "UPDATE SecurityGroup SET Name = '{0}' WHERE ID = '{1}'";
-
-            string id;
-            string sid;
-            string accountName;
-            Dictionary<string, string> updateMap;
-
-            updateMap = new Dictionary<string, string>();
-
-            // Find user accounts that need to be updated
-            using (IDataReader userAccountReader = database.Connection.ExecuteReader(SelectUserAccountQuery))
-            {
-                while (userAccountReader.Read())
-                {
-                    id = userAccountReader["ID"].ToNonNullString();
-                    accountName = userAccountReader["Name"].ToNonNullString();
-
-                    if (userAccountReader["UseADAuthentication"].ToNonNullString().ParseBoolean())
-                    {
-                        sid = UserInfo.UserNameToSID(accountName);
-
-                        if (!ReferenceEquals(accountName, sid) && UserInfo.IsUserSID(sid))
-                            updateMap.Add(id, sid);
-                    }
-                }
-            }
-
-            // Update user accounts
-            foreach (KeyValuePair<string, string> pair in updateMap)
-                database.Connection.ExecuteNonQuery(string.Format(UpdateUserAccountFormat, pair.Value, pair.Key));
-
-            updateMap.Clear();
-
-            // Find security groups that need to be updated
-            using (IDataReader securityGroupReader = database.Connection.ExecuteReader(SelectSecurityGroupQuery))
-            {
-                while (securityGroupReader.Read())
-                {
-                    id = securityGroupReader["ID"].ToNonNullString();
-                    accountName = securityGroupReader["Name"].ToNonNullString();
-
-                    if (accountName.Contains('\\'))
-                    {
-                        sid = UserInfo.GroupNameToSID(accountName);
-
-                        if (!ReferenceEquals(accountName, sid) && UserInfo.IsGroupSID(sid))
-                            updateMap.Add(id, sid);
-                    }
-                }
-            }
-
-            // Update security groups
-            foreach (KeyValuePair<string, string> pair in updateMap)
-                database.Connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
-        }
-
-
-        /// <summary>
-        /// Logs a status message to connected clients.
-        /// </summary>
-        /// <param name="message">Message to log.</param>
-        /// <param name="type">Type of message to log.</param>
-        public void LogStatusMessage(string message, UpdateType type = UpdateType.Information)
-        {
-            DisplayStatusMessage(message, type);
-        }
-
-
-        /// <summary>
-        /// Displays a broadcast message to all subscribed clients.
-        /// </summary>
-        /// <param name="status">Status message to send to all clients.</param>
-        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
-        protected virtual void DisplayStatusMessage(string status, UpdateType type)
-        {
-            try
-            {
-                status = status.Replace("{", "{{").Replace("}", "}}");
-                m_serviceHelper.UpdateStatus(type, string.Format("{0}\r\n\r\n", status));
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
-            }
-        }
-
-        /// <summary>
-        /// Sends a command request to the service.
-        /// </summary>
-        /// <param name="clientID">Client ID of sender.</param>
-        /// <param name="principal">The principal used for role-based security.</param>
-        /// <param name="userInput">Request string.</param>
-        public void SendRequest(Guid clientID, IPrincipal principal, string userInput)
-        {
-            ClientRequest request = ClientRequest.Parse(userInput);
-
-            if ((object)request == null)
-                return;
-
-            if (SecurityProviderUtility.IsResourceSecurable(request.Command) && !SecurityProviderUtility.IsResourceAccessible(request.Command, principal))
-            {
-                m_serviceHelper.UpdateStatus(clientID, UpdateType.Alarm, $"Access to \"{request.Command}\" is denied.\r\n\r\n");
-                return;
-            }
-
-            ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(request.Command);
-
-            if ((object)requestHandler == null)
-            {
-                m_serviceHelper.UpdateStatus(clientID, UpdateType.Alarm, $"Command \"{request.Command}\" is not supported.\r\n\r\n");
-                return;
-            }
-
-            ClientInfo clientInfo = new ClientInfo();
-            clientInfo.ClientID = clientID;
-            clientInfo.SetClientUser(principal);
-
-            ClientRequestInfo requestInfo = new ClientRequestInfo(clientInfo, request);
-            requestHandler.HandlerMethod(requestInfo);
-        }
-
-        /// <summary>
-        /// Sends a command request to the service to reprocess files.
-        /// </summary>
-        /// <param name="fileGroupID">Identifier for the file group to be reprocessed.</param>
-        /// <param name="meterID">Identifier for the meter that provided the files.</param>
-        public void ReprocessFile(int fileGroupID, int meterID)
-        {
-            ReprocessFile(fileGroupID, meterID, false);
-        }
-
-        /// <summary>
-        /// Sends a command request to the service to reprocess files.
-        /// </summary>
-        /// <param name="fileGroupID">Identifier for the file group to be reprocessed.</param>
-        /// <param name="meterID">Identifier for the meter that provided the files.</param>
-        /// <param name="loadHistoricConfiguration">True to load historic configuration; false otherwise.</param>
-        public void ReprocessFile(int fileGroupID, int meterID, bool loadHistoricConfiguration)
-        {
-            m_extensibleDisturbanceAnalysisEngine.ReprocessFile(fileGroupID, meterID, loadHistoricConfiguration);
-        }
-
         public void DisconnectClient(Guid clientID)
         {
             m_serviceHelper.DisconnectClient(clientID);
@@ -1400,6 +478,214 @@ namespace openXDA
                 HandleException(ex);
 
             e.SetObserved();
+        }
+
+        private string QueryNodeConfigurationStatus(AdoDataConnection connection)
+        {
+            const string Query =
+                "SELECT " +
+                "    ActiveHost.RegistrationKey HostKey, " +
+                "    ActiveHost.URL HostURL, " +
+                "    Node.ID NodeID, " +
+                "    Node.Name NodeName, " +
+                "    NodeType.Name NodeType " +
+                "FROM " +
+                "    ActiveHost JOIN " +
+                "    Node ON Node.HostRegistrationID = ActiveHost.ID JOIN " +
+                "    NodeType ON Node.NodeTypeID = NodeType.ID";
+
+            using (DataTable result = connection.RetrieveData(Query))
+            {
+                IEnumerable<string> hostInfos = result
+                    .AsEnumerable()
+                    .Select(row => new
+                    {
+                        Host = new
+                        {
+                            Key = row.ConvertField<string>("HostKey"),
+                            URL = row.ConvertField<string>("HostURL")
+                        },
+                        Node = new
+                        {
+                            ID = row.ConvertField<int>("NodeID"),
+                            Name = row.ConvertField<string>("NodeName"),
+                            Type = row.ConvertField<string>("NodeType")
+                        }
+                    })
+                    .GroupBy(record => record.Host, record => record.Node)
+                    .Select(grouping =>
+                    {
+                        var host = grouping.Key;
+
+                        IEnumerable<string> lines = grouping
+                            .Select(node => $"    {node.Name} <{node.Type}> ({node.ID})")
+                            .Prepend($"{host.Key} ({host.URL})");
+
+                        return string.Join(Environment.NewLine, lines);
+                    });
+
+                string doubleLineSeparator = string.Format("{0}{0}", Environment.NewLine);
+                return string.Join(doubleLineSeparator, hostInfos);
+            }
+        }
+
+        private async Task<string> QueryFileNodeStatusAsync(AdoDataConnection connection)
+        {
+            const string QueryFormat =
+                "SELECT " +
+                "    ActiveHost.URL HostURL, " +
+                "    Node.ID NodeID, " +
+                "    Node.Name NodeName " +
+                "FROM " +
+                "    ActiveHost JOIN " +
+                "    Node ON Node.HostRegistrationID = ActiveHost.ID JOIN " +
+                "    NodeType ON Node.NodeTypeID = NodeType.ID " +
+                "WHERE NodeType.TypeName = {0}";
+
+            Type nodeType = typeof(FileProcessorNode);
+            string nodeTypeName = nodeType.FullName;
+
+            using (DataTable result = connection.RetrieveData(QueryFormat, nodeTypeName))
+            {
+                async Task<string> QueryAsync(string url)
+                {
+                    void ConfigureRequest(HttpRequestMessage request) =>
+                        request.RequestUri = new Uri(url);
+
+                    using (HttpResponseMessage response = await NodeHost.SendWebRequestAsync(ConfigureRequest))
+                    {
+                        if (!response.IsSuccessStatusCode)
+                            return $"ERROR: [{response.StatusCode}] {response.ReasonPhrase}";
+
+                        try { return await response.Content.ReadAsStringAsync(); }
+                        catch (Exception ex) { return ex.ToString(); }
+                    }
+                }
+
+                // Query the status of each active file node
+                var nodeQueries = result
+                    .AsEnumerable()
+                    .Select(row =>
+                    {
+                        int nodeID = row.ConvertField<int>("NodeID");
+                        string nodeName = row.ConvertField<string>("NodeName");
+
+                        string hostURL = row.ConvertField<string>("HostURL");
+                        string cleanHostURL = hostURL.Trim().TrimEnd('/');
+                        string action = "Status";
+                        string url = $"{cleanHostURL}/Node/{nodeID}/{action}";
+                        Task<string> queryStatusTask = QueryAsync(url);
+
+                        return new
+                        {
+                            NodeID = nodeID,
+                            NodeName = nodeName,
+                            QueryStatusTask = queryStatusTask
+                        };
+                    })
+                    .ToList();
+
+                // Wait for all queries to finish
+                IEnumerable<Task<string>> queryTasks = nodeQueries.Select(obj => obj.QueryStatusTask);
+                await Task.WhenAll(queryTasks);
+
+                IEnumerable<string> fileNodeInfos = nodeQueries
+                    .Select(query =>
+                    {
+                        int nodeID = query.NodeID;
+                        string nodeName = query.NodeName;
+                        Task<string> queryStatusTask = query.QueryStatusTask;
+                        string header = $"{nodeName} ({nodeID}) Status:";
+                        string status = queryStatusTask.GetAwaiter().GetResult();
+                        return string.Join(Environment.NewLine, header, status);
+                    });
+
+                string doubleLineSeparator = string.Format("{0}{0}", Environment.NewLine);
+                return string.Join(doubleLineSeparator, fileNodeInfos);
+            }
+        }
+
+        private string QueryAnalysisStatus(AdoDataConnection connection)
+        {
+            const string Query =
+                "SELECT " +
+                "    FileGroup.ProcessingStartTime, " +
+                "    DataFile.FilePath, " +
+                "    Meter.AssetKey MeterKey, " +
+                "    Meter.Name MeterName, " +
+                "    Node.ID NodeID, " +
+                "    Node.Name NodeName " +
+                "FROM " +
+                "    AnalysisTask JOIN " +
+                "    FileGroup ON AnalysisTask.FileGroupID = FileGroup.ID CROSS APPLY " +
+                "    (SELECT TOP 1 * FROM DataFile WHERE FileGroupID = FileGroup.ID ORDER BY FileSize DESC, ID) DataFile JOIN " +
+                "    Meter ON AnalysisTask.MeterID = Meter.ID JOIN " +
+                "    Node ON AnalysisTask.NodeID = Node.ID";
+
+            int totalCount = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM AnalysisTask");
+
+            using (DataTable result = connection.RetrieveData(Query))
+            {
+                int hostID = NodeHost.ID;
+                Func<AdoDataConnection> connectionFactory = DatabaseConnectionFactory.CreateDbConnection;
+                ConfigurationLoader configurationLoader = new ConfigurationLoader(hostID, connectionFactory);
+
+                Action<object> configurator = configurationLoader.Configure;
+                TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
+                DateTime now = DateTime.UtcNow;
+                DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
+
+                IEnumerable<string> analysisNodeInfos = result
+                    .AsEnumerable()
+                    .Select(row => new
+                    {
+                        Node = new
+                        {
+                            ID = row.ConvertField<int>("NodeID"),
+                            Name = row.ConvertField<string>("NodeName")
+                        },
+                        AnalysisTask = new
+                        {
+                            ProcessingStartTime = row.ConvertField<DateTime>("ProcessingStartTime"),
+                            FilePath = row.ConvertField<string>("FilePath"),
+                            MeterKey = row.ConvertField<string>("MeterKey"),
+                            MeterName = row.ConvertField<string>("MeterName")
+                        }
+                    })
+                    .GroupBy(record => record.Node, record => record.AnalysisTask)
+                    .Select(grouping =>
+                    {
+                        string ToIdentification(string meterKey, string meterName) =>
+                            meterKey != meterName
+                                ? $"{meterName} ({meterKey})"
+                                : meterName;
+
+                        var node = grouping.Key;
+                        int nodeID = node.ID;
+                        string nodeName = node.Name;
+
+                        IEnumerable<string> lines = grouping
+                            .Select(analysisTask =>
+                            {
+                                DateTime processingStartTime = analysisTask.ProcessingStartTime;
+                                string filePath = analysisTask.FilePath;
+                                string meterKey = analysisTask.MeterKey;
+                                string meterName = analysisTask.MeterName;
+
+                                TimeSpan processingTime = xdaNow - processingStartTime;
+                                string fileName = Path.GetFileName(filePath);
+                                string meterIdentification = ToIdentification(meterKey, meterName);
+                                return $"    [{processingTime}] from {meterIdentification} - {fileName}";
+                            })
+                            .Prepend($"Node {nodeName} ({nodeID}):");
+
+                        return string.Join(Environment.NewLine, lines);
+                    })
+                    .Prepend($"Total queued analysis tasks: {totalCount}");
+
+                string doubleLineSeparator = string.Format("{0}{0}", Environment.NewLine);
+                return string.Join(doubleLineSeparator, analysisNodeInfos);
+            }
         }
 
         #region [ Service Monitor Handlers ]
@@ -1430,7 +716,7 @@ namespace openXDA
             IServiceMonitor serviceMonitor = sender as IServiceMonitor;
 
             if (serviceMonitor?.Enabled ?? false)
-                DisplayStatusMessage(e.Argument2, e.Argument1);
+                m_serviceHelper.UpdateStatus(e.Argument1, "{0}", e.Argument2);
         }
 
         // Handle exceptions thrown by service monitors.
@@ -1483,7 +769,7 @@ namespace openXDA
                     string arguments = requestInfo.Request.Arguments.ToString();
                     string message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")");
 
-                    if (status != null)
+                    if (!(status is null))
                     {
                         if (args.Length == 0)
                             message += " - " + status;
@@ -1530,51 +816,16 @@ namespace openXDA
             }
         }
 
-
-        private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e)
-        {
-            if ((object)UpdatedStatus != null)
-                UpdatedStatus(sender, new EventArgs<Guid, string, UpdateType>(e.Argument1, e.Argument2, e.Argument3));
-        }
-
-        private void LoggedExceptionHandler(object sender, EventArgs<Exception> e)
-        {
-            if ((object)LoggedException != null)
-                LoggedException(sender, new EventArgs<Exception>(e.Argument));
-        }
-
-
         #endregion
-
-
-        // Loads system settings from the database.
-        private string LoadSystemSettings()
-        {
-            using(AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                TableOperations<Setting> settingTable = new TableOperations<Setting>(connection);
-                List<Setting> settingList = settingTable.QueryRecords().ToList();
-
-                foreach (IGrouping<string, Setting> grouping in settingList.GroupBy(setting => setting.Name))
-                {
-                    if (grouping.Count() > 1)
-                        DisplayStatusMessage($"Duplicate record for setting {grouping.Key} detected.", UpdateType.Warning);
-                }
-
-                // Convert the Setting table to a dictionary
-                Dictionary<string, string> settings = settingList
-                    .DistinctBy(setting => setting.Name)
-                    .ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.OrdinalIgnoreCase);
-
-                // Convert dictionary to a connection string and return it
-                return SystemSettings.ToConnectionString(settings);
-            }
-        }
 
         #endregion
 
         #region [ Static ]
-        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
+
+        // Static Properties
+        private static HttpClient HttpClient { get; }
+            = new HttpClient();
+
         #endregion
     }
 }

@@ -350,10 +350,14 @@ namespace openXDA.Adapters
             DataTable dataTable = connection.RetrieveData("SELECT ID FROM Event WHERE MeterID = {0} AND EndTime >= {1} AND StartTime <= {2})", meter.ID, ToDateTime2(connection, startTime), ToDateTime2(connection, endTime));
             Dictionary<string, DataSeries> dict = new Dictionary<string, DataSeries>();
 
+            IDbConnection dbConnection = connection.Connection;
+            Type adapterType = typeof(SqlDataAdapter);
+            Func<AdoDataConnection> connectionFactory = () => new AdoDataConnection(dbConnection, adapterType, false);
+
             IEnumerable<DataGroup> dataGroups = dataTable
                 .Select()
                 .Select(row => row.ConvertField<int>("ID"))
-                .Select(id => ToDataGroup(meter, ChannelData.DataFromEvent(id, "systemSettings")))
+                .Select(id => ToDataGroup(meter, ChannelData.DataFromEvent(id, connectionFactory)))
                 .OrderBy(subGroup => subGroup.StartTime)
                 .ToList();
 

@@ -24,10 +24,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Data;
 using System.Linq;
-using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
@@ -37,6 +35,7 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace FaultData.DataOperations
@@ -181,7 +180,7 @@ namespace FaultData.DataOperations
             // Fields
             private DataSeries m_waveform;
             private CycleDataGroup m_cycleDataGroup;
-            private BreakerSettings m_breakerSettings;
+            private BreakerSection m_breakerSettings;
             private XValue m_timeCleared;
             private double m_timing;
             private double m_systemFrequency;
@@ -191,7 +190,7 @@ namespace FaultData.DataOperations
 
             #region [ Constructors ]
 
-            public PhaseTiming(DataSeries waveform, CycleDataGroup cycleDataGroup, BreakerTiming breakerTiming, BreakerSettings breakerSettings, double systemFrequency)
+            public PhaseTiming(DataSeries waveform, CycleDataGroup cycleDataGroup, BreakerTiming breakerTiming, BreakerSection breakerSettings, double systemFrequency)
             {
                 m_waveform = waveform;
                 m_cycleDataGroup = cycleDataGroup;
@@ -399,46 +398,21 @@ namespace FaultData.DataOperations
             }
         }
 
-        // Fields
-        private double m_systemFrequency;
-        private BreakerSettings m_breakerSettings;
-        private HashSet<string> m_breakerCurrents;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        public BreakerTimingOperation()
-        {
-            m_breakerSettings = new BreakerSettings();
-        }
-
         #endregion
 
         #region [ Properties ]
 
-        [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
+        private HashSet<string> BreakerCurrents { get; set; }
 
         [Category]
-        [SettingName(BreakerSettings.CategoryName)]
-        public BreakerSettings BreakerSettings
-        {
-            get
-            {
-                return m_breakerSettings;
-            }
-        }
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
+
+        [Category]
+        [SettingName(BreakerSection.CategoryName)]
+        public BreakerSection BreakerSettings { get; }
+            = new BreakerSection();
 
         #endregion
 
@@ -461,10 +435,10 @@ namespace FaultData.DataOperations
 
                 // Look up the breaker numbers for the lines
                 // that represent groupings of breaker current data
-                m_breakerCurrents = new HashSet<string>();
+                BreakerCurrents = new HashSet<string>();
                 if (channelsIDs.Count > 0)
                 {
-                    m_breakerCurrents.UnionWith(breakerChannelTable
+                    BreakerCurrents.UnionWith(breakerChannelTable
                         .QueryRecordsWhere($"ChannelID IN ({string.Join(",", channelsIDs)})")
                         .Select(breakerChannel => breakerChannel.BreakerNumber));
                 }
@@ -504,13 +478,15 @@ namespace FaultData.DataOperations
 
             // If the breaker currents are defined for breaker-and-a-half or ring bus configurations,
             // skip this data group so that timing is only applied to the breaker currents
-            if (breakerNumbers.Count > 1 && breakerNumbers.Any(num => m_breakerCurrents.Contains(num)))
+            if (breakerNumbers.Count > 1 && breakerNumbers.Any(num => BreakerCurrents.Contains(num)))
                 return;
 
             Event evt = eventTable.GetEvent(fileGroup, dataGroup);
 
             if ((object)evt == null)
                 return;
+
+            double systemFrequency = DataAnalysisSettings.SystemFrequency;
 
             foreach (string breakerNumber in breakerNumbers)
             {
@@ -547,11 +523,11 @@ namespace FaultData.DataOperations
 
                 foreach (XValue tripCoilEnergizedTrigger in tripCoilEnergizedTriggers)
                 {
-                    BreakerTiming breakerTiming = new BreakerTiming(tripCoilEnergizedTrigger, breakerStatusChannel, m_systemFrequency, breakerSpeed, m_breakerSettings.MinWaitBeforeReclose);
+                    BreakerTiming breakerTiming = new BreakerTiming(tripCoilEnergizedTrigger, breakerStatusChannel, systemFrequency, breakerSpeed, BreakerSettings.MinWaitBeforeReclose);
 
-                    PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_breakerSettings, m_systemFrequency);
-                    PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_breakerSettings, m_systemFrequency);
-                    PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, m_breakerSettings, m_systemFrequency);
+                    PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, BreakerSettings, systemFrequency);
+                    PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, BreakerSettings, systemFrequency);
+                    PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, BreakerSettings, systemFrequency);
 
                     BreakerOperation breakerOperation = GetBreakerOperation(connection, evt.ID, breakerNumber, breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
                     breakerOperationTable.AddNewRecord(breakerOperation);
@@ -673,7 +649,7 @@ namespace FaultData.DataOperations
 
             diff = breakerTiming - breakerSpeed;
 
-            if (diff >= m_breakerSettings.LateBreakerThreshold)
+            if (diff >= BreakerSettings.LateBreakerThreshold)
                 return BreakerOperationType.Late;
 
             return BreakerOperationType.Normal;

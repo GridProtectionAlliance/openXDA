@@ -82,9 +82,9 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\openXDA.EMCB\openXDA.EMCB.csproj">
-      <Name>openXDA.EMCB</Name>
-      <Project>{d755fab9-64d2-4c65-a765-9bd986cf8594}</Project>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Configuration\openXDA.Configuration.csproj">
+      <Name>openXDA.Configuration</Name>
+      <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
@@ -93,6 +93,14 @@
     <ProjectReference Include="..\..\..\Libraries\openXDA.HIDS\openXDA.HIDS.csproj">
       <Name>openXDA.HIDS</Name>
       <Project>{2528ec50-0be9-4a9f-8ac3-77fc42afe8ce}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Nodes\openXDA.Nodes.csproj">
+      <Name>openXDA.Nodes</Name>
+      <Project>{565e38b7-24c0-48b6-9f28-2521b2ccd87d}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
@@ -189,22 +197,6 @@
     <ProjectReference Include="..\openXDAConsole\openXDAConsole.csproj">
       <Name>openXDAConsole</Name>
       <Project>{72f417e9-f592-4417-b87c-b681ae707294}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-    <ProjectReference Include="..\openXDAFileWatcherConsole\openXDAFileWatcherConsole.csproj">
-      <Name>openXDAFileWatcherConsole</Name>
-      <Project>{55283222-247d-41f0-bd2e-a685468866e9}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-    <ProjectReference Include="..\openXDAFileWatcher\openXDAFileWatcher.csproj">
-      <Name>openXDAFileWatcher</Name>
-      <Project>{7c63f03f-5176-4878-a562-803f51f7adbf}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>

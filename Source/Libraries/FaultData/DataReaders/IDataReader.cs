@@ -21,40 +21,33 @@
 //
 //******************************************************************************************************
 
-using System;
+using System.IO;
 using FaultData.DataSets;
+using openXDA.Model;
 
 namespace FaultData.DataReaders
 {
     public interface IDataReader
     {
         /// <summary>
-        /// Gets the data set produced by the Parse method of the data reader.
+        /// Determines whether the file can be loaded at this time.
         /// </summary>
-        /// <remarks>
-        /// For data reader implementations that return a data set,
-        /// the return value should not be null at any time during the
-        /// lifecycle of the data reader. For implementations that do
-        /// not return a data set, this should always return null.
-        /// </remarks>
-        MeterDataSet MeterDataSet
-        {
-            get;
-        }
+        /// <param name="fileList">The list of files to be loaded from disk.</param>
+        /// <returns>True if the file can be loaded; false otherwise.</returns>
+        bool IsReadyForLoad(FileInfo[] fileList);
 
         /// <summary>
-        /// Determines whether the file can be parsed at this time.
+        /// Identifies the primary data file from the given file group.
         /// </summary>
-        /// <param name="filePath">The path to the file to be parsed.</param>
-        /// <param name="fileCreationTime">The time the file was created.</param>
-        /// <returns>True if the file can be parsed; false otherwise.</returns>
-        bool CanParse(string filePath, DateTime fileCreationTime);
+        /// <param name="fileGroup">The group of files to be parsed.</param>
+        /// <returns>The primary data file from the file group.</returns>
+        DataFile GetPrimaryDataFile(FileGroup fileGroup);
 
         /// <summary>
         /// Parses the file into a meter data set per meter contained in the file.
         /// </summary>
-        /// <param name="filePath">The path to the file to be parsed.</param>
+        /// <param name="fileGroup">The group of files to be parsed.</param>
         /// <returns>The data set containing data parsed from the file.</returns>
-        void Parse(string filePath);
+        MeterDataSet Parse(FileGroup fileGroup);
     }
 }

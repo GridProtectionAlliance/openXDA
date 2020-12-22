@@ -367,7 +367,7 @@ namespace XDABatchDataTransferTool
                     // Setup event query filter
                     string eventFilter = JsonConvert.SerializeObject(new EventFilter
                     {
-                        LineIDList = m_lineIDList,
+                        AssetIDList = m_lineIDList,
                         MeterIDList = m_meterIDList,
                         StartDate = m_settings.StartDateTimeForQuery > DateTimePicker.MinimumDateTime ? m_settings.StartDateTimeForQuery : (DateTime?)null,
                         EndDate = m_settings.EndDateTimeForQuery < DateTimePicker.MaximumDateTime ? m_settings.EndDateTimeForQuery : (DateTime?)null

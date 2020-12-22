@@ -25,19 +25,17 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using FaultData.Configuration;
 using FaultData.DataAnalysis;
+using FaultData.DataOperations;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using log4net;
-using openXDA.HIDS;
-using openXDA.Model;
 using HIDS;
+using log4net;
 using openXDA.HIDS.APIExtensions;
-using FaultData.DataOperations;
+using openXDA.Model;
 
 namespace openXDA.HIDS
 {

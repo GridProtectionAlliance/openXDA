@@ -42,7 +42,6 @@ using GSF.Data.Model;
 using GSF.Identity;
 using GSF.NumericalAnalysis;
 using GSF.Web;
-using GSF.Web.Model;
 using MathNet.Numerics.IntegralTransforms;
 using openXDA.Model;
 
@@ -52,10 +51,7 @@ namespace openXDA.Adapters
     {
         #region [ Members ]
 
-        // Fields
-        private DateTime m_epoch = new DateTime(1970, 1, 1);
-        private bool m_disposed;
-
+        // Nested Types
         public class JsonReturn
         {
             public DateTime StartDate;
@@ -64,12 +60,12 @@ namespace openXDA.Adapters
             public double CalculationEnd;
             public List<FlotSeries> Data;
         }
+
         public class FFTReturn
         {
             public List<FFTSeries> Data;
             public double CalculationTime;
             public double CalculationEnd;
-
         }
 
         public class FlotSeries
@@ -138,78 +134,21 @@ namespace openXDA.Adapters
             "    Sag.PerUnitMagnitude, " +
             "    Event.StartTime";
 
+        // Fields
+        private DateTime m_epoch = new DateTime(1970, 1, 1);
+
         #endregion
 
-        #region [ Static ]
+        #region [ Constructors ]
 
-        private static MemoryCache s_memoryCache;
+        public OpenSEEController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
 
-        static OpenSEEController()
-        {
-            s_memoryCache = new MemoryCache("openSEE");
-        }
+        #endregion
 
-        public static void ConfigureView(dynamic viewBag)
-        {
-            using (DataContext dataContext = new DataContext("systemSettings"))
-            {
-                HttpRequestMessage request = viewBag.Request;
-                int eventID = int.Parse(request.QueryParameters()["eventid"]);
-                Event evt = dataContext.Table<Event>().QueryRecordWhere("ID = {0}", eventID);
+        #region [ Properties ]
 
-#if DEBUG
-                viewBag.IsDebug = true;
-#else
-                viewBag.IsDebug = false;
-#endif
-
-                viewBag.EnableLightningQuery = dataContext.Connection.ExecuteScalar<bool>("SELECT Value FROM Setting WHERE Name = 'OpenSEE.EnableLightningQuery'");
-                viewBag.IsAdmin = ValidateAdminRequest(viewBag.SecurityPrincipal);
-                viewBag.EventID = eventID;
-                viewBag.EventStartTime = evt.StartTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff");
-                viewBag.EventEndTime = evt.EndTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff");
-                viewBag.SamplesPerCycle = evt.SamplesPerCycle;
-                viewBag.Cycles = Math.Floor((evt.EndTime - evt.StartTime).TotalSeconds * 60.0D);
-            }
-        }
-
-        private static bool ValidateAdminRequest(IPrincipal user)
-        {
-            string username = user.Identity.Name;
-            string userid = UserInfo.UserNameToSID(username);
-
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                bool isAdmin = connection.ExecuteScalar<int>(@"
-					select 
-						COUNT(*) 
-					from 
-						UserAccount JOIN 
-						ApplicationRoleUserAccount ON ApplicationRoleUserAccount.UserAccountID = UserAccount.ID JOIN
-						ApplicationRole ON ApplicationRoleUserAccount.ApplicationRoleID = ApplicationRole.ID
-					WHERE 
-						ApplicationRole.Name = 'Administrator' AND UserAccount.Name = {0}
-                ", userid) > 0;
-
-                if (isAdmin) return true;
-                else return false;
-            }
-
-            //string username = User.Identity.Name;
-            //ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(username);
-            //securityProvider.PassthroughPrincipal = User;
-
-            //if (!securityProvider.Authenticate())
-            //    return false;
-
-            //SecurityIdentity approverIdentity = new SecurityIdentity(securityProvider);
-            //SecurityPrincipal approverPrincipal = new SecurityPrincipal(approverIdentity);
-
-            //if (!approverPrincipal.IsInRole("Administrator"))
-            //    return false;
-
-            //return true;
-        }
+        private Func<AdoDataConnection> ConnectionFactory { get; }
 
         #endregion
 
@@ -219,13 +158,13 @@ namespace openXDA.Adapters
         [HttpGet]
         public JsonReturn GetData()
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 Dictionary<string, string> query = Request.QueryParameters();
                 int eventId = int.Parse(query["eventId"]);
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                meter.ConnectionFactory = ConnectionFactory;
                 int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                 double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -387,12 +326,12 @@ namespace openXDA.Adapters
         {
             Dictionary<string, string> query = Request.QueryParameters();
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 int eventId = int.Parse(query["eventId"]);
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                meter.ConnectionFactory = () => new AdoDataConnection(connection.Connection, typeof(SqlDataAdapter), false);
+                meter.ConnectionFactory = ConnectionFactory;
 
                 DateTime epoch = new DateTime(1970, 1, 1);
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
@@ -467,14 +406,14 @@ namespace openXDA.Adapters
         [HttpGet]
         public JsonReturn GetFaultDistanceData()
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 Dictionary<string, string> query = Request.QueryParameters();
 
                 int eventId = int.Parse(query["eventId"]);
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                meter.ConnectionFactory = () => new AdoDataConnection(connection.Connection, typeof(SqlDataAdapter), false);
+                meter.ConnectionFactory = ConnectionFactory;
 
                 DateTime epoch = new DateTime(1970, 1, 1);
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
@@ -519,7 +458,7 @@ namespace openXDA.Adapters
 
         private KeyValuePair<string, FlotSeries> QueryFaultDistanceData(int faultCurveID, Meter meter)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 FaultCurve faultCurve = new TableOperations<FaultCurve>(connection).QueryRecordWhere("ID = {0}", faultCurveID);
                 DataGroup dataGroup = new DataGroup();
@@ -554,9 +493,9 @@ namespace openXDA.Adapters
             Task<DataGroup> dataGroupTask = new Task<DataGroup>(() =>
             {
 
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
-                   return ToDataGroup(meter, ChannelData.DataFromEvent(eventID, "systemSettings"));
+                   return ToDataGroup(meter, ChannelData.DataFromEvent(eventID, ConnectionFactory));
                 }
             });
 
@@ -574,7 +513,7 @@ namespace openXDA.Adapters
 
             Task<VICycleDataGroup> viCycleDataGroupTask = new Task<VICycleDataGroup>(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     DataGroup dataGroup = QueryDataGroup(eventID, meter);
                     double freq = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0D;
@@ -699,7 +638,7 @@ namespace openXDA.Adapters
             Dictionary<string, dynamic> returnDict = new Dictionary<string, dynamic>();
 
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 EventView theEvent = new TableOperations<EventView>(connection).QueryRecordWhere("ID = {0}", eventId);
 
@@ -836,7 +775,7 @@ namespace openXDA.Adapters
         [HttpGet]
         public DataTable GetOverlappingEvents()
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 Dictionary<string, string> query = Request.QueryParameters();
                 int eventId = int.Parse(query["eventId"]);
@@ -877,13 +816,13 @@ namespace openXDA.Adapters
         public Task<FFTReturn> GetFFTData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
 
@@ -919,7 +858,7 @@ namespace openXDA.Adapters
 
             double systemFrequency;
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
             }
@@ -981,13 +920,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetFirstDerivativeData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -1079,7 +1018,7 @@ namespace openXDA.Adapters
 
         private FlotSeries GetFirstDerivativeFlotSeries(DataSeries dataSeries, string label)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 double nominalVoltage = connection.ExecuteScalar<double?>("SELECT VoltageKV * 1000 FROM Line WHERE ID = {0}", dataSeries.SeriesInfo.Channel.AssetID) ?? 1;
 
@@ -1120,13 +1059,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetImpedanceData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -1242,13 +1181,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetRemoveCurrentData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -1307,7 +1246,7 @@ namespace openXDA.Adapters
         {
             Dictionary<string, FlotSeries> dataLookup = new Dictionary<string, FlotSeries>();
             double systemFrequency;
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
             }
@@ -1372,13 +1311,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetPowerData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -1512,13 +1451,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetMissingVoltageData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -1579,7 +1518,7 @@ namespace openXDA.Adapters
             DataSeries vBN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "BN");
             DataSeries vCN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "CN");
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
             }
@@ -1640,13 +1579,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetClippedWaveformsData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -1703,7 +1642,7 @@ namespace openXDA.Adapters
 
             double systemFrequency;
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
             }
@@ -1762,7 +1701,7 @@ namespace openXDA.Adapters
         public Task<FFTReturn> GetHarmonicSpectrumData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
@@ -1770,7 +1709,7 @@ namespace openXDA.Adapters
 
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
 
@@ -1861,13 +1800,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetLowPassFilterData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -1923,19 +1862,13 @@ namespace openXDA.Adapters
         private Dictionary<string, FlotSeries> GetLowPassFilterLookup(DataGroup dataGroup)
         {
             Dictionary<string, FlotSeries> dataLookup = new Dictionary<string, FlotSeries>();
-            double systemFrequency;
+            double systemFrequency = 120;
             DataSeries vAN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "AN");
             DataSeries vBN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "BN");
             DataSeries vCN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "CN");
             DataSeries iAN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Current" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "AN");
             DataSeries iBN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Current" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "BN");
             DataSeries iCN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Current" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "CN");
-
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                systemFrequency = 120;
-            }
-
 
             if (vAN != null)
             {
@@ -1950,7 +1883,6 @@ namespace openXDA.Adapters
 
                 dataLookup.Add("Low Pass Filter VAN", new FlotSeries() { ChartLabel = "VAN Low Pass Filter", DataPoints = results.Select((point, index) => new double[] { points[index].Time.Subtract(m_epoch).TotalMilliseconds, point }).ToList() });
             }
-
 
             if (vBN != null)
             {
@@ -2034,13 +1966,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetHighPassFilterData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -2105,7 +2037,7 @@ namespace openXDA.Adapters
             DataSeries iBN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Current" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "BN");
             DataSeries iCN = dataGroup.DataSeries.ToList().Find(x => x.SeriesInfo.Channel.MeasurementType.Name == "Current" && x.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && x.SeriesInfo.Channel.Phase.Name == "CN");
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 systemFrequency = 120;
             }
@@ -2208,13 +2140,13 @@ namespace openXDA.Adapters
         public Task<OverlapReturn> GetOverlappingWaveformData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -2266,7 +2198,7 @@ namespace openXDA.Adapters
         {
             double systemFrequency;
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
             }
@@ -2332,13 +2264,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetRapidVoltageChangeData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -2403,7 +2335,7 @@ namespace openXDA.Adapters
 
         private FlotSeries GetRapidVoltageChangeFlotSeries(DataSeries dataSeries, string label)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 double nominalVoltage = connection.ExecuteScalar<double?>("SELECT VoltageKV * 1000 FROM Asset WHERE ID = {0}", dataSeries.SeriesInfo.Channel.AssetID) ?? 1;
 
@@ -2440,13 +2372,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetFrequencyData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -2455,7 +2387,6 @@ namespace openXDA.Adapters
                     DateTime endTime = (query.ContainsKey("endDate") ? DateTime.Parse(query["endDate"]) : evt.EndTime);
                     int pixels = int.Parse(query["pixels"]);
                     DataTable table;
-                    double calcTime;
 
                     Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
                     table = connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND AssetID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), evt.MeterID, evt.AssetID);
@@ -2504,7 +2435,7 @@ namespace openXDA.Adapters
 
             double systemFrequency;
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
             }
@@ -2560,13 +2491,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetSymmetricalComponentsData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -2729,13 +2660,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetUnbalanceData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -2871,13 +2802,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetRectifierData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -2985,13 +2916,13 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetTHDData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -3048,7 +2979,7 @@ namespace openXDA.Adapters
 
             double systemFrequency;
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
             }
@@ -3120,14 +3051,14 @@ namespace openXDA.Adapters
         public Task<JsonReturn> GetSpecifiedHarmonicData(CancellationToken cancellationToken)
         {
             return Task.Run(() => {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Dictionary<string, string> query = Request.QueryParameters();
                     int eventId = int.Parse(query["eventId"]);
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
                     int specifiedHarmonic = int.Parse(query["specifiedHarmonic"]);
-                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                    meter.ConnectionFactory = ConnectionFactory;
                     int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
                     double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
 
@@ -3185,7 +3116,7 @@ namespace openXDA.Adapters
 
             double systemFrequency;
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
             }
@@ -3261,7 +3192,7 @@ namespace openXDA.Adapters
             Dictionary<string, string> query = Request.QueryParameters();
             int eventId = int.Parse(query["eventId"]);
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 DataTable dataTable = connection.RetrieveData("SELECT * FROM OpenSEEScalarStatView WHERE EventID = {0}", eventId);
                 if (dataTable.Rows.Count == 0) return new Dictionary<string, string>();
@@ -3278,7 +3209,7 @@ namespace openXDA.Adapters
             Dictionary<string, string> query = Request.QueryParameters();
             int eventId = int.Parse(query["eventId"]);
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 DataTable dataTable = connection.RetrieveData(@"
                     SELECT 
@@ -3302,7 +3233,7 @@ namespace openXDA.Adapters
             int eventID = int.Parse(query["eventId"]);
 
             if (eventID <= 0) return new DataTable();
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 double timeTolerance = connection.ExecuteScalar<double>("SELECT Value FROM Setting WHERE Name = 'TimeTolerance'");
                 DateTime startTime = connection.ExecuteScalar<DateTime>("SELECT StartTime FROM Event WHERE ID = {0}", eventID);
@@ -3319,7 +3250,7 @@ namespace openXDA.Adapters
             Dictionary<string, string> query = Request.QueryParameters();
             int eventID = int.Parse(query["eventId"]);
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 const string Query =
                     "SELECT " +
@@ -3367,7 +3298,7 @@ namespace openXDA.Adapters
         {
             Dictionary<string, string> query = Request.QueryParameters();
             int eventID = int.Parse(query["eventId"]);
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 const string SQL = "SELECT * FROM EventNote WHERE EventID = {0}";
 
@@ -3403,7 +3334,7 @@ namespace openXDA.Adapters
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     EventNote record = new EventNote()
                     {
@@ -3435,7 +3366,7 @@ namespace openXDA.Adapters
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     DateTime now = DateTime.Now;
                     List<EventNote> records = new List<EventNote>();
@@ -3475,7 +3406,7 @@ namespace openXDA.Adapters
 
                 if (result != null) return result;
 
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     EventNote record = new TableOperations<EventNote>(connection).QueryRecordWhere("ID = {0}", note.ID);
                     new TableOperations<EventNote>(connection).DeleteRecord(record);
@@ -3502,7 +3433,7 @@ namespace openXDA.Adapters
 
                 if (result != null) return result;
 
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     connection.ExecuteNonQuery(@"
                         DELETE FROM EventNote WHERE Note = {0} AND UserAccount = {1} AND Timestamp = {2}
@@ -3528,7 +3459,7 @@ namespace openXDA.Adapters
             if (result != null) return result;
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     EventNote record = new TableOperations<EventNote>(connection).QueryRecordWhere("ID = {0}", note.ID);
 
@@ -3563,9 +3494,67 @@ namespace openXDA.Adapters
             return StatusCode(HttpStatusCode.Forbidden);
         }
 
-        #endregion
+        private bool ValidateAdminRequest(IPrincipal user)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+                return ValidateAdminRequest(connection, user);
+        }
 
         #endregion
 
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly MemoryCache s_memoryCache = new MemoryCache("openSEE");
+
+        // Static Methods
+        public static void ConfigureView(dynamic viewBag)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                HttpRequestMessage request = viewBag.Request;
+                int eventID = int.Parse(request.QueryParameters()["eventid"]);
+
+                TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+                Event evt = eventTable.QueryRecordWhere("ID = {0}", eventID);
+
+#if DEBUG
+                viewBag.IsDebug = true;
+#else
+                viewBag.IsDebug = false;
+#endif
+
+                viewBag.EnableLightningQuery = connection.ExecuteScalar<bool>("SELECT Value FROM Setting WHERE Name = 'OpenSEE.EnableLightningQuery'");
+                viewBag.IsAdmin = ValidateAdminRequest(connection, viewBag.SecurityPrincipal);
+                viewBag.EventID = eventID;
+                viewBag.EventStartTime = evt.StartTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff");
+                viewBag.EventEndTime = evt.EndTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff");
+                viewBag.SamplesPerCycle = evt.SamplesPerCycle;
+                viewBag.Cycles = Math.Floor((evt.EndTime - evt.StartTime).TotalSeconds * 60.0D);
+            }
+        }
+
+        private static bool ValidateAdminRequest(AdoDataConnection connection, IPrincipal user)
+        {
+            string username = user.Identity.Name;
+            string userid = UserInfo.UserNameToSID(username);
+
+            int count = connection.ExecuteScalar<int>(@"
+				SELECT 
+					COUNT(*) 
+				FROM 
+					UserAccount JOIN 
+					ApplicationRoleUserAccount ON ApplicationRoleUserAccount.UserAccountID = UserAccount.ID JOIN
+					ApplicationRole ON ApplicationRoleUserAccount.ApplicationRoleID = ApplicationRole.ID
+				WHERE 
+					ApplicationRole.Name = 'Administrator' AND UserAccount.Name = {0}
+            ", userid);
+
+            return count > 0;
+        }
+
+        #endregion
     }
 }

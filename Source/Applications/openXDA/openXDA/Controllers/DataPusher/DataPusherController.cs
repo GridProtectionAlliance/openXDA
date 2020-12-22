@@ -30,6 +30,7 @@ using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Security.Model;
+using log4net;
 using openXDA.DataPusher;
 using openXDA.Model;
 
@@ -38,12 +39,17 @@ namespace openXDA.Controllers.Config
     [RoutePrefix("api/DataPusher")]
     public class DataPusherController : ApiController
     {
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
+        public DataPusherController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
         [Route("SyncMeterConfig/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet]
         public Task SyncMeterConfigurationForInstance(string connectionId, int instanceId, int meterId, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
 
                     try
@@ -57,8 +63,7 @@ namespace openXDA.Controllers.Config
                     }
                     catch (Exception ex)
                     {
-                        Program.Host.HandleException(ex);
-
+                        Log.Error(ex.Message, ex);
                     }
                 }
             }, cancellationToken);
@@ -70,7 +75,7 @@ namespace openXDA.Controllers.Config
         {
             return Task.Run(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     try
                     {
@@ -81,7 +86,7 @@ namespace openXDA.Controllers.Config
                     }
                     catch (Exception ex)
                     {
-                        Program.Host.HandleException(ex);
+                        Log.Error(ex.Message, ex);
                     }
                 }
             }, cancellationToken);
@@ -104,7 +109,7 @@ namespace openXDA.Controllers.Config
         {
             return Task.Run(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                     DataPusherEngine engine = new DataPusherEngine();
@@ -113,5 +118,7 @@ namespace openXDA.Controllers.Config
                 }
             }, cancellationToken);
         }
+
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherController));
     }
 }

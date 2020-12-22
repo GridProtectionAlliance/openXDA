@@ -46,20 +46,20 @@ namespace openXDA.Adapters
     /// </summary>
     public class PQMarkController : ApiController
     {
-        #region [ Static Event Handlers ]
-        public static event EventHandler<EventArgs<int, int>> ReprocessFilesEvent;
-        private static void OnReprocessFiles(int fileGroupID, int meterID)
-        {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int, int>(fileGroupID, meterID));
-        }
-        #endregion
+        #region [ Constructors ]
 
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(PQMarkController));
+        public PQMarkController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
 
         #endregion
+
+        #region [ Properties ]
+
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
+        #endregion
+
+        #region [ Methods ]
 
         #region [ GET Operations ]
         // This generates a request verification token that will need to be added to the headers
@@ -88,7 +88,8 @@ namespace openXDA.Adapters
         {
             object result;
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataContext dataContext = new DataContext(connection))
             {
                 try
                 {
@@ -113,7 +114,7 @@ namespace openXDA.Adapters
                         queryParameters = new object[] { modelName, User.Identity.Name };
                     }
 
-                    result = dataContext.Connection.ExecuteScalar(query, queryParameters);
+                    result = connection.ExecuteScalar(query, queryParameters);
                 }
                 catch (Exception ex)
                 {
@@ -134,7 +135,8 @@ namespace openXDA.Adapters
         {
             object collection;
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataContext dataContext = new DataContext(connection))
             {
                 try
                 {
@@ -161,7 +163,7 @@ namespace openXDA.Adapters
 
                     Type fieldType = tableOperations.GetFieldType("ID");
 
-                    collection = dataContext.Connection.RetrieveData(query, queryParameters).Select()
+                    collection = connection.RetrieveData(query, queryParameters).Select()
                         .Select(row => row.ConvertField("ID", fieldType));
                 }
                 catch (Exception ex)
@@ -183,14 +185,15 @@ namespace openXDA.Adapters
         {
             object record;
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataContext dataContext = new DataContext(connection))
             {
                 try
                 {
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     PQMarkRestrictedAttribute thing;
 
-                    if(type.TryGetAttribute(out thing))
+                    if (type.TryGetAttribute(out thing))
                     {
                         record = dataContext.Table(type).QueryRecordWhere("ID = {0} AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {1} AND UserAccount = {2})", id, modelName, Thread.CurrentPrincipal.Identity.Name);
                     }
@@ -218,7 +221,8 @@ namespace openXDA.Adapters
         {
             object record;
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataContext dataContext = new DataContext(connection))
             {
                 try
                 {
@@ -258,7 +262,8 @@ namespace openXDA.Adapters
         {
             object record;
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataContext dataContext = new DataContext(connection))
             {
                 try
                 {
@@ -318,7 +323,8 @@ namespace openXDA.Adapters
                 return BadRequest("The id field must be a comma separated integer list.");
             }
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataContext dataContext = new DataContext(connection))
             {
                 try
                 {
@@ -365,29 +371,29 @@ namespace openXDA.Adapters
         {
             object record;
 
-
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 try
                 {
+                    TableOperations<ChannelDetail> channelTable = new TableOperations<ChannelDetail>(connection);
                     Type type = typeof(Channel);
                     PQMarkRestrictedAttribute thing;
 
                     if (id == "all")
                     {
                         if (type.TryGetAttribute(out thing))
-                            record = dataContext.Table<ChannelDetail>().QueryRecordWhere("ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = 'Channel' AND UserAccount = {0})", Thread.CurrentPrincipal.Identity.Name);
+                            record = channelTable.QueryRecordWhere("ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = 'Channel' AND UserAccount = {0})", Thread.CurrentPrincipal.Identity.Name);
                         else
-                            record = dataContext.Table<ChannelDetail>().QueryRecords();
+                            record = channelTable.QueryRecords();
                     }
                     else
                     {
                         if (type.TryGetAttribute(out thing))
-                            record = dataContext.Table<ChannelDetail>().QueryRecordWhere("ID = {0} AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = 'Channel' AND UserAccount = {1})", id, Thread.CurrentPrincipal.Identity.Name);
+                            record = channelTable.QueryRecordWhere("ID = {0} AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = 'Channel' AND UserAccount = {1})", id, Thread.CurrentPrincipal.Identity.Name);
                         else
-                            record = dataContext.Table<ChannelDetail>().QueryRecordsWhere(id);
+                            record = channelTable.QueryRecordsWhere(id);
                     }
-                    record = dataContext.Table<ChannelDetail>().QueryRecordsWhere(id);
+                    record = channelTable.QueryRecordsWhere(id);
                 }
                 catch (Exception ex)
                 {
@@ -405,15 +411,16 @@ namespace openXDA.Adapters
 
         [HttpPut]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public IHttpActionResult UpdateRecord(string modelName, [FromBody]JObject record)
+        public IHttpActionResult UpdateRecord(string modelName, [FromBody] JObject record)
         {
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataContext dataContext = new DataContext(connection))
             {
                 try
                 {
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     object obj = record.ToObject(type);
-                    dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).UpdateRecord(obj);
+                    dataContext.Table(type).UpdateRecord(obj);
                 }
                 catch (Exception ex)
                 {
@@ -427,15 +434,15 @@ namespace openXDA.Adapters
 
         [HttpPut]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public IHttpActionResult AppendToFileBlob([FromBody]JObject record)
+        public IHttpActionResult AppendToFileBlob([FromBody] JObject record)
         {
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 try
                 {
                     FileBlob fileBlob = record.ToObject<FileBlob>();
-                    dataContext.Connection.ExecuteNonQuery("UPDATE FileBlob SET Blob = Blob + {0} WHERE ID = {1}", fileBlob.Blob, fileBlob.ID);
-                    dataContext.Connection.ExecuteNonQuery("UPDATE DataFile SET FileSize = FileSize + {0} WHERE ID = {1}", fileBlob.Blob.Length, fileBlob.DataFileID);
+                    connection.ExecuteNonQuery("UPDATE FileBlob SET Blob = Blob + {0} WHERE ID = {1}", fileBlob.Blob, fileBlob.ID);
+                    connection.ExecuteNonQuery("UPDATE DataFile SET FileSize = FileSize + {0} WHERE ID = {1}", fileBlob.Blob.Length, fileBlob.DataFileID);
                 }
                 catch (Exception ex)
                 {
@@ -453,11 +460,12 @@ namespace openXDA.Adapters
 
         [HttpPost]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public IHttpActionResult CreateRecord( string modelName, [FromBody]JObject record)
+        public IHttpActionResult CreateRecord(string modelName, [FromBody] JObject record)
         {
             int recordId;
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataContext dataContext = new DataContext(connection))
             {
                 try
                 {
@@ -465,17 +473,17 @@ namespace openXDA.Adapters
                     object obj = record.ToObject(type);
                     PQMarkRestrictedAttribute attribute;
 
-                    dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).AddNewRecord(obj);
+                    dataContext.Table(type).AddNewRecord(obj);
 
-                    if(modelName == "Meter")
+                    if (modelName == "Meter")
                         recordId = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = {0}", ((Meter)obj).AssetKey).ID;
                     else if (modelName == "Line")
                         recordId = dataContext.Table<Line>().QueryRecordWhere("AssetKey = {0}", ((Line)obj).AssetKey).ID;
                     else
-                        recordId = dataContext.Connection.ExecuteScalar<int>("SELECT @@Identity");
+                        recordId = connection.ExecuteScalar<int>("SELECT @@Identity");
 
                     if (type.TryGetAttribute(out attribute))
-                        dataContext.Connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, {1}, {2})", recordId, modelName, Thread.CurrentPrincipal.Identity.Name);
+                        connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, {1}, {2})", recordId, modelName, Thread.CurrentPrincipal.Identity.Name);
                 }
                 catch (Exception ex)
                 {
@@ -492,33 +500,38 @@ namespace openXDA.Adapters
 
         [HttpPost]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public IHttpActionResult CreateChannel([FromBody]JObject record)
+        public IHttpActionResult CreateChannel([FromBody] JObject record)
         {
             int channelId;
-            using (DataContext dataContext = new DataContext("systemSettings"))
+
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 try
                 {
-                    int measurementCharacteristicID = dataContext.Table<MeasurementCharacteristic>().QueryRecordWhere("Name = {0}", record["MeasurementCharacteristic"].Value<string>())?.ID ?? -1;
-                    int measurementTypeID = dataContext.Table<MeasurementType>().QueryRecordWhere("Name = {0}", record["MeasurementType"].Value<string>())?.ID ?? -1;
-                    int phaseID = dataContext.Table<Phase>().QueryRecordWhere("Name = {0}", record["Phase"].Value<string>())?.ID ?? -1;
+                    TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
+                    TableOperations<MeasurementType> measurementTypeTable = new TableOperations<MeasurementType>(connection);
+                    TableOperations<Phase> phaseTable = new TableOperations<Phase>(connection);
 
-                    if(measurementCharacteristicID == -1)
+                    int measurementCharacteristicID = measurementCharacteristicTable.QueryRecordWhere("Name = {0}", record["MeasurementCharacteristic"].Value<string>())?.ID ?? -1;
+                    int measurementTypeID = measurementTypeTable.QueryRecordWhere("Name = {0}", record["MeasurementType"].Value<string>())?.ID ?? -1;
+                    int phaseID = phaseTable.QueryRecordWhere("Name = {0}", record["Phase"].Value<string>())?.ID ?? -1;
+
+                    if (measurementCharacteristicID == -1)
                     {
-                        dataContext.Table<MeasurementCharacteristic>().AddNewRecord(new MeasurementCharacteristic() { Name = record["MeasurementCharacteristic"].Value<string>(), Description = "", Display = false });
-                        measurementCharacteristicID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                        measurementCharacteristicTable.AddNewRecord(new MeasurementCharacteristic() { Name = record["MeasurementCharacteristic"].Value<string>(), Description = "", Display = false });
+                        measurementCharacteristicID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                     }
 
-                    if(measurementTypeID == -1)
+                    if (measurementTypeID == -1)
                     {
-                        dataContext.Table<MeasurementType>().AddNewRecord(new MeasurementType() { Name = record["MeasurementType"].Value<string>(), Description = "" });
-                        measurementTypeID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                        measurementTypeTable.AddNewRecord(new MeasurementType() { Name = record["MeasurementType"].Value<string>(), Description = "" });
+                        measurementTypeID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                     }
 
                     if (phaseID == -1)
                     {
-                        dataContext.Table<Phase>().AddNewRecord(new Phase() { Name = record["Phase"].Value<string>(), Description = "" });
-                        phaseID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                        phaseTable.AddNewRecord(new Phase() { Name = record["Phase"].Value<string>(), Description = "" });
+                        phaseID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                     }
 
                     Channel channel = new Channel();
@@ -534,12 +547,13 @@ namespace openXDA.Adapters
                     channel.Description = record["Description"].Value<string>();
                     channel.Enabled = record["Enabled"].Value<bool>();
 
-                    dataContext.Table<Channel>().AddNewRecord(channel);
-                    channelId = dataContext.Connection.ExecuteScalar<int>("SELECT @@Identity");
+                    TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+                    channelTable.AddNewRecord(channel);
+                    channelId = connection.ExecuteScalar<int>("SELECT @@Identity");
 
                     PQMarkRestrictedAttribute attribute;
                     if (typeof(Channel).TryGetAttribute(out attribute))
-                        dataContext.Connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, 'Channel', {1})", channel, Thread.CurrentPrincipal.Identity.Name);
+                        connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, 'Channel', {1})", channel, Thread.CurrentPrincipal.Identity.Name);
 
                 }
                 catch (Exception ex)
@@ -555,13 +569,14 @@ namespace openXDA.Adapters
 
         [HttpPost]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public IHttpActionResult UpdateChannel([FromBody]JObject record)
+        public IHttpActionResult UpdateChannel([FromBody] JObject record)
         {
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 try
                 {
-                    Channel channel = dataContext.Table<Channel>().QueryRecordWhere("ID = {0}", record["ID"].Value<int>());
+                    TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+                    Channel channel = channelTable.QueryRecordWhere("ID = {0}", record["ID"].Value<int>());
                     channel.Name = record["Name"].Value<string>();
                     channel.SamplesPerHour = record["SamplesPerHour"].Value<float>();
                     channel.PerUnitValue = record["PerUnitValue"].Value<double?>();
@@ -569,37 +584,41 @@ namespace openXDA.Adapters
                     channel.Description = record["Description"].Value<string>();
                     channel.Enabled = record["Enabled"].Value<bool>();
 
-                    int measurementCharacteristicID = dataContext.Table<MeasurementCharacteristic>().QueryRecordWhere("Name = {0}", record["MeasurementCharacteristic"].Value<string>())?.ID ?? -1;
-                    int measurementTypeID = dataContext.Table<MeasurementType>().QueryRecordWhere("Name = {0}", record["MeasurementType"].Value<string>())?.ID ?? -1;
-                    int phaseID = dataContext.Table<Phase>().QueryRecordWhere("Name = {0}", record["Phase"].Value<string>())?.ID ?? -1;
+                    TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
+                    TableOperations<MeasurementType> measurementTypeTable = new TableOperations<MeasurementType>(connection);
+                    TableOperations<Phase> phaseTable = new TableOperations<Phase>(connection);
+
+                    int measurementCharacteristicID = measurementCharacteristicTable.QueryRecordWhere("Name = {0}", record["MeasurementCharacteristic"].Value<string>())?.ID ?? -1;
+                    int measurementTypeID = measurementTypeTable.QueryRecordWhere("Name = {0}", record["MeasurementType"].Value<string>())?.ID ?? -1;
+                    int phaseID = phaseTable.QueryRecordWhere("Name = {0}", record["Phase"].Value<string>())?.ID ?? -1;
 
                     if (measurementCharacteristicID == -1)
                     {
-                        dataContext.Table<MeasurementCharacteristic>().AddNewRecord(new MeasurementCharacteristic() { Name = record["MeasurementCharacteristic"].Value<string>(), Description = "", Display = false });
-                        measurementCharacteristicID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                        measurementCharacteristicTable.AddNewRecord(new MeasurementCharacteristic() { Name = record["MeasurementCharacteristic"].Value<string>(), Description = "", Display = false });
+                        measurementCharacteristicID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                     }
 
                     if (measurementTypeID == -1)
                     {
-                        dataContext.Table<MeasurementType>().AddNewRecord(new MeasurementType() { Name = record["MeasurementType"].Value<string>(), Description = "" });
-                        measurementTypeID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                        measurementTypeTable.AddNewRecord(new MeasurementType() { Name = record["MeasurementType"].Value<string>(), Description = "" });
+                        measurementTypeID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                     }
 
                     if (phaseID == -1)
                     {
-                        dataContext.Table<Phase>().AddNewRecord(new Phase() { Name = record["Phase"].Value<string>(), Description = "" });
-                        phaseID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                        phaseTable.AddNewRecord(new Phase() { Name = record["Phase"].Value<string>(), Description = "" });
+                        phaseID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                     }
 
                     channel.MeasurementTypeID = measurementTypeID;
                     channel.MeasurementCharacteristicID = measurementCharacteristicID;
                     channel.PhaseID = phaseID;
 
-                    dataContext.Table<Channel>().UpdateRecord(channel);
+                    channelTable.UpdateRecord(channel);
 
                     PQMarkRestrictedAttribute attribute;
                     if (typeof(Channel).TryGetAttribute(out attribute))
-                        dataContext.Connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, 'Channel', {1})", channel, Thread.CurrentPrincipal.Identity.Name);
+                        connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, 'Channel', {1})", channel, Thread.CurrentPrincipal.Identity.Name);
 
                 }
                 catch (Exception ex)
@@ -616,13 +635,14 @@ namespace openXDA.Adapters
 
         [HttpPost]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public IHttpActionResult ProcessFileGroup([FromBody]JObject record)
+        public IHttpActionResult ProcessFileGroup([FromBody] JObject record)
         {
             try
             {
                 OnReprocessFiles(record["FileGroupID"].Value<int>(), record["MeterID"].Value<int>());
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Log.Error(ex);
                 return BadRequest("Failed to process file group.");
             }
@@ -641,7 +661,8 @@ namespace openXDA.Adapters
         {
             try
             {
-                using (DataContext dataContext = new DataContext("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
+                using (DataContext dataContext = new DataContext(connection))
                 {
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     PQMarkRestrictedAttribute attribute;
@@ -649,13 +670,14 @@ namespace openXDA.Adapters
                     if (type.TryGetAttribute(out attribute))
                     {
                         dataContext.Table(type).DeleteRecordWhere("ID = {0} AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {1} AND UserAccount = {2})", id, modelName, Thread.CurrentPrincipal.Identity.Name);
-                        dataContext.Connection.ExecuteNonQuery("DELETE FROM [PQMarkRestrictedTableUserAccount] WHERE PrimaryID = {0} AND TableName = {1} AND UserAccount = {2}", id, modelName, Thread.CurrentPrincipal.Identity.Name);
+                        connection.ExecuteNonQuery("DELETE FROM [PQMarkRestrictedTableUserAccount] WHERE PrimaryID = {0} AND TableName = {1} AND UserAccount = {2}", id, modelName, Thread.CurrentPrincipal.Identity.Name);
                     }
                     else
                         dataContext.Table(type).DeleteRecordWhere("ID = {0}", id);
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Log.Error(ex);
                 return BadRequest("Failed delete.");
             }
@@ -664,6 +686,26 @@ namespace openXDA.Adapters
 
             return Ok();
         }
+
+        #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(PQMarkController));
+
+        #region [ Static Event Handlers ]
+
+        public static event EventHandler<EventArgs<int, int>> ReprocessFilesEvent;
+
+        private static void OnReprocessFiles(int fileGroupID, int meterID)
+        {
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int, int>(fileGroupID, meterID));
+        }
+
+        #endregion
 
         #endregion
     }

@@ -24,8 +24,11 @@
 using System;
 using System.Security.Principal;
 using GSF;
+using GSF.Security;
+using GSF.ServiceProcess;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
+using Microsoft.AspNet.SignalR.Infrastructure;
 
 namespace openXDA
 {
@@ -43,8 +46,14 @@ namespace openXDA
         private ServiceConnection(IHubConnectionContext<dynamic> clients)
         {
             m_clients = clients;
-            Program.Host.UpdatedStatus += m_serviceHost_UpdatedStatus;
+            ServiceHost.Helper.UpdatedStatus += ServiceHelper_UpdatedStatus;
         }
+
+        #endregion
+
+        #region [ Properties ]
+
+        public ServiceHost Host => ServiceHost;
 
         #endregion
 
@@ -58,21 +67,46 @@ namespace openXDA
         /// <param name="command">Command string.</param>
         public void SendCommand(string connectionID, IPrincipal principal, string command)
         {
-            Guid clientID;
-
-            if (Guid.TryParse(connectionID, out clientID))
-                Program.Host.SendRequest(clientID, principal, command);
+            if (Guid.TryParse(connectionID, out Guid clientID))
+                SendRequest(clientID, principal, command);
         }
 
         public void Disconnect(string connectionID)
         {
-            Guid clientID;
-
-            if (Guid.TryParse(connectionID, out clientID))
-                Program.Host.DisconnectClient(clientID);
+            if (Guid.TryParse(connectionID, out Guid clientID))
+                ServiceHost.Helper.DisconnectClient(clientID);
         }
 
-        private void m_serviceHost_UpdatedStatus(object sender, EventArgs<Guid, string, UpdateType> e)
+        private void SendRequest(Guid clientID, IPrincipal principal, string userInput)
+        {
+            ClientRequest request = ClientRequest.Parse(userInput);
+
+            if (request is null)
+                return;
+
+            if (SecurityProviderUtility.IsResourceSecurable(request.Command) && !SecurityProviderUtility.IsResourceAccessible(request.Command, principal))
+            {
+                ServiceHost.Helper.UpdateStatus(clientID, UpdateType.Alarm, $"Access to \"{request.Command}\" is denied.\r\n\r\n");
+                return;
+            }
+
+            ClientRequestHandler requestHandler = ServiceHost.Helper.FindClientRequestHandler(request.Command);
+
+            if (requestHandler is null)
+            {
+                ServiceHost.Helper.UpdateStatus(clientID, UpdateType.Alarm, $"Command \"{request.Command}\" is not supported.\r\n\r\n");
+                return;
+            }
+
+            ClientInfo clientInfo = new ClientInfo();
+            clientInfo.ClientID = clientID;
+            clientInfo.SetClientUser(principal);
+
+            ClientRequestInfo requestInfo = new ClientRequestInfo(clientInfo, request);
+            requestHandler.HandlerMethod(requestInfo);
+        }
+
+        private void ServiceHelper_UpdatedStatus(object sender, EventArgs<Guid, string, UpdateType> e)
         {
             string color;
 
@@ -100,24 +134,35 @@ namespace openXDA
                 color = "white";
 
             client.broadcastMessage(message, color);
-            //m_clients.All.broadcastMessage(message, color);
         }
 
         #endregion
 
         #region [ Static ]
 
-        // Static Fields
-        private static readonly Lazy<ServiceConnection> s_defaultInstance;
-
         // Static Constructor
         static ServiceConnection()
         {
-            s_defaultInstance = new Lazy<ServiceConnection>(() => new ServiceConnection(GlobalHost.ConnectionManager.GetHubContext<ServiceHub>().Clients));
+            IConnectionManager connectionmanager = GlobalHost.ConnectionManager;
+            IHubContext hubContext = connectionmanager.GetHubContext<ServiceHub>();
+            IHubConnectionContext<dynamic> clients = hubContext.Clients;
+            ServiceConnection CreateServiceConnection() => new ServiceConnection(clients);
+            DefaultInstance = new Lazy<ServiceConnection>(CreateServiceConnection);
         }
 
         // Static Properties
-        public static ServiceConnection Default => s_defaultInstance.Value;
+        public static ServiceConnection Default => DefaultInstance.Value;
+        private static ServiceHost ServiceHost { get; set; }
+        private static Lazy<ServiceConnection> DefaultInstance { get; }
+
+        // Static Methods
+        public static void InitializeDefaultInstance(ServiceHost serviceHost)
+        {
+            if (DefaultInstance.IsValueCreated)
+                throw new InvalidOperationException("Default ServiceConnection instance has already been initialized.");
+
+            ServiceHost = serviceHost;
+        }
 
         #endregion
     }

@@ -39,7 +39,7 @@ namespace FaultData.DataResources
         IEnumerable<ILightningStrike> GetLightningStrikes(string lineKey, DateTime start, DateTime end);
     }
 
-    public class LightningDataSettings
+    public class LightningDataSection
     {
         public const string CategoryName = "Lightning";
 
@@ -70,13 +70,13 @@ namespace FaultData.DataResources
     {
         public LightningDataResource()
         {
-            LightningDataSettings = new LightningDataSettings();
+            LightningDataSettings = new LightningDataSection();
             LightningStrikeLookup = new Dictionary<DataGroup, List<ILightningStrike>>();
         }
 
         [Category]
-        [SettingName(LightningDataSettings.CategoryName)]
-        public LightningDataSettings LightningDataSettings { get; }
+        [SettingName(LightningDataSection.CategoryName)]
+        public LightningDataSection LightningDataSettings { get; }
 
         public Dictionary<DataGroup, List<ILightningStrike>> LightningStrikeLookup { get; }
 
@@ -88,8 +88,7 @@ namespace FaultData.DataResources
             if (dataProvider == null)
                 return;
 
-            ConnectionStringParser<SettingAttribute, CategoryAttribute> connectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
-            connectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataProvider);
+            meterDataSet.Configure(dataProvider);
 
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)
             {
