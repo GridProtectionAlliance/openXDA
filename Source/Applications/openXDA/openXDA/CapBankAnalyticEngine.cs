@@ -189,6 +189,8 @@ namespace openXDA
             if (!settings.AnalyticSettings.Enabled)
                 return;
 
+            Log.Info($"Adding {meterDataSet.FilePath} to CapBank Analytic Queue");
+
             using (AdoDataConnection connection = ConnectionFactory())
             {
 
@@ -224,7 +226,9 @@ namespace openXDA
                 using (FileBackedDictionary<int, List<int>> dictionary = new FileBackedDictionary<int, List<int>>("./CapBankAnalytic.bin"))
                     dictionary.Remove(fileGroupID);
             }
-            
+
+            Log.Info("Starting CapBank Analytic...");
+
             // Then Run the EPRI Analytic
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -324,7 +328,7 @@ namespace openXDA
             for (int i = 0; i < phases; i++)
             {
                 for (int j = 0; j < banks; j++)
-                    kFactors[i, j] = double.NaN;
+                    kFactors[i, j] = 0.9623;
             }
 
             using (DataTable kRecords = connection.RetrieveData(query, evt.MeterID))
@@ -361,22 +365,25 @@ namespace openXDA
             string capBankAnalytics;
 
             switchingAnalysis = csvFiles.Where(item => item.EndsWith("_GenCapSwitch.csv", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            Log.Info($"Processing Capacitor Switching Analytic File");
             restrikeAnalysis = csvFiles.Where(item => item.EndsWith("_Restrike.csv", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            Log.Info($"Processing Restrike Analytic Files");
             preInsertionAnalytics = csvFiles.Where(item => item.EndsWith("_PreInsHealth.csv", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            Log.Info($"Processing Pre-Insertion Health Analytic Files");
             capBankAnalytics = csvFiles.Where(item => item.EndsWith("_RelayHealth.csv", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            Log.Info($"Processing CapBank and Relay Health Analytic Files");
 
-           
             if (!string.IsNullOrEmpty(switchingAnalysis))
             {
                 Log.Info($"Processing Capacitor Switching Analytic File");
                 ReadSwitchingAnalytic(switchingAnalysis, eventMapping);
+
+                Log.Info($"Processing Pre-Insertion Health Analytic Files");
                 ReadPreInsertionAnalytic(preInsertionAnalytics, eventMapping);
+                
+                Log.Info($"Processing Restrike Analytic Files");
                 ReadRestrikeAnalytic(restrikeAnalysis, eventMapping);
+
+                Log.Info($"Processing CapBank and Relay Health Analytic Files");
                 ReadCapBankAnalytic(capBankAnalytics, eventMapping);
+
+                Log.Info("Finished Processing CapBank Analytic Results");
             }
             else
             {
@@ -498,8 +505,7 @@ namespace openXDA
                     row.CBOperationID = ConvertToInt(fields[5]);
                     if (ConvertToInt(fields[6]) < 1 && ConvertToInt(fields[7]) < 1)
                     {
-                        Log.Warn("Capacitor Bank Analysis not completed");
-                        continue;
+                        Log.Warn("Unable to identify target CapBank");
                     }
                     row.EnergizedBanks = ConvertToInt(fields[6]);
                     row.DeEnergizedBanks = ConvertToInt(fields[7]);
@@ -605,7 +611,7 @@ namespace openXDA
                     if (double.IsNaN(row.R) && double.IsNaN(row.X) && double.IsNaN(row.Duration))
                         continue;
 
-                    Event evt = null;
+                    Event evt;
                     if (eventMapping.TryGetValue(fileName, out evt))
                     {
                         if (new TableOperations<CBAnalyticResult>(connection).QueryRecordCountWhere("PhaseID = {0} AND EventID = {1}", PhaseID, evt.ID) != 1)
@@ -662,12 +668,12 @@ namespace openXDA
                         PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'None'");
 
                     row.CBRestrikeTypeID = ConvertToInt(fields[3]) ?? -1;
-                    row.Text = ConvertToDouble(fields[6]) ?? double.NaN;
-                    row.Trest = ConvertToDouble(fields[7]) ?? double.NaN;
-                    row.Text2 = ConvertToDouble(fields[8]) ?? double.NaN;
-                    row.Drest = ConvertToDouble(fields[9]) ?? double.NaN;
-                    row.Imax = ConvertToDouble(fields[10]) ?? double.NaN;
-                    row.Vmax = ConvertToDouble(fields[11]) ?? double.NaN;
+                    row.Text = ConvertToDouble(fields[6]);
+                    row.Trest = ConvertToDouble(fields[7]);
+                    row.Text2 = ConvertToDouble(fields[8]);
+                    row.Drest = ConvertToDouble(fields[9]);
+                    row.Imax = ConvertToDouble(fields[10]);
+                    row.Vmax = ConvertToDouble(fields[11]);
 
                     if (row.CBRestrikeTypeID < 0)
                         continue;
@@ -750,75 +756,75 @@ namespace openXDA
 
                     if (capBank.Compensated && !capBank.Fused)
                     {
-                        row.Kfactor = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.Kfactor = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.dV = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.dV = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.XLV = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.XLV = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.X = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.X = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.XVmiss = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.XVmiss = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.VUIEC = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.VUIEC = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.VUIEEE = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.VUIEEE = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                     }
                     else if (!capBank.Fused && !capBank.Compensated)
                     {
-                        row.Vrelay = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.Vrelay = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.Ineutral = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.Ineutral = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.V0 = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.V0 = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ;
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.Z0 = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.Z0 = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.XLV = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.XLV = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.X = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.X = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.VUIEC = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.VUIEC = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.VUIEEE = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.VUIEEE = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                     }
                     else
                     {
-                        row.Kfactor = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.Kfactor = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.dV = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.dV = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.XUG = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.XUG = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.XLG = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.XLG = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.X = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.X = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.XVmiss = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.XVmiss = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.VUIEC = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.VUIEC = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.VUIEEE = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ?? double.NaN;
+                        row.VUIEEE = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                     }
 
                    
@@ -968,7 +974,7 @@ namespace openXDA
                 lines.Add("Specify relay data inputs and requirements");
                 lines.Add($"33 Offset time between cap bank and relay time stamps; dToffset = {tOffset}");
                 // Rated Realy Voltage is based on kV Field on primary side so it needs to be converted to secondary Side
-                double relayVoltageFactor = ((double)capBank.RelayPTRatioSecondary / (double)capBank.RelayPTRatioPrimary)/Math.Sqrt(3);
+                double relayVoltageFactor = 1.0D; //((double)capBank.RelayPTRatioSecondary / (double)capBank.RelayPTRatioPrimary)/Math.Sqrt(3);
                 lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV* relayVoltageFactor}");
                 lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {relays.First().OnVoltageThreshhold}");
                 lines.Add("");
@@ -980,7 +986,7 @@ namespace openXDA
                 lines.Add($"41 rated voltage of the low - voltage capacitor; LVcapUnitRatedV = {capBank.LVKV}");
                 lines.Add($"42 the reactance tolerance of LV cap., negative tolerance in percent; nLVcapTolpct = {capBank.LVNegReactanceTol}");
                 lines.Add($"43 the reactance tolerance of LV cap., positive tolerance in percent; pLVcapTolpct = {capBank.LVPosReactanceTol}");
-                lines.Add($"44 relay PT ratio, high to low; relayPTR = {capBank.RelayPTRatioPrimary + " " + capBank.RelayPTRatioSecondary}");
+                lines.Add($"44 relay PT ratio, high to low; relayPTR = [{capBank.RelayPTRatioPrimary + " " + capBank.RelayPTRatioSecondary}]");
                 lines.Add($"45 the output resistor of the voltage divider circuit; Rv = {capBank.Rv}");
                 lines.Add($"46 the input resistor of the voltage divider circuit; Rh = {capBank.Rh}");
                 lines.Add("");
