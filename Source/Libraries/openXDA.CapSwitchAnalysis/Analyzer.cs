@@ -65,9 +65,11 @@ namespace openXDA.CapSwitchAnalysis
 
         private void InvokeTCSAM(double[,] kFactors, string inputParameterFile)
         {
-            capsw theObject = new capsw();
-            MWNumericArray mwArray = new MWNumericArray(kFactors);
-            theObject.fTCSAM_Analytics(inputParameterFile, mwArray, 0.0D, 0.0D);
+            using (capsw theObject = new capsw())
+            {
+                MWNumericArray mwArray = new MWNumericArray(kFactors);
+                theObject.fTCSAM_Analytics(new MWStringArray(inputParameterFile), mwArray, 0.0D, 0.0D);
+            }
         }
 
         private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
