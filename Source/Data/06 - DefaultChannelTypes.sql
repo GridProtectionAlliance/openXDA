@@ -684,5 +684,6 @@ INSERT INTO CBBankHealth (ID, Description) VALUES
 	(0,'Capacitor bank and relay are healthy'),
 	(1,'Some fuseless units are shorted, or fused units shorted because fuses failed to clear'),
 	(2,'Some fused units have blown fuses'),
-	(3,'Mid-rack tap voltages are missing')
+	(3,'Mid-rack tap voltages are missing'),
+	(-1,'Unavailable')
 GO
