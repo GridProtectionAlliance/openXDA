@@ -271,7 +271,9 @@ namespace openXDA
                     string dstFolder = settings.AnalyticSettings.ParameterFileLocation;
                     dstFolder = Path.GetFullPath(Path.GetDirectoryName(dstFolder));
 
-                    double[,] kFactors = GetKFactors(connection, events.First(), capBank.NumberOfBanks);
+                    // Compute Initial K
+
+                    double[,] kFactors = GetKFactors(connection, events.First(), capBank.NumberOfBanks, ComputeKInitial(capBank));
                     string inputParameterFile = Path.Combine(dstFolder, $"{capBank.AssetKey}.txt");
                     CapBankAnalysisRoutine analysisRoutine = GetAnalysisRoutine(connection);
                     analysisRoutine(kFactors, inputParameterFile);
@@ -286,7 +288,41 @@ namespace openXDA
             }
         }
 
-        private double[,] GetKFactors(AdoDataConnection connection, Event evt, int numBanks)
+        private double ComputeKInitial(CapBank capBank)
+        {
+            double K = 1.0D;
+            if (capBank.Fused)
+            {
+                double M = capBank.LowerXFRRatio;
+                double B = capBank.VTratioBus;
+                double S = capBank.Nseries;
+                double T = 3.0D;
+
+                K = (M/B)* (S/T);
+            }
+            else if (capBank.Compensated)
+            {
+                double B = capBank.VTratioBus;
+                double N = ((double)capBank.RelayPTRatioPrimary / (double)capBank.RelayPTRatioSecondary);
+
+                double Vu = capBank.UnitKV* 1000.0D;
+                double Qu = capBank.UnitKVAr* 1000.0D;
+                double S = capBank.Nseries;
+                double P = capBank.Nparalell;
+
+                double Qr = capBank.LVKVAr * 1000.0D;
+                double Vr = capBank.LVKV * 1000.0D; ;
+                double R = capBank.NumberLVCaps;
+
+
+                double Xp = Vu*Vu / Qu * S / P;
+                double Xb = Vr*Vr / Qr / R;
+
+                K = (Xb + Xp) * N / (Xp * B);
+            }
+            return K;
+        }
+        private double[,] GetKFactors(AdoDataConnection connection, Event evt, int numBanks, double Kinitial)
         {
             int GetPhaseIndex(string phaseName)
             {
@@ -328,7 +364,7 @@ namespace openXDA
             for (int i = 0; i < phases; i++)
             {
                 for (int j = 0; j < banks; j++)
-                    kFactors[i, j] = 0.9623;
+                    kFactors[i, j] = Kinitial;
             }
 
             using (DataTable kRecords = connection.RetrieveData(query, evt.MeterID))
