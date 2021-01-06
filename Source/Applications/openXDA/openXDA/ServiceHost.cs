@@ -628,6 +628,35 @@ namespace openXDA
 
                 DefaultWebPage = systemSettings["DefaultWebPage"].Value;
 
+                // Load external WebController Dll to make sure they are in the application Domain before loading the Web controller
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    TableOperations<Model.WebControllerExtension> extensionTable = new TableOperations<Model.WebControllerExtension>(connection);
+
+                    List<Model.WebControllerExtension> webExtensionDefinitions = extensionTable
+                        .QueryRecords("LoadOrder")
+                        .ToList();
+
+                    foreach (Model.WebControllerExtension webExtensionDefinition in webExtensionDefinitions)
+                    {
+                        try
+                        {
+                            System.Reflection.Assembly.Load(webExtensionDefinition.AssemblyName);
+
+                            LogStatusMessage($"[{webExtensionDefinition.AssemblyName}] Loading WebController...");
+                        }
+                        catch (Exception ex)
+                        {
+                            string message;
+
+                            // Log the exception
+                            message = $"Failed to load web Controller {webExtensionDefinition.AssemblyName} due to exception: " + ex.InnerException.Message;
+                            HandleException(new InvalidOperationException(message, ex));
+                        }
+                    }
+                }
+
+
                 Model = new AppModel();
                 Model.Global.CompanyName = systemSettings["CompanyName"].Value;
                 Model.Global.CompanyAcronym = systemSettings["CompanyAcronym"].Value;

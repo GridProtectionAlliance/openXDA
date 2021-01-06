@@ -137,6 +137,7 @@
     <Compile Include="Settings\PQReportsSettings.cs" />
     <Compile Include="System\AuditLog.cs" />
     <Compile Include="System\ConfigurationLoader.cs" />
+    <Compile Include="System\WebControllerExtension.cs" />
     <Compile Include="System\DataReader.cs" />
     <Compile Include="Links\CustomerAsset.cs" />
     <Compile Include="TransmissionElements\CapBankRelay.cs" />

@@ -79,6 +79,15 @@ CREATE TABLE DataOperation
 )
 GO
 
+CREATE TABLE WebControllerExtension
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssemblyName VARCHAR(200) NOT NULL,
+    LoadOrder INT NOT NULL
+)
+GO
+
+
 CREATE TABLE DataWriter
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
