@@ -219,6 +219,11 @@ namespace openXDA.Model
         /// </summary>
         public bool Compensated { get; set; }
 
+        /// <summary>
+        ///  number of series capacitor groups from midstack VT position to ground (Fused only)
+        /// </summary>
+        public int NMidStackGround { get; set; }
+
         [JsonIgnore]
         [NonRecordField]
         public List<CapBankRelay> ConnectedRelays

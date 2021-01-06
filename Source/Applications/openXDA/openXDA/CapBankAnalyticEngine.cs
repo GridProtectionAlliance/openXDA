@@ -296,7 +296,7 @@ namespace openXDA
                 double M = capBank.LowerXFRRatio;
                 double B = capBank.VTratioBus;
                 double S = capBank.Nseries;
-                double T = 3.0D;
+                double T = (double)capBank.NMidStackGround;
 
                 K = (M/B)* (S/T);
             }

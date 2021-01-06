@@ -400,7 +400,8 @@ CREATE TABLE CapacitorBankAttributes
     Compensated BIT NOT NULL,
     NLowerGroups INT NOT NULL,
     ShortedGroups FLOAT NOT NULL DEFAULT(0),
-    Sh FLOAT NOT NULL DEFAULT(0)
+    Sh FLOAT NOT NULL DEFAULT(0),
+    NMidStackGround INT NOT NULL DEFAULT(0)
 )
 GO
 
@@ -792,7 +793,8 @@ CREATE VIEW CapBank AS
         Rh,
         Compensated,
         NLowerGroups,
-        ShortedGroups
+        ShortedGroups,
+        NMidStackGround
 	FROM Asset JOIN CapacitorBankAttributes ON Asset.ID = CapacitorBankAttributes.AssetID
 GO
 
@@ -812,7 +814,7 @@ BEGIN
 	INSERT INTO CapacitorBankAttributes (AssetID, CapacitancePerBank, NumberOfBanks, CktSwitcher, MaxKV, UnitKV, UnitKVAr, NegReactanceTol,
         PosReactanceTol, Nparalell, Nseries, NSeriesGroup, NParalellGroup, Fused, VTratioBus, NumberLVCaps, NumberLVUnits, LVKVAr,
         LVKV, LVNegReactanceTol, LVPosReactanceTol, UpperXFRRatio, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups,
-        RelayPTRatioPrimary, RelayPTRatioSecondary,Rv, Rh, Compensated, NLowerGroups, ShortedGroups,Sh)
+        RelayPTRatioPrimary, RelayPTRatioSecondary,Rv, Rh, Compensated, NLowerGroups, ShortedGroups,Sh, NMidStackGround)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			CapacitancePerBank AS CapacitancePerBank,
@@ -847,7 +849,8 @@ BEGIN
             Compensated AS Compensated,
             NLowerGroups AS NLowerGroups,
             ShortedGroups AS ShortedGroups,
-            Sh as Sh
+            Sh AS Sh,
+            NMidStackGround AS NMidStackGround
 	    FROM INSERTED
 END
 GO
@@ -905,7 +908,8 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             CapacitorBankAttributes.Compensated = INSERTED.Compensated,
             CapacitorBankAttributes.NLowerGroups = INSERTED.NLowerGroups,
             CapacitorBankAttributes.ShortedGroups = INSERTED.ShortedGroups,
-            CapacitorBankAttributes.Sh = INSERTED.Sh
+            CapacitorBankAttributes.Sh = INSERTED.Sh,
+            CapacitorBankAttributes.NMidStackGround = INSERTED.NMidStackGround
 		FROM
 			CapacitorBankAttributes 
 	INNER JOIN
