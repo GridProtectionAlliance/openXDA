@@ -296,7 +296,7 @@ namespace openXDA
                 double M = capBank.LowerXFRRatio;
                 double B = capBank.VTratioBus;
                 double S = capBank.Nseries;
-                double T = (double)capBank.NMidStackGround;
+                double T = (double)capBank.NLowerGroups;
 
                 K = (M/B)* (S/T);
             }
@@ -1027,7 +1027,7 @@ namespace openXDA
                 lines.Add($"46 the input resistor of the voltage divider circuit; Rh = {capBank.Rh}");
                 lines.Add("");
                 lines.Add("Specify relay capacitor configuration for fused configurations");
-                lines.Add($"48 upper group voltage transformer ratio; UVTR = {capBank.UpperXFRRatio}");
+                lines.Add($"48 upper group voltage transformer ratio; UVTR = {capBank.VTratioBus}");
                 lines.Add($"49 lower group voltage transformer ratio; LVTR = {capBank.LowerXFRRatio}");
                 lines.Add($"50 number of lower groups below the tap point; nLGbTap = {capBank.NLowerGroups}");
                 lines.Add("");

@@ -388,7 +388,6 @@ CREATE TABLE CapacitorBankAttributes
     LVKV FLOAT NOT NULL DEFAULT(0),
     LVNegReactanceTol FLOAT NOT NULL DEFAULT(0),
     LVPosReactanceTol FLOAT NOT NULL DEFAULT(0),
-    UpperXFRRatio FLOAT NOT NULL DEFAULT(0),
     LowerXFRRatio FLOAT NOT NULL DEFAULT(0),
     Nshorted FLOAT NOT NULL,
     BlownFuses INT NOT NULL DEFAULT(0),
@@ -401,7 +400,6 @@ CREATE TABLE CapacitorBankAttributes
     NLowerGroups INT NOT NULL,
     ShortedGroups FLOAT NOT NULL DEFAULT(0),
     Sh FLOAT NOT NULL DEFAULT(0),
-    NMidStackGround INT NOT NULL DEFAULT(0)
 )
 GO
 
@@ -781,7 +779,6 @@ CREATE VIEW CapBank AS
         LVKV,
         LVNegReactanceTol,
         LVPosReactanceTol,
-        UpperXFRRatio,
         LowerXFRRatio,
         Nshorted,
         BlownFuses,
@@ -793,8 +790,7 @@ CREATE VIEW CapBank AS
         Rh,
         Compensated,
         NLowerGroups,
-        ShortedGroups,
-        NMidStackGround
+        ShortedGroups
 	FROM Asset JOIN CapacitorBankAttributes ON Asset.ID = CapacitorBankAttributes.AssetID
 GO
 
@@ -813,8 +809,8 @@ BEGIN
 
 	INSERT INTO CapacitorBankAttributes (AssetID, CapacitancePerBank, NumberOfBanks, CktSwitcher, MaxKV, UnitKV, UnitKVAr, NegReactanceTol,
         PosReactanceTol, Nparalell, Nseries, NSeriesGroup, NParalellGroup, Fused, VTratioBus, NumberLVCaps, NumberLVUnits, LVKVAr,
-        LVKV, LVNegReactanceTol, LVPosReactanceTol, UpperXFRRatio, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups,
-        RelayPTRatioPrimary, RelayPTRatioSecondary,Rv, Rh, Compensated, NLowerGroups, ShortedGroups,Sh, NMidStackGround)
+        LVKV, LVNegReactanceTol, LVPosReactanceTol, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups,
+        RelayPTRatioPrimary, RelayPTRatioSecondary,Rv, Rh, Compensated, NLowerGroups, ShortedGroups,Sh)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			CapacitancePerBank AS CapacitancePerBank,
@@ -837,7 +833,6 @@ BEGIN
             LVKV AS LVKV,
             LVNegReactanceTol AS LVNegReactanceTol,
             LVPosReactanceTol AS LVPosReactanceTol,
-            UpperXFRRatio AS UpperXFRRatio,
             LowerXFRRatio AS LowerXFRRatio,
             Nshorted AS Nshorted,
             BlownFuses AS BlownFuses,
@@ -849,8 +844,7 @@ BEGIN
             Compensated AS Compensated,
             NLowerGroups AS NLowerGroups,
             ShortedGroups AS ShortedGroups,
-            Sh AS Sh,
-            NMidStackGround AS NMidStackGround
+            Sh AS Sh
 	    FROM INSERTED
 END
 GO
@@ -896,7 +890,6 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             CapacitorBankAttributes.LVKV = INSERTED.LVKV,
             CapacitorBankAttributes.LVNegReactanceTol = INSERTED.LVNegReactanceTol,
             CapacitorBankAttributes.LVPosReactanceTol = INSERTED.LVPosReactanceTol,
-            CapacitorBankAttributes.UpperXFRRatio = INSERTED.UpperXFRRatio,
             CapacitorBankAttributes.LowerXFRRatio = INSERTED.LowerXFRRatio,
             CapacitorBankAttributes.Nshorted = INSERTED.Nshorted,
             CapacitorBankAttributes.BlownFuses = INSERTED.BlownFuses,
@@ -908,8 +901,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             CapacitorBankAttributes.Compensated = INSERTED.Compensated,
             CapacitorBankAttributes.NLowerGroups = INSERTED.NLowerGroups,
             CapacitorBankAttributes.ShortedGroups = INSERTED.ShortedGroups,
-            CapacitorBankAttributes.Sh = INSERTED.Sh,
-            CapacitorBankAttributes.NMidStackGround = INSERTED.NMidStackGround
+            CapacitorBankAttributes.Sh = INSERTED.Sh
 		FROM
 			CapacitorBankAttributes 
 	INNER JOIN
