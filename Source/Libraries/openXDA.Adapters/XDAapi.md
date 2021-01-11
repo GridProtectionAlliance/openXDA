@@ -1,4 +1,4 @@
-![Icon](http://www.gridprotectionalliance.org/images/products/icons%2064/XDAapi.png)![openXDA](http://www.gridprotectionalliance.org/images/products/openXDAW.png)
+![Icon](http://www.gridprotectionalliance.org/images/products/icons%2064/XDAapi.png)![openXDA](http://www.gridprotectionalliance.org/images/products/productTitles32/XDAapi.png)
 
 **eXtensible Disturbance Analytics Web Api**
 
