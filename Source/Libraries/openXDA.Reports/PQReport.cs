@@ -1929,12 +1929,17 @@ namespace openXDA.Reports
 
             double step = (max - min) / NumBuckets;
 
-            Dictionary<string, int> buckets = Enumerable.Range(0, NumBuckets)
+            var buckets = Enumerable.Range(0, NumBuckets)
                 .GroupJoin(points, key => key, point => (int)((point - min) / step), (Key, grouping) => new { Key, Val = grouping.Count() })
-                .ToDictionary(obj => (obj.Key * step + min).ToString(units), obj => obj.Val);
+                .ToList();
 
-            foreach (var kvp in buckets)
-                series.Points.AddXY(kvp.Key, kvp.Value);
+            foreach (var bucket in buckets)
+            {
+                double key = bucket.Key * step + min;
+                string x = key.ToString(units);
+                double y = bucket.Val;
+                series.Points.AddXY(x, y);
+            }
 
             chart.Series.Add(series);
 
