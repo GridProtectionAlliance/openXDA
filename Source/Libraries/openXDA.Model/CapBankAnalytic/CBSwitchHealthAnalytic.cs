@@ -41,26 +41,26 @@ namespace openXDA.Model
         /// <summary>
         /// A flag for denoting an abnormal pre-insertion closing condition, <see cref="CBSwitchingCondition"/> for more details
         /// </summary>
-        public int? CBSwitchingConditionID { get; set; }
+        public int CBSwitchingConditionID { get; set; }
 
         /// <summary>
         /// The estimated resistive element of the pre-insertion switch
         /// </summary>
-        public double R { get; set; }
+        public double? R { get; set; }
 
         /// <summary>
         /// The estimated reactance element of the pre-insertion switch
         /// </summary>
-        public double X { get; set; }
+        public double? X { get; set; }
 
         /// <summary>
         /// Time between the first closing and the switching out of the pre-insertion R and X branch
         /// </summary>
-        public double Duration { get; set; }
+        public double? Duration { get; set; }
 
         /// <summary>
         /// The change of current magnitude with and without the pre-insertion during the energizing
         /// </summary>
-        public double I { get; set; }
+        public double? I { get; set; }
     } 
 }
