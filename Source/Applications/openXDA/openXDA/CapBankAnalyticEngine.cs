@@ -237,6 +237,7 @@ namespace openXDA
                 Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", events.First().AssetID);
                    
                 Dictionary<string, Event> eventMapping = new Dictionary<string, Event>();
+                Dictionary<string, Event> relayEventMapping = new Dictionary<string, Event>();
 
                 CapBank capBank;
                 List<CapBankRelay> relays;
@@ -260,7 +261,7 @@ namespace openXDA
                         eventMapping.Add(fname, evt);
 
                         List<Event> relayEvents = GetRelayEvents(evt.StartTime, evt.EndTime, relays);
-                        relayEvents.ForEach(relayEvt => GenerateRelayDataFile(relayEvt));
+                        relayEvents.ForEach(relayEvt => { relayEventMapping.Add(GenerateRelayDataFile(relayEvt), evt);  });
                     }
 
                     if (eventMapping.Count == 0)
@@ -280,7 +281,7 @@ namespace openXDA
 
                     // Read Output Files
                     Log.Info("Processing CapBank Analytic Results...");
-                    ParseOutputs(eventMapping);
+                    ParseOutputs(eventMapping, relayEventMapping);
 
                     // Trigger cap bank emails
                     EventEmailEngine.Process(events, "CapBankAnalyticEngine");
@@ -388,7 +389,7 @@ namespace openXDA
             return kFactors;
         }
 
-        private void ParseOutputs(Dictionary<string, Event> eventMapping)
+        private void ParseOutputs(Dictionary<string, Event> eventMapping, Dictionary<string, Event> relayEventMapping)
         {
             EngineSettings settings = GetSettings(ConnectionString);
             string resultFolder = settings.AnalyticSettings.ResultFileLocation;
@@ -411,7 +412,7 @@ namespace openXDA
                 ReadSwitchingAnalytic(switchingAnalysis, eventMapping);
 
                 Log.Info($"Processing Pre-Insertion Health Analytic Files");
-                ReadPreInsertionAnalytic(preInsertionAnalytics, eventMapping);
+                ReadPreInsertionAnalytic(preInsertionAnalytics, relayEventMapping);
                 
                 Log.Info($"Processing Restrike Analytic Files");
                 ReadRestrikeAnalytic(restrikeAnalysis, eventMapping);
@@ -638,13 +639,13 @@ namespace openXDA
                     else
                         PhaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'None'");
 
-                    row.CBSwitchingConditionID = ConvertToInt(fields[3]);
-                    row.R = ConvertToDouble(fields[7]) ?? double.NaN;
-                    row.X = ConvertToDouble(fields[8]) ?? double.NaN;
-                    row.Duration = ConvertToDouble(fields[6]) ?? double.NaN;
-                    row.I = ConvertToDouble(fields[9]) ?? double.NaN;
+                    row.CBSwitchingConditionID = ConvertToInt(fields[3]) ?? -1;
+                    row.R = ConvertToDouble(fields[7]);
+                    row.X = ConvertToDouble(fields[8]);
+                    row.Duration = ConvertToDouble(fields[6]);
+                    row.I = ConvertToDouble(fields[9]);
 
-                    if (double.IsNaN(row.R) && double.IsNaN(row.X) && double.IsNaN(row.Duration))
+                    if (row.CBSwitchingConditionID == -1)
                         continue;
 
                     Event evt;
@@ -1009,10 +1010,19 @@ namespace openXDA
                 lines.Add("");
                 lines.Add("Specify relay data inputs and requirements");
                 lines.Add($"33 Offset time between cap bank and relay time stamps; dToffset = {tOffset}");
-                // Rated Realy Voltage is based on kV Field on primary side so it needs to be converted to secondary Side
-                double relayVoltageFactor = 1.0D; //((double)capBank.RelayPTRatioSecondary / (double)capBank.RelayPTRatioPrimary)/Math.Sqrt(3);
-                lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV* relayVoltageFactor}");
-                lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {relays.First().OnVoltageThreshhold}");
+              
+                if (relays.Count == 0)
+                {
+                    lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {161}");
+                    lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {0.075}");
+                    Log.Error($"No connectd Relays found for {capBank.AssetName}");
+
+                }
+                else
+                {
+                    lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV}");
+                    lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {relays.First().OnVoltageThreshhold}");
+                }
                 lines.Add("");
                 lines.Add("Specify relay capacitor configuration for fuseless configurations");
                 lines.Add($"37 Bus VT ratio; busVT = {capBank.VTratioBus}");
@@ -1151,7 +1161,7 @@ namespace openXDA
 
         }
 
-        private void GenerateRelayDataFile(Event evt)
+        private string GenerateRelayDataFile(Event evt)
         {
             CapBankRelay relay;
             VIDataGroup data = QueryDataGroup(evt.ID, evt.MeterID);
@@ -1190,7 +1200,7 @@ namespace openXDA
                     series.Add(data.VC);
                 }
                 if (header == "Time (s),")
-                    return;
+                    return dstFile;
 
                 lines.Add(header);
                 lines.AddRange(ToCsV(series));
@@ -1203,7 +1213,10 @@ namespace openXDA
                         fileWriter.WriteLine(lines[i]);
                     }
                 }
+
+                return dstFile;
             }
+            
 
         }
 
