@@ -213,36 +213,39 @@ namespace FaultData.DataWriters
 
         public void ApplyFTTTransform(List<Attachment> attachments, XDocument htmlDocument)
         {
-            htmlDocument.TransformAll("ftt", (element, index) =>
+            using (AdoDataConnection connection = ConnectionFactory())
             {
-                string fttEventID = (string)element.Attribute("eventID") ?? "-1";
-                string cid = $"event{fttEventID}_ftt{index:00}.jpg";
-
-                try
+                htmlDocument.TransformAll("ftt", (element, index) =>
                 {
-                    Stream image = FTTImageGenerator.ConvertToFTTImageStream(element);
-                    Attachment attachment = new Attachment(image, cid);
-                    attachment.ContentId = attachment.Name;
-                    attachments.Add(attachment);
+                    string fttEventID = (string)element.Attribute("eventID") ?? "-1";
+                    string cid = $"event{fttEventID}_ftt{index:00}.jpg";
 
-                    return new XElement("img", new XAttribute("src", $"cid:{cid}"));
-                }
-                catch (Exception ex)
-                {
-                    string text = new StringBuilder()
-                        .AppendLine($"Error while querying {cid}:")
-                        .Append(ex.ToString())
-                        .ToString();
+                    try
+                    {
+                        Stream image = FTTImageGenerator.ConvertToFTTImageStream(connection, element);
+                        Attachment attachment = new Attachment(image, cid);
+                        attachment.ContentId = attachment.Name;
+                        attachments.Add(attachment);
 
-                    object[] content = text
-                        .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
-                        .SelectMany(line => new object[] { new XElement("br"), new XText(line) })
-                        .Skip(1)
-                        .ToArray();
+                        return new XElement("img", new XAttribute("src", $"cid:{cid}"));
+                    }
+                    catch (Exception ex)
+                    {
+                        string text = new StringBuilder()
+                            .AppendLine($"Error while querying {cid}:")
+                            .Append(ex.ToString())
+                            .ToString();
 
-                    return new XElement("div", content);
-                }
-            });
+                        object[] content = text
+                            .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+                            .SelectMany(line => new object[] { new XElement("br"), new XText(line) })
+                            .Skip(1)
+                            .ToArray();
+
+                        return new XElement("div", content);
+                    }
+                });
+            }
         }
 
         public int LoadSentEmail(List<string> recipients, XDocument htmlDocument, List<int> eventIDs)

@@ -162,6 +162,7 @@
     <Compile Include="DataWriters\EventEmailService.cs" />
     <Compile Include="DataWriters\FaultTypeGenerator.cs" />
     <Compile Include="DataWriters\GTC\FTTImageGenerator.cs" />
+    <Compile Include="DataWriters\GTC\FTTOptions.cs" />
     <Compile Include="DataWriters\GTC\StringExtensions.cs" />
     <Compile Include="DataWriters\LightningGenerator.cs" />
     <Compile Include="DataWriters\PQIGenerator.cs" />

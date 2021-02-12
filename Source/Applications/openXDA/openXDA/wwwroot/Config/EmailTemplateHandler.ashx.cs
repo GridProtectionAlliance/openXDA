@@ -496,10 +496,13 @@ namespace openXDA
                 return;
             }
 
-            response.Content = new StreamContent(FTTImageGenerator.ConvertToFTTImageStream(fttElement));
-            response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment");
-            response.Content.Headers.ContentDisposition.FileName = $"faulttracetool-{fttIdentity.GetHashCode()}.jpg";
-            response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+            using (DataContext dataContext = new DataContext())
+            {
+                response.Content = new StreamContent(FTTImageGenerator.ConvertToFTTImageStream(dataContext.Connection, fttElement));
+                response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment");
+                response.Content.Headers.ContentDisposition.FileName = $"faulttracetool-{fttIdentity.GetHashCode()}.jpg";
+                response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+            }
         }
 
         private string ApplyTemplate(HttpRequestMessage request)
