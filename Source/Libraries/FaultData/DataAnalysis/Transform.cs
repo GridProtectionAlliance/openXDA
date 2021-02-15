@@ -155,20 +155,20 @@ namespace FaultData.DataAnalysis
                 prevSinError = sinError;
                 cycleTime = dataSeries.DataPoints[0].Time;
 
-                // Reduce RMS to max 50 pt per cycle initially but do a full computation as well
+                // Reduce RMS to max 2 pt per cycle to get half cycle RMS
                 int step = 1;
                 if (compress)
-                    step = (int)Math.Floor(samplesPerCycle / 10.0D);
+                    step = (int)Math.Floor(samplesPerCycle / 2.0D);
                 if (step == 0)
                     step = 1;
 
-                for (int i = step; i <= dataSeries.DataPoints.Count - samplesPerCycle; i = i + step)
+                for (int i = step; i < dataSeries.DataPoints.Count - samplesPerCycle; i = i + step)
                 {
 
                     for (int j = 0; j < step; j++)
                     {
                         sum = sum - dataSeries.DataPoints[i - step + j].Value * dataSeries.DataPoints[i - step + j].Value;
-                        sum = sum + dataSeries.DataPoints[i - step + j + samplesPerCycle - 1].Value * dataSeries.DataPoints[i - step + j + samplesPerCycle - 1].Value;
+                        sum = sum + dataSeries.DataPoints[i - step + j + samplesPerCycle].Value * dataSeries.DataPoints[i - step + j + samplesPerCycle].Value;
                     }
 
                     // If the cycle following i contains a data gap, do not calculate cycle data
