@@ -156,7 +156,8 @@ namespace openXDA.Controllers.WebAPI
                     ORDER BY StartTime";
 
                 IEnumerable<AlarmRequestResponse> result = alarms.Select().Select(item => {
-                    DataTable values = connection.RetrieveData(sql);
+                    int alarmID = connection.ExecuteScalar<int>("SELECT MAX(ID) FROM ALARM WHERE ALARMGROUPID = {0} AND Manual = 0", int.Parse(item["ID"].ToString()));
+                    DataTable values = connection.RetrieveData(string.Format(string.Format(sql,alarmID,post.StartTime,post.EndTime));
                     AlarmRequestResponse parsed = new AlarmRequestResponse() {
                         ID = int.Parse(item["ID"].ToString()),
                         Color = item["Color"].ToString(),
