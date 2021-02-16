@@ -521,13 +521,13 @@ namespace FaultData.DataOperations
 
             if (meter.MeterAssets.Count > 1)
             {
-                Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are too many lines associated with that meter.");
-                return;
+                Log.Warn($"Add channels to meter {meterDataSet.Meter.Name} Asset {meter.MeterAssets.First().Asset.AssetKey}. There are too many lines associated with that meter.");
+                //return;
             }
 
             Asset asset = meter.MeterAssets
                 .Select(meterLine => meterLine.Asset)
-                .Single();
+                .First();
 
             foreach (DataSeries series in undefinedDataSeries)
                 series.SeriesInfo.Channel.AssetID = asset.ID;
