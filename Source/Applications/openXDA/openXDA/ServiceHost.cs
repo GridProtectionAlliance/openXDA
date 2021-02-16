@@ -631,28 +631,34 @@ namespace openXDA
                 // Load external WebController Dll to make sure they are in the application Domain before loading the Web controller
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    TableOperations<Model.WebControllerExtension> extensionTable = new TableOperations<Model.WebControllerExtension>(connection);
+                    try {
+                        TableOperations<Model.WebControllerExtension> extensionTable = new TableOperations<Model.WebControllerExtension>(connection);
 
-                    List<Model.WebControllerExtension> webExtensionDefinitions = extensionTable
-                        .QueryRecords("LoadOrder")
-                        .ToList();
+                        List<Model.WebControllerExtension> webExtensionDefinitions = extensionTable
+                            .QueryRecords("LoadOrder")
+                            .ToList();
 
-                    foreach (Model.WebControllerExtension webExtensionDefinition in webExtensionDefinitions)
-                    {
-                        try
+                        foreach (Model.WebControllerExtension webExtensionDefinition in webExtensionDefinitions)
                         {
-                            System.Reflection.Assembly.Load(webExtensionDefinition.AssemblyName);
+                            try
+                            {
+                                System.Reflection.Assembly.Load(webExtensionDefinition.AssemblyName);
 
-                            LogStatusMessage($"[{webExtensionDefinition.AssemblyName}] Loading WebController...");
-                        }
-                        catch (Exception ex)
-                        {
-                            string message;
+                                LogStatusMessage($"[{webExtensionDefinition.AssemblyName}] Loading WebController...");
+                            }
+                            catch (Exception ex)
+                            {
+                                string message;
 
-                            // Log the exception
-                            message = $"Failed to load web Controller {webExtensionDefinition.AssemblyName} due to exception: " + ex.InnerException.Message;
-                            HandleException(new InvalidOperationException(message, ex));
+                                // Log the exception
+                                message = $"Failed to load web Controller {webExtensionDefinition.AssemblyName} due to exception: " + ex.InnerException.Message;
+                                HandleException(new InvalidOperationException(message, ex));
+                            }
                         }
+
+                    }
+                    catch (Exception ex) {
+                        HandleException(ex);
                     }
                 }
 

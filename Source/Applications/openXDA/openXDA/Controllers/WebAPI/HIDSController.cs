@@ -31,6 +31,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -80,12 +82,64 @@ namespace openXDA.Controllers.WebAPI
 
         [HttpPost, Route("")]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public IHttpActionResult Post([FromBody] HIDSPost post, CancellationToken cancellationToken)
+        public HttpResponseMessage Post([FromBody] HIDSPost post, CancellationToken cancellationToken)
         {
-            //Stopwatch stopwatch = new Stopwatch();
-            //stopwatch.Start();
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
-                DataTable ids = connection.RetrieveData(@"
+            try {
+                DataTable table = GetTable(post);
+
+
+                HIDS.TrendingDataQuery hids = new HIDS.TrendingDataQuery();
+                IAsyncEnumerable<Point> results = hids.Query(table.Select().Select(x => int.Parse(x["ID"].ToString())).ToList(), post.StartTime, post.EndTime, post.Aggregate,  cancellationToken, post.Hours, post.Days, post.Weeks, post.Months);
+
+                IEnumerable<Point> list = results.ToArrayAsync().Result;
+                MemoryStream stream = new MemoryStream();
+                IFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(stream, list);
+                stream.Position = 0;
+                HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+                result.Content = new StreamContent(stream);
+                result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                return result;
+            }
+            catch (Exception ex) {
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                response.Content = new StringContent(ex.Message);
+                Log.Error(ex.Message);
+                return response;
+            }
+        }
+
+        [HttpPost, Route("Table")]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        public HttpResponseMessage PostTable([FromBody] HIDSPost post, CancellationToken cancellationToken)
+        {
+            try
+            {
+                DataTable table = GetTable(post);
+
+                MemoryStream stream = new MemoryStream();
+                IFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(stream, table);
+                stream.Position = 0;
+                HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+                result.Content = new StreamContent(stream);
+                result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                response.Content = new StringContent(ex.Message);
+                return response;
+            }
+        }
+
+        public static DataTable GetTable(HIDSPost post)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                return connection.RetrieveData(@"
                     SELECT 
 	                    DISTINCT Channel.ID, Meter.Name as Meter, Asset.AssetName as Asset, Phase.Name as Phase,  
                         Channel.Name, MeasurementCharacteristic.Name as Characteristic, MeasurementType.Name as Type, 
@@ -100,37 +154,11 @@ namespace openXDA.Controllers.WebAPI
 	                    MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID JOIN
 	                    ChannelGroupType ON ChannelGroupType.MeasurementCharacteristicID = Channel.MeasurementCharacteristicID AND ChannelGroupType.MeasurementTypeID = Channel.MeasurementTypeID
                     WHERE 
-	                    " + post.By + @".ID IN (" + string.Join(",", post.IDs)+ @") AND
+	                    " + post.By + @".ID IN (" + string.Join(",", post.IDs) + @") AND
 	                    Phase.ID IN (" + string.Join(",", post.Phases) + @") AND
 	                    ChannelGroupType.ID IN (" + string.Join(",", post.Types) + @")
                 ");
-                //Log.Error($"Database Query Complete  = {stopwatch.Elapsed}");
-
-                HIDS.TrendingDataQuery hids = new HIDS.TrendingDataQuery();
-                List<Point> results = hids.Query(ids.Select().Select(x => int.Parse(x["ID"].ToString())).ToList(), post.StartTime, post.EndTime, post.Aggregate,  cancellationToken, post.Hours, post.Days, post.Weeks, post.Months).Result;
-                //Log.Error($"HIDS Query Complete  = {stopwatch.Elapsed}");
-                JArray json = JArray.FromObject(ids);
-
-                var groupjoin = json.GroupJoin(results, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) => {
-                    JObject jObject = JObject.FromObject(row);
-                    jObject["Data"] = JArray.FromObject(resultcollection);
-                    return jObject;
-                });
-                //Log.Error($"GroupJoin Complete  = {stopwatch.Elapsed}");
-
-                return Ok(JsonConvert.SerializeObject(groupjoin));
-
-                //HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-                //response.Content = new PushStreamContent((stream, content, context) =>
-                //{
-                //    // write your output here
-                //    SerializeJsonIntoStream(groupjoin, stream);
-                //});
-
-                //Log.Error($"Stream write Complete  = {stopwatch.Elapsed}");
-
-                //return response;
-            }          
+            }
         }
 
         private static void SerializeJsonIntoStream(object value, Stream stream)

@@ -223,6 +223,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MinTimeOffset', '0.0', '0.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES ('OpenSEE.URL', 'http://localhost/OpenSEE', 'http://localhost/OpenSEE')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ProcessingThreadCount', '0', '0')
 GO
 
