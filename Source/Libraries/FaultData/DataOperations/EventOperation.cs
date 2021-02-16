@@ -115,7 +115,9 @@ namespace FaultData.DataOperations
             for (int i = 0; i < dataGroups.Count; i++)
             {
                 DataGroup dataGroup = dataGroups[i];
-                TimeSpan duration = TimeSpan.FromSeconds(dataGroup.Duration);
+                TimeSpan duration = !double.IsNaN(dataGroup.Duration)
+                    ? TimeSpan.FromSeconds(dataGroup.Duration)
+                    : TimeSpan.Zero;
 
                 if (MaxEventDurationSpan > TimeSpan.Zero && duration > MaxEventDurationSpan)
                     continue;
