@@ -347,6 +347,7 @@
     <Compile Include="Controllers\ModelController.cs" />
     <Compile Include="Controllers\SPCTools\Controllers.cs" />
     <Compile Include="Controllers\SPCTools\AssetGroupController.cs" />
+    <Compile Include="Controllers\WebAPI\AlarmValueController.cs" />
     <Compile Include="Controllers\WebAPI\HIDSController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
