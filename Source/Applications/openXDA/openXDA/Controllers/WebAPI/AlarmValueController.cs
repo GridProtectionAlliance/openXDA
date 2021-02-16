@@ -92,7 +92,7 @@ namespace openXDA.Controllers.WebAPI
 
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                DataTable alarms = connection.RetrieveData($@"
+                string alarmsql = $@"
                     SELECT DISTINCT 
                         AlarmGroup.ID as ID,
                         AlarmSeverity.Name AS Severity,
@@ -113,9 +113,11 @@ namespace openXDA.Controllers.WebAPI
                     WHERE 
 	                    {post.By}.ID IN({string.Join(", ", post.IDs)}) AND
 	                    Phase.ID IN ({string.Join(",", post.Phases)}) AND
-	                    ChannelGroupType.ID IN {string.Join(",", post.Types)}) AND
+	                    ChannelGroupType.ID IN ({string.Join(",", post.Types)}) AND
 						Alarm.Manual = 0
-	                    ");
+	                    ";
+
+                DataTable alarms = connection.RetrieveData(alarmsql);
 
                 IEnumerable<TimeFilter> hours = Enumerable.Range(0, 24).Where(index => (~post.Hours & (1Lu << index)) > 0).Select(h => TimeFilter.Hour00 + h);
                 IEnumerable<TimeFilter> days = Enumerable.Range(0, 7).Where(index => (~post.Days & (1Lu << index)) > 0).Select(h => TimeFilter.Sunday + h);
@@ -123,21 +125,20 @@ namespace openXDA.Controllers.WebAPI
                 IEnumerable<TimeFilter> months = Enumerable.Range(0, 12).Where(index => (~post.Months & (1Lu << index)) > 0).Select(h => TimeFilter.January + h);
 
                 string selectWeek = $@"
-                    SELECT * FROM (
-                    SELECT * FROM (SELECT StartHour, EndHour, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN (SELECT ID FROM AlarmDay WHERE Name IN ('Sunday','Weekend')) OR AlarmDayID IS NULL) AND 24 IN ({string.Join(",",days)})
+                    SELECT * FROM (SELECT StartHour, EndHour, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN (SELECT ID FROM AlarmDay WHERE Name IN ('Sunday','Weekend')) OR AlarmDayID IS NULL) AND 24 NOT IN ({(days.Count() == 0 ? "0" : string.Join(",", days))})
                         UNION
-                    SELECT StartHour + 24, EndHour + 24, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Monday', 'WorkDay')) OR AlarmDayID IS NULL) AND 25 IN ({string.Join(",", days)})
+                    SELECT StartHour + 24, EndHour + 24, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Monday', 'WorkDay')) OR AlarmDayID IS NULL) AND 25 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
                         UNION
-                    SELECT StartHour + 48, EndHour + 48, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Tuesday', 'WorkDay')) OR AlarmDayID IS NULL) AND 26 IN ({string.Join(",", days)})
+                    SELECT StartHour + 48, EndHour + 48, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Tuesday', 'WorkDay')) OR AlarmDayID IS NULL) AND 26 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
                         UNION
-                    SELECT StartHour + 72, EndHour + 72, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Wednesday', 'WorkDay')) OR AlarmDayID IS NULL) AND 27 IN ({string.Join(",", days)})
+                    SELECT StartHour + 72, EndHour + 72, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Wednesday', 'WorkDay')) OR AlarmDayID IS NULL) AND 27 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
                         UNION
-                    SELECT StartHour + 96, EndHour + 96, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Thursday', 'WorkDay')) OR AlarmDayID IS NULL) AND 28 IN ({string.Join(",", days)})
+                    SELECT StartHour + 96, EndHour + 96, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Thursday', 'WorkDay')) OR AlarmDayID IS NULL) AND 28 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
                         UNION
-                    SELECT StartHour + 120, EndHour + 120, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Friday', 'WorkDay')) OR AlarmDayID IS NULL) AND 29 IN ({string.Join(",", days)})
+                    SELECT StartHour + 120, EndHour + 120, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Friday', 'WorkDay')) OR AlarmDayID IS NULL) AND 29 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
                         UNION
-                        SELECT StartHour + 144, EndHour + 144, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Saturday', 'WorkDay')) OR AlarmDayID IS NULL) AND 30 IN ({string.Join(",", days)})
-                    ) W ORDER BY Starthour";
+                        SELECT StartHour + 144, EndHour + 144, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Saturday', 'WorkDay')) OR AlarmDayID IS NULL) AND 30 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
+                    ) W ";
 
                 DateTime startOfWeek = post.StartTime.Date.AddDays(-(int)post.StartTime.DayOfWeek);
                 int nWeeks = (int)Math.Ceiling(post.EndTime.Subtract(startOfWeek).Days / 7.0);
@@ -145,31 +146,35 @@ namespace openXDA.Controllers.WebAPI
                 string weekTbl = $"( VALUES {string.Join(",",Enumerable.Repeat(0,nWeeks).Select(i => "(" + i.ToString() + ")"))}) TR (Weeks)";
 
                 string sql = $@" SELECT 
-	                DateAdd(week,Weeks,DateAdd(hour,StartHour,'2021-01-03')) AS StartTime,
-	                DateAdd(week,Weeks,DateAdd(hour,EndHour,'2021-01-03')) AS EndTime
+	                DateAdd(week,Weeks,DateAdd(hour,StartHour,'{post.StartTime}')) AS StartTime,
+	                DateAdd(week,Weeks,DateAdd(hour,EndHour,'{post.EndTime}')) AS EndTime,
 	                Value
 	                From  ({selectWeek} CROSS JOIN {weekTbl}) C WHERE 
-                    (DatePart(week,DateAdd(week,Weeks,DateAdd(hour,StartHour,{startOfWeek}))) + 30) IN ({string.Join(",", weeks)}) AND
-                    (DatePart(month,DateAdd(week,Weeks,DateAdd(hour,StartHour,{startOfWeek}))) + 83) IN ({string.Join(",", months)}) AND
-                    DateAdd(week,Weeks,DateAdd(hour,EndHour,{startOfWeek}))  > {{1}} AND
-                    DateAdd(week,Weeks,DateAdd(hour,StartHour,{startOfWeek}))  < {{2}} AND
+                    (DatePart(week,DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}'))) + 30) NOT IN  ({(weeks.Count() == 0 ? "0" : string.Join(",", weeks))}) AND
+                    (DatePart(month,DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}'))) + 83) NOT IN  ({(months.Count() == 0 ? "0" : string.Join(",", months))}) AND
+                    DateAdd(week,Weeks,DateAdd(hour,EndHour,'{startOfWeek}'))  > {{1}} AND
+                    DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}'))  < {{2}}
                     ORDER BY StartTime";
 
                 IEnumerable<AlarmRequestResponse> result = alarms.Select().Select(item => {
-                    int alarmID = connection.ExecuteScalar<int>("SELECT MAX(ID) FROM ALARM WHERE ALARMGROUPID = {0} AND Manual = 0", int.Parse(item["ID"].ToString()));
-                    DataTable values = connection.RetrieveData(string.Format(string.Format(sql,alarmID,post.StartTime,post.EndTime)));
-                    AlarmRequestResponse parsed = new AlarmRequestResponse() {
-                        ID = int.Parse(item["ID"].ToString()),
-                        Color = item["Color"].ToString(),
-                        Severity = item["Severity"].ToString(),
-                        Label = item["Label"].ToString(),
-                        ThreshHold = values.Select().SelectMany(row => new List<double[]>() { 
+                    using (AdoDataConnection conn = new AdoDataConnection("systemSettings"))
+                    {
+                        DataTable values = conn.RetrieveData(sql, int.Parse(item["ID"].ToString()), post.StartTime, post.EndTime);
+                        AlarmRequestResponse parsed = new AlarmRequestResponse()
+                        {
+                            ID = int.Parse(item["ID"].ToString()),
+                            Color = item["Color"].ToString(),
+                            Severity = item["Severity"].ToString(),
+                            Label = item["Label"].ToString(),
+                            ThreshHold = values.Select().SelectMany(row => new List<double[]>() {
                             new double[] { DateTime.Parse(row["StartTime"].ToString()).Subtract(m_epoch).TotalMilliseconds , double.Parse(row["Value"].ToString()) },
                             new double[] { DateTime.Parse(row["EndTime"].ToString()).Subtract(m_epoch).TotalMilliseconds , double.Parse(row["Value"].ToString()) },
                         }).ToList()
-                    };
+                        };
 
-                    return parsed;
+                        return parsed;
+
+                    }
                 });
               
                 return Ok(result);
