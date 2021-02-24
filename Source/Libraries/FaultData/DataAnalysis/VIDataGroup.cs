@@ -560,14 +560,21 @@ namespace FaultData.DataAnalysis
             for (int i = 0; i < m_vIndices.Count(); i++)
             {
                 // If all line voltages are already present or there are not
-                // atleast 2 lines we will not perform line to line calculations
+                // at least 2 lines we will not perform line to line calculations
                 if (m_vIndices[i].DefinedLineVoltages == 3 || m_vIndices[i].DefinedNeutralVoltages < 2)
                     return;
 
                 // Get the meter associated with the channels in this data group
-                DataSeries VA = m_dataGroup[m_vIndices[i].Va];
-                DataSeries VB = m_dataGroup[m_vIndices[i].Vb];
-                DataSeries VC = m_dataGroup[m_vIndices[i].Vc];
+                DataSeries VA = null;
+                DataSeries VB = null;
+                DataSeries VC = null;
+
+                if  (m_vIndices[i].Va  > -1)
+                    VA = m_dataGroup[m_vIndices[i].Va];
+                if (m_vIndices[i].Vb > -1)
+                    VB = m_dataGroup[m_vIndices[i].Vb];
+                if (m_vIndices[i].Vc > -1)
+                    VC = m_dataGroup[m_vIndices[i].Vc];
 
                 meter = (VA ?? VB ?? VC).SeriesInfo.Channel.Meter;
 
