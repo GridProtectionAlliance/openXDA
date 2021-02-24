@@ -119,39 +119,39 @@ namespace openXDA.Controllers.WebAPI
 
                 DataTable alarms = connection.RetrieveData(alarmsql);
 
-                IEnumerable<TimeFilter> hours = Enumerable.Range(0, 24).Where(index => (~post.Hours & (1Lu << index)) > 0).Select(h => TimeFilter.Hour00 + h);
-                IEnumerable<TimeFilter> days = Enumerable.Range(0, 7).Where(index => (~post.Days & (1Lu << index)) > 0).Select(h => TimeFilter.Sunday + h);
-                IEnumerable<TimeFilter> weeks = Enumerable.Range(0, 53).Where(index => (~post.Weeks & (1Lu << index)) > 0).Select(h => TimeFilter.Week00 + h);
-                IEnumerable<TimeFilter> months = Enumerable.Range(0, 12).Where(index => (~post.Months & (1Lu << index)) > 0).Select(h => TimeFilter.January + h);
+                IEnumerable<TimeFilter> hours = Enumerable.Range(0, 24).Where(index => (post.Hours & (1Lu << index)) > 0).Select(h => TimeFilter.Hour00 + h);
+                IEnumerable<TimeFilter> days = Enumerable.Range(0, 7).Where(index => (post.Days & (1Lu << index)) > 0).Select(h => TimeFilter.Sunday + h);
+                IEnumerable<TimeFilter> weeks = Enumerable.Range(0, 53).Where(index => (post.Weeks & (1Lu << index)) > 0).Select(h => TimeFilter.Week00 + h);
+                IEnumerable<TimeFilter> months = Enumerable.Range(0, 12).Where(index => (post.Months & (1Lu << index)) > 0).Select(h => TimeFilter.January + h);
 
                 string selectWeek = $@"
-                    SELECT * FROM (SELECT StartHour, EndHour, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN (SELECT ID FROM AlarmDay WHERE Name IN ('Sunday','Weekend')) OR AlarmDayID IS NULL) AND 24 NOT IN ({(days.Count() == 0 ? "0" : string.Join(",", days))})
+                    SELECT * FROM (SELECT StartHour, EndHour, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN (SELECT ID FROM AlarmDay WHERE Name IN ('Sunday','Weekend')) OR AlarmDayID IS NULL) AND 24 IN ({(days.Count() == 0 ? "0" : string.Join(",", days.Select(item => (int)item)))})
                         UNION
-                    SELECT StartHour + 24, EndHour + 24, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Monday', 'WorkDay')) OR AlarmDayID IS NULL) AND 25 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
+                    SELECT StartHour + 24, EndHour + 24, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Monday', 'WorkDay')) OR AlarmDayID IS NULL) AND 25 IN  ({(days.Count() == 0 ? "0" : string.Join(",", days.Select(item => (int)item)))})
                         UNION
-                    SELECT StartHour + 48, EndHour + 48, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Tuesday', 'WorkDay')) OR AlarmDayID IS NULL) AND 26 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
+                    SELECT StartHour + 48, EndHour + 48, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Tuesday', 'WorkDay')) OR AlarmDayID IS NULL) AND 26 IN  ({(days.Count() == 0 ? "0" : string.Join(",", days.Select(item => (int)item)))})
                         UNION
-                    SELECT StartHour + 72, EndHour + 72, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Wednesday', 'WorkDay')) OR AlarmDayID IS NULL) AND 27 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
+                    SELECT StartHour + 72, EndHour + 72, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Wednesday', 'WorkDay')) OR AlarmDayID IS NULL) AND 27 IN  ({(days.Count() == 0 ? "0" : string.Join(",", days.Select(item => (int)item)))})
                         UNION
-                    SELECT StartHour + 96, EndHour + 96, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Thursday', 'WorkDay')) OR AlarmDayID IS NULL) AND 28 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
+                    SELECT StartHour + 96, EndHour + 96, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Thursday', 'WorkDay')) OR AlarmDayID IS NULL) AND 28 IN  ({(days.Count() == 0 ? "0" : string.Join(",", days.Select(item => (int)item)))})
                         UNION
-                    SELECT StartHour + 120, EndHour + 120, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Friday', 'WorkDay')) OR AlarmDayID IS NULL) AND 29 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
+                    SELECT StartHour + 120, EndHour + 120, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Friday', 'WorkDay')) OR AlarmDayID IS NULL) AND 29 IN  ({(days.Count() == 0 ? "0" : string.Join(",", days.Select(item => (int)item)))})
                         UNION
-                        SELECT StartHour + 144, EndHour + 144, Value FROM AlarmValue WHERE AlarmID = {{0}} AND(AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Saturday', 'WorkDay')) OR AlarmDayID IS NULL) AND 30 NOT IN  ({(days.Count() == 0 ? "0" : string.Join(",", days))})
+                        SELECT StartHour + 144, EndHour + 144, Value FROM AlarmValue WHERE AlarmID = {{0}} AND (AlarmDayID IN(SELECT ID FROM AlarmDay WHERE Name IN('Saturday', 'WorkDay')) OR AlarmDayID IS NULL) AND 30 IN  ({(days.Count() == 0 ? "0" : string.Join(",", days.Select(item => (int)item)))})
                     ) W ";
 
                 DateTime startOfWeek = post.StartTime.Date.AddDays(-(int)post.StartTime.DayOfWeek);
                 int nWeeks = (int)Math.Ceiling(post.EndTime.Subtract(startOfWeek).Days / 7.0);
 
-                string weekTbl = $"( VALUES {string.Join(",",Enumerable.Repeat(0,nWeeks).Select(i => "(" + i.ToString() + ")"))}) TR (Weeks)";
+                string weekTbl = $"( VALUES {string.Join(",",Enumerable.Repeat(0,nWeeks).Select((v,i) => "(" + i.ToString() + ")"))}) TR (Weeks)";
 
                 string sql = $@" SELECT 
-	                DateAdd(week,Weeks,DateAdd(hour,StartHour,'{post.StartTime}')) AS StartTime,
-	                DateAdd(week,Weeks,DateAdd(hour,EndHour,'{post.EndTime}')) AS EndTime,
+	                DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}')) AS StartTime,
+	                DateAdd(week,Weeks,DateAdd(hour,EndHour,'{startOfWeek}')) AS EndTime,
 	                Value
 	                From  ({selectWeek} CROSS JOIN {weekTbl}) C WHERE 
-                    (DatePart(week,DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}'))) + 30) NOT IN  ({(weeks.Count() == 0 ? "0" : string.Join(",", weeks))}) AND
-                    (DatePart(month,DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}'))) + 83) NOT IN  ({(months.Count() == 0 ? "0" : string.Join(",", months))}) AND
+                    (DatePart(week,DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}'))) + 30) IN ({(weeks.Count() == 0 ? "0" : string.Join(",", weeks.Select(item => (int)(item))))}) AND
+                    (DatePart(month,DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}'))) + 83) IN ({(months.Count() == 0 ? "0" : string.Join(",", months.Select(item =>(int)item)))}) AND
                     DateAdd(week,Weeks,DateAdd(hour,EndHour,'{startOfWeek}'))  > {{1}} AND
                     DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}'))  < {{2}}
                     ORDER BY StartTime";
