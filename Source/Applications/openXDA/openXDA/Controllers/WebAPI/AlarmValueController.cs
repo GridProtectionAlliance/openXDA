@@ -156,7 +156,7 @@ namespace openXDA.Controllers.WebAPI
                     DateAdd(week,Weeks,DateAdd(hour,StartHour,'{startOfWeek}'))  < {{2}}
                     ORDER BY StartTime";
 
-                IEnumerable<AlarmRequestResponse> result = alarms.Select().Select(item => {
+                IEnumerable<AlarmRequestResponse> result = alarms.Select().SelectMany(item => {
                     using (AdoDataConnection conn = new AdoDataConnection("systemSettings"))
                     {
                         DataTable values = conn.RetrieveData(sql, int.Parse(item["ID"].ToString()), post.StartTime, post.EndTime);
@@ -172,10 +172,21 @@ namespace openXDA.Controllers.WebAPI
                         }).ToList()
                         };
 
-                        return parsed;
+                        DataTable thresholds = conn.RetrieveData("SELECT AlarmFactor.Factor AS f, AlarmSeverity.Name AS Severity, AlarmSeverity.Color AS Color FROM AlarmFactor LEFT JOIN AlarmSeverity ON AlarmFactor.SeverityID = AlarmSeverity.ID WHERE  AlarmGroupID = {0}", int.Parse(item["ID"].ToString()));
+
+                        List<AlarmRequestResponse> additionalLevels = thresholds.Select().Select(row => new AlarmRequestResponse()
+                        {
+                            ID = parsed.ID,
+                            Color = row["Color"].ToString(),
+                            Severity = row["Severity"].ToString(),
+                            Label = parsed.Label,
+                            ThreshHold = parsed.ThreshHold.Select(pt => new double[] { pt[0], pt[1] * double.Parse(row["f"].ToString()) }).ToList()
+                        }).ToList();
+                        additionalLevels.Add(parsed);
+                        return additionalLevels;
 
                     }
-                });
+                }).ToList();
               
                 return Ok(result);
 
