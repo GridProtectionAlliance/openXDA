@@ -469,11 +469,6 @@ namespace openXDA.WebHosting
             // Load the WebPageController class and assign its routes
             app.UseWebApi(httpConfig);
 
-            app.Use(async (context, next) =>
-            {
-                await next.Invoke();
-            });
-
             // Setup resolver for web page controller instances
             app.UseWebPageController(WebServer, DefaultWebPage, AppModel, typeof(AppModel), AuthenticationOptions);
 
