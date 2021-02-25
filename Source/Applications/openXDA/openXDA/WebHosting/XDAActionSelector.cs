@@ -38,7 +38,7 @@ namespace openXDA.WebHosting
 
             if (controllerType == nodeControllerType)
             {
-                MethodInfo methodInfo = nodeControllerType.GetMethod("HandleRequest");
+                MethodInfo methodInfo = nodeControllerType.GetMethod("HandleRequestAsync");
                 return new ReflectedHttpActionDescriptor(controllerDescriptor, methodInfo);
             }
 

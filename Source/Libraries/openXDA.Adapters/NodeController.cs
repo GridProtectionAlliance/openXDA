@@ -24,10 +24,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Results;
+using GSF.Data;
 using openXDA.Nodes;
 
 namespace openXDA.Adapters
@@ -40,10 +44,55 @@ namespace openXDA.Adapters
             Host = host;
 
         [HttpGet, HttpPost, HttpPut, HttpDelete, HttpPatch]
-        public Task<HttpResponseMessage> HandleRequest(int node, string action, CancellationToken cancellationToken) =>
-            Forward(node, action, cancellationToken);
+        public Task<HttpResponseMessage> HandleRequestAsync(string node, string action, CancellationToken cancellationToken)
+        {
+            if (int.TryParse(node, out int nodeID))
+                return ForwardAsync(nodeID, action, cancellationToken);
 
-        private async Task<HttpResponseMessage> Forward(int nodeID, string action, CancellationToken cancellationToken)
+            return ForwardAsync(node, action, cancellationToken);
+        }
+
+        private async Task<HttpResponseMessage> ForwardAsync(string nodeType, string action, CancellationToken cancellationToken)
+        {
+            async Task<string> MessageNodeAsync(int nodeID)
+            {
+                using (HttpResponseMessage messageResponse = await ForwardAsync(nodeID, action, cancellationToken))
+                {
+                    if (!messageResponse.IsSuccessStatusCode)
+                        return $"[Node {nodeID}] ERROR: {messageResponse.StatusCode} {messageResponse.ReasonPhrase}";
+
+                    HttpContent content = messageResponse.Content;
+
+                    Task<string> readResponseTask =
+                        content?.ReadAsStringAsync() ??
+                        Task.FromResult(string.Empty);
+
+                    string responseMessage = await readResponseTask;
+
+                    if (string.IsNullOrEmpty(responseMessage))
+                        return $"[Node {nodeID}] Success";
+
+                    return $"[Node {nodeID}] {responseMessage}";
+                }
+            }
+
+            List<int> nodeIDs = QueryNodeIDs(nodeType);
+
+            if (!nodeIDs.Any())
+            {
+                NotFoundResult notFoundResult = NotFound();
+                return await notFoundResult.ExecuteAsync(cancellationToken);
+            }
+
+            IEnumerable<Task<string>> messageTasks = nodeIDs.Select(MessageNodeAsync);
+            string[] results = await Task.WhenAll(messageTasks);
+            string responseData = string.Join(Environment.NewLine, results);
+            HttpResponseMessage response = new HttpResponseMessage();
+            response.Content = new StringContent(responseData);
+            return response;
+        }
+
+        private async Task<HttpResponseMessage> ForwardAsync(int nodeID, string action, CancellationToken cancellationToken)
         {
             INode node = Host.GetNode(nodeID);
 
@@ -67,7 +116,7 @@ namespace openXDA.Adapters
 
                     foreach (KeyValuePair<string, IEnumerable<string>> header in Request.Headers)
                         request.Headers.TryAddWithoutValidation(header.Key, header.Value);
-                });
+                }, cancellationToken);
             }
             catch (InvalidOperationException)
             {
@@ -76,6 +125,25 @@ namespace openXDA.Adapters
 
                 IHttpActionResult notFound = NotFound();
                 return await notFound.ExecuteAsync(cancellationToken);
+            }
+        }
+
+        private List<int> QueryNodeIDs(string nodeType)
+        {
+            const string QueryFormat =
+                "SELECT Node.ID " +
+                "FROM " +
+                "    Node JOIN " +
+                "    NodeType ON Node.NodeTypeID = NodeType.ID " +
+                "WHERE NodeType.Name = {0}";
+
+            using (AdoDataConnection connection = Host.CreateDbConnection())
+            using (DataTable result = connection.RetrieveData(QueryFormat, nodeType))
+            {
+                return result
+                    .AsEnumerable()
+                    .Select(row => row.ConvertField<int>("ID"))
+                    .ToList();
             }
         }
     }

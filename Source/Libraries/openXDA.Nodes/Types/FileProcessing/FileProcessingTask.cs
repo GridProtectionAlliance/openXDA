@@ -95,13 +95,13 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                string filePattern = Settings.FileProcessorSettings.FilePattern;
-                Meter meter = GetMeter(connection, FilePath, filePattern);
                 bool hasChanges = CheckForChanges(connection);
 
                 if (!hasChanges)
                     return;
 
+                string filePattern = Settings.FileProcessorSettings.FilePattern;
+                Meter meter = GetMeter(connection, FilePath, filePattern);
                 FileGroup fileGroup = ToFileGroup();
                 AnalysisTask analysisTask = new AnalysisTask(fileGroup, meter, Priority);
                 AnalysisTaskPublisher taskPublisher = new AnalysisTaskPublisher(ConnectionFactory);
@@ -227,7 +227,12 @@ namespace openXDA.Nodes.Types.FileProcessing
         {
             TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
             string meterKey = GetMeterKey(filePath, filePattern);
-            return meterTable.QueryRecordWhere("AssetKey = {0}", meterKey);
+            Meter meter = meterTable.QueryRecordWhere("AssetKey = {0}", meterKey);
+
+            if (meter is null)
+                throw new FileSkippedException(false, $"No meter configuration was found for meter {meterKey}.");
+
+            return meter;
         }
 
         #endregion

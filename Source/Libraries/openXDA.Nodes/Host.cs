@@ -198,7 +198,7 @@ namespace openXDA.Nodes
             return url;
         }
 
-        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure)
+        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, CancellationToken cancellationToken = default)
         {
             const string HostQueryFormat =
                 "SELECT " +
@@ -232,7 +232,7 @@ namespace openXDA.Nodes
                 string credentials = Convert.ToBase64String(credentialData);
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(type, credentials);
 
-                return await HttpClient.SendAsync(request);
+                return await HttpClient.SendAsync(request, cancellationToken);
             }
         }
 

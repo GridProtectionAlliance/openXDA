@@ -102,6 +102,13 @@ namespace openXDA.Nodes.Types.FileProcessing
                 Node.FileProcessor.EnumerateWatchDirectories();
 
             [HttpPost]
+            public void FlushAndEnumerate()
+            {
+                Node.FileProcessor.ResetIndexAndStatistics();
+                Node.FileProcessor.EnumerateWatchDirectories();
+            }
+
+            [HttpPost]
             public void StopEnumeration() =>
                 Node.FileProcessor.StopEnumeration();
 
