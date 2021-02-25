@@ -613,7 +613,7 @@
       
       <!-- log4net Dependencies -->
       <Component Id="log4net">
-        <File Id="log4net.dll" Name="log4net.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll" />
+        <File Id="log4net.dll" Name="log4net.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\log4net.2.0.12\lib\net45\log4net.dll" />
       </Component>
 
       <!-- GSF Dependencies -->
