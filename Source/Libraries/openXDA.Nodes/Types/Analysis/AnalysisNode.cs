@@ -100,7 +100,7 @@ namespace openXDA.Nodes.Types.Analysis
             public AnalysisWebController(AnalysisNode node) =>
                 Node = node;
 
-            [HttpGet]
+            [HttpPost]
             public void PollTaskQueue() =>
                 Node.PollingOperation.RunOnceAsync();
         }
@@ -412,6 +412,7 @@ namespace openXDA.Nodes.Types.Analysis
                 queryParameters.Add("processingVersion", processingVersion.ToString());
 
                 string url = Host.BuildURL(nodeID, action, queryParameters);
+                request.Method = HttpMethod.Post;
                 request.RequestUri = new Uri(url);
             }
 
@@ -451,6 +452,7 @@ namespace openXDA.Nodes.Types.Analysis
                 queryParameters.Add("processingVersion", processingVersion.ToString());
 
                 string url = Host.BuildURL(nodeID, action, queryParameters);
+                request.Method = HttpMethod.Post;
                 request.RequestUri = new Uri(url);
             }
 

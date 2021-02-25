@@ -78,7 +78,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             public EPRICapBankAnalysisWebController(EPRICapBankAnalysisNode node) =>
                 Node = node;
 
-            [HttpGet]
+            [HttpPost]
             public void Analyze(int fileGroupID, int processingVersion) =>
                 Node.Process(fileGroupID, processingVersion);
         }
@@ -1189,7 +1189,9 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 foreach (Event evt in events)
                     queryParameters.Add("eventIDs", evt.ID.ToString());
 
-                string baseURL = Host.BuildURL(nodeID, action, queryParameters);
+                string url = Host.BuildURL(nodeID, action, queryParameters);
+                request.Method = HttpMethod.Post;
+                request.RequestUri = new Uri(url);
             }
 
             using (HttpResponseMessage response = await Host.SendWebRequestAsync(ConfigureRequest))

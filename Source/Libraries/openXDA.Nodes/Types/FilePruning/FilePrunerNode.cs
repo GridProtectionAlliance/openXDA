@@ -71,11 +71,11 @@ namespace openXDA.Nodes.Types.FilePruning
             public int CountEvents(DateTime maxDate) =>
                 Node.CountEvents(maxDate);
 
-            [HttpGet]
+            [HttpPost]
             public void PurgeFileGroups(DateTime maxDate) =>
                 Node.PurgeFileGroups(maxDate);
 
-            [HttpGet]
+            [HttpPost]
             public void PurgeOrphanData() =>
                 Node.PurgeOrphanDataOperation.TryRunOnceAsync();
         }

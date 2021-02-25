@@ -71,15 +71,15 @@ namespace openXDA.Nodes.Types.Email
             public EventEmailWebController(EventEmailNode node) =>
                 Node = node;
 
-            [HttpGet]
+            [HttpPost]
             public void TriggerForFileGroup(int fileGroupID, int processingVersion, string triggerSource = "") =>
                 Node.Process(fileGroupID, processingVersion, triggerSource);
 
-            [HttpGet]
+            [HttpPost]
             public void TriggerForEvents([FromUri] List<int> eventIDs, string triggerSource = "") =>
                 Node.Process(eventIDs, triggerSource);
 
-            [HttpGet]
+            [HttpPost]
             public void RestoreEventEmails() =>
                 Node.Restore();
         }

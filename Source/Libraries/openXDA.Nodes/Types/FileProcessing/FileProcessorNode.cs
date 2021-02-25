@@ -97,11 +97,11 @@ namespace openXDA.Nodes.Types.FileProcessing
             public FileProcessorWebController(FileProcessorNode node) =>
                 Node = node;
 
-            [HttpGet]
+            [HttpPost]
             public void Enumerate() =>
                 Node.FileProcessor.EnumerateWatchDirectories();
 
-            [HttpGet]
+            [HttpPost]
             public void StopEnumeration() =>
                 Node.FileProcessor.StopEnumeration();
 
@@ -229,8 +229,11 @@ namespace openXDA.Nodes.Types.FileProcessing
         {
             async Task NotifyAsync(string url)
             {
-                void ConfigureRequest(HttpRequestMessage request) =>
+                void ConfigureRequest(HttpRequestMessage request)
+                {
+                    request.Method = HttpMethod.Post;
                     request.RequestUri = new Uri(url);
+                }
 
                 using (HttpResponseMessage response = await Host.SendWebRequestAsync(ConfigureRequest))
                 {

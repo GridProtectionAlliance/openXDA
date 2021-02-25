@@ -344,8 +344,11 @@ namespace openXDA.Controllers.Config
         {
             async Task NotifyAsync(string url)
             {
-                void ConfigureRequest(HttpRequestMessage request) =>
+                void ConfigureRequest(HttpRequestMessage request)
+                {
+                    request.Method = HttpMethod.Post;
                     request.RequestUri = new Uri(url);
+                }
 
                 using (HttpResponseMessage response = await NodeHost.SendWebRequestAsync(ConfigureRequest))
                 {
