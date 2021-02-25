@@ -200,10 +200,10 @@ namespace openXDA
 
             // Set up heartbeat and client request handlers
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Reconfigure", "Force host to reconfigure on demand", ReconfigureRequestHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadWebHost", "Reloads web host with latest configuration", ReloadWebHostRequestHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about file/analysis nodes", EngineStatusRequestHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Reconfigure", "Force host to reconfigure on demand", ReconfigureHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadWebHost", "Reloads web host with latest configuration", ReloadWebHostHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about file/analysis nodes", EngineStatusHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsHandler));
 
             // Set up adapter loader to load service monitors
             ServiceMonitors = new ServiceMonitors();
@@ -366,7 +366,7 @@ namespace openXDA
         }
 
         // Force the host to reconfigure on demand.
-        private void ReconfigureRequestHandler(ClientRequestInfo requestInfo)
+        private void ReconfigureHandler(ClientRequestInfo requestInfo)
         {
             ConfigurationFile.Reload();
             DatabaseConnectionFactory.ReloadConfiguration();
@@ -375,7 +375,7 @@ namespace openXDA
         }
 
         // Reloads web host from configuration in the config file.
-        private void ReloadWebHostRequestHandler(ClientRequestInfo requestInfo)
+        private void ReloadWebHostHandler(ClientRequestInfo requestInfo)
         {
             WebHost.Dispose();
             ConfigurationFile.Reload();
@@ -385,15 +385,16 @@ namespace openXDA
         }
 
         // Displays status information about the XDA engine.
-        private void EngineStatusRequestHandler(ClientRequestInfo requestInfo)
+        private void EngineStatusHandler(ClientRequestInfo requestInfo)
         {
             Task<string> engineStatusTask = QueryEngineStatusAsync();
             string engineStatus = engineStatusTask.GetAwaiter().GetResult();
             DisplayResponseMessage(requestInfo, engineStatus);
+            SendResponse(requestInfo, true);
         }
 
         // Send a message to the service monitors on request.
-        private void MsgServiceMonitorsRequestHandler(ClientRequestInfo requestInfo)
+        private void MsgServiceMonitorsHandler(ClientRequestInfo requestInfo)
         {
             Arguments arguments = requestInfo.Request.Arguments;
 
@@ -465,11 +466,6 @@ namespace openXDA
                     m_serviceHelper.UpdateStatus(UpdateType.Alarm, ex2.Message + newLines);
                 }
             }
-        }
-
-        public void DisconnectClient(Guid clientID)
-        {
-            m_serviceHelper.DisconnectClient(clientID);
         }
 
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
