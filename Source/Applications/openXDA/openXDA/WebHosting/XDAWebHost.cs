@@ -459,6 +459,10 @@ namespace openXDA.WebHosting
             XDAControllerActivator controllerActivator = new XDAControllerActivator(ConnectionFactory, NodeHost);
             httpConfig.Services.Replace(typeof(IHttpControllerActivator), controllerActivator);
 
+            // Override action selection
+            XDAActionSelector actionSelector = new XDAActionSelector();
+            httpConfig.Services.Replace(typeof(IHttpActionSelector), actionSelector);
+
             // Set configuration to use reflection to setup routes
             ControllerConfig.Register(httpConfig);
 

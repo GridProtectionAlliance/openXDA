@@ -71,6 +71,9 @@ namespace openXDA.Adapters
             }
             catch (InvalidOperationException)
             {
+                if (Request.ShouldIncludeErrorDetail())
+                    throw;
+
                 IHttpActionResult notFound = NotFound();
                 return await notFound.ExecuteAsync(cancellationToken);
             }
