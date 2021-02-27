@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.ComponentModel;
 using System.Configuration;
 
@@ -53,5 +54,31 @@ namespace openXDA.Configuration
         [Setting]
         [DefaultValue(30.0D)]
         public double MaxFileSize { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of threads used
+        /// for processing file data concurrently.
+        /// </summary>
+        /// <remarks>
+        /// Values less than or equal to zero will be set to the number of logical processors.
+        /// </remarks>
+        [Setting]
+        [DefaultValue(0)]
+        public int ProcessingThreadCount
+        {
+            get
+            {
+                return _ProcessingThreadCount;
+            }
+            set
+            {
+                _ProcessingThreadCount = value;
+
+                if (_ProcessingThreadCount <= 0)
+                    _ProcessingThreadCount = Environment.ProcessorCount;
+            }
+        }
+
+        private int _ProcessingThreadCount { get; set; }
     }
 }

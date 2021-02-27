@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -29,6 +30,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
@@ -41,6 +43,7 @@ using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
 using openXDA.Nodes.Types.Analysis;
+using AnalysisTask = openXDA.Nodes.Types.Analysis.AnalysisTask;
 using FileShare = openXDA.Configuration.FileWatcher.FileShare;
 
 namespace openXDA.Nodes.Types.FileProcessing
@@ -62,32 +65,10 @@ namespace openXDA.Nodes.Types.FileProcessing
             [Category]
             [SettingName(FileEnumeratorSection.CategoryName)]
             public FileEnumeratorSection FileEnumeratorSettings { get; } = new FileEnumeratorSection();
-        }
 
-        private class NotifySynchronizedOperation : SynchronizedOperationBase
-        {
-            private FileProcessorNode Node { get; }
-
-            public NotifySynchronizedOperation(FileProcessorNode node)
-                : base(() => { })
-            {
-                Node = node;
-            }
-
-            protected override void ExecuteActionAsync()
-            {
-                Task.Run(async () =>
-                {
-                    try { Node.NotifyAnalysisNodes(); }
-                    catch (Exception ex) { Log.Error(ex.Message, ex); }
-
-                    TimeSpan delay = TimeSpan.FromSeconds(15);
-                    await Task.Delay(delay);
-
-                    if (ExecuteAction())
-                        ExecuteActionAsync();
-                });
-            }
+            [Category]
+            [SettingName(FileProcessorSection.CategoryName)]
+            public FileProcessorSection FileProcessorSettings { get; } = new FileProcessorSection();
         }
 
         private class FileProcessorWebController : ApiController
@@ -122,10 +103,24 @@ namespace openXDA.Nodes.Types.FileProcessing
             }
         }
 
-        // Constants
-        private const int FileEnumerationPriority = 1;
-        private const int FileWatcherPriority = 2;
-        private const int RequeuePriority = 3;
+        private class WorkItem
+        {
+            public string FilePath { get; }
+            public int Priority { get; }
+            public int RetryCount => MutableRetryCount;
+            private int MutableRetryCount { get; set; }
+
+            public WorkItem(string filePath, int priority)
+            {
+                FilePath = filePath;
+                Priority = priority;
+            }
+
+            public void IncrementRetryCount() => MutableRetryCount++;
+        }
+
+        // Fields
+        private int m_processedFileCount;
 
         #endregion
 
@@ -135,10 +130,15 @@ namespace openXDA.Nodes.Types.FileProcessing
             : base(host, definition, type)
         {
             FileProcessor = new FileProcessor();
-            NotifyOperation = new NotifySynchronizedOperation(this);
+            WorkQueue = new ConcurrentQueue<WorkItem>();
+
+            Action pollingFunction = GetPollingFunction();
+            void LogException(Exception ex) => Log.Error(ex.Message, ex);
+            PollOperation = new ShortSynchronizedOperation(pollingFunction, LogException);
+            NotifyOperation = new TaskSynchronizedOperation(NotifyAnalysisNodesAsync, LogException);
 
             Action<object> configurator = GetConfigurator();
-            ConfigureFileProcessor(configurator);
+            Configure(configurator);
         }
 
         #endregion
@@ -146,8 +146,15 @@ namespace openXDA.Nodes.Types.FileProcessing
         #region [ Properties ]
 
         private FileProcessor FileProcessor { get; }
-        private NotifySynchronizedOperation NotifyOperation { get; }
+        private ConcurrentQueue<WorkItem> WorkQueue { get; }
+        private ISynchronizedOperation PollOperation { get; }
+        private TaskSynchronizedOperation NotifyOperation { get; }
         private IEnumerable<FileShare> FileShares { get; set; }
+        private int ProcessingThreadCount { get; set; }
+
+        private int ProcessedFileCount =>
+            Interlocked.CompareExchange(ref m_processedFileCount, 0, 0);
+
         private bool IsDisposed { get; set; }
 
         #endregion
@@ -167,21 +174,137 @@ namespace openXDA.Nodes.Types.FileProcessing
         }
 
         protected override void OnReconfigure(Action<object> configurator) =>
-            ConfigureFileProcessor(configurator);
+            Configure(configurator);
 
-        private void ConfigureFileProcessor(Action<object> configurator)
+        private Action GetPollingFunction()
+        {
+            // This is used to track the processing thread
+            // count so resource usage can be throttled
+            int threadCount = 0;
+            int GetThreadCount() => Interlocked.CompareExchange(ref threadCount, 0, 0);
+
+            return () =>
+            {
+                if (IsDisposed)
+                    return;
+
+                int maxThreadCount = ProcessingThreadCount;
+
+                // If there are no threads available to process,
+                // active threads will poll again when they are finished
+                if (GetThreadCount() >= maxThreadCount)
+                    return;
+
+                // It's not necessary to keep
+                // polling if the queue is empty
+                if (!WorkQueue.TryDequeue(out WorkItem task))
+                    return;
+
+                // Add another processing thread for the polled file
+                Interlocked.Increment(ref threadCount);
+
+                _ = Task.Run(() =>
+                {
+                    try
+                    {
+                        TryProcess(task);
+                    }
+                    finally
+                    {
+                        Interlocked.Decrement(ref threadCount);
+
+                        // Ensure there are no more tasks in the queue
+                        PollOperation.RunOnceAsync();
+                    }
+                });
+
+                // Keep polling until the queue is empty
+                PollOperation.RunOnceAsync();
+            };
+        }
+
+        private void TryProcess(WorkItem workItem)
+        {
+            if (IsDisposed)
+                return;
+
+            string filePath = workItem.FilePath;
+            int priority = workItem.Priority;
+            int retryCount = workItem.RetryCount;
+
+            int GetDelay()
+            {
+                // 8 * 250 ms = 2 sec (cumulative: 2 sec)
+                const int FastRetryLimit = 8;
+                const int FastRetryDelay = 250;
+
+                if (retryCount < FastRetryLimit)
+                    return FastRetryDelay;
+
+                // 13 * 1000 ms = 13 sec (cumulative: 15 sec)
+                const int QuickRetryLimit = 13 + FastRetryLimit;
+                const int QuickRetryDelay = 1000;
+
+                if (retryCount < QuickRetryLimit)
+                    return QuickRetryDelay;
+
+                // 9 * 5000 ms = 45 sec (cumulative: 60 sec)
+                const int RelaxedRetryLimit = 9 + QuickRetryLimit;
+                const int RelaxedRetryDelay = 5000;
+
+                if (retryCount < RelaxedRetryLimit)
+                    return RelaxedRetryDelay;
+
+                // After 60 seconds, continue with the slow retry delay
+                const int SlowRetryDelay = 60000;
+                return SlowRetryDelay;
+            }
+
+            async Task RetryAsync()
+            {
+                int delay = GetDelay();
+                await Task.Delay(delay);
+                workItem.IncrementRetryCount();
+                WorkQueue.Enqueue(workItem);
+                PollOperation.RunOnceAsync();
+            }
+
+            try
+            {
+                Action<object> configurator = GetConfigurator();
+                FileProcessingTask fileProcessingTask = new FileProcessingTask(filePath, priority, CreateDbConnection, configurator);
+                fileProcessingTask.Execute();
+                NotifyOperation.RunOnceAsync();
+            }
+            catch (FileSkippedException ex)
+            {
+                if (ex.Requeue && retryCount < 30)
+                {
+                    _ = RetryAsync();
+                    return;
+                }
+
+                Log.Warn(ex.Message, ex);
+            }
+            catch (Exception ex)
+            {
+                string message = $"Exception occurred processing file \"{filePath}\": {ex.Message}";
+                Log.Error(message, ex);
+            }
+
+            Interlocked.Increment(ref m_processedFileCount);
+        }
+
+        private void Configure(Action<object> configurator)
         {
             Settings settings = new Settings(configurator);
-            FileProcessor.Filter = QueryFileProcessorFilter();
-            FileProcessor.FolderExclusion = settings.FileEnumeratorSettings.FolderExclusion;
-            FileProcessor.InternalBufferSize = settings.FileWatcherSettings.BufferSize;
-            FileProcessor.EnumerationStrategy = settings.FileEnumeratorSettings.Strategy;
-            FileProcessor.MaxThreadCount = settings.FileWatcherSettings.InternalThreadCount;
-            FileProcessor.TrackChanges = true;
-            FileProcessor.Processing += FileProcessor_Processing;
-            FileProcessor.Error += FileProcessor_Error;
+            ProcessingThreadCount = settings.FileProcessorSettings.ProcessingThreadCount;
+            AuthenticateFileShares(settings);
+            ConfigureFileProcessor(settings);
+        }
 
-            // Attempt to authenticate to configured file shares
+        private void AuthenticateFileShares(Settings settings)
+        {
             void HandleException(Exception ex) => Log.Error(ex.Message, ex);
 
             FileShares = settings.FileWatcherSettings.FileShareList;
@@ -191,6 +314,34 @@ namespace openXDA.Nodes.Types.FileProcessing
                 if (!fileShare.TryAuthenticate())
                     HandleException(fileShare.AuthenticationException);
             }
+        }
+
+        private void ConfigureFileProcessor(Settings settings)
+        {
+            string QueryFilter()
+            {
+                const string Query = "SELECT FilePattern FROM DataReader";
+
+                // Get the list of file extensions to be processed by openXDA
+                using (AdoDataConnection connection = CreateDbConnection())
+                using (DataTable result = connection.RetrieveData(Query))
+                {
+                    IEnumerable<string> filterPatterns = result
+                        .AsEnumerable()
+                        .Select(row => row.ConvertField<string>("FilePattern"));
+
+                    return string.Join(Path.PathSeparator.ToString(), filterPatterns);
+                }
+            }
+
+            FileProcessor.Filter = QueryFilter();
+            FileProcessor.FolderExclusion = settings.FileEnumeratorSettings.FolderExclusion;
+            FileProcessor.InternalBufferSize = settings.FileWatcherSettings.BufferSize;
+            FileProcessor.EnumerationStrategy = settings.FileEnumeratorSettings.Strategy;
+            FileProcessor.MaxThreadCount = settings.FileWatcherSettings.InternalThreadCount;
+            FileProcessor.TrackChanges = true;
+            FileProcessor.Processing += FileProcessor_Processing;
+            FileProcessor.Error += FileProcessor_Error;
 
             IReadOnlyCollection<string> watchDirectories = settings.FileWatcherSettings.WatchDirectoryList;
 
@@ -212,27 +363,11 @@ namespace openXDA.Nodes.Types.FileProcessing
                     Log.Error(ex.Message, ex);
                 }
             }
+
+            FileProcessor.EnumerateWatchDirectories();
         }
 
-        private string QueryFileProcessorFilter()
-        {
-            List<string> filterPatterns;
-
-            // Get the list of file extensions to be processed by openXDA
-            using (AdoDataConnection connection = CreateDbConnection())
-            {
-                TableOperations<DataReader> dataReaderTable = new TableOperations<DataReader>(connection);
-
-                filterPatterns = dataReaderTable
-                    .QueryRecords()
-                    .Select(reader => reader.FilePattern)
-                    .ToList();
-            }
-
-            return string.Join(Path.PathSeparator.ToString(), filterPatterns);
-        }
-
-        private void NotifyAnalysisNodes()
+        private async Task NotifyAnalysisNodesAsync()
         {
             async Task NotifyAsync(string url)
             {
@@ -284,50 +419,13 @@ namespace openXDA.Nodes.Types.FileProcessing
                     })
                     .ToList();
 
-                _ = Task.Run(async () =>
-                {
-                    try { await Task.WhenAll(notifyTasks); }
-                    catch (Exception ex) { Log.Error(ex.Message, ex); }
-                });
-            }
-        }
+                try { await Task.WhenAll(notifyTasks); }
+                catch (Exception ex) { Log.Error(ex.Message, ex); }
 
-        private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
-        {
-            if (IsDisposed)
-                return;
-
-            try
-            {
-                string filePath = fileProcessorEventArgs.FullPath;
-
-                int priority = fileProcessorEventArgs.RaisedByFileWatcher
-                    ? FileWatcherPriority
-                    : FileEnumerationPriority;
-
-                Action<object> configurator = GetConfigurator();
-                FileProcessingTask task = new FileProcessingTask(filePath, priority, CreateDbConnection, configurator);
-                task.Execute();
-
-                NotifyOperation.RunOnceAsync();
-            }
-            catch (FileSkippedException ex)
-            {
-                if (ex.Requeue && fileProcessorEventArgs.RetryCount < 30)
-                {
-                    fileProcessorEventArgs.Requeue = true;
-                    return;
-                }
-
-                // Do not wrap FileSkippedExceptions because
-                // these only generate warning messages
-                throw;
-            }
-            catch (Exception ex)
-            {
-                // Wrap all other exceptions to include the file path in the message
-                string message = $"Exception occurred processing file \"{fileProcessorEventArgs.FullPath}\": {ex.Message}";
-                throw new Exception(message, ex);
+                // This method runs as the action of a synchronized operation
+                // so this limits notifications to at most every 5 seconds
+                TimeSpan delay = TimeSpan.FromSeconds(5);
+                await Task.Delay(delay);
             }
         }
 
@@ -339,13 +437,16 @@ namespace openXDA.Nodes.Types.FileProcessing
             if (!string.IsNullOrEmpty(FileProcessor.FolderExclusion))
                 statusBuilder.AppendLine($"       Folder Exclusion: {FileProcessor.FolderExclusion}");
 
+            int processedFileCount = ProcessedFileCount;
+            int skippedFileCount = FileProcessor.SkippedFileCount;
+            int scannedFileCount = FileProcessor.ProcessedFileCount + skippedFileCount;
             statusBuilder.AppendLine($"   Internal buffer size: {FileProcessor.InternalBufferSize}");
             statusBuilder.AppendLine($"   Max thread pool size: {FileProcessor.MaxThreadCount}");
             statusBuilder.AppendLine($"   Enumeration strategy: {FileProcessor.EnumerationStrategy}");
             statusBuilder.AppendLine($"         Is Enumerating: {FileProcessor.IsEnumerating}");
-            statusBuilder.AppendLine($"        Processed files: {FileProcessor.ProcessedFileCount}");
-            statusBuilder.AppendLine($"          Skipped files: {FileProcessor.SkippedFileCount}");
-            statusBuilder.AppendLine($"         Requeued files: {FileProcessor.RequeuedFileCount}");
+            statusBuilder.AppendLine($"          Scanned files: {scannedFileCount}");
+            statusBuilder.AppendLine($"        Processed files: {processedFileCount}");
+            statusBuilder.AppendLine($"          Skipped files: {skippedFileCount}");
             statusBuilder.AppendLine();
 
             if (FileProcessor.IsEnumerating)
@@ -374,7 +475,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
                 foreach (FileShare fileShare in FileShares)
                 {
-                    if ((object)fileShare.AuthenticationException == null)
+                    if (fileShare.AuthenticationException is null)
                         statusBuilder.AppendLine($"    {fileShare.Name}");
                     else
                         statusBuilder.AppendLine($"    {fileShare.Name} [Exception: {fileShare.AuthenticationException.Message}]");
@@ -388,6 +489,22 @@ namespace openXDA.Nodes.Types.FileProcessing
                 .TrimEnd();
         }
 
+        private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
+        {
+            if (IsDisposed)
+                return;
+
+            string filePath = fileProcessorEventArgs.FullPath;
+
+            int priority = fileProcessorEventArgs.RaisedByFileWatcher
+                ? AnalysisTask.FileWatcherPriority
+                : AnalysisTask.FileEnumerationPriority;
+
+            WorkItem workItem = new WorkItem(filePath, priority);
+            WorkQueue.Enqueue(workItem);
+            PollOperation.RunOnceAsync();
+        }
+
         #endregion
 
         #region [ Static ]
@@ -399,11 +516,7 @@ namespace openXDA.Nodes.Types.FileProcessing
         private static void FileProcessor_Error(object sender, ErrorEventArgs args)
         {
             Exception ex = args.GetException();
-
-            if (ex is FileSkippedException)
-                Log.Warn(ex.Message, ex);
-            else
-                Log.Error(ex.Message, ex);
+            Log.Error(ex.Message, ex);
         }
 
         #endregion

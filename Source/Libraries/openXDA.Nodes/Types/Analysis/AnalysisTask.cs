@@ -44,5 +44,9 @@ namespace openXDA.Nodes.Types.Analysis
         public FileGroup FileGroup { get; }
         public Meter Meter { get; }
         public int Priority { get; }
+
+        public const int FileEnumerationPriority = 1;
+        public const int FileWatcherPriority = 2;
+        public const int RequeuePriority = 3;
     }
 }
