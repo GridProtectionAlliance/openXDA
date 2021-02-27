@@ -87,14 +87,14 @@ namespace openXDA.Nodes.Types.FilePruning
         public FilePrunerNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
         {
-            PurgeOrphanDataOperation = new LongSynchronizedOperation(PurgeOrphanData, LogException) { IsBackground = true };
+            PurgeOrphanDataOperation = new TaskSynchronizedOperation(PurgeOrphanData, LogException);
         }
 
         #endregion
 
         #region [ Properties ]
 
-        private ISynchronizedOperation PurgeOrphanDataOperation { get; }
+        private TaskSynchronizedOperation PurgeOrphanDataOperation { get; }
 
         #endregion
 
@@ -174,7 +174,7 @@ namespace openXDA.Nodes.Types.FilePruning
             PurgeOrphanDataOperation.TryRunOnceAsync();
         }
 
-        private void PurgeOrphanData()
+        private async Task PurgeOrphanData()
         {
             void PurgeChannelData()
             {
@@ -232,8 +232,7 @@ namespace openXDA.Nodes.Types.FilePruning
 
             Task channelDataTask = Task.Run(PurgeChannelData);
             Task eventDataTask = Task.Run(PurgeEventData);
-            Task all = Task.WhenAll(channelDataTask, eventDataTask);
-            all.GetAwaiter().GetResult();
+            await Task.WhenAll(channelDataTask, eventDataTask);
         }
 
         private void LogException(Exception ex) =>
