@@ -70,29 +70,6 @@ namespace openXDA.Nodes.Types.Analysis
             public TaskProcessorSection TaskProcessorSettings { get; } = new TaskProcessorSection();
         }
 
-        private class PollingSynchronizedOperation : SynchronizedOperationBase
-        {
-            private Func<Task> PollingFunction { get; }
-
-            public PollingSynchronizedOperation(AnalysisNode node)
-                : base(() => { })
-            {
-                PollingFunction = node.GetPollingFunction();
-            }
-
-            protected override void ExecuteActionAsync()
-            {
-                Task.Run(async () =>
-                {
-                    try { await PollingFunction(); }
-                    catch (Exception ex) { Log.Error(ex.Message, ex); }
-
-                    if (ExecuteAction())
-                        ExecuteActionAsync();
-                });
-            }
-        }
-
         private class AnalysisWebController : ApiController
         {
             private AnalysisNode Node { get; }
@@ -112,7 +89,9 @@ namespace openXDA.Nodes.Types.Analysis
         public AnalysisNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
         {
-            PollingOperation = new PollingSynchronizedOperation(this);
+            Action pollingFunction = GetPollingFunction();
+            void LogException(Exception ex) => Log.Error(ex.Message, ex);
+            PollingOperation = new ShortSynchronizedOperation(pollingFunction, LogException);
 
             Action<object> configurator = GetConfigurator();
             UpdateTaskProcessorSettings(configurator);
@@ -123,7 +102,7 @@ namespace openXDA.Nodes.Types.Analysis
 
         #region [ Properties ]
 
-        private PollingSynchronizedOperation PollingOperation { get; }
+        private ISynchronizedOperation PollingOperation { get; }
         private string MeterFilterQuery { get; set; }
         private int ProcessingThreadCount { get; set; }
         private bool IsDisposed { get; set; }
@@ -141,7 +120,7 @@ namespace openXDA.Nodes.Types.Analysis
         protected override void OnReconfigure(Action<object> configurator) =>
             UpdateTaskProcessorSettings(configurator);
 
-        private Func<Task> GetPollingFunction()
+        private Action GetPollingFunction()
         {
             AnalysisTaskProcessor taskProcessor = new AnalysisTaskProcessor(Definition.ID, CreateDbConnection);
 
@@ -150,30 +129,16 @@ namespace openXDA.Nodes.Types.Analysis
             int threadCount = 0;
             int GetThreadCount() => Interlocked.CompareExchange(ref threadCount, 0, 0);
 
-            // This will be used to notify the polling function when processing threads have completed
-            TaskCreationOptions runContinuationsAsynchronously = TaskCreationOptions.RunContinuationsAsynchronously;
-            TaskCompletionSource<object> taskCompletionSource = null;
-
-            return async () =>
+            return () =>
             {
                 if (IsDisposed)
                     return;
 
                 int maxThreadCount = ProcessingThreadCount;
 
-                // If there are too many processing threads,
-                // wait for some to complete before polling
-                while (GetThreadCount() >= maxThreadCount)
-                {
-                    TaskCompletionSource<object> processingThreadComplete = new TaskCompletionSource<object>(runContinuationsAsynchronously);
-                    Interlocked.Exchange(ref taskCompletionSource, processingThreadComplete);
-
-                    // Check again to avoid race conditions
-                    if (GetThreadCount() >= maxThreadCount)
-                        await processingThreadComplete.Task;
-                }
-
-                if (IsDisposed)
+                // If there are no threads available to process,
+                // active threads will poll again when they are finished
+                if (GetThreadCount() >= maxThreadCount)
                     return;
 
                 AnalysisTask task = taskProcessor.Poll(MeterFilterQuery);
@@ -197,14 +162,9 @@ namespace openXDA.Nodes.Types.Analysis
                     {
                         Interlocked.Decrement(ref threadCount);
 
-                        // Notify that processing thread has completed
-                        TaskCompletionSource<object> processingThreadComplete = Interlocked.Exchange(ref taskCompletionSource, null);
-                        processingThreadComplete?.SetResult(null);
+                        // Ensure there are no more tasks in the queue
+                        PollingOperation.RunOnceAsync();
                     }
-
-                    // Ensure there are no more tasks
-                    // in the queue for the same meter
-                    PollingOperation.RunOnceAsync();
                 });
 
                 // Keep polling until the queue is empty
@@ -328,7 +288,6 @@ namespace openXDA.Nodes.Types.Analysis
             _ = NotifyEPRICapBankAnalysisNode(fileGroup.ID, fileGroup.ProcessingVersion);
         }
 
-        // Saves the current meter configuration to the database.
         private void SaveMeterConfiguration(FileGroup fileGroup, Meter meter)
         {
             MeterSettingsSheet meterSettingsSheet = new MeterSettingsSheet(meter);
