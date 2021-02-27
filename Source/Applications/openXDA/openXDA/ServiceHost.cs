@@ -408,14 +408,14 @@ namespace openXDA
         {
             ConfigurationFile.Reload();
             DatabaseConnectionFactory.ReloadConfiguration();
-            NodeHost.Reconfigure();
+            NodeHost?.Reconfigure();
             SendResponse(requestInfo, true);
         }
 
         // Reloads web host from configuration in the config file.
         private void ReloadWebHostHandler(ClientRequestInfo requestInfo)
         {
-            WebHost.Dispose();
+            WebHost?.Dispose();
             ConfigurationFile.Reload();
             DatabaseConnectionFactory.ReloadConfiguration();
             WebHost = new XDAWebHost(ConfigurationFile, NodeHost);
@@ -565,6 +565,9 @@ namespace openXDA
 
         private async Task<string> QueryFileNodeStatusAsync(AdoDataConnection connection)
         {
+            if (NodeHost is null)
+                return string.Empty;
+
             const string QueryFormat =
                 "SELECT " +
                 "    ActiveHost.URL HostURL, " +
@@ -641,6 +644,9 @@ namespace openXDA
 
         private string QueryAnalysisStatus(AdoDataConnection connection)
         {
+            if (NodeHost is null)
+                return string.Empty;
+
             const string Query =
                 "SELECT " +
                 "    FileGroup.ProcessingStartTime, " +
