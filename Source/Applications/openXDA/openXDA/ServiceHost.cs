@@ -199,6 +199,8 @@ namespace openXDA
             DatabaseConnectionFactory = new DatabaseConnectionFactory(ConfigurationFile);
 
             // Set up heartbeat and client request handlers
+            m_serviceHelper.AddProcess(UpdateConfigurationHandler, "UpdateConfiguration");
+            m_serviceHelper.AddProcess(ScanFilesHandler, "ScanFiles");
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Reconfigure", "Force host to reconfigure on demand", ReconfigureHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadWebHost", "Reloads web host with latest configuration", ReloadWebHostHandler));
@@ -344,6 +346,42 @@ namespace openXDA
 
                 await Task.Delay(5000);
             }
+        }
+
+        private void UpdateConfigurationHandler(string s, object[] args)
+        {
+            ConfigurationFile.Reload();
+            DatabaseConnectionFactory.ReloadConfiguration();
+            NodeHost?.Reconfigure();
+        }
+
+        private void ScanFilesHandler(string s, object[] args)
+        {
+            if (NodeHost is null)
+                return;
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                Type fileProcessorType = typeof(FileProcessorNode);
+                string url = NodeHost.BuildURL(fileProcessorType, "Enumerate");
+                request.Method = HttpMethod.Post;
+                request.RequestUri = new Uri(url);
+            }
+
+            async Task ScanFilesAsync()
+            {
+                using (HttpResponseMessage response = await NodeHost.SendWebRequestAsync(ConfigureRequest))
+                {
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        UpdateType alarm = UpdateType.Alarm;
+                        string errorMessage = $"ERROR: {response.StatusCode} {response.ReasonPhrase}";
+                        m_serviceHelper.UpdateStatus(alarm, "{0}", errorMessage);
+                    }
+                }
+            }
+
+            _ = ScanFilesAsync();
         }
 
         private void ServiceHeartbeatHandler(string s, object[] args)
