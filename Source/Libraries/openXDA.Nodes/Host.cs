@@ -155,6 +155,57 @@ namespace openXDA.Nodes
             disposeTaskSource.Task.ContinueWith(_ => CLIRegistry.DeregisterScheduledProcess(processName));
         }
 
+        public string BuildURL(Type nodeType, string action) =>
+            BuildURL(nodeType, action, null);
+
+        public string BuildURL(Type nodeType, string action, NameValueCollection queryParameters)
+        {
+            string url;
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                const string URLQueryFormat =
+                    "SELECT URL " +
+                    "FROM ActiveHost " +
+                    "WHERE ActiveHost.ID = {0}";
+
+                const string NodeQueryFormat =
+                    "SELECT Name " +
+                    "FROM NodeType " +
+                    "WHERE TypeName = {0}";
+
+                string nodeTypeName = nodeType.FullName;
+                string hostURL = connection.ExecuteScalar<string>(URLQueryFormat, ID);
+                string node = connection.ExecuteScalar<string>(NodeQueryFormat, (object)nodeTypeName);
+
+                if (hostURL is null)
+                    throw new InvalidOperationException($"Host {ID} is not active.");
+
+                if (node is null)
+                    throw new InvalidOperationException($"Node type for \"{nodeTypeName}\" does not exist.");
+
+                string cleanHostURL = hostURL.Trim().TrimEnd('/');
+                url = $"{cleanHostURL}/Node/{node}/{action}";
+            }
+
+            if (!(queryParameters is null) && queryParameters.Count > 0)
+            {
+                IEnumerable<string> queryStringParameters = queryParameters.AllKeys
+                    .SelectMany(key =>
+                    {
+                        return queryParameters
+                            .GetValues(key)
+                            .Select(Uri.EscapeDataString)
+                            .Select(value => $"{key}={value}");
+                    });
+
+                string queryString = string.Join("&", queryParameters);
+                url += $"?{queryString}";
+            }
+
+            return url;
+        }
+
         public string BuildURL(int nodeID, string action) =>
             BuildURL(nodeID, action, null);
 
