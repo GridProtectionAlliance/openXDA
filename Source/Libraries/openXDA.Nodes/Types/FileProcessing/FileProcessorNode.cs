@@ -34,6 +34,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
@@ -71,6 +72,24 @@ namespace openXDA.Nodes.Types.FileProcessing
             public FileProcessorSection FileProcessorSettings { get; } = new FileProcessorSection();
         }
 
+        private class DirectoryIndex
+        {
+            public string Directory { get; }
+            public Dictionary<string, List<string>> FileGroups { get; }
+
+            public DirectoryIndex(string directory)
+            {
+                void HandleException(Exception ex) => Log.Error(ex.Message, ex);
+
+                Directory = directory;
+
+                FileGroups = FilePath
+                    .EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly, HandleException)
+                    .GroupBy(file => Path.ChangeExtension(file, ".*"))
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
+            }
+        }
+
         private class FileProcessorWebController : ApiController
         {
             private FileProcessorNode Node { get; }
@@ -105,13 +124,15 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         private class WorkItem
         {
+            public FileInfo[] FileGroup { get; }
             public string FilePath { get; }
             public int Priority { get; }
             public int RetryCount => MutableRetryCount;
             private int MutableRetryCount { get; set; }
 
-            public WorkItem(string filePath, int priority)
+            public WorkItem(FileInfo[] fileGroup, string filePath, int priority)
             {
+                FileGroup = fileGroup;
                 FilePath = filePath;
                 Priority = priority;
             }
@@ -120,7 +141,10 @@ namespace openXDA.Nodes.Types.FileProcessing
         }
 
         // Fields
+        private int m_scannedFileCount;
         private int m_processedFileCount;
+        private int m_skippedFileCount;
+        private int m_errorCount;
 
         #endregion
 
@@ -130,10 +154,11 @@ namespace openXDA.Nodes.Types.FileProcessing
             : base(host, definition, type)
         {
             FileProcessor = new FileProcessor();
-            WorkQueue = new ConcurrentQueue<WorkItem>();
+            Index = new Dictionary<string, DirectoryIndex>();
 
             Action pollingFunction = GetPollingFunction();
             void LogException(Exception ex) => Log.Error(ex.Message, ex);
+            WorkQueue = new ConcurrentQueue<WorkItem>();
             PollOperation = new ShortSynchronizedOperation(pollingFunction, LogException);
             NotifyOperation = new TaskSynchronizedOperation(NotifyAnalysisNodesAsync, LogException);
 
@@ -146,14 +171,27 @@ namespace openXDA.Nodes.Types.FileProcessing
         #region [ Properties ]
 
         private FileProcessor FileProcessor { get; }
+        private Dictionary<string, DirectoryIndex> Index { get; }
+
         private ConcurrentQueue<WorkItem> WorkQueue { get; }
         private ISynchronizedOperation PollOperation { get; }
         private TaskSynchronizedOperation NotifyOperation { get; }
-        private IEnumerable<FileShare> FileShares { get; set; }
+
+        private string Filter { get; set; }
         private int ProcessingThreadCount { get; set; }
+        private IEnumerable<FileShare> FileShares { get; set; }
+
+        private int ScannedFileCount =>
+            Interlocked.CompareExchange(ref m_scannedFileCount, 0, 0);
 
         private int ProcessedFileCount =>
             Interlocked.CompareExchange(ref m_processedFileCount, 0, 0);
+
+        private int SkippedFileCount =>
+            Interlocked.CompareExchange(ref m_skippedFileCount, 0, 0);
+
+        private int ErrorCount =>
+            Interlocked.CompareExchange(ref m_errorCount, 0, 0);
 
         private bool IsDisposed { get; set; }
 
@@ -228,6 +266,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             if (IsDisposed)
                 return;
 
+            FileInfo[] fileGroup = workItem.FileGroup;
             string filePath = workItem.FilePath;
             int priority = workItem.Priority;
             int retryCount = workItem.RetryCount;
@@ -272,9 +311,10 @@ namespace openXDA.Nodes.Types.FileProcessing
             try
             {
                 Action<object> configurator = GetConfigurator();
-                FileProcessingTask fileProcessingTask = new FileProcessingTask(filePath, priority, CreateDbConnection, configurator);
+                FileProcessingTask fileProcessingTask = new FileProcessingTask(fileGroup, filePath, priority, CreateDbConnection, configurator);
                 fileProcessingTask.Execute();
                 NotifyOperation.RunOnceAsync();
+                Interlocked.Increment(ref m_processedFileCount);
             }
             catch (FileSkippedException ex)
             {
@@ -285,19 +325,36 @@ namespace openXDA.Nodes.Types.FileProcessing
                 }
 
                 Log.Warn(ex.Message, ex);
+                Interlocked.Increment(ref m_skippedFileCount);
             }
             catch (Exception ex)
             {
                 string message = $"Exception occurred processing file \"{filePath}\": {ex.Message}";
                 Log.Error(message, ex);
+                Interlocked.Increment(ref m_errorCount);
             }
-
-            Interlocked.Increment(ref m_processedFileCount);
         }
 
         private void Configure(Action<object> configurator)
         {
+            string QueryFilter()
+            {
+                const string Query = "SELECT FilePattern FROM DataReader";
+
+                // Get the list of file extensions to be processed by openXDA
+                using (AdoDataConnection connection = CreateDbConnection())
+                using (DataTable result = connection.RetrieveData(Query))
+                {
+                    IEnumerable<string> filterPatterns = result
+                        .AsEnumerable()
+                        .Select(row => row.ConvertField<string>("FilePattern"));
+
+                    return string.Join(Path.PathSeparator.ToString(), filterPatterns);
+                }
+            }
+
             Settings settings = new Settings(configurator);
+            Filter = QueryFilter();
             ProcessingThreadCount = settings.FileProcessorSettings.ProcessingThreadCount;
             AuthenticateFileShares(settings);
             ConfigureFileProcessor(settings);
@@ -318,23 +375,6 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         private void ConfigureFileProcessor(Settings settings)
         {
-            string QueryFilter()
-            {
-                const string Query = "SELECT FilePattern FROM DataReader";
-
-                // Get the list of file extensions to be processed by openXDA
-                using (AdoDataConnection connection = CreateDbConnection())
-                using (DataTable result = connection.RetrieveData(Query))
-                {
-                    IEnumerable<string> filterPatterns = result
-                        .AsEnumerable()
-                        .Select(row => row.ConvertField<string>("FilePattern"));
-
-                    return string.Join(Path.PathSeparator.ToString(), filterPatterns);
-                }
-            }
-
-            FileProcessor.Filter = QueryFilter();
             FileProcessor.FolderExclusion = settings.FileEnumeratorSettings.FolderExclusion;
             FileProcessor.InternalBufferSize = settings.FileWatcherSettings.BufferSize;
             FileProcessor.EnumerationStrategy = settings.FileEnumeratorSettings.Strategy;
@@ -365,6 +405,41 @@ namespace openXDA.Nodes.Types.FileProcessing
             }
 
             FileProcessor.EnumerateWatchDirectories();
+        }
+
+        private bool MatchesFilter(string filePath)
+        {
+            string[] filters = Filter.Split(Path.PathSeparator);
+            return FilePath.IsFilePatternMatch(filters, filePath, true);
+        }
+
+        private void TryIndexFile(string filePath)
+        {
+            string directory = Path.GetDirectoryName(filePath);
+
+            if (!Index.TryGetValue(directory, out DirectoryIndex directoryIndex))
+                return;
+
+            string fileGroupKey = Path.ChangeExtension(filePath, ".*");
+            List<string> fileGroup = directoryIndex.FileGroups.GetOrAdd(fileGroupKey, key => new List<string>());
+
+            if (!fileGroup.Contains(filePath))
+                fileGroup.Add(filePath);
+        }
+
+        private FileInfo[] IndexFile(string filePath)
+        {
+            string directory = Path.GetDirectoryName(filePath);
+            string fileGroupKey = Path.ChangeExtension(filePath, ".*");
+            DirectoryIndex directoryIndex = Index.GetOrAdd(directory, dir => new DirectoryIndex(dir));
+            List<string> fileGroup = directoryIndex.FileGroups.GetOrAdd(fileGroupKey, key => new List<string>());
+
+            if (!fileGroup.Contains(filePath))
+                fileGroup.Add(filePath);
+
+            return fileGroup
+                .Select(path => new FileInfo(path))
+                .ToArray();
         }
 
         private async Task NotifyAnalysisNodesAsync()
@@ -432,14 +507,15 @@ namespace openXDA.Nodes.Types.FileProcessing
         private string GetStatus()
         {
             StringBuilder statusBuilder = new StringBuilder();
-            statusBuilder.AppendLine($"                 Filter: {FileProcessor.Filter}");
+            statusBuilder.AppendLine($"                 Filter: {Filter}");
 
             if (!string.IsNullOrEmpty(FileProcessor.FolderExclusion))
                 statusBuilder.AppendLine($"       Folder Exclusion: {FileProcessor.FolderExclusion}");
 
+            int scannedFileCount = ScannedFileCount;
             int processedFileCount = ProcessedFileCount;
-            int skippedFileCount = FileProcessor.SkippedFileCount;
-            int scannedFileCount = FileProcessor.ProcessedFileCount + skippedFileCount;
+            int skippedFileCount = SkippedFileCount;
+            int errorCount = ErrorCount;
             statusBuilder.AppendLine($"   Internal buffer size: {FileProcessor.InternalBufferSize}");
             statusBuilder.AppendLine($"   Max thread pool size: {FileProcessor.MaxThreadCount}");
             statusBuilder.AppendLine($"   Enumeration strategy: {FileProcessor.EnumerationStrategy}");
@@ -447,6 +523,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             statusBuilder.AppendLine($"          Scanned files: {scannedFileCount}");
             statusBuilder.AppendLine($"        Processed files: {processedFileCount}");
             statusBuilder.AppendLine($"          Skipped files: {skippedFileCount}");
+            statusBuilder.AppendLine($"      Processing errors: {errorCount}");
             statusBuilder.AppendLine();
 
             if (FileProcessor.IsEnumerating)
@@ -494,15 +571,35 @@ namespace openXDA.Nodes.Types.FileProcessing
             if (IsDisposed)
                 return;
 
+            Interlocked.Increment(ref m_scannedFileCount);
+
             string filePath = fileProcessorEventArgs.FullPath;
+
+            if (!MatchesFilter(filePath))
+            {
+                TryIndexFile(filePath);
+                Interlocked.Increment(ref m_skippedFileCount);
+                return;
+            }
+
+            FileInfo[] fileGroup = IndexFile(filePath);
 
             int priority = fileProcessorEventArgs.RaisedByFileWatcher
                 ? AnalysisTask.FileWatcherPriority
                 : AnalysisTask.FileEnumerationPriority;
 
-            WorkItem workItem = new WorkItem(filePath, priority);
+            WorkItem workItem = new WorkItem(fileGroup, filePath, priority);
             WorkQueue.Enqueue(workItem);
             PollOperation.RunOnceAsync();
+        }
+
+        private void FileProcessor_Error(object sender, ErrorEventArgs args)
+        {
+            Exception ex = args.GetException();
+            Log.Error(ex.Message, ex);
+
+            if (ex is InternalBufferOverflowException)
+                FileProcessor.EnumerateWatchDirectories();
         }
 
         #endregion
@@ -511,13 +608,6 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(FileProcessorNode));
-
-        // Static Methods
-        private static void FileProcessor_Error(object sender, ErrorEventArgs args)
-        {
-            Exception ex = args.GetException();
-            Log.Error(ex.Message, ex);
-        }
 
         #endregion
     }

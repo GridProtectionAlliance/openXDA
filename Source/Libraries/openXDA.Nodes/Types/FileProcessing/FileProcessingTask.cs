@@ -60,8 +60,9 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         #region [ Constructors ]
 
-        public FileProcessingTask(string filePath, int priority, Func<AdoDataConnection> connectionFactory, Action<object> configurator)
+        public FileProcessingTask(FileInfo[] fileList, string filePath, int priority, Func<AdoDataConnection> connectionFactory, Action<object> configurator)
         {
+            FileList = fileList;
             FilePath = filePath;
             Priority = priority;
             ConnectionFactory = connectionFactory;
@@ -73,6 +74,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         #region [ Properties ]
 
+        private FileInfo[] FileList { get; }
         private string FilePath { get; }
         private int Priority { get; }
         private Func<AdoDataConnection> ConnectionFactory { get; }
@@ -85,13 +87,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         public void Execute()
         {
-            string directory = Path.GetDirectoryName(FilePath);
-            DirectoryInfo directoryInfo = new DirectoryInfo(directory);
-
-            string fileName = Path.GetFileName(FilePath);
-            string searchPattern = Path.ChangeExtension(fileName, ".*");
-            FileInfo[] fileList = directoryInfo.GetFiles(searchPattern);
-            ValidateFilesForProcessing(fileList);
+            ValidateFilesForProcessing();
 
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -109,7 +105,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             }
         }
 
-        private void ValidateFilesForProcessing(FileInfo[] fileList)
+        private void ValidateFilesForProcessing()
         {
             double maxFileCreationTimeOffset = Settings.FileProcessorSettings.MaxFileCreationTimeOffset;
             double maxFileSize = Settings.FileProcessorSettings.MaxFileSize;
@@ -119,7 +115,7 @@ namespace openXDA.Nodes.Types.FileProcessing
                 DateTime now = DateTime.UtcNow;
                 TimeSpan offset = TimeSpan.FromHours(maxFileCreationTimeOffset);
                 DateTime threshold = now - offset;
-                DateTime creationTime = fileList.Max(fileInfo => fileInfo.CreationTimeUtc);
+                DateTime creationTime = FileList.Max(fileInfo => fileInfo.CreationTimeUtc);
 
                 if (creationTime < threshold)
                 {
@@ -130,7 +126,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             if (maxFileSize > 0.0D)
             {
-                double fileSizeMB = fileList
+                double fileSizeMB = FileList
                     .Sum(fileInfo => fileInfo.Length / 1024.0D / 1024.0D);
 
                 if (fileSizeMB > maxFileSize)
@@ -140,16 +136,16 @@ namespace openXDA.Nodes.Types.FileProcessing
                 }
             }
 
-            if (fileList.Any(fileInfo => !GSF.IO.FilePath.TryGetReadLockExclusive(fileInfo.FullName)))
+            if (FileList.Any(fileInfo => !GSF.IO.FilePath.TryGetReadLockExclusive(fileInfo.FullName)))
             {
                 string message = $"Exclusive lock could not be obtained.";
                 throw new FileSkippedException(true, message);
             }
 
             DataReaderFactory readerFactory = new DataReaderFactory(ConnectionFactory);
-            IDataReader reader = readerFactory.CreateDataReader(fileList);
+            IDataReader reader = readerFactory.CreateDataReader(FileList);
 
-            if (!reader.IsReadyForLoad(fileList))
+            if (!reader.IsReadyForLoad(FileList))
             {
                 string message = $"Reader is not ready to load the file group.";
                 throw new FileSkippedException(true, message);
