@@ -50,7 +50,21 @@ jobs:
     #    uses a compiled language
 
     - run: msbuild /t:Clean ${{ github.workspace }}/Source
-    - run: msbuild /t:Restore ${{ github.workspace }}/Source
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Applications/openXDA/openXDA
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/FaultData
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/openXDA.Adapters
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/openXDA.ArcGIS
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/openXDA.DataPusher
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/openXDA.HIDS
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/openXDA.Hubs
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/openXDA.Nodes
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/openXDA.PQTrendingWebReport
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/openXDA.Reports
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/openXDA.StepChangeWebReport
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/PQMark.DataAggregator
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/SPCTools
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/XDAAlarmCreationApp
+    - run: msbuild /t:Restore ${{ github.workspace }}/Source/Libraries/XDABatchDataTransferTool
     - run: msbuild ${{ github.workspace }}/Source /p:UseSharedCompilation=false
     #   make bootstrap
     #   make release
