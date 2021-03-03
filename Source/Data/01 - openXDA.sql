@@ -243,7 +243,9 @@ CREATE TABLE Customer
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     CustomerKey VARCHAR(50) NOT NULL UNIQUE,
-    Name VARCHAR(200) NULL
+    Name VARCHAR(200) NULL,
+    Phone VARCHAR(20) NULL,
+	Description VARCHAR(200) NULL
 )
 GO
 
@@ -1514,6 +1516,13 @@ CREATE TABLE UserAccount
     LockedOut BIT NOT NULL DEFAULT 0,
     Approved BIT NOT NULL DEFAULT 0,
     UseADAuthentication BIT NOT NULL DEFAULT 1,
+    TSCID INT NULL,
+    RoleID INT NULL,
+    Title varchar(200) NULL,
+    Department varchar(200) NULL,
+    DepartmentNumber varchar(200) NULL,
+    MobilePhone VARCHAR(200) NULL,
+    ReceiveNotifications BIT NOT NULL DEFAULT 1,
     ChangePasswordOn DATETIME NULL DEFAULT DATEADD(DAY, 90, GETUTCDATE()),
     CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
     CreatedBy VARCHAR(50) NOT NULL DEFAULT SUSER_NAME(),
@@ -3703,17 +3712,35 @@ CREATE NONCLUSTERED INDEX IX_ContourAnimationFrame_ContourAnimationID
 ON ContourAnimationFrame(ContourAnimationID ASC)
 GO
 
-CREATE TABLE PQMarkCompany
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL
+
+CREATE TABLE CompanyType(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name VARCHAR(200) NOT NULL UNIQUE,
+	Description VARCHAR(MAX) NULL
 )
 GO
 
-CREATE TABLE PQMarkCompanyMeter
+CREATE TABLE Company
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    PQMarkCompanyID INT NOT NULL REFERENCES PQMarkCompany(ID),
+    CompanyID VARCHAR(8) NOT NULL UNIQUE,
+    CompanyTypeID int NOT NULL REFERENCES CompanyType(ID),
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE CompanyType(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name VARCHAR(200) NOT NULL UNIQUE,
+	Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE CompanyMeter
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    PQMarkCompanyID INT NOT NULL REFERENCES Company(ID),
     MeterID INT NOT NULL REFERENCES Meter(ID),
     DisplayName VARCHAR(200) NOT NULL,
     Enabled BIT NOT NULL
@@ -3722,13 +3749,13 @@ GO
 
 CREATE TABLE [dbo].[PQMarkCompanyCustomer](
 	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	[PQMarkCompanyID] [int] NOT NULL FOREIGN KEY REFERENCES PQMarkCompany(ID),
+	[PQMarkCompanyID] [int] NOT NULL FOREIGN KEY REFERENCES Company(ID),
 	[CustomerID] [int] NOT NULL
 )
 GO
 
 CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_MeterID 
-ON PQMarkCompanyMeter(MeterID) 
+ON CompanyMeter(MeterID) 
 GO
 
 CREATE TABLE PQMarkAggregate
@@ -6122,3 +6149,95 @@ GO
 --GO
 --EXEC sp_addlinkedsrvlogin PQInvestigator, 'FALSE', [LocalLogin], [PQIAdmin], [PQIPassword]
 --GO
+
+---------------- System Center TableSpace -------------
+CREATE TABLE [ValueListGroup](
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	[Name] [varchar](200) NULL,
+	[Description] [varchar](max) NULL,
+)
+
+CREATE TABLE [ValueList](
+    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [GroupID] [int] NOT NULL FOREIGN KEY REFERENCES ValueListGroup(ID),
+    [Text] [varchar](200) NULL,
+    [Value] [int] NULL,
+    [Description] [varchar](max) NULL,
+    [SortOrder] [int] NULL,
+)
+GO
+
+
+CREATE TABLE SystemCenter.AdditionalField(
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ParentTable varchar(100) NOT NULL,
+	FieldName varchar(100) NOT NULL,
+	Type varchar(max) NULL DEFAULT ('string'),
+	ExternalDB varchar(max) NULL,
+	ExternalDBTable varchar(max) NULL,
+	ExternalDBTableKey varchar(max) NULL,
+	IsSecure bit NULL DEFAULT(0)
+	Constraint UC_AdditonaField UNIQUE(OpenXDAParentTable, FieldName)
+)
+GO
+
+CREATE TABLE SystemCenter.AdditionalFieldValue(
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ParentTableID int NOT NULL,
+	AdditionalFieldID int NOT NULL FOREIGN KEY REFERENCES SystemCenter.AdditionalField(ID),
+	Value varchar(max) NULL,
+    UpdatedOn DATE NULL DEFAULT (SYSDATETIME()),
+	Constraint UC_AdditonaFieldValue UNIQUE(OpenXDAParentTableID, AdditionalFieldID)
+)
+GO
+
+CREATE TABLE SystemCenter.ExternalOpenXDAField(
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	OpenXDAParentTable varchar(100) NOT NULL,
+	FieldName varchar(100) NOT NULL,
+	ExternalDB varchar(max) NULL,
+	ExternalDBTable varchar(max) NULL,
+	ExternalDBTableKey varchar(max) NULL,
+	Constraint UC_ExternalOpenXDAField UNIQUE(OpenXDAParentTable, FieldName)
+)
+GO
+
+CREATE Table SystemCenter.extDBTables (
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	TableName varchar(200) NOT NULL,
+    ExternalDB varchar(200) NOT NULL,
+	Query varchar(max) NULL,
+)
+GO
+
+CREATE TABLE SystemCenter.TSC (
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name varchar(200) NOT NULL,
+	Description varchar(max) NULL,
+	DepartmentNumber varchar(6) NOT NULL
+)
+GO
+
+CREATE TABLE SystemCenter.CustomerAccess(
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(ID),
+	PQViewSiteID int NOT NULL
+)
+GO
+
+CREATE TABLE SystemCenter.CustomerAccessPQDigest(
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(ID),
+	OpenXDAMeterID INT FOREIGN KEY REFERENCES Meter(ID)
+)
+GO
+
+
+CREATE TABLE SystemCenter.Role (
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name varchar(200) NOT NULL,
+	Description varchar(max) NULL,
+)
+GO
+
+-- Note PQMark might not work properly with this schema --
