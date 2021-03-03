@@ -6278,18 +6278,18 @@ CREATE TABLE SystemCenter.AdditionalFieldValue(
 	AdditionalFieldID int NOT NULL FOREIGN KEY REFERENCES SystemCenter.AdditionalField(ID),
 	Value varchar(max) NULL,
     UpdatedOn DATE NULL DEFAULT (SYSDATETIME()),
-	Constraint UC_AdditonaFieldValue UNIQUE(OpenXDAParentTableID, AdditionalFieldID)
+	Constraint UC_AdditonaFieldValue UNIQUE(ParentTableID, AdditionalFieldID)
 )
 GO
 
 CREATE TABLE SystemCenter.ExternalOpenXDAField(
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	OpenXDAParentTable varchar(100) NOT NULL,
+	ParentTable varchar(100) NOT NULL,
 	FieldName varchar(100) NOT NULL,
 	ExternalDB varchar(max) NULL,
 	ExternalDBTable varchar(max) NULL,
 	ExternalDBTableKey varchar(max) NULL,
-	Constraint UC_ExternalOpenXDAField UNIQUE(OpenXDAParentTable, FieldName)
+	Constraint UC_ExternalOpenXDAField UNIQUE(ParentTable, FieldName)
 )
 GO
 
