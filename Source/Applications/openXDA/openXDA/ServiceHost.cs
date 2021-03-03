@@ -107,10 +107,10 @@ namespace openXDA
 
             public void RegisterScheduledProcess(Action process, string name, string schedule)
             {
-                Action<string, object[]> processExecutionMethod = (_, __) => process();
+                void ProcessExecutionMethod(string processName, object[] processArgs) => process();
                 ServiceHelper.RemoveScheduledProcess(name);
 
-                if (ServiceHelper.AddProcess(processExecutionMethod, name))
+                if (ServiceHelper.AddProcess(ProcessExecutionMethod, name))
                     ServiceHelper.ProcessScheduler.AddSchedule(name, schedule, true);
             }
 
@@ -181,20 +181,7 @@ namespace openXDA
             InitializeLogging();
 
             ConfigurationFile = ConfigurationFile.Current;
-            CategorizedSettingsSection categorizedSettings = ConfigurationFile.Settings;
-            CategorizedSettingsElementCollection systemSettings = categorizedSettings["systemSettings"];
-            systemSettings.Add("ConnectionString", "Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI", "Defines the connection to the openXDA database.");
-            systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter", "Configuration database ADO.NET data provider assembly type creation string used when ConfigurationType=Database");
-            systemSettings.Add("NodeID", "00000000-0000-0000-0000-000000000000", "Unique Node ID");
-            systemSettings.Add("CompanyName", "Grid Protection Alliance", "The acronym representing the company who owns this instance of openXDA.");
-            systemSettings.Add("CompanyAcronym", "GPA", "Default culture to use for language, country/region and calendar formats.");
-            systemSettings.Add("DateFormat", "MM/dd/yyyy", "The date format to use when rendering timestamps.");
-            systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The time format to use when rendering timestamps.");
-            systemSettings.Add("ConfigurationCachePath", string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar), "Defines the path used to cache serialized configurations");
-
-            CategorizedSettingsElementCollection securityProvider = categorizedSettings["securityProvider"];
-            securityProvider.Add("ConnectionString", "Eval(systemSettings.ConnectionString)", "Connection connection string to be used for connection to the backend security datastore.");
-            securityProvider.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
+            InitializeConfigurationFile();
 
             DatabaseConnectionFactory = new DatabaseConnectionFactory(ConfigurationFile);
 
@@ -255,6 +242,24 @@ namespace openXDA
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CreateSpecificCulture(defaultCulture);   // Culture for resource strings, etc.
         }
 
+        private void InitializeConfigurationFile()
+        {
+            CategorizedSettingsSection categorizedSettings = ConfigurationFile.Settings;
+            CategorizedSettingsElementCollection systemSettings = categorizedSettings["systemSettings"];
+            systemSettings.Add("ConnectionString", "Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI", "Defines the connection to the openXDA database.");
+            systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter", "Configuration database ADO.NET data provider assembly type creation string used when ConfigurationType=Database");
+            systemSettings.Add("NodeID", "00000000-0000-0000-0000-000000000000", "Unique Node ID");
+            systemSettings.Add("CompanyName", "Grid Protection Alliance", "The acronym representing the company who owns this instance of openXDA.");
+            systemSettings.Add("CompanyAcronym", "GPA", "Default culture to use for language, country/region and calendar formats.");
+            systemSettings.Add("DateFormat", "MM/dd/yyyy", "The date format to use when rendering timestamps.");
+            systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The time format to use when rendering timestamps.");
+            systemSettings.Add("ConfigurationCachePath", string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar), "Defines the path used to cache serialized configurations");
+
+            CategorizedSettingsElementCollection securityProvider = categorizedSettings["securityProvider"];
+            securityProvider.Add("ConnectionString", "Eval(systemSettings.ConnectionString)", "Connection connection string to be used for connection to the backend security datastore.");
+            securityProvider.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
+        }
+
         private void InitializeLogging()
         {
             ServiceHelperAppender serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
@@ -305,7 +310,7 @@ namespace openXDA
             {
                 try
                 {
-                    ConfigurationFile.Reload();
+                    ReloadConfigurationFile();
 
                     CategorizedSettingsSection categorizedSettings = ConfigurationFile.Settings;
                     CategorizedSettingsElementCollection systemSettings = categorizedSettings["systemSettings"];
@@ -335,7 +340,7 @@ namespace openXDA
             {
                 try
                 {
-                    ConfigurationFile.Reload();
+                    ReloadConfigurationFile();
                     DatabaseConnectionFactory.ReloadConfiguration();
                     return new XDAWebHost(ConfigurationFile, nodeHost);
                 }
@@ -350,7 +355,7 @@ namespace openXDA
 
         private void UpdateConfigurationHandler(string s, object[] args)
         {
-            ConfigurationFile.Reload();
+            ReloadConfigurationFile();
             DatabaseConnectionFactory.ReloadConfiguration();
             NodeHost?.Reconfigure();
         }
@@ -406,7 +411,7 @@ namespace openXDA
         // Force the host to reconfigure on demand.
         private void ReconfigureHandler(ClientRequestInfo requestInfo)
         {
-            ConfigurationFile.Reload();
+            ReloadConfigurationFile();
             DatabaseConnectionFactory.ReloadConfiguration();
             NodeHost?.Reconfigure();
             SendResponse(requestInfo, true);
@@ -416,7 +421,7 @@ namespace openXDA
         private void ReloadWebHostHandler(ClientRequestInfo requestInfo)
         {
             WebHost?.Dispose();
-            ConfigurationFile.Reload();
+            ReloadConfigurationFile();
             DatabaseConnectionFactory.ReloadConfiguration();
             WebHost = new XDAWebHost(ConfigurationFile, NodeHost);
             SendResponse(requestInfo, true);
@@ -479,6 +484,12 @@ namespace openXDA
 
                 SendResponse(requestInfo, true);
             }
+        }
+
+        private void ReloadConfigurationFile()
+        {
+            ConfigurationFile.Reload();
+            InitializeConfigurationFile();
         }
 
         // Send the error to the service helper, error logger, and each service monitor
@@ -857,14 +868,6 @@ namespace openXDA
         }
 
         #endregion
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Properties
-        private static HttpClient HttpClient { get; }
-            = new HttpClient();
 
         #endregion
     }
