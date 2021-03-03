@@ -45,9 +45,9 @@ namespace openXDA.Model
         [FieldDataType(System.Data.DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime ProcessingEndTime { get; set; }
 
-        public int Error { get; set; }
+        public int ProcessingVersion { get; set; }
 
-        public int FileHash { get; set; }
+        public int Error { get; set; }
 
         [NonRecordField]
         public List<DataFile> DataFiles { get; set; } = new List<DataFile>();
@@ -63,6 +63,26 @@ namespace openXDA.Model
             fileGroupFieldValue.FileGroupFieldID = fileGroupField.ID;
             fileGroupFieldValue.Value = value;
             fileGroupFieldValueTable.AddNewRecord(fileGroupFieldValue);
+        }
+
+        public void AddOrUpdateFieldValue(AdoDataConnection connection, string name, string value, string description = null)
+        {
+            TableOperations<FileGroupField> fileGroupFieldTable = new TableOperations<FileGroupField>(connection);
+            FileGroupField fileGroupField = fileGroupFieldTable.GetOrAdd(name, description);
+
+            TableOperations<FileGroupFieldValue> fileGroupFieldValueTable = new TableOperations<FileGroupFieldValue>(connection);
+            RecordRestriction fileGroupRestriction = new RecordRestriction("FileGroupID = {0}", ID);
+            RecordRestriction fileGroupFieldRestriction = new RecordRestriction("FileGroupFieldID = {0}", fileGroupField.ID);
+            RecordRestriction queryRestriction = fileGroupRestriction & fileGroupFieldRestriction;
+
+            FileGroupFieldValue fileGroupFieldValue = fileGroupFieldValueTable.QueryRecord(queryRestriction) ?? new FileGroupFieldValue()
+            {
+                FileGroupID = ID,
+                FileGroupFieldID = fileGroupField.ID
+            };
+
+            fileGroupFieldValue.Value = value;
+            fileGroupFieldValueTable.AddNewOrUpdateRecord(fileGroupFieldValue);
         }
     }
 }

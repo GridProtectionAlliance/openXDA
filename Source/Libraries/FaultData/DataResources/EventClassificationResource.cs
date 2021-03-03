@@ -21,17 +21,15 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Linq;
-using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using openXDA.Configuration;
 using openXDA.Model;
 using FaultGroup = FaultData.DataAnalysis.FaultGroup;
 
@@ -53,112 +51,20 @@ namespace FaultData.DataResources
 
     public class EventClassificationResource : DataResourceBase<MeterDataSet>
     {
-        #region [ Members ]
-
-        // Fields
-        private Dictionary<DataGroup, EventClassification> m_classifications;
-
-        private double m_systemFrequency;
-        private double m_sagThreshold;
-        private double m_swellThreshold;
-        private double m_interruptionThreshold;
-        private BreakerSettings m_breakerSettings;
-        private FaultLocationSettings m_faultLocationSettings;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        public EventClassificationResource()
-        {
-            m_classifications = new Dictionary<DataGroup, EventClassification>();
-            m_breakerSettings = new BreakerSettings();
-            m_faultLocationSettings = new FaultLocationSettings();
-        }
-
-        #endregion
-
         #region [ Properties ]
 
-        public Dictionary<DataGroup, EventClassification> Classifications
-        {
-            get
-            {
-                return m_classifications;
-            }
-        }
-
-        [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
-
-        [Setting]
-        public double SagThreshold
-        {
-            get
-            {
-                return m_sagThreshold;
-            }
-            set
-            {
-                m_sagThreshold = value;
-            }
-        }
-
-        [Setting]
-        public double SwellThreshold
-        {
-            get
-            {
-                return m_swellThreshold;
-            }
-            set
-            {
-                m_swellThreshold = value;
-            }
-        }
-
-        [Setting]
-        public double InterruptionThreshold
-        {
-            get
-            {
-                return m_interruptionThreshold;
-            }
-            set
-            {
-                m_interruptionThreshold = value;
-            }
-        }
+        public Dictionary<DataGroup, EventClassification> Classifications { get; }
+            = new Dictionary<DataGroup, EventClassification>();
 
         [Category]
-        [SettingName(BreakerSettings.CategoryName)]
-        public BreakerSettings BreakerSettings
-        {
-            get
-            {
-                return m_breakerSettings;
-            }
-        }
+        [SettingName(BreakerSection.CategoryName)]
+        public BreakerSection BreakerSettings { get; }
+            = new BreakerSection();
 
         [Category]
-        [SettingName(FaultLocationSettings.CategoryName)]
-        public FaultLocationSettings FaultLocationSettings
-        {
-            get
-            {
-                return m_faultLocationSettings;
-            }
-        }
+        [SettingName(FaultLocationSection.CategoryName)]
+        public FaultLocationSection FaultLocationSettings { get; }
+            = new FaultLocationSection();
 
         #endregion
 
@@ -184,7 +90,7 @@ namespace FaultData.DataResources
                 if (!ValidateEventType(classification, (AssetType)dataGroup.Asset.AssetTypeID))
                     classification = EventClassification.Other;
 
-                m_classifications.Add(dataGroup, classification);
+                Classifications.Add(dataGroup, classification);
             }
 
             foreach (DataGroup dataGroup in dataGroupsResource.DataGroups)
@@ -197,7 +103,7 @@ namespace FaultData.DataResources
                 if (!ValidateEventType(classification, (AssetType)dataGroup.Asset.AssetTypeID))
                     classification = EventClassification.Other;
 
-                m_classifications.Add(dataGroup, classification);
+                Classifications.Add(dataGroup, classification);
             }
         }
 
@@ -218,7 +124,7 @@ namespace FaultData.DataResources
                 if (faultGroup.FaultDetectionLogicResult ?? false)
                     return EventClassification.Fault;
 
-                if (!faultGroup.FaultDetectionLogicResult.HasValue && m_faultLocationSettings.UseDefaultFaultDetectionLogic)
+                if (!faultGroup.FaultDetectionLogicResult.HasValue && FaultLocationSettings.UseDefaultFaultDetectionLogic)
                 {
                     if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsSuppressed && !fault.IsReclose))
                         return EventClassification.Fault;

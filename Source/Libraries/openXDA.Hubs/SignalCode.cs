@@ -285,7 +285,7 @@ namespace openXDA.Hubs
                 List<FlotSeries> flotInfo = GetFlotInfo(eventID);
                 DateTime epoch = new DateTime(1970, 1, 1);
 
-                List<byte[]> timeDomainData = ChannelData.DataFromEvent(evt.ID,connection,() => CreateDbConnection());
+                List<byte[]> timeDomainData = ChannelData.DataFromEvent(evt.ID, CreateDbConnection);
 
                 Lazy<DataGroup> dataGroup = new Lazy<DataGroup>(() => ToDataGroup(meter, timeDomainData));
                 Dictionary<int, DataSeries> waveformData = dataGroup.Value.DataSeries.ToDictionary(dataSeries => dataSeries.SeriesInfo.ID);

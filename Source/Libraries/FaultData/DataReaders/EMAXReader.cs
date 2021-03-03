@@ -24,46 +24,142 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.COMTRADE;
 using GSF.Configuration;
 using GSF.EMAX;
-using GSF.IO;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace FaultData.DataReaders
 {
-    public class EMAXReader : IDataReader, IDisposable
+    public class EMAXReader : IDataReader
     {
         #region [ Members ]
 
-        // Fields
-        private EMAXSettings m_emaxSettings;
-        private string m_filePattern;
-
-        private CorrectiveParser m_parser;
-        private MeterDataSet m_meterDataSet;
-        private bool m_disposed;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="EMAXReader"/> class.
-        /// </summary>
-        public EMAXReader()
+        // Nested Types
+        private class COMTRADEExporter
         {
-            m_emaxSettings = new EMAXSettings();
-            m_meterDataSet = new MeterDataSet();
+            public string ExportDirectory { get; set; }
+
+            public MeterDataSet MeterDataSet { get; set; }
+            public string FilePath { get; set; }
+            public string MeterKey { get; set; }
+            public string IdentityString { get; set; }
+
+            public ControlFile ControlFile { get; set; }
+            public List<ANLG_CHNL_NEW> AnalogChannels { get; set; }
+            public List<EVNT_CHNL_NEW> DigitalChannels { get; set; }
+
+            public void ExportToCOMTRADE()
+            {
+                string rootFileName = GSF.IO.FilePath.GetFileNameWithoutExtension(FilePath);
+                string directoryPath = Path.Combine(ExportDirectory, MeterKey);
+                string schemaFilePath = Path.Combine(directoryPath, $"{rootFileName}.cfg");
+                string dataFilePath = Path.Combine(directoryPath, $"{rootFileName}.dat");
+                Schema comtradeSchema = new Schema();
+
+                if (File.Exists(dataFilePath))
+                    return;
+
+                comtradeSchema.StationName = Regex.Replace(IdentityString, @"[\r\n]", "");
+                comtradeSchema.Version = 2013;
+                comtradeSchema.AnalogChannels = new AnalogChannel[ControlFile.AnalogChannelCount];
+                comtradeSchema.DigitalChannels = new DigitalChannel[ControlFile.EventChannelSettings.Count];
+                comtradeSchema.SampleRates = new SampleRate[1];
+                comtradeSchema.SampleRates[0].Rate = ControlFile.SystemParameters.samples_per_second;
+                comtradeSchema.SampleRates[0].EndSample = ControlFile.SystemParameters.rcd_sample_count - 1;
+                comtradeSchema.StartTime = new Timestamp() { Value = MeterDataSet.DataSeries[1][0].Time };
+
+                int triggerIndex = ControlFile.SystemParameters.start_offset_samples + ControlFile.SystemParameters.prefault_samples;
+                comtradeSchema.TriggerTime = new Timestamp() { Value = MeterDataSet.DataSeries[1][triggerIndex].Time };
+
+                for (int i = 0; i < AnalogChannels.Count; i++)
+                {
+                    ANLG_CHNL_NEW analogChannel = AnalogChannels[i];
+                    AnalogChannel comtradeAnalog = new AnalogChannel();
+                    DataSeries channelData = MeterDataSet.DataSeries[i + 1];
+
+                    double unitMultiplier = 1.0D;
+                    double max = channelData.Maximum;
+                    double min = channelData.Minimum;
+                    double num;
+
+                    comtradeAnalog.Index = i + 1;
+                    comtradeAnalog.Name = analogChannel.title;
+
+                    comtradeAnalog.Units = new Func<string, string>(type =>
+                    {
+                        switch (type)
+                        {
+                            case "V": return "kVAC";
+                            case "A": return "kAAC";
+                            case "v": return " VDC";
+                            default: return type;
+                        }
+                    })(analogChannel.type);
+
+                    if (analogChannel.type.All(char.IsUpper))
+                    {
+                        unitMultiplier = 0.001D;
+                        max *= unitMultiplier;
+                        min *= unitMultiplier;
+                    }
+
+                    comtradeAnalog.Multiplier = (max - min) / (2 * short.MaxValue);
+                    comtradeAnalog.Adder = (max + min) / 2.0D;
+                    comtradeAnalog.PrimaryRatio = double.TryParse(analogChannel.primary, out num) ? num * unitMultiplier : 0.0D;
+                    comtradeAnalog.SecondaryRatio = double.TryParse(analogChannel.secondary, out num) ? num * unitMultiplier : 0.0D;
+
+                    comtradeSchema.AnalogChannels[i] = comtradeAnalog;
+                }
+
+                for (int i = 0; i < DigitalChannels.Count; i++)
+                {
+                    EVNT_CHNL_NEW digitalChannel = DigitalChannels[i];
+                    DigitalChannel comtradeDigital = new DigitalChannel();
+                    comtradeDigital.Index = i + 1;
+                    comtradeDigital.ChannelName = digitalChannel.e_title;
+                    comtradeSchema.DigitalChannels[i] = comtradeDigital;
+                }
+
+                Directory.CreateDirectory(directoryPath);
+                File.WriteAllText(schemaFilePath, comtradeSchema.FileImage, Encoding.ASCII);
+
+                using (FileStream stream = File.OpenWrite(dataFilePath))
+                {
+                    const int DigitalSize = sizeof(ushort) * 8;
+
+                    IEnumerable<DataSeries> digitalWords = MeterDataSet.Digitals.Skip(1)
+                        .Select((dataSeries, index) => dataSeries.Multiply(Math.Pow(2.0D, DigitalSize - (index % DigitalSize) - 1)))
+                        .Select((DataSeries, Index) => new { DataSeries, Index })
+                        .GroupBy(obj => obj.Index / DigitalSize)
+                        .Select(grouping => grouping.Select(obj => obj.DataSeries))
+                        .Select(grouping => grouping.Aggregate((sum, series) => sum.Add(series)));
+
+                    List<DataSeries> allChannels = MeterDataSet.DataSeries.Skip(1)
+                        .Select((dataSeries, index) => AnalogChannels[index].type.All(char.IsUpper) ? dataSeries.Multiply(0.001D) : dataSeries)
+                        .Concat(digitalWords)
+                        .ToList();
+
+                    for (int i = 0; i < MeterDataSet.DataSeries[1].DataPoints.Count; i++)
+                    {
+                        DateTime timestamp = MeterDataSet.DataSeries[1][i].Time;
+
+                        double[] values = allChannels
+                            .Select(dataSeries => dataSeries[i].Value)
+                            .ToArray();
+
+                        Writer.WriteNextRecordBinary(stream, comtradeSchema, timestamp, values, (uint)i, false);
+                    }
+                }
+            }
         }
 
         #endregion
@@ -74,78 +170,107 @@ namespace FaultData.DataReaders
         /// Settings to configure native EMAX file format integration.
         /// </summary>
         [Category]
-        [SettingName(EMAXSettings.CategoryName)]
-        public EMAXSettings EMAXSettings
-        {
-            get
-            {
-                return m_emaxSettings;
-            }
-        }
+        [SettingName(EMAXSection.CategoryName)]
+        public EMAXSection EMAXSettings { get; }
+            = new EMAXSection();
 
-        /// <summary>
-        /// Gets or sets the file pattern used to determine
-        /// the asset key of the meter from the file path.
-        /// </summary>
-        [Setting]
-        public string FilePattern
-        {
-            get
-            {
-                return m_filePattern;
-            }
-            set
-            {
-                m_filePattern = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the data set produced by the Parse method of the data reader.
-        /// </summary>
-        public MeterDataSet MeterDataSet
-        {
-            get
-            {
-                return m_meterDataSet;
-            }
-        }
+        [Category]
+        [SettingName(FileProcessorSection.CategoryName)]
+        public FileProcessorSection FileProcessorSettings { get; }
+            = new FileProcessorSection();
 
         #endregion
 
         #region [ Methods ]
 
-        public bool CanParse(string filePath, DateTime fileCreationTime)
+        public bool IsReadyForLoad(FileInfo[] fileList)
         {
-            string directory = FilePath.GetDirectoryName(filePath);
-            string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
-            string controlFileName = Path.Combine(directory, rootFileName + ".ctl");
+            FileInfo FromExtension(string extension) => fileList
+                .FirstOrDefault(fileInfo => fileInfo.Extension.Equals(extension, StringComparison.OrdinalIgnoreCase));
 
-            if (!File.Exists(controlFileName))
+            bool IsReady(FileInfo fileInfo) =>
+                !(fileInfo is null) &&
+                fileInfo.Length > 0L;
+
+            FileInfo controlFile = FromExtension(".ctl");
+            FileInfo rcdFile = FromExtension(".rcd");
+            FileInfo rclFile = FromExtension(".rcl");
+            FileInfo rcuFile = FromExtension(".rcu");
+
+            if (!IsReady(controlFile))
                 return false;
 
-            try
-            {
-                m_parser = new CorrectiveParser();
-                m_parser.ControlFile = new ControlFile(controlFileName);
-                m_parser.FileName = filePath;
-                m_parser.OpenFiles();
-            }
-            catch (IOException)
-            {
+            if (!IsReady(rcdFile) && !(IsReady(rclFile) && IsReady(rcuFile)))
                 return false;
-            }
 
             return true;
         }
 
-        public void Parse(string filePath)
+        public DataFile GetPrimaryDataFile(FileGroup fileGroup)
         {
-            ControlFile controlFile = m_parser.ControlFile;
+            bool IsPrimaryDataFile(DataFile dataFile) =>
+                dataFile.FilePath.EndsWith(".rcd", StringComparison.OrdinalIgnoreCase) ||
+                dataFile.FilePath.EndsWith(".rcl", StringComparison.OrdinalIgnoreCase);
+
+            return fileGroup.DataFiles.First(IsPrimaryDataFile);
+        }
+
+        public MeterDataSet Parse(FileGroup fileGroup)
+        {
+            bool IsControlFile(DataFile dataFile) =>
+                dataFile.FilePath.EndsWith(".ctl", StringComparison.OrdinalIgnoreCase);
+
+            string firstFilePath = fileGroup.DataFiles.Select(dataFile => dataFile.FilePath).First();
+            string tempDataFolderName = Path.GetFileNameWithoutExtension(firstFilePath);
+            string tempDataFolderPath = Path.Combine(TempDataFolder, tempDataFolderName);
+
+            string GetPathInTempDataFolder(DataFile dataFile)
+            {
+                string fileName = Path.GetFileName(dataFile.FilePath);
+                return Path.Combine(tempDataFolderPath, fileName);
+            }
+
+            try
+            {
+                if (Directory.Exists(tempDataFolderPath))
+                    Directory.Delete(tempDataFolderPath, true);
+
+                Directory.CreateDirectory(tempDataFolderPath);
+                Dump(fileGroup, tempDataFolderPath);
+
+                string controlFilePath = fileGroup.DataFiles
+                    .Where(IsControlFile)
+                    .Select(GetPathInTempDataFolder)
+                    .First();
+
+                DataFile primaryDataFile = GetPrimaryDataFile(fileGroup);
+                string primaryDataFilePath = GetPathInTempDataFolder(primaryDataFile);
+
+                using (CorrectiveParser parser = new CorrectiveParser())
+                {
+                    parser.ControlFile = new ControlFile(controlFilePath);
+                    parser.FileName = primaryDataFilePath;
+                    parser.OpenFiles();
+                    return Parse(parser);
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(tempDataFolderPath))
+                    Directory.Delete(tempDataFolderPath, true);
+            }
+        }
+
+        public MeterDataSet Parse(CorrectiveParser parser)
+        {
+            MeterDataSet meterDataSet = new MeterDataSet();
+            meterDataSet.Meter = new Meter();
+
+            ControlFile controlFile = parser.ControlFile;
             string identityString = controlFile.IdentityString.value;
             string deviceName = identityString.Substring(0, IndexOf(identityString, "\r\n", "\n", "\r"));
 
-            Meter meter = new Meter();
+            Meter meter = meterDataSet.Meter;
             meter.Location = new Location();
             meter.Channels = new List<Channel>();
             meter.AssetKey = deviceName;
@@ -170,44 +295,44 @@ namespace FaultData.DataReaders
                 .ToList();
 
             // Add an empty data series for 1-based indexing
-            m_meterDataSet.DataSeries.Add(new DataSeries());
-            m_meterDataSet.Digitals.Add(new DataSeries());
+            meterDataSet.DataSeries.Add(new DataSeries());
+            meterDataSet.Digitals.Add(new DataSeries());
 
             foreach (ANLG_CHNL_NEW analogChannel in analogChannels)
             {
                 Channel channel = ParseSeries(analogChannel);
                 channel.Meter = meter;
-                channel.Series.Single().SourceIndexes = m_meterDataSet.DataSeries.Count.ToString();
+                channel.Series.Single().SourceIndexes = meterDataSet.DataSeries.Count.ToString();
 
                 DataSeries dataSeries = new DataSeries();
                 dataSeries.SeriesInfo = channel.Series[0];
 
                 meter.Channels.Add(channel);
 
-                m_meterDataSet.DataSeries.Add(dataSeries);
+                meterDataSet.DataSeries.Add(dataSeries);
             }
 
             foreach (EVNT_CHNL_NEW digitalChannel in digitalChannels)
             {
                 Channel channel = ParseSeries(digitalChannel);
-                channel.Series.Single().SourceIndexes = m_meterDataSet.Digitals.Count.ToString();
+                channel.Series.Single().SourceIndexes = meterDataSet.Digitals.Count.ToString();
 
                 DataSeries series = new DataSeries();
                 series.SeriesInfo = channel.Series[0];
 
                 meter.Channels.Add(channel);
 
-                m_meterDataSet.Digitals.Add(series);
+                meterDataSet.Digitals.Add(series);
             }
 
-            while (m_parser.ReadNext())
+            while (parser.ReadNext())
             {
-                DateTime timestamp = m_emaxSettings.ApplyTimestampCorrection ? m_parser.CalculatedTimestamp : m_parser.ParsedTimestamp;
+                DateTime timestamp = EMAXSettings.ApplyTimestampCorrection ? parser.CalculatedTimestamp : parser.ParsedTimestamp;
 
                 for (int i = 0; i < analogChannels.Count; i++)
                 {
-                    double value = m_emaxSettings.ApplyValueCorrection ? m_parser.CorrectedValues[i] : m_parser.Values[i];
-                    m_meterDataSet.DataSeries[i + 1].DataPoints.Add(new DataPoint() { Time = timestamp, Value = value });
+                    double value = EMAXSettings.ApplyValueCorrection ? parser.CorrectedValues[i] : parser.Values[i];
+                    meterDataSet.DataSeries[i + 1].DataPoints.Add(new DataPoint() { Time = timestamp, Value = value });
                 }
 
                 for (int i = 0; i < digitalChannels.Count; i++)
@@ -216,153 +341,43 @@ namespace FaultData.DataReaders
                     int groupIndex = i / bitCount;
                     int bitIndex = i % bitCount;
                     ushort mask = (ushort)~(0x8000u >> bitIndex);
-                    double value = m_parser.EventGroups[groupIndex] & mask;
-                    m_meterDataSet.Digitals[i + 1].DataPoints.Add(new DataPoint() { Time = timestamp, Value = value });
+                    double value = parser.EventGroups[groupIndex] & mask;
+                    meterDataSet.Digitals[i + 1].DataPoints.Add(new DataPoint() { Time = timestamp, Value = value });
                 }
             }
 
-            if (!string.IsNullOrEmpty(m_emaxSettings.COMTRADEExportDirectory))
-                TryExportToCOMTRADE(filePath, controlFile, identityString, analogChannels, digitalChannels);
-
-            m_meterDataSet.Meter = meter;
-        }
-
-        private bool TryExportToCOMTRADE(string filePath, ControlFile controlFile, string identityString, List<ANLG_CHNL_NEW> analogChannels, List<EVNT_CHNL_NEW> digitalChannels)
-        {
             try
             {
-                ExportToCOMTRADE(filePath, controlFile, identityString, analogChannels, digitalChannels);
-                return true;
+                if (!string.IsNullOrEmpty(EMAXSettings.COMTRADEExportDirectory))
+                {
+                    string filePath = parser.FileName;
+
+                    string meterKey = GetMeterKey(filePath, FileProcessorSettings.FilePattern)
+                        ?? ThreadContext.Properties["Meter"].ToString();
+
+                    COMTRADEExporter exporter = new COMTRADEExporter()
+                    {
+                        ExportDirectory = EMAXSettings.COMTRADEExportDirectory,
+
+                        MeterDataSet = meterDataSet,
+                        FilePath = filePath,
+                        MeterKey = meterKey,
+                        IdentityString = identityString,
+
+                        ControlFile = controlFile,
+                        AnalogChannels = analogChannels,
+                        DigitalChannels = digitalChannels
+                    };
+
+                    exporter.ExportToCOMTRADE();
+                }
             }
             catch (Exception ex)
             {
                 Log.Error(ex.Message, ex);
-                return false;
-            }
-        }
-
-        private void ExportToCOMTRADE(string filePath, ControlFile controlFile, string identityString, List<ANLG_CHNL_NEW> analogChannels, List<EVNT_CHNL_NEW> digitalChannels)
-        {
-            string assetKey = GetMeterKey(filePath, m_filePattern) ?? ThreadContext.Properties["Meter"].ToString();
-            string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
-            string directoryPath = Path.Combine(m_emaxSettings.COMTRADEExportDirectory, assetKey);
-            string schemaFilePath = Path.Combine(directoryPath, $"{rootFileName}.cfg");
-            string dataFilePath = Path.Combine(directoryPath, $"{rootFileName}.dat");
-            Schema comtradeSchema = new Schema();
-
-            if (File.Exists(dataFilePath))
-                return;
-
-            comtradeSchema.StationName = Regex.Replace(identityString, @"[\r\n]", "");
-            comtradeSchema.Version = 2013;
-            comtradeSchema.AnalogChannels = new AnalogChannel[controlFile.AnalogChannelCount];
-            comtradeSchema.DigitalChannels = new DigitalChannel[controlFile.EventChannelSettings.Count];
-            comtradeSchema.SampleRates = new SampleRate[1];
-            comtradeSchema.SampleRates[0].Rate = controlFile.SystemParameters.samples_per_second;
-            comtradeSchema.SampleRates[0].EndSample = controlFile.SystemParameters.rcd_sample_count - 1;
-            comtradeSchema.StartTime = new Timestamp() { Value = m_meterDataSet.DataSeries[1][0].Time };
-
-            int triggerIndex = controlFile.SystemParameters.start_offset_samples + controlFile.SystemParameters.prefault_samples;
-            comtradeSchema.TriggerTime = new Timestamp() { Value = m_meterDataSet.DataSeries[1][triggerIndex].Time };
-
-            for (int i = 0; i < analogChannels.Count; i++)
-            {
-                ANLG_CHNL_NEW analogChannel = analogChannels[i];
-                AnalogChannel comtradeAnalog = new AnalogChannel();
-                DataSeries channelData = m_meterDataSet.DataSeries[i + 1];
-
-                double unitMultiplier = 1.0D;
-                double max = channelData.Maximum;
-                double min = channelData.Minimum;
-                double num;
-
-                comtradeAnalog.Index = i + 1;
-                comtradeAnalog.Name = analogChannel.title;
-
-                comtradeAnalog.Units = new Func<string, string>(type =>
-                {
-                    switch (type)
-                    {
-                        case "V": return "kVAC";
-                        case "A": return "kAAC";
-                        case "v": return " VDC";
-                        default: return type;
-                    }
-                })(analogChannel.type);
-
-                if (analogChannel.type.All(char.IsUpper))
-                {
-                    unitMultiplier = 0.001D;
-                    max *= unitMultiplier;
-                    min *= unitMultiplier;
-                }
-
-                comtradeAnalog.Multiplier = (max - min) / (2 * short.MaxValue);
-                comtradeAnalog.Adder = (max + min) / 2.0D;
-                comtradeAnalog.PrimaryRatio = double.TryParse(analogChannel.primary, out num) ? num * unitMultiplier : 0.0D;
-                comtradeAnalog.SecondaryRatio = double.TryParse(analogChannel.secondary, out num) ? num * unitMultiplier : 0.0D;
-
-                comtradeSchema.AnalogChannels[i] = comtradeAnalog;
             }
 
-            for (int i = 0; i < digitalChannels.Count; i++)
-            {
-                EVNT_CHNL_NEW digitalChannel = digitalChannels[i];
-                DigitalChannel comtradeDigital = new DigitalChannel();
-                comtradeDigital.Index = i + 1;
-                comtradeDigital.ChannelName = digitalChannel.e_title;
-                comtradeSchema.DigitalChannels[i] = comtradeDigital;
-            }
-
-            Directory.CreateDirectory(directoryPath);
-            File.WriteAllText(schemaFilePath, comtradeSchema.FileImage, Encoding.ASCII);
-
-            using (FileStream stream = File.OpenWrite(dataFilePath))
-            {
-                const int DigitalSize = sizeof(ushort) * 8;
-
-                IEnumerable<DataSeries> digitalWords = m_meterDataSet.Digitals.Skip(1)
-                    .Select((dataSeries, index) => dataSeries.Multiply(Math.Pow(2.0D, DigitalSize - (index % DigitalSize) - 1)))
-                    .Select((DataSeries, Index) => new { DataSeries, Index })
-                    .GroupBy(obj => obj.Index / DigitalSize)
-                    .Select(grouping => grouping.Select(obj => obj.DataSeries))
-                    .Select(grouping => grouping.Aggregate((sum, series) => sum.Add(series)));
-
-                List<DataSeries> allChannels = m_meterDataSet.DataSeries.Skip(1)
-                    .Select((dataSeries, index) => analogChannels[index].type.All(char.IsUpper) ? dataSeries.Multiply(0.001D) : dataSeries)
-                    .Concat(digitalWords)
-                    .ToList();
-
-                for (int i = 0; i < m_meterDataSet.DataSeries[1].DataPoints.Count; i++)
-                {
-                    DateTime timestamp = m_meterDataSet.DataSeries[1][i].Time;
-
-                    double[] values = allChannels
-                        .Select(dataSeries => dataSeries[i].Value)
-                        .ToArray();
-
-                    Writer.WriteNextRecordBinary(stream, comtradeSchema, timestamp, values, (uint)i, false);
-                }
-            }
-        }
-
-        public void Dispose()
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if ((object)m_parser != null)
-                    {
-                        m_parser.Dispose();
-                        m_parser = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;
-                }
-            }
+            return meterDataSet;
         }
 
         private Channel ParseSeries(ANLG_CHNL_NEW analogChannel)
@@ -435,6 +450,27 @@ namespace FaultData.DataReaders
 
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(EMAXReader));
+
+        // Static Properties
+        private static string TempDataFolder => LazyTempDataFolder.Value;
+
+        private static Lazy<string> LazyTempDataFolder => new Lazy<string>(() =>
+        {
+            string tempPath = Path.GetTempPath();
+            return Path.Combine(tempPath, "openXDA", "EMAX");
+        });
+
+        // Static Methods
+        private static void Dump(FileGroup fileGroup, string path)
+        {
+            foreach (DataFile dataFile in fileGroup.DataFiles)
+            {
+                string fileName = Path.GetFileName(dataFile.FilePath);
+                string destination = Path.Combine(path, fileName);
+                byte[] data = dataFile.FileBlob.Blob;
+                File.WriteAllBytes(destination, data);
+            }
+        }
 
         #endregion
     }

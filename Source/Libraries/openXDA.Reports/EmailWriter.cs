@@ -29,27 +29,18 @@ using System.Net;
 using System.Net.Mail;
 using System.Xml.Linq;
 using GSF.Data;
-using GSF.Web.Model;
 using GSF.Xml;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace openXDA.Reports
 {
     public class EmailWriter
     {
-        #region [ Members ]
-
-
-        // Constants
-
-        // Fields
-
-        #endregion
-
         #region [ Constructors ]
 
-        public EmailWriter(PQReportsSettings reportsSettings, EmailSettings emailSettings)
+        public EmailWriter(PQReportsSettings reportsSettings, EmailSection emailSettings)
         {
             ReportSettings = reportsSettings;
             EmailSettings = emailSettings;
@@ -59,7 +50,7 @@ namespace openXDA.Reports
 
         #region [ Properties ]
 
-        public EmailSettings EmailSettings { get; }
+        public EmailSection EmailSettings { get; }
         public PQReportsSettings ReportSettings { get; }
 
         #endregion

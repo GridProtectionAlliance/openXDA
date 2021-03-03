@@ -45,7 +45,6 @@ namespace openXDA.DataPusher
         #region [ Members ]
 
         // Fields
-        private DataContext m_dataContext;
         private bool m_disposed;
         private ScheduleManager m_scheduler;
         private bool m_running = false;
@@ -77,21 +76,8 @@ namespace openXDA.DataPusher
 
         // Client-side script functionality
         #region [ Static ]
+
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherEngine));
-
-        public static event EventHandler<EventArgs<string>> LogStatusMessageEvent;
-
-        private static void OnLogStatusMessage(string message)
-        {
-            LogStatusMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
-        }
-
-        public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
-
-        private static void OnLogExceptionMessage(Exception exception)
-        {
-            LogExceptionMessage?.Invoke(new object(), new EventArgs<Exception>(exception));
-        }
 
         public static event EventHandler<EventArgs<string, string, int>> UpdateProgressForMeter;
 
@@ -108,7 +94,6 @@ namespace openXDA.DataPusher
             if (client != string.Empty)
                 UpdateProgressForInstance?.Invoke(new object(), new EventArgs<string, string, int>(client, instance, update));
         }
-
 
         #endregion
 
@@ -1282,7 +1267,8 @@ namespace openXDA.DataPusher
 
         #endregion
 
-        #region [ File Sync Functions]
+        #region [ File Sync Functions ]
+
         public void SyncInstanceFiles(string clientId, RemoteXDAInstance instance, CancellationToken cancellationToken)
         {
             try
@@ -1338,7 +1324,7 @@ namespace openXDA.DataPusher
                     {
                         if (cancellationToken.IsCancellationRequested) break;
 
-                        OnLogStatusMessage($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}:Filegroup:{fileGroup.ID}...");
+                        Log.Info($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}:Filegroup:{fileGroup.ID}...");
 
                         FileGroupLocalToRemote fileGroupLocalToRemote = new TableOperations<FileGroupLocalToRemote>(connection).QueryRecordWhere("LocalFileGroupID = {0} AND RemoteXDAInstanceID = {1}", fileGroup.ID, instance.ID);
 
@@ -1350,8 +1336,7 @@ namespace openXDA.DataPusher
                                 ProcessingStartTime = fileGroup.ProcessingStartTime,
                                 DataEndTime = fileGroup.DataEndTime,
                                 DataStartTime = fileGroup.DataStartTime,
-                                Error = fileGroup.Error,
-                                FileHash = fileGroup.FileHash
+                                Error = fileGroup.Error
                             };
                             int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, fg, userAccount);
                             fileGroupLocalToRemote = new FileGroupLocalToRemote()
@@ -1456,8 +1441,7 @@ namespace openXDA.DataPusher
                             ProcessingStartTime = fileGroup.ProcessingStartTime,
                             DataEndTime = fileGroup.DataEndTime,
                             DataStartTime = fileGroup.DataStartTime,
-                            Error = fileGroup.Error,
-                            FileHash = fileGroup.FileHash
+                            Error = fileGroup.Error
                         };
                         int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, fg, userAccount);
                         fileGroupLocalToRemote = new FileGroupLocalToRemote()
@@ -1574,8 +1558,7 @@ namespace openXDA.DataPusher
                         DataEndTime = local.DataEndTime,
                         ProcessingStartTime = local.ProcessingStartTime,
                         ProcessingEndTime = local.ProcessingEndTime,
-                        Error = local.Error,
-                        FileHash = local.FileHash
+                        Error = local.Error
                     };
                     id = WebAPIHub.CreateRecord(address, record, userAccount);
                 }

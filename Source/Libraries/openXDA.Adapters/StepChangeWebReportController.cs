@@ -21,40 +21,40 @@
 //
 //******************************************************************************************************
 
-using GSF;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.Caching;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web;
 using GSF.Web.Model;
-using openHistorian.XDALink;
 using openXDA.Model;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Runtime.Caching;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web.Http;
 
 namespace openXDA.Adapters
 {
     public class StepChangeWebReportController : ApiController
     {
-        #region [ Static ]
-        private static MemoryCache s_memoryCache;
+        #region [ Constructors ]
 
-        static StepChangeWebReportController()
-        {
-            s_memoryCache = new MemoryCache("StepChangeWebReport");
-        }
+        public StepChangeWebReportController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
         #endregion
 
+        #region [ Properties ]
+
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
+        #endregion
 
         #region [ Methods ]
+
         [HttpGet]
         public Task<DataTable> GetData(CancellationToken cancellationToken)
         {
@@ -66,7 +66,8 @@ namespace openXDA.Adapters
 
             return Task.Factory.StartNew(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
                     return GetData(connection, startDate, endDate, sortField, ascending);
                 }
             }, cancellationToken);
@@ -82,10 +83,13 @@ namespace openXDA.Adapters
 
             return Task.Factory.StartNew(() =>
             {
-                using (DataContext dataContext = new DataContext("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
-                    PQMeasurement pQMeasurement = dataContext.Table<PQMeasurement>().QueryRecordWhere("Name = {0}", measurementID);
-                    return dataContext.Table<Channel>().QueryRecordWhere(@"
+                    TableOperations<PQMeasurement> pqMeasurementTable = new TableOperations<PQMeasurement>(connection);
+                    PQMeasurement pQMeasurement = pqMeasurementTable.QueryRecordWhere("Name = {0}", measurementID);
+
+                    TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+                    return channelTable.QueryRecordWhere(@"
                         MeterID = {0} AND
                         Channel.MeasurementTypeID = {1} AND
                         Channel.MeasurementCharacteristicID = {2} AND
@@ -106,7 +110,8 @@ namespace openXDA.Adapters
             {
                 table = (DataTable)s_memoryCache.Get(target);
             }
-            else {
+            else
+            {
                 table = connection.RetrieveData(@"
                     DECLARE @PivotColumns NVARCHAR(MAX) = N''
                     DECLARE @ReturnColumns NVARCHAR(MAX) = N''
@@ -171,8 +176,12 @@ namespace openXDA.Adapters
                 return table.Select().OrderByDescending(row => row[sortField]).CopyToDataTable();
         }
 
-
         #endregion
 
+        #region [ Static ]
+
+        private static MemoryCache s_memoryCache = new MemoryCache("StepChangeWebReport");
+
+        #endregion
     }
 }

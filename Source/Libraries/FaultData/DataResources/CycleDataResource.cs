@@ -23,12 +23,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using GSF.Configuration;
 using log4net;
+using openXDA.Configuration;
 
 namespace FaultData.DataResources
 {
@@ -36,21 +38,17 @@ namespace FaultData.DataResources
     {
         #region [ Properties ]
 
-        [Setting]
-        public double MaxEventDuration
-        {
-            get => MaxEventDurationSpan.TotalSeconds;
-            set => MaxEventDurationSpan = TimeSpan.FromSeconds(value);
-        }
-
-        [Setting]
-        public double SystemFrequency { get; set; }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
         public List<DataGroup> DataGroups { get; private set; }
         public List<VIDataGroup> VIDataGroups { get; private set; }
         public List<VICycleDataGroup> VICycleDataGroups { get; private set; }
 
-        private TimeSpan MaxEventDurationSpan { get; set; }
+        private TimeSpan MaxEventDurationSpan =>
+            TimeSpan.FromSeconds(DataAnalysisSettings.MaxEventDuration);
 
         #endregion
 
@@ -58,12 +56,13 @@ namespace FaultData.DataResources
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
+            double systemFrequency = DataAnalysisSettings.SystemFrequency;
             DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
             Stopwatch stopwatch = new Stopwatch();
 
             DataGroups = dataGroupsResource.DataGroups
                 .Where(dataGroup => dataGroup.Classification == DataClassification.Event)
-                .Where(dataGroup => dataGroup.SamplesPerSecond / SystemFrequency >= 3.999D)
+                .Where(dataGroup => dataGroup.SamplesPerSecond / systemFrequency >= 3.999D)
                 .Where(dataGroup => MaxEventDurationSpan <= TimeSpan.Zero || TimeSpan.FromSeconds(dataGroup.Duration) <= MaxEventDurationSpan)
                 .ToList();
 
@@ -78,7 +77,7 @@ namespace FaultData.DataResources
             stopwatch.Start();
 
             VICycleDataGroups = VIDataGroups
-                .Select(viDataGroup => Transform.ToVICycleDataGroup(viDataGroup, SystemFrequency))
+                .Select(viDataGroup => Transform.ToVICycleDataGroup(viDataGroup, systemFrequency))
                 .ToList();
 
             Log.Debug(string.Format("Cycle data calculated in {0}.", stopwatch.Elapsed));

@@ -57,6 +57,12 @@ namespace openXDA.HIDS
                 return;
             }
 
+            if (string.IsNullOrEmpty(HIDSSettings.Host))
+            {
+                Log.Debug($"No HIDS instance defined; skipping {nameof(DataQualityOperation)}.");
+                return;
+            }
+
             // Get the total cumulative samples per hour
             // of each of the enabled channels in the meter
             double meterSamplesPerHour = meterDataSet.Meter.Channels

@@ -30,24 +30,30 @@ using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Configuration;
+using openXDA.Configuration;
 
 namespace FaultData.DataOperations.GTC
 {
     public class MeterDataQualityOverride : DataOperationBase<MeterDataSet>
     {
-        public class MeterDataQualitySettings
+        public class MeterDataQualitySection
         {
+            public const string CategoryName = "MeterDataQuality";
+
             [Setting]
             [DefaultValue(15.0D)]
             public double MaxVoltageSlope { get; set; }
         }
 
         [Category]
-        [SettingName("MeterDataQuality")]
-        public MeterDataQualitySettings Settings { get; } = new MeterDataQualitySettings();
+        [SettingName(MeterDataQualitySection.CategoryName)]
+        public MeterDataQualitySection Settings { get; }
+            = new MeterDataQualitySection();
 
-        [Setting]
-        public double SystemFrequency { get; set; }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
         public override void Execute(MeterDataSet meterDataSet)
         {
@@ -67,7 +73,7 @@ namespace FaultData.DataOperations.GTC
 
                 // Nominal multipliers used for first derivative, based on:
                 //   d/dt(A*sin(w*t)) = A*w*cos(w*t)
-                double omega = 2.0D * Math.PI * SystemFrequency;
+                double omega = 2.0D * Math.PI * DataAnalysisSettings.SystemFrequency;
                 double llFactor = 1.0D / (llPeakNominalVoltage * omega);
                 double lnFactor = 1.0D / (lnPeakNominalVoltage * omega);
 

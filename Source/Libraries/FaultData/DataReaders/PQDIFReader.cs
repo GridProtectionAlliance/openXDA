@@ -23,125 +23,116 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
+using FaultData.DataReaders.Linq;
 using FaultData.DataReaders.PQube;
 using FaultData.DataSets;
 using GSF;
+using GSF.Configuration;
 using GSF.PQDIF.Logical;
 using GSF.PQDIF.Physical;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataReaders
 {
-    public class PQDIFReader : IDataReader, IDisposable
+    namespace Linq
     {
-        #region [ Members ]
-
-        // Fields
-        private double m_systemFrequency;
-
-        private LogicalParser m_parser;
-        private MeterDataSet m_meterDataSet;
-        private bool m_disposed;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="PQDIFReader"/> class.
-        /// </summary>
-        public PQDIFReader()
+        public static class EnumerableExtensions
         {
-            m_meterDataSet = new MeterDataSet();
+            public static IEnumerable<T> HandleExceptions<T>(this IEnumerable<T> enumerable, Action<AggregateException> handler)
+            {
+                List<Exception> exceptions = new List<Exception>();
+                IEnumerator<T> enumerator = enumerable.GetEnumerator();
+
+                using (enumerable as IDisposable)
+                using (enumerator)
+                {
+                    while (true)
+                    {
+                        T item;
+
+                        try
+                        {
+                            if (!enumerator.MoveNext())
+                                break;
+
+                            item = enumerator.Current;
+                        }
+                        catch (Exception ex)
+                        {
+                            exceptions.Add(ex);
+                            continue;
+                        }
+
+                        yield return item;
+                    }
+                }
+
+                try
+                {
+                    if (exceptions.Any())
+                        throw new AggregateException(exceptions);
+                }
+                catch (AggregateException ex)
+                {
+                    handler(ex);
+                }
+            }
         }
+    }
 
-        #endregion
-
+    public class PQDIFReader : IDataReader
+    {
         #region [ Properties ]
 
-        /// <summary>
-        /// Gets or sets the system frequency.
-        /// </summary>
-        [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the data set produced by the Parse method of the data reader.
-        /// </summary>
-        public MeterDataSet MeterDataSet
-        {
-            get
-            {
-                return m_meterDataSet;
-            }
-        }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
         #endregion
 
         #region [ Methods ]
 
-        /// <summary>
-        /// Determines whether the file can be parsed at this time.
-        /// </summary>
-        /// <param name="filePath">The path to the file to be parsed.</param>
-        /// <param name="fileCreationTime">The time the file was created.</param>
-        /// <returns>True if the file can be parsed; false otherwise.</returns>
-        public bool CanParse(string filePath, DateTime fileCreationTime)
+        public bool IsReadyForLoad(FileInfo[] fileList) => fileList
+            .Where(fileInfo => fileInfo.Extension.Equals(".pqd", StringComparison.OrdinalIgnoreCase))
+            .All(fileInfo => fileInfo.Length > 0L);
+
+        public DataFile GetPrimaryDataFile(FileGroup fileGroup)
         {
-            try
-            {
-                m_parser = new LogicalParser(filePath);
-                m_parser.Open();
-                return true;
-            }
-            catch (IOException)
-            {
-                return false;
-            }
+            bool IsPrimaryDataFile(DataFile dataFile) =>
+                dataFile.FilePath.EndsWith(".pqd", StringComparison.OrdinalIgnoreCase);
+
+            return fileGroup.DataFiles.First(IsPrimaryDataFile);
         }
 
-        /// <summary>
-        /// Parses the file into a meter data set per meter contained in the file.
-        /// </summary>
-        /// <param name="filePath">The path to the file to be parsed.</param>
-        /// <returns>List of meter data sets, one per meter.</returns>
-        public void Parse(string filePath)
+        public MeterDataSet Parse(FileGroup fileGroup)
         {
-            List<DataSourceRecord> dataSources;
-            List<ObservationRecord> observationRecords;
-            List<ChannelInstance> channelInstances;
-            List<SeriesInstance> seriesInstances;
-            List<SeriesDefinition> seriesDefinitions;
+            MeterDataSet meterDataSet = new MeterDataSet();
 
-            Meter meter;
-            Channel channel;
-            DataSeries dataSeries;
-            DateTime[] timeData;
+            DataFile pqdFile = GetPrimaryDataFile(fileGroup);
+            byte[] fileData = pqdFile.FileBlob.Blob;
 
-            // Build the list of observation records in the PQDIF file
-            observationRecords = new List<ObservationRecord>();
+            ContainerRecord containerRecord;
+            List<ObservationRecord> observationRecords = new List<ObservationRecord>();
 
-            while (m_parser.HasNextObservationRecord())
-                observationRecords.Add(m_parser.NextObservationRecord());
+            using (MemoryStream stream = new MemoryStream(fileData))
+            using (LogicalParser parser = new LogicalParser(stream))
+            {
+                containerRecord = parser.ContainerRecord;
+
+                while (parser.HasNextObservationRecord())
+                    observationRecords.Add(parser.NextObservationRecord());
+            }
 
             // Build the list of all data source records in the PQDIF file
-            dataSources = observationRecords
+            List<DataSourceRecord> dataSources = observationRecords
                 .Select(observation => observation.DataSource)
                 .Distinct()
                 .ToList();
@@ -150,26 +141,28 @@ namespace FaultData.DataReaders
             // need to go any further because we won't be
             // able to interpret any of the channel data
             if (!dataSources.Any())
-                return;
+                return meterDataSet;
 
             // Validate data sources to make sure there is only one data source defined in the file
             if (!dataSources.Zip(dataSources.Skip(1), (ds1, ds2) => AreEquivalent(ds1, ds2)).All(b => b))
-                throw new InvalidDataException($"PQDIF file \"{filePath}\" defines too many data sources.");
+                throw new InvalidDataException($"PQDIF file \"{pqdFile.FilePath}\" defines too many data sources.");
 
             // Create a meter from the parsed data source
-            meter = ParseDataSource(dataSources.First());
+            Meter meter = ParseDataSource(dataSources.First());
+            meterDataSet.Meter = meter;
 
             // Build the list of all channel instances in the PQDIF file
-            channelInstances = observationRecords
+            List<ChannelInstance> channelInstances = observationRecords
                 .SelectMany(observation => observation.ChannelInstances)
                 .Where(channelInstance => QuantityType.IsQuantityTypeID(channelInstance.Definition.QuantityTypeID))
                 .Where(channelInstance => channelInstance.SeriesInstances.Any())
                 .Where(channelInstance => channelInstance.SeriesInstances[0].Definition.ValueTypeID == SeriesValueType.Time)
+                .HandleExceptions(ex => Log.Warn("Encountered malformed observation records in PQDIF file.", ex))
                 .ToList();
 
             // Create the list of series instances so we can
             // build it as we process each channel instance
-            seriesInstances = new List<SeriesInstance>();
+            List<SeriesInstance> seriesInstances = new List<SeriesInstance>();
 
             foreach (ChannelInstance channelInstance in channelInstances)
             {
@@ -182,23 +175,23 @@ namespace FaultData.DataReaders
                     continue;
 
                 // Parse time data from the channel instance
-                timeData = ParseTimeData(channelInstance, m_systemFrequency);
+                DateTime[] timeData = ParseTimeData(channelInstance, DataAnalysisSettings.SystemFrequency);
 
                 foreach (SeriesInstance seriesInstance in channelInstance.SeriesInstances.Skip(1))
                 {
                     // Create a channel from the parsed series instance
                     seriesInstances.Add(seriesInstance);
-                    channel = ParseSeries(seriesInstance);
+                    Channel channel = ParseSeries(seriesInstance);
 
                     // Parse the values and zip them with time data to create data points
-                    dataSeries = new DataSeries();
+                    DataSeries dataSeries = new DataSeries();
                     dataSeries.DataPoints = timeData.Zip(ParseValueData(seriesInstance), (time, d) => new DataPoint() { Time = time, Value = d }).ToList();
                     dataSeries.SeriesInfo = channel.Series[0];
 
                     // Add the new channel to the meter's channel list
                     channel.Meter = meter;
                     meter.Channels.Add(channel);
-                    m_meterDataSet.DataSeries.Add(dataSeries);
+                    meterDataSet.DataSeries.Add(dataSeries);
                 }
             }
 
@@ -212,9 +205,9 @@ namespace FaultData.DataReaders
                 if (!magDurChannel)
                     continue;
 
-                timeData = channelInstance.SeriesInstances
+                DateTime[] timeData = channelInstance.SeriesInstances
                     .Where(seriesInstance => seriesInstance.Definition.ValueTypeID == SeriesValueType.Time)
-                    .Select(seriesInstance => ParseTimeData(seriesInstance, m_systemFrequency))
+                    .Select(seriesInstance => ParseTimeData(seriesInstance, DataAnalysisSettings.SystemFrequency))
                     .FirstOrDefault();
 
                 Guid valType = SeriesValueType.Val;
@@ -244,7 +237,7 @@ namespace FaultData.DataReaders
 
                 TimeSpan[] durData = channelInstance.SeriesInstances
                     .Where(seriesInstance => seriesInstance.Definition.ValueTypeID == SeriesValueType.Duration)
-                    .Select(seriesInstance => ParseTimeSpanData(seriesInstance, m_systemFrequency))
+                    .Select(seriesInstance => ParseTimeSpanData(seriesInstance, DataAnalysisSettings.SystemFrequency))
                     .FirstOrDefault();
 
                 int minLength = Common.Min(timeData.Length, maxData.Length, minData.Length, avgData.Length, durData.Length);
@@ -256,7 +249,7 @@ namespace FaultData.DataReaders
 
                 for (int i = 0; i < minLength; i++)
                 {
-                    DateTime time = ((object)timeData != null)
+                    DateTime time = !(timeData is null)
                         ? timeData[i]
                         : channelInstance.ObservationRecord.StartTime;
 
@@ -265,12 +258,12 @@ namespace FaultData.DataReaders
                     double avg = avgData[i];
                     TimeSpan dur = durData[i];
 
-                    m_meterDataSet.ReportedDisturbances.Add(new ReportedDisturbance(channelInstance.Definition.Phase, time, max, min, avg, dur, units));
+                    meterDataSet.ReportedDisturbances.Add(new ReportedDisturbance(channelInstance.Definition.Phase, time, max, min, avg, dur, units));
                 }
             }
 
             // Build a list of series definitions that were not instanced by this PQDIF file
-            seriesDefinitions = dataSources
+            List<SeriesDefinition> seriesDefinitions = dataSources
                 .SelectMany(dataSource => dataSource.ChannelDefinitions)
                 .SelectMany(channelDefinition => channelDefinition.SeriesDefinitions)
                 .Distinct()
@@ -281,29 +274,10 @@ namespace FaultData.DataReaders
             foreach (SeriesDefinition seriesDefinition in seriesDefinitions)
                 meter.Channels.Add(ParseSeries(seriesDefinition));
 
-            m_meterDataSet.Meter = meter;
-
             // Parse triggers from PQube data
-            m_meterDataSet.Triggers = PQubeReader.GetTriggers(m_parser.ContainerRecord, observationRecords);
-        }
+            meterDataSet.Triggers = PQubeReader.GetTriggers(containerRecord, observationRecords);
 
-        public void Dispose()
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if ((object)m_parser != null)
-                    {
-                        m_parser.Dispose();
-                        m_parser = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;
-                }
-            }
+            return meterDataSet;
         }
 
         #endregion
@@ -320,10 +294,10 @@ namespace FaultData.DataReaders
             if (ReferenceEquals(dataSource1, dataSource2))
                 return true;
 
-            if ((object)dataSource1 == null)
+            if (dataSource1 is null)
                 return false;
 
-            if ((object)dataSource2 == null)
+            if (dataSource2 is null)
                 return false;
 
             return dataSource1.DataSourceName == dataSource2.DataSourceName &&
@@ -421,7 +395,7 @@ namespace FaultData.DataReaders
             SeriesInstance timeSeries = channelInstance.SeriesInstances
                 .FirstOrDefault(seriesInstance => seriesInstance.Definition.ValueTypeID == SeriesValueType.Time);
 
-            if ((object)timeSeries == null)
+            if (timeSeries is null)
                 return null;
 
             return ParseTimeData(timeSeries, systemFrequency);

@@ -79,7 +79,7 @@ namespace FaultData.DataOperations
             {
                 const string FieldName = "BreakerRestrike";
                 const string Description = "Indicates whether the file captures a breaker restrike event.";
-                meterDataSet.FileGroup.AddFieldValue(connection, FieldName, breakerRestrikeData, Description);
+                meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, breakerRestrikeData, Description);
             }
         }
 

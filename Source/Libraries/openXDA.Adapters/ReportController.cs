@@ -21,29 +21,29 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
-using GSF.Data.Model;
-using openXDA.Model;
 using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
+using GSF.Data;
+using GSF.Data.Model;
+using openXDA.Model;
 
 namespace openXDA.Adapters
 {
-    public class ReportController: ApiController
+    public class ReportController : ApiController
     {
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
+        public ReportController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
         [HttpGet]
-        public IHttpActionResult Get(int id, string name) {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+        public IHttpActionResult Get(int id, string name)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
             using(MemoryStream stream = new MemoryStream())
             {
                

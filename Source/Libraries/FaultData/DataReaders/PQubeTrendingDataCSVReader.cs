@@ -24,12 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF;
-using GSF.IO;
 using log4net;
 using openXDA.Model;
 
@@ -38,59 +38,28 @@ namespace FaultData.DataReaders
     /// <summary>
     /// Reads a PQubeTrendingDataCSVReader file to produce a <see cref="MeterDataSet"/>.
     /// </summary>
-    public class PQubeTrendingDataCSVReader : IDataReader, IDisposable
+    public class PQubeTrendingDataCSVReader : IDataReader
     {
-        #region [ Members ]
-
-        // Fields
-        private MeterDataSet m_meterDataSet;
-        private bool m_disposed;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="PQubeTrendingDataCSVReader"/> class.
-        /// </summary>
-        public PQubeTrendingDataCSVReader()
-        {
-            m_meterDataSet = new MeterDataSet();
-            Channels = new Dictionary<string, int>();
-        }
-
-        #endregion
-
         #region [ Properties ]
 
-        /// <summary>
-        /// Gets the data set produced by the Parse method of the data reader.
-        /// </summary>
-        public MeterDataSet MeterDataSet
-        {
-            get
-            {
-                return m_meterDataSet;
-            }
-        }
-
-        private Dictionary<string, int> Channels { get; set; }
+        private Dictionary<string, int> Channels { get; } = new Dictionary<string, int>();
 
         #endregion
 
         #region [ Methods ]
 
-        public bool CanParse(string filePath, DateTime fileCreationTime)
-        {
-            if (!FilePath.TryGetReadLockExclusive(filePath))
-                return false;
+        public bool IsReadyForLoad(FileInfo[] fileList) =>
+            fileList.All(fileInfo => fileInfo.Length > 0L);
 
-            return true;
-        }
+        public DataFile GetPrimaryDataFile(FileGroup fileGroup) =>
+            fileGroup.DataFiles.First();
 
-        public void Parse(string filePath)
+        public MeterDataSet Parse(FileGroup fileGroup)
         {
-            Meter meter = new Meter();
+            MeterDataSet meterDataSet = new MeterDataSet();
+            meterDataSet.Meter = new Meter();
+
+            Meter meter = meterDataSet.Meter;
             meter.Location = new Location();
             meter.Channels = new List<Channel>();
 
@@ -99,41 +68,46 @@ namespace FaultData.DataReaders
 
             try
             {
-                // open file and read first line
-                StreamReader file = new StreamReader(filePath);
-                string line = file.ReadLine();
+                DataFile csvFile = GetPrimaryDataFile(fileGroup);
+                byte[] fileData = csvFile.FileBlob.Blob;
 
-                // if first line is not header columns move down until you read the header columns
-                while (!line.Contains(","))
-                    line = file.ReadLine();
-
-                // build channels and dataseries from header columns
-                string[] headers = CSVDecode(line);
-                for(int i = 1; i < headers.Length; ++i)
+                using (MemoryStream stream = new MemoryStream(fileData))
+                using (StreamReader file = new StreamReader(stream))
                 {
-                    if (headers[i].ToLower() == "flag"|| headers[i].ToLower() == "nothing") continue;
+                    // read first line
+                    string line = file.ReadLine();
 
-                    Channel channel = ParseSeries(headers[i]);
-                    channel.Meter = meter;
+                    // if first line is not header columns move down until you read the header columns
+                    while (!line.Contains(","))
+                        line = file.ReadLine();
 
-                    DataSeries dataSeries = new DataSeries();
-                    dataSeries.SeriesInfo = channel.Series[0];
-                    meter.Channels.Add(channel);
-                    m_meterDataSet.DataSeries.Add(dataSeries);
-                    Channels.Add(headers[i], m_meterDataSet.DataSeries.Count - 1);
-                }
-
-                while ((line = file.ReadLine()) != null)
-                {
-                    string[] data = CSVDecode(line);
-                    string timeStamp = data[0];
-
-                    for (int i = 1; i < headers.Length; i++)
+                    // build channels and dataseries from header columns
+                    string[] headers = CSVDecode(line);
+                    for (int i = 1; i < headers.Length; ++i)
                     {
                         if (headers[i].ToLower() == "flag" || headers[i].ToLower() == "nothing") continue;
-                        m_meterDataSet.DataSeries[Channels[headers[i]]].DataPoints.Add(new DataPoint() { Time = DateTime.Parse(timeStamp), Value = double.Parse(data[i]) });
+
+                        Channel channel = ParseSeries(headers[i]);
+                        channel.Meter = meter;
+
+                        DataSeries dataSeries = new DataSeries();
+                        dataSeries.SeriesInfo = channel.Series[0];
+                        meter.Channels.Add(channel);
+                        meterDataSet.DataSeries.Add(dataSeries);
+                        Channels.Add(headers[i], meterDataSet.DataSeries.Count - 1);
                     }
 
+                    while ((line = file.ReadLine()) != null)
+                    {
+                        string[] data = CSVDecode(line);
+                        string timeStamp = data[0];
+
+                        for (int i = 1; i < headers.Length; i++)
+                        {
+                            if (headers[i].ToLower() == "flag" || headers[i].ToLower() == "nothing") continue;
+                            meterDataSet.DataSeries[Channels[headers[i]]].DataPoints.Add(new DataPoint() { Time = DateTime.Parse(timeStamp), Value = double.Parse(data[i]) });
+                        }
+                    }
                 }
             }
             catch (InvalidOperationException ex)
@@ -141,21 +115,7 @@ namespace FaultData.DataReaders
                 Log.Warn(ex.Message, ex);
             }
 
-            m_meterDataSet.Meter = meter;
-        }
-
-        public void Dispose()
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                }
-                finally
-                {
-                    m_disposed = true;
-                }
-            }
+            return meterDataSet;
         }
 
         private Channel ParseSeries(string channelName)

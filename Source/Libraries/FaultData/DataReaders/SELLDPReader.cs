@@ -23,35 +23,22 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using FaultData.Configuration;
+using System.Text;
 using FaultData.DataAnalysis;
-using FaultData.DataResources.GTC;
 using FaultData.DataSets;
-using GSF.COMTRADE;
-using GSF.Configuration;
-using GSF.Interop;
-using GSF.IO;
 using log4net;
 using openXDA.Model;
 
 namespace FaultData.DataReaders
 {
     /// <summary>
-    /// Reads a COMTRADE file to produce a <see cref="MeterDataSet"/>.
+    /// Reads an LDP file to produce a <see cref="MeterDataSet"/>.
     /// </summary>
-    public class SELLDPReader : IDataReader, IDisposable
+    public class SELLDPReader : IDataReader
     {
-        #region [ Members ]
-
-        // Fields
-        private bool m_disposed;
-
-        #endregion
-
         #region [ Member Classes ]
 
         private class Record
@@ -77,8 +64,6 @@ namespace FaultData.DataReaders
 
                 return result;
             }
-
-            
         }
         
         enum RecordType: ushort
@@ -120,48 +105,32 @@ namespace FaultData.DataReaders
             Miscellaneous = 200
         }
 
-    #endregion
-    #region [ Constructors ]
-
-    /// <summary>
-    /// Creates a new instance of the <see cref="SELLDPReader"/> class.
-    /// </summary>
-        public SELLDPReader()
-        {
-            MeterDataSet = new MeterDataSet();
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets the data set produced by the Parse method of the data reader.
-        /// </summary>
-        public MeterDataSet MeterDataSet { get; }
-
         #endregion
 
         #region [ Methods ]
 
-        public bool CanParse(string filePath, DateTime fileCreationTime)
-        {
-            return true;
-        }
+        public bool IsReadyForLoad(FileInfo[] fileList) =>
+            fileList.All(fileInfo => fileInfo.Length > 0L);
 
-        public void Parse(string filePath)
+        public DataFile GetPrimaryDataFile(FileGroup fileGroup) =>
+            fileGroup.DataFiles.First();
+
+        public MeterDataSet Parse(FileGroup fileGroup)
         {
+            MeterDataSet meterDataSet = new MeterDataSet();
+            meterDataSet.Meter = new Meter();
+
+            DataFile dataFile = GetPrimaryDataFile(fileGroup);
             List<Record> records = new List<Record>();
-            byte[] data = ReadFile(filePath);
+            byte[] data = ReadFile(dataFile);
 
-            while(data.Length > 0)
+            while (data.Length > 0)
             {
                 records.Add(Record.PareseNext(data));
                 data = data.Skip(records.Last().Length + 4).ToArray();
             }
 
-
-            Meter meter = new Meter();
+            Meter meter = meterDataSet.Meter;
             meter.Location = new Location();
             meter.Channels = new List<Channel>();
             meter.AssetKey = "";
@@ -177,9 +146,9 @@ namespace FaultData.DataReaders
 
             List<RecordChannel> channels = ReadMeterConfiguration(records[0]);
 
-            for (int i=0; i< channels.Count; i++)
+            for (int i = 0; i < channels.Count; i++)
             {
-                Channel channel = ParseSeries(channels[i],i);
+                Channel channel = ParseSeries(channels[i], i);
                 channel.Meter = meter;
 
                 DataSeries dataSeries = new DataSeries();
@@ -187,15 +156,15 @@ namespace FaultData.DataReaders
 
                 meter.Channels.Add(channel);
 
-                while (MeterDataSet.DataSeries.Count <= i)
-                    MeterDataSet.DataSeries.Add(new DataSeries());
+                while (meterDataSet.DataSeries.Count <= i)
+                    meterDataSet.DataSeries.Add(new DataSeries());
 
-                MeterDataSet.DataSeries[i] = dataSeries;
+                meterDataSet.DataSeries[i] = dataSeries;
             }
 
             try
             {
-                foreach(Record record in records)
+                foreach (Record record in records)
                 {
                     if (record.Type != RecordType.LDPData)
                         continue;
@@ -216,13 +185,11 @@ namespace FaultData.DataReaders
                         TS = new DateTime(year, 1, 1);
                         TS = TS + (new TimeSpan(day, 0, 0, 0)) + (new TimeSpan(milliseconds * GSF.Ticks.PerMillisecond / 10));
 
-                        
-
                         for (int i = 0; i < channels.Count; i++)
                         {
                             double value = Parse32Float(record.Data, index);
                             index = index + 4;
-                            MeterDataSet.DataSeries[i].DataPoints.Add(new DataPoint() { Time = TS, Value = channels[i].Scalar * value });
+                            meterDataSet.DataSeries[i].DataPoints.Add(new DataPoint() { Time = TS, Value = channels[i].Scalar * value });
                         }
                     }
 
@@ -238,42 +205,13 @@ namespace FaultData.DataReaders
                 Log.Warn(ex.Message, ex);
             }
 
-            MeterDataSet.Meter = meter;
-           
+            return meterDataSet;
         }
 
-        public void Dispose()
+        private byte[] ReadFile(DataFile dataFile)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                   
-                }
-                finally
-                {
-                    m_disposed = true;
-                }
-            }
-        }
-
-       
-        private byte[] ReadFile(string fileName)
-        {
-            string hexData = "";
-            try
-            {   // Open the text file using a stream reader.
-                using (StreamReader sr = new StreamReader(fileName))
-                {
-                    // Read the stream to a string, and write the string to the console.
-                    hexData = sr.ReadToEnd();
-                }
-            }
-            catch (IOException e)
-            {
-                throw new IOException("Unable to open SEL Trending Data File");
-            }
-
+            byte[] fileData = dataFile.FileBlob.Blob;
+            string hexData = Encoding.UTF8.GetString(fileData);
             byte[] data = new byte[hexData.Length / 2];
 
             for (int index = 0; index < data.Length; index++)
@@ -283,7 +221,6 @@ namespace FaultData.DataReaders
             }
 
             return data;
-
         }
 
         private List<RecordChannel> ReadMeterConfiguration(Record meterConfiguration)

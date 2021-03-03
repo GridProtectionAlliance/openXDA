@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -218,13 +217,14 @@ namespace FaultData.DataWriters
         {
             TableOperations<Meter> meterTable = new TableOperations<Meter>(m_connection);
             TableOperations<Event> eventTable = new TableOperations<Event>(m_connection);
+            Func<AdoDataConnection> connectionFactory = () => new AdoDataConnection(m_connection.Connection, m_connection.AdapterType, false);
 
             Event evt = eventTable.QueryRecordWhere("ID = {0}", m_eventID);
-            Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);
-            List<byte[]> timeDomainData = ChannelData.DataFromEvent(evt.ID, "systemSettings");
+            List<byte[]> timeDomainData = ChannelData.DataFromEvent(evt.ID, connectionFactory);
 
             //This Should start by getting multiple datasets
-            meter.ConnectionFactory = () => new AdoDataConnection(m_connection.Connection, m_connection.AdapterType, false);
+            Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);
+            meter.ConnectionFactory = connectionFactory;
 
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(meter, timeDomainData);

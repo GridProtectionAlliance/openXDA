@@ -81,23 +81,20 @@ namespace openXDA
     static class Program
     {
         /// <summary>
-        /// The service host instance for the application.
-        /// </summary>
-        public static readonly ServiceHost Host = new ServiceHost();
-
-        /// <summary>
         /// The main entry point for the application.
         /// </summary>
         static void Main()
         {
+            ServiceHost host = new ServiceHost();
+
 #if RunAsApp
             // Run as Windows Application.
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new DebugHost(Host));
+            Application.Run(new DebugHost(host));
 #else
             // Run as Windows Service.
-            ServiceBase.Run(Host);
+            ServiceBase.Run(host);
 #endif
         }
     }

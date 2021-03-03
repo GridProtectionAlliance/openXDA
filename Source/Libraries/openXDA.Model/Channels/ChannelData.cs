@@ -22,24 +22,24 @@
 //******************************************************************************************************
 
 
-using GSF;
-using GSF.Data;
-using GSF.Data.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using Ionic.Zlib;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data.SqlClient;
+using System.Linq;
+using GSF;
+using GSF.Data;
+using GSF.Data.Model;
+using Ionic.Zlib;
 
 namespace openXDA.Model
 {
     [TableName("ChannelData")]
     public class ChannelData
     {
-        #region [Private Class]
+        #region [ Members ]
+
+        // Nested Types
         private class DataPoint
         {
             public DateTime Time;
@@ -48,7 +48,8 @@ namespace openXDA.Model
 
         #endregion
  
-        #region [Properties]
+        #region [ Properties ]
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -73,33 +74,27 @@ namespace openXDA.Model
 
         #endregion
 
-        #region [Statics]
+        #region [ Static ]
 
-        public static List<byte[]> DataFromEvent(int eventID, string connectionStringCategory)
+        // This is going through this function to migtrate all EventdataBlobs over to ChannelDataBlobs as they are read eventually removing the legacy table (eventData)
+        public static List<byte[]> DataFromEvent(int eventID, Func<AdoDataConnection> connectionFactory)
         {
-            AdoDataConnection connection = new AdoDataConnection(connectionStringCategory);
-            return DataFromEvent(eventID, connection,  () => { return new AdoDataConnection(connectionStringCategory); });
-        }
-            // This is going through this function to migtrate all EventdataBlobs over to ChannelDataBlobs as they are read eventually removing the legacy table (eventData)
-        public static List<byte[]> DataFromEvent(int eventID, AdoDataConnection connection, Func<AdoDataConnection> assetConnection)
-        {
-            if (assetConnection == null)
-                assetConnection = () => { return new AdoDataConnection(connection.Connection.ConnectionString, typeof(SqlConnection), typeof(SqlDataAdapter)); };
-            
             List<byte[]> result = new List<byte[]>();
             List<int> directChannelIDs = new List<int>();
 
             //This Should start by getting multiple datasets
             string query = "SELECT SeriesID FROM ChannelData WHERE EventID = {0}";
-            DataTable table = connection.RetrieveData(query, eventID);
 
-            foreach (DataRow row in table.Rows)
+            using (AdoDataConnection connection = connectionFactory())
+            using (DataTable table = connection.RetrieveData(query, eventID))
             {
+                foreach (DataRow row in table.Rows)
+                {
                     int seriesID = row.Field<int>("SeriesID");
 
                     ChannelData channelData = new TableOperations<ChannelData>(connection).QueryRecordWhere("SeriesID = {0} AND EventID = {1}", seriesID, eventID);
                     if (channelData == null) continue;
-                   
+
                     if (channelData.TimeDomainData == null)
                     {
                         channelData.TimeDomainData = ProcessLegacyBlob(eventID, seriesID, connection);
@@ -108,51 +103,48 @@ namespace openXDA.Model
                     }
                     directChannelIDs.Add(connection.ExecuteScalar<int>("SELECT ChannelID FROM Series WHERE ID = {0}", seriesID));
                     result.Add(channelData.TimeDomainData);
-            }
-            
-
-            //This Will get the extended Data (throught connections)....
-            Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT AssetID FROM Event WHERE ID = {0})", eventID);
-            asset.ConnectionFactory = assetConnection;
-            List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
-
-            foreach (int channelID in channelIDs)
-            {
-                if (directChannelIDs.Contains(channelID))
-                    continue;
-
-                //Find any Series where Event happens at the same time and ChannelID is ChannelID 
-                //-> note that this assumes any Channel is only associated with a single event at a time
-                
-                int channelDataID = connection.ExecuteScalar<int>("SELECT COUNT(ChannelData.ID) FROM ChannelData LEFT JOIN Event ON ChannelData.EventID = Event.ID " +
-                    "LEFT JOIN Series ON ChannelData.SeriesID = Series.ID " + 
-                    "WHERE(Series.ChannelID = {0}) AND(Event.MeterID = (SELECT EV.MeterID FROM Event EV WHERE EV.ID = {1})) AND " +
-                    "(Event.StartTime <= (SELECT EV.EndTime FROM Event EV WHERE EV.ID = {1})) AND " +
-                    "(Event.EndTime >= (SELECT EV.StartTime FROM Event EV WHERE EV.ID = {1}))", channelID, eventID);
-
-                if (channelDataID == 0)
-                    continue;
-
-                channelDataID = connection.ExecuteScalar<int>("SELECT ChannelData.ID FROM ChannelData LEFT JOIN Event ON ChannelData.EventID = Event.ID " +
-                    "LEFT JOIN Series ON ChannelData.SeriesID = Series.ID " +
-                    "WHERE(Series.ChannelID = {0}) AND(Event.MeterID = (SELECT EV.MeterID FROM Event EV WHERE EV.ID = {1})) AND " +
-                    "(Event.StartTime <= (SELECT EV.EndTime FROM Event EV WHERE EV.ID = {1})) AND " +
-                    "(Event.EndTime >= (SELECT EV.StartTime FROM Event EV WHERE EV.ID = {1}))", channelID, eventID);
-
-                byte[] singleSeriesData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM ChannelData WHERE ID = {0}"
-                        , channelDataID);
-
-                if (singleSeriesData == null)
-                {
-                    ChannelData channelData = new TableOperations<ChannelData>(connection).QueryRecordWhere("ID = {0}", channelDataID); 
-                    singleSeriesData = ProcessLegacyBlob(channelData.EventID, channelData.SeriesID, connection);
                 }
 
-                result.Add(singleSeriesData);
+                //This Will get the extended Data (throught connections)....
+                Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT AssetID FROM Event WHERE ID = {0})", eventID);
+                asset.ConnectionFactory = connectionFactory;
+                List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
 
+                foreach (int channelID in channelIDs)
+                {
+                    if (directChannelIDs.Contains(channelID))
+                        continue;
 
+                    //Find any Series where Event happens at the same time and ChannelID is ChannelID 
+                    //-> note that this assumes any Channel is only associated with a single event at a time
+
+                    int channelDataID = connection.ExecuteScalar<int>("SELECT COUNT(ChannelData.ID) FROM ChannelData LEFT JOIN Event ON ChannelData.EventID = Event.ID " +
+                        "LEFT JOIN Series ON ChannelData.SeriesID = Series.ID " +
+                        "WHERE(Series.ChannelID = {0}) AND(Event.MeterID = (SELECT EV.MeterID FROM Event EV WHERE EV.ID = {1})) AND " +
+                        "(Event.StartTime <= (SELECT EV.EndTime FROM Event EV WHERE EV.ID = {1})) AND " +
+                        "(Event.EndTime >= (SELECT EV.StartTime FROM Event EV WHERE EV.ID = {1}))", channelID, eventID);
+
+                    if (channelDataID == 0)
+                        continue;
+
+                    channelDataID = connection.ExecuteScalar<int>("SELECT ChannelData.ID FROM ChannelData LEFT JOIN Event ON ChannelData.EventID = Event.ID " +
+                        "LEFT JOIN Series ON ChannelData.SeriesID = Series.ID " +
+                        "WHERE(Series.ChannelID = {0}) AND(Event.MeterID = (SELECT EV.MeterID FROM Event EV WHERE EV.ID = {1})) AND " +
+                        "(Event.StartTime <= (SELECT EV.EndTime FROM Event EV WHERE EV.ID = {1})) AND " +
+                        "(Event.EndTime >= (SELECT EV.StartTime FROM Event EV WHERE EV.ID = {1}))", channelID, eventID);
+
+                    byte[] singleSeriesData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM ChannelData WHERE ID = {0}"
+                            , channelDataID);
+
+                    if (singleSeriesData == null)
+                    {
+                        ChannelData channelData = new TableOperations<ChannelData>(connection).QueryRecordWhere("ID = {0}", channelDataID);
+                        singleSeriesData = ProcessLegacyBlob(channelData.EventID, channelData.SeriesID, connection);
+                    }
+
+                    result.Add(singleSeriesData);
+                }
             }
-        
 
             return result;
         }
@@ -173,12 +165,9 @@ namespace openXDA.Model
             byte[] resultData = null;
 
             List<Tuple<int, List<DataPoint>>> data = Decompress(timeDomainData);
-
            
             foreach (Tuple<int,List<DataPoint>> item in data)
             {
-                
-                
                 if (item.Item1 == requestedSeriesID)
                 {
                     resultData = ToData(item.Item2, item.Item1, item.Item2.Count);
@@ -186,7 +175,6 @@ namespace openXDA.Model
 
                 // Insert into correct ChannelData.....
                 connection.ExecuteNonQuery("UPDATE ChannelData SET TimeDomainData = {0} WHERE SeriesID = {1} AND EventID = {2}", ToData(item.Item2, item.Item1, item.Item2.Count), item.Item1, eventID);
-
             }
 
             connection.ExecuteNonQuery("DELETE FROM EventData WHERE ID = {0}", eventDataID);
@@ -207,8 +195,6 @@ namespace openXDA.Model
 
                 if (diff >= 0 && diff <= ushort.MaxValue)
                     timeSeries[i] = new { Time = diff, Compressed = true };
-
-
             }
 
             int timeSeriesByteLength = timeSeries.Sum(obj => obj.Compressed ? sizeof(ushort) : sizeof(int) + sizeof(long));
@@ -405,7 +391,6 @@ namespace openXDA.Model
             }
             return result;
         }
-
         
         /// <summary>
         /// Adjusts the TimeDomain Data by Moving it a certain ammount of Time
@@ -430,6 +415,5 @@ namespace openXDA.Model
         }
 
         #endregion
-
     }
 }

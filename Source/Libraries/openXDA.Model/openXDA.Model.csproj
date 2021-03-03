@@ -104,6 +104,7 @@
     <Compile Include="Events\Faults\FaultDetectionLogic.cs" />
     <Compile Include="Events\Faults\FaultLocationAlgorithm.cs" />
     <Compile Include="ExceptionHandler.cs" />
+    <Compile Include="Files\AnalysisTask.cs" />
     <Compile Include="Files\FileGroupField.cs" />
     <Compile Include="Files\FileGroupFieldValue.cs" />
     <Compile Include="LazyContext.cs" />
@@ -118,6 +119,11 @@
     <Compile Include="Meters\MeterAlarmGroup.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="Meters\MeterConfiguration.cs" />
+    <Compile Include="Nodes\HostRegistration.cs" />
+    <Compile Include="Nodes\HostSetting.cs" />
+    <Compile Include="Nodes\NodeType.cs" />
+    <Compile Include="Nodes\Node.cs" />
+    <Compile Include="Nodes\NodeSetting.cs" />
     <Compile Include="Note.cs" />
     <Compile Include="NoteType.cs" />
     <Compile Include="Settings\BreakerReportsSettings.cs" />

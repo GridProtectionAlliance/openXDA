@@ -21,7 +21,9 @@
 //
 //******************************************************************************************************
 
+using GSF.Data;
 using openXDA.Model;
+using System;
 using System.Web.Http;
 
 namespace openXDA.Controllers
@@ -29,6 +31,11 @@ namespace openXDA.Controllers
     [RoutePrefix("api/SPCTools/AlarmGroupView")]
     public class AlarmGroupViewController : ModelController<AlarmGroupView>
     {
+        public AlarmGroupViewController(Func<AdoDataConnection> connectionFactory)
+            : base(connectionFactory)
+        {
+        }
+
         protected override bool ViewOnly => true;
         protected override bool AllowSearch => true;
     }
@@ -36,6 +43,11 @@ namespace openXDA.Controllers
     [RoutePrefix("api/SPCTools/ChannelOverview")]
     public class ChannelOverviewController : ModelController<ChannelOverview>
     {
+        public ChannelOverviewController(Func<AdoDataConnection> connectionFactory)
+            : base(connectionFactory)
+        {
+        }
+
         protected override bool ViewOnly => true;
         protected override bool AllowSearch => true;
     }
@@ -43,6 +55,11 @@ namespace openXDA.Controllers
     [RoutePrefix("api/SPCTools/ChannelAlarmGroup")]
     public class ChannelAlarmGroupController : ModelController<ChannelAlarmGroup>
     {
+        public ChannelAlarmGroupController(Func<AdoDataConnection> connectionFactory)
+            : base(connectionFactory)
+        {
+        }
+
         protected override bool ViewOnly => true;
         protected override bool AllowSearch => false;
         protected override bool HasParent => true;
@@ -52,6 +69,11 @@ namespace openXDA.Controllers
     [RoutePrefix("api/SPCTools/MeterAlarmGroup")]
     public class MeterAlarmGroupController : ModelController<MeterAlarmGroup>
     {
+        public MeterAlarmGroupController(Func<AdoDataConnection> connectionFactory)
+            : base(connectionFactory)
+        {
+        }
+
         protected override bool ViewOnly => true;
         protected override bool AllowSearch => false;
         protected override bool HasParent => true;
@@ -61,6 +83,11 @@ namespace openXDA.Controllers
     [RoutePrefix("api/SPCTools/AlarmSeverity")]
     public class AlarmSeverityController : ModelController<AlarmSeverity>
     {
+        public AlarmSeverityController(Func<AdoDataConnection> connectionFactory)
+            : base(connectionFactory)
+        {
+        }
+
         protected override bool AllowSearch => false;
     }
 }

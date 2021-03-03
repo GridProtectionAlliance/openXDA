@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{565E38B7-24C0-48B6-9F28-2521B2CCD87D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>openXDA.Nodes</RootNamespace>
+    <AssemblyName>openXDA.Nodes</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="GSF.Core">
+      <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="GSF.PQDIF">
+      <HintPath>..\..\Dependencies\GSF\GSF.PQDIF.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=2.0.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\log4net.2.0.12\lib\net45\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\GSF\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Http">
+      <HintPath>..\..\Dependencies\GSF\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ICLIRegistry.cs" />
+    <Compile Include="Types\Analysis\AnalysisNode.cs" />
+    <Compile Include="Types\Analysis\AnalysisTask.cs" />
+    <Compile Include="Types\Analysis\AnalysisTaskProcessor.cs" />
+    <Compile Include="Types\Analysis\AnalysisTaskPublisher.cs" />
+    <Compile Include="ConfigurationLoader.cs" />
+    <Compile Include="Types\Email\EventEmailNode.cs" />
+    <Compile Include="Types\Email\EventEmailType.cs" />
+    <Compile Include="Types\EPRICapBankAnalysis\EPRICapBankAnalysisNode.cs" />
+    <Compile Include="Types\FileProcessing\FileProcessingTask.cs" />
+    <Compile Include="Types\FileProcessing\FileProcessorNode.cs" />
+    <Compile Include="Types\FileProcessing\FileSkippedException.cs" />
+    <Compile Include="Host.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TimeZoneConverter.cs" />
+    <Compile Include="Types\FilePruning\FilePrunerNode.cs" />
+    <Compile Include="INode.cs" />
+    <Compile Include="NodeBase.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FaultData\FaultData.csproj">
+      <Project>{11ae594d-2b2b-473c-8550-6bf62914c3e2}</Project>
+      <Name>FaultData</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\openXDA.Configuration\openXDA.Configuration.csproj">
+      <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
+      <Name>openXDA.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
+      <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
+      <Name>openXDA.Model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

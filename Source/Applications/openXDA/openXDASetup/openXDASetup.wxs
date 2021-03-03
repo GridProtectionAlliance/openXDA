@@ -41,18 +41,6 @@
           <ComponentGroupRef Id="ConsoleComponents" />
         </Feature>
       </Feature>
-
-      <Feature Id="openXDAFileWatcher" Title="File Watcher" AllowAdvertise="no" Description="Includes the file watcher service for loading file data into a remote openXDA instance." Level="2">
-        <!-- File Watcher Service -->
-        <Feature Id="FileWatcherServiceFeature" Title="openXDA Service" AllowAdvertise="no" Description="Installs the File Watcher Windows service to load file data into openXDA remotely.">
-          <ComponentGroupRef Id="FileWatcherServiceComponents" />
-        </Feature>
-
-        <!-- File Watcher Console -->
-        <Feature Id="FileWatcherConsoleFeature" Title="File Watcher Remote Console" AllowAdvertise="no" Description="Installs the remote console used to monitor and interact with the File Watcher service.">
-          <ComponentGroupRef Id="FileWatcherConsoleComponents" />
-        </Feature>
-      </Feature>
     </Feature>
     
     <UI>
@@ -84,10 +72,6 @@
       <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLSERVICEFEATURE" Order="7"><![CDATA[NOT(&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Publish>
       <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLCONSOLEFEATURE" Value="1" Order="7"><![CDATA[&ConsoleFeature=3 OR (!ConsoleFeature=3 AND &ConsoleFeature=-1)]]></Publish>
       <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLCONSOLEFEATURE" Order="7"><![CDATA[NOT(&ConsoleFeature=3 OR (!ConsoleFeature=3 AND &ConsoleFeature=-1))]]></Publish>
-      <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLFWSERVICEFEATURE" Value="1" Order="7"><![CDATA[&FileWatcherServiceFeature=3 OR (!FileWatcherServiceFeature=3 AND &FileWatcherServiceFeature=-1)]]></Publish>
-      <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLFWSERVICEFEATURE" Order="7"><![CDATA[NOT(&FileWatcherServiceFeature=3 OR (!FileWatcherServiceFeature=3 AND &FileWatcherServiceFeature=-1))]]></Publish>
-      <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLFWCONSOLEFEATURE" Value="1" Order="7"><![CDATA[&FileWatcherConsoleFeature=3 OR (!FileWatcherConsoleFeature=3 AND &FileWatcherConsoleFeature=-1)]]></Publish>
-      <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLFWCONSOLEFEATURE" Order="7"><![CDATA[NOT(&FileWatcherConsoleFeature=3 OR (!FileWatcherConsoleFeature=3 AND &FileWatcherConsoleFeature=-1))]]></Publish>
       
       <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="ServiceAccountDialog" Order="8">INSTALLSERVICEFEATURE</Publish>
       <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="DatabaseConnectionDialog" Order="8">NOT(INSTALLSERVICEFEATURE) AND INSTALLDATABASEFEATURE</Publish>
@@ -98,23 +82,16 @@
     
     <Icon Id="openXDA.ico.exe" SourceFile="$(var.openXDA.TargetPath)" />
     <Icon Id="openXDAConsole.ico.exe" SourceFile="$(var.openXDAConsole.TargetPath)" />
-    <Icon Id="openXDAFileWatcherConsole.ico.exe" SourceFile="$(var.openXDAFileWatcherConsole.TargetPath)" />
 
     <Property Id="INSTALLDATABASEFEATURE" Secure="yes" />
     <Property Id="INSTALLEVENTSQLCLRFEATURE" Secure="yes" />
     <Property Id="INSTALLHISTORIANSQLCLRFEATURE" Secure="yes" />
     <Property Id="INSTALLSERVICEFEATURE" Secure="yes" />
     <Property Id="INSTALLCONSOLEFEATURE" Secure="yes" />
-    <Property Id="INSTALLFWSERVICEFEATURE" Secure="yes" />
-    <Property Id="INSTALLFWCONSOLEFEATURE" Secure="yes" />
 
     <Property Id="SERVICEACCOUNT" Secure="yes" />
     <Property Id="SERVICENAME" Value="$(var.openXDA.TargetName)" />
     <Property Id="SERVICEPASSWORD" Hidden="yes" />
-    
-    <Property Id="FWSERVICEACCOUNT" Secure="yes" />
-    <Property Id="FWSERVICENAME" Value="$(var.openXDAFileWatcher.TargetName)" />
-    <Property Id="FWSERVICEPASSWORD" Hidden="yes" />
     
     <Property Id="HTTPSERVICEPORTS" Value="8989" />
     <Property Id="SERVERNAME" Value="localhost" />
@@ -145,7 +122,6 @@
     <Property Id="COMPANYACRONYMMAPPING" Value="COMPANYACRONYM={//add[@name='CompanyAcronym']/@value}" />
 
     <SetProperty Id="SERVICEACCOUNT" Value="NT SERVICE\[SERVICENAME]" After="LaunchConditions" Sequence="first" />
-    <SetProperty Id="FWSERVICEACCOUNT" Value="NT SERVICE\[FWSERVICENAME]" After="LaunchConditions" Sequence="first" />
     <SetProperty Id="DATABASENAME" Value="[SERVICENAME]" After="LaunchConditions" Sequence="first" />
     <SetProperty Id="UPDATECONFIGFILEMAPPINGS" Value="[CONNECTIONSTRINGMAPPING];;[COMPANYNAMEMAPPING];;[COMPANYACRONYMMAPPING]" Before="UpdateConfigFileAction.SetProperty" Sequence="execute" />
 
@@ -159,10 +135,6 @@
     <SetProperty Action="INSTALLSERVICEFEATURE1" Id="INSTALLSERVICEFEATURE" Value="" After="CostFinalize" Sequence="both"><![CDATA[NOT(&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></SetProperty>
     <SetProperty Action="INSTALLCONSOLEFEATURE0" Id="INSTALLCONSOLEFEATURE" Value="1" After="CostFinalize" Sequence="both"><![CDATA[&ConsoleFeature=3 OR (!ConsoleFeature=3 AND &ConsoleFeature=-1)]]></SetProperty>
     <SetProperty Action="INSTALLCONSOLEFEATURE1" Id="INSTALLCONSOLEFEATURE" Value="" After="CostFinalize" Sequence="both"><![CDATA[NOT(&ConsoleFeature=3 OR (!ConsoleFeature=3 AND &ConsoleFeature=-1))]]></SetProperty>
-    <SetProperty Action="INSTALLFWSERVICEFEATURE0" Id="INSTALLFWSERVICEFEATURE" Value="1" After="CostFinalize" Sequence="both"><![CDATA[&FileWatcherServiceFeature=3 OR (!FileWatcherServiceFeature=3 AND &FileWatcherServiceFeature=-1)]]></SetProperty>
-    <SetProperty Action="INSTALLFWSERVICEFEATURE1" Id="INSTALLFWSERVICEFEATURE" Value="" After="CostFinalize" Sequence="both"><![CDATA[NOT(&FileWatcherServiceFeature=3 OR (!FileWatcherServiceFeature=3 AND &FileWatcherServiceFeature=-1))]]></SetProperty>
-    <SetProperty Action="INSTALLFWCONSOLEFEATURE0" Id="INSTALLFWCONSOLEFEATURE" Value="1" After="CostFinalize" Sequence="both"><![CDATA[&FileWatcherConsoleFeature=3 OR (!FileWatcherConsoleFeature=3 AND &FileWatcherConsoleFeature=-1)]]></SetProperty>
-    <SetProperty Action="INSTALLFWCONSOLEFEATURE1" Id="INSTALLFWCONSOLEFEATURE" Value="" After="CostFinalize" Sequence="both"><![CDATA[NOT(&FileWatcherConsoleFeature=3 OR (!FileWatcherConsoleFeature=3 AND &FileWatcherConsoleFeature=-1))]]></SetProperty>
     
     <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\openXDASetupBanner.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\openXDASetupDialog.bmp" />
@@ -187,10 +159,6 @@
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
     <CustomAction Id="ServiceAccountAction.SetProperty" Property="ServiceAccountAction" Value="SERVICENAME=[SERVICENAME];SERVICEACCOUNT=[SERVICEACCOUNT];HTTPSERVICEPORTS=[HTTPSERVICEPORTS]" />
     <CustomAction Id="ServiceAccountAction" BinaryKey="InstallerActions" DllEntry="ServiceAccountAction" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="FileWatcherConfigureServiceAction.SetProperty" Property="FileWatcherConfigureServiceAction" Value="SERVICENAME=[FWSERVICENAME]" />
-    <CustomAction Id="FileWatcherConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="FileWatcherServiceAccountAction.SetProperty" Property="FileWatcherServiceAccountAction" Value="SERVICENAME=[FWSERVICENAME];SERVICEACCOUNT=[FWSERVICEACCOUNT];HTTPSERVICEPORTS=" />
-    <CustomAction Id="FileWatcherServiceAccountAction" BinaryKey="InstallerActions" DllEntry="ServiceAccountAction" Execute="deferred" Impersonate="no" />
     
     <CustomAction Id="CreateDatabase.SetProperty" Property="CreateDatabase" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBQUERY]" />
     <CustomAction Id="CreateDatabase" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
@@ -274,10 +242,6 @@
       <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty"><![CDATA[&ServiceFeature=3]]></Custom>
       <Custom Action="ServiceAccountAction.SetProperty" After="ConfigureServiceAction">INSTALLSERVICEFEATURE</Custom>
       <Custom Action="ServiceAccountAction" After="ServiceAccountAction.SetProperty">INSTALLSERVICEFEATURE</Custom>
-      <Custom Action="FileWatcherConfigureServiceAction.SetProperty" After="ServiceAccountAction"><![CDATA[&FileWatcherServiceFeature=3]]></Custom>
-      <Custom Action="FileWatcherConfigureServiceAction" After="FileWatcherConfigureServiceAction.SetProperty"><![CDATA[&FileWatcherServiceFeature=3]]></Custom>
-      <Custom Action="FileWatcherServiceAccountAction.SetProperty" After="FileWatcherConfigureServiceAction">INSTALLFWSERVICEFEATURE</Custom>
-      <Custom Action="FileWatcherServiceAccountAction" After="FileWatcherServiceAccountAction.SetProperty">INSTALLFWSERVICEFEATURE</Custom>
       
       <Custom Action="CreateDatabase.SetProperty" After="InstallFiles">INSTALLDATABASEFEATURE</Custom>
       <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty">INSTALLDATABASEFEATURE</Custom>
@@ -343,9 +307,7 @@
               <Directory Id="ARCGISCLIENTFOLDER" Name="client64" />
             </Directory>
 
-            <Directory Id="FILEWATCHERFOLDER" Name="FileWatcher" />
             <Directory Id="DEBUGFOLDER" Name="Debug" />
-            <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
             <?include WebFolders.wxi ?>
           </Directory>
@@ -364,9 +326,7 @@
               <Directory Id="ARCGISCLIENTFOLDER" Name="client32" />
             </Directory>
 
-            <Directory Id="FILEWATCHERFOLDER" Name="FileWatcher" />
             <Directory Id="DEBUGFOLDER" Name="Debug" />
-            <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
             <?include WebFolders.wxi ?>
           </Directory>
@@ -444,10 +404,11 @@
       <ComponentRef Id="Reports" />
       <ComponentRef Id="openXDA.Adapters" />
       <ComponentRef Id="openXDA.ArcGIS" />
-      <ComponentRef Id="openXDA.EMCB" />
+      <ComponentRef Id="openXDA.Configuration" />
       <ComponentRef Id="openHistorian.XDALink" />
       <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
+      <ComponentRef Id="openXDA.Nodes" />
       <ComponentRef Id="openXDA.DataPusher" />
       <ComponentRef Id="openXDA.Reports" />
       <ComponentRef Id="openXDA.PQTrendingWebReport" />
@@ -522,7 +483,6 @@
       <ComponentRef Id="Owin" />
       <ComponentRef Id="RazorEngine" />
       <ComponentRef Id="System.Web.Razor" />
-      <ComponentRef Id="System.Net.Http" />
       <ComponentRef Id="System.Net.Http.Formatting" />
       <ComponentRef Id="System.Web.Helpers" />
       <ComponentRef Id="System.Web.Mvc" />
@@ -530,10 +490,6 @@
       <ComponentRef Id="System.Web.WebPages" />
       <ComponentRef Id="System.Web.WebPages.Razor" />
       <ComponentRef Id="System.Security.AccessControl"/>
-      <ComponentRef Id="System.Security.Cryptography.Algorithms"/>
-      <ComponentRef Id="System.Security.Cryptography.Encoding"/>
-      <ComponentRef Id="System.Security.Cryptography.Primitives"/>
-      <ComponentRef Id="System.Security.Cryptography.X509Certificates"/>
       <ComponentRef Id="System.Security.Permissions"/>
       <ComponentRef Id="System.Security.Principal.Windows"/>
 
@@ -553,11 +509,9 @@
       <ComponentRef Id="System.Buffers"/>
       <ComponentRef Id="System.Collections.Immutable"/>
       <ComponentRef Id="System.Configuration.ConfigurationManager"/>
-      <ComponentRef Id="System.IO"/>
       <ComponentRef Id="System.Memory"/>
       <ComponentRef Id="System.Numerics.Vectors"/>
       <ComponentRef Id="System.Reactive"/>
-      <ComponentRef Id="System.Runtime"/>
       <ComponentRef Id="System.ValueTuple"/>
 
       <!-- SPCTools Dependencies -->
@@ -572,9 +526,7 @@
       <!-- Cleanup -->
       <Component Id="Cleanup" Guid="{C8EBB158-C708-4C94-87C1-F5DBC77D7BDE}">
         <CreateFolder />
-        <RemoveFolder Id="RemoveFileWatcherFolder" Directory="FILEWATCHERFOLDER" On="uninstall" />
         <RemoveFolder Id="RemoveDebugFolder" Directory="DEBUGFOLDER" On="uninstall" />
-        <RemoveFolder Id="RemoveResultsFolder" Directory="RESULTSFOLDER" On="uninstall" />
         <RemoveFolder Id="RemoveWatchFolder" Directory="WATCHFOLDER" On="uninstall" />
         <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
         <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
@@ -618,14 +570,17 @@
       <Component Id="openXDA.ArcGIS">
         <File Id="openXDA.ArcGIS.dll" Name="$(var.openXDA.ArcGIS.TargetFileName)" Source="$(var.openXDA.ArcGIS.TargetPath)" />
       </Component>
-      <Component Id="openXDA.EMCB">
-        <File Id="openXDA.EMCB.dll" Name="$(var.openXDA.EMCB.TargetFileName)" Source="$(var.openXDA.EMCB.TargetPath)" />
+      <Component Id="openXDA.Configuration">
+        <File Id="openXDA.Configuration.dll" Name="$(var.openXDA.Configuration.TargetFileName)" Source="$(var.openXDA.Configuration.TargetPath)" />
       </Component>
       <Component Id="openXDA.Hubs">
         <File Id="openXDA.Hubs.dll" Name="$(var.openXDA.Hubs.TargetFileName)" Source="$(var.openXDA.Hubs.TargetPath)" />
       </Component>
       <Component Id="openXDA.Model">
         <File Id="openXDA.Model.dll" Name="$(var.openXDA.Model.TargetFileName)" Source="$(var.openXDA.Model.TargetPath)" />
+      </Component>
+      <Component Id="openXDA.Nodes">
+        <File Id="openXDA.Nodes.dll" Name="$(var.openXDA.Nodes.TargetFileName)" Source="$(var.openXDA.Nodes.TargetPath)" />
       </Component>
       <Component Id="openXDA.DataPusher">
         <File Id="openXDA.DataPusher.dll" Name="$(var.openXDA.DataPusher.TargetFileName)" Source="$(var.openXDA.DataPusher.TargetPath)" />
@@ -658,7 +613,7 @@
       
       <!-- log4net Dependencies -->
       <Component Id="log4net">
-        <File Id="log4net.dll" Name="log4net.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll" />
+        <File Id="log4net.dll" Name="log4net.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\log4net.2.0.12\lib\net45\log4net.dll" />
       </Component>
 
       <!-- GSF Dependencies -->
@@ -767,18 +722,6 @@
       <Component Id="System.Security.AccessControl">
         <File Id="System.Security.AccessControl.dll" Name="System.Security.AccessControl.dll" Source="$(var.openXDA.TargetDir)System.Security.AccessControl.dll" />
       </Component>
-      <Component Id="System.Security.Cryptography.Algorithms">
-        <File Id="System.Security.Cryptography.Algorithms.dll" Name="System.Security.Cryptography.Algorithms.dll" Source="$(var.openXDA.TargetDir)System.Security.Cryptography.Algorithms.dll" />
-      </Component>
-      <Component Id="System.Security.Cryptography.Encoding">
-        <File Id="System.Security.Cryptography.Encoding.dll" Name="System.Security.Cryptography.Encoding.dll" Source="$(var.openXDA.TargetDir)System.Security.Cryptography.Encoding.dll" />
-      </Component>
-      <Component Id="System.Security.Cryptography.Primitives">
-        <File Id="System.Security.Cryptography.Primitives.dll" Name="System.Security.Cryptography.Primitives.dll" Source="$(var.openXDA.TargetDir)System.Security.Cryptography.Primitives.dll" />
-      </Component>
-      <Component Id="System.Security.Cryptography.X509Certificates">
-        <File Id="System.Security.Cryptography.X509Certificates.dll" Name="System.Security.Cryptography.X509Certificates.dll" Source="$(var.openXDA.TargetDir)System.Security.Cryptography.X509Certificates.dll" />
-      </Component>
       <Component Id="System.Security.Permissions">
         <File Id="System.Security.Permissions.dll" Name="System.Security.Permissions.dll" Source="$(var.openXDA.TargetDir)System.Security.Permissions.dll" />
       </Component>
@@ -812,9 +755,6 @@
       <Component Id="RestSharp">
         <File Id="RestSharp.dll" Name="RestSharp.dll" Source="$(var.openXDA.TargetDir)RestSharp.dll" />
       </Component>
-      <Component Id="System.Runtime">
-        <File Id="System.Runtime.dll" Name="System.Runtime.dll" Source="$(var.openXDA.TargetDir)System.Runtime.dll" />
-      </Component>
       <Component Id="System.Runtime.CompilerServices.Unsafe">
         <File Id="System.Runtime.CompilerServices.Unsafe.dll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.openXDA.TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
       </Component>
@@ -836,9 +776,6 @@
       <Component Id="System.Configuration.ConfigurationManager">
         <File Id="System.Configuration.ConfigurationManager.dll" Name="System.Configuration.ConfigurationManager.dll" Source="$(var.openXDA.TargetDir)System.Configuration.ConfigurationManager.dll" />
       </Component>
-      <Component Id="System.IO">
-        <File Id="System.IO.dll" Name="System.IO.dll" Source="$(var.openXDA.TargetDir)System.IO.dll" />
-      </Component>
       <Component Id="System.Memory">
         <File Id="System.Memory.dll" Name="System.Memory.dll" Source="$(var.openXDA.TargetDir)System.Memory.dll" />
       </Component>
@@ -851,7 +788,6 @@
       <Component Id="System.ValueTuple">
         <File Id="System.ValueTuple.dll" Name="System.ValueTuple.dll" Source="$(var.openXDA.TargetDir)System.ValueTuple.dll" />
       </Component>
-
 
       <!--SPC Tools Dependencies -->
       <Component Id="SPCTools">
@@ -870,9 +806,6 @@
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (these are managed as NuGet dependencies to GSF.Web) -->
       <Component Id="Microsoft.AspNet.SignalR.Core">
         <File Id="Microsoft.AspNet.SignalR.Core.dll" Name="Microsoft.AspNet.SignalR.Core.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Microsoft.AspNet.SignalR.Core.dll" />
-      </Component>
-      <Component Id="System.Net.Http">
-        <File Id="System.Net.Http.dll" Name="System.Net.Http.dll" Source="$(var.openXDA.TargetDir)System.Net.Http.dll" />
       </Component>
       <Component Id="System.Net.Http.Formatting">
         <File Id="System.Net.Http.Formatting.dll" Name="System.Net.Http.Formatting.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Net.Http.Formatting.dll" />
@@ -958,111 +891,6 @@
       </Component>
       <?endif ?>
     </ComponentGroup>
-
-    
-    
-    <!-- File Watcher Service Components -->
-    <ComponentGroup Id="FileWatcherServiceComponents" Directory="FILEWATCHERFOLDER">
-      <!-- Service Applications -->
-      <Component Id="openXDAFileWatcher">
-        <File Id="openXDAFileWatcher.exe" Name="$(var.openXDAFileWatcher.TargetFileName)" Source="$(var.openXDAFileWatcher.TargetPath)" />
-        <ServiceInstall Id="openXDAFileWatcherService" Name="openXDAFileWatcher" Account="[FWSERVICEACCOUNT]" Password="[FWSERVICEPASSWORD]" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for processing files and pushing data into openXDA." />
-        <ServiceControl Id="openXDAFileWatcherServiceControl" Name="openXDAFileWatcher" Stop="both" Remove="uninstall" />
-      </Component>
-      <Component Id="openXDAFileWatcherConfig" Permanent="yes">
-        <File Id="openXDAFileWatcher.exe.config" Name="$(var.openXDAFileWatcher.TargetFileName).config" Source="$(var.openXDAFileWatcher.TargetPath).config" />
-      </Component>
-
-      <!-- XDA Libraries -->
-      <ComponentRef Id="FW.openXDA.Model" />
-      <ComponentRef Id="FW.openXDA.DataPusher" />
-
-      <!-- log4net Dependencies -->
-      <ComponentRef Id="FW.log4net" />
-
-      <!-- GSF Dependencies -->
-      <ComponentRef Id="FW.AjaxMin"/>
-      <ComponentRef Id="FW.Antlr3.Runtime" />
-      <ComponentRef Id="FW.ExpressionEvaluator" />
-      <ComponentRef Id="FW.GSF.Communication" />
-      <ComponentRef Id="FW.GSF.Core" />
-      <ComponentRef Id="FW.GSF.Security" />
-      <ComponentRef Id="FW.GSF.ServiceProcess" />
-      <ComponentRef Id="FW.GSF.Web" />
-      <ComponentRef Id="FW.Newtonsoft.Json" />
-      <ComponentRef Id="FW.System.Net.Http.Formatting" />
-
-      <ComponentRef Id="InstallFolderPermissions"/>
-
-      <!-- Cleanup -->
-      <ComponentRef Id="Cleanup" />
-    </ComponentGroup>
-
-    <!-- File Watcher Console Components -->
-    <ComponentGroup Id="FileWatcherConsoleComponents" Directory="FILEWATCHERFOLDER">
-      <!-- Remote Console Applications -->
-      <Component Id="openXDAFileWatcherConsole">
-        <File Id="openXDAFileWatcherConsole.exe" Name="$(var.openXDAFileWatcherConsole.TargetFileName)" Source="$(var.openXDAFileWatcherConsole.TargetPath)" />
-        <Shortcut Id="openXDAFileWatcherConsoleStartMenuShortcut" Name="openXDA File Watcher Console" Icon="openXDAFileWatcherConsole.ico.exe" Description="Console application to monitor the openXDAFileWatcher service." WorkingDirectory="FILEWATCHERFOLDER" Directory="ApplicationProgramsFolder" Advertise="yes" />
-      </Component>
-      <Component Id="openXDAFileWatcherConsoleConfig">
-        <File Id="openXDAFileWatcherConsole.exe.config" Name="$(var.openXDAFileWatcherConsole.TargetFileName).config" Source="$(var.openXDAFileWatcherConsole.TargetPath).config" />
-      </Component>
-
-      <!-- GSF Dependencies -->
-      <ComponentRef Id="FW.GSF.Communication" />
-      <ComponentRef Id="FW.GSF.Core" />
-      <ComponentRef Id="FW.GSF.Security" />
-      <ComponentRef Id="FW.GSF.ServiceProcess" />
-    </ComponentGroup>
-
-    <!-- File Watcher Library Components -->
-    <ComponentGroup Id="FileWatcherLibraryComponents" Directory="FILEWATCHERFOLDER">
-      <!-- XDA Libraries -->
-      <Component Id="FW.openXDA.Model">
-        <File Id="FW.openXDA.Model.dll" Name="$(var.openXDA.Model.TargetFileName)" Source="$(var.openXDA.Model.TargetPath)" />
-      </Component>
-      <Component Id="FW.openXDA.DataPusher">
-        <File Id="FW.openXDA.DataPusher.dll" Name="$(var.openXDA.DataPusher.TargetFileName)" Source="$(var.openXDA.DataPusher.TargetPath)" />
-      </Component>
-
-      <!-- log4net Dependencies -->
-      <Component Id="FW.log4net">
-        <File Id="FW.log4net.dll" Name="log4net.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll" />
-      </Component>
-
-      <!-- GSF Dependencies -->
-      <Component Id="FW.AjaxMin">
-        <File Id="FW.AjaxMin.dll" Name="AjaxMin.dll" Source="$(var.SolutionDir)\Dependencies\GSF\AjaxMin.dll" />
-      </Component>
-      <Component Id="FW.Antlr3.Runtime">
-        <File Id="FW.Antlr3.Runtime.dll" Name="Antlr3.Runtime.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Antlr3.Runtime.dll" />
-      </Component>
-      <Component Id="FW.ExpressionEvaluator">
-        <File Id="FW.ExpressionEvaluator.dll" Name="ExpressionEvaluator.dll" Source="$(var.SolutionDir)\Dependencies\GSF\ExpressionEvaluator.dll" />
-      </Component>
-      <Component Id="FW.GSF.Communication">
-        <File Id="FW.GSF.Communication.dll" Name="GSF.Communication.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Communication.dll" />
-      </Component>
-      <Component Id="FW.GSF.Core">
-        <File Id="FW.GSF.Core.dll" Name="GSF.Core.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Core.dll" />
-      </Component>
-      <Component Id="FW.GSF.Security">
-        <File Id="FW.GSF.Security.dll" Name="GSF.Security.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Security.dll" />
-      </Component>
-      <Component Id="FW.GSF.ServiceProcess">
-        <File Id="FW.GSF.ServiceProcess.dll" Name="GSF.ServiceProcess.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.ServiceProcess.dll" />
-      </Component>
-      <Component Id="FW.GSF.Web">
-        <File Id="FW.GSF.Web.dll" Name="GSF.Web.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Web.dll" />
-      </Component>
-      <Component Id="FW.Newtonsoft.Json">
-        <File Id="FW.Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Newtonsoft.Json.dll" />
-      </Component>
-      <Component Id="FW.System.Net.Http.Formatting">
-        <File Id="FW.System.Net.Http.Formatting.dll" Name="System.Net.Http.Formatting.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Net.Http.Formatting.dll" />
-      </Component>
-    </ComponentGroup>
   </Fragment>
 
   <!-- Custom Dialogs -->
@@ -1085,22 +913,14 @@
         <Control Id="ServicePasswordInfo" Type="Text" X="45" Y="153" Width="280" Height="30" Transparent="yes" NoPrefix="yes">
           <Text>NOTE: If the service account is LocalSystem or begins with NT AUTHORITY or NT SERVICE you may leave the password field blank.</Text>
         </Control>
-        <Control Id="UseSameAccountCheckBox" Type="CheckBox" X="45" Y="181" Width="200" Height="17" Property="SAMEACCOUNT" CheckBoxValue="1" Text="Use same account for file watcher">
-          <Condition Action="show">INSTALLFWSERVICEFEATURE</Condition>
-          <Condition Action="hide">NOT INSTALLFWSERVICEFEATURE</Condition>
-        </Control>
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
           <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
           <Publish Event="DoAction" Value="AuthenticateServiceAccountAction">1</Publish>
-          <Publish Property="FWSERVICEACCOUNT" Value="[SERVICEACCOUNT]"><![CDATA[SAMEACCOUNT AND NOT(SERVICEACCOUNT << "NT SERVICE")]]></Publish>
-          <Publish Property="FWSERVICEACCOUNT" Value="NT SERVICE\[FWSERVICENAME]"><![CDATA[SAMEACCOUNT AND (SERVICEACCOUNT << "NT SERVICE")]]></Publish>
-          <Publish Property="FWSERVICEPASSWORD" Value="[SERVICEPASSWORD]">SAMEACCOUNT</Publish>
           <Publish Event="NewDialog" Value="ServiceAccountErrorDialog">NOT SERVICEAUTHENTICATED</Publish>
-          <Publish Event="NewDialog" Value="FWServiceAccountDialog">SERVICEAUTHENTICATED AND INSTALLFWSERVICEFEATURE AND NOT SAMEACCOUNT</Publish>
-          <Publish Event="NewDialog" Value="CompanyInfoDialog">SERVICEAUTHENTICATED AND NOT(INSTALLFWSERVICEFEATURE AND NOT SAMEACCOUNT)</Publish>
+          <Publish Event="NewDialog" Value="CompanyInfoDialog">SERVICEAUTHENTICATED</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
@@ -1125,71 +945,13 @@
           <Publish Event="NewDialog" Value="ServiceAccountDialog">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
-          <Publish Event="NewDialog" Value="FWServiceAccountDialog"><![CDATA[INSTALLFWSERVICEFEATURE AND (SAMEACCOUNT OR (SERVICEACCOUNT << "NT SERVICE"))]]></Publish>
-          <Publish Event="NewDialog" Value="CompanyInfoDialog"><![CDATA[NOT(INSTALLFWSERVICEFEATURE AND (SAMEACCOUNT OR (SERVICEACCOUNT << "NT SERVICE")))]]></Publish>
-        </Control>
-        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
-          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
-        </Control>
-      </Dialog>
-      
-      <!-- FWServiceAccount Dialog -->
-      <Dialog Id="FWServiceAccountDialog" Width="370" Height="270" Title="[ProductName] Setup">
-        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
-        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>{\WixUI_Font_Title}Service Account</Text>
-        </Control>
-        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>Enter the [FWSERVICENAME] service account.</Text>
-        </Control>
-        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
-        <Control Id="ServiceAccountLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="&amp;Service Account:" />
-        <Control Id="ServiceAccountEdit" Type="Edit" X="45" Y="85" Width="220" Height="18" Property="FWSERVICEACCOUNT" Text="{80}" />
-        <Control Id="ServicePasswordLabel" Type="Text" X="45" Y="113" Width="100" Height="15" TabSkip="no" Text="&amp;Service Password:" />
-        <Control Id="ServicePasswordEdit" Type="Edit" X="45" Y="125" Width="220" Height="18" Property="FWSERVICEPASSWORD" Text="{80}" Password="yes" />
-        <Control Id="ServicePasswordInfo" Type="Text" X="45" Y="153" Width="280" Height="30" Transparent="yes" NoPrefix="yes">
-          <Text>NOTE: If the service account is LocalSystem or begins with NT AUTHORITY or NT SERVICE you may leave the password field blank.</Text>
-        </Control>
-        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
-        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
-          <Publish Event="NewDialog" Value="ServiceAccountDialog">INSTALLSERVICEFEATURE</Publish>
-          <Publish Event="NewDialog" Value="CustomizeDlg">NOT INSTALLSERVICEFEATURE</Publish>
-        </Control>
-        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
-          <Publish Event="DoAction" Value="AuthenticateServiceAccountAction">1</Publish>
-          <Publish Event="NewDialog" Value="FWServiceAccountErrorDialog">NOT SERVICEAUTHENTICATED</Publish>
-          <Publish Event="NewDialog" Value="CompanyInfoDialog">SERVICEAUTHENTICATED</Publish>
-        </Control>
-        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
-          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
-        </Control>
-      </Dialog>
-
-      <!-- ServiceAccountError Dialog -->
-      <Dialog Id="FWServiceAccountErrorDialog" Width="370" Height="270" Title="[ProductName] Setup">
-        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
-        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>{\WixUI_Font_Title}Service Account</Text>
-        </Control>
-        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>Setup encountered an error authenticating the service account.</Text>
-        </Control>
-        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
-        <Control Id="InfoLabel" Type="Text" X="45" Y="73" Width="280" Height="60" TabSkip="no">
-          <Text>The service account entered could not be authorized. The username or password may have been entered incorrectly. To correct this, please click the "Back" button to go back to the previous step. To ignore this error and proceed with the installation, click the "Next" button.</Text>
-        </Control>
-        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
-        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Back">
-          <Publish Event="NewDialog" Value="FWServiceAccountDialog">1</Publish>
-        </Control>
-        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
           <Publish Event="NewDialog" Value="CompanyInfoDialog">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
         </Control>
       </Dialog>
-
+      
       <!-- CompanyInfo Dialog -->
       <Dialog Id="CompanyInfoDialog" Width="370" Height="270" Title="[ProductName] Setup">
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
@@ -1206,8 +968,7 @@
         <Control Id="CompanyAcronymEdit" Type="Edit" X="45" Y="125" Width="220" Height="18" Property="COMPANYACRONYM" Text="{80}" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
-          <Publish Event="NewDialog" Value="FWServiceAccountDialog">INSTALLFWSERVICEFEATURE AND (NOT INSTALLSERVICEFEATURE OR NOT SAMEACCOUNT)</Publish>
-          <Publish Event="NewDialog" Value="ServiceAccountDialog">NOT(INSTALLFWSERVICEFEATURE AND (NOT INSTALLSERVICEFEATURE OR NOT SAMEACCOUNT))</Publish>
+          <Publish Event="NewDialog" Value="ServiceAccountDialog">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
           <Publish Event="NewDialog" Value="DatabaseConnectionDialog">1</Publish>

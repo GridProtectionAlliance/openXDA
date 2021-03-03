@@ -23,11 +23,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.ComponentModel;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF;
+using GSF.Configuration;
+using openXDA.Configuration;
 
 namespace FaultData.DataResources
 {
@@ -54,34 +56,16 @@ namespace FaultData.DataResources
             }
         }
 
-        // Fields
-        private double m_timeTolerance;
-        private List<SystemEvent> m_systemEvents;
-
         #endregion
 
         #region [ Properties ]
 
-        [Setting]
-        public double TimeTolerance
-        {
-            get
-            {
-                return m_timeTolerance;
-            }
-            set
-            {
-                m_timeTolerance = value;
-            }
-        }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
-        public List<SystemEvent> SystemEvents
-        {
-            get
-            {
-                return m_systemEvents;
-            }
-        }
+        public List<SystemEvent> SystemEvents { get; private set; }
 
         #endregion
 
@@ -90,17 +74,19 @@ namespace FaultData.DataResources
         public override void Initialize(MeterDataSet meterDataSet)
         {
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            m_systemEvents = GetSystemEvents(cycleDataResource.DataGroups);
+            SystemEvents = GetSystemEvents(cycleDataResource.DataGroups);
         }
 
         private List<SystemEvent> GetSystemEvents(IEnumerable<DataGroup> dataGroups)
         {
+            double timeTolerance = DataAnalysisSettings.TimeTolerance;
+
             return dataGroups
                 .OrderBy(dataGroup => dataGroup.StartTime)
                 .Select(dataGroup => new SystemEvent()
                 {
-                    StartTime = dataGroup.StartTime.AddSeconds(-m_timeTolerance),
-                    EndTime = dataGroup.EndTime.AddSeconds(m_timeTolerance),
+                    StartTime = dataGroup.StartTime.AddSeconds(-timeTolerance),
+                    EndTime = dataGroup.EndTime.AddSeconds(timeTolerance),
                 })
                 .Aggregate(new List<SystemEvent>(), (list, systemEvent) =>
                 {

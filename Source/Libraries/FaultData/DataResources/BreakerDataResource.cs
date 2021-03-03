@@ -24,15 +24,14 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Linq;
-using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.NumericalAnalysis;
 using GSF.PQDIF.Logical;
+using openXDA.Configuration;
 
 namespace FaultData.DataResources
 {
@@ -71,12 +70,15 @@ namespace FaultData.DataResources
 
         #region [ Properties ]
 
-        [Setting]
-        public double SystemFrequency { get; set; }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
         [Category]
-        [SettingName(BreakerSettings.CategoryName)]
-        public BreakerSettings BreakerSettings { get; } = new BreakerSettings();
+        [SettingName(BreakerSection.CategoryName)]
+        public BreakerSection BreakerSettings { get; }
+            = new BreakerSection();
 
         public Dictionary<DataGroup, List<Trip>> TripLookup { get; } = new Dictionary<DataGroup, List<Trip>>();
 
@@ -167,7 +169,7 @@ namespace FaultData.DataResources
                 return restrikes;
 
            
-            int fullCycle = (int)Math.Ceiling(pointOnWaveData.SampleRate / SystemFrequency);
+            int fullCycle = (int)Math.Ceiling(pointOnWaveData.SampleRate / DataAnalysisSettings.SystemFrequency);
             // This needs to be tuned
             double deltaThreshhold = 8.5;
 
@@ -437,7 +439,7 @@ namespace FaultData.DataResources
             }
 
             // Use a curve fitting algorithm to estimate the sine wave over this cycle
-            SineWave sineFit = WaveFit.SineFit(yValues, tValues, SystemFrequency);
+            SineWave sineFit = WaveFit.SineFit(yValues, tValues, DataAnalysisSettings.SystemFrequency);
 
             // Use a curve fitting algorithm to estimate the sine wave 
             return Math.Abs(sineFit.Amplitude);

@@ -280,13 +280,35 @@
         });
 
         function reprocessForRange() {
-            dataHub.reprocessFiles($('#meters').val(), {
-                Item1: $('#dateRange').data('daterangepicker').startDate._d, Item2: $('#dateRange').data('daterangepicker').endDate._d
+            var dateRange = $("#dateRange");
+            var picker = dateRange.data("daterangepicker");
+
+            $.ajax({
+                type: "POST",
+                url: homePath + "/api/Workbench/DataFiles/ReprocessFiles",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify({
+                    meterIDs: $("#meters").val(),
+                    startDate: picker.startDate._d,
+                    endDate: picker.endDate._d
+                }),
+                cache: true,
+                async: true
             });
         }
 
         function reprocessSingleFileGroup() {
-            dataHub.reprocessFile($('#FileGroupID').text(), $('#LoadHistoricConfiguration').is(':checked'));
+            var fileGroupID = $('#FileGroupID').text();
+
+            $.ajax({
+                type: "POST",
+                url: homePath + "/api/Workbench/DataFiles/ReprocessFile/" + fileGroupID,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                cache: true,
+                async: true
+            });
         }
         
         function selectAll(control) {

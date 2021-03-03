@@ -23,13 +23,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Numerics;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using GSF.Configuration;
 using GSF.Data;
 using MathNet.Numerics.IntegralTransforms;
 using Newtonsoft.Json;
+using openXDA.Configuration;
 using openXDA.Model;
 using Phase = GSF.PQDIF.Logical.Phase;
 
@@ -50,6 +53,11 @@ namespace FaultData.DataResources
 
         #region [ Properties ]
 
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
+
         public bool IsSnapshot { get; private set; } = false;
 
         public Dictionary<Channel, string> Snapshots { get; } = new Dictionary<Channel, string>();
@@ -67,7 +75,7 @@ namespace FaultData.DataResources
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {
-                ProcessSnapshots(cycleDataResource.SystemFrequency, cycleDataResource.VIDataGroups[i]);
+                ProcessSnapshots(DataAnalysisSettings.SystemFrequency, cycleDataResource.VIDataGroups[i]);
             }
         }
 

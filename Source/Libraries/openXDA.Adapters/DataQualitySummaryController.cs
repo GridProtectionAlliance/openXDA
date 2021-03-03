@@ -21,40 +21,37 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Data;
-using GSF.Data.Model;
-using GSF.Web;
-using GSF.Web.Model;
-using openHistorian.XDALink;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Caching;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using GSF.Data;
+using GSF.Web;
 
 namespace openXDA.Adapters
 {
     public class DataQualitySummaryController : ApiController
     {
-        #region [ Static ]
-        private static MemoryCache s_memoryCache;
+        #region [ Constructors ]
 
-        static DataQualitySummaryController()
-        {
-            s_memoryCache = new MemoryCache("DataQualitySummary");
-        }
+        public DataQualitySummaryController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
         #endregion
 
+        #region [ Properties ]
+
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
+        #endregion
 
         #region [ Methods ]
+
         [HttpGet]
         public Task<DataTable> GetData(CancellationToken cancellationToken)
         {
@@ -67,7 +64,7 @@ namespace openXDA.Adapters
 
             return Task.Factory.StartNew(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+                using (AdoDataConnection connection = ConnectionFactory()) {
                     if (level == "Meter")
                         return GetDataMeters(connection, date, sortField, ascending);
                     else
@@ -75,16 +72,14 @@ namespace openXDA.Adapters
 
                 }
             }, cancellationToken);
-
         }
-
 
         private DataTable GetDataMeters(AdoDataConnection connection, DateTime date, string sortField, bool ascending)
         {
             DataTable table;
-            if (s_memoryCache.Contains("Meters" + date.ToString()))
+            if (MemoryCache.Contains("Meters" + date.ToString()))
             {
-                table = (DataTable)s_memoryCache.Get("Meters" + date.ToString());
+                table = (DataTable)MemoryCache.Get("Meters" + date.ToString());
             }
             else {
                 table = connection.RetrieveData(@"
@@ -118,7 +113,7 @@ namespace openXDA.Adapters
                     GROUP BY Meter.Name, Meter.ID
                 ", date);
 
-                s_memoryCache.Add("Meters" + date.ToString(), table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
+                MemoryCache.Add("Meters" + date.ToString(), table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
 
             }
             if (!table.Select().Any())
@@ -132,9 +127,9 @@ namespace openXDA.Adapters
         private DataTable GetDataChannels(AdoDataConnection connection, DateTime date, int meterID, string sortField, bool ascending)
         {
             DataTable table;
-            if (s_memoryCache.Contains("Channels" + meterID.ToString() + date.ToString()))
+            if (MemoryCache.Contains("Channels" + meterID.ToString() + date.ToString()))
             {
-                table = (DataTable)s_memoryCache.Get("Channels" + meterID.ToString() + date.ToString());
+                table = (DataTable)MemoryCache.Get("Channels" + meterID.ToString() + date.ToString());
             }
             else
             {
@@ -160,7 +155,7 @@ namespace openXDA.Adapters
                         Date = {0} AND Channel.MeterID = {1}
                 ", date , meterID);
 
-                s_memoryCache.Add("Channels" + meterID.ToString() + date.ToString(), table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
+                MemoryCache.Add("Channels" + meterID.ToString() + date.ToString(), table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
             }
 
             if (!table.Select().Any())
@@ -174,5 +169,12 @@ namespace openXDA.Adapters
 
         #endregion
 
+        #region [ Static ]
+
+        // Static Properties
+        private static MemoryCache MemoryCache { get; }
+            = new MemoryCache("DataQualitySummary");
+
+        #endregion
     }
 }

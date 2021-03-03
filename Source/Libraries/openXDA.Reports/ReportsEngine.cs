@@ -35,8 +35,8 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Scheduling;
-using GSF.Web.Model;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace openXDA.Reports
@@ -51,7 +51,7 @@ namespace openXDA.Reports
         public ReportsEngine()
         {
             PQReportsSettings = new PQReportsSettings();
-            EmailSettings = new EmailSettings();
+            EmailSettings = new EmailSection();
             BreakerReportsSettings = new BreakerReportsSettings();
 
             Scheduler = new ScheduleManager();
@@ -79,8 +79,8 @@ namespace openXDA.Reports
         public BreakerReportsSettings BreakerReportsSettings { get; }
 
         [Category]
-        [SettingName(EmailSettings.CategoryName)]
-        public EmailSettings EmailSettings { get; }
+        [SettingName(EmailSection.CategoryName)]
+        public EmailSection EmailSettings { get; }
 
         #endregion
 

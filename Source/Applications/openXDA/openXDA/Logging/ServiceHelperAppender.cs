@@ -28,6 +28,7 @@ using GSF.ServiceProcess;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
+using openXDA.Nodes.Types.FileProcessing;
 
 namespace openXDA.Logging
 {
@@ -90,7 +91,7 @@ namespace openXDA.Logging
 
             // Do not log FileSkippedExceptions
             // to the error log or the status log
-            if (ExtensibleDisturbanceAnalysisEngine.IsFileSkippedException(ex))
+            if (ex is FileSkippedException)
             {
                 if (meterKey == null)
                     m_serviceHelper.UpdateStatus(updateType, false, "[{0}] {1}{2}", threadID, renderedMessage, Environment.NewLine);

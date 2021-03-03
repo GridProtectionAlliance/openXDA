@@ -30,16 +30,14 @@
     <div class="panel-body">
         <div class="btn-group-vertical btn-block" style="width: 49%; vertical-align: top; margin-top: 0px">
             <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Help')" hub-dependent>Help</button>
-            <button type="button" class="btn btn-default" onclick="submitTerminalCommand('PQMarkProcessAllData')" hub-dependent>PQMark Process All Data</button>
-            <button type="button" class="btn btn-default" onclick="submitTerminalCommand('PQMarkProcessEmptyData')" hub-dependent>PQMark Process Empty Data</button>
-            <button type="button" class="btn btn-default" onclick="submitTerminalCommand('PQMarkProcessMonthToDate')" hub-dependent>PQMark Process Month To Date</button>
-            <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Tweakfileprocessor -Enumerate')" hub-dependent>Enumerate Watch Directory</button>
-            <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Tweakfileprocessor -stopEnumeration')" hub-dependent>Stop Enumeration</button>
-            <button type="button" class="btn btn-default" onclick="reloadSystemSettings()" hub-dependent>Reload System Settings</button>
+            <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Reconfigure')" hub-dependent>Reload Configuration</button>
+            <button type="button" class="btn btn-default" onclick="messageNodes('FileProcessor', 'Enumerate')" hub-dependent>Scan Unprocessed Files</button>
+            <button type="button" class="btn btn-default" onclick="messageNodes('FileProcessor', 'FlushAndEnumerate')" hub-dependent>Scan All Files</button>
+            <button type="button" class="btn btn-default" onclick="messageNodes('FileProcessor', 'StopEnumeration')" hub-dependent>Stop File Scan</button>
+            <button type="button" class="btn btn-default" onclick="messageNodes('Analysis', 'PollTaskQueue')" hub-dependent>Poll Analysis Task Queue</button>
         </div>
         <div class="btn-group-vertical btn-block" style="width: 49%; vertical-align: top; margin-top: 0px">
-            <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Start ReloadConfiguration')" hub-dependent>Reload Configuration</button>
-            <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL')" hub-dependent>Remove All Filters</button>
+            <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL')" hub-dependent>Show All Messages</button>
             <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL -include Type Alarm')" hub-dependent>Show Only Alarms</button>
             <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL -include Type Warning')" hub-dependent>Show Only Warnings</button>
             <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL -include Type Information')" hub-dependent>Show Only Information</button>
@@ -52,13 +50,16 @@
     <script>
         function submitTerminalCommand(request) {
             serviceHub.sendCommand(request);
-
         }
 
-        function reloadSystemSettings() {
-            if (hubIsConnected) {
-                dataHub.reloadSystemSetting();
-            }
+        function messageNodes(nodeType, action) {
+            var homePath = "@Html.Raw(Url.Content("~/"))";
+            var url = homePath + "Node/" + nodeType + "/" + action;
+
+            $.ajax({
+                method: "POST",
+                url: url
+            });
         }
 
         $(function () {
@@ -68,7 +69,5 @@
         $(window).resize(function (e) {
             $('.well').height(window.innerHeight - 500);
         });
-
-
     </script>
 }

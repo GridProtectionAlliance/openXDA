@@ -8312,7 +8312,7 @@
         </member>
         <member name="T:GSF.Data.Model.CSVExcludeFieldAttribute">
             <summary>
-            Defines an attribute that will exclude this Field in any CSV exports.
+            Defines an attribute that will exclude a field from a CSV export.
             </summary>
         </member>
         <member name="T:GSF.Data.Model.NonRecordFieldAttribute">
@@ -19881,6 +19881,46 @@
             <param name="exceptionHandler">Handles exceptions thrown during file enumeration.</param>
             <returns>An enumerable collection of the full names (including paths) for the files in the directory specified by <paramref name="path"/> and that match the specified search pattern and option.</returns>
         </member>
+        <member name="M:GSF.IO.FilePath.GetDirectories(System.IO.DirectoryInfo,System.String,System.IO.SearchOption,System.Action{System.Exception})">
+            <summary>
+            Returns the subdirectories that match the specified search pattern in the specified directory, and optionally searches subdirectories.
+            </summary>
+            <param name="directory">The directory to search.</param>
+            <param name="searchPattern">The search string to match against the names of subdirectories in the <paramref name="directory"/>. This parameter can contain a combination of valid literal and wildcard characters, but doesn't support regular expressions.</param>
+            <param name="searchOption">One of the enumeration values that specifies whether the search operation should include all subdirectories or only the current directory.</param>
+            <param name="exceptionHandler">Handles exceptions thrown during directory enumeration.</param>
+            <returns>An array of the <see cref="T:System.IO.DirectoryInfo"/> objects representing the subdirectories that match the specified search criteria.</returns>
+        </member>
+        <member name="M:GSF.IO.FilePath.EnumerateDirectories(System.IO.DirectoryInfo,System.String,System.IO.SearchOption,System.Action{System.Exception})">
+            <summary>
+            Returns an enumerable collection of subdirectories that match a search pattern in a specified path, and optionally searches subdirectories.
+            </summary>
+            <param name="directory">The directory to search.</param>
+            <param name="searchPattern">The search string to match against the names of subdirectories in the <paramref name="directory"/>. This parameter can contain a combination of valid literal and wildcard characters, but doesn't support regular expressions.</param>
+            <param name="searchOption">One of the enumeration values that specifies whether the search operation should include only the current directory or should include all subdirectories.</param>
+            <param name="exceptionHandler">Handles exceptions thrown during directory enumeration.</param>
+            <returns>An enumerable collection of the <see cref="T:System.IO.DirectoryInfo"/> objects representing the subdirectories that match the specified search criteria.</returns>
+        </member>
+        <member name="M:GSF.IO.FilePath.GetFiles(System.IO.DirectoryInfo,System.String,System.IO.SearchOption,System.Action{System.Exception})">
+            <summary>
+            Returns the files that match the specified search pattern in the specified directory, using a value to determine whether to search subdirectories.
+            </summary>
+            <param name="directory">The directory to search.</param>
+            <param name="searchPattern">The search string to match against the names of files in the <paramref name="directory"/>. This parameter can contain a combination of valid literal path and wildcard (* and ?) characters, but doesn't support regular expressions.</param>
+            <param name="searchOption">One of the enumeration values that specifies whether the search operation should include all subdirectories or only the current directory.</param>
+            <param name="exceptionHandler">Handles exceptions thrown during file enumeration.</param>
+            <returns>An array of the <see cref="T:System.IO.FileInfo"/> objects representing the files in the specified directory that match the specified search pattern, or an empty array if no files are found.</returns>
+        </member>
+        <member name="M:GSF.IO.FilePath.EnumerateFiles(System.IO.DirectoryInfo,System.String,System.IO.SearchOption,System.Action{System.Exception})">
+            <summary>
+            Returns an enumerable collection of files that match a search pattern in a specified path, and optionally searches subdirectories.
+            </summary>
+            <param name="directory">The directory to search.</param>
+            <param name="searchPattern">The search string to match against the names of files in the <paramref name="directory"/>. This parameter can contain a combination of valid literal path and wildcard (* and ?) characters, but doesn't support regular expressions.</param>
+            <param name="searchOption">One of the enumeration values that specifies whether the search operation should include only the current directory or should include all subdirectories.</param>
+            <param name="exceptionHandler">Handles exceptions thrown during file enumeration.</param>
+            <returns>An enumerable collection of the <see cref="T:System.IO.FileInfo"/> objects representing the files in the specified directory that match the specified search pattern, or an empty array if no files are found.</returns>
+        </member>
         <member name="M:GSF.IO.FilePath.ValidatePathName(System.String)">
             <summary>
             Ensures the supplied path name is valid.
@@ -21346,23 +21386,17 @@
             Arguments to events triggered by the <see cref="T:GSF.IO.FileProcessor"/>.
             </summary>
         </member>
-        <member name="M:GSF.IO.FileProcessorEventArgs.#ctor(System.String,System.Boolean,System.Boolean,System.Func{System.Int32})">
+        <member name="M:GSF.IO.FileProcessorEventArgs.#ctor(System.String,System.Boolean,System.Func{System.Int32})">
             <summary>
             Creates a new instance of the <see cref="T:GSF.IO.FileProcessorEventArgs"/> class.
             </summary>
             <param name="fullPath">The full path to the file to be processed.</param>
-            <param name="alreadyProcessed">Flag indicating whether this file has been processed before.</param>
             <param name="raisedByFileWatcher">Flag indicating whether this event was raised by the file watcher.</param>
             <param name="retryCounter">The function that provides the value for <see cref="P:GSF.IO.FileProcessorEventArgs.RetryCount"/>.</param>
         </member>
         <member name="P:GSF.IO.FileProcessorEventArgs.FullPath">
             <summary>
             Gets the full path to the file to be processed.
-            </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessorEventArgs.AlreadyProcessed">
-            <summary>
-            Gets the flag that indicates whether this file has been processed before.
             </summary>
         </member>
         <member name="P:GSF.IO.FileProcessorEventArgs.RaisedByFileWatcher">
@@ -21387,45 +21421,6 @@
             notifies when new files become available to be processed.
             </summary>
         </member>
-        <member name="M:GSF.IO.FileProcessor.TrackedDirectory.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:GSF.IO.FileProcessor.TrackedDirectory"/> object.
-            </summary>
-        </member>
-        <member name="M:GSF.IO.FileProcessor.EnumerableWrapper.#ctor(System.Collections.Generic.IEnumerable{System.String},GSF.Threading.CancellationToken)">
-            <summary>
-            Creates a new instance of the <see cref="T:GSF.IO.FileProcessor.EnumerableWrapper"/> class.
-            </summary>
-            <param name="enumerable">The enumerable to be wrapped.</param>
-            <param name="cancellationToken">The token used to cancel the enumeration operation.</param>
-        </member>
-        <member name="P:GSF.IO.FileProcessor.EnumerableWrapper.LastMove">
-            <summary>
-            Gets the value returned by the
-            last call to <see cref="M:GSF.IO.FileProcessor.EnumerableWrapper.MoveNext"/>.
-            </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessor.EnumerableWrapper.Current">
-            <summary>
-            Gets the current value of the enumerator.
-            </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessor.EnumerableWrapper.CancellationToken">
-            <summary>
-            Gets the cancellation token for this enumerator.
-            </summary>
-        </member>
-        <member name="M:GSF.IO.FileProcessor.EnumerableWrapper.MoveNext">
-            <summary>
-            Advances the enumerator to the next element of the collection.
-            </summary>
-            <returns>True if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.</returns>
-        </member>
-        <member name="M:GSF.IO.FileProcessor.EnumerableWrapper.Dispose">
-            <summary>
-            Releases all the resources used by the enumerable.
-            </summary>
-        </member>
         <member name="F:GSF.IO.FileProcessor.DefaultFilter">
             <summary>
             Default value for the <see cref="P:GSF.IO.FileProcessor.Filter"/> property.
@@ -21441,19 +21436,9 @@
             Default value for the <see cref="P:GSF.IO.FileProcessor.TrackChanges"/> property.
             </summary>
         </member>
-        <member name="F:GSF.IO.FileProcessor.DefaultCachePath">
-            <summary>
-            Default value for the <see cref="P:GSF.IO.FileProcessor.CachePath"/> property.
-            </summary>
-        </member>
         <member name="F:GSF.IO.FileProcessor.DefaultInternalBufferSize">
             <summary>
             Default value for the <see cref="P:GSF.IO.FileProcessor.InternalBufferSize"/> property.
-            </summary>
-        </member>
-        <member name="F:GSF.IO.FileProcessor.DefaultMaxFragmentation">
-            <summary>
-            Default value for the <see cref="P:GSF.IO.FileProcessor.MaxFragmentation"/> property.
             </summary>
         </member>
         <member name="F:GSF.IO.FileProcessor.DefaultEnumerationStrategy">
@@ -21472,11 +21457,10 @@
             normal operation of the <see cref="T:GSF.IO.FileProcessor"/>.
             </summary>
         </member>
-        <member name="M:GSF.IO.FileProcessor.#ctor(System.Guid)">
+        <member name="M:GSF.IO.FileProcessor.#ctor">
             <summary>
             Creates a new instance of the <see cref="T:GSF.IO.FileProcessor"/> class.
             </summary>
-            <param name="processorID">Identifies the file processor so that it can locate its processed file cache.</param>
         </member>
         <member name="P:GSF.IO.FileProcessor.Filter">
             <summary>
@@ -21488,20 +21472,9 @@
             Gets or sets the pattern used to determine whether a folder should be excluded from enumeration.
             </summary>
         </member>
-        <member name="P:GSF.IO.FileProcessor.FilterMethod">
-            <summary>
-            Gets or sets the user-defined method by which to filter
-            files before raising the <see cref="E:GSF.IO.FileProcessor.Processing"/> event.
-            </summary>
-        </member>
         <member name="P:GSF.IO.FileProcessor.TrackChanges">
             <summary>
             Gets or sets a flag that determines whether files should be processed on change.
-            </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessor.CachePath">
-            <summary>
-            Gets or sets the path to the cache where the list of processed files will be persisted.
             </summary>
         </member>
         <member name="P:GSF.IO.FileProcessor.InternalBufferSize">
@@ -21515,18 +21488,6 @@
             Gets or sets the maximum number of threads
             used for file processing and enumeration.
             </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessor.MaxFragmentation">
-            <summary>
-            Gets or sets the maximum amount of fragmentation allowed
-            before compacting the lookup table for processed files.
-            </summary>
-            <remarks>
-            If files are frequently removed from the watch directories,
-            increasing this value may improve performance. Setting the
-            value too high may result in the file perpetually growing
-            or long pauses on the processing thread.
-            </remarks>
         </member>
         <member name="P:GSF.IO.FileProcessor.EnumerationStrategy">
             <summary>
@@ -21555,12 +21516,6 @@
             Gets the flag indicating if the file processor is actively enumerating.
             </summary>
         </member>
-        <member name="P:GSF.IO.FileProcessor.IsCleaning">
-            <summary>
-            Gets the flag indicating if the file processor is actively
-            purging processed files from the internal lookup table.
-            </summary>
-        </member>
         <member name="P:GSF.IO.FileProcessor.ProcessedFileCount">
             <summary>
             Gets the number of files
@@ -21575,18 +21530,6 @@
         <member name="P:GSF.IO.FileProcessor.RequeuedFileCount">
             <summary>
             Gets the number of times files that are being requeued by the file processor.
-            </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessor.LastCompactTime">
-            <summary>
-            Gets the time at which the last operation to
-            compact the set of processed files occurred.
-            </summary>
-        </member>
-        <member name="P:GSF.IO.FileProcessor.LastCompactDuration">
-            <summary>
-            Gets the amount of time spent during the last
-            operation to compact the set of processed files.
             </summary>
         </member>
         <member name="M:GSF.IO.FileProcessor.AddTrackedDirectory(System.String)">
@@ -21613,13 +21556,6 @@
             <param name="filePath">The path to the file to be tested against the filter string.</param>
             <returns>True if the file matches the filter string; false otherwise.</returns>
         </member>
-        <member name="M:GSF.IO.FileProcessor.MatchesFilterMethod(System.String)">
-            <summary>
-            Determines if the given file matches the filter method provided through the <see cref="P:GSF.IO.FileProcessor.FilterMethod"/> property.
-            </summary>
-            <param name="filePath">The path to the file to be tested against the filter method.</param>
-            <returns>True if the file matches the filter method; false otherwise.</returns>
-        </member>
         <member name="M:GSF.IO.FileProcessor.MatchesFolderExclusion(System.String)">
             <summary>
             Determines if the given folder matches the exclusion string provided through the <see cref="P:GSF.IO.FileProcessor.FolderExclusion"/> property.
@@ -21636,6 +21572,19 @@
             <summary>
             Empties the list of directories tracked by this <see cref="T:GSF.IO.FileProcessor"/>.
             </summary>
+        </member>
+        <member name="M:GSF.IO.FileProcessor.ResetIndexAndStatistics">
+            <summary>
+            Resets the internal file index so all files can be reprocessed.
+            </summary>
+            <remarks>
+            As an optimization, the internal file index allows the file processor to enumerate
+            the folder without raising events for files that were already processed, enabling
+            the file processor to process files that were missed by the file watcher. However,
+            because of this optimization, it can instead be difficult to force the file processor
+            to reprocess files it has already processed once before. This method clears the
+            internal file index, allowing for reprocessing of files that have already been processed.
+            </remarks>
         </member>
         <member name="M:GSF.IO.FileProcessor.Dispose">
             <summary>
@@ -37784,6 +37733,100 @@
             Gets the logical thread that is currently executing.
             </summary>
         </member>
+        <member name="T:GSF.Threading.LogicalThreadExtensions">
+            <summary>
+            Defines extensions for the <see cref="T:GSF.Threading.LogicalThread"/> class.
+            </summary>
+        </member>
+        <member name="M:GSF.Threading.LogicalThreadExtensions.Join(GSF.Threading.LogicalThread)">
+            <summary>
+            Creates an awaitable that ensures the continuation is running on the logical thread.
+            </summary>
+            <param name="thread">The thread to join.</param>
+            <returns>A context that, when awaited, runs on the logical thread.</returns>
+        </member>
+        <member name="M:GSF.Threading.LogicalThreadExtensions.Join(GSF.Threading.LogicalThread,System.Int32)">
+            <summary>
+            Creates an awaitable that ensures the continuation is running on the logical thread.
+            </summary>
+            <param name="thread">The thread to join.</param>
+            <param name="priority">The priority of the continuation when completing asynchronously.</param>
+            <returns>A context that, when awaited, runs on the logical thread.</returns>
+        </member>
+        <member name="M:GSF.Threading.LogicalThreadExtensions.Yield(GSF.Threading.LogicalThread)">
+            <summary>
+            Creates an awaitable that asynchronously yields
+            to a new action on the logical thread when awaited.
+            </summary>
+            <param name="thread">The thread to yield to.</param>
+            <returns>A context that, when awaited, will transition to a new action on the logical thread.</returns>
+        </member>
+        <member name="M:GSF.Threading.LogicalThreadExtensions.Yield(GSF.Threading.LogicalThread,System.Int32)">
+            <summary>
+            Creates an awaitable that asynchronously yields
+            to a new action on the logical thread when awaited.
+            </summary>
+            <param name="thread">The thread to yield to.</param>
+            <param name="priority">The priority of the continuation.</param>
+            <returns>A context that, when awaited, will transition to a new action on the logical thread.</returns>
+        </member>
+        <member name="T:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable">
+            <summary>
+            Provides an awaitable context for switching into a target environment.
+            </summary>
+            <remarks>
+            This type is intended for compiler use only.
+            </remarks>
+        </member>
+        <member name="T:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable.LogicalThreadAwaiter">
+            <summary>
+            Provides an awaiter that switches into a target environment.
+            </summary>
+            <remarks>
+            This type is intended for compiler use only.
+            </remarks>
+        </member>
+        <member name="M:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable.LogicalThreadAwaiter.#ctor(GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable)">
+            <summary>
+            Creates a new instance of the <see cref="T:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable.LogicalThreadAwaiter"/> class.
+            </summary>
+            <param name="awaitable">The awaitable that spawned this awaiter.</param>
+        </member>
+        <member name="P:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable.LogicalThreadAwaiter.IsCompleted">
+            <summary>
+            Gets whether a yield is not required.
+            </summary>
+            <remarks>
+            This property is intended for compiler user rather than use directly in code.
+            </remarks>
+        </member>
+        <member name="M:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable.LogicalThreadAwaiter.OnCompleted(System.Action)">
+            <summary>
+            Posts the <paramref name="continuation"/> back to the current context.
+            </summary>
+            <param name="continuation">The action to invoke asynchronously.</param>
+            <exception cref="T:System.ArgumentNullException">The <paramref name="continuation"/> argument is null.</exception>
+        </member>
+        <member name="M:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable.LogicalThreadAwaiter.GetResult">
+            <summary>
+            Ends the await operation.
+            </summary>
+        </member>
+        <member name="M:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable.#ctor(GSF.Threading.LogicalThread,System.Int32,System.Boolean)">
+            <summary>
+            Creates a new instance of the <see cref="T:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable"/> class.
+            </summary>
+            <param name="thread">The thread on which to push continuations.</param>
+            <param name="priority">The priority of continuations pushed to the thread.</param>
+            <param name="forceYield">Force continuations to complete asynchronously.</param>
+        </member>
+        <member name="M:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable.GetAwaiter">
+            <summary>
+            Gets an awaiter for this <see cref="T:GSF.Threading.LogicalThreadExtensions.LogicalThreadAwaitable"/>.
+            </summary>
+            <returns>An awaiter for this awaitable.</returns>
+            <remarks>This method is intended for compiler user rather than use directly in code.</remarks>
+        </member>
         <member name="T:GSF.Threading.LogicalThreadLocal`1">
             <summary>
             Represents a slot in the thread local memory space of each logical thread.
@@ -38966,6 +39009,63 @@
              }
              </code>
              </remarks>
+        </member>
+        <member name="T:GSF.Threading.TaskSynchronizedOperation">
+            <summary>
+            Represents a task-based synchronized operation
+            that cannot run while it is already in progress.
+            </summary>
+            <remarks>
+            The action performed by the <see cref="T:GSF.Threading.TaskSynchronizedOperation"/> is executed using
+            <see cref="M:System.Threading.Tasks.Task.Run(System.Func{System.Threading.Tasks.Task})"/>. Pending actions run when the task returned by the
+            asynchronous action is completed. This synchronized operation only supports the async
+            versions of the <see cref="T:GSF.Threading.ISynchronizedOperation"/> interface because the async action
+            cannot be executed synchronously.
+            </remarks>
+        </member>
+        <member name="M:GSF.Threading.TaskSynchronizedOperation.#ctor(System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            Creates a new instance of the <see cref="T:GSF.Threading.TaskSynchronizedOperation"/> class.
+            </summary>
+            <param name="asyncAction">The action to be performed during this operation.</param>
+        </member>
+        <member name="M:GSF.Threading.TaskSynchronizedOperation.#ctor(System.Func{System.Threading.Tasks.Task},System.Action{System.Exception})">
+            <summary>
+            Creates a new instance of the <see cref="T:GSF.Threading.TaskSynchronizedOperation"/> class.
+            </summary>
+            <param name="asyncAction">The action to be performed during this operation.</param>
+            <param name="exceptionAction">The action to be performed if an exception is thrown from the action.</param>
+        </member>
+        <member name="P:GSF.Threading.TaskSynchronizedOperation.IsRunning">
+            <summary>
+            Gets a value to indicate whether the synchronized
+            operation is currently executing its action.
+            </summary>
+        </member>
+        <member name="P:GSF.Threading.TaskSynchronizedOperation.IsPending">
+            <summary>
+            Gets a value to indiate whether the synchronized operation
+            has an additional operation that is pending execution after
+            the currently running action has completed.
+            </summary>
+        </member>
+        <member name="M:GSF.Threading.TaskSynchronizedOperation.RunOnceAsync">
+            <summary>
+            Executes the action on another thread or marks the
+            operation as pending if the operation is already running.
+            </summary>
+            <remarks>
+            When the operation is marked as pending, it will run again after the
+            operation that is currently running has completed. This is useful if
+            an update has invalidated the operation that is currently running and
+            will therefore need to be run again.
+            </remarks>
+        </member>
+        <member name="M:GSF.Threading.TaskSynchronizedOperation.TryRunOnceAsync">
+            <summary>
+            Attempts to execute the action on another thread.
+            Does nothing if the operation is already running.
+            </summary>
         </member>
         <member name="F:GSF.Threading.ThreadContainerBase.CallbackArgs.StartDisposalCallSuccessful">
             <summary>
@@ -49778,6 +49878,89 @@
             <param name="value">Source value.</param>
             <param name="sourceUnit">Source value units.</param>
             <returns>New <see cref="T:GSF.Units.Current"/> from the specified <paramref name="value"/> in <paramref name="sourceUnit"/>.</returns>
+        </member>
+        <member name="T:GSF.Units.EE.VoltageLevel">
+            <summary>
+            Common transmission voltage levels enumeration.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV44">
+            <summary>
+            44 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV69">
+            <summary>
+            69 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV115">
+            <summary>
+            115 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV138">
+            <summary>
+            138 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV161">
+            <summary>
+            161 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV169">
+            <summary>
+            169 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV230">
+            <summary>
+            230 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV345">
+            <summary>
+            345 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV500">
+            <summary>
+            500 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV765">
+            <summary>
+            765 kV.
+            </summary>
+        </member>
+        <member name="F:GSF.Units.EE.VoltageLevel.kV1100">
+            <summary>
+            1100 kV.
+            </summary>
+        </member>
+        <member name="T:GSF.Units.EE.VoltageLevelExtensions">
+            <summary>
+            Defines extension functions related to <see cref="T:GSF.Units.EE.VoltageLevel"/> enumeration.
+            </summary>
+        </member>
+        <member name="M:GSF.Units.EE.VoltageLevelExtensions.Value(GSF.Units.EE.VoltageLevel)">
+            <summary>
+            Gets the voltage level for the specified <see cref="T:GSF.Units.EE.VoltageLevel"/> enum value.
+            </summary>
+            <param name="level">Target <see cref="T:GSF.Units.EE.VoltageLevel"/> enum value.</param>
+            <returns>Voltage level for the specified <paramref name="level"/>.</returns>
+        </member>
+        <member name="M:GSF.Units.EE.VoltageLevelExtensions.TryGetVoltageLevel(System.Int32,GSF.Units.EE.VoltageLevel@)">
+            <summary>
+            Attempts to get the <see cref="T:GSF.Units.EE.VoltageLevel"/> enum value for the source kV <paramref name="value"/>.
+            </summary>
+            <param name="value">kV value to attempt to find.</param>
+            <param name="level">Mapped <see cref="T:GSF.Units.EE.VoltageLevel"/> enum value, if found.</param>
+            <returns>
+            <c>true</c> if matching <see cref="T:GSF.Units.EE.VoltageLevel"/> enum value is found for specified kV
+            <paramref name="value"/>; otherwise, <c>false</c>.
+            </returns>
         </member>
         <member name="T:GSF.Units.EE.LineFrequency">
             <summary>

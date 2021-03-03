@@ -47,8 +47,8 @@
     <Reference Include="InfluxDB.Client.Core, Version=1.13.0.0, Culture=neutral, PublicKeyToken=2ffdb0e6ebde0d3f, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\InfluxDB.Client.Core.1.13.0\lib\netstandard2.0\InfluxDB.Client.Core.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    <Reference Include="log4net, Version=2.0.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\log4net.2.0.12\lib\net45\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\Microsoft.Bcl.AsyncInterfaces.1.1.1\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>

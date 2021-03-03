@@ -422,27 +422,19 @@ namespace PQMark.DataAggregator
                                 point.Value *= 100;
                             if (point.SeriesID.ToString() == "Average" && point.Value >= 0 && point.Value <= 10)
                                 historianPoints.Add(point);
-
-
                         }
 
                         return "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Where(x => x.Key > 0).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
                     }
-
                 }
-                catch(KeyNotFoundException ex)
+                catch(KeyNotFoundException)
                 {
                     return "";
                 }
-                catch (SocketException ex)
+                catch (SocketException)
                 {
                     return "";
                 }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-
             }
         }
 

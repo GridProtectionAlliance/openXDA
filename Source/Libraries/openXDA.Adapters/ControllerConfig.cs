@@ -28,7 +28,6 @@ namespace openXDA.Adapters
     {
         public static void Register(HttpConfiguration config)
         {
-
             //Map custom API controllers
             config.Routes.MapHttpRoute(
                 name: "JSONAPIs",
@@ -123,7 +122,6 @@ namespace openXDA.Adapters
                 }
             );
 
-
             config.Routes.MapHttpRoute(
                 name: "ReportAPI",
                 routeTemplate: "api/report/{id}/{name}",
@@ -142,6 +140,14 @@ namespace openXDA.Adapters
                 }
             );
 
+            config.Routes.MapHttpRoute(
+                name: "Nodes",
+                routeTemplate: "Node/{node}/{action}",
+                defaults: new
+                {
+                    controller = "Node"
+                }
+            );
         }
     }
 }

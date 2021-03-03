@@ -114,30 +114,6 @@ namespace openXDA
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!this.m_disposed)
-            {
-                try
-                {
-                    if (disposing && (components != null))
-                    {
-                        this.m_webAppHost?.Dispose();
-                        components.Dispose();
-                    }
-                }
-                finally
-                {
-                    this.m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
-        }
-
         #region Component Designer generated code
 
         /// <summary> 
@@ -150,6 +126,8 @@ namespace openXDA
             this.m_serviceHelper = new GSF.ServiceProcess.ServiceHelper(this.components);
             this.m_remotingServer = new GSF.Communication.TcpServer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ConnectionErrorLogger)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ConnectionErrorLogger.ErrorLog)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger.ErrorLog)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ProcessScheduler)).BeginInit();
@@ -157,6 +135,9 @@ namespace openXDA
             ((System.ComponentModel.ISupportInitialize)(this.m_remotingServer)).BeginInit();
             // 
             // m_serviceHelper
+            // 
+            // 
+            // 
             // 
             // 
             // 
@@ -182,6 +163,8 @@ namespace openXDA
             this.m_serviceHelper.StatusLog.FileName = "openXDA.StatusLog.txt";
             this.m_serviceHelper.StatusLog.PersistSettings = true;
             this.m_serviceHelper.StatusLog.SettingsCategory = "StatusLog";
+            this.m_serviceHelper.ServiceStarted += new System.EventHandler(this.ServiceHelper_ServiceStarted);
+            this.m_serviceHelper.ServiceStopping += new System.EventHandler(this.ServiceHelper_ServiceStopping);
             // 
             // m_remotingServer
             // 
@@ -194,14 +177,14 @@ namespace openXDA
             // ServiceHost
             // 
             this.ServiceName = "openXDA";
+            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ConnectionErrorLogger.ErrorLog)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ConnectionErrorLogger)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger.ErrorLog)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ProcessScheduler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.StatusLog)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_remotingServer)).EndInit();
-
-
 
         }
 

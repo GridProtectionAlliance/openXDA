@@ -21,48 +21,54 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Data;
-using GSF.Data.Model;
-using GSF.Web;
-using GSF.Web.Model;
-using openHistorian.XDALink;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Caching;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using GSF;
+using GSF.Data;
+using GSF.Data.Model;
+using GSF.Web;
+using openHistorian.XDALink;
+using openXDA.Model;
 
 namespace openXDA.Adapters
 {
     public class PeriodicDataDisplayController : ApiController
     {
         #region [ Members ]
-        // Fields
-        #endregion
-        #region [ Properties ]
+
+        // Nested Types
+        public class PeriodicMeasurements
+        {
+            public string MeasurementType { get; set; }
+            public int MeasurementTypeID { get; set; }
+            public string MeasurementCharacteristic { get; set; }
+            public int MeasurementCharacteristicID { get; set; }
+        }
+
         #endregion
 
         #region [ Constructors ]
+
+        public PeriodicDataDisplayController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
         #endregion
 
-        #region [ Static ]
-        private static MemoryCache s_memoryCache;
+        #region [ Properties ]
 
-        static PeriodicDataDisplayController()
-        {
-            s_memoryCache = new MemoryCache("PeriodicDataDisplay");
-        }
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
         #endregion
-
 
         #region [ Methods ]
+
         [HttpGet]
         public Task<Dictionary<string, List<double[]>>> GetData(CancellationToken cancellationToken)
         {
@@ -80,7 +86,7 @@ namespace openXDA.Adapters
 
             return Task.Factory.StartNew(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
@@ -88,7 +94,7 @@ namespace openXDA.Adapters
 
                     string target = "PeriodicDataDisplay" + meterId.ToString() + measurementCharacteristicId.ToString() + startDate.Subtract(epoch).TotalMilliseconds.ToString() + endDate.Subtract(epoch).TotalMilliseconds.ToString() + type;
                     Dictionary<string, List<double[]>> data = (Dictionary<string, List<double[]>>)s_memoryCache.Get(target);
-                    if(data == null)
+                    if (data == null)
                     {
                         data = new Dictionary<string, List<double[]>>();
                         IEnumerable<Channel> channels = (new TableOperations<Channel>(connection)).QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = {1} AND MeasurementTypeID = {2}", meterId, measurementCharacteristicId, measurementTypeId);
@@ -127,7 +133,7 @@ namespace openXDA.Adapters
         {
             return Task.Factory.StartNew(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     string target = "PeriodicDataDisplayMeters";
                     IOrderedEnumerable<Meter> data = (IOrderedEnumerable<Meter>)s_memoryCache.Get(target);
@@ -140,14 +146,6 @@ namespace openXDA.Adapters
                     return data;
                 }
             }, cancellationToken);
-
-        }
-
-        public class PeriodicMeasurements {
-            public string MeasurementType { get; set; }
-            public int MeasurementTypeID { get; set; }
-            public string MeasurementCharacteristic { get; set; }
-            public int MeasurementCharacteristicID { get; set; }
 
         }
 
@@ -173,8 +171,9 @@ namespace openXDA.Adapters
 
         }
 
-        private IOrderedEnumerable<PeriodicMeasurements> GetAllMeasurementCharacteristics() {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+        private IOrderedEnumerable<PeriodicMeasurements> GetAllMeasurementCharacteristics()
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 string target = "PeriodicDataDisplayMeasurementCharacteristicsAll";
                 IOrderedEnumerable<PeriodicMeasurements> data = (IOrderedEnumerable<PeriodicMeasurements>)s_memoryCache.Get(target);
@@ -202,7 +201,7 @@ namespace openXDA.Adapters
 
         private IOrderedEnumerable<PeriodicMeasurements> GetMeasurementCharacteristicsForWebReport()
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 string target = "PeriodicDataDisplayMeasurementCharacteristicsForWebReport";
                 IOrderedEnumerable<PeriodicMeasurements> data = (IOrderedEnumerable<PeriodicMeasurements>)s_memoryCache.Get(target);
@@ -238,8 +237,6 @@ namespace openXDA.Adapters
                 return data;
             }
         }
-
-
 
         private Dictionary<string, List<double[]>> Downsample(Dictionary<string, List<double[]>> dict, int maxSampleCount, Range<DateTime> range)
         {
@@ -302,13 +299,14 @@ namespace openXDA.Adapters
             }
 
             return returnData;
-
         }
-
-
-
 
         #endregion
 
+        #region [ Static ]
+
+        private static MemoryCache s_memoryCache = new MemoryCache("PeriodicDataDisplay");
+
+        #endregion
     }
 }

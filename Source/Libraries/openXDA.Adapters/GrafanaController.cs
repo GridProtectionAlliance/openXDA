@@ -47,46 +47,50 @@ namespace openXDA.Adapters
 
         // Nested Types
         //[EnableCors(origins: "*", headers: "*", methods: "*")]
-        private class openXDADataSource : GrafanaDataSourceBase, IDisposable
+        private class XDADataSource : GrafanaDataSourceBase, IDisposable
         {
-            #region [ Members ]
-
-            // Fields
-            private readonly AdoDataConnection m_database;
-            private readonly long m_baseTicks;
-            private bool m_disposed;
-
-            #endregion
-
             #region [ Constructors ]
 
-            public openXDADataSource()
+            public XDADataSource(AdoDataConnection connection)
             {
-                m_baseTicks = UnixTimeTag.BaseTicks.Value;
-                m_database = new AdoDataConnection("systemSettings");
+                Connection = connection;
+                BaseTicks = UnixTimeTag.BaseTicks.Value;
+                InstanceName = "XDA";
+
                 Metadata = new DataSet();
-                DataTable table = m_database.RetrieveData("SELECT * FROM ActiveMeasurements").Copy();
+                DataTable table = connection.RetrieveData("SELECT * FROM ActiveMeasurements").Copy();
                 table.TableName = "ActiveMeasurements";
                 Metadata.Tables.Add(table);
-                InstanceName = "XDA";
             }
 
             public void Dispose()
             {
+                if (IsDisposed)
+                    return;
+
                 try
                 {
-                    if (!m_disposed)
-                        m_database?.Dispose();
+                    Metadata.Dispose();
+                    Connection.Dispose();
                 }
                 finally
                 {
-                    m_disposed = true;
+                    IsDisposed = true;
                 }
             }
 
             #endregion
 
+            #region [ Properties ]
+
+            private AdoDataConnection Connection { get; }
+            private long BaseTicks { get; }
+            private bool IsDisposed { get; set; }
+
+            #endregion
+
             #region [ Methods ]
+
             /// <summary>
             /// Search data source for a target.
             /// </summary>
@@ -102,7 +106,6 @@ namespace openXDA.Adapters
                 });
             }
 
-
             protected override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool decimate, Dictionary<ulong, string> targetMap)
             {
                 foreach (KeyValuePair<ulong, string> kvp in targetMap)
@@ -111,42 +114,42 @@ namespace openXDA.Adapters
                     switch (kvp.Value.Split('_')[kvp.Value.Split('_').Length - 1])
                     {
                         case "Event": // GlobalEventCount
-                            data = m_database.RetrieveData("SELECT Count(*) as Count, Cast(StartTime as Date) as Date FROM Event WHERE StartTime >= {0} AND EndTime <= {1} AND MeterID Like {2} Group by Cast(StartTime as Date)", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
+                            data = Connection.RetrieveData("SELECT Count(*) as Count, Cast(StartTime as Date) as Date FROM Event WHERE StartTime >= {0} AND EndTime <= {1} AND MeterID Like {2} Group by Cast(StartTime as Date)", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
 
                             foreach (DataRow row in data.Rows)
                             {
                                 yield return new DataSourceValue
                                 {
                                     Target = kvp.Value,
-                                    Time = (row.ConvertField<DateTime>("Date").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                    Time = (row.ConvertField<DateTime>("Date").Date.Ticks - BaseTicks) / (double)Ticks.PerMillisecond,
                                     Value = row.ConvertField<int>("Count")
                                 };
                             }
 
                             break;
                         case "Fault":
-                            data = m_database.RetrieveData("SELECT Count(*) as Count, Cast(Inception as Date) as Date FROM FaultSummary WHERE Inception Between {0} AND {1} AND Algorithm LIKE 'Simple' AND EventID IN (Select ID FROM Event WHERE MeterID = {2}) Group by Cast(Inception as Date)", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
+                            data = Connection.RetrieveData("SELECT Count(*) as Count, Cast(Inception as Date) as Date FROM FaultSummary WHERE Inception Between {0} AND {1} AND Algorithm LIKE 'Simple' AND EventID IN (Select ID FROM Event WHERE MeterID = {2}) Group by Cast(Inception as Date)", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
 
                             foreach (DataRow row in data.Rows)
                             {
                                 yield return new DataSourceValue
                                 {
                                     Target = kvp.Value,
-                                    Time = (row.ConvertField<DateTime>("Date").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                    Time = (row.ConvertField<DateTime>("Date").Date.Ticks - BaseTicks) / (double)Ticks.PerMillisecond,
                                     Value = row.ConvertField<int>("Count")
                                 };
                             }
 
                             break;
                         case "Alarm":
-                            data = m_database.RetrieveData("SELECT Count(*) as Count, Cast(Date as Date) as Date FROM ChannelAlarmSummary WHERE Date Between {0} AND {1} AND ChannelID IN (Select ID FROM Channel WHERE MeterID = {2}) Group by Cast(Date as Date)", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
+                            data = Connection.RetrieveData("SELECT Count(*) as Count, Cast(Date as Date) as Date FROM ChannelAlarmSummary WHERE Date Between {0} AND {1} AND ChannelID IN (Select ID FROM Channel WHERE MeterID = {2}) Group by Cast(Date as Date)", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
 
                             foreach (DataRow row in data.Rows)
                             {
                                 yield return new DataSourceValue
                                 {
                                     Target = kvp.Value,
-                                    Time = (row.ConvertField<DateTime>("Date").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                    Time = (row.ConvertField<DateTime>("Date").Date.Ticks - BaseTicks) / (double)Ticks.PerMillisecond,
                                     Value = row.ConvertField<int>("Count")
                                 };
                             }
@@ -160,7 +163,7 @@ namespace openXDA.Adapters
                         case "GlobalEvent":
                             var numAlpha = new Regex("(?<Numeric>[0-9]*)(?<Alpha>[a-zA-Z]*)");
                             var match = numAlpha.Match(interval);
-                            using (IDbCommand sc = m_database.Connection.CreateCommand())
+                            using (IDbCommand sc = Connection.Connection.CreateCommand())
                             {
                                 sc.CommandText = "dbo.GetGlobalEventsForGrafana";
                                 sc.CommandType = CommandType.StoredProcedure;
@@ -185,24 +188,17 @@ namespace openXDA.Adapters
                                 sc.Parameters.Add(param3);
                                 sc.Parameters.Add(param4);
                                 sc.Parameters.Add(param5);
-                                IDataReader rdr = sc.ExecuteReader();
-                                try
+
+                                using (IDataReader rdr = sc.ExecuteReader())
                                 {
                                     while (rdr.Read())
                                     {
                                         yield return new DataSourceValue()
                                         {
                                             Target = targetMap.First().Value,
-                                            Time = (DateTime.Parse(rdr["Date"].ToString()).Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                            Time = (DateTime.Parse(rdr["Date"].ToString()).Ticks - BaseTicks) / (double)Ticks.PerMillisecond,
                                             Value = int.Parse(rdr["Count"].ToString())
                                         };
-                                    }
-                                }
-                                finally
-                                {
-                                    if (!rdr.IsClosed)
-                                    {
-                                        rdr.Close();
                                     }
                                 }
                             }
@@ -214,14 +210,19 @@ namespace openXDA.Adapters
             #endregion
         }
 
-        // Fields
-        private openXDADataSource m_dataSource;
-        private bool m_disposed;
+        #endregion
+
+        #region [ Constructors ]
+
+        public GrafanaController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
         #endregion
 
         #region [ Properties ]
 
-        private openXDADataSource DataSource => m_dataSource ?? (m_dataSource = new openXDADataSource());
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
         #endregion
 
         #region [ Methods ]
@@ -243,8 +244,12 @@ namespace openXDA.Adapters
         [HttpPost]
         public Task<List<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
         {
-            return DataSource?.Query(request, cancellationToken) ?? Task.FromResult(new List<TimeSeriesValues>());
-            //return null;
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (XDADataSource dataSource = new XDADataSource(connection))
+            {
+                return dataSource.Query(request, cancellationToken)
+                    ?? Task.FromResult(new List<TimeSeriesValues>());
+            }
         }
 
         /// <summary>
@@ -254,7 +259,12 @@ namespace openXDA.Adapters
         [HttpPost]
         public Task<string[]> Search(Target request)
         {
-            return DataSource?.Search(request, CancellationToken.None) ?? Task.FromResult(new string[0]);
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (XDADataSource dataSource = new XDADataSource(connection))
+            {
+                return dataSource.Search(request, CancellationToken.None)
+                    ?? Task.FromResult(new string[0]);
+            }
         }
 
         /// <summary>
@@ -265,27 +275,11 @@ namespace openXDA.Adapters
         [HttpPost]
         public Task<List<AnnotationResponse>> Annotations(AnnotationRequest request, CancellationToken cancellationToken)
         {
-            return DataSource?.Annotations(request, cancellationToken) ?? Task.FromResult(new List<AnnotationResponse>());
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="GrafanaController"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (XDADataSource dataSource = new XDADataSource(connection))
             {
-                try
-                {
-                    if (disposing)
-                        m_dataSource?.Dispose();
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+                return dataSource.Annotations(request, cancellationToken)
+                    ?? Task.FromResult(new List<AnnotationResponse>());
             }
         }
 

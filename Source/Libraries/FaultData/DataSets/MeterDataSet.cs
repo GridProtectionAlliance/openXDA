@@ -23,12 +23,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using openXDA.Model;
@@ -60,12 +57,12 @@ namespace FaultData.DataSets
                 Meter = (new TableOperations<Meter>(connection)).QueryRecordWhere("ID = {0}", evt.MeterID);
                 Meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
                 CreateDbConnection = () => new AdoDataConnection("systemSettings");
-                ConnectionString = string.Empty;
+                Configure = obj => { };
                 FilePath = (new TableOperations<DataFile>(connection)).QueryRecordWhere("FileGroupID = {0}", evt.FileGroupID).FilePath;
                 FileGroup = (new TableOperations<FileGroup>(connection)).QueryRecordWhere("ID = {0}", evt.FileGroupID);
                 
 
-                DataGroup dataGroup = ToDataGroup(ChannelData.DataFromEvent(evt.ID, "systemSettings"));
+                DataGroup dataGroup = ToDataGroup(ChannelData.DataFromEvent(evt.ID, CreateDbConnection));
                 DataSeries = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name != "Digital").ToList();
                 Digitals = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name == "Digital").ToList();
             }
@@ -76,7 +73,7 @@ namespace FaultData.DataSets
         #region [ Properties ]
 
         public Func<AdoDataConnection> CreateDbConnection { get; set; }
-        public string ConnectionString { get; set; }
+        public Action<object> Configure { get; set; }
         public string FilePath { get; set; }
         public FileGroup FileGroup { get; set; }
         public bool LoadHistoricConfiguration { get; set; }
@@ -113,7 +110,7 @@ namespace FaultData.DataSets
             else
             {
                 resource = resourceFactory();
-                ConnectionStringParser.ParseConnectionString(ConnectionString ?? "", resource);
+                Configure(resource);
                 resource.Initialize(this);
                 Resources.Add(type, resource);
             }
@@ -127,13 +124,6 @@ namespace FaultData.DataSets
             dataGroup.FromData(Meter, data);
             return dataGroup;
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
 
         #endregion
     }

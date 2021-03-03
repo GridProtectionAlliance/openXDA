@@ -24,13 +24,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Linq;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
 using GSF.Configuration;
 using GSF.PQDIF.Logical;
+using openXDA.Configuration;
 using openXDA.Model;
 using Phase = GSF.PQDIF.Logical.Phase;
 
@@ -41,8 +41,6 @@ namespace FaultData.DataAnalysis
         #region [ Members ]
 
         // Fields
-        private double m_systemFrequency;
-
         private Func<DataPoint, bool> m_isDisturbed;
         private Func<double, double, bool> m_isMoreSevere;
         private EventClassification m_eventType;
@@ -70,18 +68,10 @@ namespace FaultData.DataAnalysis
 
         #region [ Properties ]
 
-        [Setting]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
         public Dictionary<DataGroup, List<Disturbance>> Disturbances
         {
@@ -97,7 +87,7 @@ namespace FaultData.DataAnalysis
 
         public void Initialize(MeterDataSet meterDataSet)
         {
-            ConnectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, this);
+            meterDataSet.Configure(this);
 
             m_disturbances = new Dictionary<DataGroup, List<Disturbance>>();
 
@@ -265,7 +255,7 @@ namespace FaultData.DataAnalysis
 
             // Determine the sample rate so that we can exclude
             // disturbances that are shorter than half a cycle
-            samplesPerCycle = Transform.CalculateSamplesPerCycle(rms, m_systemFrequency);
+            samplesPerCycle = Transform.CalculateSamplesPerCycle(rms, DataAnalysisSettings.SystemFrequency);
 
             // Sample rate of zero is invalid
             if (samplesPerCycle == 0)
@@ -414,13 +404,6 @@ namespace FaultData.DataAnalysis
             dataPoint.Value = disturbance.PerUnitMagnitude;
             return m_isDisturbed(dataPoint);
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
 
         #endregion
     }

@@ -21,40 +21,37 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Data;
-using GSF.Data.Model;
-using GSF.Web;
-using GSF.Web.Model;
-using openHistorian.XDALink;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Caching;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using GSF.Data;
+using GSF.Web;
 
 namespace openXDA.Adapters
 {
     public class PQTrendingWebReportController : ApiController
     {
-        #region [ Static ]
-        private static MemoryCache s_memoryCache;
+        #region [ Constructors ]
 
-        static PQTrendingWebReportController()
-        {
-            s_memoryCache = new MemoryCache("PQTrendingWebReport");
-        }
+        public PQTrendingWebReportController(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
         #endregion
 
+        #region [ Properties ]
+
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
+        #endregion
 
         #region [ Methods ]
+
         [HttpGet]
         public Task<DataTable> GetData(CancellationToken cancellationToken)
         {
@@ -66,7 +63,8 @@ namespace openXDA.Adapters
 
             return Task.Factory.StartNew(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
                     return GetData(connection, date, sortField, ascending, stat);
                 }
             }, cancellationToken);
@@ -74,7 +72,8 @@ namespace openXDA.Adapters
         }
 
         [HttpGet]
-        public Task<DataTable> GetChart(CancellationToken cancellationToken) {
+        public Task<DataTable> GetChart(CancellationToken cancellationToken)
+        {
             Dictionary<string, string> query = Request.QueryParameters();
             string stat = query["stat"];
             string measurementId = query["measurementID"];
@@ -93,8 +92,9 @@ namespace openXDA.Adapters
                 {
                     return (DataTable)s_memoryCache.Get(target);
                 }
-                else {
-                    using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                else
+                {
+                    using (AdoDataConnection connection = ConnectionFactory())
                     {
                         DataTable table = connection.RetrieveData("SELECT DISTINCT Date, " + notSqlInjection + " as Value FROM PQTrendStat WHERE MeterID = (SELECT TOP 1 ID FROM METER WHERE Name = {0}) AND PQMeasurementTypeID = (SELECT TOP 1 ID FROM PQMeasurement WHERE Name = {1}) AND Date BETWEEN {2} AND {3}", meterId, measurementId, startDate, toDate);
                         s_memoryCache.Add(target, table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
@@ -120,7 +120,8 @@ namespace openXDA.Adapters
             {
                 table = (DataTable)s_memoryCache.Get(target);
             }
-            else {
+            else
+            {
                 table = connection.RetrieveData(@"
                     DECLARE @PivotColumns NVARCHAR(MAX) = N''
                     DECLARE @SQLStatement NVARCHAR(MAX) = N''
@@ -160,7 +161,7 @@ namespace openXDA.Adapters
 		                    Avg(ed." + notSqlInjection + @")
 		                    FOR ed.Measurement IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
                      ) as pvt 
-                     ORDER BY " + notSqlInjectionSort +@" '
+                     ORDER BY " + notSqlInjectionSort + @" '
 
                     print @sqlstatement
 
@@ -173,8 +174,12 @@ namespace openXDA.Adapters
             return table;
         }
 
-
         #endregion
 
+        #region [ Static ]
+
+        private static MemoryCache s_memoryCache = new MemoryCache("PQTrendingWebReport");
+
+        #endregion
     }
 }

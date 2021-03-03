@@ -24,15 +24,14 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Data;
 using System.Linq;
-using FaultData.Configuration;
 using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
 using InStep.eDNA.EzDNAApiNet;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace FaultData.DataResources
@@ -41,16 +40,15 @@ namespace FaultData.DataResources
     {
         #region [ Properties ]
 
-        [Setting]
-        [SettingName(nameof(XDATimeZone))]
-        public string XDATimeZoneID { get; set; }
+        [Category]
+        [SettingName(SystemSection.CategoryName)]
+        public SystemSection SystemSettings { get; }
+            = new SystemSection();
 
         [Category]
-        [SettingName(EDNASettings.CategoryName)]
-        public EDNASettings EDNASettings { get; } = new EDNASettings();
-
-        private TimeZoneInfo XDATimeZone =>
-            TimeZoneInfo.FindSystemTimeZoneById(XDATimeZoneID);
+        [SettingName(EDNASection.CategoryName)]
+        public EDNASection EDNASettings { get; }
+            = new EDNASection();
 
         private Func<AdoDataConnection> ConnectionFactory { get; set; }
 
@@ -77,7 +75,7 @@ namespace FaultData.DataResources
             if (!points.Any())
                 return true;
 
-            DateTime utcClearingTime = TimeZoneInfo.ConvertTimeToUtc(approximateTime, XDATimeZone);
+            DateTime utcClearingTime = TimeZoneInfo.ConvertTimeToUtc(approximateTime, SystemSettings.XDATimeZoneInfo);
             DateTime localClearingTime = utcClearingTime.ToLocalTime();
 
             TimeSpan queryTolerance = EDNASettings.QueryToleranceSpan;

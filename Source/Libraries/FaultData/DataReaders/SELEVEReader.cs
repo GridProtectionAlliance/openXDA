@@ -23,16 +23,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF;
+using GSF.Configuration;
 using GSF.SELEventParser;
 using GSF.Units;
+using openXDA.Configuration;
 using openXDA.Model;
-using System.Text.RegularExpressions;
 
 namespace FaultData.DataReaders
 {
@@ -41,93 +43,47 @@ namespace FaultData.DataReaders
     /// </summary>
     public class SELEVEReader : IDataReader
     {
-        #region [ Members ]
-
-        // Fields
-        private EventFile m_eventFile;
-        private MeterDataSet m_meterDataSet;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="SELEVEReader"/> class.
-        /// </summary>
-        public SELEVEReader()
-        {
-            m_meterDataSet = new MeterDataSet();
-        }
-
-        #endregion
-
         #region [ Properties ]
 
-        /// <summary>
-        /// Gets the data set produced by the Parse method of the data reader.
-        /// </summary>
-        public MeterDataSet MeterDataSet
-        {
-            get
-            {
-                return m_meterDataSet;
-            }
-        }
-
-        [Setting]
-        public double MaxFileDuration
-        {
-            get;
-            set;
-        }
-
-        [Setting]
-        public double SystemFrequency
-        {
-            get;
-            set;
-        }
+        [Category]
+        [SettingName(DataAnalysisSection.CategoryName)]
+        public DataAnalysisSection DataAnalysisSettings { get; }
+            = new DataAnalysisSection();
 
         #endregion
 
         #region [ Methods ]
 
-        /// <summary>
-        /// Determines whether the file can be parsed at this time.
-        /// </summary>
-        /// <param name="filePath">The path to the file to be parsed.</param>
-        /// <param name="fileCreationTime">The time the file was created.</param>
-        /// <returns>True if the file can be parsed; false otherwise.</returns>
-        public bool CanParse(string filePath, DateTime fileCreationTime)
+        public bool IsReadyForLoad(FileInfo[] fileList) =>
+            fileList.All(fileInfo => fileInfo.Length > 0L);
+
+        public DataFile GetPrimaryDataFile(FileGroup fileGroup) =>
+            fileGroup.DataFiles.First();
+
+        public MeterDataSet Parse(FileGroup fileGroup)
         {
-            try
-            {
-                m_eventFile = EventFile.Parse(filePath, SystemFrequency, MaxFileDuration);
-                return true;
-            }
-            catch (IOException)
-            {
-                return false;
-            }
-        }
+            MeterDataSet meterDataSet = new MeterDataSet();
+            meterDataSet.Meter = new Meter();
 
-        /// <summary>
-        /// Parses the file into a meter data set per meter contained in the file.
-        /// </summary>
-        /// <param name="filePath">The path to the file to be parsed.</param>
-        /// <returns>List of meter data sets, one per meter.</returns>
-        public void Parse(string filePath)
-        {
-            if ((object)m_eventFile == null)
-                m_eventFile = EventFile.Parse(filePath, SystemFrequency, MaxFileDuration);
+            DataFile dataFile = GetPrimaryDataFile(fileGroup);
+            string tempDataFolderName = Path.GetFileNameWithoutExtension(dataFile.FilePath);
+            string tempDataFolderPath = Path.Combine(TempDataFolder, tempDataFolderName);
+            string dataFileName = Path.GetFileName(dataFile.FilePath);
+            string tempFilePath = Path.Combine(tempDataFolderPath, dataFileName);
+            byte[] data = dataFile.FileBlob.Blob;
+            File.WriteAllBytes(tempFilePath, data);
 
-            if (!m_eventFile.EventReports.Any() && !m_eventFile.CommaSeparatedEventReports.Any())
-                return;
+            double systemFrequency = DataAnalysisSettings.SystemFrequency;
+            double maxEventDuration = DataAnalysisSettings.MaxEventDuration;
+            EventFile eventFile = EventFile.Parse(tempFilePath, systemFrequency, maxEventDuration);
 
-            Header header = m_eventFile.EventReports.FirstOrDefault()?.Header
-                ?? m_eventFile.CommaSeparatedEventReports[0].Header;
+            if (!eventFile.EventReports.Any() && !eventFile.CommaSeparatedEventReports.Any())
+                return meterDataSet;
 
-            Meter meter = new Meter();
+            Header header = eventFile.EventReports.FirstOrDefault()?.Header
+                ?? eventFile.CommaSeparatedEventReports[0].Header;
+
+            Meter meter = meterDataSet.Meter;
             meter.Location = new Location();
             meter.Channels = new List<Channel>();
             meter.AssetKey = header.RelayID;
@@ -141,7 +97,7 @@ namespace FaultData.DataReaders
             meterLocation.ShortName = new string(header.StationID.ToNonNullString().Take(50).ToArray());
             meterLocation.Description = header.StationID;
 
-            foreach (EventReport report in m_eventFile.EventReports)
+            foreach (EventReport report in eventFile.EventReports)
             {
                 for (int i = 0; i < report.AnalogSection.AnalogChannels.Count; i++)
                 {
@@ -161,7 +117,7 @@ namespace FaultData.DataReaders
                         dataSeries = dataSeries.Multiply(1000.0D);
 
                     dataSeries.SeriesInfo = channel.Series[0];
-                    m_meterDataSet.DataSeries.Add(dataSeries);
+                    meterDataSet.DataSeries.Add(dataSeries);
                 }
 
                 for (int i = 0; i < report.AnalogSection.DigitalChannels.Count; i++)
@@ -186,7 +142,7 @@ namespace FaultData.DataReaders
                         .Select(x => new DataPoint { Time = x.Time, Value = Convert.ToDouble(x.Value) })
                         .ToList();
 
-                    m_meterDataSet.Digitals.Add(dataSeries);
+                    meterDataSet.Digitals.Add(dataSeries);
                 }
 
                 ComplexNumber z1 = new ComplexNumber(0.0D, 0.0D);
@@ -205,10 +161,10 @@ namespace FaultData.DataReaders
                 if (double.TryParse(report.GetGroupSettings("Z0ANG"), out groupSetting))
                     z0.Angle = Angle.FromDegrees(groupSetting);
 
-               
+
             }
 
-            foreach (CommaSeparatedEventReport report in m_eventFile.CommaSeparatedEventReports)
+            foreach (CommaSeparatedEventReport report in eventFile.CommaSeparatedEventReports)
             {
                 for (int i = 0; i < report.AnalogSection.AnalogChannels.Count; i++)
                 {
@@ -225,7 +181,7 @@ namespace FaultData.DataReaders
                         .ToList();
 
                     dataSeries.SeriesInfo = channel.Series[0];
-                    m_meterDataSet.DataSeries.Add(dataSeries);
+                    meterDataSet.DataSeries.Add(dataSeries);
                 }
 
                 for (int i = 0; i < report.AnalogSection.DigitalChannels.Count; i++)
@@ -246,15 +202,15 @@ namespace FaultData.DataReaders
 
                     dataSeries.DataPoints = timeSamples
                         .Zip(digitalSamples, (time, value) => new { Time = time, Value = value })
-                        .Where(x => x.Value != null )
-                        .Select(x => new DataPoint { Time= x.Time, Value = Convert.ToDouble(x.Value)})
+                        .Where(x => x.Value != null)
+                        .Select(x => new DataPoint { Time = x.Time, Value = Convert.ToDouble(x.Value) })
                         .ToList();
 
-                    m_meterDataSet.Digitals.Add(dataSeries);
+                    meterDataSet.Digitals.Add(dataSeries);
                 }
             }
 
-            m_meterDataSet.Meter = meter;
+            return meterDataSet;
         }
 
         private Channel MakeParsedAnalog(EventReport report, int channelIndex)
@@ -477,6 +433,19 @@ namespace FaultData.DataReaders
 
             return channel;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Properties
+        private static string TempDataFolder => LazyTempDataFolder.Value;
+
+        private static Lazy<string> LazyTempDataFolder => new Lazy<string>(() =>
+        {
+            string tempPath = Path.GetTempPath();
+            return Path.Combine(tempPath, "openXDA", "SEL");
+        });
 
         #endregion
     }
