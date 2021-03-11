@@ -3813,13 +3813,6 @@ CREATE TABLE Company
 )
 GO
 
-CREATE TABLE CompanyType(
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name VARCHAR(200) NOT NULL UNIQUE,
-	Description VARCHAR(MAX) NULL
-)
-GO
-
 CREATE TABLE CompanyMeter
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -6259,7 +6252,7 @@ CREATE TABLE [ValueList](
 GO
 
 
-CREATE TABLE SystemCenter.AdditionalField(
+CREATE TABLE [SystemCenter.AdditionalField] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTable varchar(100) NOT NULL,
 	FieldName varchar(100) NOT NULL,
@@ -6268,11 +6261,11 @@ CREATE TABLE SystemCenter.AdditionalField(
 	ExternalDBTable varchar(max) NULL,
 	ExternalDBTableKey varchar(max) NULL,
 	IsSecure bit NULL DEFAULT(0)
-	Constraint UC_AdditonaField UNIQUE(OpenXDAParentTable, FieldName)
+	Constraint UC_AdditonaField UNIQUE(ParentTable, FieldName)
 )
 GO
 
-CREATE TABLE SystemCenter.AdditionalFieldValue(
+CREATE TABLE [SystemCenter.AdditionalFieldValue] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTableID int NOT NULL,
 	AdditionalFieldID int NOT NULL FOREIGN KEY REFERENCES SystemCenter.AdditionalField(ID),
@@ -6282,7 +6275,7 @@ CREATE TABLE SystemCenter.AdditionalFieldValue(
 )
 GO
 
-CREATE TABLE SystemCenter.ExternalOpenXDAField(
+CREATE TABLE [SystemCenter.ExternalOpenXDAField] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTable varchar(100) NOT NULL,
 	FieldName varchar(100) NOT NULL,
@@ -6293,7 +6286,7 @@ CREATE TABLE SystemCenter.ExternalOpenXDAField(
 )
 GO
 
-CREATE Table SystemCenter.extDBTables (
+CREATE Table [SystemCenter.extDBTables] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	TableName varchar(200) NOT NULL,
     ExternalDB varchar(200) NOT NULL,
@@ -6301,7 +6294,7 @@ CREATE Table SystemCenter.extDBTables (
 )
 GO
 
-CREATE TABLE SystemCenter.TSC (
+CREATE TABLE [SystemCenter.TSC] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	Name varchar(200) NOT NULL,
 	Description varchar(max) NULL,
@@ -6309,14 +6302,14 @@ CREATE TABLE SystemCenter.TSC (
 )
 GO
 
-CREATE TABLE SystemCenter.CustomerAccess(
+CREATE TABLE [SystemCenter.CustomerAccess] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(ID),
 	PQViewSiteID int NOT NULL
 )
 GO
 
-CREATE TABLE SystemCenter.CustomerAccessPQDigest(
+CREATE TABLE [SystemCenter.CustomerAccessPQDigest] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(ID),
 	OpenXDAMeterID INT FOREIGN KEY REFERENCES Meter(ID)
@@ -6324,7 +6317,7 @@ CREATE TABLE SystemCenter.CustomerAccessPQDigest(
 GO
 
 
-CREATE TABLE SystemCenter.Role (
+CREATE TABLE [SystemCenter.Role] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	Name varchar(200) NOT NULL,
 	Description varchar(max) NULL,
