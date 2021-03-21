@@ -34,6 +34,7 @@ using System.Web.Http;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.IO;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
@@ -202,6 +203,7 @@ namespace openXDA.Controllers.Config
                             .Select(configurator => new Settings(configurator.Configure))
                             .Select(settings => new { settings.FileWatcherSettings.WatchDirectoryList, settings.FileProcessorSettings.FilePattern })
                             .SelectMany(record => record.WatchDirectoryList, (record, Directory) => new { Directory, record.FilePattern })
+                            .Select(record => new { Directory = FilePath.GetAbsolutePath(record.Directory), record.FilePattern })
                             .SelectMany(record => files, (record, File) => new { File, record.Directory, record.FilePattern })
                             .Where(record => record.File.StartsWith(record.Directory, StringComparison.OrdinalIgnoreCase))
                             .Select(record => Regex.Match(record.File, record.FilePattern))
