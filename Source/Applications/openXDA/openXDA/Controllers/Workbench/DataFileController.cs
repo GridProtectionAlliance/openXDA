@@ -184,8 +184,8 @@ namespace openXDA.Controllers.Config
                         .ToArray();
 
                     const string NodeQueryFormat =
-                        "SELECT ID " +
-                        "FROM Node " +
+                        "SELECT Node.ID " +
+                        "FROM Node LEFT JOIN NodeType ON Node.NodeTypeID = NodeType.ID " +
                         "WHERE TypeName = {0}";
 
                     Type fileProcessorType = typeof(FileProcessorNode);
