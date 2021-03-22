@@ -124,6 +124,12 @@ namespace openXDA.Nodes.Types.Analysis
         {
             AnalysisTaskProcessor taskProcessor = new AnalysisTaskProcessor(Definition.ID, CreateDbConnection);
 
+            // Reset Tasks tha failed Processing on this Node
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                string query = "UPDATE AnalysisTask SET NodeID = NULL WHERE NodeID  = {0}";
+                connection.ExecuteNonQuery(query, Definition.ID);
+            }
             // This is used to track the processing thread
             // count so resource usage can be throttled
             int threadCount = 0;
