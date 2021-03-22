@@ -109,7 +109,7 @@ namespace openXDA.Controllers.Config
                     ") DataFile";
 
                 TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
-                RecordRestriction restriction = dataFileTable.GetSearchRestriction(postData.filterString);
+                RecordRestriction restriction = dataFileTable.GetSearchRestriction(postData?.filterString ?? "");
                 string query = string.Format(QueryFormat, restriction?.FilterExpression ?? "1=1");
                 return connection.ExecuteScalar<int>(query, restriction?.Parameters ?? new object[0]);
             }
