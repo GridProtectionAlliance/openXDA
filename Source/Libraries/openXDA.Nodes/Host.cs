@@ -242,7 +242,7 @@ namespace openXDA.Nodes
                             .Select(value => $"{key}={value}");
                     });
 
-                string queryString = string.Join("&", queryParameters);
+                string queryString = string.Join("&", queryStringParameters);
                 url += $"?{queryString}";
             }
 
