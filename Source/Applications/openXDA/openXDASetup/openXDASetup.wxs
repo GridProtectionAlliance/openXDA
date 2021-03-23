@@ -9,6 +9,12 @@
     <PropertyRef Id="WIX_IS_NETFRAMEWORK_46_OR_LATER_INSTALLED"/>
     <Condition Message='This setup requires Microsoft .NET Framework 4.6 or greater - this will need to be installed before installation can continue.'>Installed OR WIX_IS_NETFRAMEWORK_46_OR_LATER_INSTALLED</Condition>
 
+    <!-- JRC: Restore last installation folder
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="InstallFolderRegSearch" Root="HKLM" Key="SOFTWARE\Grid Protection Alliance\openXDA" Name="InstallPath" Type="raw" />
+    </Property>
+     -->
+
     <Feature Id="AllProducts" Title="All Products" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER" AllowAdvertise="no" Description="All components of the openXDA installation.">
       <Feature Id="openXDA" Title="openXDA" AllowAdvertise="no" Description="Includes the openXDA database, service, and remote console components.">
         <!-- openXDA Database-->
@@ -41,6 +47,10 @@
           <ComponentGroupRef Id="ConsoleComponents" />
         </Feature>
       </Feature>
+
+      <!-- JRC: Forward reference for registry component (required?)
+      <ComponentRef Id="Registry" />
+      -->
     </Feature>
     
     <UI>
@@ -120,6 +130,18 @@
     <Property Id="CONNECTIONSTRINGMAPPING" Value="XDACONNECTIONSTRING={//systemSettings/add[@name='ConnectionString']/@value}" />
     <Property Id="COMPANYNAMEMAPPING" Value="COMPANYNAME={//add[@name='CompanyName']/@value}" />
     <Property Id="COMPANYACRONYMMAPPING" Value="COMPANYACRONYM={//add[@name='CompanyAcronym']/@value}" />
+
+    <!-- JRC: Something to consider:
+    <Property Id="SYSTEMNAME" Value=" " />
+    -->
+
+    <!-- JRC: Restore last service account name:
+    <Property Id="REGSERVICEACCOUNT">
+      <RegistrySearch Id="ServiceAccountRegSearch" Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\[SERVICENAME]" Name="ObjectName" Type="raw" />
+    </Property>
+    <SetProperty Action="SetServiceAccountDefault" Id="SERVICEACCOUNT" After="AppSearch" Value="NT SERVICE\[SERVICENAME]" Sequence="first"><![CDATA[NOT REGSERVICEACCOUNT]]></SetProperty>
+    <SetProperty Action="SetServiceAccountRegistry" Id="SERVICEACCOUNT" After="AppSearch" Value="[REGSERVICEACCOUNT]" Sequence="first"><![CDATA[REGSERVICEACCOUNT]]></SetProperty>
+    -->
 
     <SetProperty Id="SERVICEACCOUNT" Value="NT SERVICE\[SERVICENAME]" After="LaunchConditions" Sequence="first" />
     <SetProperty Id="DATABASENAME" Value="[SERVICENAME]" After="LaunchConditions" Sequence="first" />
@@ -522,7 +544,19 @@
       <ComponentRef Id="Microsoft.Net.Http.Headers"/>
 
       <ComponentRef Id="InstallFolderPermissions"/>
-      
+
+      <!-- JRC: Registry Settings
+      <Component Id="Registry" Guid="{F74C123C-C923-4B04-813B-05E81397C764}">
+        <RegistryKey Id="REG_GridProtectionAlliance" Root="HKLM" Key="SOFTWARE\Grid Protection Alliance" ForceCreateOnInstall="yes">
+          <RegistryKey Id="REG_GridProtectionAlliance.openXDA" Key="openXDA" ForceCreateOnInstall="yes">
+            <RegistryValue Id="REG_GridProtectionAlliance.openXDA.InstallPath" Name="InstallPath" Value="[INSTALLFOLDER]" Type="string" />
+            <RegistryValue Id="REG_GridProtectionAlliance.openXDA.Revision" Name="Revision" Value="[ProductVersion]" Type="string" />
+            <RegistryValue Id="REG_GridProtectionAlliance.openXDA.TargetBitSize" Name="TargetBitSize" Value="64bit" Type="string" />
+          </RegistryKey>
+        </RegistryKey>
+      </Component>
+       -->
+
       <!-- Cleanup -->
       <Component Id="Cleanup" Guid="{C8EBB158-C708-4C94-87C1-F5DBC77D7BDE}">
         <CreateFolder />
@@ -906,9 +940,9 @@
           <Text>Enter the [ProductName] service account.</Text>
         </Control>
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
-        <Control Id="ServiceAccountLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="&amp;Service Account:" />
+        <Control Id="ServiceAccountLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="Service &amp;Account:" />
         <Control Id="ServiceAccountEdit" Type="Edit" X="45" Y="85" Width="220" Height="18" Property="SERVICEACCOUNT" Text="{80}" />
-        <Control Id="ServicePasswordLabel" Type="Text" X="45" Y="113" Width="100" Height="15" TabSkip="no" Text="&amp;Service Password:" />
+        <Control Id="ServicePasswordLabel" Type="Text" X="45" Y="113" Width="100" Height="15" TabSkip="no" Text="Service &amp;Password:" />
         <Control Id="ServicePasswordEdit" Type="Edit" X="45" Y="125" Width="220" Height="18" Property="SERVICEPASSWORD" Text="{80}" Password="yes" />
         <Control Id="ServicePasswordInfo" Type="Text" X="45" Y="153" Width="280" Height="30" Transparent="yes" NoPrefix="yes">
           <Text>NOTE: If the service account is LocalSystem or begins with NT AUTHORITY or NT SERVICE you may leave the password field blank.</Text>
@@ -921,6 +955,9 @@
           <Publish Event="DoAction" Value="AuthenticateServiceAccountAction">1</Publish>
           <Publish Event="NewDialog" Value="ServiceAccountErrorDialog">NOT SERVICEAUTHENTICATED</Publish>
           <Publish Event="NewDialog" Value="CompanyInfoDialog">SERVICEAUTHENTICATED</Publish>
+          <!-- JRC: something like this (note that "SYSTEMNAME" property could be required, even if you opt not to use it):
+          <Publish Event="DoAction" Value="LoadExistingCompanyInfoAction" Order="2">SERVICEAUTHENTICATED</Publish>
+          -->
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
@@ -962,10 +999,14 @@
           <Text>Enter information for the company using [ProductName].</Text>
         </Control>
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
-        <Control Id="CompanyNameLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="&amp;Company Name:" />
+        <Control Id="CompanyNameLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="Company &amp;Name:" />
         <Control Id="CompanyNameEdit" Type="Edit" X="45" Y="85" Width="220" Height="18" Property="COMPANYNAME" Text="{80}" />
-        <Control Id="CompanyAcronymLabel" Type="Text" X="45" Y="113" Width="100" Height="15" TabSkip="no" Text="&amp;Company Acronym:" />
+        <Control Id="CompanyAcronymLabel" Type="Text" X="45" Y="113" Width="100" Height="15" TabSkip="no" Text="Company &amp;Acronym:" />
         <Control Id="CompanyAcronymEdit" Type="Edit" X="45" Y="125" Width="220" Height="18" Property="COMPANYACRONYM" Text="{80}" />
+        <!-- JRC: Something to consider:
+        <Control Id="SystemNameLabel" Type="Text" X="45" Y="153" Width="250" Height="15" TabSkip="no" Text="&amp;System Name: (e.g., a location name, dev or prod)" />
+        <Control Id="SystemNameEdit" Type="Edit" X="45" Y="165" Width="220" Height="18" Property="SYSTEMNAME" Text="{80}" />
+         -->
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
           <Publish Event="NewDialog" Value="ServiceAccountDialog">1</Publish>
