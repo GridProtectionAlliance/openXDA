@@ -146,7 +146,7 @@ namespace openXDA.Controllers.Config
 
                 TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
 
-                RecordRestriction searchRestriction = dataFileTable.GetSearchRestriction(postData.filterString)
+                RecordRestriction searchRestriction = dataFileTable.GetSearchRestriction(postData?.filterString ?? "")
                     ?? new RecordRestriction("1=1");
 
                 string searchClause = searchRestriction.FilterExpression;
@@ -154,12 +154,12 @@ namespace openXDA.Controllers.Config
                 int paramIndex = searchRestriction.Parameters.Length;
                 string pageClause = $"RowNumber BETWEEN {{{paramIndex}}} AND {{{paramIndex + 1}}}";
 
-                string sortOrder = postData.ascending ? "ASC" : "DESC";
-                string orderByClause = $"{postData.sortField} {sortOrder}";
+                string sortOrder = (postData?.ascending ?? true)? "ASC" : "DESC";
+                string orderByClause = $"{postData?.sortField ?? "ID"} {sortOrder}";
                 string query = string.Format(QueryFormat, searchClause, pageClause, orderByClause);
 
-                int pageStart = (postData.page - 1) * postData.pageSize + 1;
-                int pageEnd = pageStart + postData.pageSize - 1;
+                int pageStart = ((postData?.page ?? 1) - 1) * (postData?.pageSize ?? 1) + 1;
+                int pageEnd = pageStart + (postData?.pageSize ??1 ) - 1;
 
                 object[] parameters = searchRestriction.Parameters
                     .Concat(new object[] { pageStart, pageEnd })
