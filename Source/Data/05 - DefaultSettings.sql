@@ -142,6 +142,11 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Delay', '1200000', '1200000')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Analyzer.DependentAssemblies.MWArray', 'C:\Program Files\MATLAB\MATLAB Runtime\v98\toolbox\dotnetbuilder\bin\win64\v4.0\MWArray.dll', 'C:\Program Files\MATLAB\MATLAB Runtime\v98\toolbox\dotnetbuilder\bin\win64\v4.0\MWArray.dll')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EPRICapBankAnalytic.Analyzer.DependentAssemblies.TCSAM', 'C:\Program Files\EPRI\TCSAM\application\TCSAM.dll', 'C:\Program Files\EPRI\TCSAM\application\TCSAM.dll')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.Enabled', 'False', 'False')
 GO
 
