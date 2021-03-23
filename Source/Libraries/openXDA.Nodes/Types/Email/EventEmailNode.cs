@@ -95,6 +95,7 @@ namespace openXDA.Nodes.Types.Email
         public EventEmailNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
         {
+            m_emailTypes = new List<EventEmailType>();
         }
 
         #endregion
