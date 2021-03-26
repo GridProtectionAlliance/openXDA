@@ -1552,6 +1552,9 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataPusherOperation', 12)
 GO
 
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.RelayEnergization', 13)
+GO
+
 INSERT INTO AssetGroup(Name, DisplayDashboard) VALUES('AllAssets', 1)
 GO
 
