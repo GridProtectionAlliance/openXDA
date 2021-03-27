@@ -4430,8 +4430,7 @@ SELECT  Breaker.ID AS BreakerID,
 		RelayPerformance.ChannelID AS TripCoilChannelID
 FROM    RelayPerformance LEFT OUTER JOIN
         Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
-        AssetChannel ON AssetChannel.ChannelID = Channel.ID LEFT JOIN
-        Breaker ON Breaker.ID = AssetChannel.AssetID
+        Breaker ON Breaker.ID = Channel.AssetID
 GO
 
 
