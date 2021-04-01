@@ -4397,21 +4397,19 @@ GO
 
 CREATE VIEW AssetGroupView AS
 SELECT
-	AssetGroup.ID,
-	AssetGroup.Name,
+    AssetGroup.ID,
+    AssetGroup.Name,
     AssetGroup.DisplayDashboard,
-	COUNT(DISTINCT AssetGroupAssetGroup.ChildAssetGroupID) as AssetGroups,
-	COUNT(DISTINCT MeterAssetGroup.MeterID) as Meters,
-	COUNT(DISTINCT AssetAssetGroup.AssetID) as Assets,
-	COUNT(DISTINCT UserAccountAssetGroup.UserAccountID) as Users
+    AssetGroupAssetGroup.Count AS AssetGroups,
+    MeterAssetGroup.Count AS Meters,
+    LineAssetGroup.Count AS Lines,
+    UserAccountAssetGroup.Count AS Users
 FROM
-	AssetGroup LEFT JOIN
-	AssetGroupAssetGroup ON AssetGroup.ID = AssetGroupAssetGroup.ParentAssetGroupID LEFT JOIN
-	MeterAssetGroup ON AssetGroup.ID = MeterAssetGroup.AssetGroupID LEFT JOIN
-	AssetAssetGroup ON AssetGroup.ID = AssetAssetGroup.AssetGroupID LEFT JOIN
-	UserAccountAssetGroup ON AssetGroup.ID = UserAccountAssetGroup.AssetGroupID
-GROUP BY
-	AssetGroup.ID,AssetGroup.Name,AssetGroup.DisplayDashboard
+    AssetGroup OUTER APPLY
+    (SELECT COUNT(*) FROM AssetGroupAssetGroup WHERE AssetGroup.ID = AssetGroupAssetGroup.ParentAssetGroupID) AssetGroupAssetGroup(Count) OUTER APPLY
+    (SELECT COUNT(*) FROM MeterAssetGroup WHERE AssetGroup.ID = MeterAssetGroup.AssetGroupID) MeterAssetGroup(Count) OUTER APPLY
+    (SELECT COUNT(*) FROM LineAssetGroup WHERE AssetGroup.ID = LineAssetGroup.AssetGroupID) LineAssetGroup(Count) OUTER APPLY
+    (SELECT COUNT(*) FROM UserAccountAssetGroup WHERE AssetGroup.ID = UserAccountAssetGroup.AssetGroupID) UserAccountAssetGroup(Count)
 GO
 
 CREATE VIEW BreakerHistory
