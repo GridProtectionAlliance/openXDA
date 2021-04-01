@@ -30,6 +30,7 @@ using System.Reflection;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.Configuration;
+using log4net;
 using openXDA.Model;
 
 namespace FaultData.DataResources
@@ -89,15 +90,24 @@ namespace FaultData.DataResources
 
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)
             {
-                string lineKey = dataGroup.Line.AssetKey;
-                DateTime start = dataGroup.StartTime.AddSeconds(-2.0D);
-                DateTime end = dataGroup.EndTime.AddSeconds(2.0D);
+                try
+                {
+                    string lineKey = dataGroup.Line.AssetKey;
+                    DateTime start = dataGroup.StartTime.AddSeconds(-2.0D);
+                    DateTime end = dataGroup.EndTime.AddSeconds(2.0D);
 
-                List<ILightningStrike> lightningStrikes = dataProvider
-                    .GetLightningStrikes(lineKey, start, end)
-                    .ToList();
+                    List<ILightningStrike> lightningStrikes = dataProvider
+                        .GetLightningStrikes(lineKey, start, end)
+                        .ToList();
 
-                LightningStrikeLookup.Add(dataGroup, lightningStrikes);
+                    LightningStrikeLookup.Add(dataGroup, lightningStrikes);
+                }
+                catch (Exception ex)
+                {
+                    string message = $"Unable to load lightning strikes for data group: {ex.Message}";
+                    Exception wrapper = new Exception(message, ex);
+                    Log.Error(message, wrapper);
+                }
             }
         }
 
@@ -113,5 +123,7 @@ namespace FaultData.DataResources
             Type dataProviderType = dataProviderAssembly.GetType(LightningDataSettings.DataProviderType);
             return (ILightningDataProvider)Activator.CreateInstance(dataProviderType);
         }
+
+        private static readonly ILog Log = LogManager.GetLogger(typeof(LightningDataResource));
     }
 }
