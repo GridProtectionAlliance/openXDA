@@ -30,6 +30,7 @@ using System.Reflection;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.Configuration;
+using log4net;
 using openXDA.Model;
 
 namespace FaultData.DataResources
@@ -92,15 +93,25 @@ namespace FaultData.DataResources
 
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)
             {
-                string lineKey = dataGroup.Asset.AssetKey;
-                DateTime start = dataGroup.StartTime.AddSeconds(-LightningDataSettings.DataProviderTimeWindow);
-                DateTime end = dataGroup.EndTime.AddSeconds(LightningDataSettings.DataProviderTimeWindow);
+                try
+                {
+                    string lineKey = dataGroup.Asset.AssetKey;
+                    double timeWindow = LightningDataSettings.DataProviderTimeWindow;
+                    DateTime start = dataGroup.StartTime.AddSeconds(-timeWindow);
+                    DateTime end = dataGroup.EndTime.AddSeconds(timeWindow);
 
-                List<ILightningStrike> lightningStrikes = dataProvider
-                    .GetLightningStrikes(lineKey, start, end)
-                    .ToList();
+                    List<ILightningStrike> lightningStrikes = dataProvider
+                        .GetLightningStrikes(lineKey, start, end)
+                        .ToList();
 
-                LightningStrikeLookup.Add(dataGroup, lightningStrikes);
+                    LightningStrikeLookup.Add(dataGroup, lightningStrikes);
+                }
+                catch (Exception ex)
+                {
+                    string message = $"Unable to load lightning strikes for data group: {ex.Message}";
+                    Exception wrapper = new Exception(message, ex);
+                    Log.Error(message, wrapper);
+                }
             }
         }
 
@@ -116,5 +127,7 @@ namespace FaultData.DataResources
             Type dataProviderType = dataProviderAssembly.GetType(LightningDataSettings.DataProviderType);
             return (ILightningDataProvider)Activator.CreateInstance(dataProviderType);
         }
+
+        private static readonly ILog Log = LogManager.GetLogger(typeof(LightningDataResource));
     }
 }
