@@ -131,7 +131,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vIndices[0].Va >= 0) ? m_cycleDataGroups[m_vIndices[0].Va] : null;
+                return (m_vIndices.Count > 0 && m_vIndices[0].Va >= 0) ? m_cycleDataGroups[m_vIndices[0].Va] : null;
             }
         }
 
@@ -139,7 +139,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vIndices[0].Vb >= 0) ? m_cycleDataGroups[m_vIndices[0].Vb] : null;
+                return (m_vIndices.Count > 0 &&  m_vIndices[0].Vb >= 0) ? m_cycleDataGroups[m_vIndices[0].Vb] : null;
             }
         }
 
@@ -147,7 +147,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vIndices[0].Vc >= 0) ? m_cycleDataGroups[m_vIndices[0].Vc] : null;
+                return (m_vIndices.Count > 0 && m_vIndices[0].Vc >= 0) ? m_cycleDataGroups[m_vIndices[0].Vc] : null;
             }
         }
 
@@ -155,7 +155,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vIndices[0].Vab >= 0) ? m_cycleDataGroups[m_vIndices[0].Vab] : null;
+                return (m_vIndices.Count > 0 &&  m_vIndices[0].Vab >= 0) ? m_cycleDataGroups[m_vIndices[0].Vab] : null;
             }
         }
 
@@ -163,7 +163,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vIndices[0].Vbc >= 0) ? m_cycleDataGroups[m_vIndices[0].Vbc] : null;
+                return (m_vIndices.Count > 0 &&  m_vIndices[0].Vbc >= 0) ? m_cycleDataGroups[m_vIndices[0].Vbc] : null;
             }
         }
 
@@ -171,7 +171,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_vIndices[0].Vca >= 0) ? m_cycleDataGroups[m_vIndices[0].Vca] : null;
+                return (m_vIndices.Count > 0 && m_vIndices[0].Vca >= 0) ? m_cycleDataGroups[m_vIndices[0].Vca] : null;
             }
         }
 
