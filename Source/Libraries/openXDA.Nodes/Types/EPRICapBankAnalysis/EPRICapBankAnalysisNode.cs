@@ -920,12 +920,12 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 {
                     lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {161}");
                     lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {0.075}");
-                    Log.Error($"No connectd Relays found for {capBank.AssetName}");
+                    Log.Error($"No connected Relays found for {capBank.AssetName}");
 
                 }
                 else
                 {
-                    lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV}");
+                    lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV*1000.0}");
                     lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {relays.First().OnVoltageThreshhold}");
                 }
                 
