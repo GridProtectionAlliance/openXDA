@@ -30,7 +30,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int PQMarkCompanyID { get; set; }
+        public int CompanyID { get; set; }
 
         public int MeterID { get; set; }
 
