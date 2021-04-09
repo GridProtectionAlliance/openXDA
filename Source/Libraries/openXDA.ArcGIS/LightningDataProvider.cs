@@ -52,6 +52,10 @@ namespace openXDA.ArcGIS
         [SettingName(nameof(LightningMapServers))]
         public string LightningMapServersSetting { get; set; }
 
+        [Setting]
+        [DefaultValue(5)]
+        public int QueryRetries { get; set; }
+
         public List<LightningMapServer> LightningMapServers => Regex.Matches(LightningMapServersSetting, LightningMapServerPattern)
             .Cast<Match>()
             .Where(match => match.Success)
@@ -76,7 +80,7 @@ namespace openXDA.ArcGIS
             TimeZoneInfo.FindSystemTimeZoneById(XDATimeZoneID);
 
         public IEnumerable<ILightningStrike> GetLightningStrikes(string lineKey, DateTime start, DateTime end) =>
-            QueryLightningStrikes(lineKey, start, end).Result;
+            QueryLightningStrikes(lineKey, start, end).GetAwaiter().GetResult();
 
         private async Task<IEnumerable<ILightningStrike>> QueryLightningStrikes(string lineKey, DateTime start, DateTime end)
         {
@@ -102,7 +106,8 @@ namespace openXDA.ArcGIS
             lineQuery.ReturnGeometry = true;
             lineQuery.WhereClause = $"UPPER(LINENAME) LIKE '%{lineKey.ToUpper()}%'";
 
-            ServiceFeatureTable featureTable = new ServiceFeatureTable(new Uri(transmissionDataMapServer));
+            Uri source = new Uri(transmissionDataMapServer);
+            ServiceFeatureTable featureTable = new ServiceFeatureTable(source);
             FeatureQueryResult result = await featureTable.QueryFeaturesAsync(lineQuery);
 
             return result
@@ -125,29 +130,41 @@ namespace openXDA.ArcGIS
         private async Task<List<ILightningStrike>> QueryLightningData(Geometry lightningBufferGeometry, DateTimeOffset startTime, DateTimeOffset endTime)
         {
             List<LightningMapServer> lightningMapServers = LightningDataSettings.LightningMapServers;
+            List<ILightningStrike> strikes = new List<ILightningStrike>();
 
-            IEnumerable<Task<List<LightningStrike>>> queryTasks = lightningMapServers
-                .Select(server =>
+            foreach (LightningMapServer server in lightningMapServers)
+            {
+                QueryParameters lightningQuery = new QueryParameters();
+                lightningQuery.TimeExtent = new TimeExtent(startTime, endTime);
+                lightningQuery.Geometry = lightningBufferGeometry;
+                lightningQuery.SpatialRelationship = SpatialRelationship.Intersects;
+
+                int retryCount = 0;
+                int maxRetries = LightningDataSettings.QueryRetries;
+
+                while (true)
                 {
-                    QueryParameters lightningQuery = new QueryParameters();
-                    lightningQuery.TimeExtent = new TimeExtent(startTime, endTime);
-                    lightningQuery.Geometry = lightningBufferGeometry;
-                    lightningQuery.SpatialRelationship = SpatialRelationship.Intersects;
+                    try
+                    {
+                        Uri source = new Uri(server.URL);
+                        ServiceFeatureTable featureTable = new ServiceFeatureTable(source);
+                        FeatureQueryResult result = await featureTable.QueryFeaturesAsync(lightningQuery, QueryFeatureFields.LoadAll);
+                        IEnumerable<ILightningStrike> serverStrikes = result.Select(feature => new LightningStrike(server.Service, feature));
+                        strikes.AddRange(serverStrikes);
+                        break;
+                    }
+                    catch (ArcGISRuntimeException)
+                    {
+                        if (maxRetries >= 0 && retryCount >= maxRetries)
+                            throw;
 
-                    ServiceFeatureTable featureTable = new ServiceFeatureTable(new Uri(server.URL));
+                        await Task.Delay(500);
+                        retryCount++;
+                    }
+                }
+            }
 
-                    return featureTable.QueryFeaturesAsync(lightningQuery, QueryFeatureFields.LoadAll)
-                        .ContinueWith(task =>
-                        {
-                            return task.Result
-                                .Select(feature => new LightningStrike(server.Service, feature))
-                                .ToList();
-                        });
-                });
-
-            return (await Task.WhenAll(queryTasks))
-                .SelectMany(strikes => strikes.Cast<ILightningStrike>())
-                .ToList();
+            return strikes;
         }
     }
 }
