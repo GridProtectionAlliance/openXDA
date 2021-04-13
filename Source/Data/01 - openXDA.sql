@@ -4403,13 +4403,13 @@ SELECT
     AssetGroup.DisplayDashboard,
     AssetGroupAssetGroup.Count AS AssetGroups,
     MeterAssetGroup.Count AS Meters,
-    LineAssetGroup.Count AS Lines,
+    AssetAssetGroup.Count AS Assets,
     UserAccountAssetGroup.Count AS Users
 FROM
     AssetGroup OUTER APPLY
     (SELECT COUNT(*) FROM AssetGroupAssetGroup WHERE AssetGroup.ID = AssetGroupAssetGroup.ParentAssetGroupID) AssetGroupAssetGroup(Count) OUTER APPLY
     (SELECT COUNT(*) FROM MeterAssetGroup WHERE AssetGroup.ID = MeterAssetGroup.AssetGroupID) MeterAssetGroup(Count) OUTER APPLY
-    (SELECT COUNT(*) FROM LineAssetGroup WHERE AssetGroup.ID = LineAssetGroup.AssetGroupID) LineAssetGroup(Count) OUTER APPLY
+    (SELECT COUNT(*) FROM AssetAssetGroup WHERE AssetGroup.ID = AssetAssetGroup.AssetGroupID) AssetAssetGroup(Count) OUTER APPLY
     (SELECT COUNT(*) FROM UserAccountAssetGroup WHERE AssetGroup.ID = UserAccountAssetGroup.AssetGroupID) UserAccountAssetGroup(Count)
 GO
 
