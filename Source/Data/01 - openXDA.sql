@@ -1069,6 +1069,7 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 			LineSegmentAttributes.X0 = INSERTED.X0,
 			LineSegmentAttributes.R1 = INSERTED.R1,
 			LineSegmentAttributes.X1 = INSERTED.X1,
+            LineSegmentAttributes.Length = INSERTED.Length,
 			LineSegmentAttributes.ThermalRating = INSERTED.ThermalRating,
             LineSegmentAttributes.IsEnd = INSERTED.IsEnd
 		FROM
