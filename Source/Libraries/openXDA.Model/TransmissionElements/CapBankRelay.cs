@@ -49,6 +49,7 @@ namespace openXDA.Model
         /// </summary>
         public double OnVoltageThreshhold { get; set; }
 
+        public int CapBankNumber { get; set; }
         #endregion
 
         #region [ Methods ]

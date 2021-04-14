@@ -491,7 +491,8 @@ CREATE TABLE CapacitorBankRelayAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
-    OnVoltageThreshhold FLOAT NOT NULL
+    OnVoltageThreshhold FLOAT NOT NULL,
+    CapBankNumber INT NOT NULL Default(0)
 )
 GO
 
@@ -775,7 +776,8 @@ CREATE VIEW CapBankRelay AS
 		AssetName,
 		AssetTypeID,
 		Spare,
-        OnVoltageThreshhold
+        OnVoltageThreshhold,
+        CapBankNumber
 	FROM Asset JOIN CapacitorBankRelayAttributes ON Asset.ID = CapacitorBankRelayAttributes.AssetID
 GO
 
@@ -792,10 +794,11 @@ BEGIN
 			Spare AS Spare
 	FROM INSERTED
 
-	INSERT INTO CapacitorBankRelayAttributes (AssetID, OnVoltageThreshhold )
+	INSERT INTO CapacitorBankRelayAttributes (AssetID, OnVoltageThreshhold, CapBankNumber )
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
-            OnVoltageThreshhold AS OnVoltageThreshhold
+            OnVoltageThreshhold AS OnVoltageThreshhold,
+            CapBankNumber as CapBankNumber
 	    FROM INSERTED
 
 END
@@ -822,7 +825,8 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 	END
     UPDATE CapBankRelay
 		SET
-			CapBankRelay.OnVoltageThreshhold = INSERTED.OnVoltageThreshhold
+			CapBankRelay.OnVoltageThreshhold = INSERTED.OnVoltageThreshhold,
+            CapBankrelay.CapBankNumber = INSERTED.CapBankNumber
 		FROM
 			CapBankRelay 
 	INNER JOIN
