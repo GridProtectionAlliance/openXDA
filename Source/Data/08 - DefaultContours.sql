@@ -1,4 +1,4 @@
-﻿INSERT INTO ContourColorScale(Name, NominalValue)
+INSERT INTO ContourColorScale(Name, NominalValue)
 VALUES('Voltage RMS', 1.0)
 GO
 
