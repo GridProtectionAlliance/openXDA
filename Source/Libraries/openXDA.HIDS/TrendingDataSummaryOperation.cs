@@ -76,30 +76,28 @@ namespace openXDA.HIDS
                 return;
             }
 
-            using (API hids = new API())
+            using API hids = new API();
+            hids.Configure(HIDSSettings);
+
+            TrendingDataSummaryResource trendingDataSummaryResource = meterDataSet.GetResource<TrendingDataSummaryResource>();
+            Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = trendingDataSummaryResource.TrendingDataSummaries;
+
+            foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
             {
-                hids.Configure(HIDSSettings);
+                int channelID = channelSummaries.Key.ID;
+                IEnumerable<TrendingDataSummaryResource.TrendingDataSummary> summaries = channelSummaries.Value;
 
-                TrendingDataSummaryResource trendingDataSummaryResource = meterDataSet.GetResource<TrendingDataSummaryResource>();
-                Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = trendingDataSummaryResource.TrendingDataSummaries;
-
-                foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
+                IEnumerable<Point> points = summaries.Select(summary => new Point()
                 {
-                    int channelID = channelSummaries.Key.ID;
-                    IEnumerable<TrendingDataSummaryResource.TrendingDataSummary> summaries = channelSummaries.Value;
+                    Tag = hids.ToTag(channelID),
+                    QualityFlags = 0u,
+                    Timestamp = summary.Time,
+                    Maximum = summary.Maximum,
+                    Average = summary.Average,
+                    Minimum = summary.Minimum
+                });
 
-                    IEnumerable<Point> points = summaries.Select(summary => new Point()
-                    {
-                        Tag = hids.ToTag(channelID),
-                        QualityFlags = 0u,
-                        Timestamp = summary.Time,
-                        Maximum = summary.Maximum,
-                        Average = summary.Average,
-                        Minimum = summary.Minimum
-                    });
-
-                    hids.WritePoints(points);
-                }
+                hids.WritePoints(points);
             }
         }
 

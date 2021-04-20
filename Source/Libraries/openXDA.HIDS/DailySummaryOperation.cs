@@ -76,7 +76,7 @@ namespace openXDA.HIDS
             loadSummariesTask.GetAwaiter().GetResult();
         }
 
-        private IAsyncEnumerable<DailyTrendingSummary> QuerySummariesAsync(Dictionary<Channel, List<DataGroup>> trendingGroups)
+        private async IAsyncEnumerable<DailyTrendingSummary> QuerySummariesAsync(Dictionary<Channel, List<DataGroup>> trendingGroups)
         {
             using API hids = new API();
             hids.Configure(HIDSSettings);
@@ -115,31 +115,32 @@ namespace openXDA.HIDS
                 .AggregateAsync(0Lu, (total, count) => total + count.Count)
                 .AsTask();
 
-            return Enumerable.Range(0, (int)endTime.Subtract(startTime).TotalDays)
+            var records = Enumerable.Range(0, (int)endTime.Subtract(startTime).TotalDays)
                 .Select(days => startTime.AddDays(days))
                 .SelectMany(date => trendingGroups.Keys.Select(channel => new { Tag = channel.ID.ToString("x8"), Timestamp = date }))
                 .ToAsyncEnumerable()
                 .GroupJoin(points, key => key, pointSelector, (Key, points) => new { Key, PointTask = points.FirstOrDefaultAsync().AsTask() })
                 .GroupJoin(validPointCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.PointTask, ValidCountTask = SumAsync(counts) })
                 .GroupJoin(totalPointCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.PointTask, record.ValidCountTask, TotalCountTask = SumAsync(counts) })
-                .WhereAwait(async record => (await record.PointTask) != null)
-                .SelectAwait(async record =>
-                {
-                    Point point = await record.PointTask;
-                    ulong validCount = await record.ValidCountTask;
-                    ulong totalCount = await record.TotalCountTask;
+                .WhereAwait(async record => (await record.PointTask) != null);
 
-                    return new DailyTrendingSummary()
-                    {
-                        ChannelID = Convert.ToInt32(record.Key.Tag, 16),
-                        Date = record.Key.Timestamp,
-                        Maximum = point.Maximum,
-                        Minimum = point.Minimum,
-                        Average = point.Average,
-                        ValidCount = (int)validCount,
-                        InvalidCount = (int)(totalCount - validCount)
-                    };
-                });
+            await foreach (var record in records)
+            {
+                Point point = await record.PointTask;
+                ulong validCount = await record.ValidCountTask;
+                ulong totalCount = await record.TotalCountTask;
+
+                yield return new DailyTrendingSummary()
+                {
+                    ChannelID = Convert.ToInt32(record.Key.Tag, 16),
+                    Date = record.Key.Timestamp,
+                    Maximum = point.Maximum,
+                    Minimum = point.Minimum,
+                    Average = point.Average,
+                    ValidCount = (int)validCount,
+                    InvalidCount = (int)(totalCount - validCount)
+                };
+            }
         }
 
         // Static Fields

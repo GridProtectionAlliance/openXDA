@@ -87,53 +87,51 @@ namespace openXDA.HIDS
                 return;
             }
 
-            using (API hids = new API())
+            using API hids = new API();
+            hids.Configure(HIDSSettings);
+            TrendingDataSummaryResource trendingDataSummaryResource = meterDataSet.GetResource<TrendingDataSummaryResource>();
+            Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = trendingDataSummaryResource.TrendingDataSummaries;
+
+            foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
             {
-                hids.Configure(HIDSSettings);
-                TrendingDataSummaryResource trendingDataSummaryResource = meterDataSet.GetResource<TrendingDataSummaryResource>();
-                Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = trendingDataSummaryResource.TrendingDataSummaries;
+                int channelID = channelSummaries.Key.ID;
+                IEnumerable<TrendingDataSummaryResource.TrendingDataSummary> summaries = channelSummaries.Value;
 
-                foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
+                IEnumerable<Point> points = summaries.Select(summary => new Point()
                 {
-                    int channelID = channelSummaries.Key.ID;
-                    IEnumerable<TrendingDataSummaryResource.TrendingDataSummary> summaries = channelSummaries.Value;
+                    Tag = hids.ToTag(channelID),
+                    QualityFlags = 0u,
+                    Timestamp = summary.Time,
+                    Maximum = summary.Maximum,
+                    Average = summary.Average,
+                    Minimum = summary.Minimum
+                });
 
-                    IEnumerable<Point> points = summaries.Select(summary => new Point()
+                List<Point> data = points.ToList();
+                data.Sort((pt1, pt2) => pt1.Timestamp.CompareTo(pt2.Timestamp));
+
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    IEnumerable<SeriesType> seriesTypes = new TableOperations<SeriesType>(connection).QueryRecordsWhere("Name = 'Average' OR Name = 'Maximum' OR Name = 'Minimum'");
+                    TableOperations<AlarmLog> alarmLogTbl = new TableOperations<AlarmLog>(connection);
+                    foreach (SeriesType sT in seriesTypes)
                     {
-                        Tag = hids.ToTag(channelID),
-                        QualityFlags = 0u,
-                        Timestamp = summary.Time,
-                        Maximum = summary.Maximum,
-                        Average = summary.Average,
-                        Minimum = summary.Minimum
-                    });
+                        // Find Any Alarms for this channel
+                        IEnumerable<ActiveAlarm> alarms = new TableOperations<ActiveAlarm>(connection).QueryRecordsWhere("SeriesID IN (SELECT ID FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1})", channelID, sT.ID);
 
-                    List<Point> data = points.ToList();
-                    data.Sort((pt1, pt2) => pt1.Timestamp.CompareTo(pt2.Timestamp));
+                        if (alarms.Count() == 0)
+                            continue;
 
-                    using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                    {
-                        IEnumerable<SeriesType> seriesTypes = new TableOperations<SeriesType>(connection).QueryRecordsWhere("Name = 'Average' OR Name = 'Maximum' OR Name = 'Minimum'");
-                        TableOperations<AlarmLog> alarmLogTbl = new TableOperations<AlarmLog>(connection);
-                        foreach (SeriesType sT in seriesTypes)
+                        Func<Point, double> pointProcessor = (Point pt) => pt.Average;
+
+                        if (sT.Name == "Maximum")
+                            pointProcessor = (Point pt) => pt.Maximum;
+                        if (sT.Name == "Minimum")
+                            pointProcessor = (Point pt) => pt.Minimum;
+
+                        foreach (ActiveAlarm alarm in alarms)
                         {
-                            // Find Any Alarms for this channel
-                            IEnumerable<ActiveAlarm> alarms = new TableOperations<ActiveAlarm>(connection).QueryRecordsWhere("SeriesID IN (SELECT ID FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1})", channelID, sT.ID);
-
-                            if (alarms.Count() == 0)
-                                continue;
-
-                            Func<Point, double> pointProcessor = (Point pt) => pt.Average;
-
-                            if (sT.Name == "Maximum")
-                                pointProcessor = (Point pt) => pt.Maximum;
-                            if (sT.Name == "Minimum")
-                                pointProcessor = (Point pt) => pt.Minimum;
-
-                            foreach (ActiveAlarm alarm in alarms)
-                            {
-                                ProcessSeriesAlarm(alarm,data, pointProcessor).ForEach(item => alarmLogTbl.AddNewRecord(item));
-                            }
+                            ProcessSeriesAlarm(alarm, data, pointProcessor).ForEach(item => alarmLogTbl.AddNewRecord(item));
                         }
                     }
                 }
