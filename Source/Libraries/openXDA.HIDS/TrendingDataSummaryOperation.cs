@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using FaultData.DataAnalysis;
 using FaultData.DataOperations;
 using FaultData.DataResources;
@@ -97,7 +98,8 @@ namespace openXDA.HIDS
                     Minimum = summary.Minimum
                 });
 
-                hids.WritePoints(points);
+                Task writeTask = hids.WritePointsAsync(points);
+                writeTask.GetAwaiter().GetResult();
             }
         }
 
