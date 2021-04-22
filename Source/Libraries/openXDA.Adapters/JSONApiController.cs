@@ -78,7 +78,7 @@ namespace openXDA.Adapters
                 int id = (json != null ? (json.ID == null ? -1: int.Parse(json.ID)) : -1);
                 string name = (json != null ? (json.Name ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData(Timeout.Infinite, "Select * FROM Meter WHERE AssetKey LIKE {0} AND " + (id != -1? "ID LIKE {1} AND ": "" )+ "NAME LIKE {2}", assetKey, id, name);
+                DataTable table = dataContext.Connection.RetrieveData(0, "Select * FROM Meter WHERE AssetKey LIKE {0} AND " + (id != -1? "ID LIKE {1} AND ": "" )+ "NAME LIKE {2}", assetKey, id, name);
                 return table.Select().Select(row => dataContext.Table<Meter>().LoadRecord(row)).ToList();
             }
         }
@@ -91,7 +91,7 @@ namespace openXDA.Adapters
                 string assetKey = (json != null ? (json.AssetKey ?? "%") : "%");
                 int id = (json != null ? (json.ID == null ? -1 : int.Parse(json.ID)) : -1);
 
-                DataTable table = dataContext.Connection.RetrieveData(Timeout.Infinite, "Select * FROM Line WHERE AssetKey LIKE {0} " + (id != -1 ? "AND ID LIKE {1}" : "") , assetKey, id);
+                DataTable table = dataContext.Connection.RetrieveData(0, "Select * FROM Line WHERE AssetKey LIKE {0} " + (id != -1 ? "AND ID LIKE {1}" : "") , assetKey, id);
                 return table.Select().Select(row => dataContext.Table<Line>().LoadRecord(row)).ToList();
             }
         }
@@ -105,7 +105,7 @@ namespace openXDA.Adapters
                 int id = (json != null ? (json.ID == null ? -1 : int.Parse(json.ID)) : -1);
                 string name = (json != null ? (json.Name ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData(Timeout.Infinite, "Select * FROM MeterLocation WHERE AssetKey LIKE {0} AND " + (id != -1 ? "ID LIKE {1} AND " : "") + "NAME LIKE {2} ", assetKey, id, name);
+                DataTable table = dataContext.Connection.RetrieveData(0, "Select * FROM MeterLocation WHERE AssetKey LIKE {0} AND " + (id != -1 ? "ID LIKE {1} AND " : "") + "NAME LIKE {2} ", assetKey, id, name);
                 return table.Select().Select(row => dataContext.Table<MeterLocation>().LoadRecord(row)).ToList();
             }
         }
@@ -119,7 +119,7 @@ namespace openXDA.Adapters
                 int id = (json != null ? (json.ID == null ? -1 : int.Parse(json.ID)) : -1);
                 string name = (json != null ? (json.Name ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData(Timeout.Infinite, "Select * FROM Channel WHERE MeterID IN (Select ID FROM Meter WHERE AssetKey LIKE {0} AND " + (id != -1 ? "ID LIKE {1} AND " : "") + "NAME LIKE {2})", assetKey, id, name);
+                DataTable table = dataContext.Connection.RetrieveData(0, "Select * FROM Channel WHERE MeterID IN (Select ID FROM Meter WHERE AssetKey LIKE {0} AND " + (id != -1 ? "ID LIKE {1} AND " : "") + "NAME LIKE {2})", assetKey, id, name);
                 return table.Select().Select(row => dataContext.Table<Channel>().LoadRecord(row)).ToList();
             }
         }
@@ -141,7 +141,7 @@ namespace openXDA.Adapters
                 {
                     if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.MeterIDList == null))
                     {
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite, "Select * FROM Event WHERE StartTime >= {0} AND EndTime <= {1}", startTime, endTime).Select();
+                        table = dataContext.Connection.RetrieveData(0, "Select * FROM Event WHERE StartTime >= {0} AND EndTime <= {1}", startTime, endTime).Select();
                         return table.Select(row => dataContext.Table<Event>().LoadRecord(row)).ToList();
 
                     }
@@ -150,31 +150,31 @@ namespace openXDA.Adapters
                     {
                         object[] ids = json.MeterIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite, $"Select * FROM Event WHERE StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND MeterID IN ({param})", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0, $"Select * FROM Event WHERE StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND MeterID IN ({param})", ids).Select().Concat(table);
                     }
                     if (json.MeterAssetKeyList != null)
                     {
                         object[] ids = json.MeterAssetKeyList.Split(',').Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite, $"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param}))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0, $"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param}))", ids).Select().Concat(table);
                     }
                     if (json.LineIDList != null)
                     {
                         object[] ids = json.LineIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite, $"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND LineID IN ({param})", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0, $"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND LineID IN ({param})", ids).Select().Concat(table);
                     }
                     if (json.LineAssetKeyList != null)
                     {
                         object[] ids = json.LineAssetKeyList.Split(',').Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite, $"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param}))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0, $"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param}))", ids).Select().Concat(table);
                     }
                     if (json.EventIDList != null)
                     {
                         object[] ids = json.EventIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite, $"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND ID IN ({param})", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0, $"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND ID IN ({param})", ids).Select().Concat(table);
 
                     }
 
@@ -201,7 +201,7 @@ namespace openXDA.Adapters
                 {
                     if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.MeterIDList == null))
                     {
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM FaultSummary WHERE Inception >= {0} AND Inception <= {1}", startTime, endTime).Select();
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM FaultSummary WHERE Inception >= {0} AND Inception <= {1}", startTime, endTime).Select();
                         return table.Select(row => dataContext.Table<Fault>().LoadRecord(row)).ToList();
 
                     }
@@ -211,31 +211,31 @@ namespace openXDA.Adapters
                     {
                         object[] ids = json.MeterIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM FaultSummary WHERE Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN ({param}))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM FaultSummary WHERE Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN ({param}))", ids).Select().Concat(table);
                     }
                     if (json.MeterAssetKeyList != null)
                     {
                         object[] ids = json.MeterAssetKeyList.Split(',').Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
                     }
                     if (json.LineIDList != null)
                     {
                         object[] ids = json.LineIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND  EventID IN (Select ID FROM Event WHERE LineID IN ({param}))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND  EventID IN (Select ID FROM Event WHERE LineID IN ({param}))", ids).Select().Concat(table);
                     }
                     if (json.LineAssetKeyList != null)
                     {
                         object[] ids = json.LineAssetKeyList.Split(',').Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
                     }
                     if (json.EventIDList != null)
                     {
                         object[] ids = json.EventIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN ({param})", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN ({param})", ids).Select().Concat(table);
 
                     }
 
@@ -263,7 +263,7 @@ namespace openXDA.Adapters
                 {
                     if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.MeterIDList == null))
                     {
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM Disturbance WHERE StartTime >= {0} AND EndTime <= {1}", startTime, endTime).Select();
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM Disturbance WHERE StartTime >= {0} AND EndTime <= {1}", startTime, endTime).Select();
                         return table.Select(row => dataContext.Table<Disturbance>().LoadRecord(row)).ToList();
 
                     }
@@ -273,31 +273,31 @@ namespace openXDA.Adapters
                     {
                         object[] ids = json.MeterIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM Disturbance WHERE StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN ({param}))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM Disturbance WHERE StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN ({param}))", ids).Select().Concat(table);
                     }
                     if (json.MeterAssetKeyList != null)
                     {
                         object[] ids = json.MeterAssetKeyList.Split(',').Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
                     }
                     if (json.LineIDList != null)
                     {
                         object[] ids = json.LineIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND  EventID IN (Select ID FROM Event WHERE LineID IN ({param}))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND  EventID IN (Select ID FROM Event WHERE LineID IN ({param}))", ids).Select().Concat(table);
                     }
                     if (json.LineAssetKeyList != null)
                     {
                         object[] ids = json.LineAssetKeyList.Split(',').Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
                     }
                     if (json.EventIDList != null)
                     {
                         object[] ids = json.EventIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN ({param})", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN ({param})", ids).Select().Concat(table);
 
                     }
 
@@ -325,7 +325,7 @@ namespace openXDA.Adapters
                 {
                     if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.MeterIDList == null))
                     {
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM BreakerOperation WHERE TripCoilEnergized >= {0} AND TripCoilEnergized <= {1}", startTime, endTime).Select();
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM BreakerOperation WHERE TripCoilEnergized >= {0} AND TripCoilEnergized <= {1}", startTime, endTime).Select();
                         return table.Select(row => dataContext.Table<BreakerOperation>().LoadRecord(row)).ToList();
 
                     }
@@ -335,31 +335,31 @@ namespace openXDA.Adapters
                     {
                         object[] ids = json.MeterIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM BreakerOperation WHERE TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN ({param}))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM BreakerOperation WHERE TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN ({param}))", ids).Select().Concat(table);
                     }
                     if (json.MeterAssetKeyList != null)
                     {
                         object[] ids = json.MeterAssetKeyList.Split(',').Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
                     }
                     if (json.LineIDList != null)
                     {
                         object[] ids = json.LineIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND  EventID IN (Select ID FROM Event WHERE LineID IN ({param}))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND  EventID IN (Select ID FROM Event WHERE LineID IN ({param}))", ids).Select().Concat(table);
                     }
                     if (json.LineAssetKeyList != null)
                     {
                         object[] ids = json.LineAssetKeyList.Split(',').Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
                     }
                     if (json.EventIDList != null)
                     {
                         object[] ids = json.EventIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
                         string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
-                        table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN ({param})", ids).Select().Concat(table);
+                        table = dataContext.Connection.RetrieveData(0,"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN ({param})", ids).Select().Concat(table);
 
                     }
 
@@ -435,7 +435,7 @@ namespace openXDA.Adapters
                     int eventID = int.Parse(json.EventID);
                     using (DataContext dataContext = new DataContext("systemSettings"))
                     {
-                        DataTable table = dataContext.Connection.RetrieveData(Timeout.Infinite,"Select * FROM GetEventData({0}) as GottenEventData JOIN Series ON GottenEventData.SeriesID = Series.ID JOIN Channel ON Series.ChannelID = Channel.ID WHERE Characteristic <> 'Instantaneous'", eventID);
+                        DataTable table = dataContext.Connection.RetrieveData(0,"Select * FROM GetEventData({0}) as GottenEventData JOIN Series ON GottenEventData.SeriesID = Series.ID JOIN Channel ON Series.ChannelID = Channel.ID WHERE Characteristic <> 'Instantaneous'", eventID);
                         return table.Select().Select(row => dataContext.Table<EventData>().LoadRecord(row)).ToList();
                     }
                 }
