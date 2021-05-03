@@ -154,7 +154,7 @@ namespace openXDA.Model
         public double Adder { get; set; }
 
         [DefaultValue(1.0D)]
-        public double Multiplier { get; set; }
+        public double Multiplier { get; set; } = 1.0D;
 
         public double SamplesPerHour { get; set; }
 
