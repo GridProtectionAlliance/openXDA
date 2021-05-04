@@ -98,8 +98,8 @@ namespace openXDA.HIDS
                     Minimum = summary.Minimum
                 });
 
-                Task writeTask = hids.WritePointsAsync(points);
-                writeTask.GetAwaiter().GetResult();
+                hids.WritePoints(points);
+                //writeTask.GetAwaiter().GetResult();
             }
         }
 
