@@ -81,17 +81,7 @@ namespace openXDA.Nodes.Types.Email
 
         public void Process(Event evt)
         {
-            bool trigger;
-            try
-            {
-                trigger = Parameters.TriggersEmail(evt.ID);
-            }
-            catch (Exception ex)
-            {
-                trigger = false;
-                Log.Error($"Unable to evaluate EventEmail [ID={Parameters.ID}] For event [ID={evt.ID}]: {ex.Message}");
-            }
-            if (trigger)
+            if (Parameters.TriggersEmail(evt.ID))
             {
                 m_triggeredEvents.Enqueue(evt);
                 m_synchronizedOperation.Run();
