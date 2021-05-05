@@ -1,4 +1,4 @@
-﻿INSERT INTO MeasurementType(Name, Description) VALUES ('Voltage', 'Voltage')
+INSERT INTO MeasurementType(Name, Description) VALUES ('Voltage', 'Voltage')
 GO
 
 INSERT INTO MeasurementType(Name, Description) VALUES ('Current', 'Current')

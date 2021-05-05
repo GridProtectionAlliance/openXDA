@@ -105,7 +105,7 @@ namespace openXDA.HIDS
             loadSummariesTask.GetAwaiter().GetResult();
         }
 
-        private IAsyncEnumerable<ChannelDataQualitySummary> QuerySummariesAsync(Dictionary<Channel, List<DataGroup>> trendingGroups)
+        private async IAsyncEnumerable<ChannelDataQualitySummary> QuerySummariesAsync(Dictionary<Channel, List<DataGroup>> trendingGroups)
         {
             using API hids = new API();
             hids.Configure(HIDSSettings);
@@ -157,33 +157,34 @@ namespace openXDA.HIDS
                 .AggregateAsync(0Lu, (total, count) => total + count.Count)
                 .AsTask();
 
-            return Enumerable.Range(0, (int)endTime.Subtract(startTime).TotalDays)
+            var records = Enumerable.Range(0, (int)endTime.Subtract(startTime).TotalDays)
                 .Select(days => startTime.AddDays(days))
                 .SelectMany(date => trendingGroups.Keys.Select(Channel => new { Key = new { Tag = Channel.ID.ToString("x8"), Timestamp = date }, Channel }))
                 .ToAsyncEnumerable()
                 .GroupJoin(unreasonableCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, UnreasonableCountTask = SumAsync(counts) })
                 .GroupJoin(latchedCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, LatchedCountTask = SumAsync(counts) })
                 .GroupJoin(noncongruentCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, record.LatchedCountTask, NoncongruentCountTask = SumAsync(counts) })
-                .GroupJoin(totalPointCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, record.LatchedCountTask, record.NoncongruentCountTask, TotalCountTask = SumAsync(counts) })
-                .SelectAwait(async record =>
-                {
-                    ulong unreasonableCount = await record.UnreasonableCountTask;
-                    ulong latchedCount = await record.LatchedCountTask;
-                    ulong noncongruentCount = await record.NoncongruentCountTask;
-                    ulong totalCount = await record.TotalCountTask;
-                    ulong expectedCount = (ulong)(24.0D * record.Channel.SamplesPerHour);
+                .GroupJoin(totalPointCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, record.LatchedCountTask, record.NoncongruentCountTask, TotalCountTask = SumAsync(counts) });
 
-                    return new ChannelDataQualitySummary()
-                    {
-                        ChannelID = Convert.ToInt32(record.Key.Tag, 16),
-                        Date = record.Key.Timestamp,
-                        UnreasonablePoints = (int)unreasonableCount,
-                        LatchedPoints = (int)latchedCount,
-                        NoncongruentPoints = (int)noncongruentCount,
-                        GoodPoints = (int)(totalCount - unreasonableCount - latchedCount - noncongruentCount),
-                        ExpectedPoints = (int)expectedCount
-                    };
-                });
+            await foreach (var record in records)
+            {
+                ulong unreasonableCount = await record.UnreasonableCountTask;
+                ulong latchedCount = await record.LatchedCountTask;
+                ulong noncongruentCount = await record.NoncongruentCountTask;
+                ulong totalCount = await record.TotalCountTask;
+                ulong expectedCount = (ulong)(24.0D * record.Channel.SamplesPerHour);
+
+                yield return new ChannelDataQualitySummary()
+                {
+                    ChannelID = Convert.ToInt32(record.Key.Tag, 16),
+                    Date = record.Key.Timestamp,
+                    UnreasonablePoints = (int)unreasonableCount,
+                    LatchedPoints = (int)latchedCount,
+                    NoncongruentPoints = (int)noncongruentCount,
+                    GoodPoints = (int)(totalCount - unreasonableCount - latchedCount - noncongruentCount),
+                    ExpectedPoints = (int)expectedCount
+                };
+            }
         }
 
         private void ProcessDataQualityRangeLimits(MeterDataSet meterDataSet)
