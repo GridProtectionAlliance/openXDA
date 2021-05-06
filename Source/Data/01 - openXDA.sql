@@ -5511,7 +5511,7 @@ DECLARE @startTime DATETIME2
 DECLARE @endTime DATETIME2
 
 SELECT
-    @lineID = LineID,
+    @lineID = AssetID,
     @startTime = dbo.AdjustDateTime2(StartTime, -@timeTolerance),
     @endTime = dbo.AdjustDateTime2(EndTime, @timeTolerance)
 FROM Event
@@ -5521,7 +5521,7 @@ SELECT *
 INTO #lineEvent
 FROM Event
 WHERE
-    Event.LineID = @lineID AND
+    Event.AssetID = @lineID AND
     Event.EndTime >= @startTime AND
     Event.StartTime <= @endTime
 
@@ -5530,10 +5530,10 @@ SELECT
     FaultSummary.ID AS FaultSummaryID,
     Meter.AssetKey AS MeterKey,
     Meter.Name AS MeterName,
-    MeterLocation.AssetKey as StationKey,
-    MeterLocation.Name AS StationName,
+    Location.LocationKey as StationKey,
+    Location.Name AS StationName,
     Line.AssetKey AS LineKey,
-    MeterLine.LineName,
+    Line.AssetName,
     FaultSummary.FaultType,
     FaultSummary.Inception,
     FaultSummary.DurationCycles,
@@ -5571,9 +5571,8 @@ FROM
         ReactanceSummary.Algorithm = ''Reactance'' JOIN
     DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
     Meter ON Event.MeterID = Meter.ID JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
-    MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID JOIN
-    Line ON Line.ID=MeterLine.LineID LEFT OUTER JOIN
+    Location ON Meter.LocationID = Location.ID JOIN
+    Line ON Line.ID=#lineEvent.LineID LEFT OUTER JOIN
     DoubleEndedFaultDistance ON DoubleEndedFaultDistance.LocalFaultSummaryID = FaultSummary.ID LEFT OUTER JOIN
     DoubleEndedFaultSummary ON DoubleEndedFaultSummary.ID = DoubleEndedFaultDistance.ID
 WHERE
@@ -5637,29 +5636,25 @@ SELECT
         ) Fault
         FOR XML PATH(''Fault''), TYPE
     ) AS [Faults],
-    MeterLine.LineName AS [Line/Name],
-    Line.AssetKey AS [Line/AssetKey],
-    FORMAT(Line.Length, ''0.##########'') AS [Line/Length],
-    FORMAT(SQRT(LineImpedance.R1 * LineImpedance.R1 + LineImpedance.X1 * LineImpedance.X1), ''0.##########'') AS [Line/Z1],
-    CASE LineImpedance.R1 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2(LineImpedance.X1, LineImpedance.R1) * 180 / PI(), ''0.##########'') END AS [Line/A1],
-    FORMAT(LineImpedance.R1, ''0.##########'') AS [Line/R1],
-    FORMAT(LineImpedance.X1, ''0.##########'') AS [Line/X1],
-    FORMAT(SQRT(LineImpedance.R0 * LineImpedance.R0 + LineImpedance.X0 * LineImpedance.X0), ''0.##########'') AS [Line/Z0],
-    CASE LineImpedance.R0 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2(LineImpedance.X0, LineImpedance.R0) * 180 / PI(), ''0.##########'') END AS [Line/A0],
-    FORMAT(LineImpedance.R0, ''0.##########'') AS [Line/R0],
-    FORMAT(LineImpedance.X0, ''0.##########'') AS [Line/X0],
-    FORMAT(SQRT(POWER((2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0, 2) + POWER((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, 2)), ''0.##########'') AS [Line/ZS],
-    CASE 2.0 * LineImpedance.R1 + LineImpedance.R0 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, (2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0) * 180 / PI(), ''0.##########'') END AS [Line/AS],
-    FORMAT((2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0, ''0.##########'') AS [Line/RS],
-    FORMAT((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, ''0.##########'') AS [Line/XS],
+    LineView.AssetName AS [Line/Name],
+    LineView.AssetKey AS [Line/AssetKey],
+    FORMAT(LineView.Length, ''0.##########'') AS [Line/Length],
+    FORMAT(SQRT(LineView.R1 * LineView.R1 + LineView.X1 * LineView.X1), ''0.##########'') AS [Line/Z1],
+    CASE LineView.R1 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2(LineView.X1, LineView.R1) * 180 / PI(), ''0.##########'') END AS [Line/A1],
+    FORMAT(LineView.R1, ''0.##########'') AS [Line/R1],
+    FORMAT(LineView.X1, ''0.##########'') AS [Line/X1],
+    FORMAT(SQRT(LineView.R0 * LineView.R0 + LineView.X0 * LineView.X0), ''0.##########'') AS [Line/Z0],
+    CASE LineView.R0 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2(LineView.X0, LineView.R0) * 180 / PI(), ''0.##########'') END AS [Line/A0],
+    FORMAT(LineView.R0, ''0.##########'') AS [Line/R0],
+    FORMAT(LineView.X0, ''0.##########'') AS [Line/X0],
+    FORMAT(SQRT(POWER((2.0 * LineView.R1 + LineView.R0) / 3.0, 2) + POWER((2.0 * LineView.X1 + LineView.X0) / 3.0, 2)), ''0.##########'') AS [Line/ZS],
+    CASE 2.0 * LineView.R1 + LineView.R0 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2((2.0 * LineView.X1 + LineView.X0) / 3.0, (2.0 * LineView.R1 + LineView.R0) / 3.0) * 180 / PI(), ''0.##########'') END AS [Line/AS],
+    FORMAT((2.0 * LineView.R1 + LineView.R0) / 3.0, ''0.##########'') AS [Line/RS],
+    FORMAT((2.0 * LineView.X1 + LineView.X0) / 3.0, ''0.##########'') AS [Line/XS],
     @url AS [PQDashboard]
 FROM
     Event JOIN
-    Line ON Event.LineID = Line.ID JOIN
-    MeterLine ON
-        MeterLine.MeterID = Event.MeterID AND
-        MeterLine.LineID = Event.LineID JOIN
-    LineImpedance ON LineImpedance.LineID = Line.ID
+    LineView ON Event.AssetID = LineView.ID
 WHERE Event.ID = {0}
 FOR XML PATH(''EventDetail''), TYPE'
 WHERE EventEmailParameters.ID = 2
@@ -5668,13 +5663,11 @@ GO
 UPDATE EventEmailParameters
 SET TriggersEmailSQL = 'SELECT CASE WHEN (SELECT COUNT(RP.ID) FROM RelayPerformance RP LEFT OUTER JOIN
 	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
-	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
-	LINE LN ON LN.ID = EV.LineID INNER JOIN
-	RelayAlertSetting RA ON RA.LineID = LN.ID
+	Breaker LN ON LN.ID = EV.AssetID
 	WHERE RP.EventID = {0}
-		AND ((RP.TripTime > 10*RA.TripTime AND RA.TripTime > 0) 
-			OR (RP.PickupTime > 10*RA.PickupTime AND RA.PickupTime > 0)
-			OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
+		AND ((RP.TripTime > 10*LN.TripTime AND LN.TripTime > 0) 
+			OR (RP.PickupTime > 10*LN.PickupTime AND LN.PickupTime > 0)
+			OR (RP.TripCoilCondition > LN.TripCoilCondition AND LN.TripCoilCondition > 0))
 	) > 0 THEN 1 ELSE 0 END'
 WHERE EventEmailParameters.ID = 3
 GO		
@@ -5684,54 +5677,49 @@ SET EventDetailSQL = 'DECLARE @url VARCHAR(MAX) = (SELECT Value FROM DashSetting
 
 /* Temporary Tables */
 /* Breaker */
-SELECT LN.ID AS LineID, ML.LineName AS Name, LN.AssetKey AS AssetKey, 
+SELECT LN.ID AS LineID, LN.AssetName AS Name, LN.AssetKey AS AssetKey, 
 	RP.TripTime / 10 AS TT, RP.PickupTime / 10 AS PT, RP.TripCoilCondition AS TCC, RP.TripInitiate AS TI, RP.Imax1 AS L1, RP.Imax2 AS L2,
-	( SELECT CASE WHEN (RP.TripTime > 10*RA.TripTime AND RA.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
-	( SELECT CASE WHEN (RP.PickupTime > 10*RA.PickupTime AND RA.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
-	( SELECT CASE WHEN (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
+	( SELECT CASE WHEN (RP.TripTime > 10*LN.TripTime AND LN.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN (RP.PickupTime > 10*LN.PickupTime AND LN.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN (RP.TripCoilCondition > LN.TripCoilCondition AND LN.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
 	( SELECT CASE WHEN
-		(RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0) OR
-		(RP.PickupTime > 10 * RA.PickupTime AND RA.PickupTime > 0) OR
-		(RP.TripTime > 10 * RA.TripTime AND RA.TripTime > 0)
+		(RP.TripCoilCondition > LN.TripCoilCondition AND LN.TripCoilCondition > 0) OR
+		(RP.PickupTime > 10 * LN.PickupTime AND LN.PickupTime > 0) OR
+		(RP.TripTime > 10 * LN.TripTime AND LN.TripTime > 0)
 		THEN 1 ELSE 0 END 
 	) AS Alert
 	INTO #Breaker 
 	FROM RelayPerformance RP LEFT OUTER JOIN
 	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
-	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
-	LINE LN ON LN.ID = EV.LineID LEFT OUTER JOIN
-	RelayAlertSetting RA ON RA.LineID = LN.ID
+	Breaker LN ON EV.MeterID = LN.ID 
 	WHERE RP.EventID = {0}
 
 /* Alert */
-SELECT ML.LineName AS Name, LN.AssetKey AS AssetKey
+SELECT LN.AssetName AS Name, LN.AssetKey AS AssetKey
 	INTO #Alert 
 	FROM RelayPerformance RP LEFT OUTER JOIN
 	EVENT EV ON EV.ID = RP.EventID LEFT OUTER JOIN
-	METERLINE ML ON EV.MeterID = ML.ID LEFT OUTER JOIN
-	LINE LN ON LN.ID = EV.LineID INNER JOIN
-	RelayAlertSetting RA ON RA.LineID = LN.ID
+	Breaker LN ON LN.ID = EV.AssetID 
 	WHERE RP.EventID = {0}
-		AND ((RP.TripTime > 10 * RA.TripTime AND RA.TripTime > 0) 
-			OR (RP.PickupTime > 10 * RA.PickupTime AND RA.PickupTime > 0)
-			OR (RP.TripCoilCondition > RA.TripCoilCondition AND RA.TripCoilCondition > 0))
+		AND ((RP.TripTime > 10 * LN.TripTime AND LN.TripTime > 0) 
+			OR (RP.PickupTime > 10 * LN.PickupTime AND LN.PickupTime > 0)
+			OR (RP.TripCoilCondition > LN.TripCoilCondition AND LN.TripCoilCondition > 0))
 
 /* History */
-SELECT Line.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime / 10 AS PT, Relay.TripTime / 10 AS TT, Relay.TripCoilCondition AS TCC,  Relay.Imax1 AS L1, Relay.Imax2 AS L2, Relay.TripInitiate AS TI,
-	( SELECT CASE WHEN (Relay.TripTime >10 * RelayAlert.TripTime AND RelayAlert.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
-	( SELECT CASE WHEN (Relay.PickupTime > 10 * RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
-	( SELECT CASE WHEN (Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
+SELECT Breaker.ID AS LineID, Relay.EventID AS EventID, Relay.PickupTime / 10 AS PT, Relay.TripTime / 10 AS TT, Relay.TripCoilCondition AS TCC,  Relay.Imax1 AS L1, Relay.Imax2 AS L2, Relay.TripInitiate AS TI,
+	( SELECT CASE WHEN (Relay.TripTime >10 * Breaker.TripTime AND Breaker.TripTime > 0) THEN 1 ELSE 0 END ) AS TTAlert,
+	( SELECT CASE WHEN (Relay.PickupTime > 10 * Breaker.PickupTime AND Breaker.PickupTime > 0) THEN 1 ELSE 0 END ) AS PTAlert,
+	( SELECT CASE WHEN (Relay.TripCoilCondition > Breaker.TripCoilCondition AND Breaker.TripCoilCondition > 0) THEN 1 ELSE 0 END ) AS TCCAlert,
 	( SELECT CASE WHEN
-		(Relay.TripCoilCondition > RelayAlert.TripCoilCondition AND RelayAlert.TripCoilCondition > 0) OR
-		(Relay.PickupTime > RelayAlert.PickupTime AND RelayAlert.PickupTime > 0) OR
-		(Relay.TripTime > RelayAlert.TripTime AND RelayAlert.TripTime > 0)
+		(Relay.TripCoilCondition > Breaker.TripCoilCondition AND Breaker.TripCoilCondition > 0) OR
+		(Relay.PickupTime > Breaker.PickupTime AND Breaker.PickupTime > 0) OR
+		(Relay.TripTime > Breaker.TripTime AND Breaker.TripTime > 0)
 		THEN 1 ELSE 0 END 
 	) AS Alert
 	INTO #History FROM  
 	RelayPerformance Relay LEFT OUTER JOIN
 	Channel ON Relay.ChannelID = Channel.ID LEFT OUTER JOIN
-	Line ON Channel.LineID = Line.ID LEFT OUTER JOIN
-	RelayAlertSetting RelayAlert ON RelayAlert.LineID = Line.ID
+	Breaker ON Channel.AssetID = Breaker.ID
 	WHERE Relay.EventID <> {0}
 
 /* Event */
