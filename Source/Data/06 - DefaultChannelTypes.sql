@@ -601,19 +601,19 @@ INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnec
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Bus-Line','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Bus-Line','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Bus-Breaker','only Voltages and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 OR {0} = 5 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Bus-Breaker','only Voltages and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) IN (1,5) THEN 1 ELSE 0 END)','SELECT 0')
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Line-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 OR {0} = 5 OR {0} = 2 THEN 1 ELSE 0 END)','SELECT 1')
+	VALUES ('Line-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) IN (1,2,5) THEN 1 ELSE 0 END)','SELECT 1')
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Line-(Double)Breaker','only Voltage are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)','SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)')
+	VALUES ('Line-(Double)Breaker','only Voltage are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)')
 GO
 
 INSERT INTO CBDataError (ID, Description) VALUES

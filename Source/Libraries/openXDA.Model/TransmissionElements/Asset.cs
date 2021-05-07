@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace openXDA.Model
@@ -363,10 +364,16 @@ namespace openXDA.Model
                 string jumpSQL = assetConnectionTypeTbl.QueryRecordWhere("ID = {0}",assetconnection.AssetRelationshipTypeID).JumpConnection;
                 string passThrough = assetConnectionTypeTbl.QueryRecordWhere("ID = {0}", assetconnection.AssetRelationshipTypeID).PassThrough;
 
+                jumpSQL = Regex.Replace(jumpSQL, @"\{parentid\}", assetconnection.ParentID.ToString(), RegexOptions.IgnoreCase);
+                jumpSQL = Regex.Replace(jumpSQL, @"\{childid\}", assetconnection.ChildID.ToString(), RegexOptions.IgnoreCase);
+
+                passThrough = Regex.Replace(passThrough, @"\{parentid\}", assetconnection.ParentID.ToString(), RegexOptions.IgnoreCase);
+                passThrough = Regex.Replace(passThrough, @"\{childid\}", assetconnection.ChildID.ToString(), RegexOptions.IgnoreCase);
+
                 foreach (Channel channel in potentials)
                 {
-
-                    if (Convert.ToBoolean(connection.ExecuteScalar(jumpSQL,channel.MeasurementTypeID)))
+                    string parsedJumpSQL = Regex.Replace(jumpSQL, @"\{channelid\}", channel.ID.ToString(), RegexOptions.IgnoreCase);
+                    if (Convert.ToBoolean(connection.ExecuteScalar(parsedJumpSQL)))
                     {
                         result.Add(channel);
                     }
@@ -375,8 +382,8 @@ namespace openXDA.Model
                 potentials = remoteAsset.GetConnectedChannel(connection, ignoredAssets, alowedLocations);
                 foreach (Channel channel in potentials)
                 {
-
-                    if (Convert.ToBoolean(connection.ExecuteScalar(passThrough, channel.MeasurementTypeID)))
+                    string parsedPassThrough = Regex.Replace(passThrough, @"\{channelid\}", channel.ID.ToString(), RegexOptions.IgnoreCase);
+                    if (Convert.ToBoolean(connection.ExecuteScalar(parsedPassThrough)))
                     {
                         result.Add(channel);
                     }
