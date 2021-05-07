@@ -1259,7 +1259,8 @@ CREATE TABLE Channel
     PerUnitValue FLOAT NULL,
     HarmonicGroup INT NOT NULL,
     Description VARCHAR(MAX) NULL,
-    Enabled INT NOT NULL DEFAULT 1
+    Enabled INT NOT NULL DEFAULT 1,
+    ConnectionPriority INT NOT NULL DEFAULT 0
 )
 GO
 

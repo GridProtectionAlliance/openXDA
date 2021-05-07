@@ -139,6 +139,7 @@
         @Raw(dataContext.AddInputField<Channel>("PerUnitValue"))
         @Raw(dataContext.AddInputField<Channel>("HarmonicGroup"))
         @Raw(dataContext.AddTextAreaField<Channel>("Description"))
+        @Raw(dataContext.AddInputField<Channel>("ConnectionPriority", fieldLabel: "Connection Priority"))
     </div>
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")

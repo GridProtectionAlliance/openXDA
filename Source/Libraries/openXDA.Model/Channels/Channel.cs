@@ -165,6 +165,9 @@ namespace openXDA.Model
         public string Description { get; set; }
 
         public bool Enabled { get; set; }
+
+        [DefaultValue(0)]
+        public int ConnectionPriority { get; set; }
     }
 
     public class Channel : ChannelBase
