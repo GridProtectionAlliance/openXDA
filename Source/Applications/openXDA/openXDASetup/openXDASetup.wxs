@@ -878,7 +878,7 @@
         <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Newtonsoft.Json.dll" />
       </Component>
       <Component Id="JsonSubTypes">
-        <File Id="JsonSubTypes.dll" Name="JsonSubTypes.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\JsonSubTypes.1.5.2\lib\net47\JsonSubTypes.dll" />
+        <File Id="JsonSubTypes.dll" Name="JsonSubTypes.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\JsonSubTypes.1.8.0\lib\net47\JsonSubTypes.dll" />
       </Component>
 
       <Component Id="Owin">
