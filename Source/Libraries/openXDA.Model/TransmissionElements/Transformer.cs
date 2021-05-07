@@ -48,6 +48,14 @@ namespace openXDA.Model
         [Required]
         public double SecondaryVoltageKV { get; set; }
 
+        public double TertiaryVoltageKV { get; set; }
+
+        public double PrimaryWinding { get; set; }
+
+        public double SecondaryWinding { get; set; }
+
+        public double TertiaryWinding { get; set; }
+
         public double Tap { get; set; }
 
         public double ThermalRating { get; set; }

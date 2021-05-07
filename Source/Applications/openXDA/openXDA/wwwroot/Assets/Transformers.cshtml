@@ -51,7 +51,8 @@ new[] { "AssetKey", "Key", "text-Left" },
 new[] { "AssetName", "Asset Name", "text-left" },
 new[] { "PrimaryVoltageKV", "Primary Voltage", "text-left"},
 new[] { "SecondaryVoltageKV", "Secondary Voltage", "text-left"},
-new[] { "ThermalRating", "Thermal Rating", "text-left"},
+new[] { "TertiaryVoltageKV", "Tertiary Voltage", "text-left"},
+new[] { "ThermalRating", "Power Rating", "text-left"},
 new[] { null, "Asset Connections", "text-left"},
 new[] { null, "Meters", "text-left"},
 
@@ -79,9 +80,10 @@ new[] { null, "Meters", "text-left"},
 {
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: AssetName"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: PrimaryVoltageKV"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: SecondaryVoltageKV"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: TertiaryVoltageKV"></td>
     <td width="15%" class="text-left valign-middle" data-bind="text: ThermalRating"></td>
-    <td width="15%" class="text-left valign-middle" data-bind="text: PrimaryVoltageKV"></td>
-    <td width="15%" class="text-left valign-middle" data-bind="text: SecondaryVoltageKV"></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/AssetConnections.cshtml?AssetID=' + ID  }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Connections&nbsp;&nbsp;<span class="badge" data-bind="text: getConnectionCount(ID, $($element)), attr: {id: 'connectionCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?AssetID=' + ID + '&MeterID=-1' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
@@ -99,14 +101,20 @@ new[] { null, "Meters", "text-left"},
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Transformer>("PrimaryVoltageKV", fieldLabel: "Primary Voltage (kV)"))
         @Raw(dataContext.AddInputField<Transformer>("SecondaryVoltageKV", fieldLabel: "Secondary Voltage (kV)"))
+        @Raw(dataContext.AddInputField<Transformer>("TertiaryVoltageKV", fieldLabel: "Tertiary Voltage (kV)"))
+
         @Raw(dataContext.AddInputField<Transformer>("Tap", fieldLabel: "Tap Ratio"))
-        @Raw(dataContext.AddInputField<Transformer>("ThermalRating", fieldLabel: "Thermal Rating (kA)"))
+        @Raw(dataContext.AddInputField<Transformer>("ThermalRating", fieldLabel: "Rating (kVA)"))
     </div>
     <div class="col-md-4">
         @Raw(dataContext.AddInputField<Transformer>("R0", fieldLabel: "R0 (p.u.)"))
         @Raw(dataContext.AddInputField<Transformer>("X0", fieldLabel: "X0 (p.u.)"))
         @Raw(dataContext.AddInputField<Transformer>("R1", fieldLabel: "R1 (p.u.)"))
         @Raw(dataContext.AddInputField<Transformer>("X1", fieldLabel: "X1 (p.u.)"))
+
+        @Raw(dataContext.AddInputField<Transformer>("PrimaryWinding", fieldLabel: "Primary Windings"))
+        @Raw(dataContext.AddInputField<Transformer>("SecondaryWinding", fieldLabel: "Secondary Windings"))
+        @Raw(dataContext.AddInputField<Transformer>("TertiaryWinding", fieldLabel: "Tertiary Windings"))
     </div>
 
 }
@@ -150,7 +158,7 @@ new[] { null, "Meters", "text-left"},
             }
 
             return element.text();
-        }    
+        }
 
     </script>
 }

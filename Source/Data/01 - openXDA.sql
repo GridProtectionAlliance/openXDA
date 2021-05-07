@@ -539,7 +539,12 @@ CREATE TABLE TransformerAttributes
 	ThermalRating FLOAT NOT NULL,
 	SecondaryVoltageKV FLOAT NULL,
 	PrimaryVoltageKV FLOAT NULL,
-	Tap FLOAT NULL
+    TertiaryVoltageKV FLOAT NULL,
+    SecondaryWinding FLOAT NULL,
+	PrimaryWinding FLOAT NULL,
+    TertiaryWinding FLOAT NULL,
+	Tap FLOAT NULL,
+
 )
 GO
 
@@ -1098,6 +1103,10 @@ CREATE VIEW Transformer AS
 		ThermalRating,
 		SecondaryVoltageKV,
 		PrimaryVoltageKV,
+        TertiaryVoltageKV,
+        SecondaryWinding,
+        PrimaryWinding,
+        TertiaryWinding,
 		TAP,
 		Description,
 		AssetName,
@@ -1120,7 +1129,7 @@ BEGIN
 			Spare AS Spare
 	FROM INSERTED
 
-	INSERT INTO TransformerAttributes (AssetID, R0, X0, R1, X1, ThermalRating, SecondaryVoltageKV, PrimaryVoltageKV, Tap )
+	INSERT INTO TransformerAttributes (AssetID, R0, X0, R1, X1, ThermalRating, SecondaryVoltageKV, PrimaryVoltageKV, Tap, TertiaryVoltageKV, SecondaryWinding, PrimaryWinding, TertiaryWinding )
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			R0 AS R0,
@@ -1130,8 +1139,11 @@ BEGIN
 			ThermalRating AS ThermalRating,
 			SecondaryVoltageKV AS SecondaryVoltageKV,
 			PrimaryVoltageKV AS PrimaryVoltageKV,
-			Tap AS Tap
-
+			Tap AS Tap,
+            TertiaryVoltageKV AS TertiaryVoltageKV,
+            SecondaryWinding AS SecondaryWinding,
+            PrimaryWinding AS PrimaryWinding,
+            TertiaryWinding AS TertiaryWinding
 	FROM INSERTED
 
 END
@@ -1165,7 +1177,11 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 			TransformerAttributes.ThermalRating = INSERTED.ThermalRating,
 			TransformerAttributes.SecondaryVoltageKV = INSERTED.SecondaryVoltageKV,
 			TransformerAttributes.PrimaryVoltageKV = INSERTED.PrimaryVoltageKV,
-			TransformerAttributes.Tap = INSERTED.Tap
+			TransformerAttributes.Tap = INSERTED.Tap,
+            TransformerAttributes.TertiaryVoltageKV = INSERTED.TertiaryVoltageKV,
+            TransformerAttributes.SecondaryWinding = INSERTED.SecondaryWinding,
+            TransformerAttributes.PrimaryWinding = INSERTED.PrimaryWinding,
+            TransformerAttributes.TertiaryWinding = INSERTED.TertiaryWinding
 		FROM
 			TransformerAttributes 
 	INNER JOIN
