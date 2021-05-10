@@ -515,7 +515,7 @@ const IntervallDataSelect = (props: {}) => {
 
     //Set Alarm Parameters to valid start Values
     React.useEffect(() => {
-        if (seriesTypes.findIndex(item => item.ID == seriesTypeID) == -1)
+        if (seriesTypes.findIndex(item => item.ID == seriesTypeID) == -1 && seriesTypes.length > 0)
             dispatch(updateSeriesTypeID(seriesTypes[0].ID));
     }, [])
 

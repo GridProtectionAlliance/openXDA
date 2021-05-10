@@ -223,7 +223,7 @@ namespace openXDA.Controllers.WebAPI
     }
 
     [RoutePrefix("api/SeriesType")]
-    public class SettingController : ModelController<Setting>
+    public class SettingController : ModelController<SeriesType>
     {
         public SettingController(Func<AdoDataConnection> connectionFactory)
             : base(connectionFactory)
