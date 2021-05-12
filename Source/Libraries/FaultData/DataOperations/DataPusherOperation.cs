@@ -103,6 +103,7 @@ namespace FaultData.DataOperations
             TableOperations<MetersToDataPush> meterTable = new TableOperations<MetersToDataPush>(connection);
             IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*'");
             DataPusherEngine engine = new DataPusherEngine();
+            engine.Initialize();
 
             foreach (RemoteXDAInstance instance in instances)
             {

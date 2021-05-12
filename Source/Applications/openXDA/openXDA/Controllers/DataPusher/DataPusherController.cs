@@ -53,6 +53,7 @@ namespace openXDA.Controllers.Config
                         RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                         MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                         UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                        engine.Initialize();
                         engine.SyncMeterConfigurationForInstance(connectionId, instance, meter, userAccount, cancellationToken);
                     }
                     catch (Exception ex)
@@ -77,6 +78,7 @@ namespace openXDA.Controllers.Config
                         // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                         DataPusherEngine engine = new DataPusherEngine();
                         RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                        engine.Initialize();
                         engine.SyncMeterFilesForInstance(connectionId, instance, meterId, cancellationToken);
                     }
                     catch (Exception ex)
@@ -94,6 +96,7 @@ namespace openXDA.Controllers.Config
             {
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine();
+                engine.Initialize();
                 engine.SyncInstanceConfiguration(connectionId, instanceId, cancellationToken);
             }, cancellationToken);
 
@@ -109,6 +112,7 @@ namespace openXDA.Controllers.Config
                     // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                     DataPusherEngine engine = new DataPusherEngine();
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    engine.Initialize();
                     engine.SyncInstanceFiles(connectionId, instance, cancellationToken);
                 }
             }, cancellationToken);

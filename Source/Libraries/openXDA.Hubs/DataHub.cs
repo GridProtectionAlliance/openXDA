@@ -6920,6 +6920,7 @@ namespace openXDA.Hubs
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    engine.Initialize();
                     engine.SyncMeterConfigurationForInstance(clientId, instance, meter, userAccount, new CancellationToken());
                 }
                 catch (Exception ex)
@@ -6942,6 +6943,7 @@ namespace openXDA.Hubs
                     // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                     DataPusherEngine engine = new DataPusherEngine();
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    engine.Initialize();
                     engine.SyncMeterFilesForInstance(clientId, instance, meterId, new CancellationToken());
                 }
                 catch (Exception ex)
@@ -7020,6 +7022,7 @@ namespace openXDA.Hubs
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
+            engine.Initialize();
             engine.SyncInstanceConfiguration(Context.ConnectionId, instanceId, new CancellationToken());
         }
 
@@ -7032,6 +7035,7 @@ namespace openXDA.Hubs
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine();
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                engine.Initialize();
                 engine.SyncInstanceFiles(Context.ConnectionId, instance, new CancellationToken());
             }
         }
