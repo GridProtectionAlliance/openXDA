@@ -16,12 +16,13 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  01/15/2016 - J. Ritchie Carroll
+//  05/10/2021 - C. Lackner
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
 @using GSF.Web.Shared
-
+@using GSF.Data
+@using System.Data
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,50 +39,110 @@
     <link href="@Model.Global.BootstrapTheme" rel="stylesheet">
     <link href="Content/Site.css" rel="stylesheet">
     <style>
-        .container {
-            position: relative;
-            padding: 0;
-        }
-        
-        .center {
-            position: absolute;
-            top: 33%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
-            display: block;
-        }
-        
-       .container img {
-            width: 100%;
-            height: auto;
-            /*opacity: 0.3;*/
+        @@media (max-width: 995px) {
+            .navbar-header {
+                float: none;
+            }
+
+            .navbar-left, .navbar-right {
+                float: none !important;
+            }
+
+            .navbar-toggle {
+                display: block;
+            }
+
+            .navbar-collapse {
+                border-top: 1px solid transparent;
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+            }
+
+            .navbar-fixed-top {
+                top: 0;
+                border-width: 0 0 1px;
+            }
+
+            .navbar-collapse.collapse {
+                display: none !important;
+            }
+
+            .navbar-nav {
+                float: none !important;
+                margin-top: 7.5px;
+            }
+
+            .collapse.in {
+                display: block !important;
+            }
         }
 
-       a img {
-           width: auto;
-           height: auto;
-       }
-       body {
-           padding-top: 0;
-       }
-        
+        @@media (min-width: 1600px) {
+            .container {
+                width: 1550px;
+            }
+        }
+
     </style>
 </head>
 <body role="document">
-<div class="container">
-    <img id="splash" src="Images/dDSplashBackground.png"/>
-    <div class="center">
-        <div class="row"><a href="Config/index.cshtml"><img style="width: auto" src="Images/dD Config.png" /></a></div>
-        <div class="row"><a href="Assets/index.cshtml"><img style="width: auto" src="Images/dD Assets.png" /></a></div>
-        <div class="row"><a href="Workbench/index.cshtml"><img style="width: auto" src="Images/dD Workbench.png" /></a></div>
-        <div class="row"><a href="DataPusher/index.cshtml"><img style="width: auto" src="Images/dD Export.png" /></a></div>
-        <div class="row"><a href="Reports/index.cshtml"><img style="width: auto" src="Images/dD Reports.png" /></a></div>
-        <div class="row"><a href="SPCTools/index.cshtml"><img style="width: auto" src="Images/dDSPCTools.png" /></a></div>
+
+    <!--/.navbar -->
+    <div class="navbar navbar-inverse navbar-fixed-top" id="menuBar">
+        <div class="container">
+            <div class="navbar-header">
+                <a href="https://gridprotectionalliance.org/productsDisturbance.asp" target="_blank" class="navbar-brand" style="padding: 0; margin: 0"><img class="pull-left" alt="PQ Products" src="/Images/PQProducts.png"></a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+
+                <p class="nav navbar-text navbar-right">
+                    <button id="logoutButton" type="button" class="btn btn-sm btn-info">Log Out</button>
+                    <a href="https://www.gridprotectionalliance.org/" target="_blank" style="padding-left: 10px" class="nav navbar-right">
+                        <img alt="Grid Protection Alliance" src="/Images/gpa-smalllock.png">
+                    </a>
+                </p>
+
+            </div>
+        </div>
     </div>
-</div>
-<script>
-</script>
+
+
+    <div class="container theme-showcase" role="main" id="bodyContainer" style="margin-top: 36px;">
+        @{
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                DataTable categoryTbl = connection.RetrieveData("SELECT * FROM PQApplicationsCategory WHERE (SELECT COUNT(*) FROM PQApplications WHERE CategoryID = PQApplicationsCategory.ID) > 0  ORDER BY SortOrder");
+
+                foreach (DataRow categoryRow in categoryTbl.Rows)
+                {
+                    <div class="panel panel-default text-center">
+                        <div class="panel-heading">
+                            @categoryRow["Name"].ToString()
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                @{
+                                    DataTable appTbl = connection.RetrieveData("SELECT * FROM PQApplications WHERE CategoryID = {0} ORDER BY SortOrder", categoryRow.ConvertField("ID", typeof(int)));
+                                    foreach (DataRow appRow in appTbl.Rows)
+                                    {
+                                        <div class="col-xs-6 col-md-4 col-lg-2">
+                                            <a href="@appRow["Url"].ToString()" class="thumbnail">
+                                                <img src="@appRow["Image"].ToString()" alt="@appRow["Name"].ToString()">
+                                                <div class="caption">
+                                                    <h3>@appRow["Name"].ToString()</h3>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        }
+    </div>
+    <script>
+    </script>
 </body>
 
 

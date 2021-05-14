@@ -31,6 +31,27 @@ CREATE TABLE Setting
 )
 GO
 
+CREATE TABLE PQApplicationsCategory
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NULL,
+    SortOrder INT NULL
+)
+GO
+
+CREATE TABLE PQApplications
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NULL,
+    Url VARCHAR(MAX) NOT NULL,
+    Image VARCHAR(MAX) NOT NULL,
+    CategoryID INT NOT NULL REFERENCES PQApplicationsCategory(ID),
+    SortOrder INT NULL
+)
+GO
+
+
+
 CREATE TABLE ConfigurationLoader
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -5504,6 +5525,45 @@ BEGIN
     DROP TABLE #deleted
 END
 GO
+
+----- Standard PQ Apps -----
+INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES ('',1)
+GO
+
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD Assets', './Assets/index.cshtml','./Images/Tiles/dD_Assets.png',1,1)
+GO
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD Config', './Config/index.cshtml','./Images/Tiles/dD_Config.png',1,0)
+GO
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD Export', './DataPusher/index.cshtml','./Images/Tiles/dD_Export.png',1,3)
+GO
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD Reports', './Reports/index.cshtml','./Images/Tiles/dD_Reports.png',1,4)
+GO
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD WorkBench', './Workbench/index.cshtml','./Images/Tiles/dD_Workbench.png',1,2)
+GO
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('SPCTools', 'SPCTools/index.cshtml','./Images/Tiles/SPCTools.png',1,5)
+GO
+-- The Following are separate Apps (only to be added if the Apps are installed) --
+--INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES 
+--('Configure',1),
+--('Acquire',2),
+--('Study',3),
+--('Display',4),
+--('Report',5),
+-- ('Integrate & Share',6)
+--GO
+
+--INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES 
+--('LSCVS', 'https://gridprotectionalliance.org/productsDisturbance.asp#LSCVS','./Images/Tiles/LSCVS.png',5,2),
+--('miMD', 'https://gridprotectionalliance.org/productsDisturbance.asp#miMD','./Images/Tiles/miMD.png',1,3),
+--('openMIC', 'https://gridprotectionalliance.org/productsDisturbance.asp#MICEE','./Images/Tiles/openMIC.png',2,1),
+--('PQDashboard', 'https://gridprotectionalliance.org/productsDisturbance.asp#PQD','./Images/Tiles/PQDashboard.png',4,1),
+--('PQDigest', 'https://gridprotectionalliance.org/productsDisturbance.asp#PQDigest','./Images/Tiles/PQDigest.png',4,3)
+-- ('SEBrowser', 'https://gridprotectionalliance.org/productsDisturbance.asp#SEBrowser','./Images/Tiles/SEBrowser.png',4,2)
+--('SystemCenter', 'https://gridprotectionalliance.org/productsDisturbance.asp#SystemCenter','./Images/Tiles/SystemCenter.png',1,1)
+--(Name,URL,Image,CategoryID,SortOrder) VALUES ('TrendAP', 'https://gridprotectionalliance.org/productsDisturbance.asp#TrenDAP','./Images/Tiles/TrendAP.png',3,1)
+--('Voltage Regulation Report', 'https://gridprotectionalliance.org/productsDisturbance.asp#VoltReg','./Images/Tiles/VoltageRegReport.png',5,3)
+--GO
+
 
 
 ----- Email Templates -----
