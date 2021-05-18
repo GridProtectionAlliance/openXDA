@@ -193,9 +193,9 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                         List<Event> relayEvents = GetRelayEvents(evt.StartTime, evt.EndTime, relays);
 
                         if (!capBank.Fused && !capBank.Compensated )
-                            relayEventMapping.Add(GenerateRelayDataFileFuselessUncompensated(relayEvents, evt), evt);
+                            relayEventMapping.Add(GenerateRelayDataFileFuselessUncompensated(relayEvents, evt, capBank), evt);
                         else
-                            relayEvents.ForEach(relayEvt => { relayEventMapping.Add(GenerateRelayDataFile(relayEvt), evt);  });
+                            relayEvents.ForEach(relayEvt => { relayEventMapping.Add(GenerateRelayDataFile(relayEvt, capBank), evt);  });
                     }
 
                     if (eventMapping.Count == 0)
@@ -215,7 +215,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                     // Read Output Files
                     Log.Info("Processing CapBank Analytic Results...");
-                    ParseOutputs(eventMapping, relayEventMapping);
+                    ParseOutputs(eventMapping, relayEventMapping, capBank);
 
                     // Trigger cap bank emails
                     _ = NotifyEventEmailNodeAsync(events);
@@ -323,11 +323,14 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             return kFactors;
         }
 
-        private void ParseOutputs(Dictionary<string, Event> eventMapping, Dictionary<string, Event> relayEventMapping)
+        private void ParseOutputs(Dictionary<string, Event> eventMapping, Dictionary<string, Event> relayEventMapping, CapBank capBank)
         {
             Settings settings = new Settings(Configure);
             string resultFolder = settings.AnalyticSettings.ResultFileLocation;
             resultFolder = Path.GetDirectoryName(resultFolder) ?? string.Empty;
+
+            if (settings.AnalyticSettings.KeepFiles)
+                resultFolder = Path.Combine(resultFolder, capBank.AssetKey);
 
             string[] csvFiles = Directory.GetFiles(resultFolder, "*.csv", SearchOption.AllDirectories);
             string switchingAnalysis;
@@ -856,24 +859,40 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 datafolder = Path.GetFullPath(Path.GetDirectoryName(datafolder));
                 resultFolder = Path.GetFullPath(Path.GetDirectoryName(resultFolder));
 
+                if (settings.AnalyticSettings.KeepFiles)
+                {
+                    dstFolder = Path.Combine(dstFolder, capBank.AssetKey);
+                    datafolder = Path.Combine(datafolder, capBank.AssetKey);
+                    resultFolder = Path.Combine(resultFolder, capBank.AssetKey);
+
+                }
+                
                 Directory.CreateDirectory(datafolder);
                 Directory.CreateDirectory(resultFolder);
                 Directory.CreateDirectory(dstFolder);
 
-                foreach (FileInfo file in new DirectoryInfo(datafolder).EnumerateFiles())
+                if (!settings.AnalyticSettings.KeepFiles)
                 {
-                    file.Delete();
-                }
-                foreach (FileInfo file in new DirectoryInfo(resultFolder).EnumerateFiles())
-                {
-                    file.Delete();
-                }
-                foreach (FileInfo file in new DirectoryInfo(dstFolder).EnumerateFiles())
-                {
-                    file.Delete();
+                    foreach (FileInfo file in new DirectoryInfo(datafolder).EnumerateFiles())
+                    {
+                        file.Delete();
+                    }
+                    foreach (FileInfo file in new DirectoryInfo(resultFolder).EnumerateFiles())
+                    {
+                        file.Delete();
+                    }
+                    foreach (FileInfo file in new DirectoryInfo(dstFolder).EnumerateFiles())
+                    {
+                        file.Delete();
+                    }
                 }
 
                 string dstFile = capBank.AssetKey + ".txt";
+
+                // Remove the Parameter file since that will be recreated even if KeepFiles is True
+                if (settings.AnalyticSettings.KeepFiles && File.Exists(Path.Combine(dstFolder, dstFile)))
+                    File.Delete(Path.Combine(dstFolder, dstFile));
+
                 List<string> lines = new List<string>();
 
                 lines.Add("Please enter capacitor bank data; Do not change the variable names; Change the values only");
@@ -1007,7 +1026,14 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 string datafolder = settings.AnalyticSettings.DataFileLocation;
                 datafolder = Path.GetDirectoryName(datafolder);
 
+                if (settings.AnalyticSettings.KeepFiles)
+                    datafolder = Path.Combine(datafolder, capBank.AssetKey);
+
                 string dstFile = $"{capBank.AssetKey}-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
+
+                if (settings.AnalyticSettings.KeepFiles && File.Exists(Path.Combine(datafolder, dstFile)))
+                    File.Delete(Path.Combine(datafolder, dstFile));
+
                 List<string> lines = new List<string>();
 
                 lines.Add($"\"{capBank.AssetKey} - {evt.StartTime:MM/dd/yyyy HH:mm:ss.ffff} \"");
@@ -1058,6 +1084,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 lines.Add(header);
                 lines.AddRange(ToCsV(series));
 
+                // 
                 // Open the file and write in each line
                 using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(datafolder + "\\" + dstFile)))
                 {
@@ -1071,7 +1098,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             }
         }
 
-        private string GenerateRelayDataFile(Event evt)
+        private string GenerateRelayDataFile(Event evt, CapBank capBank)
         {
             CapBankRelay relay;
             VIDataGroup data = QueryVIDataGroup(evt.ID, evt.MeterID);
@@ -1085,7 +1112,15 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 string datafolder = settings.AnalyticSettings.DataFileLocation;
                 datafolder = Path.GetDirectoryName(datafolder);
 
+                if (settings.AnalyticSettings.KeepFiles)
+                    datafolder = Path.Combine(datafolder, capBank.AssetKey);
+
                 string dstFile = $"Relay{relay.ID}-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
+
+                if (settings.AnalyticSettings.KeepFiles && File.Exists(Path.Combine(datafolder, dstFile)))
+                    File.Delete(Path.Combine(datafolder, dstFile));
+
+                
                 List<string> lines = new List<string>();
 
                 lines.Add($"\"{relay.AssetKey} - {evt.StartTime:MM/dd/yyyy HH:mm:ss.ffff} \"");
@@ -1127,14 +1162,23 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             }
         }
 
-        private string GenerateRelayDataFileFuselessUncompensated(List<Event> relayEvents, Event evt)
+        private string GenerateRelayDataFileFuselessUncompensated(List<Event> relayEvents, Event evt, CapBank capBank)
         {
            
             Settings settings = new Settings(Configure);
             string datafolder = settings.AnalyticSettings.DataFileLocation;
             datafolder = Path.GetDirectoryName(datafolder);
 
+            if (settings.AnalyticSettings.KeepFiles)
+                datafolder = Path.Combine(datafolder, capBank.AssetKey);
+
             string dstFile = $"Relay-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
+
+            if (settings.AnalyticSettings.KeepFiles && File.Exists(Path.Combine(datafolder, dstFile)))
+                File.Delete(Path.Combine(datafolder, dstFile));
+
+
+
             List<string> lines = new List<string>();
             
 
