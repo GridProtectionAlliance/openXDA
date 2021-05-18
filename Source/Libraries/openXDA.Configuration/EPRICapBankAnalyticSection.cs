@@ -81,5 +81,9 @@ namespace openXDA.Configuration
         [Setting]
         [DefaultValue(1200000)]
         public int Delay { get; set; }
+
+        [Setting]
+        [DefaultValue(false)]
+        public bool KeepFiles { get; set; }
     }
 }
