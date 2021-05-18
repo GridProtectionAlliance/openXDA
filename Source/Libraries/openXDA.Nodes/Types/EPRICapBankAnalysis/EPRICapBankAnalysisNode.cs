@@ -191,7 +191,11 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                         eventMapping.Add(fname, evt);
 
                         List<Event> relayEvents = GetRelayEvents(evt.StartTime, evt.EndTime, relays);
-                        relayEvents.ForEach(relayEvt => { relayEventMapping.Add(GenerateRelayDataFile(relayEvt), evt);  });
+
+                        if (!capBank.Fused && !capBank.Compensated )
+                            relayEventMapping.Add(GenerateRelayDataFileFuselessUncompensated(relayEvents, evt), evt);
+                        else
+                            relayEvents.ForEach(relayEvt => { relayEventMapping.Add(GenerateRelayDataFile(relayEvt), evt);  });
                     }
 
                     if (eventMapping.Count == 0)
@@ -808,7 +812,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
             CapBank capBank;
             List<CapBankRelay> relays;
-            VIDataGroup datagroup = QueryDataGroup(evt.ID, evt.MeterID);
+            VIDataGroup datagroup = QueryVIDataGroup(evt.ID, evt.MeterID);
 
             double iSamples = datagroup.Data.Where(item =>
                 item.SeriesInfo.Channel.AssetID == evt.AssetID &&
@@ -965,11 +969,15 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 lines.Add("");
                 lines.Add("Specify relay keywords");
                 int n = 1;
-                foreach (CapBankRelay relay in relays)
-                {
-                    lines.Add($"{n + 65} fileKeyRelay4Cap{{{n}}} = Relay{relay.ID}");
-                    n++;
-                }
+
+                if (!capBank.Compensated && !capBank.Fused)
+                    lines.Add($"{n + 65} fileKeyRelay4Cap{{{n}}} = Relay");
+                else
+                    foreach (CapBankRelay relay in relays)
+                    {
+                        lines.Add($"{n + 65} fileKeyRelay4Cap{{{n}}} = Relay{relay.ID}");
+                        n++;
+                    }
                 lines.Add("");
                 lines.Add("Evaluation of pre-insertion takes a longer time.  Set evalPreIns to 1 to evaluate; 0 to skip");
                 lines.Add($"{n + 66} evalPreIns = {(enablePreInsertion ? 1 : 0)}");
@@ -988,7 +996,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
         private string GenerateCapBankDataFile(Event evt)
         {
             CapBank capBank;
-            VIDataGroup data = QueryDataGroup(evt.ID, evt.MeterID);
+            VIDataGroup data = QueryVIDataGroup(evt.ID, evt.MeterID);
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -1066,7 +1074,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
         private string GenerateRelayDataFile(Event evt)
         {
             CapBankRelay relay;
-            VIDataGroup data = QueryDataGroup(evt.ID, evt.MeterID);
+            VIDataGroup data = QueryVIDataGroup(evt.ID, evt.MeterID);
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -1082,11 +1090,11 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                 lines.Add($"\"{relay.AssetKey} - {evt.StartTime:MM/dd/yyyy HH:mm:ss.ffff} \"");
                 lines.Add("\"\"");
-                string header = "Time (s),";
+                string header = "Time (s)";
                 List<DataSeries> series = new List<DataSeries>();
                 if (data.VA != null)
                 {
-                    header = header + " Va";
+                    header = header + ", Va";
                     series.Add(data.VA);
                 }
 
@@ -1100,7 +1108,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     header = header + ", Vc";
                     series.Add(data.VC);
                 }
-                if (header == "Time (s),")
+                if (header == "Time (s)")
                     return dstFile;
 
                 lines.Add(header);
@@ -1117,6 +1125,76 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                 return dstFile;
             }
+        }
+
+        private string GenerateRelayDataFileFuselessUncompensated(List<Event> relayEvents, Event evt)
+        {
+           
+            Settings settings = new Settings(Configure);
+            string datafolder = settings.AnalyticSettings.DataFileLocation;
+            datafolder = Path.GetDirectoryName(datafolder);
+
+            string dstFile = $"Relay-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
+            List<string> lines = new List<string>();
+            
+
+            lines.Add($"\"Relay - {evt.StartTime:MM/dd/yyyy HH:mm:ss.ffff} \"");
+            lines.Add("\"\"");
+            string header = "Time (s)";
+            
+
+            // Grab all associated Relays and order them by CapankNumber
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                List<CapBankRelay> relays = new TableOperations<CapBankRelay>(connection).QueryRecordsWhere($"ID in ({string.Join(",",relayEvents.Select(e => e.AssetID))})").ToList();
+                int Ncol = relays.Max(r => r.CapBankNumber);
+                List<DataSeries> series = new List<DataSeries>(Ncol);
+
+                for (int i=0; i < Ncol; i++)
+                {
+                    int assetID = relays.Find(r => r.CapBankNumber == i + 1)?.ID ?? -1;
+                    Event relayEvt = relayEvents.Find(e => e.AssetID == assetID);
+                   
+                    if (relayEvt == null)
+                    {
+                        series.Add(null);
+                        continue;
+                    }
+                    DataGroup data = QueryDataGroup(relayEvt.ID, relayEvt.MeterID);
+
+                    if (data.DataSeries.Where(ds => isVoltage("NG",ds)).Count() == 0)
+                    {
+                        series.Add(null);
+                        continue;
+                    }
+
+                    series.Add(data.DataSeries.First(ds => isVoltage("NG", ds)));
+                }
+
+                if (!series.Any(s => (object)s!= null))
+                    return dstFile;
+
+                header = header + ", " + string.Join(", ", series.Select((item) => "V"));
+
+                if (header == "Time (s), ")
+                    return dstFile;
+
+                lines.Add(header);
+                lines.AddRange(ToCsV(series));
+
+                // Open the file and write in each line
+                using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(datafolder + "\\" + dstFile)))
+                {
+                    for (int i = 0; i < lines.Count(); i++)
+                    {
+                        fileWriter.WriteLine(lines[i]);
+                    }
+                }
+
+            }
+          
+            return dstFile;
+        
         }
 
         private List<Event> GetRelayEvents(DateTime startTime, DateTime endTime, List<CapBankRelay> relays)
@@ -1148,7 +1226,18 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             }
         }
 
-        private VIDataGroup QueryDataGroup(int eventID, int meterId)
+        private VIDataGroup QueryVIDataGroup(int eventID, int meterId)
+        {
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                List<byte[]> data = ChannelData.DataFromEvent(eventID, CreateDbConnection);
+                Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterId);
+                meter.ConnectionFactory = CreateDbConnection;
+                return ToVIDataGroup(meter, data);
+            }
+        }
+
+        private DataGroup QueryDataGroup(int eventID, int meterId)
         {
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -1158,6 +1247,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 return ToDataGroup(meter, data);
             }
         }
+
 
         private async Task NotifyEventEmailNodeAsync(List<Event> events)
         {
@@ -1228,17 +1318,20 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
         private static List<string> ToCsV(List<DataSeries> data)
         {
 
+          
             List<string> result = new List<string>();
-            DateTime startingTime = data.First().DataPoints[0].Time;
+            DateTime startingTime = data.First(item => (object)item != null).DataPoints[0].Time;
 
-            for (int i = 0; i < data.First().DataPoints.Count; ++i)
+            for (int i = 0; i < data.First(item => (object)item != null).DataPoints.Count; ++i)
             {
-                double TS = (data.First().DataPoints[i].Time - startingTime).TotalSeconds;
+                double TS = (data.First(item => (object)item != null).DataPoints[i].Time - startingTime).TotalSeconds;
 
                 IEnumerable<string> row = new List<string>() { TS.ToString("0.#######") };
 
                 row = row.Concat(data.Select(x =>
                 {
+                    if ((object)data == null)
+                        return "0";
                     if (x.DataPoints.Count > i)
                         return x.DataPoints[i].Value.ToString();
                     else
@@ -1251,13 +1344,19 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             return result;
         }
 
-        private static VIDataGroup ToDataGroup(Meter meter, List<byte[]> data)
+        private static VIDataGroup ToVIDataGroup(Meter meter, List<byte[]> data)
         {
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(meter, data);
             return new VIDataGroup(dataGroup);
         }
 
+        private static DataGroup ToDataGroup(Meter meter, List<byte[]> data)
+        {
+            DataGroup dataGroup = new DataGroup();
+            dataGroup.FromData(meter, data);
+            return dataGroup;
+        }
         private static IDbDataParameter ToDateTime2(AdoDataConnection connection, DateTime dateTime)
         {
             using (IDbCommand command = connection.Connection.CreateCommand())
@@ -1267,6 +1366,31 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 parameter.Value = dateTime;
                 return parameter;
             }
+        }
+
+        private static bool isVoltage(string phase, DataSeries dataSeries)
+        {
+            string[] instantaneousSeriesTypes = { "Values", "Instantaneous" };
+
+            string measurementType = dataSeries.SeriesInfo.Channel.MeasurementType.Name;
+            string measurementCharacteristic = dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name;
+            string seriesType = dataSeries.SeriesInfo.SeriesType.Name;
+            string seriesPhase = dataSeries.SeriesInfo.Channel.Phase.Name;
+
+            if (measurementCharacteristic != "Instantaneous")
+                return false;
+
+            if (!instantaneousSeriesTypes.Contains(seriesType))
+                return false;
+
+            if (measurementType != "Voltage")
+                return false;
+
+            if (seriesPhase != phase)
+                return false;
+
+            return true;
+
         }
 
         #endregion
