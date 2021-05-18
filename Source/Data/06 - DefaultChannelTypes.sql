@@ -624,7 +624,7 @@ INSERT INTO CBDataError (ID, Description) VALUES
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Bus-CapBank','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN {0} = 1 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Bus-CapBank','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
 GO
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
 	VALUES ('Bus-Relay','only Voltages are passed across this connection.',0,'SELECT 0','SELECT 0')
