@@ -263,7 +263,7 @@ namespace FaultData.DataAnalysis
             }
 
             // Start by matching 
-            //Check if a voltage and current channnel exist on this asset
+            //Check if a voltage and current channel exist on this asset
 
             if (iaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).Count() > 0)
                 m_iaIndex = iaIndices.Where(i => dataGroup[i].SeriesInfo.Channel.AssetID == dataGroup.Asset.ID).First();
