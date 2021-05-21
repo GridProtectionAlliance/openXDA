@@ -1336,7 +1336,8 @@ namespace openXDA.DataPusher
                                 ProcessingStartTime = fileGroup.ProcessingStartTime,
                                 DataEndTime = fileGroup.DataEndTime,
                                 DataStartTime = fileGroup.DataStartTime,
-                                Error = fileGroup.Error
+                                Error = fileGroup.Error,
+                                MeterID = meterToDataPush.RemoteXDAMeterID
                             };
                             int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, fg, userAccount);
                             fileGroupLocalToRemote = new FileGroupLocalToRemote()
@@ -1441,7 +1442,8 @@ namespace openXDA.DataPusher
                             ProcessingStartTime = fileGroup.ProcessingStartTime,
                             DataEndTime = fileGroup.DataEndTime,
                             DataStartTime = fileGroup.DataStartTime,
-                            Error = fileGroup.Error
+                            Error = fileGroup.Error,
+                            MeterID = meterToDataPush.RemoteXDAMeterID
                         };
                         int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, fg, userAccount);
                         fileGroupLocalToRemote = new FileGroupLocalToRemote()
@@ -1515,135 +1517,6 @@ namespace openXDA.DataPusher
                 Log.Error(ex);
             }
 
-        }
-
-        private int GetRemoteEventTypeId(string address, int localEventTypeId, UserAccount userAccount)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-
-                IEnumerable<EventType> localTypes = new TableOperations<EventType>(connection).QueryRecords();
-                List<EventType> remoteTypes = WebAPIHub.GetRecords<EventType>(address, "all", userAccount).ToList();
-
-                if (!remoteTypes.Where(x => x.Name == localTypes.Where(y => y.ID == localEventTypeId).First().Name).Any())
-                {
-                    EventType record = new EventType()
-                    {
-                        Name = localTypes.Where(y => y.ID == localEventTypeId).First().Name,
-                        Description = localTypes.Where(y => y.ID == localEventTypeId).First().Description
-                    };
-                    return WebAPIHub.CreateRecord(address, record, userAccount);
-                }
-                else
-                {
-                    return remoteTypes.Where(x => x.Name == localTypes.Where(y => y.ID == localEventTypeId).First().Name).First().ID;
-                }
-            }
-        }
-
-        private int GetRemoteFileGroup(string address, int localFileGroupId, UserAccount userAccount)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-
-                FileGroup local = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", localFileGroupId);
-                List<FileGroup> remote = WebAPIHub.GetRecords<FileGroup>(address, "all", userAccount).ToList();
-
-                int id;
-                if (local != null && !remote.Where(x => x.DataStartTime.Equals(local.DataStartTime) && x.DataEndTime.Equals(local.DataEndTime) && x.ProcessingStartTime.Equals(local.ProcessingStartTime) && x.ProcessingEndTime.Equals(local.ProcessingEndTime)).Any())
-                {
-                    FileGroup record = new FileGroup()
-                    {
-                        DataStartTime = local.DataStartTime,
-                        DataEndTime = local.DataEndTime,
-                        ProcessingStartTime = local.ProcessingStartTime,
-                        ProcessingEndTime = local.ProcessingEndTime,
-                        Error = local.Error
-                    };
-                    id = WebAPIHub.CreateRecord(address, record, userAccount);
-                }
-                else
-                {
-                    id = remote.Where(x => x.DataStartTime.Equals(local.DataStartTime) && x.DataEndTime.Equals(local.DataEndTime) && x.ProcessingStartTime.Equals(local.ProcessingStartTime) && x.ProcessingEndTime.Equals(local.ProcessingEndTime)).First().ID;
-                }
-
-                SyncDataFiles(address, localFileGroupId, id, userAccount);
-
-                return id;
-            }
-        }
-
-        private void SyncDataFiles(string address, int localFileGroupId, int remoteFileGroupId, UserAccount userAccount)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-
-                IEnumerable<DataFile> local = new TableOperations<DataFile>(connection).QueryRecordsWhere("FileGroupID = {0}", localFileGroupId);
-                List<DataFile> remote = WebAPIHub.GetRecordsWhere<DataFile>(address, $"FileGroupID = {remoteFileGroupId}", userAccount).ToList();
-
-                // if there is a local record but not a remote record
-                foreach (DataFile localRecord in local)
-                {
-                    if (!remote.Where(x => x.FilePath == localRecord.FilePath).Any())
-                    {
-                        DataFile record = new DataFile()
-                        {
-                            FileGroupID = remoteFileGroupId,
-                            FilePath = localRecord.FilePath,
-                            FilePathHash = localRecord.FilePathHash,
-                            FileSize = localRecord.FileSize,
-                            CreationTime = localRecord.CreationTime,
-                            LastAccessTime = localRecord.LastAccessTime,
-                            LastWriteTime = localRecord.LastWriteTime
-                        };
-                        int id = WebAPIHub.CreateRecord(address, record, userAccount);
-
-                        SyncFileBlobs(address, localRecord.ID, id, userAccount);
-                    }
-                }
-            }
-        }
-
-        private void SyncFileBlobs(string address, int localDataFileId, int remoteDataFileId, UserAccount userAccount)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-
-                FileBlob local = new TableOperations<FileBlob>(connection).QueryRecordWhere("DataFileID = {0}", localDataFileId);
-                FileBlob remote = WebAPIHub.GetRecordWhere<FileBlob>(address, $"DataFileID = {remoteDataFileId}", userAccount);
-
-                if (local != null && remote == null)
-                {
-                    FileBlob record = new FileBlob()
-                    {
-                        DataFileID = remoteDataFileId,
-                        Blob = local.Blob
-                    };
-                    WebAPIHub.CreateRecord(address, record, userAccount);
-                }
-            }
-        }
-
-        private int GetRemotePhaseId(string address, int localPhaseId, UserAccount userAccount)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-
-                List<Phase> remote = WebAPIHub.GetRecords<Phase>(address, "all", userAccount).ToList();
-                Phase local = new TableOperations<Phase>(connection).QueryRecordWhere("ID = {0}", localPhaseId);
-                if (remote.Where(x => x.Name == local.Name).Any())
-                    return remote.Where(x => x.Name == local.Name).First().ID;
-                else
-                {
-                    Phase record = new Phase()
-                    {
-                        Name = local.Name,
-                        Description = local.Description
-                    };
-
-                    return WebAPIHub.CreateRecord(address, record, userAccount);
-                }
-            }
         }
 
         #endregion

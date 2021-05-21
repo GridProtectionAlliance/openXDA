@@ -98,7 +98,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
                 string filePattern = Settings.FileProcessorSettings.FilePattern;
                 Meter meter = GetMeter(connection, FilePath, filePattern);
-                FileGroup fileGroup = ToFileGroup();
+                FileGroup fileGroup = ToFileGroup(meter.ID);
                 AnalysisTask analysisTask = new AnalysisTask(fileGroup, meter, Priority);
                 AnalysisTaskPublisher taskPublisher = new AnalysisTaskPublisher(ConnectionFactory);
                 taskPublisher.Publish(analysisTask);
@@ -181,7 +181,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             return !alreadyProcessed;
         }
 
-        private FileGroup ToFileGroup()
+        private FileGroup ToFileGroup(int meterID)
         {
             FileBlob ToFileBlob(string blobPath) => new FileBlob()
             {
@@ -209,6 +209,7 @@ namespace openXDA.Nodes.Types.FileProcessing
                 FileInfo[] fileList = directoryInfo.GetFiles(searchPattern);
 
                 FileGroup fileGroup = new FileGroup();
+                fileGroup.MeterID = meterID;
                 fileGroup.DataFiles = fileList.Select(ToDataFile).ToList();
                 return fileGroup;
             }

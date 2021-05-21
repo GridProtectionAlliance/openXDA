@@ -98,9 +98,38 @@ CREATE TABLE DataWriter
 )
 GO
 
+CREATE TABLE Location
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    LocationKey VARCHAR(50) NOT NULL UNIQUE,
+    Name VARCHAR(200) NOT NULL,
+    Alias VARCHAR(200) NULL,
+    ShortName VARCHAR(50) NULL,
+    Latitude FLOAT NOT NULL DEFAULT 0.0,
+    Longitude FLOAT NOT NULL DEFAULT 0.0,
+    Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE Meter
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetKey VARCHAR(50) NOT NULL UNIQUE,
+    LocationID INT NOT NULL REFERENCES Location(ID),
+    Name VARCHAR(200) NOT NULL,
+    Alias VARCHAR(200) NULL,
+    ShortName VARCHAR(50) NULL,
+    Make VARCHAR(200) NOT NULL,
+    Model VARCHAR(200) NOT NULL,
+    TimeZone VARCHAR(200) NULL,
+    Description VARCHAR(MAX) NULL
+)
+GO
+
 CREATE TABLE FileGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeterID INT NOT NULL REFERENCES Meter(ID),
     DataStartTime DATETIME2 NOT NULL,
     DataEndTime DATETIME2 NOT NULL,
     ProcessingStartTime DATETIME2 NOT NULL,
@@ -125,6 +154,11 @@ GO
 CREATE NONCLUSTERED INDEX IX_FileGroup_ProcessingEndTime
 ON FileGroup(ProcessingEndTime ASC)
 GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroup_MeterID
+ON FileGroup(MeterID ASC)
+GO
+
 
 CREATE TABLE DataFile
 (
@@ -172,33 +206,6 @@ CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupFieldID
 ON FileGroupFieldValue(FileGroupFieldID ASC)
 GO
 
-CREATE TABLE Location
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    LocationKey VARCHAR(50) NOT NULL UNIQUE,
-    Name VARCHAR(200) NOT NULL,
-    Alias VARCHAR(200) NULL,
-    ShortName VARCHAR(50) NULL,
-    Latitude FLOAT NOT NULL DEFAULT 0.0,
-    Longitude FLOAT NOT NULL DEFAULT 0.0,
-    Description VARCHAR(MAX) NULL
-)
-GO
-
-CREATE TABLE Meter
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    AssetKey VARCHAR(50) NOT NULL UNIQUE,
-    LocationID INT NOT NULL REFERENCES Location(ID),
-    Name VARCHAR(200) NOT NULL,
-    Alias VARCHAR(200) NULL,
-    ShortName VARCHAR(50) NULL,
-    Make VARCHAR(200) NOT NULL,
-    Model VARCHAR(200) NOT NULL,
-    TimeZone VARCHAR(200) NULL,
-    Description VARCHAR(MAX) NULL
-)
-GO
 
 CREATE TABLE HostRegistration
 (
