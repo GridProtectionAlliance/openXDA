@@ -6401,4 +6401,119 @@ CREATE TABLE [SystemCenter.Role] (
 )
 GO
 
+CREATE TABLE [SystemCenter.NoteApplication](
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+	Name varchar(max) not null,
+)
+GO
+
+INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('OpenMIC')
+GO
+INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('OpenXDA')
+GO
+INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('MiMD')
+GO
+INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('SystemCenter')
+GO
+INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('OpenHistorian')
+GO
+INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('All')
+GO
+
+CREATE TABLE [SystemCenter.NoteTable] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+	Name varchar(max) not null
+)
+GO
+
+INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Meter')
+GO
+INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Event')
+GO
+INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Asset')
+GO
+INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Location')
+GO
+INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Customer')
+GO
+INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('UserAccount')
+GO
+INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Company')
+GO
+
+CREATE TABLE [SystemCenter.NoteType] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+	Name varchar(max) not null
+)
+GO
+
+INSERT INTO [SystemCenter.NoteType] (Name) VALUES ('Configuration')
+GO
+INSERT INTO [SystemCenter.NoteType] (Name) VALUES ('Diagnostic')
+GO
+INSERT INTO [SystemCenter.NoteType] (Name) VALUES ('General')
+GO
+
+
+
+CREATE TABLE [SystemCenter.Note] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+    NoteApplicationID int Not NULL REFERENCES [SystemCenter.NoteApplication](ID),
+	NoteTableID int Not NULL REFERENCES [SystemCenter.NoteTable](ID),
+    NoteTypeID int Not NULL REFERENCES [SystemCenter.NoteType](ID),
+	ReferenceTableID INT NOT NULL,
+    Note VARCHAR(MAX) NOT NULL,
+    UserAccount VARCHAR(MAX) NOT NULL DEFAULT SUSER_NAME(),
+    Timestamp DATETIME NOT NULL DEFAULT GETUTCDATE(),
+)
+GO
+
+CREATE TABLE [SystemCenter.OpenMICDailyStatistic] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+    [Date] date not null,
+    Meter VARCHAR(MAX) not null,
+    LastSuccessfulConnection DATETIME NULL,
+    LastUnsuccessfulConnection DATETIME NULL,
+    LastUnsuccessfulConnectionExplanation VARCHAR(MAX) NULL,
+    TotalConnections INT NOT NULL,
+    TotalUnsuccessfulConnections INT NOT NULL,
+    TotalSuccessfulConnections INT NOT NULL
+    CONSTRAINT UC_SystemCenter_OpenMICDailyStatistic_Date_Meter UNIQUE ([Date],Meter)
+)
+GO
+
+CREATE TABLE [SystemCenter.OpenXDADailyStatistic] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+    [Date] date not null,
+    Meter VARCHAR(MAX) not null,
+    LastSuccessfulFileProcessed DATETIME NULL,
+    LastUnsuccessfulFileProcessed DATETIME NULL,
+    LastUnsuccessfulFileProcessedExplanation VARCHAR(MAX) NULL,
+    TotalFilesProcessed INT NOT NULL,
+    TotalUnsuccessfulFilesProcessed INT NOT NULL,
+    TotalSuccessfulFilesProcessed INT NOT NULL,
+    AverageDownloadLatency FLOAT NULL,
+    AverageProcessingStartLatency FLOAT NULL,
+    AverageProcessingEndLatency FLOAT NULL,
+    AverageEmailLatency FLOAT NULL,
+    AverageTotalProcessingLatency FLOAT NULL,
+    AverageTotalEmailLatency FLOAT NULL
+    CONSTRAINT UC_SystemCenter_OpenXDADailyStatistic_Date_Meter UNIQUE ([Date],Meter)
+)
+GO
+
+CREATE TABLE [SystemCenter.MiMDDailyStatistic] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+    [Date] date not null,
+    Meter VARCHAR(MAX) not null,
+    LastSuccessfulFileProcessed DATETIME NULL,
+    LastUnsuccessfulFileProcessed DATETIME NULL,
+    LastUnsuccessfulFileProcessedExplanation VARCHAR(MAX) NULL,
+    TotalFilesProcessed INT NOT NULL,
+    TotalUnsuccessfulFilesProcessed INT NOT NULL,
+    TotalSuccessfulFilesProcessed INT NOT NULL
+    CONSTRAINT UC_SystemCenter_MiMDDailyStatistic_Date_Meter UNIQUE ([Date],Meter)
+)
+GO
+
 -- Note PQMark might not work properly with this schema --
