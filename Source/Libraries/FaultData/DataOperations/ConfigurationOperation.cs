@@ -56,7 +56,7 @@ namespace FaultData.DataOperations
 
 
             public static SourceIndex Parse(string text, List<string> channelNames = null)
-             {
+            {
                 if (channelNames == null)
                     channelNames = new List<string>();
 
@@ -75,7 +75,7 @@ namespace FaultData.DataOperations
 
                     if (text.Trim().StartsWith("RMS", StringComparison.OrdinalIgnoreCase))
                         sourceIndex.IsRMSTrend = true;
-                    
+
                     if (text.Trim().StartsWith("FLKR", StringComparison.OrdinalIgnoreCase))
                         sourceIndex.IsFLKRTrend = true;
 
@@ -83,7 +83,7 @@ namespace FaultData.DataOperations
                         sourceIndex.IsTriggerTrend = true;
 
                     channelIndex = text.Trim().Substring(text.Trim().IndexOf("(") + 1, text.Trim().IndexOf(")") - text.Trim().IndexOf("(") - 1);
-                    sourceIndex.ChannelName = text.Trim().Substring(0,text.Trim().IndexOf("("));
+                    sourceIndex.ChannelName = text.Trim().Substring(0, text.Trim().IndexOf("("));
 
                     if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
                     {
@@ -91,7 +91,7 @@ namespace FaultData.DataOperations
                     }
                     return sourceIndex;
                 }
-                    
+
 
                 string[] parts = text.Split('*');
                 string multiplier = (parts.Length > 1) ? parts[0].Trim() : "1";
@@ -114,7 +114,7 @@ namespace FaultData.DataOperations
                     sourceIndex.ChannelName = (channelIndex[0] == '-' ? channelIndex.Substring(1) : channelIndex);
                     sourceIndex.ByName = true;
                 }
-                    
+
 
                 if (channelIndex[0] == '-')
                 {
@@ -134,15 +134,15 @@ namespace FaultData.DataOperations
             /// <returns> The Channel Index associated with this channelName. Returns -1 if it is not found</returns>
             private static int ParseName(string name, List<string> nameIndexPairs)
             {
-              
+
                 string test = (name[0] == '-' ? name.Substring(1) : name);
                 if (!nameIndexPairs.Contains(test))
                     return -1;
                 if (nameIndexPairs.FindAll(item => item == test).Count() > 1)
                     throw new FormatException($"Incorrect format for channel name {test} duplicates found in configuration.");
-               
+
                 return nameIndexPairs.FindIndex(item => item == test);
-               
+
             }
         }
 
@@ -228,9 +228,9 @@ namespace FaultData.DataOperations
 
                 List<SourceIndex> rmsSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Where(item => !string.IsNullOrEmpty(item))
                     .Select(item => SourceIndex.Parse(item))).Where(item => item.IsRMSTrend).ToList();
-                
+
                 // Add RMS Channels as neccesarry for PoW Channels
-                powChannels.ForEach(item => AddRMSChannel(item, rmsSourceIndices,meterDataSet));
+                powChannels.ForEach(item => AddRMSChannel(item, rmsSourceIndices, meterDataSet));
 
                 //Need to update Meter here to make sure we have all Series that were generated
                 dbMeter.Channels = null;
@@ -238,7 +238,7 @@ namespace FaultData.DataOperations
                 seriesList = dbMeter.Channels
                    .SelectMany(channel => channel.Series)
                    .ToList();
-                 
+
                 //compute Series properly to account for multiply and Add (only deal with RMS here)
                 foreach (Series series in seriesList.Where(series => (!string.IsNullOrEmpty(series.SourceIndexes)) &&
                     (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsRMSTrend))))
@@ -254,20 +254,20 @@ namespace FaultData.DataOperations
                 List<SourceIndex> flkrSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Where(item => !string.IsNullOrEmpty(item))
                     .Select(item => SourceIndex.Parse(item))).Where(item => item.IsFLKRTrend).ToList();
 
-                    // Add RMS Channels as neccesarry for PoW Channels
-                    powChannels.ForEach(item => AddFlkrChannel(item, flkrSourceIndices, meterDataSet));
+                // Add RMS Channels as neccesarry for PoW Channels
+                powChannels.ForEach(item => AddFlkrChannel(item, flkrSourceIndices, meterDataSet));
 
-                    //Need to update Meter here to make sure we have all Series that were generated
-                    dbMeter.Channels = null;
+                //Need to update Meter here to make sure we have all Series that were generated
+                dbMeter.Channels = null;
 
-                    seriesList = dbMeter.Channels
-                       .SelectMany(channel => channel.Series)
-                       .ToList();
+                seriesList = dbMeter.Channels
+                   .SelectMany(channel => channel.Series)
+                   .ToList();
 
-                    //compute Series properly to account for multiply and Add
-                    foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
-                    (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsFLKRTrend))))
-                        AddFlkrTrendSeries(calculatedDataSeriesList, meterDataSet, series);
+                //compute Series properly to account for multiply and Add
+                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
+                (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsFLKRTrend))))
+                    AddFlkrTrendSeries(calculatedDataSeriesList, meterDataSet, series);
             }
             else if (isTriggerTrending)
             {
@@ -338,6 +338,10 @@ namespace FaultData.DataOperations
             // Only update database configuration if NOT using historic configuration.
             if (!meterDataSet.LoadHistoricConfiguration)
             {
+                // If there are any channels defined for this meter we remove all the PQDIf Channels
+                if (calculatedDataSeriesList.Count > 0)
+                    RemoveUnDefinedChannelnels(meterDataSet);
+
                 // Add channels that are not already defined in the
                 // configuration by assuming the meter monitors only one line
                 AddUndefinedChannels(meterDataSet);
@@ -408,7 +412,7 @@ namespace FaultData.DataOperations
             List<SourceIndex> sourceIndexes;
             DataSeries dataSeries;
 
-            List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null? "" : item.SeriesInfo.Channel.Name)).ToList();
+            List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null ? "" : item.SeriesInfo.Channel.Name)).ToList();
             sourceIndexes = series.SourceIndexes.Split(',')
                 .Select(item => SourceIndex.Parse(item, channelNames))
                 .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
@@ -468,6 +472,7 @@ namespace FaultData.DataOperations
 
         private void AddUndefinedChannels(MeterDataSet meterDataSet)
         {
+
             List<DataSeries> undefinedDataSeries = meterDataSet.DataSeries
                 .Concat(meterDataSet.Digitals)
                 .Where(dataSeries => (object)dataSeries.SeriesInfo.Channel.Asset == null)
@@ -475,6 +480,7 @@ namespace FaultData.DataOperations
 
             if (undefinedDataSeries.Count <= 0)
                 return;
+
 
             Meter meter = meterDataSet.Meter;
 
@@ -645,7 +651,7 @@ namespace FaultData.DataOperations
                 }
             }
         }
-        
+
         private void FixUpdatedChannelInfo(MeterDataSet meterDataSet, Meter parsedMeter)
         {
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
@@ -665,7 +671,7 @@ namespace FaultData.DataOperations
                         if (samplesPerHour <= 60.0D)
                         {
                             Channel channel = dataSeries.SeriesInfo.Channel;
-                            if(channel.SamplesPerHour == 0)
+                            if (channel.SamplesPerHour == 0)
                             {
                                 channel.SamplesPerHour = samplesPerHour;
                                 channelTable.UpdateRecord(channel);
@@ -726,6 +732,22 @@ namespace FaultData.DataOperations
             }
         }
 
+        private void RemoveUnDefinedChannelnels(MeterDataSet meterDataSet)
+        {
+            for (int i = meterDataSet.DataSeries.Count - 1; i >= 0; i--)
+            {
+
+                if ((object)meterDataSet.DataSeries[i].SeriesInfo.Channel.Asset == null)
+                    meterDataSet.DataSeries.RemoveAt(i);
+            }
+
+            for (int i = meterDataSet.Digitals.Count - 1; i >= 0; i--)
+            {
+                if ((object)meterDataSet.Digitals[i].SeriesInfo.Channel.Asset == null)
+                    meterDataSet.Digitals.RemoveAt(i);
+            }
+        }
+
         /// <summary>
         /// Checks if the RMS Trend Channels exist and adds them if necesarry.
         /// </summary>
@@ -766,7 +788,7 @@ namespace FaultData.DataOperations
                         return grouping.Key;
                     }, grouping => grouping.First());
 
-            
+
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
@@ -774,13 +796,13 @@ namespace FaultData.DataOperations
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
                 TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
 
-                
+
                 rmsChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = 'RMS'");
                 rmsChannel.MeasurementCharacteristicID = rmsChannel.MeasurementCharacteristic.ID;
 
                 ChannelKey key = new ChannelKey(rmsChannel);
                 Channel conChannel;
-                if (!channelLookup.TryGetValue(key,out conChannel))
+                if (!channelLookup.TryGetValue(key, out conChannel))
                 {
                     channelTable.AddNewRecord(rmsChannel);
                     meterDataSet.Meter.Channels = null;
@@ -792,11 +814,11 @@ namespace FaultData.DataOperations
                 }
 
                 //Create all 3 Series for this Channel
-                Series avgSeries = new Series() 
-                { 
+                Series avgSeries = new Series()
+                {
                     ChannelID = conChannel.ID,
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Average'").ID,
-                    SourceIndexes = "RMSAVG(" + powChannel.ID +  ")"
+                    SourceIndexes = "RMSAVG(" + powChannel.ID + ")"
                 };
                 Series minSeries = new Series()
                 {
@@ -817,7 +839,7 @@ namespace FaultData.DataOperations
 
 
             }
-             
+
         }
 
         /// <summary>
@@ -892,10 +914,10 @@ namespace FaultData.DataOperations
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Values'").ID,
                     SourceIndexes = "FLKR(" + powChannel.ID + ")"
                 };
-                
+
 
                 seriesTable.AddNewRecord(avgSeries);
-                
+
 
             }
 
@@ -930,7 +952,7 @@ namespace FaultData.DataOperations
                 MeasurementType = powChannel.MeasurementType,
                 Phase = powChannel.Phase
             };
-            
+
 
             Dictionary<ChannelKey, Channel> channelLookup = meterDataSet.Meter.Channels
                     .GroupBy(channel => new ChannelKey(channel))
@@ -1076,7 +1098,7 @@ namespace FaultData.DataOperations
                 }).Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
                 .ToList();
 
-           if (sourceIndexes.Count == 0)
+            if (sourceIndexes.Count == 0)
                 return;
 
             dataSeries = sourceIndexes
@@ -1162,7 +1184,7 @@ namespace FaultData.DataOperations
                         item = sourceIndex.Multiplier.ToString() + "*A" + sourceIndex.ChannelIndex.ToString();
                         sourceIndex = SourceIndex.Parse(item, channelNames);
                     }
-                    return sourceIndex; 
+                    return sourceIndex;
                 })
                 .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsFLKRTrend)
                 .ToList();
@@ -1205,11 +1227,11 @@ namespace FaultData.DataOperations
             if (parsed.Multiplier < 0)
             {
                 if (functional.ChannelName.EndsWith("MIN", StringComparison.OrdinalIgnoreCase))
-                    translated = translated.Replace("Min_", "Max_");                   
-                
+                    translated = translated.Replace("Min_", "Max_");
+
                 if (functional.ChannelName.EndsWith("MAX", StringComparison.OrdinalIgnoreCase))
                     translated = translated.Replace("Max_", "Min_");
-                
+
             }
 
             return SourceIndex.Parse(translated, seriesNames);
