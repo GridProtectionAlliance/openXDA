@@ -16,6 +16,7 @@
   <ComponentGroupRef Id="wwwroot_fonts_Components" />
   <ComponentGroupRef Id="wwwroot_Images_Components" />
   <ComponentGroupRef Id="wwwroot_Images_Icons_Components" />
+  <ComponentGroupRef Id="wwwroot_Images_Tiles_Components" />
   <ComponentGroupRef Id="wwwroot_Reports_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_D3_Components" />

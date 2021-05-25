@@ -19,6 +19,7 @@
   <Directory Id="wwwroot_FONTSFOLDER" Name="fonts" />
   <Directory Id="wwwroot_IMAGESFOLDER" Name="Images">
     <Directory Id="wwwroot_IMAGESICONSFOLDER" Name="Icons" />
+    <Directory Id="wwwroot_IMAGESTILESFOLDER" Name="Tiles" />
   </Directory>
   <Directory Id="wwwroot_REPORTSFOLDER" Name="Reports" />
   <Directory Id="wwwroot_SCRIPTSFOLDER" Name="Scripts">

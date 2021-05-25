@@ -1,5 +1,8 @@
 <Include>
 <ComponentGroup Id="wwwroot_Components" Directory="wwwroot_WWWROOTFOLDER">
+  <Component Id="wwwroot_dDtools_cshtml">
+    <File Id="wwwroot_dDtools.cshtml" Name="dDtools.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\dDtools.cshtml" />
+  </Component>
   <Component Id="wwwroot_index_cshtml">
     <File Id="wwwroot_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\index.cshtml" />
   </Component>
@@ -17,6 +20,9 @@
   </Component>
   <Component Id="wwwroot_OpenSTE_cshtml">
     <File Id="wwwroot_OpenSTE.cshtml" Name="OpenSTE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSTE.cshtml" />
+  </Component>
+  <Component Id="wwwroot_README_md">
+    <File Id="wwwroot_README.md" Name="README.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\README.md" />
   </Component>
   <Component Id="wwwroot_RestoreEventEmail_cshtml">
     <File Id="wwwroot_RestoreEventEmail.cshtml" Name="RestoreEventEmail.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\RestoreEventEmail.cshtml" />
@@ -604,6 +610,9 @@
   <Component Id="wwwroot_Images_openXDA_png">
     <File Id="wwwroot_Images_openXDA.png" Name="openXDA.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openXDA.png" />
   </Component>
+  <Component Id="wwwroot_Images_PQProducts_png">
+    <File Id="wwwroot_Images_PQProducts.png" Name="PQProducts.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\PQProducts.png" />
+  </Component>
   <Component Id="wwwroot_Images_SPCTools_png">
     <File Id="wwwroot_Images_SPCTools.png" Name="SPCTools.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\SPCTools.png" />
   </Component>
@@ -674,6 +683,53 @@
   </Component>
   <Component Id="wwwroot_Images_Icons_openXDA_png">
     <File Id="wwwroot_Images_Icons_openXDA.png" Name="openXDA.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Icons\openXDA.png" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Images_Tiles_Components" Directory="wwwroot_IMAGESTILESFOLDER">
+  <Component Id="wwwroot_Images_Tiles_dD_Assets_png">
+    <File Id="wwwroot_Images_Tiles_dD_Assets.png" Name="dD_Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\dD_Assets.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_dD_Config_png">
+    <File Id="wwwroot_Images_Tiles_dD_Config.png" Name="dD_Config.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\dD_Config.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_dD_Export_png">
+    <File Id="wwwroot_Images_Tiles_dD_Export.png" Name="dD_Export.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\dD_Export.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_dD_Reports_png">
+    <File Id="wwwroot_Images_Tiles_dD_Reports.png" Name="dD_Reports.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\dD_Reports.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_dD_Workbench_png">
+    <File Id="wwwroot_Images_Tiles_dD_Workbench.png" Name="dD_Workbench.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\dD_Workbench.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_LSCVS_png">
+    <File Id="wwwroot_Images_Tiles_LSCVS.png" Name="LSCVS.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\LSCVS.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_miMD_png">
+    <File Id="wwwroot_Images_Tiles_miMD.png" Name="miMD.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\miMD.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_openMIC_png">
+    <File Id="wwwroot_Images_Tiles_openMIC.png" Name="openMIC.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\openMIC.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_PQDashboard_png">
+    <File Id="wwwroot_Images_Tiles_PQDashboard.png" Name="PQDashboard.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\PQDashboard.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_PQDigest_png">
+    <File Id="wwwroot_Images_Tiles_PQDigest.png" Name="PQDigest.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\PQDigest.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_SEBrowser_png">
+    <File Id="wwwroot_Images_Tiles_SEBrowser.png" Name="SEBrowser.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\SEBrowser.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_SPCTools_png">
+    <File Id="wwwroot_Images_Tiles_SPCTools.png" Name="SPCTools.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\SPCTools.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_SystemCenter_png">
+    <File Id="wwwroot_Images_Tiles_SystemCenter.png" Name="SystemCenter.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\SystemCenter.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_TrenDAP_png">
+    <File Id="wwwroot_Images_Tiles_TrenDAP.png" Name="TrenDAP.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\TrenDAP.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_VoltageRegReport_png">
+    <File Id="wwwroot_Images_Tiles_VoltageRegReport.png" Name="VoltageRegReport.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\VoltageRegReport.png" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Reports_Components" Directory="wwwroot_REPORTSFOLDER">
