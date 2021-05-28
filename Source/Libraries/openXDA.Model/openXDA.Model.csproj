@@ -141,6 +141,9 @@
     <Compile Include="Settings\StepChangeWebReportSettings.cs" />
     <Compile Include="Settings\PQTrendingWebReportSettings.cs" />
     <Compile Include="Settings\PQReportsSettings.cs" />
+    <Compile Include="SystemCenter\MeterHealthStatistics\MiMDDailyStatistic.cs" />
+    <Compile Include="SystemCenter\MeterHealthStatistics\OpenMICDailyStatistic.cs" />
+    <Compile Include="SystemCenter\MeterHealthStatistics\OpenXDADailyStatistic.cs" />
     <Compile Include="System\AuditLog.cs" />
     <Compile Include="System\ConfigurationLoader.cs" />
     <Compile Include="System\WebControllerExtension.cs" />

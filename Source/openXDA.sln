@@ -57,6 +57,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{B554F6A4-C
 		Data\06 - DefaultChannelTypes.sql = Data\06 - DefaultChannelTypes.sql
 		Data\07 - DefaultTrendingAlarms.sql = Data\07 - DefaultTrendingAlarms.sql
 		Data\08 - DefaultContours.sql = Data\08 - DefaultContours.sql
+		09 - SystemCenter.sql = 09 - SystemCenter.sql
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{9DA625F5-5D02-4855-A891-5E059AE2BD83}"

@@ -107,6 +107,7 @@
     <Compile Include="DataOperations\LightningDataOperation.cs" />
     <Compile Include="DataOperations\PQube\PQubeClassificationOverride.cs" />
     <Compile Include="DataOperations\RelayEnergization.cs" />
+    <Compile Include="DataOperations\DailyStatisticOperation.cs" />
     <Compile Include="DataOperations\StatisticOperation.cs" />
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
@@ -38,6 +39,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using openXDA.Configuration;
 using openXDA.Model;
+using SystemCenter.Model;
 
 namespace openXDA.Nodes.Types.Email
 {
@@ -269,6 +271,7 @@ namespace openXDA.Nodes.Types.Email
                     TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
                     DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
                     EventEmailService.LoadSentEmail(xdaNow, recipients, htmlDocument, eventIDs);
+                    UpdateProcessingStatistic(eventIDs);
                 }
                 finally
                 {
@@ -358,6 +361,94 @@ namespace openXDA.Nodes.Types.Email
 
             Tripped = true;
             return true;
+        }
+
+        private void UpdateProcessingStatistic(List<int> eventIDs)
+        {
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                foreach (int eventID in eventIDs) {
+                    Event xdaEvent = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                    Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", xdaEvent.MeterID);
+                    FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", xdaEvent.FileGroupID);
+                    fileGroup.DataFiles = new TableOperations<DataFile>(connection).QueryRecordsWhere("FileGroupID = {0}", xdaEvent.FileGroupID).ToList();
+                    UpdateProcessingStatistic(meter.AssetKey, fileGroup);
+                }
+            }
+        }
+
+        private void UpdateProcessingStatistic(string assetKey, FileGroup fileGroup)
+        {
+            try
+            {
+                using (AdoDataConnection connection = CreateDbConnection())
+                {
+                    
+                    OpenXDADailyStatistic dailyStatistic = new TableOperations<OpenXDADailyStatistic>(connection).QueryRecordsWhere("Meter = {0}", assetKey).OrderBy(x => x.Date).Last();
+
+                    if (dailyStatistic == null)
+                    {
+
+                        dailyStatistic = new OpenXDADailyStatistic();
+                        dailyStatistic.ID = 0;
+                        dailyStatistic.Date = DateTime.Now.Date.ToString("MM/dd/yyyy");
+                        dailyStatistic.Meter = assetKey;
+
+                        dailyStatistic.LastSuccessfulFileProcessed = DateTime.Now;
+                        dailyStatistic.LastUnsuccessfulFileProcessed = DateTime.MinValue;
+                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = null;
+
+                        dailyStatistic.TotalFilesProcessed = 1;
+                        dailyStatistic.TotalSuccessfulFilesProcessed = 1;
+                        dailyStatistic.TotalUnsuccessfulFilesProcessed = 0;
+                        dailyStatistic.TotalEmailsSent = 1;
+
+                        dailyStatistic.AverageDownloadLatency = fileGroup.DataFiles.First().LastWriteTime.Subtract(fileGroup.DataStartTime).TotalSeconds;
+                        dailyStatistic.AverageProcessingStartLatency = fileGroup.ProcessingStartTime.Subtract(fileGroup.DataFiles.First().LastWriteTime).TotalSeconds;
+                        dailyStatistic.AverageProcessingEndLatency = fileGroup.ProcessingEndTime.Subtract(fileGroup.ProcessingStartTime).TotalSeconds;
+                        dailyStatistic.AverageTotalProcessingLatency = fileGroup.ProcessingEndTime.Subtract(fileGroup.DataStartTime).TotalSeconds;
+                        dailyStatistic.AverageEmailLatency = DateTime.Now.Subtract(fileGroup.ProcessingEndTime).TotalSeconds;
+                        dailyStatistic.AverageTotalEmailLatency = DateTime.Now.Subtract(fileGroup.DataStartTime).TotalSeconds;
+                    }
+                    else if (dailyStatistic.Date != DateTime.Now.Date.ToString("MM/dd/yyyy"))
+                    {
+                        dailyStatistic.ID = 0;
+                        dailyStatistic.Date = DateTime.Now.Date.ToString("MM/dd/yyyy");
+
+                        dailyStatistic.LastSuccessfulFileProcessed = DateTime.Now;
+
+                        dailyStatistic.TotalFilesProcessed = 1;
+                        dailyStatistic.TotalSuccessfulFilesProcessed = 1;
+                        dailyStatistic.TotalUnsuccessfulFilesProcessed = 0;
+                        dailyStatistic.TotalEmailsSent = 1;
+
+                        dailyStatistic.AverageDownloadLatency = fileGroup.DataFiles.First().LastWriteTime.Subtract(fileGroup.DataStartTime).TotalSeconds;
+                        dailyStatistic.AverageProcessingStartLatency = fileGroup.ProcessingStartTime.Subtract(fileGroup.DataFiles.First().LastWriteTime).TotalSeconds;
+                        dailyStatistic.AverageProcessingEndLatency = fileGroup.ProcessingEndTime.Subtract(fileGroup.ProcessingStartTime).TotalSeconds;
+                        dailyStatistic.AverageTotalProcessingLatency = fileGroup.ProcessingEndTime.Subtract(fileGroup.DataStartTime).TotalSeconds;
+                        dailyStatistic.AverageEmailLatency = DateTime.Now.Subtract(fileGroup.ProcessingEndTime).TotalSeconds;
+                        dailyStatistic.AverageTotalEmailLatency = DateTime.Now.Subtract(fileGroup.DataStartTime).TotalSeconds;
+
+
+                    }
+                    else
+                    {
+                        dailyStatistic.AverageTotalEmailLatency = (dailyStatistic.AverageTotalEmailLatency* dailyStatistic.TotalEmailsSent + DateTime.Now.Subtract(fileGroup.DataStartTime).TotalSeconds)/ (dailyStatistic.TotalEmailsSent + 1);
+                        dailyStatistic.TotalEmailsSent += 1;
+                    }
+
+                    new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
+                }
+            }
+            catch (Exception ex)
+            {
+                DataFile dataFile = fileGroup.DataFiles.First();
+                string filePath = Path.ChangeExtension(dataFile.FilePath, "*");
+                string msg = $"An error occurred while processing daily statistic for file group \"{filePath}\": {ex.Message}";
+                Exception wrapper = new Exception(msg, ex);
+
+            }
+
         }
 
         #endregion
