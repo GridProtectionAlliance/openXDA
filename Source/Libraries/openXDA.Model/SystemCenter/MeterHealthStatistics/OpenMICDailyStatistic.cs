@@ -36,8 +36,8 @@ namespace SystemCenter.Model
         public string Date { get; set; }
 
         public string Meter { get; set; }
-        public DateTime LastSuccessfulConnection { get; set; }
-        public DateTime LastUnsuccessfulConnection { get; set; }
+        public DateTime? LastSuccessfulConnection { get; set; }
+        public DateTime? LastUnsuccessfulConnection { get; set; }
 
         public string LastUnsuccessfulConnectionExplanation { get; set; }
         public int TotalConnections { get; set; }

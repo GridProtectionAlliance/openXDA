@@ -36,8 +36,8 @@ namespace SystemCenter.Model
         public string Date { get; set; }
 
         public string Meter { get; set; }
-        public DateTime LastSuccessfulFileProcessed { get; set; }
-        public DateTime LastUnsuccessfulFileProcessed { get; set; }
+        public DateTime? LastSuccessfulFileProcessed { get; set; }
+        public DateTime? LastUnsuccessfulFileProcessed { get; set; }
 
         public string LastUnsuccessfulFileProcessedExplanation { get; set; }
         public int TotalFilesProcessed { get; set; }
