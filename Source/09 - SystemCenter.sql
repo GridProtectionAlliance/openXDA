@@ -1,4 +1,100 @@
 ﻿---------------- System Center TableSpace -------------
+CREATE TABLE [SystemCenter.Setting](
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NULL,
+    Value VARCHAR(MAX) NULL,
+    DefaultValue VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE [SystemCenter.AccessLog](
+    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    UserName varchar(200) NOT NULL,
+    AccessGranted bit NOT NULL,
+    CreatedOn datetime NOT NULL CONSTRAINT [DF_AccessLog_Timestamp]  DEFAULT (getutcdate())
+)
+GO
+
+CREATE TABLE [SystemCenter.ApplicationRole]
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    NodeID UNIQUEIDENTIFIER NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE [SystemCenter.SecurityGroup]
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE [SystemCenter.UserAccount]
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL UNIQUE,
+    Password VARCHAR(200) NULL,
+    FirstName VARCHAR(200) NULL,
+    LastName VARCHAR(200) NULL,
+    DefaultNodeID UNIQUEIDENTIFIER NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
+    Phone VARCHAR(200) NULL,
+    PhoneConfirmed BIT NOT NULL DEFAULT 0,
+    Email VARCHAR(200) NULL,
+    EmailConfirmed BIT NOT NULL DEFAULT 0,
+    LockedOut BIT NOT NULL DEFAULT 0,
+    Approved BIT NOT NULL DEFAULT 0,
+    TSCID INT NULL,
+    RoleID INT NULL,
+    Title varchar(200) NULL,
+    Department varchar(200) NULL,
+    DepartmentNumber varchar(200) NULL,
+    MobilePhone VARCHAR(200) NULL,
+    ReceiveNotifications BIT NOT NULL DEFAULT 1,
+    UseADAuthentication BIT NOT NULL DEFAULT 1,
+    ChangePasswordOn DATETIME NULL DEFAULT DATEADD(DAY, 90, GETUTCDATE()),
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(50) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(50) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE [SystemCenter.ApplicationRoleSecurityGroup]
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ApplicationRoleID UNIQUEIDENTIFIER NOT NULL REFERENCES [SystemCenter.ApplicationRole](ID),
+    SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES [SystemCenter.SecurityGroup](ID)
+)
+GO
+
+CREATE TABLE [SystemCenter.ApplicationRoleUserAccount]
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ApplicationRoleID UNIQUEIDENTIFIER NOT NULL REFERENCES [SystemCenter.ApplicationRole](ID),
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES [SystemCenter.UserAccount](ID)
+)
+GO
+
+CREATE TABLE [SystemCenter.SecurityGroupUserAccount]
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES [SystemCenter.ApplicationRole](ID),
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES [SystemCenter.UserAccount](ID)
+)
+GO
+
+
 CREATE TABLE [SystemCenter.ValueListGroup](
 	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	[Name] [varchar](200) NULL,
@@ -7,7 +103,7 @@ CREATE TABLE [SystemCenter.ValueListGroup](
 
 CREATE TABLE [SystemCenter.ValueList](
     [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [GroupID] [int] NOT NULL FOREIGN KEY REFERENCES ValueListGroup(ID),
+    [GroupID] [int] NOT NULL FOREIGN KEY REFERENCES [SystemCenter.ValueListGroup](ID),
     [Text] [varchar](200) NULL,
     [Value] [int] NULL,
     [Description] [varchar](max) NULL,
@@ -158,7 +254,7 @@ GO
 CREATE TABLE [SystemCenter.OpenMICDailyStatistic] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
     [Date] VARCHAR(10) not null,
-    Meter VARCHAR(MAX) not null,
+    Meter VARCHAR(50) not null,
     LastSuccessfulConnection DATETIME NULL,
     LastUnsuccessfulConnection DATETIME NULL,
     LastUnsuccessfulConnectionExplanation VARCHAR(MAX) NULL,
@@ -172,7 +268,7 @@ GO
 CREATE TABLE [SystemCenter.OpenXDADailyStatistic] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
     [Date] VARCHAR(10) not null,
-    Meter VARCHAR(MAX) not null,
+    Meter VARCHAR(50) not null,
     LastSuccessfulFileProcessed DATETIME NULL,
     LastUnsuccessfulFileProcessed DATETIME NULL,
     LastUnsuccessfulFileProcessedExplanation VARCHAR(MAX) NULL,
@@ -193,7 +289,7 @@ GO
 CREATE TABLE [SystemCenter.MiMDDailyStatistic] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
     [Date] VARCHAR(10) not null,
-    Meter VARCHAR(MAX) not null,
+    Meter VARCHAR(50) not null,
     LastSuccessfulFileProcessed DATETIME NULL,
     LastUnsuccessfulFileProcessed DATETIME NULL,
     LastUnsuccessfulFileProcessedExplanation VARCHAR(MAX) NULL,
