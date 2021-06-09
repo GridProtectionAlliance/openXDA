@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  OpenMICDailyStatistic.cs - Gbtc
+//  Setting.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,34 +16,20 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/21/2021 - Billy Ernest
+//  06/09/2021 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace SystemCenter.Model
 {
-    [TableName("OpenMICDailyStatistic"), UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix")]
-    public class OpenMICDailyStatistic
-    {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-
-        [UseEscapedName]
-        public string Date { get; set; }
-
-        public string Meter { get; set; }
-        public DateTime? LastSuccessfulConnection { get; set; }
-        public DateTime? LastUnsuccessfulConnection { get; set; }
-
-        public string LastUnsuccessfulConnectionExplanation { get; set; }
-        public int TotalConnections { get; set; }
-        public int TotalUnsuccessfulConnections { get; set; }
-        public int TotalSuccessfulConnections { get; set; }
-
-
-    }
+    [ConfigFileTableNamePrefix("SystemCenterTableNamePrefix"), TableName("Setting"), UseEscapedName]
+    public class Setting: openXDA.Model.Setting {}
 }

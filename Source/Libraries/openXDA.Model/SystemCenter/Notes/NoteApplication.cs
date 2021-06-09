@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  OpenMICDailyStatistic.cs - Gbtc
+//  NoteApplication.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -22,28 +22,15 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
-using System;
 
 namespace SystemCenter.Model
 {
-    [TableName("OpenMICDailyStatistic"), UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix")]
-    public class OpenMICDailyStatistic
+    [TableName("NoteApplication"), UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix")]
+    public class NoteApplication
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-
-        [UseEscapedName]
-        public string Date { get; set; }
-
-        public string Meter { get; set; }
-        public DateTime? LastSuccessfulConnection { get; set; }
-        public DateTime? LastUnsuccessfulConnection { get; set; }
-
-        public string LastUnsuccessfulConnectionExplanation { get; set; }
-        public int TotalConnections { get; set; }
-        public int TotalUnsuccessfulConnections { get; set; }
-        public int TotalSuccessfulConnections { get; set; }
-
+        public string Name { get; set; }
 
     }
 }

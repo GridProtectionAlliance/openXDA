@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  OpenMICDailyStatistic.cs - Gbtc
+//  Company.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,34 +16,28 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/21/2021 - Billy Ernest
+//  06/09/2021 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
-using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace SystemCenter.Model
+namespace openXDA.Model
 {
-    [TableName("OpenMICDailyStatistic"), UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix")]
-    public class OpenMICDailyStatistic
+    public class Company
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        [Required]
+        public string CompanyID { get; set; }
+        public int CompanyTypeID { get; set; }
 
-        [UseEscapedName]
-        public string Date { get; set; }
-
-        public string Meter { get; set; }
-        public DateTime? LastSuccessfulConnection { get; set; }
-        public DateTime? LastUnsuccessfulConnection { get; set; }
-
-        public string LastUnsuccessfulConnectionExplanation { get; set; }
-        public int TotalConnections { get; set; }
-        public int TotalUnsuccessfulConnections { get; set; }
-        public int TotalSuccessfulConnections { get; set; }
-
-
+        [NonRecordField]
+        public string CompanyTypeName { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
     }
+
 }

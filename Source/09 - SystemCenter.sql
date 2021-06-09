@@ -104,9 +104,8 @@ CREATE TABLE [SystemCenter.ValueListGroup](
 CREATE TABLE [SystemCenter.ValueList](
     [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [GroupID] [int] NOT NULL FOREIGN KEY REFERENCES [SystemCenter.ValueListGroup](ID),
-    [Text] [varchar](200) NULL,
-    [Value] [int] NULL,
-    [Description] [varchar](max) NULL,
+    [Value] [varchar](200) NULL,
+    [AltValue] [varchar](200) NULL,
     [SortOrder] [int] NULL,
 )
 GO
@@ -151,14 +150,6 @@ CREATE Table [SystemCenter.extDBTables] (
 	TableName varchar(200) NOT NULL,
     ExternalDB varchar(200) NOT NULL,
 	Query varchar(max) NULL,
-)
-GO
-
-CREATE TABLE [SystemCenter.TSC] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name varchar(200) NOT NULL,
-	Description varchar(max) NULL,
-	DepartmentNumber varchar(6) NOT NULL
 )
 GO
 

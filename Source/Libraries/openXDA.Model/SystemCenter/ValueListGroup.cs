@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  OpenMICDailyStatistic.cs - Gbtc
+//  ValueListGroup.cs - Gbtc
 //
-//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,34 +16,27 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/21/2021 - Billy Ernest
+//  09/10/2018 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace SystemCenter.Model
 {
-    [TableName("OpenMICDailyStatistic"), UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix")]
-    public class OpenMICDailyStatistic
+
+    [TableName("ValueListGroup"), ConfigFileTableNamePrefix("SystemCenterTableNamePrefix"), UseEscapedName, PrimaryLabel("Name")]
+    public class ValueListGroup
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        [UseEscapedName]
-        public string Date { get; set; }
-
-        public string Meter { get; set; }
-        public DateTime? LastSuccessfulConnection { get; set; }
-        public DateTime? LastUnsuccessfulConnection { get; set; }
-
-        public string LastUnsuccessfulConnectionExplanation { get; set; }
-        public int TotalConnections { get; set; }
-        public int TotalUnsuccessfulConnections { get; set; }
-        public int TotalSuccessfulConnections { get; set; }
-
-
+        [StringLength(200)]
+        public string Name { get; set; }
+        public string Description { get; set; }
     }
 }

@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  OpenMICDailyStatistic.cs - Gbtc
+//  AdditionalField.cs - Gbtc
 //
-//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,34 +16,27 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/21/2021 - Billy Ernest
+//  09/20/2019 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
-using System;
 
 namespace SystemCenter.Model
 {
-    [TableName("OpenMICDailyStatistic"), UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix")]
-    public class OpenMICDailyStatistic
+    [UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix")]
+    public class AdditionalField
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-
-        [UseEscapedName]
-        public string Date { get; set; }
-
-        public string Meter { get; set; }
-        public DateTime? LastSuccessfulConnection { get; set; }
-        public DateTime? LastUnsuccessfulConnection { get; set; }
-
-        public string LastUnsuccessfulConnectionExplanation { get; set; }
-        public int TotalConnections { get; set; }
-        public int TotalUnsuccessfulConnections { get; set; }
-        public int TotalSuccessfulConnections { get; set; }
-
+        public string ParentTable { get; set; }
+        public string FieldName { get; set; }
+        public string Type { get; set; }
+        public string ExternalDB { get; set; }
+        public string ExternalDBTable { get; set; }
+        public string ExternalDBTableKey { get; set; }
+        public bool IsSecure { get; set; }
 
     }
 }
