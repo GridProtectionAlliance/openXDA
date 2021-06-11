@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
-    [UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix"), TableName("ExternalOpenXDAField")]
+    [UseEscapedName, TableName("ExternalOpenXDAField")]
     public class ExternalOpenXDAField
     {
         [PrimaryKey(true)]

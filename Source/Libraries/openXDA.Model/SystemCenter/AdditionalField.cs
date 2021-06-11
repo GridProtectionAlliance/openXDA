@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
-    [UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix")]
+    [UseEscapedName]
     public class AdditionalField
     {
         [PrimaryKey(true)]

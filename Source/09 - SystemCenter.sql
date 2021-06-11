@@ -95,15 +95,15 @@ CREATE TABLE [SystemCenter.SecurityGroupUserAccount]
 GO
 
 
-CREATE TABLE [SystemCenter.ValueListGroup](
+CREATE TABLE [ValueListGroup](
 	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	[Name] [varchar](200) NULL,
 	[Description] [varchar](max) NULL,
 )
 
-CREATE TABLE [SystemCenter.ValueList](
+CREATE TABLE [ValueList](
     [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [GroupID] [int] NOT NULL FOREIGN KEY REFERENCES [SystemCenter.ValueListGroup](ID),
+    [GroupID] [int] NOT NULL FOREIGN KEY REFERENCES [ValueListGroup](ID),
     [Value] [varchar](200) NULL,
     [AltValue] [varchar](200) NULL,
     [SortOrder] [int] NULL,
@@ -111,7 +111,7 @@ CREATE TABLE [SystemCenter.ValueList](
 GO
 
 
-CREATE TABLE [SystemCenter.AdditionalField] (
+CREATE TABLE [AdditionalField] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTable varchar(100) NOT NULL,
 	FieldName varchar(100) NOT NULL,
@@ -124,17 +124,17 @@ CREATE TABLE [SystemCenter.AdditionalField] (
 )
 GO
 
-CREATE TABLE [SystemCenter.AdditionalFieldValue] (
+CREATE TABLE [AdditionalFieldValue] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTableID int NOT NULL,
-	AdditionalFieldID int NOT NULL FOREIGN KEY REFERENCES [SystemCenter.AdditionalField](ID),
+	AdditionalFieldID int NOT NULL FOREIGN KEY REFERENCES [AdditionalField](ID),
 	Value varchar(max) NULL,
     UpdatedOn DATE NULL DEFAULT (SYSDATETIME()),
 	Constraint UC_AdditonaFieldValue UNIQUE(ParentTableID, AdditionalFieldID)
 )
 GO
 
-CREATE TABLE [SystemCenter.ExternalOpenXDAField] (
+CREATE TABLE [ExternalOpenXDAField] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTable varchar(100) NOT NULL,
 	FieldName varchar(100) NOT NULL,
@@ -145,7 +145,7 @@ CREATE TABLE [SystemCenter.ExternalOpenXDAField] (
 )
 GO
 
-CREATE Table [SystemCenter.extDBTables] (
+CREATE Table [extDBTables] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	TableName varchar(200) NOT NULL,
     ExternalDB varchar(200) NOT NULL,
@@ -153,14 +153,14 @@ CREATE Table [SystemCenter.extDBTables] (
 )
 GO
 
-CREATE TABLE [SystemCenter.CustomerAccess] (
+CREATE TABLE [CustomerAccess] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(ID),
 	PQViewSiteID int NOT NULL
 )
 GO
 
-CREATE TABLE [SystemCenter.CustomerAccessPQDigest] (
+CREATE TABLE [CustomerAccessPQDigest] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(ID),
 	OpenXDAMeterID INT FOREIGN KEY REFERENCES Meter(ID)
@@ -175,66 +175,66 @@ CREATE TABLE [SystemCenter.Role] (
 )
 GO
 
-CREATE TABLE [SystemCenter.NoteApplication](
+CREATE TABLE [NoteApplication](
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
 	Name varchar(max) not null,
 )
 GO
 
-INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('OpenMIC')
+INSERT INTO [NoteApplication] (Name) VALUES ('OpenMIC')
 GO
-INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('OpenXDA')
+INSERT INTO [NoteApplication] (Name) VALUES ('OpenXDA')
 GO
-INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('MiMD')
+INSERT INTO [NoteApplication] (Name) VALUES ('MiMD')
 GO
-INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('SystemCenter')
+INSERT INTO [NoteApplication] (Name) VALUES ('SystemCenter')
 GO
-INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('OpenHistorian')
+INSERT INTO [NoteApplication] (Name) VALUES ('OpenHistorian')
 GO
-INSERT INTO [SystemCenter.NoteApplication] (Name) VALUES ('All')
+INSERT INTO [NoteApplication] (Name) VALUES ('All')
 GO
 
-CREATE TABLE [SystemCenter.NoteTable] (
+CREATE TABLE [NoteTable] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
 	Name varchar(max) not null
 )
 GO
 
-INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Meter')
+INSERT INTO [NoteTable] (Name) VALUES ('Meter')
 GO
-INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Event')
+INSERT INTO [NoteTable] (Name) VALUES ('Event')
 GO
-INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Asset')
+INSERT INTO [NoteTable] (Name) VALUES ('Asset')
 GO
-INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Location')
+INSERT INTO [NoteTable] (Name) VALUES ('Location')
 GO
-INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Customer')
+INSERT INTO [NoteTable] (Name) VALUES ('Customer')
 GO
-INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('UserAccount')
+INSERT INTO [NoteTable] (Name) VALUES ('UserAccount')
 GO
-INSERT INTO [SystemCenter.NoteTable] (Name) VALUES ('Company')
+INSERT INTO [NoteTable] (Name) VALUES ('Company')
 GO
 
-CREATE TABLE [SystemCenter.NoteType] (
+CREATE TABLE [NoteType] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
 	Name varchar(max) not null
 )
 GO
 
-INSERT INTO [SystemCenter.NoteType] (Name) VALUES ('Configuration')
+INSERT INTO [NoteType] (Name) VALUES ('Configuration')
 GO
-INSERT INTO [SystemCenter.NoteType] (Name) VALUES ('Diagnostic')
+INSERT INTO [NoteType] (Name) VALUES ('Diagnostic')
 GO
-INSERT INTO [SystemCenter.NoteType] (Name) VALUES ('General')
+INSERT INTO [NoteType] (Name) VALUES ('General')
 GO
 
 
 
-CREATE TABLE [SystemCenter.Note] (
+CREATE TABLE [Note] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
-    NoteApplicationID int Not NULL REFERENCES [SystemCenter.NoteApplication](ID),
-	NoteTableID int Not NULL REFERENCES [SystemCenter.NoteTable](ID),
-    NoteTypeID int Not NULL REFERENCES [SystemCenter.NoteType](ID),
+    NoteApplicationID int Not NULL REFERENCES [NoteApplication](ID),
+	NoteTableID int Not NULL REFERENCES [NoteTable](ID),
+    NoteTypeID int Not NULL REFERENCES [NoteType](ID),
 	ReferenceTableID INT NOT NULL,
     Note VARCHAR(MAX) NOT NULL,
     UserAccount VARCHAR(MAX) NOT NULL DEFAULT SUSER_NAME(),
@@ -242,7 +242,7 @@ CREATE TABLE [SystemCenter.Note] (
 )
 GO
 
-CREATE TABLE [SystemCenter.OpenMICDailyStatistic] (
+CREATE TABLE [OpenMICDailyStatistic] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
     [Date] VARCHAR(10) not null,
     Meter VARCHAR(50) not null,
@@ -256,7 +256,7 @@ CREATE TABLE [SystemCenter.OpenMICDailyStatistic] (
 )
 GO
 
-CREATE TABLE [SystemCenter.OpenXDADailyStatistic] (
+CREATE TABLE [OpenXDADailyStatistic] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
     [Date] VARCHAR(10) not null,
     Meter VARCHAR(50) not null,
@@ -277,7 +277,7 @@ CREATE TABLE [SystemCenter.OpenXDADailyStatistic] (
 )
 GO
 
-CREATE TABLE [SystemCenter.MiMDDailyStatistic] (
+CREATE TABLE [MiMDDailyStatistic] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
     [Date] VARCHAR(10) not null,
     Meter VARCHAR(50) not null,

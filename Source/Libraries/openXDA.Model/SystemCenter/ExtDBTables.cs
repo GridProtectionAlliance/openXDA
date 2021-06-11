@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
-    [UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix"), TableName("extDBTables")]
+    [UseEscapedName,TableName("extDBTables")]
     public class extDBTables
     {
         [PrimaryKey(true)]

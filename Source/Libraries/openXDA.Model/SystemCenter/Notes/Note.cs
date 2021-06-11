@@ -26,7 +26,7 @@ using System;
 
 namespace SystemCenter.Model.Notes
 {
-    [TableName("Note"), UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix")]
+    [TableName("Note"), UseEscapedName]
     public class Notes
     {
         [PrimaryKey(true)]

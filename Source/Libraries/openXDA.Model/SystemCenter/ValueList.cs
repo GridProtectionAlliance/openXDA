@@ -28,7 +28,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SystemCenter.Model
 {
-    [ConfigFileTableNamePrefix("SystemCenterTableNamePrefix"), TableName("ValueList"), UseEscapedName, PrimaryLabel("Text")]
+    [ TableName("ValueList"), UseEscapedName, PrimaryLabel("Text")]
     public class ValueList
     {
 

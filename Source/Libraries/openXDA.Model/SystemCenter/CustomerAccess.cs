@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
-    [UseEscapedName, ConfigFileTableNamePrefix("SystemCenterTableNamePrefix"),TableName("CustomerAccess")]
+    [UseEscapedName, TableName("CustomerAccess")]
     public class CustomerAccess
     {
         [PrimaryKey(true)]
