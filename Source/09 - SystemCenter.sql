@@ -134,6 +134,17 @@ CREATE TABLE [AdditionalFieldValue] (
 )
 GO
 
+CREATE VIEW AdditionalFieldSearch AS 
+	SELECT 
+		AdditionalFieldValue.ParentTableID,
+		AdditionalFieldValue.Value,
+		AdditionalField.ParentTable,
+		AdditionalField.FieldName
+		FROM 
+			AdditionalField LEFT JOIN
+			AdditionalFieldValue ON AdditionalFieldValue.AdditionalFieldID = AdditionalField.ID
+GO
+
 CREATE TABLE [ExternalOpenXDAField] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTable varchar(100) NOT NULL,
