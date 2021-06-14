@@ -47,6 +47,7 @@ using GSF.Threading;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
+using SystemCenter.Model;
 using IDataReader = FaultData.DataReaders.IDataReader;
 
 namespace openXDA.Nodes.Types.Analysis
@@ -192,6 +193,16 @@ namespace openXDA.Nodes.Types.Analysis
                 DataFile dataFile = task.FileGroup.DataFiles.First();
                 string filePath = Path.ChangeExtension(dataFile.FilePath, "*");
                 string message = $"An error occurred while processing file group \"{filePath}\": {ex.Message}";
+
+                try
+                {
+                    DailyStatisticOperation.UpdateFileProcessingStatistic(task.Meter.AssetKey, task.FileGroup, message);
+                }
+                catch (Exception e) {
+                    Exception w = new Exception(message, e);
+                    Log.Error(w.Message, w);
+                }
+
                 Exception wrapper = new Exception(message, ex);
                 Log.Error(wrapper.Message, wrapper);
             }

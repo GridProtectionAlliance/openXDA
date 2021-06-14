@@ -1605,6 +1605,9 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.RelayEnergization', 13)
 GO
 
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailyStatisticOperation', 14)
+GO
+
 INSERT INTO AssetGroup(Name, DisplayDashboard) VALUES('AllAssets', 1)
 GO
 
@@ -3869,7 +3872,7 @@ GO
 CREATE TABLE CompanyMeter
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    CompanyTypeID INT NOT NULL REFERENCES Company(ID),
+    CompanyID INT NOT NULL REFERENCES Company(ID),
     MeterID INT NOT NULL REFERENCES Meter(ID),
     DisplayName VARCHAR(200) NOT NULL,
     Enabled BIT NOT NULL
@@ -6311,94 +6314,5 @@ GO
 --EXEC sp_addlinkedsrvlogin PQInvestigator, 'FALSE', [LocalLogin], [PQIAdmin], [PQIPassword]
 --GO
 
----------------- System Center TableSpace -------------
-CREATE TABLE [ValueListGroup](
-	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	[Name] [varchar](200) NULL,
-	[Description] [varchar](max) NULL,
-)
-
-CREATE TABLE [ValueList](
-    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [GroupID] [int] NOT NULL FOREIGN KEY REFERENCES ValueListGroup(ID),
-    [Text] [varchar](200) NULL,
-    [Value] [int] NULL,
-    [Description] [varchar](max) NULL,
-    [SortOrder] [int] NULL,
-)
-GO
-
-
-CREATE TABLE [SystemCenter.AdditionalField] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	ParentTable varchar(100) NOT NULL,
-	FieldName varchar(100) NOT NULL,
-	Type varchar(max) NULL DEFAULT ('string'),
-	ExternalDB varchar(max) NULL,
-	ExternalDBTable varchar(max) NULL,
-	ExternalDBTableKey varchar(max) NULL,
-	IsSecure bit NULL DEFAULT(0)
-	Constraint UC_AdditonaField UNIQUE(ParentTable, FieldName)
-)
-GO
-
-CREATE TABLE [SystemCenter.AdditionalFieldValue] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	ParentTableID int NOT NULL,
-	AdditionalFieldID int NOT NULL FOREIGN KEY REFERENCES [SystemCenter.AdditionalField](ID),
-	Value varchar(max) NULL,
-    UpdatedOn DATE NULL DEFAULT (SYSDATETIME()),
-	Constraint UC_AdditonaFieldValue UNIQUE(ParentTableID, AdditionalFieldID)
-)
-GO
-
-CREATE TABLE [SystemCenter.ExternalOpenXDAField] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	ParentTable varchar(100) NOT NULL,
-	FieldName varchar(100) NOT NULL,
-	ExternalDB varchar(max) NULL,
-	ExternalDBTable varchar(max) NULL,
-	ExternalDBTableKey varchar(max) NULL,
-	Constraint UC_ExternalOpenXDAField UNIQUE(ParentTable, FieldName)
-)
-GO
-
-CREATE Table [SystemCenter.extDBTables] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	TableName varchar(200) NOT NULL,
-    ExternalDB varchar(200) NOT NULL,
-	Query varchar(max) NULL,
-)
-GO
-
-CREATE TABLE [SystemCenter.TSC] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name varchar(200) NOT NULL,
-	Description varchar(max) NULL,
-	DepartmentNumber varchar(6) NOT NULL
-)
-GO
-
-CREATE TABLE [SystemCenter.CustomerAccess] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(ID),
-	PQViewSiteID int NOT NULL
-)
-GO
-
-CREATE TABLE [SystemCenter.CustomerAccessPQDigest] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(ID),
-	OpenXDAMeterID INT FOREIGN KEY REFERENCES Meter(ID)
-)
-GO
-
-
-CREATE TABLE [SystemCenter.Role] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name varchar(200) NOT NULL,
-	Description varchar(max) NULL,
-)
-GO
 
 -- Note PQMark might not work properly with this schema --

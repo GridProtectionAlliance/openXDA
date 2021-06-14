@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
@@ -32,12 +33,14 @@ using System.Threading;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Xml.Linq;
+using FaultData.DataOperations;
 using FaultData.DataWriters;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using openXDA.Configuration;
 using openXDA.Model;
+using SystemCenter.Model;
 
 namespace openXDA.Nodes.Types.Email
 {
@@ -269,6 +272,7 @@ namespace openXDA.Nodes.Types.Email
                     TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
                     DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
                     EventEmailService.LoadSentEmail(xdaNow, recipients, htmlDocument, eventIDs);
+                    DailyStatisticOperation.UpdateEmailProcessingStatistic(eventIDs);
                 }
                 finally
                 {
@@ -359,6 +363,7 @@ namespace openXDA.Nodes.Types.Email
             Tripped = true;
             return true;
         }
+
 
         #endregion
     }
