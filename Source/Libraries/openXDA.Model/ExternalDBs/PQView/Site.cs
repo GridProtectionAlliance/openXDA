@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Note.cs - Gbtc
+//  Site.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,28 +16,35 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/21/2021 - Billy Ernest
+//  06/15/2021 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace SystemCenter.Model
+namespace PQView.Model
 {
-    [TableName("Note"), UseEscapedName]
-    public class Notes
+    [TableName("PQViewSite"), SettingsCategory("dbPQView")]
+    public class Site
     {
         [PrimaryKey(true)]
-        public int ID { get; set; }
-        public int NoteApplicationID { get; set; }
-        public int NoteTableID { get; set; }
-        public int NoteTypeID { get; set; }
-        public int ReferenceTableID { get; set; }
-        public string Note { get; set; }
-        public string UserAccount { get; set; }
-        public DateTime Timestamp { get; set; }
+        public int id { get; set; }
+        public string name { get; set; }
+        public string description { get; set; }
+        public int rank { get; set; }
+        public int parentID { get; set; }
+        public int uctOffset { get; set; }
+        public int dst { get; set; }
+        public int connectionTypeID { get; set; }
+        public double nominalBaseV { get; set; }
+        public int nominalFundFreq { get; set; }
+        //public DateTime upsize_ts { get; set; }
 
     }
 }

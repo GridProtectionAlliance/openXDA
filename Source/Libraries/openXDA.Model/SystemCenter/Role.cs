@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Note.cs - Gbtc
+//  Role.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,28 +16,22 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/21/2021 - Billy Ernest
+//  06/15/2021 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
-using System;
 
 namespace SystemCenter.Model
 {
-    [TableName("Note"), UseEscapedName]
-    public class Notes
+    [TableName("SystemCenter.Role"), UseEscapedName]
+    public class Role
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int NoteApplicationID { get; set; }
-        public int NoteTableID { get; set; }
-        public int NoteTypeID { get; set; }
-        public int ReferenceTableID { get; set; }
-        public string Note { get; set; }
-        public string UserAccount { get; set; }
-        public DateTime Timestamp { get; set; }
-
+        public string Name { get; set; }
+        public string Description { get; set; }
     }
+
 }
