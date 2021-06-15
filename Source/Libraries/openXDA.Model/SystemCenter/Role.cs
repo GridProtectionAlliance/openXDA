@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
-    [TableName("SystemCenter.Role"), UseEscapedName]
+    [ConfigFileTableNamePrefix, TableName("Role"), UseEscapedName]
     public class Role
     {
         [PrimaryKey(true)]

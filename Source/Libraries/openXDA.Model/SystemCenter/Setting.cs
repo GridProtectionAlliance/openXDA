@@ -30,6 +30,6 @@ using System.Threading.Tasks;
 
 namespace SystemCenter.Model
 {
-    [ConfigFileTableNamePrefix("SystemCenterTableNamePrefix"), TableName("Setting"), UseEscapedName]
+    [ConfigFileTableNamePrefix, TableName("Setting"), UseEscapedName, AllowSearch]
     public class Setting: openXDA.Model.Setting {}
 }
