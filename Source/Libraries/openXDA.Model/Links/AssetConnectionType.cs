@@ -30,6 +30,9 @@ using Newtonsoft.Json;
 namespace openXDA.Model
 {
     [TableName("AssetRelationshipType")]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class AssetConnectionType
     {
         #region [ Members ]

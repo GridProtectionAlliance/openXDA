@@ -29,11 +29,15 @@ using GSF.Text;
 
 namespace openXDA.Model
 {
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class MeterConfiguration
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [ParentKey(typeof(Meter))]
         public int MeterID { get; set; }
 
         public int? DiffID { get; set; }
@@ -43,6 +47,7 @@ namespace openXDA.Model
 
         public string ConfigText { get; set; }
 
+        [DefaultSortOrder]
         public int RevisionMajor { get; set; }
         public int RevisionMinor { get; set; }
 

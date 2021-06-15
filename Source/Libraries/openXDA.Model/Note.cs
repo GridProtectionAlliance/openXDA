@@ -31,6 +31,10 @@ using System.Threading.Tasks;
 namespace openXDA.Model
 {
     [TableName("Note")]
+    [PostRoles("Administrator, Transmission SME, PQ Data Viewer")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [AllowSearch]
     public class Notes
     {
         [PrimaryKey(true)]

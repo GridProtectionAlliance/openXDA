@@ -45,6 +45,9 @@ namespace openXDA.Model
     }
 
     [TableName("AssetType")]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
     public class AssetTypes
     {
         #region [ Members ]
@@ -59,6 +62,7 @@ namespace openXDA.Model
 
         [StringLength(50)]
         [Searchable]
+        [DefaultSortOrder]
         public string Name { get; set; }
 
         [StringLength(250)]

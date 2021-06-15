@@ -36,6 +36,7 @@ namespace openXDA.Model
         [Required]
         [StringLength(100)]
         [Searchable]
+        [DefaultSortOrder]
         public string Name { get; set; }
 
         [DefaultValue(true)]
@@ -43,6 +44,10 @@ namespace openXDA.Model
     }
 
     [TableName("AssetGroupView")]
+    [AllowSearch]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class AssetGroupView: AssetGroup
     {
         public int AssetGroups { get; set; }

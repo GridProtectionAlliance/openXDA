@@ -34,6 +34,10 @@ using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
     public class Location
     {
         #region [ Members ]
@@ -52,6 +56,7 @@ namespace openXDA.Model
         [StringLength(50)]
         [Searchable]
         [Required]
+        [DefaultSortOrder]
         public string LocationKey { get; set; }
 
         [StringLength(200)]

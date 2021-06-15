@@ -27,12 +27,16 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
     public class MeasurementType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
         [StringLength(200)]
+        [DefaultSortOrder]
         public string Name { get; set; }
 
         public string Description { get; set; }

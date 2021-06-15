@@ -34,6 +34,10 @@ using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
     public class Meter
     {
         #region [ Members ]
@@ -52,6 +56,7 @@ namespace openXDA.Model
 
         [Required]
         [StringLength(50)]
+        [DefaultSortOrder]
         public string AssetKey { get; set; }
 
         [Required]

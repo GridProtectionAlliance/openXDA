@@ -35,7 +35,10 @@ using System.Threading.Tasks;
 
 namespace openXDA.Model
 {
-   
+   [AllowSearch]
+   [PostRoles("Administrator, Transmission SME")]
+   [DeleteRoles("Administrator, Transmission SME")]
+   [PatchRoles("Administrator, Transmission SME")]
     public class Asset
     {
         #region [ Members ]
@@ -60,6 +63,7 @@ namespace openXDA.Model
         [Required]
         [StringLength(50)]
         [Searchable]
+        [DefaultSortOrder]
         public string AssetKey { get; set; }
 
         public string Description { get; set; }
