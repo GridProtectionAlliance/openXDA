@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  NoteTag.cs - Gbtc
+//  NoteApplication.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -23,10 +23,10 @@
 
 using GSF.Data.Model;
 
-namespace SystemCenter.Model
+namespace openXDA.Model
 {
-    [TableName("NoteTag"), UseEscapedName]
-    public class NoteTag
+    [TableName("NoteApplication"), UseEscapedName]
+    public class NoteApplication
     {
         [PrimaryKey(true)]
         public int ID { get; set; }

@@ -155,9 +155,9 @@
     <Compile Include="SystemCenter\MeterHealthStatistics\MiMDDailyStatistic.cs" />
     <Compile Include="SystemCenter\MeterHealthStatistics\OpenMICDailyStatistic.cs" />
     <Compile Include="SystemCenter\MeterHealthStatistics\OpenXDADailyStatistic.cs" />
-    <Compile Include="SystemCenter\Notes\NoteApplication.cs" />
-    <Compile Include="SystemCenter\Notes\NoteType.cs" />
-    <Compile Include="SystemCenter\Notes\NoteTag.cs" />
+    <Compile Include="Notes\NoteApplication.cs" />
+    <Compile Include="Notes\NoteType.cs" />
+    <Compile Include="Notes\NoteTag.cs" />
     <Compile Include="SystemCenter\Role.cs" />
     <Compile Include="SystemCenter\Setting.cs" />
     <Compile Include="SystemCenter\ValueList.cs" />
