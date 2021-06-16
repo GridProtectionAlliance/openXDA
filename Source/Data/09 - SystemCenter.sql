@@ -237,3 +237,33 @@ CREATE TABLE [MiMDDailyStatistic] (
     CONSTRAINT UC_SystemCenter_MiMDDailyStatistic_Date_Meter UNIQUE ([Date],Meter)
 )
 GO
+
+-- Default Settings --
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('Email.AdminAddress', 'SystemCenter-admin@gridprotectionalliance.org', 'SystemCenter-admin@gridprotectionalliance.org')
+GO
+
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('Email.BlindCopyAddress', '', '')
+GO
+
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('Email.EnableSSL', 'False', 'False')
+GO
+
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('Email.FromAddress', 'SystemCenter@gridprotectionalliance.org', 'SystemCenter@gridprotectionalliance.org')
+GO
+
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('Email.Password', '', '')
+GO
+
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('Email.SMTPServer', '', '')
+GO
+
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('Email.Username', '', '')
+GO
+
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('SystemCenter.Url', 'http://localhost:8987', '')
+GO
