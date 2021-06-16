@@ -11,7 +11,7 @@ CREATE TABLE [SystemCenter.AccessLog](
     ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
     UserName varchar(200) NOT NULL,
     AccessGranted bit NOT NULL,
-    CreatedOn datetime NOT NULL CONSTRAINT [DF_AccessLog_Timestamp]  DEFAULT (getutcdate())
+    CreatedOn datetime NOT NULL CONSTRAINT [DF_SC_AccessLog_Timestamp]  DEFAULT (getutcdate())
 )
 GO
 
@@ -226,20 +226,8 @@ GO
 INSERT INTO [NoteTable] (Name) VALUES ('Company')
 GO
 
-CREATE TABLE [NoteType] (
-	ID int not null IDENTITY(1,1) PRIMARY KEY,
-	Name varchar(max) not null
-)
+DROP TABLE NOTE
 GO
-
-INSERT INTO [NoteType] (Name) VALUES ('Configuration')
-GO
-INSERT INTO [NoteType] (Name) VALUES ('Diagnostic')
-GO
-INSERT INTO [NoteType] (Name) VALUES ('General')
-GO
-
-
 
 CREATE TABLE [Note] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
