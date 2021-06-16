@@ -186,61 +186,6 @@ CREATE TABLE [SystemCenter.Role] (
 )
 GO
 
-CREATE TABLE [NoteApplication](
-	ID int not null IDENTITY(1,1) PRIMARY KEY,
-	Name varchar(max) not null,
-)
-GO
-
-INSERT INTO [NoteApplication] (Name) VALUES ('OpenMIC')
-GO
-INSERT INTO [NoteApplication] (Name) VALUES ('OpenXDA')
-GO
-INSERT INTO [NoteApplication] (Name) VALUES ('MiMD')
-GO
-INSERT INTO [NoteApplication] (Name) VALUES ('SystemCenter')
-GO
-INSERT INTO [NoteApplication] (Name) VALUES ('OpenHistorian')
-GO
-INSERT INTO [NoteApplication] (Name) VALUES ('All')
-GO
-
-CREATE TABLE [NoteTable] (
-	ID int not null IDENTITY(1,1) PRIMARY KEY,
-	Name varchar(max) not null
-)
-GO
-
-INSERT INTO [NoteTable] (Name) VALUES ('Meter')
-GO
-INSERT INTO [NoteTable] (Name) VALUES ('Event')
-GO
-INSERT INTO [NoteTable] (Name) VALUES ('Asset')
-GO
-INSERT INTO [NoteTable] (Name) VALUES ('Location')
-GO
-INSERT INTO [NoteTable] (Name) VALUES ('Customer')
-GO
-INSERT INTO [NoteTable] (Name) VALUES ('UserAccount')
-GO
-INSERT INTO [NoteTable] (Name) VALUES ('Company')
-GO
-
-DROP TABLE NOTE
-GO
-
-CREATE TABLE [Note] (
-	ID int not null IDENTITY(1,1) PRIMARY KEY,
-    NoteApplicationID int Not NULL REFERENCES [NoteApplication](ID),
-	NoteTableID int Not NULL REFERENCES [NoteTable](ID),
-    NoteTypeID int Not NULL REFERENCES [NoteType](ID),
-	ReferenceTableID INT NOT NULL,
-    Note VARCHAR(MAX) NOT NULL,
-    UserAccount VARCHAR(MAX) NOT NULL DEFAULT SUSER_NAME(),
-    Timestamp DATETIME NOT NULL DEFAULT GETUTCDATE(),
-)
-GO
-
 CREATE TABLE [OpenMICDailyStatistic] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
     [Date] VARCHAR(10) not null,

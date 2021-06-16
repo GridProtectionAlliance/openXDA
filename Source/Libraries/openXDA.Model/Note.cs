@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  01/14/2020 - Billy Ernest
 //       Generated original version of source code.
+//  05/16/2021 - C. Lackner
+//       Merged notes model from SystemCenter.
 //
 //******************************************************************************************************
 
@@ -30,7 +32,7 @@ using System.Threading.Tasks;
 
 namespace openXDA.Model
 {
-    [TableName("Note")]
+    [TableName("Note"), UseEscapedName]
     [PostRoles("Administrator, Transmission SME, PQ Data Viewer")]
     [DeleteRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
@@ -40,9 +42,12 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int NoteTypeID { get; set; }
+        public int NoteApplicationID { get; set; } = 2;
+        public int NoteTagID { get; set; } = 1;
         public int ReferenceTableID { get; set; }
         public string Note { get; set; }
         public string UserAccount { get; set; }
+        [DefaultSortOrder(false)]
         public DateTime Timestamp { get; set; }
 
     }

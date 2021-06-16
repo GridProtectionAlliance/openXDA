@@ -3660,10 +3660,43 @@ GO
 INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Company', 'Company')
 GO
 
-
-CREATE TABLE Note (
+CREATE TABLE [NoteApplication](
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
-	NoteTypeID int Not NULL REFERENCES NoteType(ID),
+	Name varchar(max) not null,
+)
+GO
+
+INSERT INTO [NoteApplication] (Name) VALUES ('OpenMIC')
+GO
+INSERT INTO [NoteApplication] (Name) VALUES ('OpenXDA')
+GO
+INSERT INTO [NoteApplication] (Name) VALUES ('MiMD')
+GO
+INSERT INTO [NoteApplication] (Name) VALUES ('SystemCenter')
+GO
+INSERT INTO [NoteApplication] (Name) VALUES ('OpenHistorian')
+GO
+INSERT INTO [NoteApplication] (Name) VALUES ('All')
+GO
+
+CREATE TABLE [NoteTag] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+	Name varchar(max) not null
+)
+GO
+
+INSERT INTO [NoteTag] (Name) VALUES ('General')
+GO
+INSERT INTO [NoteTag] (Name) VALUES ('Configuration')
+GO
+INSERT INTO [NoteTag] (Name) VALUES ('Diagnostic')
+GO
+
+CREATE TABLE [Note] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+    NoteApplicationID int Not NULL REFERENCES [NoteApplication](ID) Default(2),
+	NoteTagID int Not NULL REFERENCES [NoteTag](ID) Default(1),
+    NoteTypeID int Not NULL REFERENCES [NoteType](ID),
 	ReferenceTableID INT NOT NULL,
     Note VARCHAR(MAX) NOT NULL,
     UserAccount VARCHAR(MAX) NOT NULL DEFAULT SUSER_NAME(),

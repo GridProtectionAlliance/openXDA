@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Note.cs - Gbtc
+//  NoteTag.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -22,22 +22,15 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
-using System;
 
 namespace SystemCenter.Model
 {
-    [TableName("Note"), UseEscapedName]
-    public class Notes
+    [TableName("NoteTag"), UseEscapedName]
+    public class NoteTag
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int NoteApplicationID { get; set; }
-        public int NoteTableID { get; set; }
-        public int NoteTypeID { get; set; }
-        public int ReferenceTableID { get; set; }
-        public string Note { get; set; }
-        public string UserAccount { get; set; }
-        public DateTime Timestamp { get; set; }
+        public string Name { get; set; }
 
     }
 }
