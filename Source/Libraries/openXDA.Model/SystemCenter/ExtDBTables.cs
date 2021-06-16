@@ -25,7 +25,13 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
+    /// <summary>
+    /// Model used to grab tables form an external Database (e.g. FAWG or Maximo)
+    /// </summary>
     [UseEscapedName,TableName("extDBTables")]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [GetRoles("Administrator, Transmission SME")]
     public class extDBTables
     {
         [PrimaryKey(true)]

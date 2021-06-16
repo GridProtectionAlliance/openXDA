@@ -26,11 +26,37 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SystemCenter.Model
 {
+    /// <summary>
+    /// Customer Model. Distinct and joined to PQViewSiteID to reduce number of duplicate Customers coming from PQView
+    /// </summary>
+    [AllowSearch]
+    [CustomView(@"SELECT
+                    DISTINCT
+                    Customer.ID,
+	                Customer.CustomerKey,
+	                Customer.Name,
+	                Customer.Phone,
+	                Customer.Description,
+	                COUNT([CustomerAccess].ID) as Meters
+                FROM
+	                Customer LEFT JOIN
+	                [systemCenter.CustomerAccess] ON Customer.ID = [CustomerAccess].CustomerID LEFT JOIN
+	                PQViewSite ON [CustomerAccess].PQViewSiteID = PQViewSite.ID 
+               GROUP BY
+                    Customer.ID,
+	                Customer.CustomerKey,
+	                Customer.Name,
+	                Customer.Phone,
+	                Customer.Description")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class Customer
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
         [Required]
+        [DefaultSortOrder]
         public string CustomerKey { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }

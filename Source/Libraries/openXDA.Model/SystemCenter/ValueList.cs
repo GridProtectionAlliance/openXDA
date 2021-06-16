@@ -34,6 +34,8 @@ namespace SystemCenter.Model
 
         [PrimaryKey(true)]
         public int ID { get; set; }
+
+        [ParentKey(typeof(ValueListGroup))]
         public int GroupID { get; set; }
         public string Value { get; set; }
         public string AltValue { get; set; }

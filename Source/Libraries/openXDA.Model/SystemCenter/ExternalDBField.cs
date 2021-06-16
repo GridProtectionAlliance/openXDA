@@ -23,14 +23,18 @@
 
 namespace SystemCenter.Model
 {
+    /// <summary>
+    /// Model used for temporary storage of External Fields obtained from external Database.
+    /// Once the User confirms these turn into <see cref="AdditionalFieldValue"/>.
+    /// </summary>
     public class ExternalDBField
     {
         /// <summary>
-        /// If the Value alrady exists this is it' ID, otherwhise it's null
+        /// If the Value already exists this is it' ID, otherwise it's null
         /// </summary>
         public int? FieldValueID { get; set; }
         /// <summary>
-        /// This is the ID of the Coressponding XDA object
+        /// This is the ID of the Corresponding XDA object
         /// </summary>
         public int OpenXDAParentTableID { get; set; }
         /// <summary>
@@ -50,7 +54,7 @@ namespace SystemCenter.Model
         /// </summary>
         public string PreviousValue { get; set; }
         /// <summary>
-        /// If it encoutnered an Error trying to update thje field this will be true
+        /// If it encountered an Error trying to update the field this will be true
         /// </summary>
         public bool Error { get; set; }
         /// <summary>

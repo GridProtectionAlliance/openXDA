@@ -25,10 +25,15 @@ using GSF.Data.Model;
 namespace SystemCenter.Model
 {
     [UseEscapedName, TableName("AdditionalFieldValue")]
+    [AllowSearch]
+    [PatchRoles("Administrator, Transmission SME")]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class AdditionalFieldValue
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        [ParentKey(typeof(int))]
         public int ParentTableID { get; set; }
         public int AdditionalFieldID { get; set; }
         public string Value { get; set; }

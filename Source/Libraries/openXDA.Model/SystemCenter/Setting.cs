@@ -31,5 +31,8 @@ using System.Threading.Tasks;
 namespace SystemCenter.Model
 {
     [ConfigFileTableNamePrefix, TableName("Setting"), UseEscapedName, AllowSearch]
+    [PostRoles("Administrator")]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
     public class Setting: openXDA.Model.Setting {}
 }

@@ -25,6 +25,9 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
+    /// <summary>
+    /// Model that contains data obtained from external Databases and should be saved directly in the Model (e.g. VoltageKV, AssetKey...) 
+    /// </summary>
     [UseEscapedName, TableName("ExternalOpenXDAField")]
     public class ExternalOpenXDAField
     {

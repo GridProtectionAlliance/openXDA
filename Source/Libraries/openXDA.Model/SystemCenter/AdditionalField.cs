@@ -26,6 +26,9 @@ using GSF.Data.Model;
 namespace SystemCenter.Model
 {
     [UseEscapedName]
+    [PatchRoles("Administrator, Transmission SME")]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class AdditionalField
     {
         [PrimaryKey(true)]
