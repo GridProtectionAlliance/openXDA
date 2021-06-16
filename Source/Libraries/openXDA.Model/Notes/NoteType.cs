@@ -32,5 +32,7 @@ namespace openXDA.Model
         public int ID { get; set; }
         public string Name { get; set; }
 
+        [Searchable]
+        public string ReferenceTableName { get; set; }
     }
 }
