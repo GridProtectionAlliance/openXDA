@@ -24,7 +24,7 @@
 using GSF.Data.Model;
 using System;
 
-namespace SystemCenter.Model.Notes
+namespace SystemCenter.Model
 {
     [TableName("Note"), UseEscapedName]
     public class Notes

@@ -107,6 +107,7 @@
     <Compile Include="Events\Faults\FaultDetectionLogic.cs" />
     <Compile Include="Events\Faults\FaultLocationAlgorithm.cs" />
     <Compile Include="ExceptionHandler.cs" />
+    <Compile Include="ExternalDBs\PQView\Site.cs" />
     <Compile Include="Files\AnalysisTask.cs" />
     <Compile Include="Files\FileGroupField.cs" />
     <Compile Include="Files\FileGroupFieldValue.cs" />
@@ -149,6 +150,7 @@
     <Compile Include="SystemCenter\Customer.cs" />
     <Compile Include="SystemCenter\CustomerAccess.cs" />
     <Compile Include="SystemCenter\ExtDBTables.cs" />
+    <Compile Include="SystemCenter\ExternalDBField.cs" />
     <Compile Include="SystemCenter\ExternalOpenXDAField.cs" />
     <Compile Include="SystemCenter\MeterHealthStatistics\MiMDDailyStatistic.cs" />
     <Compile Include="SystemCenter\MeterHealthStatistics\OpenMICDailyStatistic.cs" />
@@ -157,6 +159,7 @@
     <Compile Include="SystemCenter\Notes\NoteApplication.cs" />
     <Compile Include="SystemCenter\Notes\NoteTable.cs" />
     <Compile Include="SystemCenter\Notes\NoteType.cs" />
+    <Compile Include="SystemCenter\Role.cs" />
     <Compile Include="SystemCenter\Setting.cs" />
     <Compile Include="SystemCenter\ValueList.cs" />
     <Compile Include="SystemCenter\ValueListGroup.cs" />
