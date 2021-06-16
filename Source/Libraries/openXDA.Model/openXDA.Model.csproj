@@ -158,7 +158,7 @@
     <Compile Include="Notes\NoteApplication.cs" />
     <Compile Include="Notes\NoteType.cs" />
     <Compile Include="Notes\NoteTag.cs" />
-    <Compile Include="SystemCenter\Role.cs" />
+    <Compile Include="SystemCenter\ADRole.cs" />
     <Compile Include="SystemCenter\Setting.cs" />
     <Compile Include="SystemCenter\ValueList.cs" />
     <Compile Include="SystemCenter\ValueListGroup.cs" />

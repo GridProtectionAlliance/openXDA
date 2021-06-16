@@ -179,7 +179,7 @@ CREATE TABLE [CustomerAccessPQDigest] (
 GO
 
 
-CREATE TABLE [SystemCenter.Role] (
+CREATE TABLE [ADRole] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	Name varchar(200) NOT NULL,
 	Description varchar(max) NULL,

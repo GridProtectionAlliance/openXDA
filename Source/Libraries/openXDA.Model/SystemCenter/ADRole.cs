@@ -25,8 +25,15 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
-    [ConfigFileTableNamePrefix, TableName("Role"), UseEscapedName]
-    public class Role
+    /// <summary>
+    /// Model for the Active Directory Role for the AD job description change widget.
+    /// </summary>
+    [ConfigFileTableNamePrefix, TableName("ADRole"), UseEscapedName]
+    [PostRoles("Administrator")]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [AllowSearch]
+    public class ADRole
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
