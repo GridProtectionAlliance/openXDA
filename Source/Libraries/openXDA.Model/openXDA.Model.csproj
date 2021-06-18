@@ -146,6 +146,7 @@
     <Compile Include="Settings\PQReportsSettings.cs" />
     <Compile Include="SystemCenter\AdditionalField.cs" />
     <Compile Include="SystemCenter\AdditionalFieldValue.cs" />
+    <Compile Include="SystemCenter\LocationDrawing.cs" />
     <Compile Include="SystemCenter\Customer.cs" />
     <Compile Include="SystemCenter\CustomerAccess.cs" />
     <Compile Include="SystemCenter\ExtDBTables.cs" />

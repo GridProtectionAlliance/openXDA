@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MiMDDailyStatistic.cs - Gbtc
+//  LocationDrawing.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,41 +16,30 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/21/2021 - Billy Ernest
+//  06/17/2021 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using GSF.Data.Model;
-using Newtonsoft.Json;
-using System;
-using System.Linq;
+using System.ComponentModel.DataAnnotations;
 
 namespace SystemCenter.Model
 {
-    [TableName("MiMDDailyStatistic"), UseEscapedName]
-    public class MiMDDailyStatistic
+    [PatchRoles("Administrator,Transmission SME")]
+    [PostRoles("Administrator,Transmission SME")]
+    [DeleteRoles("Administrator,Transmission SME")]
+    public class LocationDrawing
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-
-        [UseEscapedName]
-        public string Date { get; set; }
-
-        public string Meter { get; set; }
-
-        public DateTime? LastSuccessfulFileProcessed { get; set; }
-        public DateTime? LastUnsuccessfulFileProcessed { get; set; }
-        public DateTime? LastConfigFileChange { get; set; }
-
-        public string LastUnsuccessfulFileProcessedExplanation { get; set; }
-        public int TotalFilesProcessed { get; set; }
-        public int TotalUnsuccessfulFilesProcessed { get; set; }
-        public int TotalSuccessfulFilesProcessed { get; set; }
-        public int ConfigChanges { get; set; }
-        public int DiagnosticAlarms { get; set; }
-        public int ComplianceIssues { get; set; }
+        [Required]
+        public int LocationID { get; set; }
+        [Required]
+        [DefaultSortOrder]
+        public string Name { get; set; }
+        [Required]
+        public string Link { get; set; }
+        public string Description { get; set; }
     }
-
 }

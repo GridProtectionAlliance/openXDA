@@ -238,6 +238,15 @@ CREATE TABLE [MiMDDailyStatistic] (
 )
 GO
 
+CREATE TABLE [LocationDrawing] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+    LocationID INT not null FOREIGN KEY REFERENCES Location(ID),
+    Name VARCHAR(200) NOT NUll,
+    Link VARCHAR(max) NOT NUll,
+    Description VARCHAR(max) NULL
+)
+GO
+
 -- Default Settings --
 SET ANSI_NULLS ON
 GO
