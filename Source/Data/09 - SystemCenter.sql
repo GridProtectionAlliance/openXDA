@@ -227,6 +227,7 @@ CREATE TABLE [MiMDDailyStatistic] (
     Meter VARCHAR(50) not null,
     LastSuccessfulFileProcessed DATETIME NULL,
     LastUnsuccessfulFileProcessed DATETIME NULL,
+    LastConfigFileChange DATETIME NULL,
     LastUnsuccessfulFileProcessedExplanation VARCHAR(MAX) NULL,
     TotalFilesProcessed INT NOT NULL,
     TotalUnsuccessfulFilesProcessed INT NOT NULL,
@@ -235,6 +236,16 @@ CREATE TABLE [MiMDDailyStatistic] (
     DiagnosticAlarms INT NOT NULL,
     ComplianceIssues INT NOT NULL,
     CONSTRAINT UC_SystemCenter_MiMDDailyStatistic_Date_Meter UNIQUE ([Date],Meter)
+)
+GO
+
+
+CREATE TABLE [LocationDrawing] (
+	ID int not null IDENTITY(1,1) PRIMARY KEY,
+    LocationID INT not null FOREIGN KEY REFERENCES Location(ID),
+    Name VARCHAR(200) NOT NUll,
+    Link VARCHAR(max) NOT NUll,
+    Description VARCHAR(max) NULL
 )
 GO
 

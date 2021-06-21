@@ -42,6 +42,7 @@ namespace SystemCenter.Model
 
         public DateTime? LastSuccessfulFileProcessed { get; set; }
         public DateTime? LastUnsuccessfulFileProcessed { get; set; }
+        public DateTime? LastConfigFileChange { get; set; }
 
         public string LastUnsuccessfulFileProcessedExplanation { get; set; }
         public int TotalFilesProcessed { get; set; }
