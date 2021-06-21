@@ -29,6 +29,7 @@ namespace SystemCenter.Model
     [PatchRoles("Administrator, Transmission SME")]
     [PostRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]
+    [AllowSearch]
     public class AdditionalField
     {
         [PrimaryKey(true)]
