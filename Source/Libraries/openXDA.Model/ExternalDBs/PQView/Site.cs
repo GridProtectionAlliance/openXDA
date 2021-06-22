@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 namespace PQView.Model
 {
-    [TableName("PQViewSite"), SettingsCategory("dbPQView")]
+    [TableName("Site"), SettingsCategory("dbPQView")]
     public class Site
     {
         [PrimaryKey(true)]
