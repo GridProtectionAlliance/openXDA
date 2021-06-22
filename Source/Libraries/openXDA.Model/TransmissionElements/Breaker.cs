@@ -44,11 +44,11 @@ namespace openXDA.Model
 
         public double Speed { get; set; }
 
-        public int? TripTime { get; set; }
-            
-        public int? PickupTime { get; set; }
-            
-        public double? TripCoilCondition { get; set; } 
+        public int TripTime { get; set; } = 0;
+
+        public int PickupTime { get; set; } = 0;
+
+        public double TripCoilCondition { get; set; } = 0.0D;
 
         #endregion
 
