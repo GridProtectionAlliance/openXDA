@@ -36,7 +36,7 @@ namespace SystemCenter.Model
         /// <summary>
         /// This is the ID of the Corresponding XDA object
         /// </summary>
-        public int OpenXDAParentTableID { get; set; }
+        public int ParentTableID { get; set; }
         /// <summary>
         /// This is the ID of the Additional Field id it is an AdditionalField in System Center
         /// </summary>
