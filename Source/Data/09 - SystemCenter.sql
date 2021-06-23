@@ -94,6 +94,24 @@ CREATE TABLE [SystemCenter.SecurityGroupUserAccount]
 )
 GO
 
+CREATE TABLE [dbo].[SystemCenter.AdditionalUserField](
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	[FieldName] [varchar](100) NOT NULL,
+	[Type] [varchar](max) NOT NULL DEFAULT ('string'),
+	[IsSecure] [bit] NOT NULL DEFAULT (0),
+) 
+GO
+
+CREATE TABLE [dbo].[SystemCenter.AdditionalUserFieldValue](
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [UserAccountID] UNIQUEIDENTIFIER NOT NULL REFERENCES [SystemCenter.UserAccount](ID),
+	[AdditionalUserFieldID] [int] NOT NULL FOREIGN KEY References [SystemCenter.AdditionalUserField](ID),
+	[Value] [varchar](max) NULL,
+
+)
+
+GO
+
 
 CREATE TABLE [ValueListGroup](
 	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
