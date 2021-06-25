@@ -343,14 +343,8 @@ namespace openXDA.Nodes.Types.Analysis
             for (int i = 0; i < meterDataSet.ReportedDisturbances.Count; i++)
             {
                 ReportedDisturbance disturbance = meterDataSet.ReportedDisturbances[i];
-                GSF.PQDIF.Logical.Phase phase = disturbance.Phase;
                 DateTime time = toXDATime(disturbance.Time);
-                double max = disturbance.Maximum;
-                double min = disturbance.Minimum;
-                double avg = disturbance.Average;
-                TimeSpan duration = disturbance.Duration;
-                GSF.PQDIF.Logical.QuantityUnits units = disturbance.Units;
-                meterDataSet.ReportedDisturbances[i] = new ReportedDisturbance(phase, time, max, min, avg, duration, units);
+                meterDataSet.ReportedDisturbances[i] = disturbance.ShiftTimestampTo(time);
             }
         }
 

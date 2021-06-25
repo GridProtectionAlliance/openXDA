@@ -48,6 +48,9 @@ namespace FaultData.DataAnalysis
         public TimeSpan Duration { get; }
         public QuantityUnits Units { get; }
 
+        public ReportedDisturbance ShiftTimestampTo(DateTime shiftedTime) =>
+            new ReportedDisturbance(Phase, shiftedTime, Maximum, Minimum, Average, Duration, Units);
+
         public Range<DateTime> ToRange()
         {
             return new Range<DateTime>(Time, Time + Duration);

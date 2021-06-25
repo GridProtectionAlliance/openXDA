@@ -1500,6 +1500,73 @@ CREATE TABLE MaintenanceWindow
 )
 GO
 
+CREATE TABLE DataRescueOperation
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeterID INT REFERENCES Meter(ID),
+    StartTime DATETIME2 NULL,
+    EndTime DATETIME2 NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataRescueOperation_MeterID
+ON DataRescueOperation(MeterID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataRescueOperation_StartTime
+ON DataRescueOperation(StartTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataRescueOperation_EndTime
+ON DataRescueOperation(EndTime ASC)
+GO
+
+CREATE TABLE DataRescueChannelAdjustment
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataRescueOperationID INT NOT NULL REFERENCES DataRescueOperation(ID),
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    Multiplier FLOAT NOT NULL DEFAULT 1,
+    Adder FLOAT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataRescueChannelAdjustment_DataRescueOperationID
+ON DataRescueChannelAdjustment(DataRescueOperationID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataRescueChannelAdjustment_ChannelID
+ON DataRescueChannelAdjustment(ChannelID ASC)
+GO
+
+CREATE TABLE DataRescueTimeShift
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataRescueOperationID INT NOT NULL REFERENCES DataRescueOperation(ID),
+    Ticks BIGINT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataRescueTimeShift_DataRescueOperationID
+ON DataRescueTimeShift(DataRescueOperationID ASC)
+GO
+
+CREATE TABLE DataRescueFileGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataRescueOperationID INT NOT NULL REFERENCES DataRescueOperation(ID),
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID)
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataRescueFileGroup_DataRescueOperationID
+ON DataRescueFileGroup(DataRescueOperationID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataRescueFileGroup_FileGroupID
+ON DataRescueFileGroup(FileGroupID ASC)
+GO
+
 CREATE TABLE BreakerChannel
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -1572,16 +1639,19 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.ConfigurationOperation', 1)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.EventOperation', 2)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataRescueOperation', 2)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DisturbanceSeverityOperation', 3)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.EventOperation', 3)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 4)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DisturbanceSeverityOperation', 4)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 5)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 5)
+GO
+
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 6)
 GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('openXDA.HIDS.dll', 'openXDA.HIDS.TrendingDataSummaryOperation', 7)
