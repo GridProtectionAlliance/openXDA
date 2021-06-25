@@ -395,6 +395,14 @@ CREATE TABLE AssetRelationshipType
 )
 GO
 
+CREATE TABLE AssetRelationshipTypeAssetType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetRelationshipTypeID INT NOT NULL REFERENCES AssetRelationshipType(ID),
+    AssetTypeID INT NOT NULL REFERENCES AssetType(ID)
+)
+GO
+
 CREATE TABLE AssetRelationship
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

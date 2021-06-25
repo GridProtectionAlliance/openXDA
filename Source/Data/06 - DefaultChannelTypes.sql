@@ -616,6 +616,30 @@ INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnec
 	VALUES ('Line-(Double)Breaker','only Voltage are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)')
 GO
 
+-- Add Connection between AssetTypes and AssetRelationshipTypes for SystemCenter UI to reduce potential for Config issues
+
+INSERT INTO AssetRelationshipTypeAssetType (AssetRelationshipTypeID, AssetTypeID ) VALUES
+	((SELECT ID FROM AssetRelationshipType where Name = 'Line-(Double)Breaker'),(SELECT ID FROM AssetType WHERE Name = 'Line')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Line-(Single)Breaker'),(SELECT ID FROM AssetType WHERE Name = 'Line')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Bus-Breaker'),(SELECT ID FROM AssetType WHERE Name = 'Bus')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Bus-Line'),(SELECT ID FROM AssetType WHERE Name = 'Bus')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Line-LineSegment'),(SELECT ID FROM AssetType WHERE Name = 'Line')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Bus-CapBank'),(SELECT ID FROM AssetType WHERE Name = 'Bus')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Bus-Relay'),(SELECT ID FROM AssetType WHERE Name = 'Bus')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Relay-CapBank'),(SELECT ID FROM AssetType WHERE Name = 'CapacitorBankRelay'))
+GO
+
+INSERT INTO AssetRelationshipTypeAssetType (AssetRelationshipTypeID, AssetTypeID ) VALUES
+	((SELECT ID FROM AssetRelationshipType where Name = 'Line-(Double)Breaker'),(SELECT ID FROM AssetType WHERE Name = 'Breaker')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Line-(Single)Breaker'),(SELECT ID FROM AssetType WHERE Name = 'Breaker')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Bus-Breaker'),(SELECT ID FROM AssetType WHERE Name = 'Breaker')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Bus-Line'),(SELECT ID FROM AssetType WHERE Name = 'Line')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Line-LineSegment'),(SELECT ID FROM AssetType WHERE Name = 'LineSegment')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Bus-CapBank'),(SELECT ID FROM AssetType WHERE Name = 'CapacitorBank')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Bus-Relay'),(SELECT ID FROM AssetType WHERE Name = 'CapacitorBankRelay')),
+	((SELECT ID FROM AssetRelationshipType where Name = 'Relay-CapBank'),(SELECT ID FROM AssetType WHERE Name = 'CapacitorBank'))
+GO
+
 INSERT INTO CBDataError (ID, Description) VALUES
 	(0, 'No Error'),
 	(11, 'Error: One or more input parameters are incorrect.'),
