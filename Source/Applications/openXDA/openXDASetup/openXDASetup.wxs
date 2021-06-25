@@ -32,6 +32,7 @@
           <ComponentRef Id="DefaultChannelTypes" />
           <ComponentRef Id="DefaultTrendingAlarms" />
           <ComponentRef Id="DefaultContours" />
+          <ComponentRef Id="SystemCenter" />
         </Feature>
 
         <!-- openXDA Service -->
@@ -225,6 +226,8 @@
     <CustomAction Id="DefaultTrendingAlarms.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="DefaultContours.sql.SetProperty" Property="DefaultContours.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultContours.sql]" />
     <CustomAction Id="DefaultContours.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="SystemCenter.sql.SetProperty" Property="SystemCenter.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#SystemCenter.sql]" />
+    <CustomAction Id="SystemCenter.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
 
     <CustomAction Id="UpgradeValidationAction.SetProperty" Property="UpgradeValidationAction" Value="ProcessStartInfo=FileName=[#XDAUpgradeValidation.exe];SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="UpgradeValidationAction" BinaryKey="InstallerActions" DllEntry="StartProcessAction" Execute="deferred" Impersonate="no" />
@@ -252,6 +255,7 @@
       <ProgressText Action="DefaultChannelTypes.sql">Defining default channel types...</ProgressText>
       <ProgressText Action="DefaultTrendingAlarms.sql">Defining default trending alarms...</ProgressText>
       <ProgressText Action="DefaultContours.sql">Adding default contour color scales...</ProgressText>
+      <ProgressText Action="SystemCenter.sql">Adding tables to support System Center...</ProgressText>
 
       <ProgressText Action="UpgradeValidationAction">Executing upgrade validation process...</ProgressText>
     </UI>
@@ -307,6 +311,8 @@
       <Custom Action="DefaultTrendingAlarms.sql" After="DefaultTrendingAlarms.sql.SetProperty">INSTALLDATABASEFEATURE</Custom>
       <Custom Action="DefaultContours.sql.SetProperty" After="DefaultTrendingAlarms.sql">INSTALLDATABASEFEATURE</Custom>
       <Custom Action="DefaultContours.sql" After="DefaultContours.sql.SetProperty">INSTALLDATABASEFEATURE</Custom>
+      <Custom Action="SystemCenter.sql.SetProperty" After="DefaultContours.sql">INSTALLDATABASEFEATURE</Custom>
+      <Custom Action="SystemCenter.sql" After="SystemCenter.sql.SetProperty">INSTALLDATABASEFEATURE</Custom>
 
       <Custom Action="UpgradeValidationAction.SetProperty" After="InstallFiles">INSTALLSERVICEFEATURE</Custom>
       <Custom Action="UpgradeValidationAction" After="UpgradeValidationAction.SetProperty">INSTALLSERVICEFEATURE</Custom>
@@ -393,6 +399,9 @@
       </Component>
       <Component Id="DefaultContours">
         <File Id="DefaultContours.sql" Name="DefaultContours.sql" Source="$(var.SolutionDir)\Data\08 - DefaultContours.sql" />
+      </Component>
+      <Component Id="SystemCenter">
+        <File Id="SystemCenter.sql" Name="SystemCenter.sql" Source="$(var.SolutionDir)\Data\09 - SystemCenter.sql" />
       </Component>
     </ComponentGroup>
     
