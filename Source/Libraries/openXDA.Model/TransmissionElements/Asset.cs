@@ -208,6 +208,8 @@ namespace openXDA.Model
                     assetLocation.LazyContext = LazyContext;
                 }
             }
+            else
+                return new List<AssetLocation>();
 
             return assetLocations;
         }
