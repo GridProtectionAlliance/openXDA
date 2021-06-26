@@ -33,6 +33,7 @@ namespace openXDA.Model
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]
+    [AllowSearch]
     public class AssetConnectionType
     {
         #region [ Members ]
