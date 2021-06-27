@@ -490,7 +490,7 @@ CREATE TABLE CapacitorBankAttributes
     AssetID INT NOT NULL REFERENCES Asset(ID),
     NumberOfBanks INT NOT NULL,
     CapacitancePerBank INT NOT NULL,
-    CktSwitcher VARCHAR(20) NOT NULL,
+    CktSwitcher VARCHAR(50) NOT NULL,
     MaxKV FLOAT NOT NULL,
     UnitKV FLOAT NOT NULL,
     UnitKVAr FLOAT NOT NULL,
