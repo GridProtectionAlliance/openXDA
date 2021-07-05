@@ -62,5 +62,8 @@ namespace SystemCenter.Model
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Description { get; set; }
+
+        [NonRecordField]
+        public int Meters { get; set; }
     }
 }
