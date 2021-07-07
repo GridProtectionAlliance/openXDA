@@ -160,6 +160,7 @@
     <Compile Include="Notes\NoteTag.cs" />
     <Compile Include="SystemCenter\ADRole.cs" />
     <Compile Include="SystemCenter\Setting.cs" />
+    <Compile Include="SystemCenter\TableOperationExtensions.cs" />
     <Compile Include="SystemCenter\UserAccount\AdditionalUserField.cs" />
     <Compile Include="SystemCenter\UserAccount\AdditionalUserFieldValue.cs" />
     <Compile Include="SystemCenter\ValueList.cs" />

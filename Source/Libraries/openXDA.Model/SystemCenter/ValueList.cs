@@ -23,12 +23,10 @@
 
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
-using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace SystemCenter.Model
 {
-    [ TableName("ValueList"), UseEscapedName, PrimaryLabel("Text")]
+    [ TableName("ValueList"), UseEscapedName, PrimaryLabel("Text"), SettingsCategory("systemSettings")]
     public class ValueList
     {
 
@@ -40,5 +38,6 @@ namespace SystemCenter.Model
         public string Value { get; set; }
         public string AltValue { get; set; }
         public int SortOrder { get; set; }
+
     }
 }
