@@ -74,8 +74,13 @@ namespace SystemCenter.Model
 
             if (userAccount == null)
                 return new AdditionalUserFieldValue() { ID = 0, UserAccountID = userAccount.ID, AdditionalUserFieldID = field.ID, Value = ""};
+
+            AdditionalUserFieldValue value = tableOperations.QueryRecordWhere("UserAccountID = {0} AND AdditionalUserFieldID = {1}", userAccount.ID, field.ID);
+
+            if (value == null)
+                return new AdditionalUserFieldValue() { ID = 0, UserAccountID = userAccount.ID, AdditionalUserFieldID = field.ID, Value = "" };
             else
-                return tableOperations.QueryRecordWhere("UserAccountID = {0} AND AdditionalUserFieldID = {1}", userAccount.ID, field.ID);
+                return value;
         }
 
         #endregion
@@ -122,10 +127,16 @@ namespace SystemCenter.Model
         /// <param name="parentTable">Name of Parent Table</param>
         /// <param name="fieldName">Name of field</param>
         /// <returns></returns>
-        public static AdditionalFieldValue GetValue(this TableOperations<AdditionalFieldValue> tableOperations, string parentTable, string fieldName)
+        public static AdditionalFieldValue GetValue(this TableOperations<AdditionalFieldValue> tableOperations, string parentTable, int parentTableID,string fieldName)
         {
             AdditionalField field = new TableOperations<AdditionalField>(tableOperations.Connection).GetField(parentTable, fieldName);
-            return tableOperations.QueryRecordWhere("ParentTableID = {0} AND AdditionalFieldID = {1}", field.ID, field.ID);
+            AdditionalFieldValue value = tableOperations.QueryRecordWhere("ParentTableID = {0} AND AdditionalFieldID = {1}", parentTableID, field.ID);
+
+            if (value == null)
+                return new AdditionalFieldValue() { ID = 0, ParentTableID = parentTableID, AdditionalFieldID = field.ID, Value = "" };
+            else
+                return value;
+
         }
 
         #endregion
