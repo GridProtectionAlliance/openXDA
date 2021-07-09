@@ -26,7 +26,7 @@ using System;
 
 namespace SystemCenter.Model
 {
-    [TableName("OpenXDADailyStatistic"), UseEscapedName]
+    [TableName("OpenXDADailyStatistic"), UseEscapedName, ConfigFileTableNamePrefix]
     public class OpenXDADailyStatistic
     {
         [PrimaryKey(true)]
