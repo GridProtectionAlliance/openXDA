@@ -616,6 +616,17 @@ INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnec
 	VALUES ('Line-(Double)Breaker','only Voltage are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)')
 GO
 
+
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Bus-CapBank','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
+GO
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Bus-Relay','only Voltages are passed across this connection.',0,'SELECT 0','SELECT 0')
+GO
+INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
+	VALUES ('Relay-CapBank','This Connection is for the Cap Bank Analytic',0,'SELECT 0','SELECT 0')
+GO
+
 -- Add Connection between AssetTypes and AssetRelationshipTypes for SystemCenter UI to reduce potential for Config issues
 
 INSERT INTO AssetRelationshipTypeAssetType (AssetRelationshipTypeID, AssetTypeID ) VALUES
@@ -647,15 +658,6 @@ INSERT INTO CBDataError (ID, Description) VALUES
 	(13, 'Error: Non-uniform sampling time or sample rates of waveforms do not match those specified in the input parameters')
 GO
 
-INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Bus-CapBank','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
-GO
-INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Bus-Relay','only Voltages are passed across this connection.',0,'SELECT 0','SELECT 0')
-GO
-INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Relay-CapBank','This Connection is for the Cap Bank Analytic',0,'SELECT 0','SELECT 0')
-GO
 
 INSERT INTO CBOperation (ID, Description) VALUES
 	(-1, 'Cannot be determined (inconclusive) or not determined because of data error'),
