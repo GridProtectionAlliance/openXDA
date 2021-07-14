@@ -29,7 +29,7 @@ using System.ComponentModel.DataAnnotations;
 namespace SystemCenter.Model
 {
 
-    [TableName("ValueListGroup"), UseEscapedName, PrimaryLabel("Name")]
+    [TableName("ValueListGroup"), UseEscapedName, PrimaryLabel("Name"), AllowSearch]
     public class ValueListGroup
     {
         [PrimaryKey(true)]
