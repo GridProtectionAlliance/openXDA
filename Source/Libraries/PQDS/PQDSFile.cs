@@ -497,14 +497,37 @@ namespace PQDS
             //write the header
             result.Add("waveform-data," + String.Join(",", measurements));
 
-            //write the Data
-            int n_data = m_Data.Select(item => item.Length).Max();
 
+            //write the Data
+            // Logic for skipping datapoints if they don't have the same sampling rate
+            List<int> samplingRates = m_Data.Select(item => item.Length).Distinct().ToList();
+
+            int n_data = samplingRates.Max();
+
+            Dictionary<int,  Func< int, DataSeries, double>> reSampling = new Dictionary<int, Func< int, DataSeries, double>>();
+
+            if (samplingRates.Any(f => ((double)n_data / (double)f) % 1 != 0))
+                throw new Exception("Sampling Rates in this File do not match and are not multiples of each other.");
+
+            reSampling = samplingRates.Select(item => new KeyValuePair<int, Func<int, DataSeries, double>>(item, (int index, DataSeries ds) => {
+                int n = n_data / item;
+                if (index % n == 0)
+                    return ds.Series[index / n].Value;
+                else
+                    return double.NaN;
+            }))
+                .ToDictionary(item => item.Key, item => item.Value);
+            
             for (int i = 0; i < n_data; i++)
             {
                 TimeSpan dT = m_Data[0].Series[i].Time - m_initialTS;
                 result.Add(Convert.ToString(dT.TotalMilliseconds) + "," +
-                    String.Join(",", m_Data.Select(item => String.Format("{0:F12}", item.Series[i].Value)).ToList()));
+                    String.Join(",", m_Data.Select(item => {
+                        double v = reSampling[item.Length](i, item);
+                        if (double.IsNaN(v))
+                            return "NaN".PadLeft(12);
+                        return String.Format("{0:F12}", v);
+                        }).ToList()));
                 progress.Report((double)i / (double)n_total);
             }
 
