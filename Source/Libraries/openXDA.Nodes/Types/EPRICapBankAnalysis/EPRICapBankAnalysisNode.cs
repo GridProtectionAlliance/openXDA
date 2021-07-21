@@ -114,7 +114,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 return;
 
             Log.Info($"Adding file group (ID={fileGroupID}) to CapBank Analytic Queue");
-            
+
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 TableOperations<Event> evtTbl = new TableOperations<Event>(connection);
@@ -192,10 +192,10 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                         List<Event> relayEvents = GetRelayEvents(evt.StartTime, evt.EndTime, relays);
 
-                        if (!capBank.Fused && !capBank.Compensated )
+                        if (!capBank.Fused && !capBank.Compensated)
                             relayEventMapping.Add(GenerateRelayDataFileFuselessUncompensated(relayEvents, evt, capBank), evt);
                         else
-                            relayEvents.ForEach(relayEvt => { relayEventMapping.Add(GenerateRelayDataFile(relayEvt, capBank), evt);  });
+                            relayEvents.ForEach(relayEvt => { relayEventMapping.Add(GenerateRelayDataFile(relayEvt, capBank), evt); });
                     }
 
                     if (eventMapping.Count == 0)
@@ -206,10 +206,13 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     string dstFolder = settings.AnalyticSettings.ParameterFileLocation;
                     dstFolder = Path.GetFullPath(Path.GetDirectoryName(dstFolder));
 
-                    // Compute Initial K
+                    if (settings.AnalyticSettings.KeepFiles)
+                        dstFolder = Path.Combine(dstFolder, capBank.AssetKey);
 
+                    // Compute Initial K
                     double[,] kFactors = GetKFactors(connection, events.First(), capBank.NumberOfBanks, ComputeKInitial(capBank));
                     string inputParameterFile = Path.Combine(dstFolder, $"{capBank.AssetKey}.txt");
+
                     CapBankAnalysisRoutine analysisRoutine = GetAnalysisRoutine(connection);
                     analysisRoutine(kFactors, inputParameterFile);
 
@@ -233,15 +236,15 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 double S = capBank.Nseries;
                 double T = (double)capBank.NLowerGroups;
 
-                K = (M/B)* (S/T);
+                K = (M / B) * (S / T);
             }
             else if (capBank.Compensated)
             {
                 double B = capBank.VTratioBus;
                 double N = ((double)capBank.RelayPTRatioPrimary / (double)capBank.RelayPTRatioSecondary);
 
-                double Vu = capBank.UnitKV* 1000.0D;
-                double Qu = capBank.UnitKVAr* 1000.0D;
+                double Vu = capBank.UnitKV * 1000.0D;
+                double Qu = capBank.UnitKVAr * 1000.0D;
                 double S = capBank.Nseries;
                 double P = capBank.Nparalell;
 
@@ -250,8 +253,8 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 double R = capBank.NumberLVCaps;
 
 
-                double Xp = Vu*Vu / Qu * S / P;
-                double Xb = Vr*Vr / Qr / R;
+                double Xp = Vu * Vu / Qu * S / P;
+                double Xb = Vr * Vr / Qr / R;
 
                 K = (Xb + Xp) * N / (Xp * B);
             }
@@ -350,7 +353,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                 Log.Info($"Processing Pre-Insertion Health Analytic Files");
                 ReadPreInsertionAnalytic(preInsertionAnalytics, relayEventMapping);
-                
+
                 Log.Info($"Processing Restrike Analytic Files");
                 ReadRestrikeAnalytic(restrikeAnalysis, eventMapping);
 
@@ -442,6 +445,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             }
 
             string fileName = "";
+            int eventID = 0;
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -521,12 +525,31 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                     if (eventMapping.TryGetValue(fileName, out Event evt))
                     {
+                        eventID = evt.ID;
                         row.EventID = evt.ID;
                         new TableOperations<CBAnalyticResult>(connection).AddNewRecord(row);
                         row.ID = connection.ExecuteScalar<int>("SELECT @@Identity");
                     }
                 }
+
+                Settings settings = new Settings(Configure);
+                if (settings.AnalyticSettings.KeepFiles && eventID > 0)
+                {
+                    CapBank capBank = new TableOperations<CapBank>(connection).QueryRecordWhere("ID = (SELECT ASSETID FROM Event WHERE ID = {0})", eventID);
+                    string dstFile = eventID + "_" + "GenCapSwitch.csv";
+                    string archiveFolder = settings.AnalyticSettings.ResultFileLocation;
+                    archiveFolder = Path.GetDirectoryName(archiveFolder);
+                    archiveFolder = Path.Combine(archiveFolder, "Archive", capBank.AssetKey, "Result");
+
+                    Directory.CreateDirectory(archiveFolder);
+                    // Remove the Parameter file since that will be recreated
+                    if (File.Exists(Path.Combine(archiveFolder, dstFile)))
+                        File.Delete(Path.Combine(archiveFolder, dstFile));
+
+                    File.Copy(filename, archiveFolder + "\\" + dstFile);
+                }
             }
+
         }
 
         private void ReadPreInsertionAnalytic(string filename, Dictionary<string, Event> eventMapping)
@@ -543,7 +566,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             }
 
             string fileName = "";
-
+            int eventID = 0;
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 foreach (string line in lines.Skip(2))
@@ -579,6 +602,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     Event evt;
                     if (eventMapping.TryGetValue(fileName, out evt))
                     {
+                        eventID = evt.ID;
                         if (new TableOperations<CBAnalyticResult>(connection).QueryRecordCountWhere("PhaseID = {0} AND EventID = {1}", PhaseID, evt.ID) != 1)
                             continue;
 
@@ -586,6 +610,22 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                         new TableOperations<CBSwitchHealthAnalytic>(connection).AddNewRecord(row);
                     }
+                }
+                Settings settings = new Settings(Configure);
+                if (settings.AnalyticSettings.KeepFiles && eventID > 0)
+                {
+                    CapBank capBank = new TableOperations<CapBank>(connection).QueryRecordWhere("ID = (SELECT ASSETID FROM Event WHERE ID = {0})", eventID);
+                    string dstFile = eventID + "_" + "PreInsHealth.csv";
+                    string archiveFolder = settings.AnalyticSettings.ResultFileLocation;
+                    archiveFolder = Path.GetDirectoryName(archiveFolder);
+                    archiveFolder = Path.Combine(archiveFolder, "Archive", capBank.AssetKey, "Result");
+
+                    Directory.CreateDirectory(archiveFolder);
+                    // Remove the Parameter file since that will be recreated
+                    if (File.Exists(Path.Combine(archiveFolder, dstFile)))
+                        File.Delete(Path.Combine(archiveFolder, dstFile));
+
+                    File.Copy(filename, archiveFolder + "\\" + dstFile);
                 }
             }
         }
@@ -604,7 +644,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             }
 
             string fileName = "";
-
+            int eventID = 0;
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 foreach (string line in lines.Skip(2))
@@ -641,6 +681,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                     if (eventMapping.TryGetValue(fileName, out Event evt))
                     {
+                        eventID = evt.ID;
                         if (new TableOperations<CBAnalyticResult>(connection).QueryRecordCountWhere("PhaseID = {0} AND EventID = {1}", PhaseID, evt.ID) != 1)
                             continue;
 
@@ -648,6 +689,22 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                         new TableOperations<CBRestrikeResult>(connection).AddNewRecord(row);
                     }
+                }
+                Settings settings = new Settings(Configure);
+                if (settings.AnalyticSettings.KeepFiles && eventID > 0)
+                {
+                    CapBank capBank = new TableOperations<CapBank>(connection).QueryRecordWhere("ID = (SELECT ASSETID FROM Event WHERE ID = {0})", eventID);
+                    string dstFile = eventID + "_" + "Restrike.csv";
+                    string archiveFolder = settings.AnalyticSettings.ResultFileLocation;
+                    archiveFolder = Path.GetDirectoryName(archiveFolder);
+                    archiveFolder = Path.Combine(archiveFolder, "Archive", capBank.AssetKey, "Result");
+
+                    Directory.CreateDirectory(archiveFolder);
+                    // Remove the Parameter file since that will be recreated
+                    if (File.Exists(Path.Combine(archiveFolder, dstFile)))
+                        File.Delete(Path.Combine(archiveFolder, dstFile));
+
+                    File.Copy(filename, archiveFolder + "\\" + dstFile);
                 }
             }
         }
@@ -666,6 +723,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             }
 
             string fileName = "";
+            int eventID = 0;
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -693,6 +751,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     Event evt = null;
                     if (eventMapping.TryGetValue(fileName, out evt))
                     {
+                       
                         if (new TableOperations<CBAnalyticResult>(connection).QueryRecordCountWhere("PhaseID = {0} AND EventID = {1}", PhaseID, evt.ID) != 1)
                             continue;
 
@@ -701,6 +760,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     if (evt == null)
                         continue;
 
+                    eventID = evt.ID; 
                     CapBank capBank = new TableOperations<CapBank>(connection).QueryRecordWhere("Id = {0}", evt.AssetID);
                     int offset = 3;
                     CBAnalyticResult result = new TableOperations<CBAnalyticResult>(connection).QueryRecordWhere("Id = {0}", row.CBResultID);
@@ -740,7 +800,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                         row.Ineutral = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
-                        row.V0 = ConvertToDouble(fields[offset + (int)result.InServiceBank]) ;
+                        row.V0 = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
                         offset = offset + capBank.NumberOfBanks;
 
                         row.Z0 = ConvertToDouble(fields[offset + (int)result.InServiceBank]);
@@ -789,6 +849,23 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     row.BankInService = (int)result.InServiceBank;
 
                     new TableOperations<CBCapBankResult>(connection).AddNewRecord(row);
+                }
+
+                Settings settings = new Settings(Configure);
+                if (settings.AnalyticSettings.KeepFiles && eventID > 0)
+                {
+                    CapBank capBank = new TableOperations<CapBank>(connection).QueryRecordWhere("ID = (SELECT ASSETID FROM Event WHERE ID = {0})", eventID);
+                    string dstFile = eventID + "_" + "RelayHealth.csv";
+                    string archiveFolder = settings.AnalyticSettings.ResultFileLocation;
+                    archiveFolder = Path.GetDirectoryName(archiveFolder);
+                    archiveFolder = Path.Combine(archiveFolder, "Archive", capBank.AssetKey, "Result");
+
+                    Directory.CreateDirectory(archiveFolder);
+                    // Remove the Parameter file since that will be recreated
+                    if (File.Exists(Path.Combine(archiveFolder, dstFile)))
+                        File.Delete(Path.Combine(archiveFolder, dstFile));
+
+                    File.Copy(filename, archiveFolder + "\\" + dstFile);
                 }
             }
         }
@@ -859,38 +936,37 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 datafolder = Path.GetFullPath(Path.GetDirectoryName(datafolder));
                 resultFolder = Path.GetFullPath(Path.GetDirectoryName(resultFolder));
 
-                if (settings.AnalyticSettings.KeepFiles)
-                {
-                    dstFolder = Path.Combine(dstFolder, capBank.AssetKey);
-                    datafolder = Path.Combine(datafolder, capBank.AssetKey);
-                    resultFolder = Path.Combine(resultFolder, capBank.AssetKey);
 
-                }
-                
+                dstFolder = Path.Combine(dstFolder, capBank.AssetKey);
+                datafolder = Path.Combine(datafolder, capBank.AssetKey);
+                resultFolder = Path.Combine(resultFolder, capBank.AssetKey);
+
+
+
                 Directory.CreateDirectory(datafolder);
                 Directory.CreateDirectory(resultFolder);
                 Directory.CreateDirectory(dstFolder);
 
-                if (!settings.AnalyticSettings.KeepFiles)
+
+                foreach (FileInfo file in new DirectoryInfo(datafolder).EnumerateFiles())
                 {
-                    foreach (FileInfo file in new DirectoryInfo(datafolder).EnumerateFiles())
-                    {
-                        file.Delete();
-                    }
-                    foreach (FileInfo file in new DirectoryInfo(resultFolder).EnumerateFiles())
-                    {
-                        file.Delete();
-                    }
-                    foreach (FileInfo file in new DirectoryInfo(dstFolder).EnumerateFiles())
-                    {
-                        file.Delete();
-                    }
+                    file.Delete();
+                }
+                foreach (FileInfo file in new DirectoryInfo(dstFolder).EnumerateFiles())
+                {
+                    file.Delete();
+                }
+
+
+                foreach (FileInfo file in new DirectoryInfo(resultFolder).EnumerateFiles())
+                {
+                    file.Delete();
                 }
 
                 string dstFile = capBank.AssetKey + ".txt";
 
-                // Remove the Parameter file since that will be recreated even if KeepFiles is True
-                if (settings.AnalyticSettings.KeepFiles && File.Exists(Path.Combine(dstFolder, dstFile)))
+                // Remove the Parameter file since that will be recreated
+                if (File.Exists(Path.Combine(dstFolder, dstFile)))
                     File.Delete(Path.Combine(dstFolder, dstFile));
 
                 List<string> lines = new List<string>();
@@ -938,7 +1014,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 lines.Add("");
                 lines.Add("Specify relay data inputs and requirements");
                 lines.Add($"33 Offset time between cap bank and relay time stamps; dToffset = {tOffset}");
-              
+
                 if (relays.Count == 0)
                 {
                     lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {161}");
@@ -948,10 +1024,10 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 }
                 else
                 {
-                    lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV*1000.0}");
+                    lines.Add($"34 Rated relay voltage in V; ratedRelayVoltage = {relays.First().VoltageKV * 1000.0}");
                     lines.Add($"35 No voltage for relay or threshold of ON voltage; relayOnVoltageThreshold = {relays.First().OnVoltageThreshhold}");
                 }
-                
+
                 lines.Add("");
                 lines.Add("Specify relay capacitor configuration for fuseless configurations");
                 lines.Add($"37 Bus VT ratio; busVT = {capBank.VTratioBus}");
@@ -1009,6 +1085,21 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                         fileWriter.WriteLine(lines[i]);
                     }
                 }
+
+                if (settings.AnalyticSettings.KeepFiles)
+                {
+                    string archiveFolder = settings.AnalyticSettings.ResultFileLocation;
+                    archiveFolder = Path.GetDirectoryName(archiveFolder);
+                    archiveFolder = Path.Combine(archiveFolder, "Archive", capBank.AssetKey, "Parameter");
+
+                    Directory.CreateDirectory(archiveFolder);
+                    // Remove the Parameter file since that will be recreated
+                    if (File.Exists(Path.Combine(archiveFolder, capBank.AssetKey + "-" + evt.StartTime.ToString("yyyy-MM-ddTHH-mm-ssTffff") + ".txt")))
+                        File.Delete(Path.Combine(archiveFolder, capBank.AssetKey + "-" + evt.StartTime.ToString("yyyy-MM-ddTHH-mm-ssTffff") + ".txt"));
+
+
+                    File.Copy(dstFolder + "\\" + dstFile, archiveFolder + "\\" + capBank.AssetKey + "-" + evt.StartTime.ToString("yyyy-MM-ddTHH-mm-ssTffff") + ".txt");
+                }
             }
         }
 
@@ -1025,13 +1116,11 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 Settings settings = new Settings(Configure);
                 string datafolder = settings.AnalyticSettings.DataFileLocation;
                 datafolder = Path.GetDirectoryName(datafolder);
-
-                if (settings.AnalyticSettings.KeepFiles)
-                    datafolder = Path.Combine(datafolder, capBank.AssetKey);
+                datafolder = Path.Combine(datafolder, capBank.AssetKey);
 
                 string dstFile = $"{capBank.AssetKey}-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
 
-                if (settings.AnalyticSettings.KeepFiles && File.Exists(Path.Combine(datafolder, dstFile)))
+                if (File.Exists(Path.Combine(datafolder, dstFile)))
                     File.Delete(Path.Combine(datafolder, dstFile));
 
                 List<string> lines = new List<string>();
@@ -1094,6 +1183,20 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     }
                 }
 
+                if (settings.AnalyticSettings.KeepFiles)
+                {
+                    string archiveFolder = settings.AnalyticSettings.ResultFileLocation;
+                    archiveFolder = Path.GetDirectoryName(archiveFolder);
+                    archiveFolder = Path.Combine(archiveFolder, "Archive", capBank.AssetKey, "Data");
+
+                    Directory.CreateDirectory(archiveFolder);
+                    // Remove the Parameter file since that will be recreated
+                    if (File.Exists(Path.Combine(archiveFolder, dstFile)))
+                        File.Delete(Path.Combine(archiveFolder, dstFile));
+
+                    File.Copy(datafolder + "\\" + dstFile, archiveFolder + "\\" + dstFile);
+                }
+
                 return dstFile;
             }
         }
@@ -1112,15 +1215,14 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                 string datafolder = settings.AnalyticSettings.DataFileLocation;
                 datafolder = Path.GetDirectoryName(datafolder);
 
-                if (settings.AnalyticSettings.KeepFiles)
-                    datafolder = Path.Combine(datafolder, capBank.AssetKey);
+                datafolder = Path.Combine(datafolder, capBank.AssetKey);
 
                 string dstFile = $"Relay{relay.ID}-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
 
-                if (settings.AnalyticSettings.KeepFiles && File.Exists(Path.Combine(datafolder, dstFile)))
+                if (File.Exists(Path.Combine(datafolder, dstFile)))
                     File.Delete(Path.Combine(datafolder, dstFile));
 
-                
+
                 List<string> lines = new List<string>();
 
                 lines.Add($"\"{relay.AssetKey} - {evt.StartTime:MM/dd/yyyy HH:mm:ss.ffff} \"");
@@ -1158,47 +1260,62 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     }
                 }
 
+                if (settings.AnalyticSettings.KeepFiles)
+                {
+                    string archiveFolder = settings.AnalyticSettings.ResultFileLocation;
+                    archiveFolder = Path.GetDirectoryName(archiveFolder);
+                    archiveFolder = Path.Combine(archiveFolder, "Archive", capBank.AssetKey, "Data");
+                    Directory.CreateDirectory(archiveFolder);
+                    // Remove the Parameter file since that will be recreated
+                    if (File.Exists(Path.Combine(archiveFolder, dstFile)))
+                        File.Delete(Path.Combine(archiveFolder, dstFile));
+
+
+                    File.Copy(datafolder + "\\" + dstFile, archiveFolder + "\\" + dstFile);
+                }
+
                 return dstFile;
             }
         }
 
         private string GenerateRelayDataFileFuselessUncompensated(List<Event> relayEvents, Event evt, CapBank capBank)
         {
-           
+
             Settings settings = new Settings(Configure);
             string datafolder = settings.AnalyticSettings.DataFileLocation;
             datafolder = Path.GetDirectoryName(datafolder);
 
-            if (settings.AnalyticSettings.KeepFiles)
-                datafolder = Path.Combine(datafolder, capBank.AssetKey);
+
+            datafolder = Path.Combine(datafolder, capBank.AssetKey);
+
 
             string dstFile = $"Relay-{evt.StartTime:yyyyMMddTHHmmss}-{evt.ID}.csv";
 
-            if (settings.AnalyticSettings.KeepFiles && File.Exists(Path.Combine(datafolder, dstFile)))
+            if (File.Exists(Path.Combine(datafolder, dstFile)))
                 File.Delete(Path.Combine(datafolder, dstFile));
 
 
 
             List<string> lines = new List<string>();
-            
+
 
             lines.Add($"\"Relay - {evt.StartTime:MM/dd/yyyy HH:mm:ss.ffff} \"");
             lines.Add("\"\"");
             string header = "Time (s)";
-            
+
 
             // Grab all associated Relays and order them by CapankNumber
             using (AdoDataConnection connection = CreateDbConnection())
             {
-                List<CapBankRelay> relays = new TableOperations<CapBankRelay>(connection).QueryRecordsWhere($"ID in ({string.Join(",",relayEvents.Select(e => e.AssetID))})").ToList();
+                List<CapBankRelay> relays = new TableOperations<CapBankRelay>(connection).QueryRecordsWhere($"ID in ({string.Join(",", relayEvents.Select(e => e.AssetID))})").ToList();
                 int Ncol = relays.Max(r => r.CapBankNumber);
                 List<DataSeries> series = new List<DataSeries>(Ncol);
 
-                for (int i=0; i < Ncol; i++)
+                for (int i = 0; i < Ncol; i++)
                 {
                     int assetID = relays.Find(r => r.CapBankNumber == i + 1)?.ID ?? -1;
                     Event relayEvt = relayEvents.Find(e => e.AssetID == assetID);
-                   
+
                     if (relayEvt == null)
                     {
                         series.Add(null);
@@ -1206,7 +1323,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     }
                     DataGroup data = QueryDataGroup(relayEvt.ID, relayEvt.MeterID);
 
-                    if (data.DataSeries.Where(ds => isVoltage("NG",ds)).Count() == 0)
+                    if (data.DataSeries.Where(ds => isVoltage("NG", ds)).Count() == 0)
                     {
                         series.Add(null);
                         continue;
@@ -1215,10 +1332,17 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     series.Add(data.DataSeries.First(ds => isVoltage("NG", ds)));
                 }
 
-                if (!series.Any(s => (object)s!= null))
+                if (!series.Any(s => (object)s != null))
                     return dstFile;
 
-                header = header + ", " + string.Join(", ", series.Select((item) => "V"));
+                if (series.Count < 2)
+                    series.Add(series.Last().Multiply(0.0D));
+
+                if (series.Count < 3)
+                    series.Add(series.Last().Multiply(0.0D));
+
+                string[] Vheader = new string[] { "Va", "Vb", "Vc", "Vn", "V1", "V2" };
+                header = header + ", " + string.Join(", ", series.Select((item, index) => Vheader[index]));
 
                 if (header == "Time (s), ")
                     return dstFile;
@@ -1235,10 +1359,25 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     }
                 }
 
+                if (settings.AnalyticSettings.KeepFiles)
+                {
+                    string archiveFolder = settings.AnalyticSettings.ResultFileLocation;
+                    archiveFolder = Path.GetDirectoryName(archiveFolder);
+                    archiveFolder = Path.Combine(archiveFolder, "Archive", capBank.AssetKey, "Data");
+
+                    Directory.CreateDirectory(archiveFolder);
+                    // Remove the Parameter file since that will be recreated
+                    if (File.Exists(Path.Combine(archiveFolder, dstFile)))
+                        File.Delete(Path.Combine(archiveFolder, dstFile));
+
+                    File.Copy(datafolder + "\\" + dstFile, archiveFolder + "\\" + dstFile);
+                }
+
+
             }
-          
+
             return dstFile;
-        
+
         }
 
         private List<Event> GetRelayEvents(DateTime startTime, DateTime endTime, List<CapBankRelay> relays)
@@ -1362,7 +1501,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
         private static List<string> ToCsV(List<DataSeries> data)
         {
 
-          
+
             List<string> result = new List<string>();
             DateTime startingTime = data.First(item => (object)item != null).DataPoints[0].Time;
 
@@ -1374,7 +1513,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
                 row = row.Concat(data.Select(x =>
                 {
-                    if ((object)data == null)
+                    if ((object)x == null)
                         return "0";
                     if (x.DataPoints.Count > i)
                         return x.DataPoints[i].Value.ToString();
