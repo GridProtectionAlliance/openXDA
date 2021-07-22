@@ -413,20 +413,6 @@ namespace openXDA.Nodes.Types.FileProcessing
             return FilePath.IsFilePatternMatch(filters, filePath, true);
         }
 
-        private void TryIndexFile(string filePath)
-        {
-            string directory = Path.GetDirectoryName(filePath);
-
-            if (!Index.TryGetValue(directory, out DirectoryIndex directoryIndex))
-                return;
-
-            string fileGroupKey = Path.ChangeExtension(filePath, ".*");
-            List<string> fileGroup = directoryIndex.FileGroups.GetOrAdd(fileGroupKey, key => new List<string>());
-
-            if (!fileGroup.Contains(filePath))
-                fileGroup.Add(filePath);
-        }
-
         private FileInfo[] IndexFile(string filePath)
         {
             string directory = Path.GetDirectoryName(filePath);
@@ -574,15 +560,13 @@ namespace openXDA.Nodes.Types.FileProcessing
             Interlocked.Increment(ref m_scannedFileCount);
 
             string filePath = fileProcessorEventArgs.FullPath;
+            FileInfo[] fileGroup = IndexFile(filePath);
 
             if (!MatchesFilter(filePath))
             {
-                TryIndexFile(filePath);
                 Interlocked.Increment(ref m_skippedFileCount);
                 return;
             }
-
-            FileInfo[] fileGroup = IndexFile(filePath);
 
             int priority = fileProcessorEventArgs.RaisedByFileWatcher
                 ? AnalysisTask.FileWatcherPriority
