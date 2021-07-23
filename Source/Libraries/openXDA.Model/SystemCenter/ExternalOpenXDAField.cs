@@ -33,7 +33,7 @@ namespace SystemCenter.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public string OpenXDAParentTable { get; set; }
+        public string ParentTable { get; set; }
         public string FieldName { get; set; }
         public string ExternalDB { get; set; }
         public string ExternalDBTable { get; set; }
