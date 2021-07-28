@@ -3083,6 +3083,7 @@ BEGIN
         FaultSummary.FaultType,
         Disturbance.Type AS DisturbanceType,
         FaultSummary.Distance AS FaultDistance,
+        CASE WHEN PQIResult.ID IS NOT NULL THEN 1 ELSE 0 END HasImpactedComponents,
         Event.UpdatedBy
     INTO #event
     FROM
@@ -3114,7 +3115,8 @@ BEGIN
             ORDER BY IsSelectedAlgorithm DESC, IsSuppressed, IsValid DESC, Inception
         ) FaultSummary JOIN
         Meter ON Meter.ID = @MeterID JOIN
-        Asset ON Event.AssetID = Asset.ID
+        Asset ON Event.AssetID = Asset.ID LEFT OUTER JOIN
+        PQIResult ON PQIResult.ID = Event.ID
     WHERE
         Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
         Event.MeterID = @localMeterID
@@ -3128,7 +3130,7 @@ BEGIN
         AssetVoltage AS voltage,
         COALESCE(FaultType, DisturbanceType, '') AS thefaulttype,
         CASE WHEN FaultDistance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultDistance AS DECIMAL(16, 4)) AS NVARCHAR(19)), '') END AS thecurrentdistance,
-        dbo.EventHasImpactedComponents(ID) AS pqiexists,
+        HasImpactedComponents AS pqiexists,
         StartTime,
         (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.StartTime BETWEEN DateAdd(SECOND, -5, Event.StartTime) and  DateAdd(SECOND, 5, Event.StartTime)) as SimultaneousCount,
         (SELECT COUNT(*) FROM Event as EventCount WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name = 'Sag' OR Name = 'Fault') AND EventCount.StartTime BETWEEN DateAdd(SECOND, -@timeWindow, Event.StartTime) and  DateAdd(SECOND, @timeWindow, Event.StartTime)) as SimultaneousFAndSCount,
