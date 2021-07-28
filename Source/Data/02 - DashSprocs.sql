@@ -3072,54 +3072,54 @@ BEGIN
     DECLARE @localMeterID INT = CAST(@MeterID AS INT)
     DECLARE @timeWindow int = (SELECT Value FROM DashSettings WHERE Name = 'System.TimeWindow')
 
-	SELECT
-		Event.ID,
-		Event.AssetID,
-		EventType.Name AS EventType,
-		Event.StartTime,
-		Asset.AssetKey,
+    SELECT
+        Event.ID,
+        Event.AssetID,
+        EventType.Name AS EventType,
+        Event.StartTime,
+        Asset.AssetKey,
         Asset.AssetName,
-		Asset.VoltageKV AS AssetVoltage,
-		FaultSummary.FaultType,
-		Disturbance.Type AS DisturbanceType,
-		FaultSummary.Distance AS FaultDistance,
-		Event.UpdatedBy
-	INTO #event
+        Asset.VoltageKV AS AssetVoltage,
+        FaultSummary.FaultType,
+        Disturbance.Type AS DisturbanceType,
+        FaultSummary.Distance AS FaultDistance,
+        Event.UpdatedBy
+    INTO #event
     FROM
         Event JOIN
         EventType ON Event.EventTypeID = EventType.ID OUTER APPLY
-		(
-			SELECT TOP 1
-				Disturbance.*,
-				Phase.Name AS Type
-			FROM
-				Disturbance JOIN
-				Phase ON Disturbance.PhaseID = Phase.ID
-			WHERE
-				EventID = Event.ID AND
-				Phase.Name <> 'Worst'
-			ORDER BY
-				CASE EventType.Name
-					WHEN 'Sag' THEN PerUnitMagnitude
-					WHEN 'Swell' THEN -PerUnitMagnitude
-					WHEN 'Interruption' THEN PerUnitMagnitude
-					WHEN 'Transient' THEN -PerUnitMagnitude
-				END,
-				StartTime
-		) Disturbance OUTER APPLY
-		(
-			SELECT TOP 1 *
-			FROM FaultSummary
-			WHERE EventID = Event.ID
-			ORDER BY IsSelectedAlgorithm DESC, IsSuppressed, IsValid DESC, Inception
-		) FaultSummary JOIN
+        (
+            SELECT TOP 1
+                Disturbance.*,
+                Phase.Name AS Type
+            FROM
+                Disturbance JOIN
+                Phase ON Disturbance.PhaseID = Phase.ID
+            WHERE
+                EventID = Event.ID AND
+                Phase.Name <> 'Worst'
+            ORDER BY
+                CASE EventType.Name
+                    WHEN 'Sag' THEN PerUnitMagnitude
+                    WHEN 'Swell' THEN -PerUnitMagnitude
+                    WHEN 'Interruption' THEN PerUnitMagnitude
+                    WHEN 'Transient' THEN -PerUnitMagnitude
+                END,
+                StartTime
+        ) Disturbance OUTER APPLY
+        (
+            SELECT TOP 1 *
+            FROM FaultSummary
+            WHERE EventID = Event.ID
+            ORDER BY IsSelectedAlgorithm DESC, IsSuppressed, IsValid DESC, Inception
+        ) FaultSummary JOIN
         Meter ON Meter.ID = @MeterID JOIN
         Asset ON Event.AssetID = Asset.ID
     WHERE
         Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
         Event.MeterID = @localMeterID
 
-	SELECT
+    SELECT
         AssetID AS thelineid,
         ID AS theeventid,
         EventType AS theeventtype,
@@ -3135,8 +3135,8 @@ BEGIN
         (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.AssetID = Event.AssetID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
         UpdatedBy,
         (SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as Note
-	INTO #temp
-	FROM #event Event
+    INTO #temp
+    FROM #event Event
 
     DECLARE @sql NVARCHAR(MAX)
     SELECT @sql = COALESCE(@sql + ',dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName, 'dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName)
@@ -3153,7 +3153,7 @@ BEGIN
     EXEC sp_executesql @sql
 
     DROP TABLE #temp
-	DROP TABLE #event
+    DROP TABLE #event
 
 END
 GO
@@ -3409,7 +3409,7 @@ BEGIN
         SET @endDate = DATEADD(SECOND, 1, @startDate)
     END
 
-	SELECT * INTO #MeterSelection FROM dbo.String_to_int_table(@MeterID, ',')
+    SELECT * INTO #MeterSelection FROM dbo.String_to_int_table(@MeterID, ',')
     SELECT
         Meter.ID AS meterid,
         Event.ID AS theeventid,
