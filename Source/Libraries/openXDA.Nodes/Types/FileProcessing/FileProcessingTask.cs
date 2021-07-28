@@ -45,8 +45,6 @@ namespace openXDA.Nodes.Types.FileProcessing
     {
         #region [ Members ]
 
-        private Action<object> m_configurator;
-
         // Nested Types
         private class TaskSettings
         {
@@ -70,13 +68,14 @@ namespace openXDA.Nodes.Types.FileProcessing
             ConnectionFactory = connectionFactory;
             TimeZoneConverter = new TimeZoneConverter(configurator);
             Settings = new TaskSettings(configurator);
-            m_configurator = configurator;
+            Configurator = configurator;
         }
 
         #endregion
 
         #region [ Properties ]
 
+        private Action<object> Configurator { get; }
         private FileInfo[] FileList { get; }
         private string FilePath { get; }
         private int Priority { get; }
@@ -147,7 +146,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             DataReaderFactory readerFactory = new DataReaderFactory(ConnectionFactory);
             IDataReader reader = readerFactory.CreateDataReader(FileList);
-            m_configurator(reader);
+            Configurator(reader);
 
             if (!reader.IsReadyForLoad(FileList))
             {
