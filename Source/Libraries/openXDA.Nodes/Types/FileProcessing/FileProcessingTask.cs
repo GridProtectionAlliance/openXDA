@@ -45,6 +45,8 @@ namespace openXDA.Nodes.Types.FileProcessing
     {
         #region [ Members ]
 
+        private Action<object> m_configurator;
+
         // Nested Types
         private class TaskSettings
         {
@@ -68,6 +70,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             ConnectionFactory = connectionFactory;
             TimeZoneConverter = new TimeZoneConverter(configurator);
             Settings = new TaskSettings(configurator);
+            m_configurator = configurator;
         }
 
         #endregion
@@ -144,7 +147,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             DataReaderFactory readerFactory = new DataReaderFactory(ConnectionFactory);
             IDataReader reader = readerFactory.CreateDataReader(FileList);
-
+            m_configurator(reader);
             if (!reader.IsReadyForLoad(FileList))
             {
                 string message = $"Reader is not ready to load the file group.";
