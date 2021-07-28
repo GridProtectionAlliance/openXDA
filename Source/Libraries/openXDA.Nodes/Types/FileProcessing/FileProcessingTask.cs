@@ -148,6 +148,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             DataReaderFactory readerFactory = new DataReaderFactory(ConnectionFactory);
             IDataReader reader = readerFactory.CreateDataReader(FileList);
             m_configurator(reader);
+
             if (!reader.IsReadyForLoad(FileList))
             {
                 string message = $"Reader is not ready to load the file group.";
