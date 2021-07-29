@@ -68,12 +68,14 @@ namespace openXDA.Nodes.Types.FileProcessing
             ConnectionFactory = connectionFactory;
             TimeZoneConverter = new TimeZoneConverter(configurator);
             Settings = new TaskSettings(configurator);
+            Configurator = configurator;
         }
 
         #endregion
 
         #region [ Properties ]
 
+        private Action<object> Configurator { get; }
         private FileInfo[] FileList { get; }
         private string FilePath { get; }
         private int Priority { get; }
@@ -144,6 +146,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             DataReaderFactory readerFactory = new DataReaderFactory(ConnectionFactory);
             IDataReader reader = readerFactory.CreateDataReader(FileList);
+            Configurator(reader);
 
             if (!reader.IsReadyForLoad(FileList))
             {

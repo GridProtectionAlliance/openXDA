@@ -223,6 +223,8 @@ namespace openXDA.Nodes.Types.Analysis
 
             DataReaderFactory readerFactory = new DataReaderFactory(CreateDbConnection);
             IDataReader reader = readerFactory.CreateDataReader(fileGroup);
+            configurator(reader);
+
             MeterDataSet meterDataSet = reader.Parse(fileGroup);
 
             if (!(meterDataSet is null))
