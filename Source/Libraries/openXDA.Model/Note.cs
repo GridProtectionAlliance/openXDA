@@ -23,12 +23,16 @@
 //
 //******************************************************************************************************
 
+using GSF.Data;
 using GSF.Data.Model;
+using GSF.Web.Model;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Http;
 
 namespace openXDA.Model
 {
@@ -49,6 +53,37 @@ namespace openXDA.Model
         public string UserAccount { get; set; }
         [DefaultSortOrder(false)]
         public DateTime Timestamp { get; set; }
+
+    }
+
+    public class NotesController<T>: ModelController<T> where T: Notes, new()
+    {
+        public override IHttpActionResult Post([FromBody] JObject record)
+        {
+            try
+            {
+                if (User.IsInRole(PostRoles))
+                {
+                    using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                    {
+                        Notes newRecord = record.ToObject<Notes>();
+
+                        newRecord.UserAccount = User.Identity.Name;
+                        int result = new TableOperations<Notes>(connection).AddNewRecord(newRecord);
+                        return Ok(result);
+                    }
+                }
+                else
+                {
+                    return Unauthorized();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
 
     }
 }
