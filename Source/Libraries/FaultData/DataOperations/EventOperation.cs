@@ -26,6 +26,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
@@ -36,6 +38,7 @@ using GSF.Data.Model;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
+using openXDA.PQI;
 using DbDisturbance = openXDA.Model.Disturbance;
 using Disturbance = FaultData.DataAnalysis.Disturbance;
 
@@ -61,6 +64,11 @@ namespace FaultData.DataOperations
         [SettingName(DataAnalysisSection.CategoryName)]
         public DataAnalysisSection DataAnalysisSettings { get; }
             = new DataAnalysisSection();
+
+        [Category]
+        [SettingName(PQISection.CategoryName)]
+        public PQISection PQISettings { get; }
+            = new PQISection();
 
         private TimeSpan MaxEventDurationSpan =>
             TimeSpan.FromSeconds(DataAnalysisSettings.MaxEventDuration);
@@ -241,8 +249,6 @@ namespace FaultData.DataOperations
                 if (eventTable.QueryRecordsWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND AssetID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.AssetID).Any())
                     continue;
 
-
-                
                 eventTable.AddNewRecord(evt);
                 evt.ID = eventTable.QueryRecordWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND AssetID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.AssetID).ID;
 
@@ -268,11 +274,7 @@ namespace FaultData.DataOperations
                     disturbanceTable.AddNewRecord(disturbance);
                 }
 
-                connection.ExecuteNonQuery(@"
-                    IF dbo.EventHasImpactedComponents({0}) = 1
-	                    INSERT INTO PQIResult VALUES ({0})                
-                ".Trim(), evt.ID);
-
+                CheckPQIComponents(meterDataSet, connection, evt);
                 ProcessSnapshots(meterDataSet, evt.ID, connection);
             }
         }
@@ -347,7 +349,44 @@ namespace FaultData.DataOperations
             return dbDisturbance;
         }
 
-        
+        private void CheckPQIComponents(MeterDataSet meterDataSet, AdoDataConnection connection, Event evt)
+        {
+            if (string.IsNullOrEmpty(PQISettings.BaseURL))
+                return;
+
+            if (string.IsNullOrEmpty(PQISettings.PingURL))
+                return;
+
+            if (string.IsNullOrEmpty(PQISettings.ClientID))
+                return;
+
+            if (string.IsNullOrEmpty(PQISettings.ClientSecret))
+                return;
+
+            if (string.IsNullOrEmpty(PQISettings.Username))
+                return;
+
+            if (string.IsNullOrEmpty(PQISettings.Password))
+                return;
+
+            string FetchAccessToken()
+            {
+                NetworkCredential clientCredential = new NetworkCredential(PQISettings.ClientID, PQISettings.ClientSecret);
+                NetworkCredential userCredential = new NetworkCredential(PQISettings.Username, PQISettings.Password);
+                PingClient pingClient = new PingClient(PQISettings.PingURL);
+                Task exchangeTask = pingClient.ExchangeAsync(clientCredential, userCredential);
+                exchangeTask.GetAwaiter().GetResult();
+                return pingClient.AccessToken;
+            }
+
+            PQIWSClient pqiwsClient = new PQIWSClient(PQISettings.BaseURL, FetchAccessToken);
+            PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(meterDataSet.CreateDbConnection, pqiwsClient);
+            Task<bool> queryTask = pqiwsQueryHelper.HasImpactedComponentsAsync(evt.ID);
+
+            if (queryTask.GetAwaiter().GetResult())
+                connection.ExecuteNonQuery("INSERT INTO PQIResult VALUES ({0})", evt.ID);
+        }
+
         private double ToDbFloat(double value)
         {
             const double Invalid = -1.0e308D;
