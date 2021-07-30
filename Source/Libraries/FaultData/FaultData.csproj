@@ -184,6 +184,10 @@
       <Project>{7F731255-FA83-4DBF-9E0F-C22AE4845E76}</Project>
       <Name>openHistorian.XDALink</Name>
     </ProjectReference>
+    <ProjectReference Include="..\openXDA.PQI\openXDA.PQI.csproj">
+      <Project>{3dec81f1-9a02-4bbf-8325-f332ac63393e}</Project>
+      <Name>openXDA.PQI</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Dependencies\eDNA\*" Exclude="..\..\Dependencies\eDNA\EzDNAApiNet64.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
