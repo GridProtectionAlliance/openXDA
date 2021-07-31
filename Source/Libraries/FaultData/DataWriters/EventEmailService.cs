@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -30,21 +31,46 @@ using System.Net.Mail;
 using System.Text;
 using System.Xml.Linq;
 using FaultData.DataWriters.GTC;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Xml;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace FaultData.DataWriters
 {
     public class EventEmailService
     {
+        #region [ Members ]
+
+        // Nested Types
+        private class PQISettingsFactory
+        {
+            private PQISettingsFactory(Action<object> configure) =>
+                configure(this);
+
+            [Category]
+            [SettingName(PQISection.CategoryName)]
+            public PQISection PQISettings { get; }
+                = new PQISection();
+
+            public static PQISection Create(Action<object> configure)
+            {
+                PQISettingsFactory container = new PQISettingsFactory(configure);
+                return container.PQISettings;
+            }
+        }
+
+        #endregion
+
         #region [ Constructors ]
 
         public EventEmailService(Func<AdoDataConnection> connectionFactory, Action<object> configure)
         {
             EmailService = new EmailService(connectionFactory, configure);
             ConnectionFactory = connectionFactory;
+            LazyPQISettings = new Lazy<PQISection>(() => PQISettingsFactory.Create(configure));
         }
 
         #endregion
@@ -53,6 +79,8 @@ namespace FaultData.DataWriters
 
         private EmailService EmailService { get; }
         private Func<AdoDataConnection> ConnectionFactory { get; }
+        private Lazy<PQISection> LazyPQISettings { get; }
+        private PQISection PQISettings => LazyPQISettings.Value;
 
         #endregion
 
@@ -213,7 +241,7 @@ namespace FaultData.DataWriters
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                htmlDocument.TransformAll("pqi", (element, index) => PQIGenerator.GetPqiInformation(connection, element));
+                htmlDocument.TransformAll("pqi", (element, index) => PQIGenerator.GetPqiInformation(connection, PQISettings, element));
                 htmlDocument.TransformAll("structure", (element, index) => StructureLocationGenerator.GetStructureLocationInformation(element));
                 htmlDocument.TransformAll("lightning", (element, index) => LightningGenerator.GetLightningInfo(connection, element));
                 htmlDocument.TransformAll("faultType", (element, index) => FaultTypeGenerator.GetFaultType(element));

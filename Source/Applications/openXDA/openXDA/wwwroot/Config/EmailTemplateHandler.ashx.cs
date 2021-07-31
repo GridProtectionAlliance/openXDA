@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -34,10 +35,12 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using FaultData.DataWriters;
 using FaultData.DataWriters.GTC;
+using GSF.Data;
 using GSF.Threading;
 using GSF.Web.Hosting;
 using GSF.Web.Model;
 using GSF.Xml;
+using openXDA.Configuration;
 
 namespace openXDA
 {
@@ -325,6 +328,16 @@ namespace openXDA
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="EmailTemplateHandler"/> class.
+        /// </summary>
+        public EmailTemplateHandler() =>
+            LazyPQISettings = new Lazy<PQISection>(GetPQISettings);
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -341,6 +354,9 @@ namespace openXDA
                 return true;
             }
         }
+
+        private Lazy<PQISection> LazyPQISettings { get; }
+        private PQISection PQISettings => LazyPQISettings.Value;
 
         #endregion
 
@@ -424,7 +440,7 @@ namespace openXDA
 
             using (DataContext dataContext = new DataContext())
             {
-                doc.TransformAll("pqi", (element) => PQIGenerator.GetPqiInformation(dataContext.Connection, element));
+                doc.TransformAll("pqi", (element) => PQIGenerator.GetPqiInformation(dataContext.Connection, PQISettings, element));
                 doc.TransformAll("structure", (element) => StructureLocationGenerator.GetStructureLocationInformation(element));
                 doc.TransformAll("lightning", (element) => LightningGenerator.GetLightningInfo(dataContext.Connection, element));
                 doc.TransformAll("faultType", (element) => FaultTypeGenerator.GetFaultType(element));
@@ -559,6 +575,41 @@ namespace openXDA
 
             string url = $"EmailTemplateHandler.ashx?EventID={m_eventID}&TemplateID={m_templateID}&FTTID={fttID}";
             return new XElement("img", new XAttribute("src", url));
+        }
+
+        private PQISection GetPQISettings()
+        {
+            const string Query =
+                "SELECT Name, Value " +
+                "FROM Setting " +
+                "WHERE Name LIKE 'PQI.%'";
+
+            using (DataContext dataContext = new DataContext())
+            using (DataTable table = dataContext.Connection.RetrieveData(Query))
+            {
+                string GetKey(DataRow row)
+                {
+                    string name = row.ConvertField<string>("Name");
+                    int index = name.LastIndexOf('.');
+                    return name.Substring(index + 1);
+                }
+
+                ILookup<string, string> lookup = table
+                    .AsEnumerable()
+                    .ToLookup(GetKey, row => row.ConvertField<string>("Value"));
+
+                string GetValue(string key) =>
+                    lookup[key].FirstOrDefault();
+
+                PQISection pqiSettings = new PQISection();
+                pqiSettings.BaseURL = GetValue(nameof(pqiSettings.BaseURL));
+                pqiSettings.PingURL = GetValue(nameof(pqiSettings.PingURL));
+                pqiSettings.ClientID = GetValue(nameof(pqiSettings.ClientID));
+                pqiSettings.ClientSecret = GetValue(nameof(pqiSettings.ClientSecret));
+                pqiSettings.Username = GetValue(nameof(pqiSettings.Username));
+                pqiSettings.Password = GetValue(nameof(pqiSettings.Password));
+                return pqiSettings;
+            }
         }
 
         #endregion

@@ -21,10 +21,15 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
-using System.Data;
+using System.Collections.Generic;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Linq;
+using GSF.Data;
+using openXDA.Configuration;
+using openXDA.PQI;
 
 namespace FaultData.DataWriters
 {
@@ -35,71 +40,124 @@ namespace FaultData.DataWriters
     {
         #region [ Static ]
 
-        public static XElement GetPqiInformation(AdoDataConnection connection, XElement element)
+        public static XElement GetPqiInformation(AdoDataConnection connection, PQISection pqiSettings, XElement element)
         {
             string queryType = ((string)element.Attribute("type") ?? "").ToLower();
 
-            return queryType == "customerequipment" ? GetCustomerEquipmentAffected(connection, element) : element;
+            return queryType == "customerequipment"
+                ? GetCustomerEquipmentAffected(connection, pqiSettings, element)
+                : element;
         }
 
-        private static XElement GetCustomerEquipmentAffected(AdoDataConnection connection, XElement element)
+        private static XElement GetCustomerEquipmentAffected(AdoDataConnection connection, PQISection pqiSettings, XElement element)
         {
             string[] returnFields = ((string)element.Attribute("returnFields")).Split(',') ?? new string[0];
             string[] returnFieldNames = ((string)element.Attribute("returnFieldNames")).Split(',') ?? returnFields;
 
-            XElement returnTable = new XElement("span");
-            string returnTableContent = "";
+            string ToFieldName(string field)
+            {
+                int index = Array.IndexOf(returnFields, field);
+                return (index >= 0) ? returnFieldNames[index] : null;
+            }
+
+            string GetValue(Equipment equipment, string field)
+            {
+                switch (field)
+                {
+                    case nameof(equipment.Facility): return equipment.Facility;
+                    case nameof(equipment.Area): return equipment.Area;
+                    case nameof(equipment.SectionTitle): return equipment.SectionTitle;
+                    case nameof(equipment.SectionRank): return $"{equipment.SectionRank}";
+                    case nameof(equipment.ComponentModel): return equipment.ComponentModel;
+                    case nameof(equipment.Manufacturer): return equipment.Manufacturer;
+                    case nameof(equipment.Series): return equipment.Series;
+                    case nameof(equipment.ComponentType): return equipment.ComponentType;
+                    default: return null;
+                }
+            }
+
+            XElement returnTable = new XElement("table");
+            PQIWSClient pqiwsClient = CreatePQIWSClient(pqiSettings);
+
+            if (pqiwsClient is null)
+            {
+                returnTable.Value = "Connection to PQI Web Service not configured.";
+                return returnTable;
+            }
+
+            AdoDataConnection ConnectionFactory() =>
+                new AdoDataConnection(connection.Connection, connection.AdapterType, false);
+
+            PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(ConnectionFactory, pqiwsClient);
             string eventsStrings = (string)element.Attribute("eventID") ?? "-1";
             int[] events = Array.ConvertAll(eventsStrings.Split(','), Convert.ToInt32);
-
-            DataTable table = new DataTable();
-            foreach (int eventID in events)
-            {
-                using (IDbCommand command = connection.Connection.CreateCommand())
-                {
-                    command.CommandText = "dbo.GetAllImpactedComponents";
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandTimeout = 600;
-
-                    IDbDataParameter param1 = command.CreateParameter();
-                    param1.ParameterName = "@eventID";
-                    param1.Value = eventID;
-
-                    command.Parameters.Add(param1);
-
-                    IDataReader rdr = command.ExecuteReader();
-                    table.Load(rdr);
-                }
-            }
-
-            table = table.DefaultView.ToTable(true, returnFields);
+            Task<List<Equipment>> task = pqiwsQueryHelper.GetAllImpactedEquipmentAsync(events);
+            List<Equipment> impactedEquipment = task.GetAwaiter().GetResult();
 
             // Create header row
-            int returnFieldIndex;
-            returnTableContent = "<tr>";
-            foreach (DataColumn column in table.Columns)
+            XElement headerRow = new XElement("tr");
+
+            foreach (string field in returnFields)
             {
-                returnFieldIndex = Array.IndexOf(returnFields, column.ColumnName);
-                if (returnFieldIndex != -1)
-                    returnTableContent += "<th>" + returnFieldNames[returnFieldIndex] + "</th>";
+                string fieldName = ToFieldName(field);
+                if (fieldName is null) continue;
+                XElement header = new XElement("th", fieldName);
+                headerRow.Add(header);
             }
-            returnTableContent += "</tr>";
+
+            returnTable.Add(headerRow);
 
             // Create body rows
-            foreach (DataRow row in table.Rows)
+            foreach (Equipment equipment in impactedEquipment)
             {
-                returnTableContent += "<tr>";
-                foreach (DataColumn column in table.Columns)
+                XElement bodyRow = new XElement("tr");
+
+                foreach (string field in returnFields)
                 {
-                    if (Array.IndexOf(returnFields, column.ColumnName) != -1)
-                        returnTableContent += "<td>" + row[column] + "</td>";
+                    string fieldName = ToFieldName(field);
+                    if (fieldName is null) continue;
+                    string value = GetValue(equipment, field);
+                    XElement cell = new XElement("td", value);
+                    bodyRow.Add(cell);
                 }
-                returnTableContent += "</tr>";
+
+                returnTable.Add(bodyRow);
             }
 
-            returnTable.Value = returnTableContent;
-
             return returnTable;
+        }
+
+        private static PQIWSClient CreatePQIWSClient(PQISection pqiSettings)
+        {
+            if (string.IsNullOrEmpty(pqiSettings.BaseURL))
+                return null;
+
+            if (string.IsNullOrEmpty(pqiSettings.PingURL))
+                return null;
+
+            if (string.IsNullOrEmpty(pqiSettings.ClientID))
+                return null;
+
+            if (string.IsNullOrEmpty(pqiSettings.ClientSecret))
+                return null;
+
+            if (string.IsNullOrEmpty(pqiSettings.Username))
+                return null;
+
+            if (string.IsNullOrEmpty(pqiSettings.Password))
+                return null;
+
+            string FetchAccessToken()
+            {
+                NetworkCredential clientCredential = new NetworkCredential(pqiSettings.ClientID, pqiSettings.ClientSecret);
+                NetworkCredential userCredential = new NetworkCredential(pqiSettings.Username, pqiSettings.Password);
+                PingClient pingClient = new PingClient(pqiSettings.PingURL);
+                Task exchangeTask = pingClient.ExchangeAsync(clientCredential, userCredential);
+                exchangeTask.GetAwaiter().GetResult();
+                return pingClient.AccessToken;
+            }
+
+            return new PQIWSClient(pqiSettings.BaseURL, FetchAccessToken);
         }
     }
 }

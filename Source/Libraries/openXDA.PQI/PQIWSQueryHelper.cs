@@ -127,6 +127,25 @@ namespace openXDA.PQI
 
         public async Task<List<Equipment>> GetAllImpactedEquipmentAsync(int eventID, CancellationToken cancellationToken = default)
         {
+            using (AdoDataConnection connection = ConnectionFactory())
+                return await GetAllImpactedEquipmentAsync(connection, eventID, cancellationToken);
+        }
+
+        public async Task<List<Equipment>> GetAllImpactedEquipmentAsync(IEnumerable<int> eventIDs, CancellationToken cancellationToken = default)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                Task<List<Equipment>> _GetAllImpactedEquipmentAsync(int eventID) =>
+                    GetAllImpactedEquipmentAsync(connection, eventID, cancellationToken);
+
+                var tasks = eventIDs.Select(_GetAllImpactedEquipmentAsync);
+                List<Equipment>[] equipmentLists = await Task.WhenAll(tasks);
+                return Flatten(equipmentLists);
+            }
+        }
+
+        private async Task<List<Equipment>> GetAllImpactedEquipmentAsync(AdoDataConnection connection, int eventID, CancellationToken cancellationToken)
+        {
             async Task<List<Equipment>> GetImpactedEquipmentAsync(DataRow facilityDisturbance)
             {
                 int facilityID = facilityDisturbance.ConvertField<int>("FacilityID");
@@ -135,7 +154,6 @@ namespace openXDA.PQI
                 return await PQIWSClient.GetImpactedEquipmentAsync(facilityID, magnitude, duration, cancellationToken);
             }
 
-            using (AdoDataConnection connection = ConnectionFactory())
             using (DataTable table = connection.RetrieveData(FacilityDisturbanceQueryFormat, eventID))
             {
                 var tasks = table
@@ -143,12 +161,13 @@ namespace openXDA.PQI
                     .Select(GetImpactedEquipmentAsync);
 
                 List<Equipment>[] equipmentLists = await Task.WhenAll(tasks);
-
-                return equipmentLists
-                    .SelectMany(list => list)
-                    .Distinct(EquipmentComparer.Instance)
-                    .ToList();
+                return Flatten(equipmentLists);
             }
         }
+
+        private List<Equipment> Flatten(IEnumerable<IEnumerable<Equipment>> equipmentLists) => equipmentLists
+            .SelectMany(list => list)
+            .Distinct(EquipmentComparer.Instance)
+            .ToList();
     }
 }
