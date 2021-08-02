@@ -28,6 +28,12 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("Setting")]
+    [UseEscapedName]
     public class Setting
     {
         [PrimaryKey(true)]
