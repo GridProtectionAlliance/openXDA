@@ -440,6 +440,7 @@
       <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
       <ComponentRef Id="openXDA.Nodes" />
+      <ComponentRef Id="openXDA.PQI" />
       <ComponentRef Id="openXDA.DataPusher" />
       <ComponentRef Id="openXDA.Reports" />
       <ComponentRef Id="openXDA.PQTrendingWebReport" />
@@ -624,6 +625,9 @@
       </Component>
       <Component Id="openXDA.Nodes">
         <File Id="openXDA.Nodes.dll" Name="$(var.openXDA.Nodes.TargetFileName)" Source="$(var.openXDA.Nodes.TargetPath)" />
+      </Component>
+      <Component Id="openXDA.PQI">
+        <File Id="openXDA.PQI.dll" Name="$(var.openXDA.PQI.TargetFileName)" Source="$(var.openXDA.PQI.TargetPath)" />
       </Component>
       <Component Id="openXDA.DataPusher">
         <File Id="openXDA.DataPusher.dll" Name="$(var.openXDA.DataPusher.TargetFileName)" Source="$(var.openXDA.DataPusher.TargetPath)" />
