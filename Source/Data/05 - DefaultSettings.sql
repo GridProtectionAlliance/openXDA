@@ -240,6 +240,24 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES ('OpenSEE.URL', 'http://localhost/OpenSEE', 'http://localhost/OpenSEE')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQI.BaseURL', 'https://pqiws.epri.com', 'https://pqiws.epri.com')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQI.PingURL', 'https://go.epri.com/as/token.oauth2', 'https://go.epri.com/as/token.oauth2')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQI.ClientID', '', '')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQI.ClientSecret', '', '')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQI.Username', '', '')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQI.Password', '', '')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregation.Enabled', 'False', 'False')
 GO
 
