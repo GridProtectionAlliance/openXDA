@@ -4908,6 +4908,7 @@ GO
      Event.SamplesPerSecond,
      Event.SamplesPerCycle,
      Event.Description,
+     Event.FileVersion,
      Event.UpdatedBy,
      Asset.AssetName,
      Meter.Name AS MeterName,
