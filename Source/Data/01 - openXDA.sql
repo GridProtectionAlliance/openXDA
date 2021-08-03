@@ -5704,7 +5704,7 @@ WHERE EventEmailParameters.ID = 2
 GO
 
 UPDATE EventEmailParameters
-SET EventDetailSQL = 'DECLARE @timeTolerance FLOAT = (SELECT CAST(Value AS FLOAT) FROM Setting WHERE Name = ''TimeTolerance'')
+SET EventDetailSQL = 'DECLARE @timeTolerance FLOAT = (SELECT CAST(Value AS FLOAT) FROM Setting WHERE Name = ''DataAnalysis.TimeTolerance'')
 DECLARE @lineID INT
 DECLARE @startTime DATETIME2
 DECLARE @endTime DATETIME2
@@ -5732,7 +5732,7 @@ SELECT
     Location.LocationKey as StationKey,
     Location.Name AS StationName,
     Line.AssetKey AS LineKey,
-    Line.AssetName,
+    Line.AssetName AS LineName,
     FaultSummary.FaultType,
     FaultSummary.Inception,
     FaultSummary.DurationCycles,
@@ -5771,7 +5771,7 @@ FROM
     DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
     Meter ON Event.MeterID = Meter.ID JOIN
     Location ON Meter.LocationID = Location.ID JOIN
-    Line ON Line.ID=#lineEvent.LineID LEFT OUTER JOIN
+    Line ON Line.ID = Event.AssetID LEFT OUTER JOIN
     DoubleEndedFaultDistance ON DoubleEndedFaultDistance.LocalFaultSummaryID = FaultSummary.ID LEFT OUTER JOIN
     DoubleEndedFaultSummary ON DoubleEndedFaultSummary.ID = DoubleEndedFaultDistance.ID
 WHERE
