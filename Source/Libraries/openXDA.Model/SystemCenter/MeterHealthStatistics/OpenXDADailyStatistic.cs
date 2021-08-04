@@ -51,5 +51,7 @@ namespace SystemCenter.Model
         public double AverageEmailLatency { get; set; }
         public double AverageTotalProcessingLatency { get; set; }
         public double AverageTotalEmailLatency { get; set; }
+
+        public int BadDays { get; set; }
     }
 }

@@ -213,7 +213,8 @@ CREATE TABLE [OpenMICDailyStatistic] (
     LastUnsuccessfulConnectionExplanation VARCHAR(MAX) NULL,
     TotalConnections INT NOT NULL,
     TotalUnsuccessfulConnections INT NOT NULL,
-    TotalSuccessfulConnections INT NOT NULL
+    TotalSuccessfulConnections INT NOT NULL,
+    BadDays INT NOT NULL,
     CONSTRAINT UC_SystemCenter_OpenMICDailyStatistic_Date_Meter UNIQUE ([Date],Meter)
 )
 GO
@@ -234,7 +235,8 @@ CREATE TABLE [OpenXDADailyStatistic] (
     AverageProcessingEndLatency FLOAT NULL,
     AverageEmailLatency FLOAT NULL,
     AverageTotalProcessingLatency FLOAT NULL,
-    AverageTotalEmailLatency FLOAT NULL
+    AverageTotalEmailLatency FLOAT NULL,
+    BadDays INT NOT NULL,
     CONSTRAINT UC_SystemCenter_OpenXDADailyStatistic_Date_Meter UNIQUE ([Date],Meter)
 )
 GO
@@ -253,6 +255,7 @@ CREATE TABLE [MiMDDailyStatistic] (
     ConfigChanges INT NOT NULL,
     DiagnosticAlarms INT NOT NULL,
     ComplianceIssues INT NOT NULL,
+    BadDays INT NOT NULL,
     CONSTRAINT UC_SystemCenter_MiMDDailyStatistic_Date_Meter UNIQUE ([Date],Meter)
 )
 GO

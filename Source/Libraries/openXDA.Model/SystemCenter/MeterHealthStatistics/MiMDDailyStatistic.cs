@@ -51,6 +51,9 @@ namespace SystemCenter.Model
         public int ConfigChanges { get; set; }
         public int DiagnosticAlarms { get; set; }
         public int ComplianceIssues { get; set; }
+
+        public int BadDays { get; set; }
+
     }
 
 }
