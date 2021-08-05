@@ -45,6 +45,7 @@ namespace SystemCenter.Model
         public int TotalSuccessfulConnections { get; set; }
 
         public int BadDays { get; set; }
+        public string Status { get; set; }
 
     }
 }

@@ -215,6 +215,7 @@ CREATE TABLE [OpenMICDailyStatistic] (
     TotalUnsuccessfulConnections INT NOT NULL,
     TotalSuccessfulConnections INT NOT NULL,
     BadDays INT NOT NULL,
+    [Status] VARCHAR(7) NULL,
     CONSTRAINT UC_SystemCenter_OpenMICDailyStatistic_Date_Meter UNIQUE ([Date],Meter)
 )
 GO
@@ -237,6 +238,7 @@ CREATE TABLE [OpenXDADailyStatistic] (
     AverageTotalProcessingLatency FLOAT NULL,
     AverageTotalEmailLatency FLOAT NULL,
     BadDays INT NOT NULL,
+    [Status] VARCHAR(7) NULL,
     CONSTRAINT UC_SystemCenter_OpenXDADailyStatistic_Date_Meter UNIQUE ([Date],Meter)
 )
 GO
@@ -256,6 +258,7 @@ CREATE TABLE [MiMDDailyStatistic] (
     DiagnosticAlarms INT NOT NULL,
     ComplianceIssues INT NOT NULL,
     BadDays INT NOT NULL,
+    [Status] VARCHAR(7) NULL,
     CONSTRAINT UC_SystemCenter_MiMDDailyStatistic_Date_Meter UNIQUE ([Date],Meter)
 )
 GO

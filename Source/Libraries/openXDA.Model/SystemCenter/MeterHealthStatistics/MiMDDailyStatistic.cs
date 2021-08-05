@@ -53,6 +53,7 @@ namespace SystemCenter.Model
         public int ComplianceIssues { get; set; }
 
         public int BadDays { get; set; }
+        public string Status { get; set; }
 
     }
 
