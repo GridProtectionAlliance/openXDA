@@ -72,24 +72,6 @@ namespace openXDA.Nodes.Types.FileProcessing
             public FileProcessorSection FileProcessorSettings { get; } = new FileProcessorSection();
         }
 
-        private class DirectoryIndex
-        {
-            public string Directory { get; }
-            public Dictionary<string, List<string>> FileGroups { get; }
-
-            public DirectoryIndex(string directory)
-            {
-                void HandleException(Exception ex) => Log.Error(ex.Message, ex);
-
-                Directory = directory;
-
-                FileGroups = FilePath
-                    .EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly, HandleException)
-                    .GroupBy(file => Path.ChangeExtension(file, ".*"))
-                    .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
-            }
-        }
-
         private class FileProcessorWebController : ApiController
         {
             private FileProcessorNode Node { get; }
@@ -124,15 +106,15 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         private class WorkItem
         {
-            public FileInfo[] FileGroup { get; }
+            public FileGroupInfo FileGroupInfo { get; }
             public string FilePath { get; }
             public int Priority { get; }
             public int RetryCount => MutableRetryCount;
             private int MutableRetryCount { get; set; }
 
-            public WorkItem(FileInfo[] fileGroup, string filePath, int priority)
+            public WorkItem(FileGroupInfo fileGroupInfo, string filePath, int priority)
             {
-                FileGroup = fileGroup;
+                FileGroupInfo = fileGroupInfo;
                 FilePath = filePath;
                 Priority = priority;
             }
@@ -154,7 +136,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             : base(host, definition, type)
         {
             FileProcessor = new FileProcessor();
-            Index = new Dictionary<string, DirectoryIndex>();
+            FileProcessorIndex = new FileProcessorIndex();
 
             Action pollingFunction = GetPollingFunction();
             void LogException(Exception ex) => Log.Error(ex.Message, ex);
@@ -171,7 +153,7 @@ namespace openXDA.Nodes.Types.FileProcessing
         #region [ Properties ]
 
         private FileProcessor FileProcessor { get; }
-        private Dictionary<string, DirectoryIndex> Index { get; }
+        private FileProcessorIndex FileProcessorIndex { get; }
 
         private ConcurrentQueue<WorkItem> WorkQueue { get; }
         private ISynchronizedOperation PollOperation { get; }
@@ -221,6 +203,45 @@ namespace openXDA.Nodes.Types.FileProcessing
             int threadCount = 0;
             int GetThreadCount() => Interlocked.CompareExchange(ref threadCount, 0, 0);
 
+            ConcurrentQueue<FileGroupInfo> processedFileGroups = new ConcurrentQueue<FileGroupInfo>();
+            HashSet<string> activeFileGroupPaths = new HashSet<string>();
+            Dictionary<string, WorkItem> heldItems = new Dictionary<string, WorkItem>();
+
+            WorkItem GetNextWorkItem()
+            {
+                // Check for held items that couldn't be processed
+                // immediately because the file group was already active
+                while (processedFileGroups.TryDequeue(out FileGroupInfo processedFileGroup))
+                {
+                    string fileGroupPath = processedFileGroup.FileGroupPath;
+                    activeFileGroupPaths.Remove(fileGroupPath);
+
+                    if (heldItems.TryGetValue(fileGroupPath, out WorkItem heldItem))
+                    {
+                        heldItems.Remove(fileGroupPath);
+                        return heldItem;
+                    }
+                }
+
+                if (WorkQueue.TryDequeue(out WorkItem workItem))
+                    return workItem;
+
+                return null;
+            }
+
+            bool MustDefer(WorkItem workItem)
+            {
+                string fileGroupPath = workItem.FileGroupInfo.FileGroupPath;
+
+                if (activeFileGroupPaths.Add(fileGroupPath))
+                    return false;
+
+                // It's okay to replace the previously
+                // held item because it's a duplicate
+                heldItems[fileGroupPath] = workItem;
+                return true;
+            }
+
             return () =>
             {
                 if (IsDisposed)
@@ -233,10 +254,17 @@ namespace openXDA.Nodes.Types.FileProcessing
                 if (GetThreadCount() >= maxThreadCount)
                     return;
 
-                // It's not necessary to keep
-                // polling if the queue is empty
-                if (!WorkQueue.TryDequeue(out WorkItem task))
+                WorkItem workItem = GetNextWorkItem();
+                bool queueIsEmpty = (workItem is null);
+
+                if (queueIsEmpty)
                     return;
+
+                if (MustDefer(workItem))
+                {
+                    PollOperation.RunOnceAsync();
+                    return;
+                }
 
                 // Add another processing thread for the polled file
                 Interlocked.Increment(ref threadCount);
@@ -245,14 +273,13 @@ namespace openXDA.Nodes.Types.FileProcessing
                 {
                     try
                     {
-                        TryProcess(task);
+                        TryProcess(workItem);
                     }
                     finally
                     {
                         Interlocked.Decrement(ref threadCount);
-
-                        // Ensure there are no more tasks in the queue
                         PollOperation.RunOnceAsync();
+                        processedFileGroups.Enqueue(workItem.FileGroupInfo);
                     }
                 });
 
@@ -266,7 +293,10 @@ namespace openXDA.Nodes.Types.FileProcessing
             if (IsDisposed)
                 return;
 
-            FileInfo[] fileGroup = workItem.FileGroup;
+            FileGroupInfo fileGroupInfo = workItem.FileGroupInfo;
+            fileGroupInfo.Refresh();
+
+            FileInfo[] fileGroup = fileGroupInfo.FileGroup;
             string filePath = workItem.FilePath;
             int priority = workItem.Priority;
             int retryCount = workItem.RetryCount;
@@ -310,6 +340,9 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             try
             {
+                if (!File.Exists(filePath))
+                    throw new FileSkippedException(false, $"Skipped file \"{filePath}\" because it was removed before data could be processed");
+
                 Action<object> configurator = GetConfigurator();
                 FileProcessingTask fileProcessingTask = new FileProcessingTask(fileGroup, filePath, priority, CreateDbConnection, configurator);
                 fileProcessingTask.Execute();
@@ -411,21 +444,6 @@ namespace openXDA.Nodes.Types.FileProcessing
         {
             string[] filters = Filter.Split(Path.PathSeparator);
             return FilePath.IsFilePatternMatch(filters, filePath, true);
-        }
-
-        private FileInfo[] IndexFile(string filePath)
-        {
-            string directory = Path.GetDirectoryName(filePath);
-            string fileGroupKey = Path.ChangeExtension(filePath, ".*");
-            DirectoryIndex directoryIndex = Index.GetOrAdd(directory, dir => new DirectoryIndex(dir));
-            List<string> fileGroup = directoryIndex.FileGroups.GetOrAdd(fileGroupKey, key => new List<string>());
-
-            if (!fileGroup.Contains(filePath))
-                fileGroup.Add(filePath);
-
-            return fileGroup
-                .Select(path => new FileInfo(path))
-                .ToArray();
         }
 
         private async Task NotifyAnalysisNodesAsync()
@@ -560,7 +578,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             Interlocked.Increment(ref m_scannedFileCount);
 
             string filePath = fileProcessorEventArgs.FullPath;
-            FileInfo[] fileGroup = IndexFile(filePath);
+            FileGroupInfo fileGroupInfo = FileProcessorIndex.Index(filePath);
 
             if (!MatchesFilter(filePath))
             {
@@ -572,7 +590,7 @@ namespace openXDA.Nodes.Types.FileProcessing
                 ? AnalysisTask.FileWatcherPriority
                 : AnalysisTask.FileEnumerationPriority;
 
-            WorkItem workItem = new WorkItem(fileGroup, filePath, priority);
+            WorkItem workItem = new WorkItem(fileGroupInfo, filePath, priority);
             WorkQueue.Enqueue(workItem);
             PollOperation.RunOnceAsync();
         }

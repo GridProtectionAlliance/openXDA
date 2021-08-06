@@ -68,7 +68,9 @@
     <Compile Include="Types\Email\EventEmailNode.cs" />
     <Compile Include="Types\Email\EventEmailType.cs" />
     <Compile Include="Types\EPRICapBankAnalysis\EPRICapBankAnalysisNode.cs" />
+    <Compile Include="Types\FileProcessing\FileGroupInfo.cs" />
     <Compile Include="Types\FileProcessing\FileProcessingTask.cs" />
+    <Compile Include="Types\FileProcessing\FileProcessorIndex.cs" />
     <Compile Include="Types\FileProcessing\FileProcessorNode.cs" />
     <Compile Include="Types\FileProcessing\FileSkippedException.cs" />
     <Compile Include="Host.cs" />
