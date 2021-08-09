@@ -192,6 +192,7 @@ namespace FaultData.DataOperations
                         dailyStatistic.AverageTotalProcessingLatency = 0;
                         dailyStatistic.AverageEmailLatency = now.Subtract(fileGroup.ProcessingEndTime).TotalSeconds;
                         dailyStatistic.AverageTotalEmailLatency = now.Subtract(fileGroup.DataStartTime).TotalSeconds;
+                        dailyStatistic.BadDays = new TableOperations<OpenXDADailyStatistic>(connection).QueryRecords("[DATE] DESC", new RecordRestriction("Meter = {0}", assetKey)).FirstOrDefault()?.BadDays ?? 0;
                         new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
 
                         return;
@@ -226,6 +227,81 @@ namespace FaultData.DataOperations
                         {
                             dailyStatistic.AverageTotalEmailLatency = (dailyStatistic.AverageTotalEmailLatency * dailyStatistic.TotalEmailsSent + DateTime.Now.Subtract(fileGroup.DataStartTime).TotalSeconds) / (dailyStatistic.TotalEmailsSent + 1);
                             dailyStatistic.TotalEmailsSent += 1;
+                        }
+
+                        MeterDataQualitySummary trendingSummary = new TableOperations<MeterDataQualitySummary>(connection).QueryRecordWhere("[Date] = {0} AND MeterID = (SELECT ID FROM Meter WHERE AssetKey = {1})", dailyStatistic.Date, assetKey);
+                        int warningLevel = int.Parse(new TableOperations<SystemCenter.Model.Setting>(connection).QueryRecordWhere("Name = 'OpenXDA.WarningLevel'")?.Value ?? "50");
+                        int errorLevel = int.Parse(new TableOperations<SystemCenter.Model.Setting>(connection).QueryRecordWhere("Name = 'OpenXDA.ErrorLevel'")?.Value ?? "100");
+
+                        if (trendingSummary == null) trendingSummary = new MeterDataQualitySummary() { ExpectedPoints = 0, GoodPoints = 0, LatchedPoints = 0, UnreasonablePoints = 0, NoncongruentPoints = 0 };
+
+                        if (dailyStatistic.Status == "Error") { } // already an error, do nothing
+                        else if (dailyStatistic.TotalUnsuccessfulFilesProcessed > errorLevel) {
+                            dailyStatistic.Status = "Error";
+                            dailyStatistic.BadDays++;
+                        }
+                        else if ((trendingSummary.ExpectedPoints - trendingSummary.GoodPoints) > errorLevel)
+                        {
+                            dailyStatistic.Status = "Error";
+                            dailyStatistic.BadDays++;
+                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.GoodPoints} good data points.  Exceeds error threshold of {errorLevel}.";
+                        }
+                        else if (trendingSummary.LatchedPoints > errorLevel)
+                        {
+                            dailyStatistic.Status = "Error";
+                            dailyStatistic.BadDays++;
+                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.LatchedPoints} latched data points.  Exceeds error threshold of {errorLevel}.";
+
+                        }
+                        else if (trendingSummary.UnreasonablePoints > errorLevel)
+                        {
+                            dailyStatistic.Status = "Error";
+                            dailyStatistic.BadDays++;
+                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.UnreasonablePoints} unreasonable data points.  Exceeds error threshold of {errorLevel}.";
+
+                        }
+                        else if (trendingSummary.NoncongruentPoints > errorLevel)
+                        {
+                            dailyStatistic.Status = "Error";
+                            dailyStatistic.BadDays++;
+                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.NoncongruentPoints} non-congruent data points.  Exceeds error threshold of {errorLevel}.";
+
+                        }
+                        else if (dailyStatistic.Status == "Warning") { } // already a warning, do nothing
+                        else if (dailyStatistic.TotalUnsuccessfulFilesProcessed > warningLevel)
+                        {
+                            dailyStatistic.Status = "Warning";
+                        }
+                        else if ((trendingSummary.ExpectedPoints - trendingSummary.GoodPoints) > warningLevel)
+                        {
+                            dailyStatistic.Status = "Warning";
+                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.GoodPoints} good data points.  Exceeds warning threshold of {warningLevel}.";
+                        }
+                        else if (trendingSummary.LatchedPoints > warningLevel)
+                        {
+                            dailyStatistic.Status = "Warning";
+                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.LatchedPoints} latched data points.  Exceeds warning threshold of {warningLevel}.";
+
+                        }
+                        else if (trendingSummary.UnreasonablePoints > warningLevel)
+                        {
+                            dailyStatistic.Status = "Warning";
+                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.UnreasonablePoints} unreasonable data points. Exceeds warning error threshold of {warningLevel}.";
+
+                        }
+                        else if (trendingSummary.NoncongruentPoints > warningLevel)
+                        {
+                            dailyStatistic.Status = "Warning";
+                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.NoncongruentPoints} non-congruent data points. Exceeds warning error threshold of {warningLevel}.";
+
                         }
 
                         new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
