@@ -4185,7 +4185,9 @@ CREATE TABLE RelayPerformance
     TripInitiate DATETIME2 NULL,
 	TripTime INT NULL,
 	PickupTime INT NULL,
-	TripCoilCondition FLOAT NULL,
+    TripTimeCurrent FLOAT NULL, 
+    PickupTimeCurrent FLOAT NULL,
+	TripCoilCondition FLOAT NULL
 )
 GO
 

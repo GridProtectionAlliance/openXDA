@@ -62,6 +62,9 @@ namespace FaultData.DataOperations
                     double Imax2;
                     double tripCoilCondition;
 
+                    double pickupCurrent;
+                    double tripCurrent;
+
                     // Determine P1 (Trip Initiate Time)
                     // find value above threshhold and walk backwards until I increases
                     int threshholdIndex = meterDataSet.DataSeries[i].Threshhold(0.5);
@@ -132,7 +135,7 @@ namespace FaultData.DataOperations
                     }
 
                     latchOff = window[0].Time;
-
+                    pickupCurrent = window[0].Value;
                     // Determine P3 (A Finger Open) and L2 (Maximum Current)
                     // Find point where the following 10 points are lower (I)
                     window = meterDataSet.DataSeries[i].ToSubSeries(lowerIndex, lowerIndex + 9);
@@ -150,7 +153,8 @@ namespace FaultData.DataOperations
 
                     Imax2 = window[0].Value;
                     fingerOpen = window[0].Time;
-
+                    tripCurrent = window[0].Value;   
+                    
                     // Save Relay Characteristics
                     Log.Info("Saving Trip Coil Characteristics to DB.");
 
@@ -167,8 +171,10 @@ namespace FaultData.DataOperations
                             Imax1 = Imax1,
                             Imax2 = Imax2,
                             TripInitiate = tripInitiate,
-                            PickupTimeTicks = (int)((latchOff - tripInitiate).TotalMilliseconds * 10000),
-                            TripTimeTicks = (int)((fingerOpen - tripInitiate).TotalMilliseconds * 10000),
+                            PickupTime = (int)((latchOff - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                            TripTime = (int)((fingerOpen - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                            PickupTimeCurrent = pickupCurrent,
+                            TripTimeCurrent = tripCurrent,
                             TripCoilCondition = double.IsNaN(tripCoilCondition) ? (double?)null : tripCoilCondition
                         });
                     }

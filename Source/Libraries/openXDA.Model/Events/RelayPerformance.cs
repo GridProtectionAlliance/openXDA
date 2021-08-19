@@ -38,24 +38,15 @@ namespace openXDA.Model
         public int ID { get; set; }
         public int EventID { get; set; }
         public int ChannelID { get; set; }
-
         public double? Imax1 { get; set; }
         public double? Imax2 { get; set; }
 
         [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime? TripInitiate { get; set; }
-
-        [NonRecordField]
-        public int? TripTime { get { return this.TripTimeTicks / 10; } set { this.TripTimeTicks = value*10; } }
-
-        [FieldName("TripTime")]
-        public int? TripTimeTicks { get; set; }
-
-        [NonRecordField]
-        public int? PickupTime { get { return this.PickupTimeTicks / 10; } set { this.PickupTimeTicks = value * 10; } }
-
-        [FieldName("PickupTime")]
-        public int? PickupTimeTicks { get; set; }
+        public int? TripTime { get; set; }
+        public int? PickupTime { get; set; }
+        public double? TripTimeCurrent { get; set;}
+        public double? PickupTimeCurrent { get; set; }
         public double? TripCoilCondition { get; set; }
     }
 }
