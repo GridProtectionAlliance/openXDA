@@ -58,13 +58,14 @@ namespace FaultData.DataOperations
                     DateTime latchOff;
                     DateTime fingerOpen;
 
-                    Double Imax1;
-                    Double Imax2;
-                    Double tripCoilCondition;
+                    double Imax1;
+                    double Imax2;
+                    double tripCoilCondition;
 
                     // Determine P1 (Trip Initiate Time)
                     // find value above threshhold and walk backwards until I increases
-                    int threshholdIndex = meterDataSet.DataSeries[i].Threshhold(0.15);
+                    int threshholdIndex = meterDataSet.DataSeries[i].Threshhold(0.5);
+
                     int minIndex = threshholdIndex - 1;
 
 
