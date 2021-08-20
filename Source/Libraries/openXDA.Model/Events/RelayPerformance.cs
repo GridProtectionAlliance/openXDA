@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  07/10/2019 - Christoph Lackner
 //       Generated original version of source code.
+//  08/20/2021 - Christoph Lackner
+//       Added additional Trip Coil Curve points.
 //
 //******************************************************************************************************
 
@@ -39,7 +41,13 @@ namespace openXDA.Model
         public int EventID { get; set; }
         public int ChannelID { get; set; }
         public double? Imax1 { get; set; }
+        public int? Tmax1 { get; set; }
         public double? Imax2 { get; set; }
+        public int? TplungerLatch { get; set; }
+        public double IplungerLatch { get; set; }
+        public double? Idrop { get; set; }
+        public int? TiDrop { get; set; }
+        public int? Tend { get; set; }
 
         [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime? TripInitiate { get; set; }

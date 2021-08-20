@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  RelayEnergization.cs - Gbtc
 //
-//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  07/09/2019 - Christoph Lackner
 //       Generated original version of source code.
+//  08/20/2021 - Christoph Lackner
+//       Added detection of additional Trip Coil Curve points.
 //
 //******************************************************************************************************
 
@@ -26,11 +28,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Numerics;
-using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
-using FaultData.DataOperations;
 using FaultData.DataSets;
 using GSF.Data;
 using GSF.Data.Model;
@@ -57,13 +56,16 @@ namespace FaultData.DataOperations
                     DateTime Imax1Time;
                     DateTime latchOff;
                     DateTime fingerOpen;
+                    DateTime plungerLatch;
+                    DateTime Tdrop;
+                    DateTime Tend;
 
                     double Imax1;
                     double Imax2;
                     double tripCoilCondition;
-
+                    double IplungerLatch;
                     double pickupCurrent;
-                    double tripCurrent;
+                    double Idrop;
 
                     // Determine P1 (Trip Initiate Time)
                     // find value above threshhold and walk backwards until I increases
@@ -111,6 +113,7 @@ namespace FaultData.DataOperations
 
                     Imax1Time = window[0].Time;
                     Imax1 = window[0].Value;
+                    int Imax1Index = lowerIndex;
 
                     // Determine Slope of curve (Trip Coil Condition)
                     // Find middle between P1 and Imax1Time and compute average slope of 10% of the points in between
@@ -136,6 +139,24 @@ namespace FaultData.DataOperations
 
                     latchOff = window[0].Time;
                     pickupCurrent = window[0].Value;
+
+                    // Find point where Plunger hits latch by determining minimum dI/dt between Imax1Time and latchoff
+                    if (lowerIndex - 21 < Imax1Index)
+                    {
+                        plungerLatch = meterDataSet.DataSeries[i][(lowerIndex + Imax1Index) / 2].Time;
+                        IplungerLatch = meterDataSet.DataSeries[i][(lowerIndex + Imax1Index) / 2].Value;
+                    }
+                    else
+                    {
+                        window = meterDataSet.DataSeries[i].ToSubSeries(Imax1Index + 10, lowerIndex - 10);
+                        List<double> dI = window.DataPoints.Skip(1).Select((p, j) => (window.DataPoints[j].Value - window.DataPoints[j - 1].Value)).ToList();
+                        double min = dI.Min();
+                        int localMinIndex = dI.FindIndex(p => p == min);
+                        plungerLatch = window[localMinIndex].Time;
+                        IplungerLatch = window[localMinIndex].Value;
+                    }
+
+                    // Determine 
                     // Determine P3 (A Finger Open) and L2 (Maximum Current)
                     // Find point where the following 10 points are lower (I)
                     window = meterDataSet.DataSeries[i].ToSubSeries(lowerIndex, lowerIndex + 9);
@@ -153,8 +174,35 @@ namespace FaultData.DataOperations
 
                     Imax2 = window[0].Value;
                     fingerOpen = window[0].Time;
-                    tripCurrent = window[0].Value;   
-                    
+
+                    // Find point where dI < -70 A/s as Idrop/TiDrop
+                    // and following find dI > 0 to determine Tend
+                    if ((lowerIndex+ 10 ) > meterDataSet.DataSeries[i].Length)
+                    {
+                        Idrop = Imax2;
+                        Tdrop = fingerOpen;
+                        Tend = fingerOpen;
+                    }
+                    else
+                    {
+                        window = meterDataSet.DataSeries[i].ToSubSeries(lowerIndex + 10, (int)meterDataSet.DataSeries[i].Length-1);
+                        List<double> dI = window.DataPoints.Skip(1).Select((p, j) => (window.DataPoints[j].Value - window.DataPoints[j - 1].Value)*window.SampleRate).ToList();
+                        int dropIndex = dI.FindIndex(d => d < -70);
+                        int endIndex = dI.FindIndex(d => d > 0);
+                        if (dropIndex < 0)
+                        {
+                            Idrop = Imax2;
+                            Tdrop = fingerOpen;
+                            Tend = fingerOpen;
+                        }
+                        else
+                        {
+                            Idrop = window[dropIndex].Value;
+                            Tdrop = window[dropIndex].Time;
+                            Tend = window[endIndex].Time;
+                        } 
+                    }
+
                     // Save Relay Characteristics
                     Log.Info("Saving Trip Coil Characteristics to DB.");
 
@@ -162,7 +210,6 @@ namespace FaultData.DataOperations
                     {
                         TableOperations<RelayPerformance> relayStatTable = new TableOperations<RelayPerformance>(connection);
                         Event evt = FindEvent(meterDataSet, channel);
-                        //IDbDataParameter tripTime = ToDateTime2(connection, tripInitiate);
 
                         relayStatTable.AddNewRecord(new RelayPerformance()
                         {
@@ -173,9 +220,15 @@ namespace FaultData.DataOperations
                             TripInitiate = tripInitiate,
                             PickupTime = (int)((latchOff - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
                             TripTime = (int)((fingerOpen - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                            Tmax1 = (int)((Imax1Time - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
                             PickupTimeCurrent = pickupCurrent,
-                            TripTimeCurrent = tripCurrent,
-                            TripCoilCondition = double.IsNaN(tripCoilCondition) ? (double?)null : tripCoilCondition
+                            TripTimeCurrent = Imax2,
+                            TripCoilCondition = double.IsNaN(tripCoilCondition) ? (double?)null : tripCoilCondition,
+                            TplungerLatch = (int)((plungerLatch - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                            IplungerLatch = IplungerLatch,
+                            TiDrop = (int)((Tdrop - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                            Tend = (int)((Tend - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                            Idrop = Idrop
                         });
                     }
                     
