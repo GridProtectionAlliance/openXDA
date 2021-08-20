@@ -242,6 +242,12 @@ namespace FaultData.DataAnalysis
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Creates a new <see cref="DataSeries"/> that is a subset.
+        /// </summary>
+        /// <param name="startIndex"> The index at which the new DataSeries starts.</param>
+        /// <param name="endIndex"> The index at which the new DataSeries ends. </param>
+        /// <returns> a new <see cref="DataSeries"/></returns>
         public DataSeries ToSubSeries(int startIndex, int endIndex)
         {
             DataSeries subSeries = new DataSeries();
