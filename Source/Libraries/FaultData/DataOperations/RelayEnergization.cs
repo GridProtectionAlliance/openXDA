@@ -185,7 +185,7 @@ namespace FaultData.DataOperations
                     }
                     else
                     {
-                        window = meterDataSet.DataSeries[i].ToSubSeries(lowerIndex + 10, (int)meterDataSet.DataSeries[i].Length-1);
+                        window = meterDataSet.DataSeries[i].ToSubSeries(lowerIndex + 10, meterDataSet.DataSeries[i].Length-1);
                         List<double> dI = window.DataPoints.Skip(1).Select((p, j) => (window.DataPoints[j].Value - window.DataPoints[j - 1].Value)*window.SampleRate).ToList();
                         int dropIndex = dI.FindIndex(d => d < -70);
                         int endIndex = dI.FindIndex(d => d > 0);
@@ -250,11 +250,11 @@ namespace FaultData.DataOperations
                         
             // Calculate the Slope
             // Find the values S1, Sx, Sy, Sxx, and Sxy.
-            Double N = series.Length;
-            Double Sy = series.DataPoints.Select(dataPoint => dataPoint.Value).Sum();
-            Double Sxx = 0;
-            Double Sx = 0;
-            Double Sxy = 0;
+            double N = (double)series.Length;
+            double Sy = series.DataPoints.Select(dataPoint => dataPoint.Value).Sum();
+            double Sxx = 0;
+            double Sx = 0;
+            double Sxy = 0;
 
             for (int i = 0; i < N; i++)
             {
@@ -263,7 +263,7 @@ namespace FaultData.DataOperations
                 Sxy += series[i].Value * i;
             }
 
-            Double m = (Sxy * N - Sx * Sy) / (Sxx * N - Sx * Sx);
+            double m = (Sxy * N - Sx * Sy) / (Sxx * N - Sx * Sx);
 
             return (m*series.SampleRate);
         }
