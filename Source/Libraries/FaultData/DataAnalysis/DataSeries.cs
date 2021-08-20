@@ -46,7 +46,6 @@ namespace FaultData.DataAnalysis
         private double? m_minimum;
         private double? m_maximum;
         private double? m_average;
-        private double? m_length;
 
         #endregion
 
@@ -90,7 +89,6 @@ namespace FaultData.DataAnalysis
             {
                 m_dataPoints = value ?? new List<DataPoint>();
                 m_duration = null;
-                m_length = null;
                 m_sampleRate = null;
                 m_minimum = null;
                 m_maximum = null;
@@ -120,19 +118,15 @@ namespace FaultData.DataAnalysis
         /// <summary>
         /// Gets the Length of the series, in datapoints.
         /// </summary>
-        public double Length
+        public int Length 
         {
-            get
+            get 
             {
-                if (m_length.HasValue)
-                    return m_length.Value;
-
+              
                 if (!m_dataPoints.Any())
-                    return double.NaN;
+                    return 0;
 
-                m_length = m_dataPoints.Count;
-
-                return m_length.Value;
+                return m_dataPoints.Count;
             }
         }
 
