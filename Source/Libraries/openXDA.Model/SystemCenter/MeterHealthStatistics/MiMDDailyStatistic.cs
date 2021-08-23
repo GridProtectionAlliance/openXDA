@@ -29,7 +29,7 @@ using System.Linq;
 
 namespace SystemCenter.Model
 {
-    [TableName("MiMDDailyStatistic"), UseEscapedName, ConfigFileTableNamePrefix, ReturnLimit(30)]
+    [TableName("MiMDDailyStatistic"), UseEscapedName, ReturnLimit(30)]
     public class MiMDDailyStatistic
     {
         [PrimaryKey(true)]

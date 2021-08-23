@@ -26,7 +26,7 @@ using System;
 
 namespace SystemCenter.Model
 {
-    [TableName("OpenMICDailyStatistic"), UseEscapedName, ConfigFileTableNamePrefix, ReturnLimit(30)]
+    [TableName("OpenMICDailyStatistic"), UseEscapedName, ReturnLimit(30)]
     public class OpenMICDailyStatistic
     {
         [PrimaryKey(true)]
