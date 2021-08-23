@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 namespace SystemCenter.Model
 {
-    [ConfigFileTableNamePrefix, TableName("Setting"), UseEscapedName, AllowSearch]
+    [ConfigFileTableNamePrefix, TableName("SystemCenter.Setting"), UseEscapedName, AllowSearch]
     [PostRoles("Administrator")]
     [DeleteRoles("Administrator")]
     [PatchRoles("Administrator")]
