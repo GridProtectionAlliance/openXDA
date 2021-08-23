@@ -3,7 +3,7 @@
   <Product Id="{019825CA-2EC7-45BF-B981-241BF64926A0}" Name="openXDA" Language="1033" Version="!(bind.FileVersion.openXDA.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="{EDB9D2AA-F21E-475F-9782-E2C95BF072C0}">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." AllowSameVersionUpgrades="yes"/>
     <MediaTemplate EmbedCab="yes" />
 
     <PropertyRef Id="WIX_IS_NETFRAMEWORK_46_OR_LATER_INSTALLED"/>
