@@ -74,7 +74,7 @@ namespace FaultData.DataOperations
                     int minIndex = threshholdIndex - 1;
 
 
-                    if (threshholdIndex < 1)
+                    if (threshholdIndex < 1 || meterDataSet.DataSeries[i].Maximum < 1.0)
                     {
                         Log.Info("Trip Coil Energization Current too low.");
                         continue;
@@ -149,7 +149,7 @@ namespace FaultData.DataOperations
                     else
                     {
                         window = meterDataSet.DataSeries[i].ToSubSeries(Imax1Index + 10, lowerIndex - 10);
-                        List<double> dI = window.DataPoints.Skip(1).Select((p, j) => (window.DataPoints[j].Value - window.DataPoints[j - 1].Value)).ToList();
+                        List<double> dI = window.DataPoints.Skip(1).Select((p, j) => (window.DataPoints[j+1].Value - window.DataPoints[j].Value)).ToList();
                         double min = dI.Min();
                         int localMinIndex = dI.FindIndex(p => p == min);
                         plungerLatch = window[localMinIndex].Time;
@@ -186,9 +186,9 @@ namespace FaultData.DataOperations
                     else
                     {
                         window = meterDataSet.DataSeries[i].ToSubSeries(lowerIndex + 10, meterDataSet.DataSeries[i].Length-1);
-                        List<double> dI = window.DataPoints.Skip(1).Select((p, j) => (window.DataPoints[j].Value - window.DataPoints[j - 1].Value)*window.SampleRate).ToList();
-                        int dropIndex = dI.FindIndex(d => d < -70);
-                        int endIndex = dI.FindIndex(d => d > 0);
+                        List<Tuple<double,double>> dI = window.DataPoints.Skip(1).Select((p, j) => new Tuple<double,double>((window.DataPoints[j+1].Value - window.DataPoints[j].Value)*window.SampleRate, window.DataPoints[j+1].Value)).ToList();
+                        int dropIndex = dI.FindIndex(d => d.Item1 < -70);
+                        int endIndex = dI.FindIndex(d => d.Item1 > 0 && d.Item2 < 0.2);
                         if (dropIndex < 0)
                         {
                             Idrop = Imax2;
