@@ -143,7 +143,7 @@ namespace openXDA.Controllers.WebAPI
                     SELECT 
 	                    DISTINCT Channel.ID, Meter.Name as Meter, Asset.AssetName as Asset, Phase.Name as Phase,  
                         Channel.Name, MeasurementCharacteristic.Name as Characteristic, MeasurementType.Name as Type, 
-                        Channel.HarmonicGroup as Harmonic, Location.Name as Station, Location.Latitude, Location.Longitude
+                        Channel.HarmonicGroup as Harmonic, Location.Name as Station, Location.Latitude, Location.Longitude, COALESCE(ValueList.Value, 'Unknown') as Unit
                     FROM 
 	                    Channel JOIN
 	                    Meter ON Meter.ID = Channel.MeterID JOIN
@@ -152,7 +152,8 @@ namespace openXDA.Controllers.WebAPI
                         Location ON Location.ID = Meter.LocationID JOIN
 	                    MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID JOIN
 	                    MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID JOIN
-	                    ChannelGroupType ON ChannelGroupType.MeasurementCharacteristicID = Channel.MeasurementCharacteristicID AND ChannelGroupType.MeasurementTypeID = Channel.MeasurementTypeID
+	                    ChannelGroupType ON ChannelGroupType.MeasurementCharacteristicID = Channel.MeasurementCharacteristicID AND ChannelGroupType.MeasurementTypeID = Channel.MeasurementTypeID LEFT JOIN
+                        ValueList ON ChannelGroupType.UnitID = ValueList.ID
                     WHERE 
 	                    " + post.By + @".ID IN (" + string.Join(",", post.IDs) + @") AND
 	                    Phase.ID IN (" + string.Join(",", post.Phases) + @") AND
