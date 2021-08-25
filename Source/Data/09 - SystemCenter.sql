@@ -112,23 +112,6 @@ CREATE TABLE [dbo].[SystemCenter.AdditionalUserFieldValue](
 
 GO
 
-
-CREATE TABLE [ValueListGroup](
-	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	[Name] [varchar](200) NULL,
-	[Description] [varchar](max) NULL,
-)
-
-CREATE TABLE [ValueList](
-    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [GroupID] [int] NOT NULL FOREIGN KEY REFERENCES [ValueListGroup](ID),
-    [Value] [varchar](200) NULL,
-    [AltValue] [varchar](200) NULL,
-    [SortOrder] [int] NULL,
-)
-GO
-
-
 CREATE TABLE [AdditionalField] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTable varchar(100) NOT NULL,

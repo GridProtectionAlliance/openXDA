@@ -31,6 +31,22 @@ CREATE TABLE Setting
 )
 GO
 
+CREATE TABLE [ValueListGroup](
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	[Name] [varchar](200) NULL,
+	[Description] [varchar](max) NULL,
+)
+
+
+CREATE TABLE [ValueList](
+    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [GroupID] [int] NOT NULL FOREIGN KEY REFERENCES [ValueListGroup](ID),
+    [Value] [varchar](200) NULL,
+    [AltValue] [varchar](200) NULL,
+    [SortOrder] [int] NULL,
+)
+GO
+
 CREATE TABLE PQApplicationsCategory
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -1335,7 +1351,8 @@ CREATE TABLE ChannelGroupType
     ChannelGroupID INT NOT NULL REFERENCES ChannelGroup(ID),
     MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
-	DisplayName VARCHAR(20) NOT NULL
+	DisplayName VARCHAR(20) NOT NULL,
+    UnitID INT NULL
 )
 GO
 
@@ -3186,6 +3203,27 @@ CREATE TABLE Unit
 )
 GO
 
+INSERT INTO Unit (Name) VALUES ('Volts')
+GO
+
+INSERT INTO Unit (Name) VALUES ('Amps')
+GO
+
+INSERT INTO Unit (Name) VALUES ('KW')
+GO
+
+INSERT INTO Unit (Name) VALUES ('KVAR')
+GO
+
+INSERT INTO Unit (Name) VALUES ('KVA')
+GO
+
+INSERT INTO Unit (Name) VALUES ('Per Unit')
+GO
+
+INSERT INTO Unit (Name) VALUES ('Percent')
+GO
+
 CREATE TABLE PQMeasurement
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -3229,26 +3267,6 @@ ON PQTrendStat(Date DESC, MeterID ASC, PQMeasurementTypeID ASC)
 GO
 
 
-INSERT INTO Unit (Name) VALUES ('Volts')
-GO
-
-INSERT INTO Unit (Name) VALUES ('Amps')
-GO
-
-INSERT INTO Unit (Name) VALUES ('KW')
-GO
-
-INSERT INTO Unit (Name) VALUES ('KVAR')
-GO
-
-INSERT INTO Unit (Name) VALUES ('KVA')
-GO
-
-INSERT INTO Unit (Name) VALUES ('Per Unit')
-GO
-
-INSERT INTO Unit (Name) VALUES ('Percent')
-GO
 
 CREATE TABLE StepChangeMeasurement(
     ID INT PRIMARY KEY IDENTITY(1,1),
