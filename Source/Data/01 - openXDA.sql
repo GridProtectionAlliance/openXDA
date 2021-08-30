@@ -4609,17 +4609,30 @@ SELECT  Breaker.ID AS BreakerID,
         RelayPerformance.Imax1,
 		RelayPerformance.Imax2,
 		RelayPerformance.TripInitiate,
-		RelayPerformance.TripTime / 10 AS TripTime,
-		RelayPerformance.PickupTime / 10 AS PickupTime,
+		RelayPerformance.TripTime,
+		RelayPerformance.PickupTime,
 		RelayPerformance.TripCoilCondition,
 		Breaker.TripCoilCondition AS TripCoilConditionAlert,
 		Breaker.TripTime AS TripTimeAlert,
 		Breaker.PickupTime AS PickupTimeAlert,
-		RelayPerformance.ChannelID AS TripCoilChannelID
-FROM    RelayPerformance LEFT OUTER JOIN
-        Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
-        Breaker ON Breaker.ID = Channel.AssetID
+		RelayPerformance.ChannelID AS TripCoilChannelID,
+        RelayPerformance.Tmax1,
+        RelayPerformance.TplungerLatch,
+        RelayPerformance.IplungerLatch,
+        RelayPerformance.Idrop,
+        RelayPerformance.TiDrop,
+        RelayPerformance.Tend,
+        RelayPerformance.TripTimeCurrent, 
+        RelayPerformance.PickupTimeCurrent,
+        		COALESCE((SELECT TOP 1 ET.Name FROM 
+			Event EV LEFT JOIN EventType ET ON Ev.EventTypeID = ET.ID WHERE EV.StartTime = Event.StartTime AND ET.Name <> 'Other' AND Ev.AssetID IN (SELECT ParentID FROM AssetConnection WHERE ChildID = Breaker.ID UNION SELECT ChildID FROM AssetConnection WHERE ParentID = Breaker.ID)
+		),'Other') AS EventType
+    FROM    RelayPerformance LEFT OUTER JOIN
+            Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
+            Breaker ON Breaker.ID = Channel.AssetID LEFT JOIN
+			Event ON Event.ID = RelayPerformance.EventID
 GO
+
 
 
 
