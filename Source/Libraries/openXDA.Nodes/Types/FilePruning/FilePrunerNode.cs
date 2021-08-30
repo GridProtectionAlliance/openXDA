@@ -197,10 +197,16 @@ namespace openXDA.Nodes.Types.FilePruning
                     "    WHERE ID IN (SELECT * FROM #channelDataIDs) " +
                     "" +
                     "    SET @count = @@ROWCOUNT " +
-                    "END ";
+                    "" +
+                    "    DROP TABLE #channelDataIDs " +
+                    "END";
 
                 using (AdoDataConnection connection = CreateDbConnection())
-                    connection.ExecuteNonQuery(Query);
+                using (IDbCommand command = connection.Connection.CreateCommand())
+                {
+                    command.CommandText = Query;
+                    command.ExecuteNonQuery();
+                }
             }
 
             void PurgeEventData()
@@ -224,10 +230,16 @@ namespace openXDA.Nodes.Types.FilePruning
                     "    WHERE ID IN (SELECT * FROM #eventDataIDs) " +
                     "" +
                     "    SET @count = @@ROWCOUNT " +
-                    "END ";
+                    "" +
+                    "    DROP TABLE #eventDataIDs " +
+                    "END";
 
                 using (AdoDataConnection connection = CreateDbConnection())
-                    connection.ExecuteNonQuery(Query);
+                using (IDbCommand command = connection.Connection.CreateCommand())
+                {
+                    command.CommandText = Query;
+                    command.ExecuteNonQuery();
+                }
             }
 
             Task channelDataTask = Task.Run(PurgeChannelData);
