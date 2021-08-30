@@ -32,6 +32,7 @@ using Newtonsoft.Json;
 namespace openXDA.Model
 {
     [TableName("Event")]
+    [SettingsCategory("systemSettings")]
     public class Event
     {
         [PrimaryKey(true)]

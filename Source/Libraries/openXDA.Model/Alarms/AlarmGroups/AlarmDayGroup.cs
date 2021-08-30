@@ -39,6 +39,9 @@ namespace openXDA.Model
 
     }
 
+    [SettingsCategory("systemSettings")]
+    [ViewOnly]
+    [TableName("AlarmDayGroupView")]
     /// <summary>
     /// View of <see cref="AlarmDayGroup"/> for UI
     /// </summary>

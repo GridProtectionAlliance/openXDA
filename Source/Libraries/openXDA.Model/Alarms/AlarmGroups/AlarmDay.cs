@@ -30,6 +30,8 @@ namespace openXDA.Model
     /// <summary>
     /// Represents a Day the alarm can be applied to (e.g. Holiday, Weekend ...)
     /// </summary>
+    [SettingsCategory("systemSettings")]
+    [ViewOnly]
     public class AlarmDay
     {
         [PrimaryKey(true)]

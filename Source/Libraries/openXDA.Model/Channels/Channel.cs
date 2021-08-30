@@ -137,6 +137,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [ParentKey(typeof(Meter))]
         public int MeterID { get; set; }
 
         public int AssetID { get; set; }
@@ -439,6 +440,8 @@ namespace openXDA.Model
     }
 
     [TableName("ChannelDetail")]
+    [AllowSearch, ViewOnly]
+    [SettingsCategory("systemSettings")]
     public class ChannelDetail : Channel
     {
         public string MeterName { get; set; }

@@ -46,6 +46,7 @@ namespace openXDA.Model
     /// <summary>
     /// Represents a detailed view of <see cref="AlarmGroup"/> inlcuding some summary Numbers
     /// </summary>
+    [SettingsCategory("systemSettings"), AllowSearch, ViewOnly]
     public class AlarmGroupView 
     {
         [PrimaryKey(true)]

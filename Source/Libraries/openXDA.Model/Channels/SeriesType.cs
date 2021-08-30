@@ -28,6 +28,8 @@ using GSF.Data.Model;
 namespace openXDA.Model
 {
     [TableName("SeriesType")]
+    [SettingsCategory("systemSettings")]
+    [AllowSearch]
     public class SeriesType
     {
         [PrimaryKey(true)]

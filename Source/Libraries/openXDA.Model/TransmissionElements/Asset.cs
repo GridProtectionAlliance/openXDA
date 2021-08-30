@@ -35,10 +35,11 @@ using System.Threading.Tasks;
 
 namespace openXDA.Model
 {
-   [AllowSearch]
-   [PostRoles("Administrator, Transmission SME")]
-   [DeleteRoles("Administrator, Transmission SME")]
-   [PatchRoles("Administrator, Transmission SME")]
+    [AllowSearch]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [SettingsCategory("systemSettings")]
     public class Asset
     {
         #region [ Members ]

@@ -30,6 +30,8 @@ namespace openXDA.Model
     [PostRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
+    [AllowSearch]
+    [SettingsCategory("systemSettings")]
     public class Phase
     {
         [PrimaryKey(true)]

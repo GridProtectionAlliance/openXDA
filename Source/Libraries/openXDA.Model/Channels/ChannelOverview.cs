@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 namespace openXDA.Model
 {
-    [TableName("ChannelOverviewView")]
+    [TableName("ChannelOverviewView"), SettingsCategory("systemSettings"), ViewOnly, AllowSearch]
     public class ChannelOverview
     {
         public int ID { get; set; }

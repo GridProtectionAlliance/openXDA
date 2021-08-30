@@ -35,6 +35,7 @@ using Newtonsoft.Json;
 namespace openXDA.Model
 {
     [AllowSearch]
+    [SettingsCategory("systemSettings")]
     [PostRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]

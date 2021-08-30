@@ -28,6 +28,7 @@ using System.Linq;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Web.Model;
 using Newtonsoft.Json;
 using openXDA.Model;
 
@@ -36,18 +37,10 @@ namespace openXDA.Controllers
     [RoutePrefix("api/SPCTools/AssetGroupView")]
     public class AssetGroupViewController : ModelController<AssetGroupView>
     {
-        public AssetGroupViewController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool ViewOnly => true;
-        protected override bool AllowSearch => true;
-
         [HttpGet, Route("{assetGroupID:int}/Meters")]
         public IHttpActionResult GetMeters(int assetGroupID)
         {
-            using (AdoDataConnection connection = CreateDbConnection())
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 try
                 {

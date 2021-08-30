@@ -30,6 +30,7 @@ namespace openXDA.Model
     [PostRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
+    [SettingsCategory("systemSettings")]
     public class MeasurementCharacteristic
     {
         [PrimaryKey(true)]

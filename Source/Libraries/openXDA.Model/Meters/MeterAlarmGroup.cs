@@ -33,10 +33,14 @@ namespace openXDA.Model
 {
 
     [TableName("MeterAlarmGroupView")]
+    [SettingsCategory("systemSettings")]
+    [ViewOnly]
+    [AllowSearch]
     public class MeterAlarmGroup
     {
         public int ID { get; set; }
         public int Channel { get; set; }
+        [ParentKey(typeof(Meter))]
         public int MeterID { get; set; }
         public string Name { get; set; }
         public string AlarmSeverity { get; set; }

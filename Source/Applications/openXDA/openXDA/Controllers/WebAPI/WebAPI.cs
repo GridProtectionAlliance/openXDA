@@ -31,8 +31,10 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Web.Http;
 using GSF.Data;
+using GSF.Web.Model;
 using GSF.Web.Security;
 using openXDA.Model;
+//using ModelController= GSF.Web.Model.ModelController;
 
 namespace openXDA.Controllers.WebAPI
 {
@@ -50,68 +52,23 @@ namespace openXDA.Controllers.WebAPI
     }
 
     [RoutePrefix("api/Meter")]
-    public class MeterController : ModelController<Meter>
-    {
-        public MeterController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-        
-        protected override bool AllowSearch => true;
-    }
+    public class MeterController : ModelController<Meter> {}
     
     [RoutePrefix("api/Channel")]
-    public class ChannelController : ModelController<ChannelDetail> 
-    {
-        public ChannelController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool HasParent => true;
-        protected override string ParentKey => "MeterID";
-        protected override bool AllowSearch => true;
-    }
+    public class ChannelController : ModelController<ChannelDetail> {}
 
     [RoutePrefix("api/Asset")]
-    public class AssetController : ModelController<Asset>
-    {
-        public AssetController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-        
-        protected override bool AllowSearch => true;
-    }
+    public class AssetController : ModelController<Asset> {}
 
     [RoutePrefix("api/Phase")]
-    public class PhaseController : ModelController<Phase>
-    {
-        public PhaseController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-        
-        protected override bool AllowSearch => true;
-    }
+    public class PhaseController : ModelController<Phase> {}
 
     [RoutePrefix("api/EventType")]
-    public class EventTypeController : ModelController<EventType>
-    {
-        public EventTypeController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-    }
+    public class EventTypeController : ModelController<EventType> {}
 
     [RoutePrefix("api/Event")]
     public class EventController : ModelController<Event>
     {
-        public EventController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
         [HttpPost, Route("TrenDAP")]
         public IHttpActionResult GetEventsForTrenDAP([FromBody] HIDSPost post)
         {
@@ -120,7 +77,7 @@ namespace openXDA.Controllers.WebAPI
             string weeks = string.Join(",", Enumerable.Range(0, 53).Where(index => (post.Weeks & (1Lu << index)) > 0).Select(h => h.ToString()));
             string months = string.Join(",", Enumerable.Range(0, 12).Where(index => (post.Months & (1Lu << index)) > 0).Select(h => (h + 1).ToString()));
             string channels = string.Join(",", HIDSController.GetTable(post).Select().Select(row => row["ID"].ToString()));
-            using (AdoDataConnection connection = CreateDbConnection())
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 string sql = @"
                     SELECT DISTINCT Event.ID,StartTime,Channel.ID as ChannelID 
@@ -143,110 +100,43 @@ namespace openXDA.Controllers.WebAPI
     }
 
     [RoutePrefix("api/MeasurementType")]
-    public class MeasurementTypeController : ModelController<MeasurementType>
-    {
-        public MeasurementTypeController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-    }
+    public class MeasurementTypeController : ModelController<MeasurementType> {}
 
     [RoutePrefix("api/MeasurementCharacteristic")]
-    public class MeasurementCharacteristicController : ModelController<MeasurementCharacteristic>
-    {
-        public MeasurementCharacteristicController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-    }
+    public class MeasurementCharacteristicController : ModelController<MeasurementCharacteristic> {}
 
     [RoutePrefix("api/ChannelGroup")]
-    public class ChannelGroupController : ModelController<ChannelGroup>
-    {
-        public ChannelGroupController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-    }
+    public class ChannelGroupController : ModelController<ChannelGroup> {}
 
     [RoutePrefix("api/ChannelGroupType")]
-    public class ChannelGroupTypeController : ModelController<ChannelGroupType>
-    {
-        public ChannelGroupTypeController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-    }
+    public class ChannelGroupTypeController : ModelController<ChannelGroupType> {}
+
+    [RoutePrefix("api/ChannelGroupDetails")]
+    public class ChannelGroupDetailsController : ModelController<ChannelGroupDetails> {}
 
     [RoutePrefix("api/AlarmType")]
-    public class AlarmTypeController : ModelController<AlarmType>
-    {
-        public AlarmTypeController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool AllowSearch => true;
-    }
+    public class AlarmTypeController : ModelController<AlarmType> {}
 
     [RoutePrefix("api/MeterDetail")]
-    public class MeterDetailController : ModelController<MeterDetail>
-    {
-        public MeterDetailController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool AllowSearch => true;
-    }
+    public class MeterDetailController : ModelController<MeterDetail> {}
 
     [RoutePrefix("api/AlarmDay")]
-    public class AlarmDayController : ModelController<AlarmDay>
-    {
-        public AlarmDayController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool ViewOnly => true;
-    }
+    public class AlarmDayController : ModelController<AlarmDay> {}
 
     [RoutePrefix("api/AlarmDayGroup")]
-    public class AlarmDayGroupController : ModelController<AlarmDayGroupView>
-    {
-        public AlarmDayGroupController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool ViewOnly => true;
-    }
+    public class AlarmDayGroupController : ModelController<AlarmDayGroupView> {}
 
     [RoutePrefix("api/SeriesType")]
-    public class SettingController : ModelController<SeriesType>
-    {
-        public SettingController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool AllowSearch => true;
-    }
+    public class SeriesTypeController : ModelController<SeriesType> {}
 
     [RoutePrefix("api/Setting")]
-    public class SeriesTypeController : ModelController<SeriesType>
+    public class SettingController : ModelController<Setting>
     {
-        public SeriesTypeController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool AllowSearch => true;
 
         [Route("Category/{category}")]
         public IHttpActionResult GetSettingCategory(string category)
         {
-            using (AdoDataConnection connection = CreateDbConnection())
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 return Ok(connection.RetrieveData("SELECT * FROM Setting WHERE Name LIKE {0}", category + "%"));
             }
@@ -254,7 +144,7 @@ namespace openXDA.Controllers.WebAPI
         [Route("{setting}")]
         public HttpResponseMessage GetSetting(string setting)
         {
-            using (AdoDataConnection connection = CreateDbConnection())
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 string value = connection.ExecuteScalar<string>(1000, "SELECT Value FROM Setting WHERE Name = {0}", setting);
                 HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);

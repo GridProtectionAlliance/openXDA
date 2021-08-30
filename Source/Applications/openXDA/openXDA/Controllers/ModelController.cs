@@ -35,7 +35,7 @@ using GSF.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace openXDA.Controllers
+namespace openXDA.Controllers.model
 {
     public class ModelController<T> : ApiController where T : class, new()
     {

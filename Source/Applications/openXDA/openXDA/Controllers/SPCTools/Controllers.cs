@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Data;
+using GSF.Web.Model;
 using openXDA.Model;
 using System;
 using System.Web.Http;
@@ -29,65 +30,17 @@ using System.Web.Http;
 namespace openXDA.Controllers
 {
     [RoutePrefix("api/SPCTools/AlarmGroupView")]
-    public class AlarmGroupViewController : ModelController<AlarmGroupView>
-    {
-        public AlarmGroupViewController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool ViewOnly => true;
-        protected override bool AllowSearch => true;
-    }
+    public class AlarmGroupViewController : ModelController<AlarmGroupView> {}
 
     [RoutePrefix("api/SPCTools/ChannelOverview")]
-    public class ChannelOverviewController : ModelController<ChannelOverview>
-    {
-        public ChannelOverviewController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool ViewOnly => true;
-        protected override bool AllowSearch => true;
-    }
+    public class ChannelOverviewController : ModelController<ChannelOverview> {}
 
     [RoutePrefix("api/SPCTools/ChannelAlarmGroup")]
-    public class ChannelAlarmGroupController : ModelController<ChannelAlarmGroup>
-    {
-        public ChannelAlarmGroupController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool ViewOnly => true;
-        protected override bool AllowSearch => false;
-        protected override bool HasParent => true;
-        protected override string ParentKey => "ChannelID";
-    }
+    public class ChannelAlarmGroupController : ModelController<ChannelAlarmGroup> {}
 
     [RoutePrefix("api/SPCTools/MeterAlarmGroup")]
-    public class MeterAlarmGroupController : ModelController<MeterAlarmGroup>
-    {
-        public MeterAlarmGroupController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool ViewOnly => true;
-        protected override bool AllowSearch => false;
-        protected override bool HasParent => true;
-        protected override string ParentKey => "MeterID";
-    }
+    public class MeterAlarmGroupController : ModelController<MeterAlarmGroup> {}
 
     [RoutePrefix("api/SPCTools/AlarmSeverity")]
-    public class AlarmSeverityController : ModelController<AlarmSeverity>
-    {
-        public AlarmSeverityController(Func<AdoDataConnection> connectionFactory)
-            : base(connectionFactory)
-        {
-        }
-
-        protected override bool AllowSearch => false;
-    }
+    public class AlarmSeverityController : ModelController<AlarmSeverity> {}
 }

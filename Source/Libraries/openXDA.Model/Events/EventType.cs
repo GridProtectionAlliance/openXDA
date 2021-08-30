@@ -26,6 +26,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [SettingsCategory("systemSettings")]
     public class EventType
     {
         [PrimaryKey(true)]

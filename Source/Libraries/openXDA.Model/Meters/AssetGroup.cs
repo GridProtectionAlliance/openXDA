@@ -44,7 +44,7 @@ namespace openXDA.Model
     }
 
     [TableName("AssetGroupView")]
-    [AllowSearch]
+    [AllowSearch, ViewOnly, SettingsCategory("systemSettings")]
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]

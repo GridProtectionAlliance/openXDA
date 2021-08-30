@@ -26,6 +26,8 @@ using GSF.Data.Model;
 namespace openXDA.Model
 {
     [TableName("AlarmType")]
+    [SettingsCategory("systemSettings")]
+    [AllowSearch]
     public class AlarmType
     {
         [PrimaryKey(true)]

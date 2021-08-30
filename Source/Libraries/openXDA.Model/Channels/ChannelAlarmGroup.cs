@@ -32,9 +32,12 @@ using System.Threading.Tasks;
 namespace openXDA.Model
 {
     [TableName("ChannelAlarmGroupView")]
+    [SettingsCategory("systemSettings")]
+    [ViewOnly, AllowSearch]
     public class ChannelAlarmGroup
     {
         public int ID { get; set; }
+        [ParentKey(typeof(Channel))]
         public int ChannelID { get; set; }
         public int MeterID { get; set; }
         public string Name { get; set; }

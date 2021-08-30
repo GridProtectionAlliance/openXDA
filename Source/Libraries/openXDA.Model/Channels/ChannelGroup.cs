@@ -29,6 +29,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [SettingsCategory("systemSettings")]
     public class ChannelGroup
     {
         [PrimaryKey(true)]

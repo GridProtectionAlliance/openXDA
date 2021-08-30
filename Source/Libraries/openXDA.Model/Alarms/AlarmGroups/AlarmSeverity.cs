@@ -26,6 +26,8 @@ using GSF.Data.Model;
 namespace openXDA.Model
 {
     [TableName("AlarmSeverity")]
+    [SettingsCategory("systemSettings")]
+    [AllowSearch]
     public class AlarmSeverity
     {
         [PrimaryKey(true)]
