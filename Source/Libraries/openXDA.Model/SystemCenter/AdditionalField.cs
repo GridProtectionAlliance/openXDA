@@ -41,6 +41,7 @@ namespace SystemCenter.Model
         public string ExternalDBTable { get; set; }
         public string ExternalDBTableKey { get; set; }
         public bool IsSecure { get; set; }
+        public bool Searchable { get; set; }
 
     }
 }

@@ -120,7 +120,8 @@ CREATE TABLE [AdditionalField] (
 	ExternalDB varchar(max) NULL,
 	ExternalDBTable varchar(max) NULL,
 	ExternalDBTableKey varchar(max) NULL,
-	IsSecure bit NULL DEFAULT(0)
+	IsSecure bit NULL DEFAULT(0),
+    Searchable bit NULL DEFAULT(0),
 	Constraint UC_AdditonaField UNIQUE(ParentTable, FieldName)
 )
 GO
