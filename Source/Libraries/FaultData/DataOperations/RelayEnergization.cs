@@ -59,6 +59,7 @@ namespace FaultData.DataOperations
                     DateTime plungerLatch;
                     DateTime Tdrop;
                     DateTime Tend;
+                    DateTime TTripCoilcondition;
 
                     double Imax1;
                     double Imax2;
@@ -122,7 +123,8 @@ namespace FaultData.DataOperations
 
                     window = meterDataSet.DataSeries[i].ToSubSeries(center - bound, center + bound);
                     tripCoilCondition = LeastSquare(window);
-
+                    TTripCoilcondition = new DateTime(meterDataSet.DataSeries[i][center - bound].Time.Ticks / 2 + meterDataSet.DataSeries[i][center + bound].Time.Ticks / 2);
+                    
                     // Determine P2 (Latch Off)
                     // Find point where the following 10 points are higher (I)
                     window = meterDataSet.DataSeries[i].ToSubSeries(lowerIndex, lowerIndex + 9);
@@ -224,12 +226,13 @@ namespace FaultData.DataOperations
                             PickupTimeCurrent = pickupCurrent,
                             TripTimeCurrent = Imax2,
                             TripCoilCondition = double.IsNaN(tripCoilCondition) ? (double?)null : tripCoilCondition,
+                            TripCoilConditionTime = (int)((TTripCoilcondition - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
                             TplungerLatch = (int)((plungerLatch - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
                             IplungerLatch = IplungerLatch,
                             TiDrop = (int)((Tdrop - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
                             Tend = (int)((Tend - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
                             Idrop = Idrop
-                        });
+                        }); ;
                     }
                     
                 }
