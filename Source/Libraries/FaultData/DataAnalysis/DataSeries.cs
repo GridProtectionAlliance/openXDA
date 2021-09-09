@@ -263,6 +263,13 @@ namespace FaultData.DataAnalysis
             return subSeries;
         }
 
+        /// <summary>
+        /// Creates a new <see cref="DataSeries"/> that is a subset.
+        /// </summary>
+        /// <param name="startSeries">The index at which the new DataSeries starts.</param>
+        /// <returns> a new <see cref="DataSeries"/></returns>
+        public DataSeries ToSubSeries(int startSeries) => ToSubSeries(startSeries, this.Length);
+
         public DataSeries ToSubSeries(DateTime startTime, DateTime endTime)
         {
             DataSeries subSeries = new DataSeries();
@@ -276,6 +283,13 @@ namespace FaultData.DataAnalysis
 
             return subSeries;
         }
+
+        /// <summary>
+        /// Creates a new <see cref="DataSeries"/> that is a subset.
+        /// </summary>
+        /// <param name="startTime">The time at which the new DataSeries starts.</param>
+        /// <returns> a new <see cref="DataSeries"/></returns>
+        public DataSeries ToSubSeries(DateTime startTime) => ToSubSeries(startTime, this[this.Length - 1].Time);
 
         public DataSeries Shift(TimeSpan timeShift)
         {
