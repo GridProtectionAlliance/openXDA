@@ -4211,7 +4211,14 @@ CREATE TABLE RelayPerformance
 	PickupTime INT NULL,
     TripTimeCurrent FLOAT NULL, 
     PickupTimeCurrent FLOAT NULL,
-	TripCoilCondition FLOAT NULL
+	TripCoilCondition FLOAT NULL,
+    TripCoilConditionTime INT NULL,
+    ExtinctionTimeA INT NULL,
+    ExtinctionTimeB INT NULL,
+    ExtinctionTimeC INT NULL,
+    I2CA FLOAT NULL,
+    I2CB FLOAT NULL,
+    I2CC FLOAT NULL
 )
 GO
 

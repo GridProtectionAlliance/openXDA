@@ -56,5 +56,13 @@ namespace openXDA.Model
         public double? TripTimeCurrent { get; set;}
         public double? PickupTimeCurrent { get; set; }
         public double? TripCoilCondition { get; set; }
+        public int TripCoilConditionTime { get; set; }
+        public int? ExtinctionTimeA { get; set; }
+        public int? ExtinctionTimeB { get; set; }
+        public int? ExtinctionTimeC { get; set; }
+        public double? I2CA { get; set; }
+        public double? I2CB { get; set; }
+        public double? I2CC { get; set; }
+
     }
 }
