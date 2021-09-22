@@ -2782,7 +2782,7 @@ namespace openXDA.Hubs
                 int xslTemplateID = connection.ExecuteScalar<int>("SELECT ID FROM XSLTemplate WHERE Name = {0}", record["Name"].ToString());
                 new TableOperations<EmailType>(connection).AddNewRecord(new EmailType() { EmailCategoryID = emailCategoryID, XSLTemplateID = xslTemplateID, SMS = bool.Parse(record["SMS"].ToString()) });
                 int emailTypeID = connection.ExecuteScalar<int>("SELECT ID FROM EmailType WHERE EmailCategoryID = {0} AND XSLTemplateID = {1}", emailCategoryID, xslTemplateID);
-                new TableOperations<EventEmailParameters>(connection).AddNewRecord(new EventEmailParameters() { EmailTypeID = emailTypeID, TriggersEmailSQL = "", EventDetailSQL = "", MaxDelay = double.Parse(record["MaxDelay"].ToString()), MinDelay = double.Parse(record["MinDelay"].ToString()) });
+                new TableOperations<EventEmailParameters>(connection).AddNewRecord(new EventEmailParameters() { EmailTypeID = emailTypeID, TriggersEmailSQL = "", EventDetailSQL = "", MaxDelay = double.Parse(record["MaxDelay"].ToString()), MinDelay = double.Parse(record["MinDelay"].ToString()), TriggerSource="" });
 
             }
         }
