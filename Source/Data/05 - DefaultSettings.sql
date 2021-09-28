@@ -659,3 +659,18 @@ GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('YearBeginDate', 'January 1', 1)
 GO
+
+-- Standard MAgDur Curves --
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area) VALUES (N'ITIC', 100, 0.000001,5,0, NULL, NULL, NULL)
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area) VALUES (N'SEMI F47',1, 0.05, 1,0, NULL, NULL, NULL)
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area) VALUES (N'IEEE 1668 Type I & II', 3,0.01, 1.2,0, NULL, NULL, NULL)
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area) VALUES (N'IEEE 1668 Type III', 3,0.01, 1.2,0, NULL, NULL, NULL)
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area) VALUES (N'NERC PRC-024-2', 4,0.001,1.3,0, NULL, NULL, NULL)
+GO
+
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.01 0.5, 0.2 0.5, 0.2 0.7, 0.5 0.7,0.5 0.8,2 0.8,2 1.0,0.01 1.0, 0.01 0.5))' WHERE Name = 'IEEE 1668 Type I & II'
+GO
