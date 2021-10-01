@@ -5270,12 +5270,25 @@ CREATE VIEW OpenSEEScalarStatView AS
     IBN.Mapping AS [IBN Channel],
     ICN.Mapping AS [ICN Channel],
     IR.Mapping AS [IR Channel],
- 	FORMAT(RP.Imax1, '0.000') AS [Lmax 1],
-	FORMAT(RP.Imax2, '0.000') AS [Lmax 2],
- 	FORMAT(RP.TripInitiate,'HH:mm:ss.fff') AS [Trip Initiation],
- 	(RP.TripTime / 10) AS [Trip Time (microsec)],
- 	(RP.PickupTime / 10) AS [Pickup Time (microsec)],
- 	FORMAT(RP.TripCoilCondition, '0.000') AS [Trip Coil Condition (Aps)]
+ 	FORMAT(RP.TripInitiate,'HH:mm:ss.ffff') AS [Trip Initiation],
+    FORMAT(RP.TripCoilCondition,'F2') AS [TC Condition (A/s)],
+    FORMAT(RP.Imax1,'F3') AS [I Plunger starts to move (A)],
+    FORMAT(RP.Tmax1/10,'F0') AS [T Plunger starts to move (micros)],
+    FORMAT(RP.IplungerLatch,'F3') AS [I Plunger hits Latch (A)],
+    FORMAT(RP.TplungerLatch/10,'F0') AS [T Plunger hits Latch (micros)],
+    FORMAT(RP.PickupTimeCurrent,'F3') AS [I Plunger hits Buffer (A)],
+    FORMAT(RP.PickupTime/10,'F0') AS [T Plunger hits Buffer (micros)],
+    FORMAT(RP.Imax2,'F3') AS [I max TCE (A)],
+    FORMAT(RP.TripTime/10,'F0') AS [T max TCE (micros)],
+    FORMAT(RP.Idrop,'F3') AS [I A Finger opens(A)],
+    FORMAT(RP.TiDrop/10,'F0') AS [T A Finger opens (micros)],                           
+    FORMAT(RP.Tend/10,'F0') AS [TCE extinct (micros)],
+    FORMAT(RP.ExtinctionTimeA/10,'F0') AS [IA extinct (micros)],
+    FORMAT(RP.ExtinctionTimeB/10,'F0') AS [IB extinct (micros)],
+    FORMAT(RP.ExtinctionTimeC/10,'F0') AS [IC extinct (micros)],
+    FORMAT(RP.I2CA,'F3') AS [IA I2t TCE (A2s)],
+    FORMAT(RP.I2CB,'F3') AS [IB I2t TCE (A2s)],
+    FORMAT(RP.I2CC,'F3') AS [IC I2t TCE (A2s)]
 FROM
      Event JOIN
      MeterAsset ON
