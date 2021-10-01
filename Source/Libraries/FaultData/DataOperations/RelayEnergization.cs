@@ -46,6 +46,7 @@ namespace FaultData.DataOperations
             {
                 Series seriesInfo = meterDataSet.DataSeries[i].SeriesInfo;
                 Channel channel = seriesInfo.Channel;
+                CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
 
                 // Check if Channel is Relay Coil Current
                 if (IsRelayEnergization(channel))
@@ -205,6 +206,100 @@ namespace FaultData.DataOperations
                         } 
                     }
 
+                    RelayPerformance result = new RelayPerformance()
+                    {
+                        ChannelID = channel.ID,
+                        Imax1 = Imax1,
+                        Imax2 = Imax2,
+                        TripInitiate = tripInitiate,
+                        PickupTime = (int)((latchOff - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                        TripTime = (int)((fingerOpen - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                        Tmax1 = (int)((Imax1Time - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                        PickupTimeCurrent = pickupCurrent,
+                        TripTimeCurrent = Imax2,
+                        TripCoilCondition = double.IsNaN(tripCoilCondition) ? (double?)null : tripCoilCondition,
+                        TripCoilConditionTime = (int)((TTripCoilcondition - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                        TplungerLatch = (int)((plungerLatch - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                        IplungerLatch = IplungerLatch,
+                        TiDrop = (int)((Tdrop - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                        Tend = (int)((Tend - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
+                        Idrop = Idrop
+                    };
+
+                    // look for Phase currents on that Breaker
+                    
+                    DataSeries Ia = meterDataSet.DataSeries.FirstOrDefault(
+                        s => channel.Asset.DirectChannels.Select(ch => ch.ID).Contains(s.SeriesInfo.ChannelID) &&
+                        IsPhaseCurrent("AN", s.SeriesInfo.Channel)
+                        );
+                    if (Ia == null)
+                        Ia = meterDataSet.DataSeries.FirstOrDefault(
+                            s => channel.Asset.ConnectedChannels.Select(ch => ch.ID).Contains(s.SeriesInfo.ChannelID) &&
+                            IsPhaseCurrent("AN", s.SeriesInfo.Channel)
+                            );
+
+                    DataSeries Ib = meterDataSet.DataSeries.FirstOrDefault(
+                            s => channel.Asset.DirectChannels.Select(ch => ch.ID).Contains(s.SeriesInfo.ChannelID) &&
+                            IsPhaseCurrent("BN", s.SeriesInfo.Channel)
+                            );
+                    if (Ib == null)
+                        Ib = meterDataSet.DataSeries.FirstOrDefault(
+                            s => channel.Asset.ConnectedChannels.Select(ch => ch.ID).Contains(s.SeriesInfo.ChannelID) &&
+                            IsPhaseCurrent("BN", s.SeriesInfo.Channel)
+                            );
+
+                    DataSeries Ic = meterDataSet.DataSeries.FirstOrDefault(
+                            s => channel.Asset.DirectChannels.Select(ch => ch.ID).Contains(s.SeriesInfo.ChannelID) &&
+                            IsPhaseCurrent("CN", s.SeriesInfo.Channel)
+                            );
+                    if (Ic == null)
+                        Ic = meterDataSet.DataSeries.FirstOrDefault(
+                            s => channel.Asset.ConnectedChannels.Select(ch => ch.ID).Contains(s.SeriesInfo.ChannelID) &&
+                            IsPhaseCurrent("CN", s.SeriesInfo.Channel)
+                            );
+
+                    if (Ia != null)
+                    {
+                        Tuple<DateTime, double> phaseAnalysis = ProcessPhaseCurrents(Ia, tripInitiate, cycleDataResource);
+                        if (!double.IsNaN(phaseAnalysis.Item2))
+                        {
+                            result.ExtinctionTimeA = (int)((phaseAnalysis.Item1 - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond);
+                            result.I2CA = phaseAnalysis.Item2;
+                        }
+                        else
+                            Log.Info("Skipping A Phase analysis - RMS value too low.");
+                    }
+                    else
+                        Log.Info("Skipping A Phase analysis - No Phase current found.");
+
+                    if (Ib != null)
+                    {
+                        Tuple<DateTime, double> phaseAnalysis = ProcessPhaseCurrents(Ib, tripInitiate, cycleDataResource);
+                        if (!double.IsNaN(phaseAnalysis.Item2))
+                        {
+                            result.ExtinctionTimeB = (int)((phaseAnalysis.Item1 - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond);
+                            result.I2CB = phaseAnalysis.Item2;
+                        }
+                        else
+                            Log.Info("Skipping B Phase analysis - RMS value too low.");
+                    }
+                    else
+                        Log.Info("Skipping B Phase analysis - No Phase current found.");
+
+                    if (Ic != null)
+                    {
+                        Tuple<DateTime, double> phaseAnalysis = ProcessPhaseCurrents(Ic, tripInitiate, cycleDataResource);
+                        if (!double.IsNaN(phaseAnalysis.Item2))
+                        {
+                            result.ExtinctionTimeC = (int)((phaseAnalysis.Item1 - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond);
+                            result.I2CC = phaseAnalysis.Item2;
+                        }
+                        else
+                            Log.Info("Skipping C Phase analysis - RMS value too low.");
+                    }
+                    else
+                        Log.Info("Skipping C Phase analysis - No Phase current found.");
+                    
                     // Save Relay Characteristics
                     Log.Info("Saving Trip Coil Characteristics to DB.");
 
@@ -212,42 +307,79 @@ namespace FaultData.DataOperations
                     {
                         TableOperations<RelayPerformance> relayStatTable = new TableOperations<RelayPerformance>(connection);
                         Event evt = FindEvent(meterDataSet, channel);
-
-                        relayStatTable.AddNewRecord(new RelayPerformance()
+                        if (evt == null)
                         {
-                            EventID = evt.ID,
-                            ChannelID = channel.ID,
-                            Imax1 = Imax1,
-                            Imax2 = Imax2,
-                            TripInitiate = tripInitiate,
-                            PickupTime = (int)((latchOff - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
-                            TripTime = (int)((fingerOpen - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
-                            Tmax1 = (int)((Imax1Time - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
-                            PickupTimeCurrent = pickupCurrent,
-                            TripTimeCurrent = Imax2,
-                            TripCoilCondition = double.IsNaN(tripCoilCondition) ? (double?)null : tripCoilCondition,
-                            TripCoilConditionTime = (int)((TTripCoilcondition - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
-                            TplungerLatch = (int)((plungerLatch - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
-                            IplungerLatch = IplungerLatch,
-                            TiDrop = (int)((Tdrop - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
-                            Tend = (int)((Tend - tripInitiate).TotalMilliseconds * GSF.Ticks.PerMillisecond),
-                            Idrop = Idrop
-                        }); ;
+                            Log.Error("Unable to identify Event");
+                            continue;
+                        }
+                        result.EventID = evt.ID;
+                        relayStatTable.AddNewRecord(result);
                     }
                     
                 }
             }
         }
 
+        private Tuple<DateTime,double> ProcessPhaseCurrents(DataSeries current, DateTime initialtrip, CycleDataResource cycleDataResource )
+        {
+            DataSeries Irms = cycleDataResource.VICycleDataGroups.SelectMany(item => item.CycleDataGroups).Where(cdg => cdg.RMS.SeriesInfo.ChannelID == current.SeriesInfo.ChannelID).FirstOrDefault()?.RMS;
+
+            if (Irms == null)
+                return new Tuple<DateTime, double>(initialtrip, double.NaN);
+
+            DataSeries activeCurrent = current.ToSubSeries(initialtrip);
+            double Imax = current.Maximum;
+            double Imin = current.Minimum;
+            DateTime Text;
+            double I2C;
+
+            if ((0.1 > Imax) || (-0.1 < Imin))
+                return new Tuple<DateTime, double>(initialtrip,double.NaN);
+
+            if (activeCurrent.Length < (0.5 * activeCurrent.SampleRate * 1.0 / 60.0))
+                return new Tuple<DateTime, double>(initialtrip, double.NaN);
+
+            if (Irms.Maximum < 40)
+                return new Tuple<DateTime, double>(initialtrip, double.NaN);
+
+            // Figure out Avg ABS(Current) before Trip
+            double IpreTrip = Irms.ToSubSeries(0, current.Length - activeCurrent.Length).DataPoints.Average(p => Math.Abs(p.Value));
+
+            // Threshold is what current should be at 1/32 of a cycle after zero crossing
+            double Ithreshold = IpreTrip * Math.Sqrt(2) * Math.Sin(1.0 / 16.0 * Math.PI);
+
+            //Find point where Current is below threshold for 1/16 of a cycle before and 1/16 of a cycle after.
+            int l16 = (int)Math.Ceiling((1.0 / 16.0 * activeCurrent.SampleRate * 1.0 / 60.0));
+            int i = l16;
+            while (i < (activeCurrent.Length - l16))
+            {
+                DataSeries window = activeCurrent.ToSubSeries(i - l16, i + l16);
+                if (window.Maximum < Ithreshold && window.Minimum > -Ithreshold)
+                    break;
+                i++;
+            }
+
+            Text = activeCurrent[i].Time;
+            I2C = activeCurrent.DataPoints.Take(i).Sum(p => (p.Value*p.Value))*1.0/activeCurrent.SampleRate;
+
+            return new Tuple<DateTime, double>(Text, I2C);
+        }
+
+        private bool IsPhaseCurrent(string phase, Channel channel)
+        {
+            return channel.MeasurementType.Name == "Current" &&
+                   (channel.MeasurementCharacteristic.Name == "Instantaneous") &&
+                   channel.Phase.Name == phase;
+        }
         #region[ Static ]
 
-        private static Boolean IsRelayEnergization(Channel channel)
+        private static bool IsRelayEnergization(Channel channel)
         {
             return channel.MeasurementType.Name == "TripCoilCurrent" &&
                    (channel.MeasurementCharacteristic.Name == "Instantaneous");
         }
 
-        private static Double LeastSquare(DataSeries series)
+        private static double LeastSquare(DataSeries series)
         {
             // Assume that all points are uniformly sampled
                         
@@ -289,7 +421,7 @@ namespace FaultData.DataOperations
                     .ToList().Contains(channel.ID)
                 ).ToList();
 
-            if (dataGroups.Count ==0)
+            if (dataGroups.Count == 0)
             {
                 return null;
             }
