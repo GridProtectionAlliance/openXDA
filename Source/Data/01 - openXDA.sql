@@ -4612,17 +4612,17 @@ GO
 CREATE VIEW BreakerHistory
 AS
 SELECT  Breaker.ID AS BreakerID,
-		RelayPerformance.EventID AS EventID,
+	RelayPerformance.EventID AS EventID,
         RelayPerformance.Imax1,
-		RelayPerformance.Imax2,
-		RelayPerformance.TripInitiate,
-		RelayPerformance.TripTime,
-		RelayPerformance.PickupTime,
-		RelayPerformance.TripCoilCondition,
-		Breaker.TripCoilCondition AS TripCoilConditionAlert,
-		Breaker.TripTime AS TripTimeAlert,
-		Breaker.PickupTime AS PickupTimeAlert,
-		RelayPerformance.ChannelID AS TripCoilChannelID,
+	RelayPerformance.Imax2,
+	RelayPerformance.TripInitiate,
+	RelayPerformance.TripTime,
+	RelayPerformance.PickupTime,
+	RelayPerformance.TripCoilCondition,
+	Breaker.TripCoilCondition AS TripCoilConditionAlert,
+	Breaker.TripTime AS TripTimeAlert,
+	Breaker.PickupTime AS PickupTimeAlert,
+	RelayPerformance.ChannelID AS TripCoilChannelID,
         RelayPerformance.Tmax1,
         RelayPerformance.TplungerLatch,
         RelayPerformance.IplungerLatch,
@@ -4631,8 +4631,15 @@ SELECT  Breaker.ID AS BreakerID,
         RelayPerformance.Tend,
         RelayPerformance.TripTimeCurrent, 
         RelayPerformance.PickupTimeCurrent,
-        		COALESCE((SELECT TOP 1 ET.Name FROM 
-			Event EV LEFT JOIN EventType ET ON Ev.EventTypeID = ET.ID WHERE EV.StartTime = Event.StartTime AND ET.Name <> 'Other' AND Ev.AssetID IN (SELECT ParentID FROM AssetConnection WHERE ChildID = Breaker.ID UNION SELECT ChildID FROM AssetConnection WHERE ParentID = Breaker.ID)
+	RelayPerformance.TripCoilConditionTime,
+        RelayPerformance.ExtinctionTimeA,
+      	RelayPerformance.ExtinctionTimeB,
+      	RelayPerformance.ExtinctionTimeC,
+      	RelayPerformance.I2CA,
+      	RelayPerformance.I2CB,
+      	RelayPerformance.I2CC,
+	COALESCE((SELECT TOP 1 ET.Name FROM 
+		Event EV LEFT JOIN EventType ET ON Ev.EventTypeID = ET.ID WHERE EV.StartTime = Event.StartTime AND ET.Name <> 'Other' AND Ev.AssetID IN (SELECT ParentID FROM AssetConnection WHERE ChildID = Breaker.ID UNION SELECT ChildID FROM AssetConnection WHERE ParentID = Breaker.ID)
 		),'Other') AS EventType
     FROM    RelayPerformance LEFT OUTER JOIN
             Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
