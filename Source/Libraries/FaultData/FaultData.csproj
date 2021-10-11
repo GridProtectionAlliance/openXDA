@@ -108,8 +108,11 @@
     <Compile Include="DataOperations\DataOperationBase.cs" />
     <Compile Include="DataOperations\DataPusherOperation.cs" />
     <Compile Include="DataOperations\DataRescueOperation.cs" />
+    <Compile Include="DataOperations\DFRLineFiles\BreakerConfiguration.cs" />
+    <Compile Include="DataOperations\DFRLineFiles\LineConfiguration.cs" />
     <Compile Include="DataOperations\GTC\MeterDataQualityOverride.cs" />
     <Compile Include="DataOperations\LightningDataOperation.cs" />
+    <Compile Include="DataOperations\DFRLineFiles\LineFileLoader.cs" />
     <Compile Include="DataOperations\PQube\PQubeClassificationOverride.cs" />
     <Compile Include="DataOperations\RelayEnergization.cs" />
     <Compile Include="DataOperations\DailyStatisticOperation.cs" />
