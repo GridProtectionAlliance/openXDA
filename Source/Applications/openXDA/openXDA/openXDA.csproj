@@ -350,6 +350,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppModel.cs" />
+    <Compile Include="Controllers\AuthenticationService\AuthenticationController.cs" />
     <Compile Include="Controllers\Config\EmailTemplateController.cs" />
     <Compile Include="Controllers\Config\QueryController.cs" />
     <Compile Include="Controllers\DataPusher\DataPusherController.cs" />
@@ -440,6 +441,10 @@
     <ProjectReference Include="..\..\..\Libraries\openHistorian.XDALink\openHistorian.XDALink.csproj">
       <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
       <Name>openHistorian.XDALink</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.CapSwitchAnalysis\openXDA.CapSwitchAnalysis.csproj">
+      <Project>{bac37d4d-3719-44f9-8f05-448e5ff6d08c}</Project>
+      <Name>openXDA.CapSwitchAnalysis</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.Configuration\openXDA.Configuration.csproj">
       <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
