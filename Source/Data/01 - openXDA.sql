@@ -1722,6 +1722,12 @@ CREATE TABLE ApplicationRole
 )
 GO
 
+Create Table ApplicationNode (
+    [ID] [uniqueidentifier] NOT NULL CONSTRAINT [DF_Node_ID]  DEFAULT (newid()),
+    [Name] [varchar](200) NOT NULL
+)
+GO
+
 CREATE TABLE SecurityGroup
 (
     ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,

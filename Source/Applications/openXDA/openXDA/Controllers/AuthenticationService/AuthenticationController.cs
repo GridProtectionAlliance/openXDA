@@ -81,6 +81,12 @@ namespace openXDA.Controllers
                 if (responseType != "code")
                     throw new Exception("Only ResponseType code is supported");
 
+
+                //Validate clientID is in the Node Table
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                    if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ApplicationNode WHERE ID={0}", clientId) == 0)
+                        throw new Exception($"Invalid NodeID '{clientId}'");
+
                 UserData user = ((SecurityPrincipal)Request.GetRequestContext().Principal).Identity.Provider.UserData;
 
                 const string QueryFormat =
