@@ -92,6 +92,11 @@ namespace FaultData.DataReaders
         #region [ Properties ]
 
         [Category]
+        [SettingName(PQDIFSection.CategoryName)]
+        public PQDIFSection PQDIFSettings { get; }
+            = new PQDIFSection();
+
+        [Category]
         [SettingName(DataAnalysisSection.CategoryName)]
         public DataAnalysisSection DataAnalysisSettings { get; }
             = new DataAnalysisSection();
@@ -143,9 +148,12 @@ namespace FaultData.DataReaders
             if (!dataSources.Any())
                 return meterDataSet;
 
-            // Validate data sources to make sure there is only one data source defined in the file
-            if (!dataSources.Zip(dataSources.Skip(1), (ds1, ds2) => AreEquivalent(ds1, ds2)).All(b => b))
-                throw new InvalidDataException($"PQDIF file \"{pqdFile.FilePath}\" defines too many data sources.");
+            if (!PQDIFSettings.AllowMultipleDataSource)
+            {
+                // Validate data sources to make sure there is only one data source defined in the file
+                if (!dataSources.Zip(dataSources.Skip(1), (ds1, ds2) => AreEquivalent(ds1, ds2)).All(b => b))
+                    throw new InvalidDataException($"PQDIF file \"{pqdFile.FilePath}\" defines too many data sources.");
+            }
 
             // Create a meter from the parsed data source
             Meter meter = ParseDataSource(dataSources.First());

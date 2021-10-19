@@ -600,6 +600,13 @@ CREATE TABLE TransformerAttributes
 )
 GO
 
+CREATE TABLE DERAttributes (
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	AssetID INT NOT NULL REFERENCES Asset(ID),
+	FullRatedOutputCurrent FLOAT NOT NULL,
+	VoltageLevel VARCHAR(6) NOT NULL
+)
+GO
 
 -- Correspoding Views and Trigger 
 CREATE VIEW Line AS
@@ -1240,6 +1247,76 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 		INSERTED
 	ON 
 		INSERTED.ID = TransformerAttributes.AssetID;
+END
+GO
+
+CREATE VIEW DER AS
+	SELECT 
+		AssetID AS ID,
+		VoltageLevel,
+		FullRatedOutputCurrent,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN DERAttributes ON Asset.ID = DERAttributes.AssetID
+GO
+
+
+CREATE TRIGGER TR_INSERT_DER ON DER
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'DER') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO DERAttributes (AssetID, FullRatedOutputCurrent, VoltageLevel )
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			FullRatedOutputCurrent AS FullRatedOutputCurrent,
+			VoltageLevel AS VoltageLevel
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_DER ON DER
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR UPDATE(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+	UPDATE DERAttributes
+		SET
+			DERAttributes.FullRatedOutputCurrent = INSERTED.FullRatedOutputCurrent,
+			DERAttributes.VoltageLevel = INSERTED.VoltageLevel
+		FROM
+			DERAttributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.ID = DERAttributes.AssetID;
 END
 GO
 
@@ -4612,17 +4689,17 @@ GO
 CREATE VIEW BreakerHistory
 AS
 SELECT  Breaker.ID AS BreakerID,
-		RelayPerformance.EventID AS EventID,
+	RelayPerformance.EventID AS EventID,
         RelayPerformance.Imax1,
-		RelayPerformance.Imax2,
-		RelayPerformance.TripInitiate,
-		RelayPerformance.TripTime,
-		RelayPerformance.PickupTime,
-		RelayPerformance.TripCoilCondition,
-		Breaker.TripCoilCondition AS TripCoilConditionAlert,
-		Breaker.TripTime AS TripTimeAlert,
-		Breaker.PickupTime AS PickupTimeAlert,
-		RelayPerformance.ChannelID AS TripCoilChannelID,
+	RelayPerformance.Imax2,
+	RelayPerformance.TripInitiate,
+	RelayPerformance.TripTime,
+	RelayPerformance.PickupTime,
+	RelayPerformance.TripCoilCondition,
+	Breaker.TripCoilCondition AS TripCoilConditionAlert,
+	Breaker.TripTime AS TripTimeAlert,
+	Breaker.PickupTime AS PickupTimeAlert,
+	RelayPerformance.ChannelID AS TripCoilChannelID,
         RelayPerformance.Tmax1,
         RelayPerformance.TplungerLatch,
         RelayPerformance.IplungerLatch,
@@ -4631,8 +4708,15 @@ SELECT  Breaker.ID AS BreakerID,
         RelayPerformance.Tend,
         RelayPerformance.TripTimeCurrent, 
         RelayPerformance.PickupTimeCurrent,
-        		COALESCE((SELECT TOP 1 ET.Name FROM 
-			Event EV LEFT JOIN EventType ET ON Ev.EventTypeID = ET.ID WHERE EV.StartTime = Event.StartTime AND ET.Name <> 'Other' AND Ev.AssetID IN (SELECT ParentID FROM AssetConnection WHERE ChildID = Breaker.ID UNION SELECT ChildID FROM AssetConnection WHERE ParentID = Breaker.ID)
+	RelayPerformance.TripCoilConditionTime,
+        RelayPerformance.ExtinctionTimeA,
+      	RelayPerformance.ExtinctionTimeB,
+      	RelayPerformance.ExtinctionTimeC,
+      	RelayPerformance.I2CA,
+      	RelayPerformance.I2CB,
+      	RelayPerformance.I2CC,
+	COALESCE((SELECT TOP 1 ET.Name FROM 
+		Event EV LEFT JOIN EventType ET ON Ev.EventTypeID = ET.ID WHERE EV.StartTime = Event.StartTime AND ET.Name <> 'Other' AND Ev.AssetID IN (SELECT ParentID FROM AssetConnection WHERE ChildID = Breaker.ID UNION SELECT ChildID FROM AssetConnection WHERE ParentID = Breaker.ID)
 		),'Other') AS EventType
     FROM    RelayPerformance LEFT OUTER JOIN
             Channel ON RelayPerformance.ChannelID = Channel.ID LEFT OUTER JOIN
