@@ -177,6 +177,7 @@
     <Compile Include="System\DataReader.cs" />
     <Compile Include="Links\CustomerAsset.cs" />
     <Compile Include="TransmissionElements\AssetTypeAssetConnection.cs" />
+    <Compile Include="TransmissionElements\DER1547_2018.cs" />
     <Compile Include="TransmissionElements\CapBankRelay.cs" />
     <Compile Include="TransmissionElements\Customer.cs" />
     <Compile Include="TransmissionElements\AssetTypes.cs" />

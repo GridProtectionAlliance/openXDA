@@ -600,6 +600,13 @@ CREATE TABLE TransformerAttributes
 )
 GO
 
+CREATE TABLE DER1547_2018Attributes (
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	AssetID INT NOT NULL REFERENCES Asset(ID),
+	FullRatedOutputCurrent FLOAT NOT NULL,
+	VoltageLevel VARCHAR(6) NOT NULL
+)
+GO
 
 -- Correspoding Views and Trigger 
 CREATE VIEW Line AS
@@ -1240,6 +1247,76 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
 		INSERTED
 	ON 
 		INSERTED.ID = TransformerAttributes.AssetID;
+END
+GO
+
+CREATE VIEW DER1547_2018 AS
+	SELECT 
+		AssetID AS ID,
+		VoltageLevel,
+		FullRatedOutputCurrent,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN DER1547_2018Attributes ON Asset.ID = DER1547_2018Attributes.AssetID
+GO
+
+
+CREATE TRIGGER TR_INSERT_DER1547_2018 ON DER1547_2018
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'DER1547_2018') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO DER1547_2018Attributes (AssetID, FullRatedOutputCurrent, VoltageLevel )
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
+			FullRatedOutputCurrent AS FullRatedOutputCurrent,
+			VoltageLevel AS VoltageLevel
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_DER1547_2018 ON DER1547_2018
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR UPDATE(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+	UPDATE DER1547_2018Attributes
+		SET
+			DER1547_2018Attributes.FullRatedOutputCurrent = INSERTED.FullRatedOutputCurrent,
+			DER1547_2018Attributes.VoltageLevel = INSERTED.VoltageLevel
+		FROM
+			DER1547_2018Attributes 
+	INNER JOIN
+		INSERTED
+	ON 
+		INSERTED.ID = DER1547_2018Attributes.AssetID;
 END
 GO
 
