@@ -620,7 +620,7 @@ INSERT INTO AssetType (Name, Description) VALUES ('Transformer','Transformer')
 GO
 INSERT INTO AssetType (Name, Description) VALUES ('CapacitorBankRelay','Relay for a Capacitor Bank')
 GO
-INSERT INTO AssetType (Name, Description) VALUES ('DER1547_2018','DER governed by IEEE Standard 1547-2018')
+INSERT INTO AssetType (Name, Description) VALUES ('DER','DER governed by IEEE Standard 1547-2018')
 GO
 
 -- Default Asset Connections

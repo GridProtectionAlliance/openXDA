@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DER1547_2018.cs - Gbtc
+//  DER.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -33,7 +33,7 @@ using Newtonsoft.Json;
 namespace openXDA.Model
 {
     [MetadataType(typeof(Asset))]
-    public class DER1547_2018 : Asset
+    public class DER : Asset
     {
 
         #region [ Properties ]
@@ -46,13 +46,13 @@ namespace openXDA.Model
 
         #region [ Methods ]
 
-        public static DER1547_2018 DetailedDER1547_2018(Asset asset, AdoDataConnection connection)
+        public static DER DetailedDER(Asset asset, AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
 
-            TableOperations<DER1547_2018> table = new TableOperations<DER1547_2018>(connection);
-            DER1547_2018 record = table.QueryRecordWhere("ID = {0}", asset.ID);
+            TableOperations<DER> table = new TableOperations<DER>(connection);
+            DER record = table.QueryRecordWhere("ID = {0}", asset.ID);
             if (record == null)
                 return null;
 
@@ -62,9 +62,9 @@ namespace openXDA.Model
             return record;
         }
 
-        public static DER1547_2018 DetailedDER1547_2018(Asset asset)
+        public static DER DetailedDER(Asset asset)
         {
-            return DetailedDER1547_2018(asset, asset.ConnectionFactory.Invoke());
+            return DetailedDER(asset, asset.ConnectionFactory.Invoke());
         }
         #endregion
     }
