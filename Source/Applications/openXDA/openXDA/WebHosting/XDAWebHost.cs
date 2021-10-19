@@ -198,6 +198,11 @@ namespace openXDA.WebHosting
                 defaultValue: AuthenticationOptions.DefaultAuthenticationSchemes,
                 description: "Comma separated list of authentication schemes to use for clients accessing the hosted web server, e.g., Basic or NTLM.");
 
+            authenticationOptions.AlternateSecurityProviderResourceExpression = RetrieveConfigurationFileSetting(
+               name: nameof(authenticationOptions.AlternateSecurityProviderResourceExpression),
+               defaultValue: AuthenticationOptions.DefaultAlternateSecurityProviderResourceExpression,
+               description: "Expression that will match paths for the resources on the web server that should use the alternate SecurityProvider.");
+
             authenticationOptions.AuthFailureRedirectResourceExpression = RetrieveConfigurationFileSetting(
                 name: nameof(authenticationOptions.AuthFailureRedirectResourceExpression),
                 defaultValue: DefaultSettings.AuthFailureRedirectResourceExpression,
