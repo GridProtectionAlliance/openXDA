@@ -691,6 +691,8 @@ namespace openXDA.Nodes
 
             INode ToNode(Node definition)
             {
+                if (definition is null)
+                    return null;
                 int typeID = definition.NodeTypeID;
                 NodeType type = QueryNodeType(typeID);
                 return CreateNodeInstance(definition, type);
@@ -698,8 +700,8 @@ namespace openXDA.Nodes
 
             IEnumerable<INode> inactiveNodes = activeConfiguration
                 .GroupJoin(activeNodes, GetDefinitionID, GetNodeID, (definition, grouping) => !grouping.Any() ? definition : null)
-                .Where(definition => !(definition is null))
-                .Select(ToNode);
+                .Select(ToNode)
+                .Where(definition => !(definition is null));
 
             Nodes = activeNodes
                 .Concat(inactiveNodes)
