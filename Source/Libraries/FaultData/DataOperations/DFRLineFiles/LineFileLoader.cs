@@ -215,6 +215,7 @@ namespace FaultData.DataOperations.DFRLineFiles
                     X0 = lineSection.X0,
                     R1 = lineSection.R1,
                     X1 = lineSection.X1,
+                    IsEnd = true
                 };
 
                 try
