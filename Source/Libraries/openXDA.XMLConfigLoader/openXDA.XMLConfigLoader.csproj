@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="XMLConfigLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XMLConfigProducer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

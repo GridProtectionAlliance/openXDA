@@ -578,10 +578,11 @@ namespace openXDA.XMLConfigLoader
                     record = new MeterAsset();
                     record.MeterID = meterID;
                     record.AssetID = assetID;
+                    new TableOperations<MeterAsset>(connection).AddNewRecord(record);
+                    Log.Info($"Loaded Meter Asset Link between {meterKey} AND {assetKey}");
+
                 }
 
-                new TableOperations<MeterAsset>(connection).AddNewRecord(record);
-                Log.Info($"Loaded Meter Asset Link between {meterKey} AND {assetKey}");
 
             }
 
@@ -603,10 +604,12 @@ namespace openXDA.XMLConfigLoader
                     record = new AssetLocation();
                     record.LocationID = locationID;
                     record.AssetID = assetID;
+
+                    new TableOperations<AssetLocation>(connection).AddNewRecord(record);
+                    Log.Info($"Loaded Meter Asset Link between {locationKey} AND {assetKey}");
+
                 }
 
-                new TableOperations<AssetLocation>(connection).AddNewRecord(record);
-                Log.Info($"Loaded Meter Asset Link between {locationKey} AND {assetKey}");
 
             }
 
