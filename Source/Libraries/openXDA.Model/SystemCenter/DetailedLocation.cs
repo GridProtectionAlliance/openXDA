@@ -35,7 +35,7 @@ namespace SystemCenter.Model
             l.Alias,
             l.ShortName,
             l.Latitude,
-            l.Longitude
+            l.Longitude,
             COUNT(DISTINCT m.ID) as Meters,
             COUNT(DISTINCT al.AssetID) as Assets
     FROM 
