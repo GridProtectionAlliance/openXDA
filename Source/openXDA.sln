@@ -58,6 +58,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{B554F6A4-C
 		Data\07 - DefaultTrendingAlarms.sql = Data\07 - DefaultTrendingAlarms.sql
 		Data\08 - DefaultContours.sql = Data\08 - DefaultContours.sql
 		Data\09 - SystemCenter.sql = Data\09 - SystemCenter.sql
+		Data\10 - MiMD.sql = Data\10 - MiMD.sql
+		Data\11 - SEBrowser.sql = Data\11 - SEBrowser.sql
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{9DA625F5-5D02-4855-A891-5E059AE2BD83}"
