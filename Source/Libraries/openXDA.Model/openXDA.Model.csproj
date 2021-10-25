@@ -152,6 +152,9 @@
     <Compile Include="Settings\PQReportsSettings.cs" />
     <Compile Include="SystemCenter\AdditionalField.cs" />
     <Compile Include="SystemCenter\AdditionalFieldValue.cs" />
+    <Compile Include="SystemCenter\DetailedAsset.cs" />
+    <Compile Include="SystemCenter\DetailedLocation.cs" />
+    <Compile Include="SystemCenter\DetailedMeter.cs" />
     <Compile Include="SystemCenter\LocationDrawing.cs" />
     <Compile Include="SystemCenter\Customer.cs" />
     <Compile Include="SystemCenter\CustomerAccess.cs" />
