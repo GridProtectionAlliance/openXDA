@@ -22,17 +22,24 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Security.Model;
+using GSF.Web;
 using log4net;
+using openXDA.Controllers.WebAPI;
 using openXDA.DataPusher;
 using openXDA.Model;
+using openXDA.XMLConfigLoader;
 
 namespace openXDA.Controllers.Config
 {
@@ -43,6 +50,82 @@ namespace openXDA.Controllers.Config
 
         public DataPusherController(Func<AdoDataConnection> connectionFactory) =>
             ConnectionFactory = connectionFactory;
+
+        [Route("Recieve/XML"), HttpPost]
+        public IHttpActionResult RecieveXML( CancellationToken cancellationToken)
+        {
+            if (User.IsInRole("DataPusher"))
+            {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+
+                    try
+                    {
+                        Stream stream = Request.Content.ReadAsStreamAsync().Result;
+                        XMLConfigLoader.XMLConfigLoader loader = new XMLConfigLoader.XMLConfigLoader(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
+                        loader.Load(stream);
+                        return Ok("Configuration updated using XML");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex.Message, ex);
+                        return InternalServerError(ex);
+                    }
+                }
+            }
+            else
+                return Unauthorized();
+
+        }
+
+        [Route("Send/XML/{instanceId:int}/{meterId:int}"), HttpGet]
+        public IHttpActionResult SendMeterConfigurationForInstance( int instanceId, int meterId, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+
+                try
+                {
+                    //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+                    DataPusherEngine engine = new DataPusherEngine();
+                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
+                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    //engine.SyncMeterConfigurationForInstance(connectionId, instance, meter, userAccount, cancellationToken);
+                    string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
+
+                    XMLConfigProducer loader = new XMLConfigProducer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
+                    Stream stream = loader.Get(instanceId, new List<int> { meter.LocalXDAMeterID });
+                    using (WebRequestHandler handler = new WebRequestHandler())
+                    using (HttpClient client = new HttpClient(handler))
+                    {
+                        handler.ServerCertificateValidationCallback += ControllerHelpers.HandleCertificateValidation;
+
+                        client.BaseAddress = new Uri(instance.Address);
+                        client.DefaultRequestHeaders.Accept.Clear();
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                        client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                        client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                        HttpContent httpContent = new StreamContent(stream);
+                        HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/XML", httpContent).Result;
+
+                        if (!response.IsSuccessStatusCode)
+                            throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                        return Ok("Configuration sent for meter");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                    return InternalServerError(ex);
+
+                }
+            }
+
+        }
+
 
         [Route("SyncMeterConfig/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet]
         public Task SyncMeterConfigurationForInstance(string connectionId, int instanceId, int meterId, CancellationToken cancellationToken)

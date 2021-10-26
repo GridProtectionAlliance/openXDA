@@ -249,9 +249,16 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Net.Http.Extensions, Version=2.2.29.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.Net.Http.2.2.29\lib\net45\System.Net.Http.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Net.Http.Formatting">
       <HintPath>..\..\..\Dependencies\GSF\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
+    <Reference Include="System.Net.Http.Primitives, Version=4.2.29.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.Net.Http.2.2.29\lib\net45\System.Net.Http.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
@@ -477,6 +484,10 @@
     <ProjectReference Include="..\..\..\Libraries\openXDA.StepChangeWebReport\openXDA.StepChangeWebReport.csproj">
       <Project>{1F3B639C-6C49-480D-A184-AED1C86AD97B}</Project>
       <Name>openXDA.StepChangeWebReport</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.XMLConfigLoader\openXDA.XMLConfigLoader.csproj">
+      <Project>{280f475d-7d5c-4bb7-98be-db0f3cbe40bb}</Project>
+      <Name>openXDA.XMLConfigLoader</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
@@ -4524,6 +4535,11 @@ CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "%25SystemRoot%25\Micr
 CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "%25SystemRoot%25\Microsoft.NET\assembly\GAC_MSIL\System.Net.Http\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Net.Http.dll"
 CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "%25SystemRoot%25\Microsoft.NET\assembly\GAC_MSIL\System.Data.Linq\v4.0_4.0.0.0__b77a5c561934e089\System.Data.Linq.dll"</PostBuildEvent>
   </PropertyGroup>
+  <Import Project="..\..\..\Dependencies\NuGet\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\..\Dependencies\NuGet\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
+  <Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == ''">
+    <Error Condition="!Exists('..\..\..\Dependencies\NuGet\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
+    <Error Condition="Exists('..\..\..\Dependencies\NuGet\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
