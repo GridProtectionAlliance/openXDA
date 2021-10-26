@@ -682,13 +682,13 @@ namespace openXDA.XMLConfigLoader
                 int meterID = connection.ExecuteScalar<int>("SELECT ID FROM Meter WHERE AssetKey = {0}", meterKey);
 
                 string measurementType = channelNode.Attributes["MeasurementType"].Value;
-                int measurementTypeID = connection.ExecuteScalar<int>("SELECT ID FROM MeasurementType WHERE Name = {0}", measurementType);
+                int measurementTypeID = GetOrAddMeasuremntType(measurementType);
 
                 string measurementCharacteristic = channelNode.Attributes["MeasurementCharacteristic"].Value;
-                int measurementCharacteristicID = connection.ExecuteScalar<int>("SELECT ID FROM MeasurementCharacteristic WHERE Name = {0}", measurementCharacteristic);
+                int measurementCharacteristicID = GetOrAddMeasurementCharacteristic(measurementCharacteristic);
 
                 string phase = channelNode.Attributes["Phase"].Value;
-                int phaseID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = {0}", phase);
+                int phaseID = GetOrAddPhase(phase);
 
                 Channel channel = new Channel()
                 {
@@ -770,6 +770,60 @@ namespace openXDA.XMLConfigLoader
 
             }
         }
+
+        private int GetOrAddPhase(string name) {
+            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString, DataProvider))
+            {
+                Phase record = new TableOperations<Phase>(connection).QueryRecordWhere("Name = {0}", name);
+                if (record == null) {
+                    record = new Phase();
+                    record.Name = name;
+                    record.Description = name;
+                    new TableOperations<Phase>(connection).AddNewRecord(record);
+                    record = new TableOperations<Phase>(connection).QueryRecordWhere("Name = {0}", name);
+                }
+
+                return record.ID;
+            }
+        }
+
+        private int GetOrAddMeasuremntType(string name)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString, DataProvider))
+            {
+                MeasurementType record = new TableOperations<MeasurementType>(connection).QueryRecordWhere("Name = {0}", name);
+                if (record == null)
+                {
+                    record = new MeasurementType();
+                    record.Name = name;
+                    record.Description = name;
+                    new TableOperations<MeasurementType>(connection).AddNewRecord(record);
+                    record = new TableOperations<MeasurementType>(connection).QueryRecordWhere("Name = {0}", name);
+                }
+
+                return record.ID;
+            }
+        }
+
+        private int GetOrAddMeasurementCharacteristic(string name)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString, DataProvider))
+            {
+                MeasurementCharacteristic record = new TableOperations<MeasurementCharacteristic>(connection).QueryRecordWhere("Name = {0}", name);
+                if (record == null)
+                {
+                    record = new MeasurementCharacteristic();
+                    record.Name = name;
+                    record.Description = name;
+                    new TableOperations<MeasurementCharacteristic>(connection).AddNewRecord(record);
+                    record = new TableOperations<MeasurementCharacteristic>(connection).QueryRecordWhere("Name = {0}", name);
+                }
+
+                return record.ID;
+            }
+        }
+
+
 
     }
 }
