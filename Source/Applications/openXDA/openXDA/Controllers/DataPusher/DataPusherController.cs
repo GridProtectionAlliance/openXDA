@@ -96,6 +96,7 @@ namespace openXDA.Controllers.Config
 
                     XMLConfigProducer loader = new XMLConfigProducer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
                     Stream stream = loader.Get(instanceId, new List<int> { meter.LocalXDAMeterID });
+                    stream.Seek(0, SeekOrigin.Begin);
                     using (WebRequestHandler handler = new WebRequestHandler())
                     using (HttpClient client = new HttpClient(handler))
                     {
@@ -103,7 +104,7 @@ namespace openXDA.Controllers.Config
 
                         client.BaseAddress = new Uri(instance.Address);
                         client.DefaultRequestHeaders.Accept.Clear();
-                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/text"));
                         client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
                         client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
@@ -113,6 +114,7 @@ namespace openXDA.Controllers.Config
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
+                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE LocalXDAMeterID = {0}", meterId);
                         return Ok("Configuration sent for meter");
                     }
                 }

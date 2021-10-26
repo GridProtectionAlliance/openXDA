@@ -1081,7 +1081,7 @@ namespace openXDA.XMLConfigLoader
 			string sql = BuildQuery(instanceID, meterIDs);
 			string xml = Query(sql);
 			MemoryStream stream = new MemoryStream();
-			byte[] bytes = Encoding.ASCII.GetBytes(xml);
+			byte[] bytes = Encoding.Unicode.GetBytes(xml);
 			stream.Write(bytes, 0, bytes.Length);
 			return stream;
 		}
