@@ -114,7 +114,7 @@ namespace openXDA.Controllers.Config
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
-                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE LocalXDAMeterID = {0}", meterId);
+                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterId);
                         return Ok("Configuration sent for meter");
                     }
                 }
@@ -128,6 +128,53 @@ namespace openXDA.Controllers.Config
 
         }
 
+        [Route("Send/XML/{instanceId:int}"), HttpGet]
+        public IHttpActionResult SendMeterConfigurationForInstance(int instanceId, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+
+                try
+                {
+                    //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+                    DataPusherEngine engine = new DataPusherEngine();
+                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
+
+                    XMLConfigProducer loader = new XMLConfigProducer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
+                    Stream stream = loader.Get(instanceId);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    using (WebRequestHandler handler = new WebRequestHandler())
+                    using (HttpClient client = new HttpClient(handler))
+                    {
+                        handler.ServerCertificateValidationCallback += ControllerHelpers.HandleCertificateValidation;
+
+                        client.BaseAddress = new Uri(instance.Address);
+                        client.DefaultRequestHeaders.Accept.Clear();
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/text"));
+                        client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                        client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                        HttpContent httpContent = new StreamContent(stream);
+                        HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/XML", httpContent).Result;
+
+                        if (!response.IsSuccessStatusCode)
+                            throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID IN ( SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instance.ID);
+                        return Ok("Configuration sent for meter");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                    return InternalServerError(ex);
+
+                }
+            }
+
+        }
 
         [Route("SyncMeterConfig/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet]
         public Task SyncMeterConfigurationForInstance(string connectionId, int instanceId, int meterId, CancellationToken cancellationToken)

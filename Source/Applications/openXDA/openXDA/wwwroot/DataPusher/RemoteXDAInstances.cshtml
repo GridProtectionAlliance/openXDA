@@ -226,7 +226,7 @@
         }
 
         function syncConfiguration(record) {
-            var ajaxHandle = null;
+            @*var ajaxHandle = null;
 
             $('#notify').puinotify('show');
             //dataHub.syncInstanceConfiguration(record.ID)
@@ -263,9 +263,44 @@
             });
             $('.ui-notify-close').on('click', function (event) {
                 if (ajaxHandle != null && ajaxHandle.abort != null) ajaxHandle.abort();
-            });
+            });*@
 
 
+            $('#notify').puinotify('show', '<h4>' + record.Name + '</h4>' +'<div class="progress">' +
+                                    '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
+                                            ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>' +
+                                '</div>');
+
+            $.ajax({
+                    type: "GET",
+                    url: '@Url.Content("~/")' + "api/DataPusher/Send/XML/" + record.ID,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: 'json',
+                    cache: false,
+                    async: true
+
+            }).done(function () {
+                    $('#notify').puinotify('update',
+                    '<h4>' + record.Name + '</h4>' +
+                    '<div class="progress">' +
+                    '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
+                    ' aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%">100%</div>' +
+                    '</div>');
+
+                    $('#notify').puinotify('hide');
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+                    viewModel.queryPageRecords();
+                }).fail(function (msg) {
+                    $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>')
+                    $('.ui-notify-close').off('click')
+                    $('.ui-notify-close').on('click', function (event) {
+                        $('#notify').hide();
+                    });
+
+                })
 
         }
 
