@@ -53,8 +53,8 @@ namespace openXDA.Controllers.WebAPI
 
             CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
             systemSettings.Add("CertFile", "", "This is a certfile.");
-            systemSettings.Add("ValidPolicyErrors", "None", "Password for PQMarkWeb API access.");
-            systemSettings.Add("ValidChainFlags", "NoError", "Password for PQMarkWeb API access.");
+            systemSettings.Add("ValidPolicyErrors", "None", "Password for OpenXDA Web API access.");
+            systemSettings.Add("ValidChainFlags", "NoError", "Password for OpenXDA Web API access.");
 
             try
             {
