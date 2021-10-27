@@ -54,7 +54,7 @@
 
     if (parameters.ContainsKey("XDAInstance"))
     {
-        ViewBag.MeterID = parameters["XDAInstance"];
+        ViewBag.XDAInstance = parameters["XDAInstance"];
     }
 
 
@@ -129,7 +129,7 @@
 
             ajaxHandle = $.ajax({
                 type: "GET",
-                url: '@Url.Content("~/")' + "api/DataPusher/Send/Files/" + @ViewBag.XDAInstance + "/" + record.ID,
+                url: '@Url.Content("~/")' + "api/DataPusher/Send/Files/" + @ViewBag.XDAInstance + "/"+ @ViewBag.MeterID + "/" + record.ID,
                 contentType: "application/json; charset=utf-8",
                 dataType: 'json',
                 cache: false,

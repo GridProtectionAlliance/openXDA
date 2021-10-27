@@ -22,9 +22,11 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System;
 
 namespace openXDA.Model
 {
+    [Serializable]
     public class FileBlob
     {
         [PrimaryKey(true)]

@@ -28,6 +28,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [Serializable]
     public class FileGroup
     {
         [PrimaryKey(true)]

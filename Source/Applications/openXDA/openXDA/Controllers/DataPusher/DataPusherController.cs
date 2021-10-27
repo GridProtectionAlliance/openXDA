@@ -51,9 +51,9 @@ namespace openXDA.Controllers.Config
         private Func<AdoDataConnection> ConnectionFactory { get; }
         private Host NodeHost { get; }
 
-        public DataPusherController(Func<AdoDataConnection> connectionFactory, Host host)
+        public DataPusherController(Host host)
         {
-            ConnectionFactory = connectionFactory;
+            ConnectionFactory = () => host.CreateDbConnection();
             NodeHost = host;
         }
 
@@ -256,6 +256,7 @@ namespace openXDA.Controllers.Config
             }
         }
 
+        [Serializable]
         public class FileGroupPost
         { 
             public string MeterKey { get; set; }

@@ -30,7 +30,7 @@ using GSF.IO.Checksums;
 
 namespace openXDA.Model
 {
-    [TableName("DataFile")]
+    [TableName("DataFile"), Serializable]
     public class DataFile
     {
         [PrimaryKey(true)]
