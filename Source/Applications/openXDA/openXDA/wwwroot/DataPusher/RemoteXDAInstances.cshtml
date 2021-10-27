@@ -154,11 +154,11 @@
         </div>
     </div>
 </div>
-<div id="notify">
+<div id="notify" style="height: 175px">
     <h4 id="meterName"></h4>
-    <div id="meterProgress" class="progress"></div>
-    <h4 id="instanceName"></h4>
-    <div id="instanceProgress" class="progress"></div>
+    <div id="stepProgress" class="progress"></div>
+    <h4 id="message"></h4>
+    <div id="overallProgress" class="progress"></div>
 </div>
 
 @section Scripts
@@ -266,10 +266,12 @@
             });*@
 
 
-            $('#notify').puinotify('show', '<h4>' + record.Name + '</h4>' +'<div class="progress">' +
-                                    '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
-                                            ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>' +
-                                '</div>');
+            $('#meterName').text(record.Name);
+            $('#stepProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>');
+            $('#overallProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>');
+            $('#message').text('');
+
+            $('#notify').puinotify('show');
 
             $.ajax({
                     type: "GET",
@@ -279,22 +281,38 @@
                     cache: false,
                     async: true
 
-            }).done(function () {
-                    $('#notify').puinotify('update',
-                    '<h4>' + record.Name + '</h4>' +
-                    '<div class="progress">' +
-                    '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
-                    ' aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%">100%</div>' +
-                    '</div>');
+            }).done(function (connectionID) {
+                var timeout = setInterval(function () {
+                    $.ajax({
+                        type: "GET",
+                        url: '@Url.Content("~/")' + "api/DataPusher/LoaderStatus/XML/"+ record.ID + "/" + connectionID,
+                        contentType: "application/json; charset=utf-8",
+                        dataType: 'json',
+                        cache: false,
+                        async: true
 
-                    $('#notify').puinotify('hide');
-                    $('.ui-notify-close').off('click')
-                    $('.ui-notify-close').on('click', function (event) {
-                        $('#notify').hide();
-                    });
-                    viewModel.queryPageRecords();
+                    }).done(function (status) {
+                        status = JSON.parse(status);
+                        $('#stepProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + status.Percent + '" aria-valuemin="0" aria-valuemax="100" style="width:' + status.Percent + '%">' + status.Percent + '%</div>');
+                        $("#message").text(status.Step + " : " + status.Message);
+                        $('#overallProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + status.OverallPercent + '" aria-valuemin="0" aria-valuemax="100" style="width:' + status.OverallPercent + '%">' + status.OverallPercent + '%</div>');
+
+                        if (status.Complete) {
+                            clearInterval(timeout)
+                            $('#notify').puinotify('hide');
+                            $('.ui-notify-close').off('click')
+                            $('.ui-notify-close').on('click', function (event) {
+                                $('#notify').hide();
+                            });
+                            viewModel.queryPageRecords();
+
+                        }
+                    })
+
+                }, 250);
+
                 }).fail(function (msg) {
-                    $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>')
+                    $("#message").text("Sync Failed : " + msg.message);
                     $('.ui-notify-close').off('click')
                     $('.ui-notify-close').on('click', function (event) {
                         $('#notify').hide();

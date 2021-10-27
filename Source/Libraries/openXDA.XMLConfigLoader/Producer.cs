@@ -1044,14 +1044,14 @@ namespace openXDA.XMLConfig
 		private string BuildQuery(List<int> locationIDs, List<int> meterIDs, List<int> assetIDs)
 		{
 			string sql = SQL;
-			if (locationIDs != null || locationIDs?.Count > 0)
+			if (locationIDs != null && locationIDs?.Count > 0)
 			{
 				sql = sql.Replace("##LOCATION_QUERY##", $"WHERE Location.ID IN ({string.Join(",", locationIDs)})");
 			}
 			else
 				sql = sql.Replace("##LOCATION_QUERY##", "");
 
-			if (meterIDs != null || meterIDs?.Count > 0)
+			if (meterIDs != null && meterIDs?.Count > 0)
 			{
 				sql = sql.Replace("##METER_QUERY##", $" AND Meter.ID IN ({string.Join(",", meterIDs)})");
 			}
@@ -1059,7 +1059,7 @@ namespace openXDA.XMLConfig
 				sql = sql.Replace("##METER_QUERY##", "");
 
 
-			if (assetIDs != null || assetIDs?.Count > 0)
+			if (assetIDs != null && assetIDs?.Count > 0)
 			{
 				sql = sql.Replace("##ASSET_QUERY##", $" AND Asset.ID IN ({string.Join(",", assetIDs)})");
 			}
@@ -1117,7 +1117,7 @@ namespace openXDA.XMLConfig
 			string sql = DataPusherSQL;
 			sql = sql.Replace("##REMOTEXDAINSTANCE_ID##", instanceID.ToString());
 
-			if (meterIDs != null || meterIDs?.Count > 0)
+			if (meterIDs != null && meterIDs?.Count > 0)
 			{
 				sql = sql.Replace("##METER_QUERY##", $" AND Meter.ID IN ({string.Join(",", meterIDs)})");
 			}

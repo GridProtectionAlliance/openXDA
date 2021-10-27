@@ -87,11 +87,9 @@ namespace openXDA.Controllers.Config
                 try
                 {
                     //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    DataPusherEngine engine = new DataPusherEngine();
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    //engine.SyncMeterConfigurationForInstance(connectionId, instance, meter, userAccount, cancellationToken);
                     string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
 
                     Producer producer = new Producer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
@@ -110,12 +108,13 @@ namespace openXDA.Controllers.Config
 
                         HttpContent httpContent = new StreamContent(stream);
                         HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/XML", httpContent).Result;
-
+                        string connectionID = response.Content.ReadAsStringAsync().Result;
+                        connectionID = connectionID.Replace("\"", "");
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
                         connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterId);
-                        return Ok("Configuration sent for meter");
+                        return Ok(connectionID);
                     }
                 }
                 catch (Exception ex)
@@ -137,7 +136,6 @@ namespace openXDA.Controllers.Config
                 try
                 {
                     //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    DataPusherEngine engine = new DataPusherEngine();
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
                     string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
@@ -160,11 +158,14 @@ namespace openXDA.Controllers.Config
                         HttpContent httpContent = new StreamContent(stream);
                         HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/XML", httpContent).Result;
 
+                        string connectionID = response.Content.ReadAsStringAsync().Result;
+                        connectionID = connectionID.Replace("\"", "");
+
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
                         connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID IN ( SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instance.ID);
-                        return Ok("Configuration sent for meter");
+                        return Ok(connectionID);
                     }
                 }
                 catch (Exception ex)
@@ -190,6 +191,48 @@ namespace openXDA.Controllers.Config
                 Log.Error(ex.Message, ex);
                 return InternalServerError(ex);
             }
+        }
+
+        [Route("LoaderStatus/XML/{instanceId:int}/{connectionID}"), HttpGet]
+        public IHttpActionResult GetStatus(int instanceId, string connectionID)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+
+                try
+                {
+                    //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
+
+                    using (WebRequestHandler handler = new WebRequestHandler())
+                    using (HttpClient client = new HttpClient(handler))
+                    {
+                        handler.ServerCertificateValidationCallback += ControllerHelpers.HandleCertificateValidation;
+
+                        client.BaseAddress = new Uri(instance.Address);
+                        client.DefaultRequestHeaders.Accept.Clear();
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                        client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                        client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                        HttpResponseMessage response = client.GetAsync($"api/DataPusher/LoaderStatus/XML/{connectionID}").Result;
+                        string result = response.Content.ReadAsStringAsync().Result;
+                        if (!response.IsSuccessStatusCode)
+                            throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                        return Ok(result);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                    return InternalServerError(ex);
+
+                }
+            }
+
         }
 
         [Route("LoaderStatus/XML"), HttpGet]
