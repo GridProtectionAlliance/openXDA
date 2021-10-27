@@ -65,7 +65,7 @@
 
     <td width="30%" class="text-center valign-middle">
         <button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncConfiguration.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Config Data</button>
-        <button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncFiles.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Files</button>
+        @*<button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncFiles.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Files</button>*@
     </td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/DataPusher/MetersToDataPush.cshtml?XDAInstance=' + ID + '&Name=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>

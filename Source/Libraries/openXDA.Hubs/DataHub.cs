@@ -7620,6 +7620,85 @@ namespace openXDA.Hubs
 
         #region [ DataPusher Operations ]
 
+        #region [ FilesToDataPush Table Operations ]
+        string filesToDataPushSql = @"
+        select 
+	        FileGroup.ID,
+	        FileGroup.DataStartTime,
+	        FileGroup.Error as ProcessingError,
+	        DataFile.FilePath as [LargestFile],
+	        Files.Files as [FilesInGroup],
+	        Count.Events,
+	        Synced.Synced 
+        FROM 
+	        FileGroup OUTER APPLY
+	        (	
+		        SELECT TOP 1 * 
+		        FROM DataFile 
+		        WHERE FileGroup.ID = DataFile.FileGroupID 
+		        ORDER BY DataFile.FileSize DESC
+	        ) as DataFile OUTER APPLY
+	        ( SELECT COUNT(*) [Files] FROM DataFile WHERE DataFile.FileGroupID = FileGroup.ID) as [Files] OUTER APPLY
+	        ( SELECT COUNT(*) [Events] FROM Event WHERE Event.FileGroupID = FileGroup.ID) as [Count] OUTER APPLY
+	        ( SELECT COUNT(*) [Synced] FROM FileGroupLocalToRemote WHERE FileGroupLocalToRemote.LocalFileGroupID = FileGroup.ID) as Synced
+        WHERE
+	        MeterID = {0}
+        ";
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FilesToDataPush), RecordOperation.QueryRecordCount)]
+        public int QueryFilesToDataPushCount(int meterID, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                DataTable table = connection.RetrieveData(filesToDataPushSql,  meterID);
+                return table.Rows.Count;
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FilesToDataPush), RecordOperation.QueryRecords)]
+        public IEnumerable<FilesToDataPush> QueryFilesToDataPush(int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+
+                DataTable table = connection.RetrieveData(filesToDataPushSql, meterID);
+                if(ascending)
+                    return table.Select().OrderBy(x => x[sortField]).Skip((page - 1) * pageSize).Take(pageSize).Select(x => new TableOperations<FilesToDataPush>(connection).LoadRecord(x));
+                else
+                    return table.Select().OrderByDescending(x => x[sortField]).Skip((page - 1) * pageSize).Take(pageSize).Select(x => new TableOperations<FilesToDataPush>(connection).LoadRecord(x));
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FilesToDataPush), RecordOperation.DeleteRecord)]
+        public void DeleteFilesToDataPush(int id)
+        {
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FilesToDataPush), RecordOperation.CreateNewRecord)]
+        public FilesToDataPush NewFilesToDataPush()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<FilesToDataPush>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FilesToDataPush), RecordOperation.AddNewRecord)]
+        public void AddNewMetersToDataPush(FilesToDataPush record)
+        { }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(FilesToDataPush), RecordOperation.UpdateRecord)]
+        public void UpdateMetersToDataPush(FilesToDataPush record)
+        {}
+
+        #endregion
+
         #region [ MetersToDataPush Table Operations ]
 
         [AuthorizeHubRole("Administrator")]

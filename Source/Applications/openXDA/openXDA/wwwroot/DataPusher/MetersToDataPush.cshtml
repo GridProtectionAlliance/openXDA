@@ -76,8 +76,12 @@
     <td width="20%" class="text-left valign-middle" data-bind="text: RemoteXDAAssetKey"></td>
     <td width="10%" class="text-center valign-middle">
         <button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncConfiguration.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Config Data</button>
-        <button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncFiles.bind($data), enable: Synced && $parent.canEdit() && $parent.dataHubIsConnected()">Files</button>
+        @*<button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncFiles.bind($data), enable: Synced && $parent.canEdit() && $parent.dataHubIsConnected()">Files</button>*@
     </td>
+    <td width="5%" class="text-center valign-middle">
+        <a data-bind="attr: { href: '/DataPusher/FilesToDataPush.cshtml?MeterID=' + LocalXDAMeterID + '&Name=' + LocalXDAAssetKey  + '&XDAInstance=@ViewBag.XDAInstance' }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Files&nbsp;&nbsp;<span class="badge" data-bind="text: getFileCount(LocalXDAMeterID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a>
+    </td>
+
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -113,16 +117,15 @@
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MetersToDataPush, DataHub>(ViewBag, "LocalXDAAssetKey", null, ViewBag.XDAInstance))
 
-        //$(window).on('beforeHubConnected', function (e) {
-        //    dataHubClient.updateProgressBarForMeter = function (meterName, update) {
-        //        $('#notify').puinotify('update',
-        //            '<h4>' + meterName + '</h4>' +
-        //            '<div class="progress">' +
-        //            '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
-        //            ' aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>' +
-        //            '</div>');
-        //    }
-        //});
+        function getFileCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryFilesToDataPushCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
 
         var localMeters;
         $(function () {

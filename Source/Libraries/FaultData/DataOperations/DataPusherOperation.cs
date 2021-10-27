@@ -63,13 +63,14 @@ namespace FaultData.DataOperations
         #region [ Methods ]
         public override void Execute(MeterDataSet meterDataSet)
         {
+            //meterDataSet.FileGroup.DataFiles[0].FileBlob.
             if (DataPusherSettings.Enabled)
             {
                 Log.Info("Executing operation to push data to remote instances...");
 
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    if (DataPusherSettings.OnlyValidFaults)
+                    if (DataPusherSettings?.OnlyValidFaults ?? false)
                     {
                         TableOperations<FaultSummary> faultSummaryTable = new TableOperations<FaultSummary>(connection);
                         int faultSummaryCount = faultSummaryTable.QueryRecordCountWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0} AND FileVersion = {1}) AND IsValid = 1 AND IsSuppressed = 0", meterDataSet.FileGroup.ID, meterDataSet.FileGroup.ProcessingVersion);

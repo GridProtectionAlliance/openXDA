@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -39,6 +40,7 @@ using log4net;
 using openXDA.Controllers.WebAPI;
 using openXDA.DataPusher;
 using openXDA.Model;
+using openXDA.Nodes;
 using openXDA.XMLConfig;
 
 namespace openXDA.Controllers.Config
@@ -47,9 +49,13 @@ namespace openXDA.Controllers.Config
     public class DataPusherController : ApiController
     {
         private Func<AdoDataConnection> ConnectionFactory { get; }
+        private Host NodeHost { get; }
 
-        public DataPusherController(Func<AdoDataConnection> connectionFactory) =>
+        public DataPusherController(Func<AdoDataConnection> connectionFactory, Host host)
+        {
             ConnectionFactory = connectionFactory;
+            NodeHost = host;
+        }
 
         [Route("Recieve/XML"), HttpPost]
         public IHttpActionResult RecieveXML( CancellationToken cancellationToken)
@@ -248,6 +254,142 @@ namespace openXDA.Controllers.Config
                 Log.Error(ex.Message, ex);
                 return InternalServerError(ex);
             }
+        }
+
+        public class FileGroupPost
+        { 
+            public string MeterKey { get; set; }
+            public FileGroup FileGroup { get; set; }
+            public List<DataFile> DataFiles { get; set; }
+            public List<FileBlob> FileBlobs { get; set; }
+        }
+
+        [Route("Send/Files/{instanceId:int}/{meterId:int}/{fileGroupID:int}"), HttpGet]
+        public IHttpActionResult SendFiles(int instanceId, int meterId, int fileGroupID, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+
+                try
+                {
+                    //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
+                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    List<DataFile> files = new TableOperations<DataFile>(connection).QueryRecordsWhere("FileGroupID = {0}", fileGroupID).ToList();
+                    List<FileBlob> fileBlobs = new TableOperations<FileBlob>(connection).QueryRecordsWhere("DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID = {0})", fileGroupID).ToList();
+                    FileGroupPost post = new FileGroupPost();
+                    post.MeterKey = meter.RemoteXDAAssetKey;
+                    post.FileGroup = fileGroup;
+                    post.DataFiles = files;
+                    post.FileBlobs = fileBlobs;
+
+                    string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
+
+                    MemoryStream stream = new MemoryStream();
+                    BinaryFormatter binaryFormater = new BinaryFormatter();
+                    binaryFormater.Serialize(stream, post);
+
+                    stream.Seek(0, SeekOrigin.Begin);
+                    using (WebRequestHandler handler = new WebRequestHandler())
+                    using (HttpClient client = new HttpClient(handler))
+                    {
+                        handler.ServerCertificateValidationCallback += ControllerHelpers.HandleCertificateValidation;
+
+                        client.BaseAddress = new Uri(instance.Address);
+                        client.DefaultRequestHeaders.Accept.Clear();
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/text"));
+                        client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                        client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                        HttpContent httpContent = new StreamContent(stream);
+                        HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/Files", httpContent).Result;
+                        string connectionID = response.Content.ReadAsStringAsync().Result;
+                        connectionID = connectionID.Replace("\"", "");
+                        if (!response.IsSuccessStatusCode)
+                            throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                        return Ok(connectionID);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                    return InternalServerError(ex);
+
+                }
+            }
+
+        }
+
+        [Route("Recieve/Files"), HttpPost]
+        public IHttpActionResult RecieveFiles(CancellationToken cancellationToken)
+        {
+            if (User.IsInRole("DataPusher"))
+            {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+
+                    try
+                    {
+                        Stream stream = Request.Content.ReadAsStreamAsync().Result;
+                        BinaryFormatter binaryFormatter = new BinaryFormatter();
+                        FileGroupPost fileGroupPost = (FileGroupPost)binaryFormatter.Deserialize(stream);
+
+                        Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("AssetKey = {0}", fileGroupPost.MeterKey);
+                        if (meter == null) throw new Exception($"{fileGroupPost.MeterKey} is not defined in database");
+
+                        FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, fileGroupPost.FileGroup.DataStartTime, fileGroupPost.FileGroup.DataEndTime);
+                        if (fileGroup == null) {
+                            fileGroup = fileGroupPost.FileGroup;
+                            fileGroup.ID = 0;
+
+                            new TableOperations<FileGroup>(connection).AddNewRecord(fileGroup);
+                            fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, fileGroupPost.FileGroup.DataStartTime, fileGroupPost.FileGroup.DataEndTime);
+                        }
+
+                        foreach(DataFile file in fileGroupPost.DataFiles)
+                        {
+                            DataFile dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
+                            if (dataFile == null)
+                            {
+                                dataFile = file;
+                                dataFile.ID = 0;
+                                dataFile.FileGroupID = fileGroup.ID;
+                                new TableOperations<DataFile>(connection).AddNewRecord(dataFile);
+                                dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
+                            }
+
+                            FileBlob blob = fileGroupPost.FileBlobs.Find(x => x.DataFileID == file.ID);
+                            FileBlob fileBlob = new TableOperations<FileBlob>(connection).QueryRecordWhere("DataFileID = {0}", dataFile.ID);
+                            if (fileBlob == null)
+                            {
+                                fileBlob = blob;
+                                fileBlob.ID = 0;
+                                fileBlob.DataFileID = dataFile.ID;
+
+                                new TableOperations<FileBlob>(connection).AddNewRecord(fileBlob);
+                            }
+
+
+
+                        }
+
+                        DataFileController dataFileController = new DataFileController(NodeHost);
+                        dataFileController.ReprocessFile(fileGroup.ID).Wait();
+                        return Ok("Completed File Process");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex.Message, ex);
+                        return InternalServerError(ex);
+                    }
+                }
+            }
+            else
+                return Unauthorized();
+
         }
 
         [Route("SyncMeterConfig/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet]

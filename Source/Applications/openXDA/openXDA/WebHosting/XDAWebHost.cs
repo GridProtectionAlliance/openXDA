@@ -382,6 +382,7 @@ namespace openXDA.WebHosting
 
             webServer.PagedViewModelTypes.TryAdd("DataPusher/RemoteXDAInstances.cshtml", new Tuple<Type, Type>(typeof(RemoteXDAInstance), typeof(DataHub)));
             webServer.PagedViewModelTypes.TryAdd("DataPusher/MetersToDataPush.cshtml", new Tuple<Type, Type>(typeof(MetersToDataPush), typeof(DataHub)));
+            webServer.PagedViewModelTypes.TryAdd("DataPusher/FilesToDataPush.cshtml", new Tuple<Type, Type>(typeof(FilesToDataPush), typeof(DataHub)));
 
             return webServer;
         }
