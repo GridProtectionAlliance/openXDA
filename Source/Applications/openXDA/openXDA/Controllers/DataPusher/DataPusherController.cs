@@ -306,12 +306,15 @@ namespace openXDA.Controllers.Config
 
                         HttpContent httpContent = new StreamContent(stream);
                         HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/Files", httpContent).Result;
-                        string connectionID = response.Content.ReadAsStringAsync().Result;
-                        connectionID = connectionID.Replace("\"", "");
+                        string remoteFGID = response.Content.ReadAsStringAsync().Result;
+                        remoteFGID = remoteFGID.Replace("\"", "");
+                        int id = int.Parse(remoteFGID);
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
-                        return Ok(connectionID);
+                        connection.ExecuteNonQuery("INSERT INTO FileGroupLocalToRemote (RemoteXDAInstanceID, LocalFileGroupID, remoteFileGroupID) VALUES ({0},{1},{2}) ", instanceId, fileGroupID, id );
+
+                        return Ok("Completed sycning file.");
                     }
                 }
                 catch (Exception ex)
@@ -392,7 +395,8 @@ namespace openXDA.Controllers.Config
 
                         DataFileController dataFileController = new DataFileController(NodeHost);
                         dataFileController.ReprocessFile(fileGroup.ID).Wait();
-                        return Ok("Completed File Process");
+
+                        return Ok(fileGroup.ID);
                     }
                     catch (Exception ex)
                     {
