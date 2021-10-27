@@ -135,10 +135,22 @@ namespace openXDA.XMLConfig
         /// <param name="file"><seealso cref="Stream"/> containing the xml file to be loaded into the XDA database</param>
         public Task Load(Stream file)
         {
+            byte[] bytes;
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                file.CopyTo(ms);
+                bytes = ms.ToArray();
+            }
+
             return Task.Run(() => {
-                XmlDocument document = new XmlDocument();
-                document.Load(file);
-                Load(document);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    stream.Write(bytes, 0, bytes.Length);
+                    XmlDocument document = new XmlDocument();
+                    document.Load(stream);
+                    Load(document);
+                }
             });
 
 
