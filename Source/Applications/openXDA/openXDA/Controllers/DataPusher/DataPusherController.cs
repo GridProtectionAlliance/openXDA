@@ -39,7 +39,7 @@ using log4net;
 using openXDA.Controllers.WebAPI;
 using openXDA.DataPusher;
 using openXDA.Model;
-using openXDA.XMLConfigLoader;
+using openXDA.XMLConfig;
 
 namespace openXDA.Controllers.Config
 {
@@ -62,9 +62,9 @@ namespace openXDA.Controllers.Config
                     try
                     {
                         Stream stream = Request.Content.ReadAsStreamAsync().Result;
-                        XMLConfigLoader.XMLConfigLoader loader = new XMLConfigLoader.XMLConfigLoader(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
+                        Loader loader = new Loader(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
                         loader.Load(stream);
-                        return Ok("Configuration updated using XML");
+                        return Ok(loader.ConnectionID);
                     }
                     catch (Exception ex)
                     {
@@ -94,8 +94,8 @@ namespace openXDA.Controllers.Config
                     //engine.SyncMeterConfigurationForInstance(connectionId, instance, meter, userAccount, cancellationToken);
                     string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
 
-                    XMLConfigProducer loader = new XMLConfigProducer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
-                    Stream stream = loader.Get(instanceId, new List<int> { meter.LocalXDAMeterID });
+                    Producer producer = new Producer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
+                    Stream stream = producer.Get(instanceId, new List<int> { meter.LocalXDAMeterID });
                     stream.Seek(0, SeekOrigin.Begin);
                     using (WebRequestHandler handler = new WebRequestHandler())
                     using (HttpClient client = new HttpClient(handler))
@@ -142,8 +142,9 @@ namespace openXDA.Controllers.Config
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
                     string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
 
-                    XMLConfigProducer loader = new XMLConfigProducer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
-                    Stream stream = loader.Get(instanceId);
+
+                    Producer producer = new Producer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
+                    Stream stream = producer.Get(instanceId, new List<int> { });
                     stream.Seek(0, SeekOrigin.Begin);
                     using (WebRequestHandler handler = new WebRequestHandler())
                     using (HttpClient client = new HttpClient(handler))
@@ -174,6 +175,36 @@ namespace openXDA.Controllers.Config
                 }
             }
 
+        }
+
+        [Route("LoaderStatus/XML/{connectionID}"), HttpGet]
+        public IHttpActionResult GetStatus(string connectionID) {
+            try
+            {
+                Guid guid = Guid.Parse(connectionID);
+                LoaderStatus status = Loader.RetrieveStatus(guid);
+                return Ok(status);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                return InternalServerError(ex);
+            }
+        }
+
+        [Route("LoaderStatus/XML"), HttpGet]
+        public IHttpActionResult InstantiateStatus()
+        {
+            try
+            {
+                Guid guid = Loader.InstantiateConnection();
+                return Ok(guid);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                return InternalServerError(ex);
+            }
         }
 
         [Route("SyncMeterConfig/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet]

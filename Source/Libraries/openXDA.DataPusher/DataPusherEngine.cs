@@ -55,6 +55,14 @@ namespace openXDA.DataPusher
 
         public DataPusherEngine()
         {
+            using(AdoDataConnection connection = new AdoDataConnection("systemSetting"))
+            {
+                m_dataPusherSettings = new DataPusherSettings();
+                m_dataPusherSettings.Enabled = connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = DataPusher.Enabled") == "True";
+                m_dataPusherSettings.OnlyValidFaults = connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = DataPusher.OnlyValidFaults") == "True";
+                m_dataPusherSettings.TimeWindow = int.Parse(connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = DataPusher.OnlyValidFaults")?.ToString() ?? "1");
+
+            }
         }
 
         public DataPusherEngine(DataPusherSettings settings)

@@ -485,9 +485,9 @@
       <Project>{1F3B639C-6C49-480D-A184-AED1C86AD97B}</Project>
       <Name>openXDA.StepChangeWebReport</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\openXDA.XMLConfigLoader\openXDA.XMLConfigLoader.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.XMLConfigLoader\openXDA.XMLConfig.csproj">
       <Project>{280f475d-7d5c-4bb7-98be-db0f3cbe40bb}</Project>
-      <Name>openXDA.XMLConfigLoader</Name>
+      <Name>openXDA.XMLConfig</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>

@@ -147,7 +147,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PQDS", "Libraries\PQDS\PQDS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.PQI", "Libraries\openXDA.PQI\openXDA.PQI.csproj", "{3DEC81F1-9A02-4BBF-8325-F332AC63393E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.XMLConfigLoader", "Libraries\openXDA.XMLConfigLoader\openXDA.XMLConfigLoader.csproj", "{280F475D-7D5C-4BB7-98BE-DB0F3CBE40BB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.XMLConfig", "Libraries\openXDA.XMLConfigLoader\openXDA.XMLConfig.csproj", "{280F475D-7D5C-4BB7-98BE-DB0F3CBE40BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

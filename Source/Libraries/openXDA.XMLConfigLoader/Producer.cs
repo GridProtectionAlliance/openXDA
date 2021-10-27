@@ -32,13 +32,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace openXDA.XMLConfigLoader
+namespace openXDA.XMLConfig
 {
-    public class XMLConfigProducer
+    public class Producer
     {
         #region [ Static ]
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(XMLConfigProducer));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Producer));
         #endregion
 
         #region [ Members ]
@@ -984,11 +984,11 @@ namespace openXDA.XMLConfigLoader
 
         #region [ Constructor ]
 		/// <summary>
-		/// Instantiates XMLConfigProducer and points it at specific database
+		/// Instantiates XMLConfig.Producer and points it at specific database
 		/// </summary>
 		/// <param name="connectionString">Database connection string</param>
 		/// <param name="dataProvider">Data provider dll information</param>
-        public XMLConfigProducer(string connectionString, string dataProvider)
+        public Producer(string connectionString, string dataProvider)
         {
             ConnectionString = connectionString;
             DataProvider = dataProvider;

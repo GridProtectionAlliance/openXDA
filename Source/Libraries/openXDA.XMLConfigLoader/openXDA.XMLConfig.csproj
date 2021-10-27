@@ -7,8 +7,8 @@
     <ProjectGuid>{280F475D-7D5C-4BB7-98BE-DB0F3CBE40BB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>openXDA.XMLConfigLoader</RootNamespace>
-    <AssemblyName>openXDA.XMLConfigLoader</AssemblyName>
+    <RootNamespace>openXDA.XMLConfig</RootNamespace>
+    <AssemblyName>openXDA.XMLConfig</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -49,9 +49,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="XMLConfigLoader.cs" />
+    <Compile Include="Loader.cs" />
+    <Compile Include="LoaderStatus.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="XMLConfigProducer.cs" />
+    <Compile Include="Producer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -33,25 +33,86 @@ using GSF.Data.Model;
 using log4net;
 using openXDA.Model;
 
-namespace openXDA.XMLConfigLoader
+namespace openXDA.XMLConfig
 {
-    public class XMLConfigLoader
+    public class Loader
     {
         #region [ Static ]
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(XMLConfigLoader));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Loader));
+        private static Dictionary<Guid, LoaderStatus> StatusLog { get; } = new Dictionary<Guid, LoaderStatus>();
+
+        public static LoaderStatus RetrieveStatus(Guid connectionID)
+        {
+            if (StatusLog.ContainsKey(connectionID))
+                return StatusLog[connectionID];
+            else
+                return null;
+        }
+
+        public static void UpdateStatus(Guid connectionID, LoaderStatus status)
+        {
+            if (StatusLog.ContainsKey(connectionID))
+                StatusLog[connectionID] = status;
+        }
+
+        public static void UpdateStatus(Guid connectionID, int percent, int overallPercent, string step, string message, bool error = false, bool complete = false)
+        {
+            LoaderStatus status = new LoaderStatus();
+            status.Step = step;
+            status.Message = message;
+            status.Percent = percent;
+            status.OverallPercent = overallPercent;
+            status.Error = error;
+            status.Complete = complete;
+
+            UpdateStatus(connectionID, status);
+        }
+
+
+        public static Guid InstantiateConnection()
+        {
+            Guid guid = Guid.NewGuid();
+            LoaderStatus status = new LoaderStatus() { Percent = 0, Step = "Retrieving XML",Message = "Connection Instantiated ...", Error = false };
+
+            if (!StatusLog.ContainsKey(guid))
+            {
+                StatusLog.Add(guid, status);
+                return guid;
+            }
+            else
+                return InstantiateConnection();
+        }
+
+        public static void TerminateConnection(Guid connectionID)
+        {
+            if (StatusLog.ContainsKey(connectionID))
+                StatusLog.Remove(connectionID);
+        }
+
+        #endregion
+
+        #region [ Members ]
+
+
         #endregion
 
         #region [ Properties ]
         private string ConnectionString { get;  set; }
         private string DataProvider { get; set; }
+
+        /// <summary>
+        /// Returns connection ID for retrieval of status log
+        /// </summary>
+        public Guid ConnectionID { get; set; }
         #endregion
 
         #region [ Constructor ]
-        public XMLConfigLoader(string connectionString, string dataProvider)
+        public Loader(string connectionString, string dataProvider)
         {
             ConnectionString = connectionString;
             DataProvider = dataProvider;
+            ConnectionID = Loader.InstantiateConnection();
         }
         #endregion
 
@@ -59,10 +120,12 @@ namespace openXDA.XMLConfigLoader
         /// Loads config data in XDA database based on information from a config file
         /// </summary>
         /// <param name="file">Path to the xml file to be loaded into the XDA database</param>
-        public void Load(string file) {
-            XmlDocument document = new XmlDocument();
-            document.Load(file);
-            Load(document);
+        public Task Load(string file) {
+            return Task.Run(() => {
+                XmlDocument document = new XmlDocument();
+                document.Load(file);
+                Load(document);
+            });
 
         }
 
@@ -70,34 +133,59 @@ namespace openXDA.XMLConfigLoader
         /// Loads config data in XDA database based on information from a config file
         /// </summary>
         /// <param name="file"><seealso cref="Stream"/> containing the xml file to be loaded into the XDA database</param>
-        public void Load(Stream file)
+        public Task Load(Stream file)
         {
-            XmlDocument document = new XmlDocument();
-            document.Load(file);
-            Load(document);
+            return Task.Run(() => {
+                XmlDocument document = new XmlDocument();
+                document.Load(file);
+                Load(document);
+            });
+
 
         }
 
         private void Load(XmlDocument document) {
             XmlNode xdaNode = document.SelectSingleNode("OpenXDA");
 
-            // First pass load all stations
+            // First pass load all stations, count devices at each station for status log
+            int stationCount = xdaNode.ChildNodes.Count;
+            int stationIndex = 0;
+            int meterCount = 0;
+            UpdateStatus(ConnectionID, 0, 0, "Step 1: Loading Stations", $"");
+
             foreach (XmlNode node in xdaNode.ChildNodes)
+            {
+                meterCount += node.SelectNodes("Device").Count;
                 LoadStation(node);
+                ++stationIndex;
+                UpdateStatus(ConnectionID, (stationIndex / stationCount) * 100,0, "Step 1: Loading Stations", $"{node.Attributes["Name"].Value} Loaded");
+            }
 
             // Second pass load all meters
+            int meterIndex = 0;
+            int assetCount = 0;
+            UpdateStatus(ConnectionID, 0,25, "Step 2: Loading Devices", $"");
             foreach (XmlNode stationNode in xdaNode.ChildNodes)
                 foreach (XmlNode deviceNode in stationNode.SelectNodes("Device"))
                 {
+                    assetCount += deviceNode.ChildNodes.Count;
                     LoadMeter(stationNode, deviceNode);
+                    ++meterIndex;
+                    UpdateStatus(ConnectionID, (meterIndex / meterCount) * 100,25, "Step 2: Loading Devices", $"{deviceNode.Attributes["Name"].Value} Loaded");
+
                 }
 
             // Third pass load all assets, meterasset links and Channels now that all the meters are defined and loaded into the database
+            int assetIndex = 0;
+            int connectionCount = 0;
+            UpdateStatus(ConnectionID, 0,50, "Step 3: Loading Assets and Channels", $"");
             foreach (XmlNode stationNode in xdaNode.ChildNodes)
                 foreach (XmlNode deviceNode in stationNode.SelectNodes("Device"))
                 {
                     foreach (XmlNode assetNode in deviceNode.ChildNodes)
                     {
+                        connectionCount += assetNode.SelectNodes("Connection").Count;
+
                         // Load the bus data in database
                         string tagName = assetNode.Name;
                         switch (tagName)
@@ -162,17 +250,28 @@ namespace openXDA.XMLConfigLoader
                             }
 
                         }
+
+                        ++assetIndex;
+                        UpdateStatus(ConnectionID, (assetIndex / assetCount) * 100, 50, "Step 3: Loading Assets and Channels", $"{assetNode.Attributes["AssetName"].Value} Loaded");
                     }
                 }
 
 
             // Fourth pass load all Asset Connections now that all the assets are defined and loaded into the database
+            int connectionIndex = 0;
+            UpdateStatus(ConnectionID, 0, 75, "Step 4: Loading Asset connections", $"");
+
             foreach (XmlNode stationNode in xdaNode.ChildNodes)
                 foreach (XmlNode deviceNode in stationNode.SelectNodes("Device"))
                     foreach (XmlNode assetNode in deviceNode.ChildNodes)
                         foreach (XmlNode connectiontNode in assetNode.SelectNodes("Connection"))
+                        {
                             LinkAssetConnections(assetNode, connectiontNode);
+                            ++connectionIndex;
+                            UpdateStatus(ConnectionID, (connectionIndex / connectionCount) * 100,75,  "Step 4: Loading Asset connections", $"{assetNode.Attributes["AssetName"].Value} Loaded");
+                        }
 
+            UpdateStatus(ConnectionID, 100, 100, "XML Loading Completed ...", $"", complete: true);
 
         }
 
