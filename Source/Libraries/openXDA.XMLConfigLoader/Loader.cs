@@ -147,6 +147,7 @@ namespace openXDA.XMLConfig
                 using (MemoryStream stream = new MemoryStream())
                 {
                     stream.Write(bytes, 0, bytes.Length);
+                    stream.Seek(0, SeekOrigin.Begin);
                     XmlDocument document = new XmlDocument();
                     document.Load(stream);
                     Load(document);
@@ -170,7 +171,7 @@ namespace openXDA.XMLConfig
                 meterCount += node.SelectNodes("Device").Count;
                 LoadStation(node);
                 ++stationIndex;
-                UpdateStatus(ConnectionID, (stationIndex / stationCount) * 100,0, "Step 1: Loading Stations", $"{node.Attributes["Name"].Value} Loaded");
+                UpdateStatus(ConnectionID, (int)(100.0 * stationIndex / stationCount),0, "Step 1: Loading Stations", $"{node.Attributes["Name"].Value} Loaded");
             }
 
             // Second pass load all meters
@@ -183,7 +184,7 @@ namespace openXDA.XMLConfig
                     assetCount += deviceNode.ChildNodes.Count;
                     LoadMeter(stationNode, deviceNode);
                     ++meterIndex;
-                    UpdateStatus(ConnectionID, (meterIndex / meterCount) * 100,25, "Step 2: Loading Devices", $"{deviceNode.Attributes["Name"].Value} Loaded");
+                    UpdateStatus(ConnectionID, (int)(100.0 * meterIndex / meterCount),25, "Step 2: Loading Devices", $"{deviceNode.Attributes["Name"].Value} Loaded");
 
                 }
 
@@ -264,7 +265,7 @@ namespace openXDA.XMLConfig
                         }
 
                         ++assetIndex;
-                        UpdateStatus(ConnectionID, (assetIndex / assetCount) * 100, 50, "Step 3: Loading Assets and Channels", $"{assetNode.Attributes["AssetName"].Value} Loaded");
+                        UpdateStatus(ConnectionID, (int)(100.0 * assetIndex / assetCount), 50, "Step 3: Loading Assets and Channels", $"{assetNode.Attributes["AssetName"].Value} Loaded");
                     }
                 }
 
@@ -280,7 +281,7 @@ namespace openXDA.XMLConfig
                         {
                             LinkAssetConnections(assetNode, connectiontNode);
                             ++connectionIndex;
-                            UpdateStatus(ConnectionID, (connectionIndex / connectionCount) * 100,75,  "Step 4: Loading Asset connections", $"{assetNode.Attributes["AssetName"].Value} Loaded");
+                            UpdateStatus(ConnectionID, (int)(100.0 * connectionIndex / connectionCount),75,  "Step 4: Loading Asset connections", $"{assetNode.Attributes["AssetName"].Value} Loaded");
                         }
 
             UpdateStatus(ConnectionID, 100, 100, "XML Loading Completed ...", $"", complete: true);
