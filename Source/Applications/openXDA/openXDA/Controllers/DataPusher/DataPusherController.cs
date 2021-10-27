@@ -277,7 +277,7 @@ namespace openXDA.Controllers.Config
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", fileGroupID);
                     List<DataFile> files = new TableOperations<DataFile>(connection).QueryRecordsWhere("FileGroupID = {0}", fileGroupID).ToList();
                     List<FileBlob> fileBlobs = new TableOperations<FileBlob>(connection).QueryRecordsWhere("DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID = {0})", fileGroupID).ToList();
                     FileGroupPost post = new FileGroupPost();
@@ -324,6 +324,17 @@ namespace openXDA.Controllers.Config
 
         }
 
+        private IDbDataParameter ToDateTime2(AdoDataConnection connection, DateTime dateTime)
+        {
+            using (IDbCommand command = connection.Connection.CreateCommand())
+            {
+                IDbDataParameter parameter = command.CreateParameter();
+                parameter.DbType = DbType.DateTime2;
+                parameter.Value = dateTime;
+                return parameter;
+            }
+        }
+
         [Route("Recieve/Files"), HttpPost]
         public IHttpActionResult RecieveFiles(CancellationToken cancellationToken)
         {
@@ -341,13 +352,14 @@ namespace openXDA.Controllers.Config
                         Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("AssetKey = {0}", fileGroupPost.MeterKey);
                         if (meter == null) throw new Exception($"{fileGroupPost.MeterKey} is not defined in database");
 
-                        FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, fileGroupPost.FileGroup.DataStartTime, fileGroupPost.FileGroup.DataEndTime);
+                        FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, ToDateTime2(connection, fileGroupPost.FileGroup.DataStartTime), ToDateTime2(connection, fileGroupPost.FileGroup.DataEndTime));
                         if (fileGroup == null) {
                             fileGroup = fileGroupPost.FileGroup;
                             fileGroup.ID = 0;
+                            fileGroup.MeterID = meter.ID;
 
                             new TableOperations<FileGroup>(connection).AddNewRecord(fileGroup);
-                            fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, fileGroupPost.FileGroup.DataStartTime, fileGroupPost.FileGroup.DataEndTime);
+                            fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, ToDateTime2(connection, fileGroupPost.FileGroup.DataStartTime), ToDateTime2(connection, fileGroupPost.FileGroup.DataEndTime));
                         }
 
                         foreach(DataFile file in fileGroupPost.DataFiles)
