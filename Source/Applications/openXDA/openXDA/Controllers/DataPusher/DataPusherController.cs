@@ -365,6 +365,8 @@ namespace openXDA.Controllers.Config
                         foreach(DataFile file in fileGroupPost.DataFiles)
                         {
                             DataFile dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
+                            FileBlob blob = fileGroupPost.FileBlobs.Find(x => x.DataFileID == file.ID);
+
                             if (dataFile == null)
                             {
                                 dataFile = file;
@@ -374,7 +376,6 @@ namespace openXDA.Controllers.Config
                                 dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
                             }
 
-                            FileBlob blob = fileGroupPost.FileBlobs.Find(x => x.DataFileID == file.ID);
                             FileBlob fileBlob = new TableOperations<FileBlob>(connection).QueryRecordWhere("DataFileID = {0}", dataFile.ID);
                             if (fileBlob == null)
                             {

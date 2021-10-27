@@ -175,7 +175,7 @@ namespace openXDA.Controllers.Config
         {
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
-                int? meterID = connection.ExecuteScalar<int?>("SELECT MeterID FROM Event WHERE FileGroupID = {0}", fileGroupID);
+                int? meterID = connection.ExecuteScalar<int?>("SELECT MeterID FROM FileGroup WHERE ID = {0}", fileGroupID);
 
                 if (meterID is null)
                 {
