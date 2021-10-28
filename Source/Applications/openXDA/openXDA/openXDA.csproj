@@ -357,6 +357,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppModel.cs" />
+    <Compile Include="Controllers\AuthenticationService\AuthenticationController.cs" />
     <Compile Include="Controllers\Config\EmailTemplateController.cs" />
     <Compile Include="Controllers\Config\QueryController.cs" />
     <Compile Include="Controllers\DataPusher\DataPusherController.cs" />

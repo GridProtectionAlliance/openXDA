@@ -37,8 +37,16 @@
     <Reference Include="GSF.PQDIF">
       <HintPath>..\..\Dependencies\GSF\GSF.PQDIF.dll</HintPath>
     </Reference>
+    <Reference Include="GSF.Security, Version=2.3.493.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\GSF\GSF.Security.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=2.0.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\log4net.2.0.12\lib\net45\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\GSF\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -47,6 +55,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependencies\GSF\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Http">
       <HintPath>..\..\Dependencies\GSF\System.Web.Http.dll</HintPath>
@@ -65,6 +74,7 @@
     <Compile Include="Types\Analysis\AnalysisTaskProcessor.cs" />
     <Compile Include="Types\Analysis\AnalysisTaskPublisher.cs" />
     <Compile Include="ConfigurationLoader.cs" />
+    <Compile Include="Types\Authentication\AuthenticationProviderNode.cs" />
     <Compile Include="Types\Email\EventEmailNode.cs" />
     <Compile Include="Types\Email\EventEmailType.cs" />
     <Compile Include="Types\EPRICapBankAnalysis\EPRICapBankAnalysisNode.cs" />
