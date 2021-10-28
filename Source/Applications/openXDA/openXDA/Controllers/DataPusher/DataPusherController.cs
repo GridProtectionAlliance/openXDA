@@ -37,7 +37,7 @@ using GSF.Data.Model;
 using GSF.Security.Model;
 using GSF.Web;
 using log4net;
-using openXDA.Controllers.WebAPI;
+using openXDA.Controllers.Helpers;
 using openXDA.DataPusher;
 using openXDA.Model;
 using openXDA.Nodes;
@@ -268,63 +268,16 @@ namespace openXDA.Controllers.Config
         [Route("Send/Files/{instanceId:int}/{meterId:int}/{fileGroupID:int}"), HttpGet]
         public IHttpActionResult SendFiles(int instanceId, int meterId, int fileGroupID, CancellationToken cancellationToken)
         {
-            using (AdoDataConnection connection = ConnectionFactory())
+            try
             {
-
-                try
-                {
-                    //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", fileGroupID);
-                    List<DataFile> files = new TableOperations<DataFile>(connection).QueryRecordsWhere("FileGroupID = {0}", fileGroupID).ToList();
-                    List<FileBlob> fileBlobs = new TableOperations<FileBlob>(connection).QueryRecordsWhere("DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID = {0})", fileGroupID).ToList();
-                    FileGroupPost post = new FileGroupPost();
-                    post.MeterKey = meter.RemoteXDAAssetKey;
-                    post.FileGroup = fileGroup;
-                    post.DataFiles = files;
-                    post.FileBlobs = fileBlobs;
-
-                    string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
-
-                    MemoryStream stream = new MemoryStream();
-                    BinaryFormatter binaryFormater = new BinaryFormatter();
-                    binaryFormater.Serialize(stream, post);
-
-                    stream.Seek(0, SeekOrigin.Begin);
-                    using (WebRequestHandler handler = new WebRequestHandler())
-                    using (HttpClient client = new HttpClient(handler))
-                    {
-                        handler.ServerCertificateValidationCallback += ControllerHelpers.HandleCertificateValidation;
-
-                        client.BaseAddress = new Uri(instance.Address);
-                        client.DefaultRequestHeaders.Accept.Clear();
-                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/text"));
-                        client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
-                        client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-
-                        HttpContent httpContent = new StreamContent(stream);
-                        HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/Files", httpContent).Result;
-                        string remoteFGID = response.Content.ReadAsStringAsync().Result;
-                        remoteFGID = remoteFGID.Replace("\"", "");
-                        int id = int.Parse(remoteFGID);
-                        if (!response.IsSuccessStatusCode)
-                            throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
-                        connection.ExecuteNonQuery("INSERT INTO FileGroupLocalToRemote (RemoteXDAInstanceID, LocalFileGroupID, remoteFileGroupID) VALUES ({0},{1},{2}) ", instanceId, fileGroupID, id );
-
-                        return Ok("Completed sycning file.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex.Message, ex);
-                    return InternalServerError(ex);
-
-                }
+                DataPusherEngine engine = new DataPusherEngine(ConnectionFactory);
+                engine.SendFiles(instanceId, meterId, fileGroupID);
+                return Ok("Completed sycning file.");
             }
-
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
         }
 
         private IDbDataParameter ToDateTime2(AdoDataConnection connection, DateTime dateTime)
@@ -421,7 +374,7 @@ namespace openXDA.Controllers.Config
                     try
                     {
                         // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                        DataPusherEngine engine = new DataPusherEngine();
+                        DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                         RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                         MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                         UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
@@ -446,7 +399,7 @@ namespace openXDA.Controllers.Config
                     try
                     {
                         // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                        DataPusherEngine engine = new DataPusherEngine();
+                        DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                         RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                         engine.SyncMeterFilesForInstance(connectionId, instance, meterId, cancellationToken);
                     }
@@ -464,7 +417,7 @@ namespace openXDA.Controllers.Config
             return Task.Run(() =>
             {
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                DataPusherEngine engine = new DataPusherEngine();
+                DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                 engine.SyncInstanceConfiguration(connectionId, instanceId, cancellationToken);
             }, cancellationToken);
 
@@ -478,7 +431,7 @@ namespace openXDA.Controllers.Config
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    DataPusherEngine engine = new DataPusherEngine();
+                    DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     engine.SyncInstanceFiles(connectionId, instance, cancellationToken);
                 }

@@ -26,13 +26,21 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Security;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using System.Threading.Tasks;
 using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Net.Security;
 using GSF.Scheduling;
 using GSF.Security.Model;
+using GSF.Web;
 using GSF.Web.Model;
 using log4net;
 using Newtonsoft.Json.Linq;
@@ -49,18 +57,29 @@ namespace openXDA.DataPusher
         private ScheduleManager m_scheduler;
         private bool m_running = false;
         private DataPusherSettings m_dataPusherSettings;
+
+        [Serializable]
+        public class FileGroupPost
+        {
+            public string MeterKey { get; set; }
+            public FileGroup FileGroup { get; set; }
+            public List<DataFile> DataFiles { get; set; }
+            public List<FileBlob> FileBlobs { get; set; }
+        }
+
         #endregion
 
         #region [ Constructors ]
 
-        public DataPusherEngine()
+        public DataPusherEngine(Func<AdoDataConnection> connectionFactory)
         {
-            using(AdoDataConnection connection = new AdoDataConnection("systemSetting"))
+            ConnectionFactory = connectionFactory;
+            using(AdoDataConnection connection = ConnectionFactory())
             {
                 m_dataPusherSettings = new DataPusherSettings();
-                m_dataPusherSettings.Enabled = connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = DataPusher.Enabled") == "True";
-                m_dataPusherSettings.OnlyValidFaults = connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = DataPusher.OnlyValidFaults") == "True";
-                m_dataPusherSettings.TimeWindow = int.Parse(connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = DataPusher.OnlyValidFaults")?.ToString() ?? "1");
+                m_dataPusherSettings.Enabled = connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = 'DataPusher.Enabled'") == "True";
+                m_dataPusherSettings.OnlyValidFaults = connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = 'DataPusher.OnlyValidFaults'") == "True";
+                m_dataPusherSettings.TimeWindow = int.Parse(connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = 'DataPusher.TimeWindow'")?.ToString() ?? "1");
 
             }
         }
@@ -79,6 +98,8 @@ namespace openXDA.DataPusher
         [Category]
         [SettingName(DataPusherSettings.CategoryName)]
         public DataPusherSettings DataPusherSettings => m_dataPusherSettings;
+
+        private Func<AdoDataConnection> ConnectionFactory { get; }
 
         #endregion
 
@@ -111,7 +132,7 @@ namespace openXDA.DataPusher
 
         public void Initialize()
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 m_dataPusherSettings = new DataPusherSettings();
                 m_dataPusherSettings.Enabled = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.Enabled'") ?? false;
@@ -491,7 +512,7 @@ namespace openXDA.DataPusher
 
             }
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 new TableOperations<MetersToDataPush>(connection).UpdateRecord(meter);
             }
@@ -519,7 +540,7 @@ namespace openXDA.DataPusher
 
         private Asset AddOrGetAsset(string address, MeterAsset meterAsset, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", meterAsset.AssetID);
                 AssetsToDataPush assetToDataPush = new TableOperations<AssetsToDataPush>(connection).QueryRecordWhere("LocalXDAAssetID = {0}", localAsset.ID);
@@ -545,7 +566,7 @@ namespace openXDA.DataPusher
         }
 
         private Line AddOrGetLine(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount) {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+            using (AdoDataConnection connection = ConnectionFactory()) {
                 Line remoteLine = null;
                 Line localLine = new TableOperations<Line>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
 
@@ -637,7 +658,7 @@ namespace openXDA.DataPusher
         }
         private Bus AddOrGetBus(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount) {
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 Bus remoteBus = null;
                 Bus localBus = new TableOperations<Bus>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
@@ -729,7 +750,7 @@ namespace openXDA.DataPusher
             }
         }
         private LineSegment AddOrGetLineSegment(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount) {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 LineSegment remoteLineSegment = null;
                 LineSegment localLineSegment = new TableOperations<LineSegment>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
@@ -822,7 +843,7 @@ namespace openXDA.DataPusher
         }       
         private CapBank AddOrGetCapBank(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 CapBank remoteCapBank = null;
                 CapBank localCapBank = new TableOperations<CapBank>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
@@ -915,7 +936,7 @@ namespace openXDA.DataPusher
         }
         private Breaker AddOrGetBreaker(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 Breaker remoteBreaker = null;
                 Breaker localBreaker = new TableOperations<Breaker>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
@@ -1008,7 +1029,7 @@ namespace openXDA.DataPusher
         }
         private Transformer AddOrGetTransformer(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 Transformer remoteTransformer = null;
                 Transformer localTransformer = new TableOperations<Transformer>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
@@ -1127,7 +1148,7 @@ namespace openXDA.DataPusher
 
         private void AddFaultDetectionLogic(string address, MeterAsset localMeterLine, MeterAsset remoteMeterLine, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 FaultDetectionLogic localFaultDetectionLogic = new TableOperations<FaultDetectionLogic>(connection).QueryRecordWhere("MeterAssetID = {0}", localMeterLine.ID);
                 if (localFaultDetectionLogic == null) return;
@@ -1171,7 +1192,7 @@ namespace openXDA.DataPusher
 
         private void AddOrUpdateChannelsForLine(string address, MeterAsset localMeterAsset, MeterAsset remoteMeterAsset, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 // ensure remote and local line impedance matches
                 IEnumerable<ChannelDetail> localChannels = new TableOperations<ChannelDetail>(connection).QueryRecordsWhere("MeterID = {0} AND AssetID = {1}", localMeterAsset.MeterID, localMeterAsset.AssetID);
@@ -1221,7 +1242,7 @@ namespace openXDA.DataPusher
 
         private void AddOrGetSeries(string address, ChannelDetail localChannel, ChannelDetail remoteChannel, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
 
                 IEnumerable<Series> local = new TableOperations<Series>(connection).QueryRecordsWhere("ChannelID = {0}", localChannel.ID);
@@ -1255,7 +1276,7 @@ namespace openXDA.DataPusher
         }
 
         private void AddAssetConnections(string address, AssetConnection assetConnection, string connectionType, IEnumerable<AssetConnectionType> remoteAssetConnectionTypes,UserAccount userAccount) {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+            using (AdoDataConnection connection = ConnectionFactory()) {
                 int remoteXDAAssetID1 = connection.ExecuteScalar<int>("SELECT RemoteXDAAssetID FROM AssetsToDataPush WHERE LocalXDAAssetID = {0}", assetConnection.ParentID);
                 int remoteXDAAssetID2 = connection.ExecuteScalar<int>("SELECT RemoteXDAAssetID FROM AssetsToDataPush WHERE LocalXDAAssetID = {0}", assetConnection.ParentID);
                 AssetConnection remoteAssetConnection = WebAPIHub.GetRecordWhere<AssetConnection>(address, $"ParentID = {remoteXDAAssetID1}  AND ChildID = {remoteXDAAssetID2}", userAccount);
@@ -1281,7 +1302,7 @@ namespace openXDA.DataPusher
         {
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
 
                     IEnumerable<int> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instance.ID).Select(x => x.ID);
@@ -1307,7 +1328,7 @@ namespace openXDA.DataPusher
             try
             {
                 
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
 
                     IEnumerable<FileGroup> localFileGroups;
@@ -1434,7 +1455,7 @@ namespace openXDA.DataPusher
             try
             {
                 if (cancellationToken.IsCancellationRequested) return;
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
 
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
@@ -1527,8 +1548,117 @@ namespace openXDA.DataPusher
 
         }
 
+
+        public void SendFiles(int instanceId, int meterId, int fileGroupID)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+
+                //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+                RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
+                UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", fileGroupID);
+                List<DataFile> files = new TableOperations<DataFile>(connection).QueryRecordsWhere("FileGroupID = {0}", fileGroupID).ToList();
+                List<FileBlob> fileBlobs = new TableOperations<FileBlob>(connection).QueryRecordsWhere("DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID = {0})", fileGroupID).ToList();
+                FileGroupPost post = new FileGroupPost();
+                post.MeterKey = meter.RemoteXDAAssetKey;
+                post.FileGroup = fileGroup;
+                post.DataFiles = files;
+                post.FileBlobs = fileBlobs;
+
+                int id = SendFiles(post, instance.Address, userAccount).Result;
+                connection.ExecuteNonQuery("INSERT INTO FileGroupLocalToRemote (RemoteXDAInstanceID, LocalFileGroupID, remoteFileGroupID) VALUES ({0},{1},{2}) ", instanceId, fileGroupID, id);
+
+            }
+
+        }
+
+        public Task<int> SendFiles(FileGroupPost post, string address, UserAccount userAccount)
+        {
+            return Task.Run(() =>
+            {
+                string antiForgeryToken = GenerateAntiForgeryToken(address, userAccount);
+
+                MemoryStream stream = new MemoryStream();
+                BinaryFormatter binaryFormater = new BinaryFormatter();
+                binaryFormater.Serialize(stream, post);
+
+                stream.Seek(0, SeekOrigin.Begin);
+                using (WebRequestHandler handler = new WebRequestHandler())
+                using (HttpClient client = new HttpClient(handler))
+                {
+                    handler.ServerCertificateValidationCallback += HandleCertificateValidation;
+
+                    client.BaseAddress = new Uri(address);
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/text"));
+                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                    HttpContent httpContent = new StreamContent(stream);
+                    HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/Files", httpContent).Result;
+                    string remoteFGID = response.Content.ReadAsStringAsync().Result;
+                    remoteFGID = remoteFGID.Replace("\"", "");
+                    int id = int.Parse(remoteFGID);
+                    if (!response.IsSuccessStatusCode)
+                        throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                    return id;
+                }
+            });
+        }
+
+
         #endregion
 
+        #region [ Helpers ]
+        public bool HandleCertificateValidation(Object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            SimpleCertificateChecker simpleCertificateChecker = new SimpleCertificateChecker();
+
+            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+            systemSettings.Add("CertFile", "", "This is a certfile.");
+            systemSettings.Add("ValidPolicyErrors", "None", "Password for OpenXDA Web API access.");
+            systemSettings.Add("ValidChainFlags", "NoError", "Password for OpenXDA Web API access.");
+
+            try
+            {
+                simpleCertificateChecker.ValidPolicyErrors = (SslPolicyErrors)Enum.Parse(typeof(SslPolicyErrors), (systemSettings["ValidPolicyErrors"].Value != "All" ? systemSettings["ValidPolicyErrors"].Value : "7"));
+                simpleCertificateChecker.ValidChainFlags = (X509ChainStatusFlags)Enum.Parse(typeof(X509ChainStatusFlags), (systemSettings["ValidChainFlags"].Value != "All" ? systemSettings["ValidChainFlags"].Value : (~0).ToString()));
+                simpleCertificateChecker.TrustedCertificates.Add((!string.IsNullOrEmpty(systemSettings["CertFile"].Value) ? new X509Certificate2(systemSettings["CertFile"].Value) : certificate));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+
+            return simpleCertificateChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+        }
+
+        public string GenerateAntiForgeryToken(string instance, UserAccount userAccount)
+        {
+            using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
+            {
+                handler.ServerCertificateValidationCallback += HandleCertificateValidation;
+
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                HttpResponseMessage response = client.GetAsync("api/rvht").Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                return response.Content.ReadAsStringAsync().Result;
+            }
+        }
+
+
+        #endregion
         #endregion
     }
 }

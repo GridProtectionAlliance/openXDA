@@ -7621,38 +7621,25 @@ namespace openXDA.Hubs
         #region [ DataPusher Operations ]
 
         #region [ FilesToDataPush Table Operations ]
-        string filesToDataPushSql = @"
-        select 
-	        FileGroup.ID,
-	        FileGroup.DataStartTime,
-	        FileGroup.Error as ProcessingError,
-	        DataFile.FilePath as [LargestFile],
-	        Files.Files as [FilesInGroup],
-	        Count.Events,
-	        Synced.Synced 
-        FROM 
-	        FileGroup OUTER APPLY
-	        (	
-		        SELECT TOP 1 * 
-		        FROM DataFile 
-		        WHERE FileGroup.ID = DataFile.FileGroupID 
-		        ORDER BY DataFile.FileSize DESC
-	        ) as DataFile OUTER APPLY
-	        ( SELECT COUNT(*) [Files] FROM DataFile WHERE DataFile.FileGroupID = FileGroup.ID) as [Files] OUTER APPLY
-	        ( SELECT COUNT(*) [Events] FROM Event WHERE Event.FileGroupID = FileGroup.ID) as [Count] OUTER APPLY
-	        ( SELECT COUNT(*) [Synced] FROM FileGroupLocalToRemote WHERE FileGroupLocalToRemote.LocalFileGroupID = FileGroup.ID) as Synced
-        WHERE
-	        MeterID = {0}
-        ";
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(FilesToDataPush), RecordOperation.QueryRecordCount)]
         public int QueryFilesToDataPushCount(int meterID, string filterString)
         {
+            string sql = @"
+                select 
+	                COUNT(*)
+                FROM 
+	                FileGroup 
+                WHERE
+	                MeterID = {0}
+                ";
+
+
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                DataTable table = connection.RetrieveData(filesToDataPushSql,  meterID);
-                return table.Rows.Count;
+                int count = connection.ExecuteScalar<int>(sql,  meterID);
+                return count;
             }
         }
 
@@ -7660,14 +7647,35 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(FilesToDataPush), RecordOperation.QueryRecords)]
         public IEnumerable<FilesToDataPush> QueryFilesToDataPush(int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
+            string sql = @"
+                select 
+	                FileGroup.ID,
+	                FileGroup.DataStartTime,
+	                FileGroup.Error as ProcessingError,
+	                DataFile.FilePath as [LargestFile],
+	                Files.Files as [FilesInGroup],
+	                Count.Events,
+	                Synced.Synced 
+                FROM 
+	                FileGroup OUTER APPLY
+	                (	
+		                SELECT TOP 1 * 
+		                FROM DataFile 
+		                WHERE FileGroup.ID = DataFile.FileGroupID 
+		                ORDER BY DataFile.FileSize DESC
+	                ) as DataFile OUTER APPLY
+	                ( SELECT COUNT(*) [Files] FROM DataFile WHERE DataFile.FileGroupID = FileGroup.ID) as [Files] OUTER APPLY
+	                ( SELECT COUNT(*) [Events] FROM Event WHERE Event.FileGroupID = FileGroup.ID) as [Count] OUTER APPLY
+	                ( SELECT COUNT(*) [Synced] FROM FileGroupLocalToRemote WHERE FileGroupLocalToRemote.LocalFileGroupID = FileGroup.ID) as Synced
+                WHERE
+	                MeterID = {0}
+                ";
+
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
 
-                DataTable table = connection.RetrieveData(filesToDataPushSql, meterID);
-                if(ascending)
-                    return table.Select().OrderBy(x => x[sortField]).Skip((page - 1) * pageSize).Take(pageSize).Select(x => new TableOperations<FilesToDataPush>(connection).LoadRecord(x));
-                else
-                    return table.Select().OrderByDescending(x => x[sortField]).Skip((page - 1) * pageSize).Take(pageSize).Select(x => new TableOperations<FilesToDataPush>(connection).LoadRecord(x));
+                DataTable table = GetPagedQuery(sql, sortField, ascending, page, pageSize, meterID);
+                return table.Select().Select(x => new TableOperations<FilesToDataPush>(connection).LoadRecord(x));
             }
         }
 
@@ -7817,7 +7825,7 @@ namespace openXDA.Hubs
                 try
                 {
                     // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    DataPusherEngine engine = new DataPusherEngine();
+                    DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
@@ -7846,7 +7854,7 @@ namespace openXDA.Hubs
                 try
                 {
                     // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    DataPusherEngine engine = new DataPusherEngine();
+                    DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
 
                     CancellationTokenSource source = new CancellationTokenSource();
@@ -7930,7 +7938,7 @@ namespace openXDA.Hubs
         public void SyncInstanceConfiguration(int instanceId)
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-            DataPusherEngine engine = new DataPusherEngine();
+            DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
 
             // Define the cancellation token.
             CancellationTokenSource source = new CancellationTokenSource();
@@ -7947,7 +7955,7 @@ namespace openXDA.Hubs
             {
 
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                DataPusherEngine engine = new DataPusherEngine();
+                DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
 
                 CancellationTokenSource source = new CancellationTokenSource();

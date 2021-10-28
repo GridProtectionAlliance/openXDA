@@ -21,7 +21,10 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
@@ -67,52 +70,65 @@ namespace FaultData.DataOperations
             if (DataPusherSettings.Enabled)
             {
                 Log.Info("Executing operation to push data to remote instances...");
-
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                {
-                    if (DataPusherSettings?.OnlyValidFaults ?? false)
-                    {
-                        TableOperations<FaultSummary> faultSummaryTable = new TableOperations<FaultSummary>(connection);
-                        int faultSummaryCount = faultSummaryTable.QueryRecordCountWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0} AND FileVersion = {1}) AND IsValid = 1 AND IsSuppressed = 0", meterDataSet.FileGroup.ID, meterDataSet.FileGroup.ProcessingVersion);
-                        if (faultSummaryCount > 0)
-                            PushDataToRemoteInstances(connection, meterDataSet.FileGroup.ID, meterDataSet.Meter.ID);
-                    }
-                    else
-                        PushDataToRemoteInstances(connection, meterDataSet.FileGroup.ID, meterDataSet.Meter.ID);
-                }
+                PushDataToRemoteInstances(meterDataSet);
             }
             else
                 Log.Info("Data Push Operation skipped because it is not enabled...");
 
         }
 
-
-        private void PushDataToRemoteInstances(AdoDataConnection connection,int fileGroupId, int meterId)
+        [Serializable]
+        public class FileGroupPost
         {
-            //// If file group has already been pushed to a remote instance, return
-            //TableOperations<FileGroupLocalToRemote> fileGroupLocalToRemoteTable = new TableOperations<FileGroupLocalToRemote>(connection);
-            //FileGroupLocalToRemote fileGroup = fileGroupLocalToRemoteTable.QueryRecordWhere("LocalFileGroupID = {0}", fileGroupId);
-            //if (fileGroup != null) {
-            //    Log.Info("File has already been pushed previously.");
-            //    return;
-            //}
+            public string MeterKey { get; set; }
+            public FileGroup FileGroup { get; set; }
+            public List<DataFile> DataFiles { get; set; }
+            public List<FileBlob> FileBlobs { get; set; }
+        }
 
-            //TableOperations<RemoteXDAInstance> instanceTable = new TableOperations<RemoteXDAInstance>(connection);
-            //TableOperations<MetersToDataPush> meterTable = new TableOperations<MetersToDataPush>(connection);
-            //IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*'");
-            //DataPusherEngine engine = new DataPusherEngine();
+        private void PushDataToRemoteInstances(MeterDataSet meterDataSet)
+        {
+            using (AdoDataConnection connection =  meterDataSet.CreateDbConnection())
+            {
 
-            //foreach (RemoteXDAInstance instance in instances)
-            //{
-            //    IEnumerable<MetersToDataPush> meters = meterTable.QueryRecordsWhere("LocalXDAMeterID = {0} AND ID IN (SELECT MetersToDataPushID From RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", meterId, instance.ID);
-            //    foreach (MetersToDataPush meter in meters)
-            //    {
-            //        Log.Info($"Sending data to intance: {instance.Name} for FileGroup: {fileGroupId}...");
-            //        engine.SyncMeterFileForInstance(instance, meter, fileGroupId);
-            //    }
-            //}
-            //Log.Info("Sync complete...");
+                // If only valid fault setting is set to true, count faults in file group and return if 0
+                if (DataPusherSettings?.OnlyValidFaults ?? false)
+                {
+                    TableOperations<FaultSummary> faultSummaryTable = new TableOperations<FaultSummary>(connection);
+                    int faultSummaryCount = faultSummaryTable.QueryRecordCountWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0} AND FileVersion = {1}) AND IsValid = 1 AND IsSuppressed = 0", meterDataSet.FileGroup.ID, meterDataSet.FileGroup.ProcessingVersion);
+                    if (faultSummaryCount == 0) return;
+                }
 
+
+                TableOperations<RemoteXDAInstance> instanceTable = new TableOperations<RemoteXDAInstance>(connection);
+                TableOperations<MetersToDataPush> meterTable = new TableOperations<MetersToDataPush>(connection);
+                IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*' AND ID IN (SELECT RemoteXDAInstanceID FROM RemoteXDAInstanceMeter WHERE MetersToDataPushID IN (SELECT ID FROM MetersToDataPush WHERE LocalXDAMeterID = {0}) )", meterDataSet.Meter.ID);
+                FileGroupPost post = new FileGroupPost();
+
+                post.FileGroup = meterDataSet.FileGroup;
+                post.DataFiles = meterDataSet.FileGroup.DataFiles;
+                post.FileBlobs = meterDataSet.FileGroup.DataFiles.Select(df => df.FileBlob).ToList();
+
+                foreach (RemoteXDAInstance instance in instances)
+                {
+                    // If file group has already been pushed to a remote instance, return
+                    TableOperations<FileGroupLocalToRemote> fileGroupLocalToRemoteTable = new TableOperations<FileGroupLocalToRemote>(connection);
+                    FileGroupLocalToRemote fileGroup = fileGroupLocalToRemoteTable.QueryRecordWhere("LocalFileGroupID = {0} AND RemoteXDAInstanceID = {1}", meterDataSet.FileGroup.ID, instance.ID);
+                    if (fileGroup != null)
+                    {
+                        Log.Info($"File has already been pushed previously for {instance.Name}.");
+                        continue;
+                    }
+
+                    MetersToDataPush metersToDataPush = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("LocalXDAMeterID = {0} AND ID IN (SELECT MetersToDataPushID From RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", meterDataSet.Meter.ID, instance.ID);
+                    post.MeterKey = metersToDataPush.RemoteXDAAssetKey;
+                    Log.Info($"Sending data to intance: {instance.Name} for FileGroup: {meterDataSet.FileGroup.ID}...");
+
+
+                }
+                Log.Info("Sync complete...");
+
+            }
 
         }
 
