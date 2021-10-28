@@ -52,79 +52,89 @@ namespace openXDA.Controllers
             {
                 // Redirect to the Correct URI
                 Dictionary<string, string> query = Request.QueryParameters();
-
                 string redirectUri;
-                string nonce;
-                string responseType;
-                string scope;
-                string clientId;
-
                 if (!query.TryGetValue("redirect_uri", out redirectUri))
-                    throw new Exception("GET Parameter 'redirect_uri' is required");
-                if (!query.TryGetValue("nonce", out nonce))
-                    throw new Exception("GET Parameter 'nonce' is required");
-                if (!query.TryGetValue("response_type", out responseType))
-                    throw new Exception("GET Parameter 'responseType' is required");
-                if (!query.TryGetValue("scope", out scope))
-                    throw new Exception("GET Parameter 'scope' is required");
-                if (!query.TryGetValue("client_id", out clientId))
-                    throw new Exception("GET Parameter 'clientId' is required");
+                    throw new Exception($"Redirect URI is required");
 
-                if (responseType != "code")
-                    throw new Exception("Only ResponseType code is supported");
-
-                int nodeID = new Func<int>(() =>
+                try
                 {
-                    using (AdoDataConnection connection = Host.CreateDbConnection())
+
+
+                    string nonce;
+                    string responseType;
+                    string scope;
+                    string clientId;
+
+
+                    if (!query.TryGetValue("nonce", out nonce))
+                        return Redirect($"{redirectUri}?error=invalid_request&error_description=nonce%20is%20missing");
+                    if (!query.TryGetValue("response_type", out responseType))
+                        return Redirect($"{redirectUri}?error=invalid_request&error_description=response_type%20is%20missing");
+                    if (!query.TryGetValue("scope", out scope))
+                        return Redirect($"{redirectUri}?error=invalid_request&error_description=scope%20is%20missing");
+                    if (!query.TryGetValue("client_id", out clientId))
+                        return Redirect($"{redirectUri}?error=invalid_request&error_description=client_id%20is%20missing");
+
+                    if (responseType != "code")
+                        return Redirect($"{redirectUri}?error=unsupported_response_type&error_description=only%20code%20is%20supported");
+
+                    int nodeID = new Func<int>(() =>
                     {
+                        using (AdoDataConnection connection = Host.CreateDbConnection())
+                        {
                         // Validate clientID is in the Node Table
                         if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ApplicationNode WHERE ID={0}", clientId) == 0)
-                            throw new Exception($"Invalid NodeID '{clientId}'");
+                                throw new Exception($"Invalid NodeID '{clientId}'");
 
-                        const string NodeQueryFormat =
-                            "SELECT Node.ID " +
-                            "FROM " +
-                            "    Node JOIN " +
-                            "    NodeType ON Node.NodeTypeID = NodeType.ID " +
-                            "WHERE NodeType.TypeName = {0}";
+                            const string NodeQueryFormat =
+                                "SELECT Node.ID " +
+                                "FROM " +
+                                "    Node JOIN " +
+                                "    NodeType ON Node.NodeTypeID = NodeType.ID " +
+                                "WHERE NodeType.TypeName = {0}";
 
-                        Type nodeType = typeof(AuthenticationProviderNode);
-                        return connection.ExecuteScalar<int>(NodeQueryFormat, nodeType.FullName);
+                            Type nodeType = typeof(AuthenticationProviderNode);
+                            return connection.ExecuteScalar<int>(NodeQueryFormat, nodeType.FullName);
+                        }
+                    })();
+
+                    UserData user = ((SecurityPrincipal)Request.GetRequestContext().Principal).Identity.Provider.UserData;
+
+                    void ConfigureRequest(HttpRequestMessage request)
+                    {
+                        string action = "AuthorizeCode";
+                        NameValueCollection queryParameters = new NameValueCollection();
+                        queryParameters.Add("appId", clientId ?? "");
+                        queryParameters.Add("userId", user.LoginID ?? "");
+                        queryParameters.Add("userName", user.Username ?? "");
+                        queryParameters.Add("userGivenName", user.FirstName ?? "");
+                        queryParameters.Add("userLastName", user.LastName ?? "");
+                        queryParameters.Add("userPhone", user.PhoneNumber ?? "");
+                        queryParameters.Add("userEmail", user.EmailAddress ?? "");
+                        queryParameters.Add("userRoles", string.Join(",", user.Roles) ?? "");
+
+                        string url = Host.BuildURL(nodeID, action, queryParameters);
+                        request.Method = HttpMethod.Post;
+                        request.RequestUri = new Uri(url);
                     }
-                })();
 
-                UserData user = ((SecurityPrincipal)Request.GetRequestContext().Principal).Identity.Provider.UserData;
+                    string code;
+                    using (HttpResponseMessage response = await Host.SendWebRequestAsync(ConfigureRequest, cancellationToken))
+                    {
+                        string content = await response.Content.ReadAsStringAsync();
 
-                void ConfigureRequest(HttpRequestMessage request)
-                {
-                    string action = "AuthorizeCode";
-                    NameValueCollection queryParameters = new NameValueCollection();
-                    queryParameters.Add("appId", clientId ?? "") ;
-                    queryParameters.Add("userId", user.LoginID ?? "");
-                    queryParameters.Add("userName", user.Username ?? "");
-                    queryParameters.Add("userGivenName", user.FirstName ?? "");
-                    queryParameters.Add("userLastName", user.LastName ?? "");
-                    queryParameters.Add("userPhone", user.PhoneNumber ?? "");
-                    queryParameters.Add("userEmail", user.EmailAddress ?? "");
-                    queryParameters.Add("userRoles", string.Join(",", user.Roles) ?? "");
+                        if (!response.IsSuccessStatusCode)
+                            throw new Exception($"Unable to get code from Authentication Node: {content}");
 
-                    string url = Host.BuildURL(nodeID, action, queryParameters);
-                    request.Method = HttpMethod.Post;
-                    request.RequestUri = new Uri(url);
+                        code = content.Trim('"');
+                    }
+
+                    return Redirect($"{redirectUri}?code={code}");
                 }
-
-                string code;
-                using (HttpResponseMessage response = await Host.SendWebRequestAsync(ConfigureRequest, cancellationToken))
+                catch (Exception ex)
                 {
-                    string content = await response.Content.ReadAsStringAsync();
-
-                    if (!response.IsSuccessStatusCode)
-                        throw new Exception($"Unable to get code from Authentication Node: {content}");
-
-                    code = content.Trim('"');
+                    return Redirect($"{redirectUri}?error=server_error&error_description={ex.ToString().Replace(" ","%20")}");
                 }
-
-                return Redirect($"{redirectUri}?code={code}");
             }
             catch (Exception ex)
             {
