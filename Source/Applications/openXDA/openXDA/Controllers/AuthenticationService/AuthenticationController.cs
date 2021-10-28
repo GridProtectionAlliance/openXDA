@@ -59,12 +59,10 @@ namespace openXDA.Controllers
                 try
                 {
 
-
                     string nonce;
                     string responseType;
                     string scope;
                     string clientId;
-
 
                     if (!query.TryGetValue("nonce", out nonce))
                         return Redirect($"{redirectUri}?error=invalid_request&error_description=nonce%20is%20missing");
@@ -112,7 +110,7 @@ namespace openXDA.Controllers
                         queryParameters.Add("userPhone", user.PhoneNumber ?? "");
                         queryParameters.Add("userEmail", user.EmailAddress ?? "");
                         queryParameters.Add("userRoles", string.Join(",", user.Roles) ?? "");
-
+                        queryParameters.Add("nonce", nonce ?? "");
                         string url = Host.BuildURL(nodeID, action, queryParameters);
                         request.Method = HttpMethod.Post;
                         request.RequestUri = new Uri(url);

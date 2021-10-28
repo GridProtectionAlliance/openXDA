@@ -46,6 +46,7 @@ namespace openXDA.Nodes.Types.Authentication
             public string Roles { get; set; }
             public DateTime Expires { get; set; }
             public string AppId { get; set; }
+            public string Nonce { get; set; }
         }
 
         public class TokenResponse
@@ -62,8 +63,8 @@ namespace openXDA.Nodes.Types.Authentication
                 Node = node;
 
             [HttpPost]
-            public IHttpActionResult AuthorizeCode(string userId, string userName, string userGivenName, string userLastName, string userPhone, string userEmail, string userRoles, string appId) =>
-                Ok(Node.GenerateCode(userId, userName, userGivenName, userLastName, userPhone, userEmail, userRoles, appId));
+            public IHttpActionResult AuthorizeCode(string userId, string userName, string userGivenName, string userLastName, string userPhone, string userEmail, string userRoles, string appId, string nonce) =>
+                Ok(Node.GenerateCode(userId, userName, userGivenName, userLastName, userPhone, userEmail, userRoles, appId, nonce));
 
             [HttpPost]
             public IHttpActionResult GetToken(string code, string appId) => Ok(Node.GenerateToken(code, appId));
@@ -82,7 +83,7 @@ namespace openXDA.Nodes.Types.Authentication
 
         #region [ Methods ]
 
-        public string GenerateCode(string userId, string userName, string userGivenName, string userLastName, string userPhone, string userEmail, string userRoles, string appId)
+        public string GenerateCode(string userId, string userName, string userGivenName, string userLastName, string userPhone, string userEmail, string userRoles, string appId, string nonce)
         {
             byte[] codeBytes = new byte[16];
             GSF.Security.Cryptography.Random.GetBytes(codeBytes);
@@ -100,7 +101,8 @@ namespace openXDA.Nodes.Types.Authentication
                 Phone = userPhone,
                 Roles = userRoles,
                 Expires = expiration,
-                AppId = appId
+                AppId = appId,
+                Nonce = nonce
             };
 
             CacheItemPolicy cacheItemPolicy = new CacheItemPolicy();
@@ -130,6 +132,7 @@ namespace openXDA.Nodes.Types.Authentication
 
             JObject idToken = new JObject();
             idToken.Add("sub", user.UserId);
+            idToken.Add("nonce", user.Nonce);
             idToken.Add("name", user.UserName);
             idToken.Add("given_name", user.FirstName);
             idToken.Add("family_name", user.LastName);
