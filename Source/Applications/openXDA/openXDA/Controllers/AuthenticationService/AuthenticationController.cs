@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Security;
@@ -45,7 +46,7 @@ namespace openXDA.Controllers
             Host = host;
 
         [Route("logon"), HttpGet]
-        public IHttpActionResult BaseLoginRequest(CancellationToken token)
+        public async Task<IHttpActionResult> BaseLoginRequestAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -99,12 +100,14 @@ namespace openXDA.Controllers
                 }
 
                 string code;
-                using (HttpResponseMessage response = Host.SendWebRequestAsync(ConfigureRequest).Result)
+                using (HttpResponseMessage response = await Host.SendWebRequestAsync(ConfigureRequest, cancellationToken))
                 {
-                    if (response.IsSuccessStatusCode)
-                        code = response.Content.ReadAsStringAsync().Result.Trim('"');
-                    else
-                        throw new Exception($"Unable to get code from Authentication Node: {response.Content.ReadAsStringAsync().Result}");
+                    string content = await response.Content.ReadAsStringAsync();
+
+                    if (!response.IsSuccessStatusCode)
+                        throw new Exception($"Unable to get code from Authentication Node: {content}");
+
+                    code = content.Trim('"');
                 }
 
                 return Redirect($"{redirectUri}?code={code}");
@@ -116,7 +119,7 @@ namespace openXDA.Controllers
         }
 
         [Route("token"), HttpPost]
-        public IHttpActionResult RequestUserInfo([FromBody] JObject data)
+        public async Task<IHttpActionResult> RequestUserInfoAsync([FromBody] JObject data, CancellationToken cancellationToken)
         {
             try
             {
@@ -151,20 +154,19 @@ namespace openXDA.Controllers
                     request.RequestUri = new Uri(url);
                 }
 
-                using (HttpResponseMessage response = Host.SendWebRequestAsync(ConfigureRequest).Result)
+                using (HttpResponseMessage response = await Host.SendWebRequestAsync(ConfigureRequest, cancellationToken))
                 {
-                    if (response.IsSuccessStatusCode)
-                    {
-                        JObject token = JObject.Parse(response.Content.ReadAsStringAsync().Result);
-                        
-                        if (!token.TryGetValue("access_token", out JToken accessToken) || string.IsNullOrEmpty(accessToken.ToString()))
-                            throw new Exception("Token not available for this code and clientId");
+                    string content = await response.Content.ReadAsStringAsync();
 
-                        return Ok(token);
-                    }
+                    if (!response.IsSuccessStatusCode)
+                        throw new Exception($"Unable to get code from Authentication Node: {content}");
+
+                    JObject token = JObject.Parse(content);
                         
-                    else
-                        throw new Exception($"Unable to get code from Authentication Node: {response.Content.ReadAsStringAsync().Result}");
+                    if (!token.TryGetValue("access_token", out JToken accessToken) || string.IsNullOrEmpty(accessToken.ToString()))
+                        throw new Exception("Token not available for this code and clientId");
+
+                    return Ok(token);
                 }
             }
             catch (Exception ex)
