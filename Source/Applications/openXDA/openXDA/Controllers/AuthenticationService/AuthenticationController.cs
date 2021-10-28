@@ -73,16 +73,30 @@ namespace openXDA.Controllers
                 if (responseType != "code")
                     throw new Exception("Only ResponseType code is supported");
 
-                //Validate clientID is in the Node Table
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                    if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ApplicationNode WHERE ID={0}", clientId) == 0)
-                        throw new Exception($"Invalid NodeID '{clientId}'");
+                int nodeID = new Func<int>(() =>
+                {
+                    using (AdoDataConnection connection = Host.CreateDbConnection())
+                    {
+                        // Validate clientID is in the Node Table
+                        if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ApplicationNode WHERE ID={0}", clientId) == 0)
+                            throw new Exception($"Invalid NodeID '{clientId}'");
+
+                        const string NodeQueryFormat =
+                            "SELECT Node.ID " +
+                            "FROM " +
+                            "    Node JOIN " +
+                            "    NodeType ON Node.NodeTypeID = NodeType.ID " +
+                            "WHERE NodeType.TypeName = {0}";
+
+                        Type nodeType = typeof(AuthenticationProviderNode);
+                        return connection.ExecuteScalar<int>(NodeQueryFormat, nodeType.FullName);
+                    }
+                })();
 
                 UserData user = ((SecurityPrincipal)Request.GetRequestContext().Principal).Identity.Provider.UserData;
 
                 void ConfigureRequest(HttpRequestMessage request)
                 {
-                    Type nodeType = typeof(AuthenticationProviderNode);
                     string action = "AuthorizeCode";
                     NameValueCollection queryParameters = new NameValueCollection();
                     queryParameters.Add("appId", clientId ?? "") ;
@@ -94,7 +108,7 @@ namespace openXDA.Controllers
                     queryParameters.Add("userEmail", user.EmailAddress ?? "");
                     queryParameters.Add("userRoles", string.Join(",", user.Roles) ?? "");
 
-                    string url = Host.BuildURL(nodeType, action, queryParameters);
+                    string url = Host.BuildURL(nodeID, action, queryParameters);
                     request.Method = HttpMethod.Post;
                     request.RequestUri = new Uri(url);
                 }
@@ -141,15 +155,30 @@ namespace openXDA.Controllers
                 if (grantType.ToString().ToLower() != "authorization_code")
                     throw new Exception("Only grant type authorization_code is accepted");
 
+                int nodeID = new Func<int>(() =>
+                {
+                    using (AdoDataConnection connection = Host.CreateDbConnection())
+                    {
+                        const string NodeQueryFormat =
+                            "SELECT Node.ID " +
+                            "FROM " +
+                            "    Node JOIN " +
+                            "    NodeType ON Node.NodeTypeID = NodeType.ID " +
+                            "WHERE NodeType.TypeName = {0}";
+
+                        Type nodeType = typeof(AuthenticationProviderNode);
+                        return connection.ExecuteScalar<int>(NodeQueryFormat, nodeType.FullName);
+                    }
+                })();
+
                 void ConfigureRequest(HttpRequestMessage request)
                 {
-                    Type nodeType = typeof(AuthenticationProviderNode);
                     string action = "GetToken";
                     NameValueCollection queryParameters = new NameValueCollection();
                     queryParameters.Add("appId", clientId.ToString() ?? "");
                     queryParameters.Add("code", code.ToString());
 
-                    string url = Host.BuildURL(nodeType, action, queryParameters);
+                    string url = Host.BuildURL(nodeID, action, queryParameters);
                     request.Method = HttpMethod.Post;
                     request.RequestUri = new Uri(url);
                 }
