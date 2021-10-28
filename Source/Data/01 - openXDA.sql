@@ -1722,9 +1722,9 @@ CREATE TABLE ApplicationRole
 )
 GO
 
-Create Table ApplicationNode (
-    [ID] [uniqueidentifier] NOT NULL CONSTRAINT [DF_Node_ID]  DEFAULT (newid()),
-    [Name] [varchar](200) NOT NULL
+CREATE TABLE ApplicationNode (
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL
 )
 GO
 
