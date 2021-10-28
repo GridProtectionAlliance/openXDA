@@ -24,21 +24,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Security;
 using GSF.Web;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using openXDA.Model;
 using openXDA.Nodes;
 using openXDA.Nodes.Types.Authentication;
 
@@ -51,7 +43,6 @@ namespace openXDA.Controllers
 
         public AuthenticationController(Host host) =>
             Host = host;
-
 
         [Route("logon"), HttpGet]
         public IHttpActionResult BaseLoginRequest(CancellationToken token)
@@ -81,7 +72,6 @@ namespace openXDA.Controllers
                 if (responseType != "code")
                     throw new Exception("Only ResponseType code is supported");
 
-
                 //Validate clientID is in the Node Table
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                     if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ApplicationNode WHERE ID={0}", clientId) == 0)
@@ -89,28 +79,9 @@ namespace openXDA.Controllers
 
                 UserData user = ((SecurityPrincipal)Request.GetRequestContext().Principal).Identity.Provider.UserData;
 
-                const string QueryFormat =
-                "SELECT Node.ID " +
-                "FROM " +
-                "    ActiveHost JOIN " +
-                "    Node ON Node.HostRegistrationID = ActiveHost.ID JOIN " +
-                "    NodeType ON Node.NodeTypeID = NodeType.ID " +
-                "WHERE NodeType.TypeName = {0}";
-
-                Type nodeType = typeof(AuthenticationProviderNode);
-                string typeName = nodeType.FullName;
-                int? result;
-
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                    result = connection.ExecuteScalar<int?>(QueryFormat, typeName);
-
-                if (result is null)
-                    throw new Exception($"No node of type '{typeName}' was found.");
-
-
                 void ConfigureRequest(HttpRequestMessage request)
                 {
-                    int nodeID = result.GetValueOrDefault();
+                    Type nodeType = typeof(AuthenticationProviderNode);
                     string action = "AuthorizeCode";
                     NameValueCollection queryParameters = new NameValueCollection();
                     queryParameters.Add("appId", clientId ?? "") ;
@@ -121,9 +92,8 @@ namespace openXDA.Controllers
                     queryParameters.Add("userPhone", user.PhoneNumber ?? "");
                     queryParameters.Add("userEmail", user.EmailAddress ?? "");
                     queryParameters.Add("userRoles", string.Join(",", user.Roles) ?? "");
-                             
 
-                    string url = Host.BuildURL(nodeID, action, queryParameters);
+                    string url = Host.BuildURL(nodeType, action, queryParameters);
                     request.Method = HttpMethod.Post;
                     request.RequestUri = new Uri(url);
                 }
@@ -168,34 +138,15 @@ namespace openXDA.Controllers
                 if (grantType.ToString().ToLower() != "authorization_code")
                     throw new Exception("Only grant type authorization_code is accepted");
 
-               const string QueryFormat =
-               "SELECT Node.ID " +
-               "FROM " +
-               "    ActiveHost JOIN " +
-               "    Node ON Node.HostRegistrationID = ActiveHost.ID JOIN " +
-               "    NodeType ON Node.NodeTypeID = NodeType.ID " +
-               "WHERE NodeType.TypeName = {0}";
-
-                Type nodeType = typeof(AuthenticationProviderNode);
-                string typeName = nodeType.FullName;
-                int? result;
-
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                    result = connection.ExecuteScalar<int?>(QueryFormat, typeName);
-
-                if (result is null)
-                    throw new Exception($"No node of type '{typeName}' was found.");
-
                 void ConfigureRequest(HttpRequestMessage request)
                 {
-                    int nodeID = result.GetValueOrDefault();
+                    Type nodeType = typeof(AuthenticationProviderNode);
                     string action = "GetToken";
                     NameValueCollection queryParameters = new NameValueCollection();
                     queryParameters.Add("appId", clientId.ToString() ?? "");
                     queryParameters.Add("code", code.ToString());
 
-
-                    string url = Host.BuildURL(nodeID, action, queryParameters);
+                    string url = Host.BuildURL(nodeType, action, queryParameters);
                     request.Method = HttpMethod.Post;
                     request.RequestUri = new Uri(url);
                 }
@@ -221,52 +172,5 @@ namespace openXDA.Controllers
                 return InternalServerError(ex);
             }
         }
-
-
-
-        private async Task<HttpResponseMessage> SendNodeRequestAsync(Action<HttpRequestMessage> configure, CancellationToken cancellationToken = default)
-        {
-            const string HostQueryFormat =
-                "SELECT " +
-                "    HostRegistration.RegistrationKey, " +
-                "    HostRegistration.APIToken " +
-                "FROM HostRegistration LEFT JOIN Node ON HostRegistration.ID = Node.HostRegistrationID " +
-                "WHERE Node.Name='AutheticationProvider'";
-
-            string registrationKey;
-            string apiToken;
-
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            using (DataTable hostResult = connection.RetrieveData(HostQueryFormat))
-            {
-                if (hostResult.Rows.Count == 0)
-                    throw new InvalidOperationException($"AuthorizationProvider is not active.");
-
-                DataRow hostRow = hostResult.Rows[0];
-                registrationKey = hostRow.ConvertField<string>("RegistrationKey");
-                apiToken = hostRow.ConvertField<string>("APIToken");
-            }
-
-            using (HttpRequestMessage request = new HttpRequestMessage())
-            {
-                configure(request);
-
-                const string type = "XDA-Host";
-                string decode = $"{registrationKey}:{apiToken}";
-                Encoding utf8 = new UTF8Encoding(false);
-                byte[] credentialData = utf8.GetBytes(decode);
-                string credentials = Convert.ToBase64String(credentialData);
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(type, credentials);
-
-                return await HttpClient.SendAsync(request, cancellationToken);
-            }
-        }
-
-        #region [ Static ]
-        // Static Properties
-        private static HttpClient HttpClient { get; }
-            = new HttpClient();
-
-        #endregion
     }
 }
