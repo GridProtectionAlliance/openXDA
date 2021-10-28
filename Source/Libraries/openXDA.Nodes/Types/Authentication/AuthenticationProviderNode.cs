@@ -22,31 +22,11 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection;
 using System.Runtime.Caching;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
-using FaultData.DataAnalysis;
-using FaultData.DataOperations;
-using GSF.Collections;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.Data.Model;
-using GSF.Security;
-using log4net;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using openXDA.Configuration;
 using openXDA.Model;
 
 namespace openXDA.Nodes.Types.Authentication
@@ -54,12 +34,6 @@ namespace openXDA.Nodes.Types.Authentication
     public class AuthenticationProviderNode : NodeBase
     {
         #region [ Members ]
-
-        private class Settings
-        {
-            public Settings(Action<object> configure) =>
-                configure(this);
-        }
 
         private class UserInfoAuth
         {
@@ -80,11 +54,11 @@ namespace openXDA.Nodes.Types.Authentication
             public string id_token { get; set; }
         }
 
-        private class AutheticationProviderWebController : ApiController
+        private class AuthenticationProviderWebController : ApiController
         {
             private AuthenticationProviderNode Node { get; }
 
-            public AutheticationProviderWebController(AuthenticationProviderNode node) =>
+            public AuthenticationProviderWebController(AuthenticationProviderNode node) =>
                 Node = node;
 
             [HttpPost]
@@ -102,28 +76,21 @@ namespace openXDA.Nodes.Types.Authentication
         public AuthenticationProviderNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
         {
-            Configurator = GetConfigurator();
         }
-
-        #endregion
-
-        #region [ Properties ]
-
-        private Action<object> Configurator { get; set; }
 
         #endregion
 
         #region [ Methods ]
 
-
         public string GenerateCode(string userId, string userName, string userGivenName, string userLastName, string userPhone, string userEmail, string userRoles, string appId)
         {
-          
             byte[] codeBytes = new byte[16];
-            new Random().NextBytes(codeBytes);
+            GSF.Security.Cryptography.Random.GetBytes(codeBytes);
 
             string code = BitConverter.ToString(codeBytes).Replace("-", "");
-            s_codeStore.Add(code, new UserInfoAuth()
+            DateTime expiration = DateTime.UtcNow.AddMinutes(10);
+
+            UserInfoAuth userInfoAuth = new UserInfoAuth()
             {
                 UserId = userId,
                 UserName = userName,
@@ -132,19 +99,22 @@ namespace openXDA.Nodes.Types.Authentication
                 Email = userEmail,
                 Phone = userPhone,
                 Roles = userRoles,
-                Expires = DateTime.UtcNow.AddMinutes(10),
+                Expires = expiration,
                 AppId = appId
-            });
+            };
 
-            s_codeStore = s_codeStore.Where(item => item.Value.Expires > DateTime.UtcNow).ToDictionary(i => i.Key, i => i.Value);
+            CacheItemPolicy cacheItemPolicy = new CacheItemPolicy();
+            cacheItemPolicy.AbsoluteExpiration = expiration;
+            s_codeStore.Add(code, userInfoAuth, cacheItemPolicy);
 
             return code;
         }
 
         public TokenResponse GenerateToken(string code, string appId)
         {
-            UserInfoAuth user;
-            if (!s_codeStore.TryGetValue(code, out user))
+            UserInfoAuth user = s_codeStore.Get(code) as UserInfoAuth;
+
+            if (user is null)
                 return new TokenResponse() { id_token = "", access_token = "" };
 
             if (user.AppId != appId)
@@ -166,32 +136,20 @@ namespace openXDA.Nodes.Types.Authentication
             idToken.Add("phone_number", user.Phone);
             idToken.Add("email", user.Email);
             idToken.Add("roles", user.Roles);
-            string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(header.ToString())) + "." + Convert.ToBase64String(Encoding.UTF8.GetBytes(idToken.ToString()));
 
-            
-            return new TokenResponse() { id_token= token, access_token = token };
+            string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(header.ToString())) + "." + Convert.ToBase64String(Encoding.UTF8.GetBytes(idToken.ToString()));
+            return new TokenResponse() { id_token = token, access_token = token };
         }
 
-        protected override void OnReconfigure(Action<object> configurator) =>
-            Configurator = configurator;
-
         public override IHttpController CreateWebController() =>
-            new AutheticationProviderWebController(this);
-
-      
-
-        
-        private void Configure(object obj) => Configurator(obj);
+            new AuthenticationProviderWebController(this);
 
         #endregion
 
         #region [ Static ]
 
         // Static Fields
-        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
-        private static readonly ILog Log = LogManager.GetLogger(typeof(AuthenticationProviderNode));
-        private static Dictionary<string, UserInfoAuth> s_codeStore = new Dictionary<string, UserInfoAuth>();
-
+        private static MemoryCache s_codeStore = new MemoryCache(typeof(AuthenticationProviderNode).FullName);
       
         #endregion
     }
