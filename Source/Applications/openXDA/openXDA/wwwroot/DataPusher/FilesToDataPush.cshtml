@@ -104,11 +104,9 @@
 {
 }
 
-<div id="notify" style="height: 175px">
-    <h4 id="meterName">@ViewBag.Name</h4>
-    <div id="stepProgress" class="progress"></div>
-    <h4 id="message"></h4>
-    <div id="overallProgress" class="progress"></div>
+<div id="notify">
+    <h4 id="fileName"></h4>
+    <div id="progress" class="progress"></div>
 </div>
 
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
@@ -123,40 +121,39 @@
         });
 
         function syncFiles(record) {
-            var ajaxHandle = null;
-
+            $('#progress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>');
+            $('#fileName').text(record.LargestFile);
             $('#notify').puinotify('show');
 
-            ajaxHandle = $.ajax({
-                type: "GET",
-                url: '@Url.Content("~/")' + "api/DataPusher/Send/Files/" + @ViewBag.XDAInstance + "/"+ @ViewBag.MeterID + "/" + record.ID,
-                contentType: "application/json; charset=utf-8",
-                dataType: 'json',
-                cache: false,
-                async: true
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '@Url.Content("~/")' + "api/DataPusher/Send/Files/" + @ViewBag.XDAInstance + "/" + @ViewBag.MeterID + "/" + record.ID)
+            xhr.send();
+            xhr.onload = function () {
+                //console.log(xhr);
 
-            }).done(function () {
+                $('#progress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%">100%</div>');
+                $('#fileName').text(record.LargestFile + " : " + xhr.responseText.replace("\"", ""));
+
                 $('#notify').puinotify('hide');
                 $('.ui-notify-close').off('click')
                 $('.ui-notify-close').on('click', function (event) {
                     $('#notify').hide();
                 });
                 viewModel.queryPageRecords();
-            }).fail(function (msg) {
-                $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>')
-                $('.ui-notify-close').off('click')
-                $('.ui-notify-close').on('click', function (event) {
-                    $('#notify').hide();
-                });
 
-            });
+            }
 
+            xhr.onprogress = function (event) {
+                $('#progress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width:50%">50%</div>');
+                $('#fileName').text(record.LargestFile + " : Request sent to server.  Processing ...");
 
+                //console.log(event);
 
-            $('.ui-notify-close').on('click', function (event) {
-                if (ajaxHandle != null && ajaxHandle.abort != null) ajaxHandle.abort();
-            });
+            }
 
+            xhr.onerror = function () {
+                $('#fileName').text(record.LargestFile + " : Request failed.");
+            }
         }
     </script>
 }

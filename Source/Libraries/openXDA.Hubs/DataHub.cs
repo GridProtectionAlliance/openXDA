@@ -7626,13 +7626,22 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(FilesToDataPush), RecordOperation.QueryRecordCount)]
         public int QueryFilesToDataPushCount(int meterID, string filterString)
         {
-            string sql = @"
+            string sql = $@"
                 select 
 	                COUNT(*)
                 FROM 
-	                FileGroup 
-                WHERE
-	                MeterID = {0}
+	                FileGroup OUTER APPLY
+	                (	
+		                SELECT TOP 1 * 
+		                FROM DataFile 
+		                WHERE FileGroup.ID = DataFile.FileGroupID 
+		                ORDER BY DataFile.FileSize DESC
+	                ) as DataFile OUTER APPLY
+	                ( SELECT COUNT(*) [Files] FROM DataFile WHERE DataFile.FileGroupID = FileGroup.ID) as [Files] OUTER APPLY
+	                ( SELECT COUNT(*) [Events] FROM Event WHERE Event.FileGroupID = FileGroup.ID) as [Count] OUTER APPLY
+	                ( SELECT COUNT(*) [Synced] FROM FileGroupLocalToRemote WHERE FileGroupLocalToRemote.LocalFileGroupID = FileGroup.ID) as Synced
+	             WHERE
+                    FileGroup.MeterID = {{0}} AND (DataFile.FilePath LIKE '%{filterString}%' OR CAST(FileGroup.DataStartTime as varchar(max))  LIKE '%{filterString}%')
                 ";
 
 
@@ -7647,7 +7656,7 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(FilesToDataPush), RecordOperation.QueryRecords)]
         public IEnumerable<FilesToDataPush> QueryFilesToDataPush(int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string sql = @"
+            string sql = $@"
                 select 
 	                FileGroup.ID,
 	                FileGroup.DataStartTime,
@@ -7668,7 +7677,7 @@ namespace openXDA.Hubs
 	                ( SELECT COUNT(*) [Events] FROM Event WHERE Event.FileGroupID = FileGroup.ID) as [Count] OUTER APPLY
 	                ( SELECT COUNT(*) [Synced] FROM FileGroupLocalToRemote WHERE FileGroupLocalToRemote.LocalFileGroupID = FileGroup.ID) as Synced
                 WHERE
-	                MeterID = {0}
+	                MeterID = {{0}}  AND (DataFile.FilePath LIKE '%{filterString}%' OR CAST(FileGroup.DataStartTime as varchar(max))  LIKE '%{filterString}%')
                 ";
 
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
