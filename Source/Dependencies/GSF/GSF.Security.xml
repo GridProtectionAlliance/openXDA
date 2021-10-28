@@ -399,6 +399,7 @@
             </summary>
             <returns>The LDAP path.</returns>
         </member>
+        <!-- Badly formed XML comment ignored for member "M:GSF.Security.AdoSecurityProvider.GetUserRoles(System.String)" -->
         <member name="E:GSF.Security.AdoSecurityProvider.SecurityContextRefreshed">
             <summary>
             Raised when the security context is refreshed.
@@ -1133,6 +1134,7 @@
             </summary>
             <returns>The LDAP path.</returns>
         </member>
+        <!-- Badly formed XML comment ignored for member "M:GSF.Security.LdapSecurityProvider.GetUserRoles(System.String)" -->
         <member name="T:GSF.Security.RestrictAccessAttribute">
             <summary>
             Represents an <see cref="T:System.Attribute"/> that can be used restrict access to a class when using role-based security.
@@ -1624,58 +1626,57 @@
             more secure since it limits knowledge about the successful elements of an authentication attempt.
             </remarks>
         </member>
-        <member name="T:GSF.Security.CachedSecurityProvider">
+        <member name="T:GSF.Security.SecurityProviderCache">
             <summary>
-            A helper class that represents a set of cached <see cref="T:GSF.Security.ISecurityProvider"/>s.
-            This is necessary to allow caching of an alternate <see cref="T:GSF.Security.ISecurityProvider"/>
+            A helper class that manages the caching of <see cref="T:GSF.Security.ISecurityProvider"/>s.
             </summary>
         </member>
-        <member name="T:GSF.Security.CachedSecurityProvider.CacheContext">
+        <member name="T:GSF.Security.SecurityProviderCache.CacheContext">
             <summary>
             A class that facilitates the caching of <see cref="T:GSF.Security.ISecurityProvider"/>.
             </summary>
         </member>
-        <member name="M:GSF.Security.CachedSecurityProvider.CacheContext.#ctor(GSF.Security.ISecurityProvider)">
+        <member name="M:GSF.Security.SecurityProviderCache.CacheContext.#ctor(GSF.Security.ISecurityProvider)">
             <summary>
-            Initializes a new instance of the <see cref="T:GSF.Security.CachedSecurityProvider.CacheContext"/> class.
+            Initializes a new instance of the <see cref="T:GSF.Security.SecurityProviderCache.CacheContext"/> class.
             </summary>
         </member>
-        <member name="M:GSF.Security.CachedSecurityProvider.CacheContext.#ctor(System.WeakReference{GSF.Security.ISecurityProvider})">
+        <member name="M:GSF.Security.SecurityProviderCache.CacheContext.#ctor(System.WeakReference{GSF.Security.ISecurityProvider})">
             <summary>
-            Initializes a new instance of the <see cref="T:GSF.Security.CachedSecurityProvider.CacheContext"/> class.
+            Initializes a new instance of the <see cref="T:GSF.Security.SecurityProviderCache.CacheContext"/> class.
             </summary>
         </member>
-        <member name="P:GSF.Security.CachedSecurityProvider.CacheContext.Provider">
+        <member name="P:GSF.Security.SecurityProviderCache.CacheContext.Provider">
             <summary>
-            Gets the <see cref="T:GSF.Security.ISecurityProvider"/> managed by this <see cref="T:GSF.Security.CachedSecurityProvider.CacheContext"/>.
+            Gets the <see cref="T:GSF.Security.ISecurityProvider"/> managed by this <see cref="T:GSF.Security.SecurityProviderCache.CacheContext"/>.
             </summary>
         </member>
-        <member name="P:GSF.Security.CachedSecurityProvider.CacheContext.LastRefreshTime">
+        <member name="P:GSF.Security.SecurityProviderCache.CacheContext.LastRefreshTime">
             <summary>
-            Gets the <see cref="T:System.DateTime"/> of when the <see cref="T:GSF.Security.CachedSecurityProvider.CacheContext"/> was last refreshed.
+            Gets the <see cref="T:System.DateTime"/> of when the <see cref="T:GSF.Security.SecurityProviderCache.CacheContext"/> was last refreshed.
             </summary>
         </member>
-        <member name="P:GSF.Security.CachedSecurityProvider.CacheContext.LastAccessTime">
+        <member name="P:GSF.Security.SecurityProviderCache.CacheContext.LastAccessTime">
             <summary>
-            Gets the <see cref="T:System.DateTime"/> of when the <see cref="T:GSF.Security.CachedSecurityProvider.CacheContext"/> was last accessed.
+            Gets the <see cref="T:System.DateTime"/> of when the <see cref="T:GSF.Security.SecurityProviderCache.CacheContext"/> was last accessed.
             </summary>
         </member>
-        <member name="M:GSF.Security.CachedSecurityProvider.CacheContext.Refresh">
+        <member name="M:GSF.Security.SecurityProviderCache.CacheContext.Refresh">
             <summary>
-            Refreshes the provider managed by this <see cref="T:GSF.Security.CachedSecurityProvider.CacheContext"/>.
+            Refreshes the provider managed by this <see cref="T:GSF.Security.SecurityProviderCache.CacheContext"/>.
             </summary>
         </member>
-        <member name="F:GSF.Security.CachedSecurityProvider.DefaultUserCacheTimeout">
+        <member name="F:GSF.Security.SecurityProviderCache.DefaultUserCacheTimeout">
             <summary>
             Number of minutes up to which <see cref="T:GSF.Security.ISecurityProvider"/>s are to be cached.
             </summary>
         </member>
-        <member name="F:GSF.Security.CachedSecurityProvider.CacheMonitorTimerInterval">
+        <member name="F:GSF.Security.SecurityProviderCache.CacheMonitorTimerInterval">
             <summary>
             Number of milliseconds between calls to monitor the cache.
             </summary>
         </member>
-        <member name="M:GSF.Security.CachedSecurityProvider.CreateProvider(System.String,System.Security.Principal.IPrincipal,System.Boolean)">
+        <member name="M:GSF.Security.SecurityProviderCache.CreateProvider(System.String,System.Security.Principal.IPrincipal,System.Boolean)">
             <summary>
             Creates a new provider from data cached by the <see cref="T:GSF.Security.SecurityProviderCache"/>.
             </summary>
@@ -1684,32 +1685,27 @@
             <param name="autoRefresh">Indicates whether the provider should be automatically refreshed on a timer.</param>
             <returns>A new provider initialized from cached data.</returns>
         </member>
-        <member name="M:GSF.Security.CachedSecurityProvider.Flush(System.String)">
+        <member name="M:GSF.Security.SecurityProviderCache.Flush(System.String)">
             <summary>
             Removes any cached information about the user with the given username.
             </summary>
             <param name="username">The username of the user to be flushed from the cache.</param>
         </member>
-        <member name="M:GSF.Security.CachedSecurityProvider.AutoRefresh(GSF.Security.ISecurityProvider)">
+        <member name="M:GSF.Security.SecurityProviderCache.AutoRefresh(GSF.Security.ISecurityProvider)">
             <summary>
             Adds the given provider to the collection of providers being automatically refreshed on the user cache timeout interval.
             </summary>
             <param name="provider">The security provider to be cached.</param>
         </member>
-        <member name="M:GSF.Security.CachedSecurityProvider.DisableAutoRefresh(GSF.Security.ISecurityProvider)">
+        <member name="M:GSF.Security.SecurityProviderCache.DisableAutoRefresh(GSF.Security.ISecurityProvider)">
             <summary>
             Removes the given provider from the collection of providers being automatically refreshed.
             </summary>
             <param name="provider">The provider to be removed.</param>
         </member>
-        <member name="M:GSF.Security.CachedSecurityProvider.RefreshAll">
+        <member name="M:GSF.Security.SecurityProviderCache.RefreshAll">
             <summary>
             Forces all cached providers to refresh state.
-            </summary>
-        </member>
-        <member name="T:GSF.Security.SecurityProviderCache">
-            <summary>
-            A helper class that manages the caching of <see cref="T:GSF.Security.ISecurityProvider"/>s.
             </summary>
         </member>
         <member name="F:GSF.Security.SecurityProviderCache.DefaultAlternateSettingsCategory">
@@ -1764,6 +1760,7 @@
             Creates a new <see cref="T:GSF.Security.ISecurityProvider"/> based on the settings in the config file.
             </summary>
             <param name="username">Username of the user for whom the <see cref="T:GSF.Security.ISecurityProvider"/> is to be created.</param>
+            <param name="settingsCategory">The category used to store configuration settings for the provider.</param>
             <returns>An object that implements <see cref="T:GSF.Security.ISecurityProvider"/>.</returns>
         </member>
         <member name="M:GSF.Security.SecurityProviderUtility.CreateProvider(System.String,System.Security.Principal.IPrincipal,System.String)">
@@ -1772,6 +1769,7 @@
             </summary>
             <param name="username">Username of the user for whom the <see cref="T:GSF.Security.ISecurityProvider"/> is to be created.</param>
             <param name="passthroughPrincipal"><see cref="T:System.Security.Principal.IPrincipal"/> obtained through alternative authentication mechanisms to provide authentication for the <see cref="T:GSF.Security.ISecurityProvider"/>.</param>
+            <param name="settingsCategory">The category used to store configuration settings for the provider.</param>
             <returns>An object that implements <see cref="T:GSF.Security.ISecurityProvider"/>.</returns>
         </member>
         <member name="M:GSF.Security.SecurityProviderUtility.CreateProvider(GSF.Security.UserData)">
