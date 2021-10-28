@@ -25,6 +25,11 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [AllowSearch]
+    [SettingsCategory("systemSettings")]
     [TableName("DataReader")]
     public class DataReader
     {
