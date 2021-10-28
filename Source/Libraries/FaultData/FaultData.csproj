@@ -47,6 +47,10 @@
     <Reference Include="GSF.PQDIF">
       <HintPath>..\..\Dependencies\GSF\GSF.PQDIF.dll</HintPath>
     </Reference>
+    <Reference Include="GSF.Security, Version=2.3.500.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\GSF\GSF.Security.dll</HintPath>
+    </Reference>
     <Reference Include="GSF.SELEventParser">
       <HintPath>..\..\Dependencies\GSF\GSF.SELEventParser.dll</HintPath>
     </Reference>
@@ -171,6 +175,10 @@
     <ProjectReference Include="..\openXDA.Configuration\openXDA.Configuration.csproj">
       <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
       <Name>openXDA.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\openXDA.DataPusher\openXDA.DataPusher.csproj">
+      <Project>{666eb8a6-fba9-454c-8537-9113c2ee68d4}</Project>
+      <Name>openXDA.DataPusher</Name>
     </ProjectReference>
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>

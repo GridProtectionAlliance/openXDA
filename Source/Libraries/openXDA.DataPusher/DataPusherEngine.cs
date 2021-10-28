@@ -48,6 +48,15 @@ using openXDA.Model;
 
 namespace openXDA.DataPusher
 {
+    [Serializable]
+    public class FileGroupPost
+    {
+        public string MeterKey { get; set; }
+        public FileGroup FileGroup { get; set; }
+        public List<DataFile> DataFiles { get; set; }
+        public List<FileBlob> FileBlobs { get; set; }
+    }
+
     public class DataPusherEngine : IDisposable
     {
         #region [ Members ]
@@ -58,14 +67,6 @@ namespace openXDA.DataPusher
         private bool m_running = false;
         private DataPusherSettings m_dataPusherSettings;
 
-        [Serializable]
-        public class FileGroupPost
-        {
-            public string MeterKey { get; set; }
-            public FileGroup FileGroup { get; set; }
-            public List<DataFile> DataFiles { get; set; }
-            public List<FileBlob> FileBlobs { get; set; }
-        }
 
         #endregion
 

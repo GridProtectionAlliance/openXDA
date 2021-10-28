@@ -256,15 +256,6 @@ namespace openXDA.Controllers.Config
             }
         }
 
-        [Serializable]
-        public class FileGroupPost
-        { 
-            public string MeterKey { get; set; }
-            public FileGroup FileGroup { get; set; }
-            public List<DataFile> DataFiles { get; set; }
-            public List<FileBlob> FileBlobs { get; set; }
-        }
-
         [Route("Send/Files/{instanceId:int}/{meterId:int}/{fileGroupID:int}"), HttpGet]
         public IHttpActionResult SendFiles(int instanceId, int meterId, int fileGroupID, CancellationToken cancellationToken)
         {

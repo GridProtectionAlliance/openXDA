@@ -29,7 +29,9 @@ using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Security.Model;
 using log4net;
+using openXDA.DataPusher;
 using openXDA.Model;
 
 namespace FaultData.DataOperations
@@ -77,15 +79,6 @@ namespace FaultData.DataOperations
 
         }
 
-        [Serializable]
-        public class FileGroupPost
-        {
-            public string MeterKey { get; set; }
-            public FileGroup FileGroup { get; set; }
-            public List<DataFile> DataFiles { get; set; }
-            public List<FileBlob> FileBlobs { get; set; }
-        }
-
         private void PushDataToRemoteInstances(MeterDataSet meterDataSet)
         {
             using (AdoDataConnection connection =  meterDataSet.CreateDbConnection())
@@ -119,10 +112,12 @@ namespace FaultData.DataOperations
                         Log.Info($"File has already been pushed previously for {instance.Name}.");
                         continue;
                     }
-
+                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
                     MetersToDataPush metersToDataPush = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("LocalXDAMeterID = {0} AND ID IN (SELECT MetersToDataPushID From RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", meterDataSet.Meter.ID, instance.ID);
                     post.MeterKey = metersToDataPush.RemoteXDAAssetKey;
                     Log.Info($"Sending data to intance: {instance.Name} for FileGroup: {meterDataSet.FileGroup.ID}...");
+                    DataPusherEngine engine = new DataPusherEngine(meterDataSet.CreateDbConnection);
+                    engine.SendFiles(post, instance.Address, userAccount);
 
 
                 }
