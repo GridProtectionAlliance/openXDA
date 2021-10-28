@@ -32,6 +32,7 @@ namespace SystemCenter.Model
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [GetRoles("Administrator, Transmission SME")]
+    [AllowSearch]
     public class extDBTables
     {
         [PrimaryKey(true)]
