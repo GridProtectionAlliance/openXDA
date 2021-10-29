@@ -104,6 +104,17 @@
             The Claim used to get the Roles for the user
             </summary>
         </member>
+        <member name="P:GSF.Security.OIDCSecurityProvider.IsRedirectRequested">
+            <summary>
+            Gets the flag that indicates whether the user 
+            needs to be redirected after the Authentication attempt. 
+            </summary>
+        </member>
+        <member name="P:GSF.Security.OIDCSecurityProvider.RequestedRedirect">
+            <summary>
+            Gets the URI that user will be redirected to if <see cref="P:GSF.Security.OIDCSecurityProvider.IsRedirectRequested"/> is set.
+            </summary>
+        </member>
         <member name="M:GSF.Security.OIDCSecurityProvider.LoadSettings">
             <summary>
             Loads saved security provider settings from the config file if the <see cref="P:GSF.Security.SecurityProviderBase.PersistSettings"/> property is set to true.
@@ -1212,6 +1223,18 @@
             authenticated during the last authentication attempt.
             </summary>
         </member>
+        <member name="P:GSF.Security.ISecurityProvider.IsRedirectRequested">
+            <summary>
+            Gets the flag that indicates whether the user 
+            needs to be redirected after the Authentication attempt. 
+            Could be used for asking Users to confirm Messages etc.
+            </summary>
+        </member>
+        <member name="P:GSF.Security.ISecurityProvider.RequestedRedirect">
+            <summary>
+            Gets the URI that user will be redirected to if <see cref="P:GSF.Security.ISecurityProvider.IsRedirectRequested"/> is set.
+            </summary>
+        </member>
         <member name="P:GSF.Security.ISecurityProvider.CanRefreshData">
             <summary>
             Gets a boolean value that indicates whether <see cref="M:GSF.Security.ISecurityProvider.RefreshData"/> operation is supported.
@@ -1490,6 +1513,17 @@
         <member name="P:GSF.Security.SecurityProviderBase.AuthenticationFailureReason">
             <summary>
             Gets or allows derived classes to set an authentication failure reason.
+            </summary>
+        </member>
+        <member name="P:GSF.Security.SecurityProviderBase.IsRedirectRequested">
+            <summary>
+            Gets the flag that indicates whether the user 
+            needs to be redirected after the Authentication attempt. 
+            </summary>
+        </member>
+        <member name="P:GSF.Security.SecurityProviderBase.RequestedRedirect">
+            <summary>
+            Gets the URI that user will be redirected to if <see cref="P:GSF.Security.SecurityProviderBase.IsRedirectRequested"/> is set.
             </summary>
         </member>
         <member name="M:GSF.Security.SecurityProviderBase.Authenticate">
@@ -1772,7 +1806,7 @@
             <param name="settingsCategory">The category used to store configuration settings for the provider.</param>
             <returns>An object that implements <see cref="T:GSF.Security.ISecurityProvider"/>.</returns>
         </member>
-        <member name="M:GSF.Security.SecurityProviderUtility.CreateProvider(GSF.Security.UserData)">
+        <member name="M:GSF.Security.SecurityProviderUtility.CreateProvider(GSF.Security.UserData,System.String)">
             <summary>
             Creates a new <see cref="T:GSF.Security.ISecurityProvider"/> based on the settings in the config file.
             </summary>
