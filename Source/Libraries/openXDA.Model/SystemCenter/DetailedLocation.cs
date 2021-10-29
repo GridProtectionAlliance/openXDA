@@ -75,7 +75,7 @@ namespace SystemCenter.Model
         public string ShortName { get; set; }
         public double Longitude {get; set;}
         public double Latitude {get; set;}
-        public string Meters { get; set; }
-        public string Assets { get; set; } 
+        public int Meters { get; set; }
+        public int Assets { get; set; } 
     }
 }
