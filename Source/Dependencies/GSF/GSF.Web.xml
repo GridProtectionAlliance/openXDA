@@ -1754,6 +1754,13 @@
             without calling the rest of the middle-ware pipeline.
             </returns>
         </member>
+        <member name="M:GSF.Web.Security.AuthenticationHandler.AuthenticateCode(System.Boolean)">
+            <summary>
+            Applies authentication for requests using OpenID Connect authentication.
+            </summary>
+            <param name="useAlternateSecurityProvider"> Indicates whether the alternate <see cref="T:GSF.Security.ISecurityProvider"/> should be used</param>
+            <returns> The <see cref="T:GSF.Security.SecurityPrincipal"/>. </returns>
+        </member>
         <member name="M:GSF.Web.Security.AuthenticationHandler.TryGetPrincipal(System.Guid,System.Boolean,GSF.Security.SecurityPrincipal@)">
             <summary>
             Attempt to get current security principal for specified <paramref name="sessionID"/>.
