@@ -73,7 +73,7 @@ namespace SystemCenter.Model
             UserAccount userAccount = new TableOperations<UserAccount>(tableOperations.Connection).QueryRecordWhere("Name = {0}", userName);
 
             if (userAccount == null)
-                return new AdditionalUserFieldValue() { ID = 0, UserAccountID = userAccount.ID, AdditionalUserFieldID = field.ID, Value = ""};
+                return new AdditionalUserFieldValue() { ID = 0, UserAccountID = Guid.Empty, AdditionalUserFieldID = field.ID, Value = ""};
 
             AdditionalUserFieldValue value = tableOperations.QueryRecordWhere("UserAccountID = {0} AND AdditionalUserFieldID = {1}", userAccount.ID, field.ID);
 
