@@ -136,6 +136,7 @@
     <Compile Include="Nodes\Node.cs" />
     <Compile Include="Nodes\NodeSetting.cs" />
     <Compile Include="Note.cs" />
+    <Compile Include="Security\ApplicationNode.cs" />
     <Compile Include="Settings\BreakerReportsSettings.cs" />
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
