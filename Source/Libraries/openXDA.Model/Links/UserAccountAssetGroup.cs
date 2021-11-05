@@ -39,6 +39,9 @@ namespace openXDA.Model
 
         [DefaultValue(true)]
         public bool Dashboard { get; set; }
+
+        [DefaultValue(false)]
+        public bool Email { get; set; }
     }
 
     [PrimaryLabel("Username")]
