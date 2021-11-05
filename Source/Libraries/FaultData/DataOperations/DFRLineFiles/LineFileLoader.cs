@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -197,8 +198,20 @@ namespace FaultData.DataOperations.DFRLineFiles
             }
 
             int assetRelationshipType = m_connection.ExecuteScalar<int>("SELECT ID FROM AssetRelationshipType WHERE Name = 'Line-LineSegment'");
-            int lineSegmentID = m_connection.ExecuteScalar<int>("SELECT ChildID FROM AssetRelationship WHERE AssetRelationshipTypeID = {0} AND ParentID = {1}", assetRelationshipType, line.ID);
-            TableOperations<LineSegment> lineSegmentTable = new TableOperations<LineSegment>(m_connection);
+            int lineSegmentID;
+
+            using (DataTable table = m_connection.RetrieveData("SELECT ChildID FROM AssetRelationship WHERE AssetRelationshipTypeID = {0} AND ParentID = {1}", assetRelationshipType, line.ID))
+            {
+                if (table.Rows.Count > 1)
+                    throw new InvalidOperationException("Detected multiple line segments on line managed by DFR line file");
+
+                lineSegmentID = table
+                    .AsEnumerable()
+                    .Select(row => row.ConvertField<int>("ChildID"))
+                    .SingleOrDefault();
+            }
+
+            TableOperations <LineSegment> lineSegmentTable = new TableOperations<LineSegment>(m_connection);
             LineSegment lineSegment = lineSegmentTable.QueryRecordWhere("ID = {0}", lineSegmentID);
             MeterAsset meterAsset = null;
 
