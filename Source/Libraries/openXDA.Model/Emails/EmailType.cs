@@ -30,11 +30,15 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int EmailCategoryID { get; set; }
-
-        public int XSLTemplateID { get; set; }
-
         public bool SMS { get; set; }
+
+        public string Name { get; set; }
+
+        public string TriggerSource { get; set; }
+
+        public double MinDelay { get; set; }
+
+        public double MaxDelay { get; set; }
     }
 
     public class EmailTypeView : EmailType
