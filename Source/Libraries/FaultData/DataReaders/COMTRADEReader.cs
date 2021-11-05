@@ -145,18 +145,6 @@ namespace FaultData.DataReaders
                     meterDataSet = Parse(parser);
                 }
 
-                string infFilePath = fileGroup.DataFiles
-                    .Where(IsINFFile)
-                    .Select(GetPathInTempDataFolder)
-                    .FirstOrDefault();
-
-                if (File.Exists(infFilePath))
-                {
-                    IniFile infFile = new IniFile(infFilePath);
-                    INFDataSet infDataSet = new INFDataSet(infFile);
-                    meterDataSet.GetResource(() => new BreakerRestrikeResource(infDataSet));
-                }
-
                 return meterDataSet;
             }
             finally
