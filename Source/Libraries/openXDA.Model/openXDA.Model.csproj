@@ -101,13 +101,12 @@
     <Compile Include="DataPush\FilesToDataPush.cs" />
     <Compile Include="DBCleanup.cs" />
     <Compile Include="DERAnalytic\DERAnalyticResult.cs" />
-    <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
     <Compile Include="Emails\EmailTemplateUser.cs" />
+    <Compile Include="Emails\TriggeredEmailDataSource.cs" />
     <Compile Include="Emails\UserEmailTemplate.cs" />
     <Compile Include="Emails\EmailType.cs" />
-    <Compile Include="Emails\EventEmailParameters.cs" />
     <Compile Include="Events\BreakerRestrike.cs" />
     <Compile Include="Events\Disturbances\EventWorstDisturbance.cs" />
     <Compile Include="Events\Disturbances\VoltageCurve.cs" />
@@ -220,7 +219,6 @@
     <Compile Include="Trending\DailyTrendingSummary.cs" />
     <Compile Include="Alarms\DefaultAlarmRangeLimit.cs" />
     <Compile Include="Events\Disturbances\Disturbance.cs" />
-    <Compile Include="Emails\DisturbanceEmailCriterion.cs" />
     <Compile Include="Events\Disturbances\DisturbanceSeverity.cs" />
     <Compile Include="Events\Faults\DoubleEndedFaultDistance.cs" />
     <Compile Include="Emails\EmailCategory.cs" />
@@ -231,7 +229,6 @@
     <Compile Include="Links\EventSentEmail.cs" />
     <Compile Include="Events\EventData.cs" />
     <Compile Include="Events\EventType.cs" />
-    <Compile Include="Emails\FaultEmailCriterion.cs" />
     <Compile Include="Events\Faults\FaultGroup.cs" />
     <Compile Include="Events\Faults\FaultNote.cs" />
     <Compile Include="Events\Faults\FaultSegment.cs" />
@@ -284,7 +281,6 @@
     <Compile Include="Events\Disturbances\VoltageEnvelope.cs" />
     <Compile Include="WorkbenchFilter.cs" />
     <Compile Include="WorkbenchVoltageCurveView.cs" />
-    <Compile Include="Emails\XSLTemplate.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

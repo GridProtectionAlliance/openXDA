@@ -8,10 +8,6 @@ BEGIN
     DECLARE @prevID INT
     DECLARE @nextID INT
 
-    SELECT @startTime = StartTime
-    FROM Event
-    WHERE ID = @EventID
-
     SELECT @prevID = COALESCE
     (
         (SELECT MAX(ID) FROM Event WHERE ID < @EventID AND StartTime = @startTime),
@@ -40,14 +36,6 @@ BEGIN
     DECLARE @meterLocationID INT
     DECLARE @prevID INT
     DECLARE @nextID INT
-
-    SELECT
-        @startTime = Event.StartTime,
-        @meterLocationID = Meter.LocationID
-    FROM
-        Event JOIN
-        Meter ON Event.MeterID = Meter.ID
-    WHERE Event.ID = @EventID
 
     SELECT @prevID = COALESCE
     (
@@ -112,12 +100,6 @@ BEGIN
     DECLARE @prevID INT
     DECLARE @nextID INT
 
-    SELECT
-        @startTime = Event.StartTime,
-        @meterID = Event.MeterID
-    FROM Event
-    WHERE Event.ID = @EventID
-
     SELECT @prevID = COALESCE
     (
         (
@@ -172,12 +154,6 @@ BEGIN
     DECLARE @lineID INT
     DECLARE @prevID INT
     DECLARE @nextID INT
-
-    SELECT
-        @startTime = Event.StartTime,
-        @lineID = Event.AssetID
-    FROM Event
-    WHERE Event.ID = @EventID
 
     SELECT @prevID = COALESCE
     (
@@ -237,21 +213,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Trending Data
-    WITH TrendingData AS
-    (
-        SELECT
-           *
-        FROM
-            GetTypedTrendingData(@StartDate, @EndDate, @ChannelID, default) AS TrendingData
-    )
     SELECT
         *
     FROM
         TrendingData
-    WHERE
-        TrendingData.ChannelID = @ChannelID
-    ORDER BY TrendingData.Time
 END
 GO
 
@@ -269,8 +234,6 @@ BEGIN
     SET NOCOUNT ON;
 
 DECLARE @counter INT = 0
-DECLARE @eventDate DATE = (Select max(CAST(StartTime AS Date)) from Event) --'2015-03-23'
-DECLARE @numberOfDays INT = DATEDIFF ( day , (Select min(CAST(StartTime AS Date)) from Event), @eventDate) --365*5
 
 SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
 
@@ -282,26 +245,6 @@ BEGIN
     SET @eventDate = DATEADD(DAY, 1, @eventDate)
     SET @counter = @counter + 1
 END
-
-SELECT Date as thedate, Normal as normal, late as late, indeterminate as indeterminate
-FROM
-(
-    SELECT #temp.Date, [BreakerOperationType].Name AS EventTypeName, COALESCE(EventCount, 0) AS EventCount
-    FROM
-        #temp CROSS JOIN
-        [BreakerOperationType] LEFT OUTER JOIN
-        (
-            SELECT CAST([TripCoilEnergized] AS Date) AS EventDate, [BreakerOperationTypeID] as EventTypeID, COUNT(*) AS EventCount
-            FROM [BreakerOperation] join [Event] on [BreakerOperation].[EventID] = [Event].[ID] 
-            GROUP BY CAST([TripCoilEnergized] AS Date), [BreakerOperationTypeID]
-        ) AS Event ON #temp.Date = Event.EventDate AND [BreakerOperationType].ID = Event.EventTypeID
-) AS EventDate
-PIVOT
-(
-    SUM(EventCount)
-    FOR EventDate.EventTypeName IN ( normal , late , indeterminate )
-) as pvt
-ORDER BY Date
 
 DROP TABLE #temp
 
@@ -363,7 +306,6 @@ DECLARE @ReturnColumns NVARCHAR(MAX) = N''
 DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
 create table #TEMP (Name varchar(max))
-insert into #TEMP SELECT Name FROM (Select Distinct Name FROM BreakerOperationType) as t
 
 SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(max)), '') + '],'
 FROM #TEMP ORDER BY Name desc
@@ -422,7 +364,6 @@ BEGIN
     SET NOCOUNT ON;
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
@@ -431,33 +372,6 @@ DECLARE @numberOfDays INT = DATEDIFF ( day , CAST(@EventDateFrom AS Date) , @eve
 SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
 
 CREATE TABLE #temp (thesiteid int, thesitename varchar(100))
-
-INSERT INTO #temp Select [dbo].[Meter].[ID], [dbo].[Meter].[Name] from [dbo].[Meter]
-
-SELECT thesiteid as siteid, thesitename as sitename , Normal as normal, Late as late, Indeterminate as indeterminate
-FROM
-(
-    SELECT #temp.thesiteid, #temp.thesitename , [BreakerOperationType].Name AS EventTypeName, COALESCE(EventCount, 0) AS EventCount
-
-    FROM
-        #temp CROSS JOIN
-        [BreakerOperationType] LEFT OUTER JOIN
-        (
-            SELECT MeterID, [BreakerOperationTypeID], COUNT(*) AS EventCount
-            FROM [BreakerOperation] join [Event] on [BreakerOperation].[EventID] = [Event].[ID]
-            where MeterID in (Select * from @MeterIDs)
-            and (CAST([TripCoilEnergized] as Date) between @EventDateFrom and @EventDateTo)
-            GROUP BY [BreakerOperationTypeID], MeterID
-        ) AS E ON [BreakerOperationType].ID = E.[BreakerOperationTypeID] and E.MeterID = #temp.thesiteid
-) AS EventDate
-PIVOT
-(
-    SUM(EventCount)
-    FOR EventDate.EventTypeName IN (normal, late, indeterminate)
-) as pvt
-ORDER BY sitename asc
-
-DROP TABLE #temp
 
 END
 GO
@@ -484,38 +398,6 @@ DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
 SELECT *
 INTO #selectedMeters
-FROM String_To_Int_Table(@MeterID, ',')
-
-SELECT  Date as thedate, COALESCE(First, 0) AS '> 100%', COALESCE(Second, 0) AS '98% - 100%', COALESCE(Third, 0) AS '90% - 97%', COALESCE(Fourth, 0) AS '70% - 89%', COALESCE(Fifth, 0) AS '50% - 69%', COALESCE(Sixth, 0) AS '>0% - 49%'
-FROM
-    (
-        SELECT Date, CompletenessLevel, COUNT(*) AS MeterCount
-        FROM
-        (
-            SELECT Date,
-                    CASE
-                        WHEN Completeness > 100.0 THEN 'First'
-                        WHEN 98.0 <= Completeness AND Completeness <= 100.0 THEN 'Second'
-                        WHEN 90.0 <= Completeness AND Completeness < 98.0 THEN 'Third'
-                        WHEN 70.0 <= Completeness AND Completeness < 90.0 THEN 'Fourth'
-                        WHEN 50.0 <= Completeness AND Completeness < 70.0 THEN 'Fifth'
-                        WHEN 0.0 < Completeness AND Completeness < 50.0 THEN 'Sixth'
-                    END AS CompletenessLevel
-            FROM
-            (
-                SELECT Date, 100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Completeness
-                FROM MeterDataQualitySummary
-                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM #selectedMeters)
-            ) MeterDataQualitySummary
-        ) MeterDataQualitySummary
-        GROUP BY Date, CompletenessLevel
-) MeterDataQualitySummary
-PIVOT
-(
-    SUM(MeterDataQualitySummary.MeterCount)
-    FOR MeterDataQualitySummary.CompletenessLevel IN (First, Second, Third, Fourth, Fifth, Sixth)
-) as pvt
-ORDER BY Date
 
 END
 GO
@@ -540,7 +422,6 @@ BEGIN
     SET NOCOUNT ON;
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
@@ -552,11 +433,6 @@ CREATE TABLE #meters (
 thesiteid int,
 thesitename varchar(100)
 )
-
-INSERT INTO #meters Select
-[dbo].[Meter].[ID] as thesiteid,
-[dbo].[Meter].[Name] as thesitename
-from [dbo].[Meter] where Meter.ID in (Select * from @MeterIDs)
 
 DECLARE @thesiteid int
 DECLARE @thesitename varchar(100)
@@ -571,37 +447,6 @@ UnreasonablePoints int,
 NoncongruentPoints int,
 DuplicatePoints int
 )
-
-DECLARE db_cursor CURSOR FOR
-SELECT thesiteid, thesitename FROM #meters
-
-OPEN db_cursor
-FETCH NEXT FROM db_cursor INTO @thesiteid , @thesitename
-
-WHILE @@FETCH_STATUS = 0
-BEGIN
-INSERT INTO #temp
-SELECT
-    @thesiteid,
-    @thesitename,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[ExpectedPoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as ExpectedPoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[GoodPoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as GoodPoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[LatchedPoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as LatchedPoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[UnreasonablePoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as UnreasonablePoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[NoncongruentPoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as NoncongruentPoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[DuplicatePoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as DuplicatePoints
-
-    FETCH NEXT FROM db_cursor INTO @thesiteid , @thesitename
-END
-
-CLOSE db_cursor
-DEALLOCATE db_cursor
-
-select * from #temp
-
-drop Table #temp
-drop Table #meters
-
 END
 GO
 
@@ -627,38 +472,6 @@ DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
 SELECT *
 INTO #selectedMeters
-FROM String_To_Int_Table(@MeterID, ',')
-
-SELECT  Date as thedate, COALESCE(First, 0) AS '> 100%', COALESCE(Second, 0) AS '98% - 100%', COALESCE(Third, 0) AS '90% - 97%', COALESCE(Fourth, 0) AS '70% - 89%', COALESCE(Fifth, 0) AS '50% - 69%', COALESCE(Sixth, 0) AS '>0% - 49%'
-FROM
-    (
-        SELECT Date, CompletenessLevel, COUNT(*) AS MeterCount
-        FROM
-        (
-            SELECT Date,
-                    CASE
-                        WHEN Correctness > 100.0 THEN 'First'
-                        WHEN 98.0 <= Correctness AND Correctness <= 100.0 THEN 'Second'
-                        WHEN 90.0 <= Correctness AND Correctness < 98.0 THEN 'Third'
-                        WHEN 70.0 <= Correctness AND Correctness < 90.0 THEN 'Fourth'
-                        WHEN 50.0 <= Correctness AND Correctness < 70.0 THEN 'Fifth'
-                        WHEN 0.0 < Correctness AND Correctness < 50.0 THEN 'Sixth'
-                    END AS CompletenessLevel
-            FROM
-            (
-                SELECT Date, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT) AS Correctness
-                FROM MeterDataQualitySummary
-                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM #selectedMeters)
-            ) MeterDataQualitySummary
-        ) MeterDataQualitySummary
-        GROUP BY Date, CompletenessLevel
-) MeterDataQualitySummary
-PIVOT
-(
-    SUM(MeterDataQualitySummary.MeterCount)
-    FOR MeterDataQualitySummary.CompletenessLevel IN (First, Second, Third, Fourth, Fifth, Sixth)
-) as pvt
-ORDER BY Date
 
 END
 GO
@@ -683,7 +496,6 @@ BEGIN
     SET NOCOUNT ON;
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
@@ -695,11 +507,6 @@ CREATE TABLE #meters (
 thesiteid int,
 thesitename varchar(100)
 )
-
-INSERT INTO #meters Select
-[dbo].[Meter].[ID] as thesiteid,
-[dbo].[Meter].[Name] as thesitename
-from [dbo].[Meter] where Meter.ID in (Select * from @MeterIDs)
 
 DECLARE @thesiteid int
 DECLARE @thesitename varchar(100)
@@ -715,28 +522,6 @@ NoncongruentPoints int,
 DuplicatePoints int
 )
 
-DECLARE db_cursor CURSOR FOR
-SELECT thesiteid, thesitename FROM #meters
-
-OPEN db_cursor
-FETCH NEXT FROM db_cursor INTO @thesiteid , @thesitename
-
-WHILE @@FETCH_STATUS = 0
-BEGIN
-INSERT INTO #temp
-SELECT
-    @thesiteid,
-    @thesitename,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[ExpectedPoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as ExpectedPoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[GoodPoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as GoodPoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[LatchedPoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as LatchedPoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[UnreasonablePoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as UnreasonablePoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[NoncongruentPoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as NoncongruentPoints,
-    (Select Coalesce(SUM([dbo].[MeterDataQualitySummary].[DuplicatePoints]), 0) from [MeterDataQualitySummary] where @thesiteid = MeterID and CAST([Date] as Date) between @EventDateFrom and @EventDateTo) as DuplicatePoints
-
-    FETCH NEXT FROM db_cursor INTO @thesiteid , @thesitename
-END
-
 CLOSE db_cursor
 DEALLOCATE db_cursor
 
@@ -744,7 +529,6 @@ select * from #temp
 
 drop Table #temp
 drop Table #meters
-
 END
 GO
 
@@ -760,8 +544,6 @@ AS
 BEGIN
 
     SET NOCOUNT ON;
-
-    Select * from [DashSettings]
 
 END
 GO
@@ -785,48 +567,6 @@ BEGIN
     DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
     DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
 
-    SELECT
-        Meter.ID AS themeterid,
-        Meter.Name AS thesite,
-        MeterLocation.Latitude AS latitude,
-        MeterLocation.Longitude AS longitude,
-        COALESCE(Disturbance_Count, 0) AS Disturbance_Count,
-        COALESCE([5], 0) AS [5],
-        COALESCE([4], 0) AS [4],
-        COALESCE([3], 0) AS [3],
-        COALESCE([2], 0) AS [2],
-        COALESCE([1], 0) AS [1],
-        COALESCE([0], 0) AS [0]
-    FROM
-        Meter JOIN
-        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-        (
-            SELECT
-                MeterID,
-                6*[5] + 5*[4] + 4*[3] + 3*[2] + 2*[1] + 1*[0] AS Disturbance_Count,
-                [5],
-                [4],
-                [3],
-                [2],
-                [1],
-                [0]
-            FROM
-            (
-                SELECT
-                    Event.MeterID,
-                    DisturbanceSeverity.SeverityCode
-                FROM
-                    DisturbanceSeverity JOIN
-                    Disturbance ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
-                    Event ON Disturbance.EventID = Event.ID
-                WHERE CAST(Disturbance.StartTime AS DATE) BETWEEN @startDate AND @endDate
-            ) AS MeterSeverityCode
-            PIVOT
-            (
-                COUNT(SeverityCode)
-                FOR SeverityCode IN ([5], [4], [3], [2], [1], [0])
-            ) AS PivotTable
-        ) AS SeverityCount ON SeverityCount.MeterID = Meter.ID
 END
 GO
 
@@ -850,51 +590,11 @@ BEGIN
     SET NOCOUNT ON;
 
 declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
 
 DECLARE @counter INT = 0
 DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
 DECLARE @numberOfDays INT = DATEDIFF ( day , CAST(@EventDateFrom AS Date) , @eventDate)
-DECLARE @voltageEnvelope varchar(max) = (SELECT TOP 1 Value FROM Setting WHERE Name = 'DefaultVoltageEnvelope')
 SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
-
-CREATE TABLE #temp (thesiteid int, thesitename varchar(100))
-
-INSERT INTO #temp Select [dbo].[Meter].[ID], [dbo].[Meter].[Name] from [dbo].[Meter] where Meter.ID in (Select * from @MeterIDs)
-
-SELECT thesiteid as siteid, thesitename as sitename, [5], [4], [3], [2], [1], [0]
-FROM
-(
-    SELECT #temp.thesiteid, #temp.thesitename, SeverityCodes.SeverityCode AS SeverityCode, COALESCE(DisturbanceCount, 0) AS DisturbanceCount
-    FROM
-        #temp Cross JOIN
-        ( Select 5 as SeverityCode UNION
-          SELECT 4 as SeverityCode UNION
-          SELECT 3 as SeverityCode UNION
-          SELECT 2 as SeverityCode UNION
-          SELECT 1 as SeverityCode UNION
-          SELECT 0 as SeverityCode
-        ) AS SeverityCodes LEFT OUTER JOIN
-        (
-            SELECT MeterID, SeverityCode, COUNT(*) AS DisturbanceCount
-            FROM DisturbanceSeverity JOIN
-                 Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID Join
-                 Event ON Event.ID = Disturbance.EventID JOIN
-                 VoltageEnvelope ON VoltageEnvelope.ID = DisturbanceSeverity.VoltageEnvelopeID
-            Where ( (CAST( Event.StartTime as Date) between @EventDateFrom and @EventDateTo))
-            and Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
-            and VoltageEnvelope.Name = COALESCE(@voltageEnvelope, 'ITIC')
-            GROUP BY SeverityCode, MeterID
-        ) AS Disturbances ON #temp.thesiteid = Disturbances.MeterID AND Disturbances.SeverityCode = SeverityCodes.SeverityCode
-) AS DisturbanceData
-PIVOT
-(
-    SUM(DisturbanceData.DisturbanceCount)
-    FOR DisturbanceData.SeverityCode IN ([5], [4], [3], [2], [1], [0])
-) as pvt
-ORDER BY sitename asc
-
-DROP TABLE #temp
 
 END
 GO
@@ -953,7 +653,6 @@ DECLARE @ReturnColumns NVARCHAR(MAX) = N''
 DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
 create table #TEMP (Name varchar(max))
-insert into #TEMP SELECT SeverityCode FROM (Select Distinct SeverityCode FROM DisturbanceSeverity) as t
 
 SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(5)), '') + '],'
 FROM #TEMP WHERE Name != 0 ORDER BY Name desc
@@ -1024,8 +723,6 @@ BEGIN
 
     SET NOCOUNT ON;
 
-    select Distance, Angle from DoubleEndedFaultSummary where EventID = @EventID
-
 END
 GO
 
@@ -1049,13 +746,6 @@ BEGIN
     declare @theDate as Date
 
     set @theDate = CAST(@EventDate as Date)
-
-  SELECT [dbo].[Event].[ID] as value, [dbo].[Event].[StartTime] as text, [dbo].[Asset].[AssetName] as linename FROM [dbo].[Event]
-  join [dbo].[Asset] on [dbo].[Event].[AssetID] = [dbo].[Asset].[ID]
-  where (CAST([dbo].[Event].[StartTime] as Date) = @theDate) and
-  [dbo].[Event].[EventTypeID] = @Type and
-  [dbo].[Event].[MeterID] = @MeterID
-  order by [dbo].[Event].[StartTime]
 
 END
 GO
