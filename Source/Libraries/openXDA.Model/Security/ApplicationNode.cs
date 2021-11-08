@@ -25,13 +25,19 @@ using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 using GSF.Security;
 using GSF.Security.Model;
+using System;
 
 namespace openXDA.Model
 {
     [UseEscapedName]
+    [AllowSearch]
+    [GetRoles("Admin")]
+    [PostRoles("Admin")]
+    [PatchRoles("Admin")]
+    [DeleteRoles("Admin")]
     public class ApplicationNode
     {
-        public string ID { get; set; }
+        public Guid ID { get; set; }
         public string Name { get; set; }
     }
 }
