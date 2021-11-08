@@ -25,6 +25,7 @@ using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 using GSF.Security;
 using GSF.Security.Model;
+using System;
 
 namespace openXDA.Model
 {
@@ -33,8 +34,8 @@ namespace openXDA.Model
     {
         [PrimaryKey]
         public int ID { get; set; }
-        public string ApplicationNodeID { get; set; }
-        public string UserAccountID { get; set; }
+        public Guid ApplicationNodeID { get; set; }
+        public Guid UserAccountID { get; set; }
         public string Code { get; set; }
     }
 }

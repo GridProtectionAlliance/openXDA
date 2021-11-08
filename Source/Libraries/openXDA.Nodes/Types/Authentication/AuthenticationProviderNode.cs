@@ -102,7 +102,7 @@ namespace openXDA.Nodes.Types.Authentication
                         Phone = user.Phone,
                         Roles = "Viewer",
                         Expires = expiration,
-                        AppId = session.ApplicationNodeID,
+                        AppId = session.ApplicationNodeID.ToString(),
                         Nonce = "Not A Valid Nonce"
                     };
 
