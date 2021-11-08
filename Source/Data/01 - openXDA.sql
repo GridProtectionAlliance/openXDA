@@ -1805,6 +1805,9 @@ CREATE TABLE ApplicationNode (
 )
 GO
 
+
+
+
 CREATE TABLE SecurityGroup
 (
     ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
@@ -1892,6 +1895,14 @@ AS BEGIN
     FROM inserted UserAccount CROSS JOIN AssetGroup
     WHERE AssetGroup.Name = 'AllAssets'
 END
+GO
+
+CREATE TABLE ApplicationSustainedUser (
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ApplicationNodeID  UNIQUEIDENTIFIER NOT NULL REFERENCES ApplicationNode(ID),
+    UserAccountID  UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
+    Code VARCHAR(200) NOT NULL
+)
 GO
 
 INSERT INTO UserAccount(Name, UseADAuthentication, Approved) VALUES('External', 0, 1)
