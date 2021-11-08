@@ -24,7 +24,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model.Emails
 {
-    class Carrier
+    public class Carrier
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
