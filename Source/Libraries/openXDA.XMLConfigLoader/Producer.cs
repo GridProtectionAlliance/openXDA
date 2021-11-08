@@ -1024,7 +1024,9 @@ namespace openXDA.XMLConfig
 		{
 			string sql = BuildQuery( locationIDs, meterIDs, assetIDs);
 			string xml = Query(sql);
-			File.WriteAllText(filePath, xml);
+			XmlDocument document = new XmlDocument();
+			document.LoadXml(xml);
+			document.Save(filePath);
 		}
 
 		/// <summary>
