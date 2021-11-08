@@ -21,6 +21,11 @@ CREATE TABLE AccessLog(
 )
 GO
 
+CREATE TABLE SMSProvider(
+    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name varchar(200) NOT NULL,
+    Format varchar(200) NOT NULL
+)
 
 CREATE TABLE Setting
 (
@@ -2025,30 +2030,6 @@ INSERT INTO EmailCategory(Name) VALUES('Event')
 GO
 
 INSERT INTO EmailCategory(Name) VALUES('Alarm')
-GO
-
-INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(1, 1)
-GO
-
-INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(2, 2)
-GO
-
-INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(2, 3)
-GO
-
-INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(3, 4)
-GO
-
-INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(2, 5)
-GO
-
-INSERT INTO EventEmailParameters(EmailTypeID) VALUES(2)
-GO
-
-INSERT INTO EventEmailParameters(EmailTypeID) VALUES(3)
-GO
-
-INSERT INTO EventEmailParameters(EmailTypeID) VALUES(5)
 GO
 
 -- ------ --
@@ -5224,8 +5205,14 @@ GO
 CREATE VIEW EmailTypeView
 AS
 SELECT
+    EmailType.EmailCategoryID,
     EmailType.ID,
-    EmailCategory.Name AS EmailCategory
+    EmailCategory.Name AS EmailCategory,
+    EmailType.Template,
+    EmailType.Name
+FROM
+    EmailType JOIN
+    EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID
 GO
 
 CREATE VIEW AuditLogView
