@@ -41,6 +41,8 @@ namespace openXDA.Model
         public double MaxDelay { get; set; }
 
         public string Template { get; set; }
+
+        public int EmailCategoryID { get; set; }
     }
 
     public class EmailTypeView : EmailType
