@@ -36,6 +36,14 @@ CREATE TABLE Setting
 )
 GO
 
+CREATE TABLE Carrier
+(
+    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NULL,
+    Transform VARCHAR(200) NULL
+)
+GO
+
 CREATE TABLE [ValueListGroup](
 	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	[Name] [varchar](200) NULL,
