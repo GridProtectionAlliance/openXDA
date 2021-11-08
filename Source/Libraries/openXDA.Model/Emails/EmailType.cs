@@ -34,22 +34,18 @@ namespace openXDA.Model
 
         public string Name { get; set; }
 
-        public string TriggerSource { get; set; }
+        public string TriggerEmailSQL { get; set; }
 
         public double MinDelay { get; set; }
 
         public double MaxDelay { get; set; }
+
+        public string Template { get; set; }
     }
 
     public class EmailTypeView : EmailType
     {
         [Searchable]
         public string EmailCategory { get; set; }
-
-        [Searchable]
-        public string XSLTemplate { get; set; }
-
-        [Searchable]
-        public string Name { get; set; }
     }
 }
