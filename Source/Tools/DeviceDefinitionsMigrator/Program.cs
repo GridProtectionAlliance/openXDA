@@ -27,18 +27,24 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Xml.Linq;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
+using log4net;
 using openXDA.Model;
+using openXDA.XMLConfig;
 
 namespace DeviceDefinitionsMigrator
 {
     class Program
     {
+        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         private class ProgressTracker
         {
             private int m_progress;
@@ -141,29 +147,60 @@ namespace DeviceDefinitionsMigrator
 
         static void Main(string[] args)
         {
-            if (args.Length != 2)
+            if (args.Length != 3)
             {
-                Console.WriteLine("Usage:");
-                Console.WriteLine("    DeviceDefinitionsMigrator <ConnectionString> <FilePath>");
-                Console.WriteLine();
-                Console.WriteLine("Example:");
-                Console.WriteLine("    DeviceDefinitionsMigrator \"Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI\" \"C:\\Program Files\\openFLE\\DeviceDefinitions.xml\"");
-
+                PrintHelp();
                 Environment.Exit(0);
             }
 
             try
             {
-                string connectionString = args[0];
-                string deviceDefinitionsFile = args[1];
+                string operation = args[0];
+                string connectionString = args[1];
+                string deviceDefinitionsFile = args[2];
+                string dataProvider = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter";
 
-                Migrate(connectionString, deviceDefinitionsFile);
+                if (operation == "load_v1")
+                    Migrate(connectionString, deviceDefinitionsFile);
+                else if (operation == "load")
+                {
+                    Loader loader = new Loader(connectionString, dataProvider);
+                    loader.Load(deviceDefinitionsFile).Wait();
+                }
+                else if (operation == "export")
+                {
+                    Producer producer = new Producer(connectionString, dataProvider);
+                    //MemoryStream stream = producer.Get();
+                    //byte[] buffer = new byte[stream.Length];
+                    //stream.Read(buffer, 0, buffer.Length);
+                    //File.WriteAllBytes(deviceDefinitionsFile, buffer);
+                    producer.Get(deviceDefinitionsFile);
+                }
+                else
+                {
+                    Console.WriteLine("Incorrect operation used ... ");
+                    PrintHelp();
+                    Environment.Exit(0);
+                }
+
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine("--- ERROR ---");
                 Console.Error.WriteLine(ex.ToString());
             }
+        }
+
+        private static void PrintHelp() {
+            Console.WriteLine("Usage:");
+            Console.WriteLine("    DeviceDefinitionsMigrator load_v1 <ConnectionString> <FilePath> - loads original xml config files into database");
+            Console.WriteLine("    DeviceDefinitionsMigrator load <ConnectionString> <FilePath> - loads new format xml config files into database");
+            Console.WriteLine("    DeviceDefinitionsMigrator export <ConnectionString> <FilePath> - exports new format xml file from database");
+            Console.WriteLine();
+
+            Console.WriteLine("Example:");
+            Console.WriteLine("    DeviceDefinitionsMigrator load_v1 \"Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI\" \"C:\\Program Files\\openFLE\\DeviceDefinitions.xml\"");
+
         }
 
         private class LookupTables

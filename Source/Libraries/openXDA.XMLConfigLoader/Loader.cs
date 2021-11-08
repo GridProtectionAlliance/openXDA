@@ -66,6 +66,7 @@ namespace openXDA.XMLConfig
             status.Error = error;
             status.Complete = complete;
 
+            Log.Info($"{step}({percent}%): {message} ... {overallPercent}%");
             UpdateStatus(connectionID, status);
         }
 
