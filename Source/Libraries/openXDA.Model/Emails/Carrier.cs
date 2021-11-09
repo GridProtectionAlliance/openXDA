@@ -24,6 +24,10 @@ using GSF.Data.Model;
 
 namespace openXDA.Model.Emails
 {
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
     public class Carrier
     {
         [PrimaryKey(true)]
