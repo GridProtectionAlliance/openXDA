@@ -674,3 +674,12 @@ GO
 
 UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.01 0.5, 0.2 0.5, 0.2 0.7, 0.5 0.7,0.5 0.8,2 0.8,2 1.0,0.01 1.0, 0.01 0.5))' WHERE Name = 'IEEE 1668 Type I & II'
 GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.01 0.5, 0.05 0.5, 0.05 0.7, 0.1 0.7,0.1 0.8,2 1.0,0.01 1.0, 0.01 0.5))' WHERE Name = 'IEEE 1668 Type III'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.05 0.5, 0.2 0.5, 0.2 0.7, 0.5 0.7,0.5 0.8,1 0.8, 10 0.8, 10 0, 0 0, 0 0.5, 0.05 0.5))' WHERE Name = 'SEMI F47'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.0001667 5, 0.001 2, 0.003 1.4, 0.003 1.2,0.5 1.2,0.5 1.1, 100 1.1,100 0.9, 10 0.9, 10 0.8, 0.5 0.8, 0.5 0.7, 0.02 0.7, 0.02 0))' WHERE Name = 'ITIC'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.001 1.2, 0.2 1.2, 0.2 1.175, 0.5 1.175,0.5 1.15,1 1.15, 1 1.10,4 1.10, 4 0.9, 3 0.9, 3 0.75, 2 0.75, 2 0.65, 0.3 0.65, 0.3 0.45, 0.15 0.45, 0.15 0, 0.001 0, 0.001 1.2))' WHERE Name = 'NERC PRC-024-2'
+GO
+ 
