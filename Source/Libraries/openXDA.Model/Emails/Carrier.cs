@@ -28,6 +28,8 @@ namespace openXDA.Model.Emails
     [DeleteRoles("Administrator")]
     [PatchRoles("Administrator")]
     [PostRoles("Administrator")]
+    [TableName("Carrier")]
+    [UseEscapedName]
     public class Carrier
     {
         [PrimaryKey(true)]
