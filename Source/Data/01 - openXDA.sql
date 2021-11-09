@@ -266,6 +266,9 @@ GO
 INSERT INTO NodeType VALUES('EPRICapBankAnalysis', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.EPRICapBankAnalysis.EPRICapBankAnalysisNode')
 GO
 
+INSERT INTO NodeType VALUES('Authorization', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode')
+GO
+
 CREATE TABLE Node
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -292,6 +295,9 @@ INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes
 GO
 
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, 'Analyzer', 4)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode'), NULL, 'SSO Provider', 1)
 GO
 
 CREATE TABLE NodeSetting
@@ -1805,8 +1811,8 @@ CREATE TABLE ApplicationNode (
 )
 GO
 
-
-
+INSERT INTO ApplocationNode VALUES ('00000000-0000-0000-0000-000000000000','OpenXDA')
+GO
 
 CREATE TABLE SecurityGroup
 (
