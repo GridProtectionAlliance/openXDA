@@ -1985,11 +1985,32 @@ CREATE TABLE EmailType
 )
 GO
 
+CREATE TABLE ScheduledEmailType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    SMS BIT NOT NULL DEFAULT 0,
+    Name VARCHAR(100) NOT NULL,
+    TriggersEmailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
+    Schedule VARCHAR(100) NOT NULL,
+    Template VARCHAR(MAX) NOT NULL,
+    EmailCategoryID INT NOT NULL REFERENCES EmailCategory(ID)
+)
+GO
+
 CREATE TABLE UserAccountEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
     EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
+    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID)
+)
+GO
+
+CREATE TABLE UserAccountScheduledEmailType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
+    ScheduledEmailTypeID INT NOT NULL REFERENCES ScheduledEmailType(ID),
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID)
 )
 GO
@@ -2004,9 +2025,31 @@ CREATE TABLE TriggeredEmailDataSource
 )
 GO
 
-CREATE TABLE TriggeredEmailDataSourceEmaiLType
+CREATE TABLE TriggeredEmailDataSourceEmailType
 (
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
+    TriggeredEmailDataSourceID INT NOT NULL REFERENCES TriggeredEmailDataSource(ID),
+    Settings VARCHAR(MAX)
+)
+GO
+
+CREATE TABLE ScheduledEmailDataSource
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL UNIQUE,
+    AssemblyName VARCHAR(200) NOT NULL,
+    TypeName VARCHAR(200) NOT NULL,
+    ConfigUI VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE ScheduledEmailDataSourceEmailType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ScheduledEmailTypeID INT NOT NULL REFERENCES ScheduledEmailType(ID),
+    ScheduledEmailDataSourceID INT NOT NULL REFERENCES ScheduledEmailDataSource(ID),
+    Settings VARCHAR(MAX)
 )
 GO
 
