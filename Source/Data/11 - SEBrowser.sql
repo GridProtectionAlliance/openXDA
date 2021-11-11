@@ -10,6 +10,28 @@ CREATE TABLE [SEBrowser.Setting]
 )
 GO
 
+/*
+	Required Fields are:
+		EventID for matching,
+		DisturbanceID for matching
+		Time for showing the Time of the Event,
+		Event Type for showing the Type of Event
+	Everything else can be customized to appear in the UI.
+*/
+CREATE VIEW [dbo].[SEBrowser.EventSearchEventView] AS
+	SELECT
+		Event.ID AS EventID,
+		FORMAT(Event.StartTime,'MM/dd/yyyy <br> HH:mm:ss.fffffff') AS Time,
+		EventType.Name AS [Event Type]
+	FROM Event LEFT JOIN EventType ON Event.EventTypeID = EventType.ID
+GO
+
+CREATE VIEW [dbo].[SEBrowser.EventSearchWorstDisturbanceView] AS
+	SELECT
+		Disturbance.ID AS DisturbanceID
+	FROM Disturbance
+GO
+
 
 INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationName', N'SEBrowser', 0, N'Administrator')
 GO
@@ -79,4 +101,10 @@ CREATE TABLE [SEBrowser.Links] (
 	Display varchar(100) NOT NULL,
 	Value varchar(max) NOT NULL
 )
+GO
+
+INSERT INTO [SEBrowser.Links] (Name, Display,Value) VALUES
+	('Breaker Report',0,'breakerreport'),
+	('TCE  Report',0,'relayreport'),
+	('CapBank Report',0,'capbankreport')
 GO
