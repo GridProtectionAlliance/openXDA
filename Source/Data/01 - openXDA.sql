@@ -1786,6 +1786,9 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailyStatisticOperation', 14)
 GO
 
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DEROperation', 15)
+GO
+
 INSERT INTO AssetGroup(Name, DisplayDashboard) VALUES('AllAssets', 1)
 GO
 
@@ -4443,6 +4446,22 @@ CREATE TABLE CBCapBankResult (
     VUIEC FLOAT NULL,
     VUIEEE FLOAT NULL
 )
+GO
+
+CREATE TABLE DERAnalyticResult(
+    ID INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+    EventID INT NULL REFERENCES [Event](ID),
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+	AssetID INT NOT NULL REFERENCES Asset(ID),
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+	Regulation VARCHAR(100) NOT NULL,
+	Parameter VARCHAR(100) NOT NULL,
+	Threshold FLOAT NOT NULL,
+	Value FLOAT NOT NULL,
+    [Time] DATETIME NOT NULL,
+	DataType VARCHAR(5) NOT NULL
+)
+
 GO
 ----- FUNCTIONS -----
 
