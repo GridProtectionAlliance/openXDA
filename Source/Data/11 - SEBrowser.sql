@@ -15,23 +15,58 @@ GO
 		EventID for matching,
 		DisturbanceID for matching
 		Time for showing the Time of the Event,
-		Event Type for showing the Type of Event
+		Asset
 	Everything else can be customized to appear in the UI.
 */
+
 CREATE VIEW [dbo].[SEBrowser.EventSearchEventView] AS
 	SELECT
 		Event.ID AS EventID,
 		FORMAT(Event.StartTime,'MM/dd/yyyy <br> HH:mm:ss.fffffff') AS Time,
+		Meter.AssetKey AS [Meter Key],
+		Meter.Name AS [Meter],
+		Meter.Alias AS [Meter Alias],
+		Meter.ShortName AS [Meter ShortName],
+		Meter.Make AS [Meter Make],
+		Meter.Model AS [Meter Model],
+		Meter.TimeZone AS [Meter TimeZone],
+		Meter.Description AS [Meter Desc],
+		--Meter Sector
+--Meter Firmware Version
+--Meter Template Version
+--Meter Connection Type
+		Location.Name AS [Station],
+		Location.LocationKey AS [Station Key],
+		Location.ShortName AS [Station ShortName],
+		Location.Alias AS [Station Alias],
+		Location.Description AS [Station Desc],
+--TSC
+		Asset.AssetName AS [Asset Name],
+		AssetType.Name AS [Asset Type],
+		Asset.VoltageKV AS [Nom Voltage (kV)],
+		Asset.Description AS [Asset Desc],
+--Asset Manufacturer
+--Asset Model
 		EventType.Name AS [Event Type]
-	FROM Event LEFT JOIN EventType ON Event.EventTypeID = EventType.ID
+	FROM Event LEFT JOIN 
+		EventType ON Event.EventTypeID = EventType.ID LEFT JOIN
+		Meter ON Meter.ID = Event.MeterID LEFT JOIN 
+		Location ON Meter.LocationID = Location.ID LEFT JOIN
+		Asset ON Asset.ID = Event.AssetID LEFT JOIN
+		AssetType ON Asset.AssetTypeID = AssetType.ID
 GO
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchWorstDisturbanceView] AS
 	SELECT
-		Disturbance.ID AS DisturbanceID
-	FROM Disturbance
+		Disturbance.ID AS DisturbanceID,
+		Phase.Name AS [Phase],
+		Disturbance.DurationCycles AS [Duration (cycles)],
+		Disturbance.DurationSeconds AS [Duration (sec)],
+		Disturbance.PerUnitMagnitude AS [MagDurMagnitude],
+		Disturbance.DurationSeconds AS [MagDurDuration]
+	FROM Disturbance LEFT JOIN
+		Phase ON Disturbance.PhaseID = Phase.ID
 GO
-
 
 INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationName', N'SEBrowser', 0, N'Administrator')
 GO

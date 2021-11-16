@@ -3875,6 +3875,8 @@ INSERT INTO [NoteApplication] (Name) VALUES ('SystemCenter')
 GO
 INSERT INTO [NoteApplication] (Name) VALUES ('OpenHistorian')
 GO
+INSERT INTO [NoteApplication] (Name) VALUES ('SEbrowser')
+GO
 INSERT INTO [NoteApplication] (Name) VALUES ('All')
 GO
 
