@@ -3144,17 +3144,39 @@ GO
 INSERT INTO SegmentType(Name, Description) VALUES('Postfault', 'After the fault ends')
 GO
 
-CREATE TABLE LightningStrike(
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	EventID int NOT NULL FOREIGN KEY REFERENCES Event(ID),
-	Service varchar(50) NOT NULL,
-	UTCTime datetime2(7) NOT NULL,
-	DisplayTime varchar(50) NOT NULL,
-	Amplitude float NOT NULL,
-	Latitude float NOT NULL,
-	Longitude float NOT NULL
+CREATE TABLE LightningStrike
+(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	EventID INT NOT NULL REFERENCES Event(ID),
+	Service VARCHAR(50) NOT NULL,
+	UTCTime DATETIME2 NOT NULL,
+	DisplayTime VARCHAR(50) NOT NULL,
+	Amplitude FLOAT NOT NULL,
+	Latitude FLOAT NOT NULL,
+	Longitude FLOAT NOT NULL
 )
+GO
 
+CREATE TABLE VaisalaExtendedLightningData
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    LightningStrikeID INT NOT NULL REFERENCES LightningStrike(ID),
+    PeakCurrent SMALLINT NOT NULL,
+    FlashMultiplicity TINYINT NOT NULL,
+    ParticipatingSensors TINYINT NOT NULL,
+    DegreesOfFreedom TINYINT NOT NULL,
+    EllipseAngle FLOAT NOT NULL,
+    SemiMajorAxisLength FLOAT NOT NULL,
+    SemiMinorAxisLength FLOAT NOT NULL,
+    ChiSquared FLOAT NOT NULL,
+    Risetime FLOAT NOT NULL,
+    PeakToZeroTime FLOAT NOT NULL,
+    MaximumRateOfRise FLOAT NOT NULL,
+    CloudIndicator BIT NOT NULL,
+    AngleIndicator BIT NOT NULL,
+    SignalIndicator BIT NOT NULL,
+    TimingIndicator BIT NOT NULL
+)
 GO
 
 

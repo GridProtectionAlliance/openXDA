@@ -29,12 +29,36 @@ using System.Linq;
 using System.Reflection;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using GSF;
+using GSF.Collections;
 using GSF.Configuration;
 using log4net;
 using openXDA.Model;
 
 namespace FaultData.DataResources
 {
+    namespace Vaisala
+    {
+        public interface IExtendedLightningData
+        {
+            int PeakCurrent { get; }
+            int FlashMultiplicity { get; }
+            int ParticipatingSensors { get; }
+            int DegreesOfFreedom { get; }
+            double EllipseAngle { get; }
+            double SemiMajorAxisLength { get; }
+            double SemiMinorAxisLength { get; }
+            double ChiSquared { get; }
+            double Risetime { get; }
+            double PeakToZeroTime { get; }
+            double MaximumRateOfRise { get; }
+            bool CloudIndicator { get; }
+            bool AngleIndicator { get; }
+            bool SignalIndicator { get; }
+            bool TimingIndicator { get; }
+        }
+    }
+
     public interface ILightningDataProvider
     {
         IEnumerable<ILightningStrike> GetLightningStrikes(string lineKey, DateTime start, DateTime end);
@@ -43,6 +67,10 @@ namespace FaultData.DataResources
     public class LightningDataSection
     {
         public const string CategoryName = "Lightning";
+
+        [Setting]
+        [DefaultValue("")]
+        public string DataProviders { get; set; }
 
         [Setting]
         [DefaultValue("")]
@@ -62,9 +90,10 @@ namespace FaultData.DataResources
         string Service { get; }
         DateTime UTCTime { get; }
         string DisplayTime { get; }
-        double Amplitude { get; }
         double Latitude { get; }
         double Longitude { get; }
+        double Amplitude { get; }
+        T GetExtendedData<T>() where T : class;
     }
 
     public class LightningDataResource : DataResourceBase<MeterDataSet>
@@ -84,12 +113,10 @@ namespace FaultData.DataResources
         public override void Initialize(MeterDataSet meterDataSet)
         {
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            ILightningDataProvider dataProvider = GetDataProvider();
+            IEnumerable<ILightningDataProvider> dataProviders = GetDataProviders();
 
-            if (dataProvider == null)
-                return;
-
-            meterDataSet.Configure(dataProvider);
+            foreach (ILightningDataProvider dataProvider in dataProviders)
+                meterDataSet.Configure(dataProvider);
 
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)
             {
@@ -100,8 +127,19 @@ namespace FaultData.DataResources
                     DateTime start = dataGroup.StartTime.AddSeconds(-timeWindow);
                     DateTime end = dataGroup.EndTime.AddSeconds(timeWindow);
 
-                    List<ILightningStrike> lightningStrikes = dataProvider
-                        .GetLightningStrikes(lineKey, start, end)
+                    Func<ILightningStrike, T> ToFunc<T>(Func<ILightningStrike, T> func) => func;
+
+                    var getKey = ToFunc(strike => new
+                    {
+                        strike.Service,
+                        strike.Latitude,
+                        strike.Longitude,
+                        strike.UTCTime
+                    });
+
+                    List<ILightningStrike> lightningStrikes = dataProviders
+                        .SelectMany(provider => provider.GetLightningStrikes(lineKey, start, end))
+                        .DistinctBy(getKey)
                         .ToList();
 
                     LightningStrikeLookup.Add(dataGroup, lightningStrikes);
@@ -115,16 +153,39 @@ namespace FaultData.DataResources
             }
         }
 
-        private ILightningDataProvider GetDataProvider()
+        private List<ILightningDataProvider> GetDataProviders()
         {
-            string dataProviderAssemblyPath = LightningDataSettings.DataProviderAssembly;
-            string dataProviderTypeName = LightningDataSettings.DataProviderType;
+            if (string.IsNullOrEmpty(LightningDataSettings.DataProviders))
+                return new List<ILightningDataProvider> { GetDataProvider(LightningDataSettings) };
+
+            ConnectionStringParser<SettingAttribute, CategoryAttribute> connectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
+
+            LightningDataSection ConfigureLightningProvider(string connectionString)
+            {
+                LightningDataSection lightningDataSection = new LightningDataSection();
+                connectionStringParser.ParseConnectionString(connectionString, lightningDataSection);
+                return lightningDataSection;
+            }
+
+            return LightningDataSettings.DataProviders
+                .ParseKeyValuePairs()
+                .Select(kvp => kvp.Value)
+                .Select(ConfigureLightningProvider)
+                .Select(GetDataProvider)
+                .Where(provider => !(provider is null))
+                .ToList();
+        }
+
+        private ILightningDataProvider GetDataProvider(LightningDataSection lightningDataSettings)
+        {
+            string dataProviderAssemblyPath = lightningDataSettings.DataProviderAssembly;
+            string dataProviderTypeName = lightningDataSettings.DataProviderType;
 
             if (string.IsNullOrEmpty(dataProviderAssemblyPath) || string.IsNullOrEmpty(dataProviderTypeName))
                 return null;
 
-            Assembly dataProviderAssembly = Assembly.LoadFrom(LightningDataSettings.DataProviderAssembly);
-            Type dataProviderType = dataProviderAssembly.GetType(LightningDataSettings.DataProviderType);
+            Assembly dataProviderAssembly = Assembly.LoadFrom(dataProviderAssemblyPath);
+            Type dataProviderType = dataProviderAssembly.GetType(dataProviderTypeName);
             return (ILightningDataProvider)Activator.CreateInstance(dataProviderType);
         }
 
