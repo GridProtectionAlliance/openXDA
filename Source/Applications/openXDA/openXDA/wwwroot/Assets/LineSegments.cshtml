@@ -43,7 +43,7 @@
     Dictionary<string, string> parameters = request.QueryParameters();
 
     ViewBag.LineID = -1;
-    ViewBag.lengthUnits = dataContext.Connection.ExecuteScalar<string>("Select Value From [Setting] WHERE Name = 'LengthUnits'");
+    ViewBag.lengthUnits = dataContext.Connection.ExecuteScalar<string>("Select Value From [Setting] WHERE Name = 'DataAnalysis.LengthUnits'");
 
     string LineName = null;
 
