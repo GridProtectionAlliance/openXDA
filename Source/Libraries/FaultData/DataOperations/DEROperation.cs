@@ -37,7 +37,6 @@ using GSF.Data;
 using GSF.Data.Model;
 using log4net;
 using openXDA.Model;
-using SystemCenter.Model;
 
 namespace FaultData.DataOperations
 {
@@ -621,7 +620,7 @@ namespace FaultData.DataOperations
                         MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup') AND
                         HarmonicGroup > {2} AND
                         HarmonicGroup < {3}
-                    ", MeterDataSet.Meter.ID, der.ID, lowHarmonic, lowHarmonic).ToList();
+                    ", MeterDataSet.Meter.ID, der.ID, lowHarmonic, highHarmonic).ToList();
             }
 
             if (channels?.Any() ?? false)
