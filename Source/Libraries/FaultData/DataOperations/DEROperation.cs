@@ -44,6 +44,8 @@ namespace FaultData.DataOperations
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DEROperation));
 
+        private double Frequency { get; set; } = 60.0;
+
         private MeterDataSet MeterDataSet { get; set; }
 
         public override void Execute(MeterDataSet meterDataSet)
@@ -55,6 +57,7 @@ namespace FaultData.DataOperations
                 using (AdoDataConnection connection = MeterDataSet.CreateDbConnection())
                 {
                     ders = new TableOperations<DER>(connection).QueryRecordsWhere("ID IN (SELECT AssetID FROM MeterAsset WHERE MeterID = {0})", meterDataSet.Meter.ID).ToList();
+                    Frequency = double.Parse(connection.ExecuteScalar<string>("SELECT Value FROM SETTING WHERE Name = 'DataAnalysis.SystemFrequency'")?.ToString() ?? "60.0");
                 }
 
                 if (ders?.Any() ?? false)
@@ -179,10 +182,11 @@ namespace FaultData.DataOperations
                         MeterID = {0} AND 
                         AssetID = {1} AND 
                         MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND 
-                        MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS')
+                        MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Instantaneous')
                     ", MeterDataSet.Meter.ID, der.ID).ToList();
 
                     eventID = connection.ExecuteScalar<int?>("SELECT TOP 1 ID FROM Event WHERE MeterID = {0} AND AssetID = {1} AND FileGroupID = {2}", MeterDataSet.Meter.ID, der.ID, MeterDataSet.FileGroup.ID);
+
                 }
 
                 if (channels?.Any() ?? false)
@@ -196,7 +200,7 @@ namespace FaultData.DataOperations
                         if (dataSeries == null) continue;
 
                         // Convert to RVC and find datapoints that have exceded threshold
-                        List<DataPoint> dataPoints = dataSeries.DataPoints;
+                        List<DataPoint> dataPoints = Transform.ToRMS(dataSeries, Frequency).DataPoints;
                         dataPoints = dataPoints.Select((dp,index) => {
                             double current = dp.Value;
                             double previous = dp.Value;
@@ -526,7 +530,7 @@ namespace FaultData.DataOperations
         {
             try
             {
-                CheckRegulation_7_3(der, 1, 50, 0.3);
+                CheckRegulation_7_3(der, 1, 50, 5);
             }
             catch (Exception ex)
             {
@@ -644,13 +648,15 @@ namespace FaultData.DataOperations
                     // if rms doesn't exist we cant caculate TRD, continue;
                     if (rms == null) continue;
 
-                    List<DataPoint> rmsDataPoints = MeterDataSet.DataSeries.Find(s => s.SeriesInfo.ChannelID == rms.ID && s.SeriesInfo.SeriesType.Name == "Average").DataPoints;
+                    List<DataPoint> rmsDataPoints = MeterDataSet.DataSeries.Find(s => s.SeriesInfo.ChannelID == rms.ID && s.SeriesInfo.SeriesType.Name == "Average")?.DataPoints;
 
                     // if rms datapoints do not exist we cant caculate TRD, continue;
                     if (rmsDataPoints == null) continue;
 
                     // Get the data series associated with the channel and choose the highest Series type to perform calculation
                     List<DataSeries> dataSerieses = MeterDataSet.DataSeries.Where(x => phase.Where(p => p.ID == x.SeriesInfo.ChannelID).Any()).ToList();
+                    if (dataSerieses.Count == 0) continue;
+
                     IEnumerable<IGrouping<int, DataSeries>> channeledSeries = dataSerieses.GroupBy(c => c.SeriesInfo.ChannelID);
                     List<DataSeries> selectedSeries = new List<DataSeries>();
                     foreach (IGrouping<int, DataSeries> series in channeledSeries)
@@ -666,7 +672,7 @@ namespace FaultData.DataOperations
 
                     //  sum up the selected series, calculate  and find datapoints that have exceded threshold
                     IEnumerable<DataPoint> dataPoints = selectedSeries.SelectMany(s => s.DataPoints).GroupBy(dp => dp.Time).Select(dp => new DataPoint() { Time = dp.Key, Value = dp.Sum(d => d.Value) });
-                    dataPoints = dataPoints.Join(rmsDataPoints, harmonicDP => harmonicDP.Time, rmsDP => rmsDP.Time, (dp, rmsDp) => new DataPoint() { Time = dp.Time, Value = Math.Sqrt(Math.Pow(dp.Value,2) - Math.Pow(rmsDp.Value,2))/der.FullRatedOutputCurrent * 100 });
+                    dataPoints = dataPoints.Join(rmsDataPoints, harmonicDP => harmonicDP.Time, rmsDP => rmsDP.Time, (dp, rmsDp) => new DataPoint() { Time = dp.Time, Value = Math.Sqrt(Math.Abs(Math.Pow(dp.Value, 2) - Math.Pow(rmsDp.Value, 2))) /der.FullRatedOutputCurrent * 100 });
                     dataPoints = dataPoints.Where(dp => dp.Value > threshold).ToList();
 
                     // Load an analysis record for each datapoint that exceded the threshold
@@ -757,7 +763,7 @@ namespace FaultData.DataOperations
                     //  sum up the selected series, calculate  and find datapoints that have exceded threshold
                     var grouped = selectedSeries.SelectMany(s => s.DataPoints).GroupBy(dp => dp.Time);
                     IEnumerable<DataPoint> dataPoints = grouped.Select(dp => new DataPoint() { Time = dp.Key, Value = dp.Sum(d => d.Value) });
-                    dataPoints = dataPoints.Join(rmsDataPoints, harmonicDP => harmonicDP.Time, rmsDP => rmsDP.Time, (dp, rmsDp) => new DataPoint() { Time = dp.Time, Value = Math.Sqrt(Math.Pow(dp.Value, 2) - Math.Pow(rmsDp.Value, 2)) / der.FullRatedOutputCurrent * 100 });
+                    dataPoints = dataPoints.Join(rmsDataPoints, harmonicDP => harmonicDP.Time, rmsDP => rmsDP.Time, (dp, rmsDp) => new DataPoint() { Time = dp.Time, Value = Math.Sqrt(Math.Abs(Math.Pow(dp.Value, 2) - Math.Pow(rmsDp.Value, 2))) / der.FullRatedOutputCurrent * 100 });
                     dataPoints = dataPoints.Where(dp => dp.Value > threshold).ToList();
 
                     // Load an analysis record for each datapoint that exceded the threshold
@@ -905,13 +911,15 @@ namespace FaultData.DataOperations
                         // Get the data series associated with the channel and choose the highest Series type to perform calculation
                         List<DataSeries> dataSerieses = MeterDataSet.DataSeries.Where(x => x.SeriesInfo.ChannelID == channel.ID).ToList();
                         DataSeries dataSeries = dataSerieses.Find(x => x.SeriesInfo.SeriesType.Name == "Values");
+
                         // Probably not properlly configured
                         if (dataSeries == null) continue;
+                        DataSeries rmsData = Transform.ToRMS(dataSeries, Frequency);
 
                         channel.ConnectionFactory = MeterDataSet.CreateDbConnection;
 
                         // Convert to percent and find datapoints that have exceded threshold
-                        List<DataPoint> dataPoints = dataSeries.DataPoints;
+                        List<DataPoint> dataPoints = rmsData.DataPoints;
                         if (dataPoints.Count == 0) continue;
 
                         double nominalVoltage = der.VoltageKV * 1000;
@@ -943,7 +951,7 @@ namespace FaultData.DataOperations
                             {
                                 DataPoint max = points.OrderByDescending(x => x.Value).First();
 
-                                LoadResult(eventID, der.ID, MeterDataSet.Meter.ID, channel.ID, max.Time, $"", threshold.Item1, max.Value);
+                                LoadResult(eventID, der.ID, MeterDataSet.Meter.ID, channel.ID, max.Time, $"{threshold.Item2} ms (total: {milliseconds})", threshold.Item1, max.Value);
                                 // only load max value for the larget number of theshold violations
                                 break;
                             }
@@ -988,10 +996,6 @@ namespace FaultData.DataOperations
                     Time = time,
                     Value = value
                 };
-                else
-                {
-                    result.Value += value;
-                }    
 
                 new TableOperations<DERAnalyticResult>(connection).AddNewOrUpdateRecord(result);
             }
