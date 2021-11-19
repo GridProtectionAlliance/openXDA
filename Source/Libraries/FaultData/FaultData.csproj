@@ -105,7 +105,6 @@
     <Compile Include="DataOperations\BreakerRestrikeOperation.cs" />
     <Compile Include="DataOperations\BreakerTimingOperation.cs" />
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
-    <Compile Include="DataOperations\DEROperation.cs" />
     <Compile Include="DataOperations\DataOperationBase.cs" />
     <Compile Include="DataOperations\DataPusherOperation.cs" />
     <Compile Include="DataOperations\DataRescueOperation.cs" />
