@@ -2030,7 +2030,6 @@ CREATE TABLE TriggeredEmailDataSourceEmailType
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
     TriggeredEmailDataSourceID INT NOT NULL REFERENCES TriggeredEmailDataSource(ID),
-    Settings VARCHAR(MAX)
 )
 GO
 
@@ -2049,7 +2048,24 @@ CREATE TABLE ScheduledEmailDataSourceEmailType
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     ScheduledEmailTypeID INT NOT NULL REFERENCES ScheduledEmailType(ID),
     ScheduledEmailDataSourceID INT NOT NULL REFERENCES ScheduledEmailDataSource(ID),
-    Settings VARCHAR(MAX)
+)
+GO
+
+CREATE TABLE TriggeredEmailDataSourceSetting
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    TriggeredEmailDataSourceID INT NOT NULL REFERENCES TriggeredEmailDataSource(ID),
+    Value VARCHAR(200) NOT NULL,
+    Name VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE ScheduledEmailDataSourceSetting
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ScheduledEmailDataSourceID INT NOT NULL REFERENCES ScheduledEmailDataSource(ID),
+    Value VARCHAR(200) NOT NULL,
+    Name VARCHAR(200) NOT NULL
 )
 GO
 
