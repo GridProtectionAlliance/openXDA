@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model.Emails
 {
-    class ScheduledEmailType
+    public class ScheduledEmailType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
