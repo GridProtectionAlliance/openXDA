@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    class SMSProvider   
+    public class SMSProvider   
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
