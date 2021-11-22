@@ -103,13 +103,12 @@
     <Compile Include="DERAnalytic\DERAnalyticResult.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
-    <Compile Include="Emails\Carrier.cs" />
     <Compile Include="Emails\ScheduledEmailDataSource.cs" />
     <Compile Include="Emails\ScheduledEmailDataSourceEmailType.cs" />
     <Compile Include="Emails\ScheduledEmailDataSourceSetting.cs" />
+    <Compile Include="Emails\SMSProvider.cs" />
     <Compile Include="Emails\TriggeredEmailDataSourceEmailType.cs" />
     <Compile Include="Emails\ScheduledEmailType.cs" />
-    <Compile Include="Emails\SMSProvider.cs" />
     <Compile Include="Emails\EmailTemplateUser.cs" />
     <Compile Include="Emails\TriggeredEmailDataSource.cs" />
     <Compile Include="Emails\TriggeredEmailDataSourceSetting.cs" />
