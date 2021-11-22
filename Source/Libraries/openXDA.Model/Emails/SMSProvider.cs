@@ -38,7 +38,7 @@ namespace openXDA.Model
 
         public string Name { get; set; }
 
-        public string Format { get; set; }
+        public string Transform { get; set; }
 
     }
 }
