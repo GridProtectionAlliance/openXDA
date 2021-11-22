@@ -52,6 +52,13 @@
       <!-- JRC: Forward reference for registry component (required?)
       <ComponentRef Id="Registry" />
       -->
+      <Feature Id="SEBrowserFeature" Title="SEBrowser" AllowAdvertise="no" Level="2" Description="Includes necessary tables for SEBrowser.">
+        <ComponentRef Id="SEBrowser" />
+      </Feature>
+      <Feature Id="MiMDFeature" Title="MiMD" AllowAdvertise="no" Level="2" Description="Includes necessary tables for MiMD.">
+        <ComponentRef Id="MiMD" />
+      </Feature>
+
     </Feature>
     
     <UI>
@@ -83,7 +90,11 @@
       <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLSERVICEFEATURE" Order="7"><![CDATA[NOT(&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Publish>
       <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLCONSOLEFEATURE" Value="1" Order="7"><![CDATA[&ConsoleFeature=3 OR (!ConsoleFeature=3 AND &ConsoleFeature=-1)]]></Publish>
       <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLCONSOLEFEATURE" Order="7"><![CDATA[NOT(&ConsoleFeature=3 OR (!ConsoleFeature=3 AND &ConsoleFeature=-1))]]></Publish>
-      
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLSEBROWSERFEATURE" Value="1" Order="7"><![CDATA[&SEBrowserFeature=3]]></Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLSEBROWSERFEATURE" Order="7"><![CDATA[NOT(&SEBrowserFeature=3)]]></Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLMIMDFEATURE" Value="1" Order="7"><![CDATA[&MiMDFeature=3]]></Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="INSTALLMIMDFEATURE" Order="7"><![CDATA[NOT(&MiMDFeature=3)]]></Publish>
+
       <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="ServiceAccountDialog" Order="8">INSTALLSERVICEFEATURE</Publish>
       <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="DatabaseConnectionDialog" Order="8">NOT(INSTALLSERVICEFEATURE) AND INSTALLDATABASEFEATURE</Publish>
       <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="8">NOT(INSTALLSERVICEFEATURE) AND NOT(INSTALLDATABASEFEATURE)</Publish>
@@ -228,6 +239,10 @@
     <CustomAction Id="DefaultContours.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="SystemCenter.sql.SetProperty" Property="SystemCenter.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#SystemCenter.sql]" />
     <CustomAction Id="SystemCenter.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="SEBrowser.sql.SetProperty" Property="SEBrowser.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#SEBrowser.sql]" />
+    <CustomAction Id="SEBrowser.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="MiMD.sql.SetProperty" Property="MiMD.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#MiMD.sql]" />
+    <CustomAction Id="MiMD.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
 
     <CustomAction Id="UpgradeValidationAction.SetProperty" Property="UpgradeValidationAction" Value="ProcessStartInfo=FileName=[#XDAUpgradeValidation.exe];SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="UpgradeValidationAction" BinaryKey="InstallerActions" DllEntry="StartProcessAction" Execute="deferred" Impersonate="no" />
@@ -256,6 +271,8 @@
       <ProgressText Action="DefaultTrendingAlarms.sql">Defining default trending alarms...</ProgressText>
       <ProgressText Action="DefaultContours.sql">Adding default contour color scales...</ProgressText>
       <ProgressText Action="SystemCenter.sql">Adding tables to support System Center...</ProgressText>
+      <ProgressText Action="SEBrowser.sql">Adding tables to support SEBrowser...</ProgressText>
+      <ProgressText Action="MiMD.sql">Adding tables to support MiMD...</ProgressText>
 
       <ProgressText Action="UpgradeValidationAction">Executing upgrade validation process...</ProgressText>
     </UI>
@@ -313,6 +330,10 @@
       <Custom Action="DefaultContours.sql" After="DefaultContours.sql.SetProperty">INSTALLDATABASEFEATURE</Custom>
       <Custom Action="SystemCenter.sql.SetProperty" After="DefaultContours.sql">INSTALLDATABASEFEATURE</Custom>
       <Custom Action="SystemCenter.sql" After="SystemCenter.sql.SetProperty">INSTALLDATABASEFEATURE</Custom>
+      <Custom Action="SEBrowser.sql.SetProperty" After="SystemCenter.sql">INSTALLSEBROWSERFEATURE</Custom>
+      <Custom Action="SEBrowser.sql" After="SEBrowser.sql.SetProperty">INSTALLSEBROWSERFEATURE</Custom>
+      <Custom Action="MiMD.sql.SetProperty" After="SEBrowser.sql">INSTALLMIMDFEATURE</Custom>
+      <Custom Action="MiMD.sql" After="MiMD.sql.SetProperty">INSTALLMIMDFEATURE</Custom>
 
       <Custom Action="UpgradeValidationAction.SetProperty" After="InstallFiles">INSTALLSERVICEFEATURE</Custom>
       <Custom Action="UpgradeValidationAction" After="UpgradeValidationAction.SetProperty">INSTALLSERVICEFEATURE</Custom>
@@ -403,6 +424,13 @@
       <Component Id="SystemCenter">
         <File Id="SystemCenter.sql" Name="SystemCenter.sql" Source="$(var.SolutionDir)\Data\09 - SystemCenter.sql" />
       </Component>
+      <Component Id="SEBrowser">
+        <File Id="SEBrowser.sql" Name="SEBrowser.sql" Source="$(var.SolutionDir)\Data\11 - SEBrowser.sql" />
+      </Component>
+      <Component Id="MiMD">
+        <File Id="MiMD.sql" Name="MiMD.sql" Source="$(var.SolutionDir)\Data\10 - MiMD.sql" />
+      </Component>
+
     </ComponentGroup>
     
     <!-- openXDA Service Components -->
@@ -440,6 +468,7 @@
       <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
       <ComponentRef Id="openXDA.Nodes" />
+      <ComponentRef Id="openXDA.XMLConfig" />
       <ComponentRef Id="openXDA.PQI" />
       <ComponentRef Id="openXDA.DataPusher" />
       <ComponentRef Id="openXDA.Reports" />
@@ -625,6 +654,9 @@
       </Component>
       <Component Id="openXDA.Nodes">
         <File Id="openXDA.Nodes.dll" Name="$(var.openXDA.Nodes.TargetFileName)" Source="$(var.openXDA.Nodes.TargetPath)" />
+      </Component>
+      <Component Id="openXDA.XMLConfig">
+        <File Id="openXDA.XMLConfig.dll" Name="$(var.openXDA.XMLConfig.TargetFileName)" Source="$(var.openXDA.XMLConfig.TargetPath)" />
       </Component>
       <Component Id="openXDA.PQI">
         <File Id="openXDA.PQI.dll" Name="$(var.openXDA.PQI.TargetFileName)" Source="$(var.openXDA.PQI.TargetPath)" />

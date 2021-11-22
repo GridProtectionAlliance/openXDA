@@ -170,6 +170,14 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.XMLConfigLoader\openXDA.XMLConfig.csproj">
+      <Name>openXDA.XMLConfig</Name>
+      <Project>{280f475d-7d5c-4bb7-98be-db0f3cbe40bb}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Name>PQMark.DataAggregator</Name>
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>

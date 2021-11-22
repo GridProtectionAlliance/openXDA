@@ -224,6 +224,15 @@ GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.WatchDirectories', 'Watch', 'Watch')
 GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.Host', 'https://localhost:8086', 'https://localhost:8086')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.PointBucket', 'point_bucket', 'point_bucket')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.OrganizationID', 'gpa', 'gpa')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.TokenID', '', '')
+GO
+
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.InstanceName', 'XDA', 'XDA')
 GO
@@ -678,7 +687,7 @@ UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.01 0.5, 0.05 0.5, 0.05 0.7, 0.
 GO
 UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.05 0.5, 0.2 0.5, 0.2 0.7, 0.5 0.7,0.5 0.8,1 0.8, 10 0.8, 10 0, 0 0, 0 0.5, 0.05 0.5))' WHERE Name = 'SEMI F47'
 GO
-UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.0001667 5, 0.001 2, 0.003 1.4, 0.003 1.2,0.5 1.2,0.5 1.1, 100 1.1,100 0.9, 10 0.9, 10 0.8, 0.5 0.8, 0.5 0.7, 0.02 0.7, 0.02 0))' WHERE Name = 'ITIC'
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.0001667 5, 0.001 2, 0.003 1.4, 0.003 1.2,0.5 1.2,0.5 1.1, 100 1.1,100 0.9, 10 0.9, 10 0.8, 0.5 0.8, 0.5 0.7, 0.02 0.7, 0.02 0, 1000 0, 1000 5, 0.0001667 5))' WHERE Name = 'ITIC'
 GO
 UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.001 1.2, 0.2 1.2, 0.2 1.175, 0.5 1.175,0.5 1.15,1 1.15, 1 1.10,4 1.10, 4 0.9, 3 0.9, 3 0.75, 2 0.75, 2 0.65, 0.3 0.65, 0.3 0.45, 0.15 0.45, 0.15 0, 0.001 0, 0.001 1.2))' WHERE Name = 'NERC PRC-024-2'
 GO
