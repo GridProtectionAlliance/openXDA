@@ -25,6 +25,12 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("Carrier")]
+    [UseEscapedName]
     public class SMSProvider   
     {
         [PrimaryKey(true)]
