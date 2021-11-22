@@ -26,7 +26,7 @@ using System;
 
 namespace openXDA.Model.Links
 {
-    class UserAccountScheduledEmailType
+    public class UserAccountScheduledEmailType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
