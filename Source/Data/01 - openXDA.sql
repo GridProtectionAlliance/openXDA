@@ -2247,6 +2247,21 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime_ID_EventID_PhaseID
 ON Disturbance ( StartTime ASC ) INCLUDE ( ID, EventID, PhaseID)
 GO
 
+Create Table EventWorstDisturbance (
+ ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+ EventID INT NOT NULL REFERENCES Event(ID),
+ WorstDisturbanceID INT NOT NULL REFERENCES Disturbance(ID),
+ WorstLLDisturbanceID INT NOT NULL REFERENCES Disturbance(ID),
+ WorstLNDisturbanceID  INT NOT NULL REFERENCES Disturbance(ID)
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventWorstDisturbance_EventID
+ON EventWorstDisturbance ( EventID ASC )
+GO
+
+
+
 CREATE TABLE BreakerRestrike (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),

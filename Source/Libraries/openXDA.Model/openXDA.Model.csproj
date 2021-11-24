@@ -106,6 +106,7 @@
     <Compile Include="Emails\EmailType.cs" />
     <Compile Include="Emails\EventEmailParameters.cs" />
     <Compile Include="Events\BreakerRestrike.cs" />
+    <Compile Include="Events\Disturbances\EventWorstDisturbance.cs" />
     <Compile Include="Events\Disturbances\VoltageCurve.cs" />
     <Compile Include="Events\Disturbances\VoltageEnvelopeCurve.cs" />
     <Compile Include="Events\RelayPerformance.cs" />
