@@ -32,8 +32,8 @@ namespace openXDA.Model
         public int ID { get; set; }
         public int EventID { get; set; }
         public int WorstDisturbanceID { get; set; }
-        public int WorstLLDisturbanceID { get; set; }
-        public int WorstLNDisturbanceID { get; set; }
+        public int? WorstLLDisturbanceID { get; set; }
+        public int? WorstLNDisturbanceID { get; set; }
 
     }
 
