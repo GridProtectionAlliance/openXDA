@@ -87,6 +87,7 @@ namespace FaultData.DataResources
                 if ((object)worst == null || transiet.PerUnitMagnitude > worst.PerUnitMagnitude)
                     worst = transiet;
 
+                worst.IsWorstDisturbance = true;
                 worst = worst.Clone();
                 worst.Phase = Phase.Worst;
             }
