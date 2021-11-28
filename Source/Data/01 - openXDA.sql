@@ -2251,8 +2251,8 @@ Create Table EventWorstDisturbance (
  ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
  EventID INT NOT NULL REFERENCES Event(ID),
  WorstDisturbanceID INT NOT NULL REFERENCES Disturbance(ID),
- WorstLLDisturbanceID INT NOT NULL REFERENCES Disturbance(ID),
- WorstLNDisturbanceID  INT NOT NULL REFERENCES Disturbance(ID)
+ WorstLLDisturbanceID INT NULL REFERENCES Disturbance(ID),
+ WorstLNDisturbanceID  INT NULL REFERENCES Disturbance(ID)
 )
 GO
 
