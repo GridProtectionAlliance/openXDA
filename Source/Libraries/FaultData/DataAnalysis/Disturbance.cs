@@ -149,6 +149,11 @@ namespace FaultData.DataAnalysis
             }
         }
 
+        public bool IsWorstDisturbance { get; set; }
+
+        public bool IsLLDisturbance => m_phase == Phase.AB || m_phase == Phase.BC || m_phase == Phase.CA;
+
+        public bool IsLNDisturbance => m_phase == Phase.AN || m_phase == Phase.BN || m_phase == Phase.CN;
         #endregion
 
         #region [ Methods ]
