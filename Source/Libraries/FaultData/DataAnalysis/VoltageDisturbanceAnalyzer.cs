@@ -153,6 +153,7 @@ namespace FaultData.DataAnalysis
 
             IEnumerable<Range<DateTime>> allDisturbanceRanges = disturbanceList
                 .Select(ToDateRange);
+            
 
             IEnumerable<Disturbance> worstDisturbances = Range<DateTime>.MergeAllOverlapping(allDisturbanceRanges)
                 .Select(range =>
@@ -165,6 +166,7 @@ namespace FaultData.DataAnalysis
                             worst = disturbance;
                     }
 
+                    worst.IsWorstDisturbance = true;
                     worst = worst.Clone();
                     worst.Phase = Phase.Worst;
                     return worst;
@@ -211,6 +213,7 @@ namespace FaultData.DataAnalysis
                             worst = disturbance;
                     }
 
+                    worst.IsWorstDisturbance = true;
                     worst = worst.Clone();
                     worst.Phase = Phase.Worst;
                     return worst;
