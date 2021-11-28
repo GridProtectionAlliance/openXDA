@@ -394,17 +394,17 @@ namespace FaultData.DataOperations
                 return disturbances;
 
             if (sagDataResource.Sags.TryGetValue(dataGroup, out disturbances))
-                return disturbances.Where(d => d.IsWorstDisturbance).ToList();
+                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
                
 
             if (swellDataResource.Swells.TryGetValue(dataGroup, out disturbances))
-                return disturbances.Where(d => d.IsWorstDisturbance).ToList();
+                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
 
             if (interruptionDataResource.Interruptions.TryGetValue(dataGroup, out disturbances))
-                return disturbances.Where(d => d.IsWorstDisturbance).ToList();
+                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
 
             if (transientDataResource.Transients.TryGetValue(dataGroup, out disturbances))
-                return disturbances.Where(d => d.IsWorstDisturbance).ToList();
+                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
 
             return disturbances;
         }
