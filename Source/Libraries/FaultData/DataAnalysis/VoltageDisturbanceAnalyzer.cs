@@ -159,12 +159,23 @@ namespace FaultData.DataAnalysis
                 .Select(range =>
                 {
                     Disturbance worst = null;
+                    Disturbance worstLL = null;
+                    Disturbance worstLN = null;
 
                     foreach (Disturbance disturbance in disturbanceList.Where(disturbance => ToDateRange(disturbance).Overlaps(range)))
                     {
                         if ((object)worst == null || m_isMoreSevere(disturbance.PerUnitMagnitude, worst.PerUnitMagnitude))
                             worst = disturbance;
+                        if (disturbance.IsLLDisturbance && ((object)worstLL == null || m_isMoreSevere(disturbance.PerUnitMagnitude, worstLL.PerUnitMagnitude)))
+                            worstLL = disturbance;
+                        if (disturbance.IsLNDisturbance && ((object)worstLN == null || m_isMoreSevere(disturbance.PerUnitMagnitude, worstLN.PerUnitMagnitude)))
+                            worstLN = disturbance;
                     }
+
+                    if (worstLL != null)
+                        worstLL.IsWorstDisturbance = true;
+                    if (worstLN != null)
+                        worstLN.IsWorstDisturbance = true;
 
                     worst.IsWorstDisturbance = true;
                     worst = worst.Clone();
@@ -206,12 +217,23 @@ namespace FaultData.DataAnalysis
                 .Select(range =>
                 {
                     Disturbance worst = null;
+                    Disturbance worstLL = null;
+                    Disturbance worstLN = null;
 
                     foreach (Disturbance disturbance in disturbanceList.Where(disturbance => ToRange(disturbance).Overlaps(range)))
                     {
                         if ((object)worst == null || m_isMoreSevere(disturbance.PerUnitMagnitude, worst.PerUnitMagnitude))
                             worst = disturbance;
+                        if (disturbance.IsLLDisturbance && ((object)worstLL == null || m_isMoreSevere(disturbance.PerUnitMagnitude, worstLL.PerUnitMagnitude)))
+                            worstLL = disturbance;
+                        if (disturbance.IsLNDisturbance &&  ((object)worstLN == null || m_isMoreSevere(disturbance.PerUnitMagnitude, worstLN.PerUnitMagnitude)))
+                            worstLN = disturbance;
                     }
+
+                    if (worstLL != null)
+                        worstLL.IsWorstDisturbance = true;
+                    if (worstLN != null)
+                        worstLN.IsWorstDisturbance = true;
 
                     worst.IsWorstDisturbance = true;
                     worst = worst.Clone();
