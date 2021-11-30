@@ -39,6 +39,8 @@ namespace openXDA.Model
 
         public string Schedule { get; set; }
 
+        public string Name { get; set; }
+
     }
 }
 
