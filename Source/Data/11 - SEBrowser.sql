@@ -60,12 +60,15 @@ CREATE VIEW [dbo].[SEBrowser.EventSearchWorstDisturbanceView] AS
 	SELECT
 		Disturbance.ID AS DisturbanceID,
 		Phase.Name AS [Phase],
-		Disturbance.DurationCycles AS [Duration (cycles)],
-		Disturbance.DurationSeconds AS [Duration (sec)],
+		FORMAT(Disturbance.DurationCycles, 'F2') AS [Duration (cycles)],
+		Format(Disturbance.DurationSeconds, 'F4') AS [Duration (sec)],
 		Disturbance.PerUnitMagnitude AS [MagDurMagnitude],
-		Disturbance.DurationSeconds AS [MagDurDuration]
+		Disturbance.DurationSeconds AS [MagDurDuration],
+		Format((SELECT D.PerUnitMagnitude FROM Disturbance D WHERE D.ID = EventWorstDisturbance.WorstLLDisturbanceID )*100.0,'F2') as [Worst LL Magnitude (%nominal)],
+        	Format((SELECT D.PerUnitMagnitude FROM Disturbance D WHERE D.ID = EventWorstDisturbance.WorstLNDisturbanceID )*100.0,'F2')  as [Worst LN Magnitude (%nominal)]
 	FROM Disturbance LEFT JOIN
-		Phase ON Disturbance.PhaseID = Phase.ID
+		Phase ON Disturbance.PhaseID = Phase.ID LEFT JOIN
+		EventWorstDisturbance ON EventWorstDisturbance.WorstDisturbanceID = Disturbance.ID
 GO
 
 INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationName', N'SEBrowser', 0, N'Administrator')
