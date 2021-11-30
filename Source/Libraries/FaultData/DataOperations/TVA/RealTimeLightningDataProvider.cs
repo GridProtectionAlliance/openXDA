@@ -151,6 +151,7 @@ namespace FaultData.DataOperations.TVA
                 "SELECT " +
                 "    StrikeTime UTCTime, " +
                 "    Latitude, " +
+                "    Longitude, " +
                 "    PeakCurrent Amplitude, " +
                 "    PeakCurrent, " +
                 "    FlashMultiplicity, " +
