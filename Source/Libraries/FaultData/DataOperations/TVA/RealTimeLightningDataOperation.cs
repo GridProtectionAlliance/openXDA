@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using FaultData.DataResources;
 using FaultData.DataResources.Vaisala;
@@ -104,6 +105,17 @@ namespace FaultData.DataOperations.TVA
 
         private int? GetID(AdoDataConnection connection, ILightningStrike strike)
         {
+            IDbDataParameter ToDateTime2(DateTime dateTime)
+            {
+                using (IDbCommand command = connection.Connection.CreateCommand())
+                {
+                    IDbDataParameter parameter = command.CreateParameter();
+                    parameter.DbType = DbType.DateTime2;
+                    parameter.Value = dateTime;
+                    return parameter;
+                }
+            }
+
             const string QueryFormat =
                 "SELECT ID " +
                 "FROM LightningStrike " +
@@ -114,7 +126,7 @@ namespace FaultData.DataOperations.TVA
                 "    Longitude = {3}";
 
             string service = strike.Service;
-            DateTime time = strike.UTCTime;
+            object time = ToDateTime2(strike.UTCTime);
             double latitude = strike.Latitude;
             double longitude = strike.Longitude;
             return connection.ExecuteScalar<int?>(QueryFormat, service, time, latitude, longitude);
