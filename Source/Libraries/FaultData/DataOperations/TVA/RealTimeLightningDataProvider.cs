@@ -41,12 +41,17 @@ namespace FaultData.DataOperations.TVA
     {
         public const string CategoryName = "RTLightning";
 
+        private const string DefaultOracleDataProviderString =
+            "AssemblyName={Oracle.DataAccess, Version=2.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342}; " +
+            "ConnectionType=Oracle.DataAccess.Client.OracleConnection; " +
+            "AdapterType=Oracle.DataAccess.Client.OracleDataAdapter";
+
         [Setting]
         [DefaultValue("")]
         public string RTLightningDatabaseConnectionString { get; set; }
 
         [Setting]
-        [DefaultValue("")]
+        [DefaultValue("yyyy-MM-dd HH:mm:ss.fffffff")]
         public string DisplayTimeFormat { get; set; }
 
         [Setting]
@@ -54,7 +59,7 @@ namespace FaultData.DataOperations.TVA
         public string MaximoConnectionString { get; set; }
 
         [Setting]
-        [DefaultValue("")]
+        [DefaultValue(DefaultOracleDataProviderString)]
         public string MaximoDataProviderString { get; set; }
 
         [Setting]
