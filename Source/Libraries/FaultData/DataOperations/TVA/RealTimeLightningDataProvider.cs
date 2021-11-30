@@ -211,14 +211,14 @@ namespace FaultData.DataOperations.TVA
         private IEnumerable<GeoCoordinate> QueryStructureLocations(AdoDataConnection connection, string lineKey)
         {
             const string QueryFormat =
-                @"SELECT" +
-                @"    Location.TVA_LATITUDE ""Latitude""," +
-                @"    Location.TVA_LONGITUDE ""Longitude""" +
-                @"FROM EAMDM.EAM_OD_LOCATION_MV Location" +
-                @"WHERE" +
-                @"    Location.SITE_ID = 'PSO' AND" +
-                @"    Location.STATUS_CD = 'ACTIVE' AND" +
-                @"    Location.STATION_LINE_CD = {0} AND" +
+                @"SELECT " +
+                @"    Location.TVA_LATITUDE ""Latitude"", " +
+                @"    Location.TVA_LONGITUDE ""Longitude"" " +
+                @"FROM EAMDM.EAM_OD_LOCATION_MV Location " +
+                @"WHERE " +
+                @"    Location.SITE_ID = 'PSO' AND " +
+                @"    Location.STATUS_CD = 'ACTIVE' AND " +
+                @"    Location.STATION_LINE_CD = {0} AND " +
                 @"    Location.CLASSSTRUCTURE_ID = '1062'";
 
             using (DataTable table = connection.RetrieveData(QueryFormat, lineKey))
