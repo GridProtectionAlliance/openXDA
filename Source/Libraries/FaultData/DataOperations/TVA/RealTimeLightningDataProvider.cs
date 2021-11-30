@@ -121,7 +121,7 @@ namespace FaultData.DataOperations.TVA
             GeoCoordinate GetLocation(ILightningStrike strike) =>
                 new GeoCoordinate(strike.Latitude, strike.Longitude);
 
-            double ToMiles(double km) => km / 1.609344;
+            double ToMiles(double meters) => meters / 1609.344;
 
             using (AdoDataConnection lightningDbConnection = CreateLightningDbConnection())
             using (AdoDataConnection maximoConnection = CreateMaximoDbConnection())
@@ -136,7 +136,7 @@ namespace FaultData.DataOperations.TVA
 
                     bool isNearLine = structureLocations
                         .Select(location => crs.Distance(location, strikeLocation))
-                        .Select(km => ToMiles(km))
+                        .Select(meters => ToMiles(meters))
                         .Any(miles => miles <= distanceThreshold);
 
                     if (isNearLine)
