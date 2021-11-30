@@ -106,10 +106,12 @@ namespace FaultData.DataOperations.TVA
         [Category]
         [SettingName(SystemSection.CategoryName)]
         public SystemSection SystemSettings { get; }
+            = new SystemSection();
 
         [Category]
         [SettingName(RealTimeLightningDataProviderSettings.CategoryName)]
         public RealTimeLightningDataProviderSettings LightningDataSettings { get; }
+            = new RealTimeLightningDataProviderSettings();
 
         private TimeZoneInfo XDATimeZone =>
             SystemSettings.XDATimeZoneInfo;
