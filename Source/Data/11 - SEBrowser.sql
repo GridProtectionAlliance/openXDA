@@ -44,12 +44,10 @@ CREATE VIEW [dbo].[SEBrowser.EventSearchEventView] AS
 		Asset.AssetName AS [Asset Name],
 		AssetType.Name AS [Asset Type],
 		Asset.VoltageKV AS [Nom Voltage (kV)],
-		Asset.Description AS [Asset Desc],
+		Asset.Description AS [Asset Desc]
 --Asset Manufacturer
 --Asset Model
-		EventType.Name AS [Event Type]
-	FROM Event LEFT JOIN 
-		EventType ON Event.EventTypeID = EventType.ID LEFT JOIN
+	FROM Event LEFT JOIN
 		Meter ON Meter.ID = Event.MeterID LEFT JOIN 
 		Location ON Meter.LocationID = Location.ID LEFT JOIN
 		Asset ON Asset.ID = Event.AssetID LEFT JOIN
@@ -65,9 +63,11 @@ CREATE VIEW [dbo].[SEBrowser.EventSearchWorstDisturbanceView] AS
 		Disturbance.PerUnitMagnitude AS [MagDurMagnitude],
 		Disturbance.DurationSeconds AS [MagDurDuration],
 		Format((SELECT D.PerUnitMagnitude FROM Disturbance D WHERE D.ID = EventWorstDisturbance.WorstLLDisturbanceID )*100.0,'F2') as [Worst LL Magnitude (%nominal)],
-        	Format((SELECT D.PerUnitMagnitude FROM Disturbance D WHERE D.ID = EventWorstDisturbance.WorstLNDisturbanceID )*100.0,'F2')  as [Worst LN Magnitude (%nominal)]
+        	Format((SELECT D.PerUnitMagnitude FROM Disturbance D WHERE D.ID = EventWorstDisturbance.WorstLNDisturbanceID )*100.0,'F2')  as [Worst LN Magnitude (%nominal)],
+		EventType.Name AS [Event Type]
 	FROM Disturbance LEFT JOIN
 		Phase ON Disturbance.PhaseID = Phase.ID LEFT JOIN
+		EventType ON Disturbance.EventTypeID = EventType.ID LEFT JOIN
 		EventWorstDisturbance ON EventWorstDisturbance.WorstDisturbanceID = Disturbance.ID
 GO
 
