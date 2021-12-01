@@ -22,13 +22,14 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
+using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataResources.Vaisala;
 using FaultData.DataSets;
 using GSF.Data;
+using GSF.Data.Model;
+using openXDA.Model;
 
 namespace FaultData.DataOperations.TVA
 {
@@ -43,67 +44,73 @@ namespace FaultData.DataOperations.TVA
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                IEnumerable<ILightningStrike> lightningStrikes = lightningDataResource.LightningStrikeLookup.Values
-                    .SelectMany(list => list);
-
-                foreach (ILightningStrike strike in lightningStrikes)
+                foreach (var kvp in lightningDataResource.LightningStrikeLookup)
                 {
-                    int? strikeID = GetID(connection, strike);
-                    if (strikeID is null)
+                    DataGroup dataGroup = kvp.Key;
+                    TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+                    Event evt = eventTable.GetEvent(meterDataSet.FileGroup, dataGroup);
+                    if (evt == null)
                         continue;
 
-                    IExtendedLightningData extendedLightningData = strike.GetExtendedData<IExtendedLightningData>();
-                    if (extendedLightningData is null)
-                        continue;
-
-                    const string QueryFormat =
-                        "INSERT INTO VaisalaExtendedLightningData " +
-                        "( " +
-                        "    LightningStrikeID, " +
-                        "    PeakCurrent, " +
-                        "    FlashMultiplicity, " +
-                        "    ParticipatingSensors, " +
-                        "    DegreesOfFreedom, " +
-                        "    EllipseAngle, " +
-                        "    SemiMajorAxisLength, " +
-                        "    SemiMinorAxisLength, " +
-                        "    ChiSquared, " +
-                        "    Risetime, " +
-                        "    PeakToZeroTime, " +
-                        "    MaximumRateOfRise, " +
-                        "    CloudIndicator, " +
-                        "    AngleIndicator, " +
-                        "    SignalIndicator, " +
-                        "    TimingIndicator " +
-                        ") " +
-                        "VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15})";
-
-                    object[] parameters =
+                    foreach (ILightningStrike strike in kvp.Value)
                     {
-                        strikeID,
-                        extendedLightningData.PeakCurrent,
-                        extendedLightningData.FlashMultiplicity,
-                        extendedLightningData.ParticipatingSensors,
-                        extendedLightningData.DegreesOfFreedom,
-                        extendedLightningData.EllipseAngle,
-                        extendedLightningData.SemiMajorAxisLength,
-                        extendedLightningData.SemiMinorAxisLength,
-                        extendedLightningData.ChiSquared,
-                        extendedLightningData.Risetime,
-                        extendedLightningData.PeakToZeroTime,
-                        extendedLightningData.MaximumRateOfRise,
-                        extendedLightningData.CloudIndicator,
-                        extendedLightningData.AngleIndicator,
-                        extendedLightningData.SignalIndicator,
-                        extendedLightningData.TimingIndicator
-                    };
+                        IExtendedLightningData extendedLightningData = strike.GetExtendedData<IExtendedLightningData>();
+                        if (extendedLightningData is null)
+                            continue;
 
-                    connection.ExecuteNonQuery(QueryFormat, parameters);
+                        int? strikeID = GetID(connection, evt.ID, strike);
+                        if (strikeID is null)
+                            continue;
+
+                        const string QueryFormat =
+                            "INSERT INTO VaisalaExtendedLightningData " +
+                            "( " +
+                            "    LightningStrikeID, " +
+                            "    PeakCurrent, " +
+                            "    FlashMultiplicity, " +
+                            "    ParticipatingSensors, " +
+                            "    DegreesOfFreedom, " +
+                            "    EllipseAngle, " +
+                            "    SemiMajorAxisLength, " +
+                            "    SemiMinorAxisLength, " +
+                            "    ChiSquared, " +
+                            "    Risetime, " +
+                            "    PeakToZeroTime, " +
+                            "    MaximumRateOfRise, " +
+                            "    CloudIndicator, " +
+                            "    AngleIndicator, " +
+                            "    SignalIndicator, " +
+                            "    TimingIndicator " +
+                            ") " +
+                            "VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15})";
+
+                        object[] parameters =
+                        {
+                            strikeID,
+                            extendedLightningData.PeakCurrent,
+                            extendedLightningData.FlashMultiplicity,
+                            extendedLightningData.ParticipatingSensors,
+                            extendedLightningData.DegreesOfFreedom,
+                            extendedLightningData.EllipseAngle,
+                            extendedLightningData.SemiMajorAxisLength,
+                            extendedLightningData.SemiMinorAxisLength,
+                            extendedLightningData.ChiSquared,
+                            extendedLightningData.Risetime,
+                            extendedLightningData.PeakToZeroTime,
+                            extendedLightningData.MaximumRateOfRise,
+                            extendedLightningData.CloudIndicator,
+                            extendedLightningData.AngleIndicator,
+                            extendedLightningData.SignalIndicator,
+                            extendedLightningData.TimingIndicator
+                        };
+
+                        connection.ExecuteNonQuery(QueryFormat, parameters);
+                    }
                 }
             }
         }
 
-        private int? GetID(AdoDataConnection connection, ILightningStrike strike)
+        private int? GetID(AdoDataConnection connection, int eventID, ILightningStrike strike)
         {
             IDbDataParameter ToDateTime2(DateTime dateTime)
             {
@@ -120,16 +127,17 @@ namespace FaultData.DataOperations.TVA
                 "SELECT ID " +
                 "FROM LightningStrike " +
                 "WHERE " +
-                "    Service = {0} AND " +
-                "    UTCTime = {1} AND " +
-                "    Latitude = {2} AND " +
-                "    Longitude = {3}";
+                "    EventID = {0} AND " +
+                "    Service = {1} AND " +
+                "    UTCTime = {2} AND " +
+                "    Latitude = {3} AND " +
+                "    Longitude = {4}";
 
             string service = strike.Service;
             object time = ToDateTime2(strike.UTCTime);
             double latitude = strike.Latitude;
             double longitude = strike.Longitude;
-            return connection.ExecuteScalar<int?>(QueryFormat, service, time, latitude, longitude);
+            return connection.ExecuteScalar<int?>(QueryFormat, eventID, service, time, latitude, longitude);
         }
     }
 }
