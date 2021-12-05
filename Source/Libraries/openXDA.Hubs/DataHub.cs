@@ -3399,8 +3399,9 @@ namespace openXDA.Hubs
 
                     //Because we are looking through the Line Segment View it does not matter if there are other
                     // Assets caught with this restriction.
-                    restriction = restriction + new RecordRestriction("ID in ({0})", string.Join(",", connectionID));
+                    restriction &= new RecordRestriction($"ID in ({string.Join(",", connectionID)})");
                 }
+
                 return tableOperations.QueryRecordCount(restriction);
             }
         }
@@ -3425,7 +3426,7 @@ namespace openXDA.Hubs
                             return item.ParentID;
                         }).ToList();
 
-                    restriction = restriction + new RecordRestriction("ID in ({0})", string.Join(",", connectionID));
+                    restriction &= new RecordRestriction($"ID in ({string.Join(", ", connectionID)})");
                 }
 
                 return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
