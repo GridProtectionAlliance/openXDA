@@ -3644,6 +3644,15 @@
             </remarks>
             <typeparam name="TFrameIdentifier">Frame type identifier used to distinguish frames.</typeparam>
         </member>
+        <member name="E:GSF.PhasorProtocols.FrameParserBase`1.ReceivedChannelFrame">
+            <summary>
+            Occurs when any <see cref="T:GSF.PhasorProtocols.IChannelFrame"/> has been received.
+            </summary>
+            <remarks>
+            <see cref="F:GSF.EventArgs`2.Argument1"/> is the <see cref="T:GSF.PhasorProtocols.IChannelFrame"/> that was received.
+            <see cref="F:GSF.EventArgs`2.Argument2"/> is the flag to determine if frame publication should continue.
+            </remarks>
+        </member>
         <member name="E:GSF.PhasorProtocols.FrameParserBase`1.ReceivedConfigurationFrame">
             <summary>
             Occurs when a <see cref="T:GSF.PhasorProtocols.IConfigurationFrame"/> has been received.
@@ -8350,6 +8359,15 @@
             This interface allows protocol specific frame parsers to be handled abstractly by the <see cref="T:GSF.PhasorProtocols.MultiProtocolFrameParser"/>.
             </remarks>
         </member>
+        <member name="E:GSF.PhasorProtocols.IFrameParser.ReceivedChannelFrame">
+            <summary>
+            Occurs when any <see cref="T:GSF.PhasorProtocols.IChannelFrame"/> has been received.
+            </summary>
+            <remarks>
+            <see cref="F:GSF.EventArgs`2.Argument1"/> is the <see cref="T:GSF.PhasorProtocols.IChannelFrame"/> that was received.
+            <see cref="F:GSF.EventArgs`2.Argument2"/> is the flag to determine if frame publication should continue.
+            </remarks>
+        </member>
         <member name="E:GSF.PhasorProtocols.IFrameParser.ReceivedCommandFrame">
             <summary>
             Occurs when a <see cref="T:GSF.PhasorProtocols.ICommandFrame"/> has been received.
@@ -9308,6 +9326,15 @@
             <summary>
             Specifies the default value for the <see cref="P:GSF.PhasorProtocols.MultiProtocolFrameParser.KeepCommandChannelOpen"/> property.
             </summary>
+        </member>
+        <member name="E:GSF.PhasorProtocols.MultiProtocolFrameParser.ReceivedChannelFrame">
+            <summary>
+            Occurs when any <see cref="T:GSF.PhasorProtocols.IChannelFrame"/> has been received.
+            </summary>
+            <remarks>
+            <see cref="F:GSF.EventArgs`2.Argument1"/> is the <see cref="T:GSF.PhasorProtocols.IChannelFrame"/> that was received.
+            <see cref="F:GSF.EventArgs`2.Argument2"/> is the flag to determine if frame publication should continue.
+            </remarks>
         </member>
         <member name="E:GSF.PhasorProtocols.MultiProtocolFrameParser.ReceivedCommandFrame">
             <summary>
