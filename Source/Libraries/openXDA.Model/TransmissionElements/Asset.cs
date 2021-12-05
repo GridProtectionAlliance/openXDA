@@ -22,17 +22,15 @@
 //******************************************************************************************************
 
 
-using GSF.Data;
-using GSF.Data.Model;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using GSF.Data;
+using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
