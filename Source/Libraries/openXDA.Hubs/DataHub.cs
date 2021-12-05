@@ -3459,15 +3459,36 @@ namespace openXDA.Hubs
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                int added = new TableOperations<LineSegment>(connection).AddNewRecord(record);
-                if (added != 0)
-                {
-                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
-                    record.ID = index;
-
-                }
+                TableOperations<LineSegment> lineSegmentTable = new TableOperations<LineSegment>(connection);
+                lineSegmentTable.AddNewRecord(record);
             }
-            
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public void AddNewLineSegmentForLine(LineSegment record, int lineID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<LineSegment> lineSegmentTable = new TableOperations<LineSegment>(connection);
+                int added = lineSegmentTable.AddNewRecord(record);
+
+                if (added == 0)
+                    return;
+
+                record.ID = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+
+                int lineToLineSegment = connection.ExecuteScalar<int>("SELECT ID FROM AssetRelationshipType WHERE Name = 'Line-LineSegment'");
+
+                AssetConnection assetConnection = new AssetConnection()
+                {
+                    AssetRelationshipTypeID = lineToLineSegment,
+                    ParentID = lineID,
+                    ChildID = record.ID
+                };
+
+                TableOperations<AssetConnection> assetConnectionTable = new TableOperations<AssetConnection>(connection);
+                assetConnectionTable.AddNewRecord(assetConnection);
+            }
         }
 
         [AuthorizeHubRole("Administrator")]

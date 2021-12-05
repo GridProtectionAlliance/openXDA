@@ -133,6 +133,10 @@ new[] { "IsEnd", "End of Line", "text-left"},
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<LineSegment, DataHub>(ViewBag,null,null,ViewBag.LineID))
 
+        viewModel.setAddNewRecord(function (record) {
+            return dataHub.addNewLineSegmentForLine(record, @ViewBag.LineID);
+        });
+
         $(function () {
             $("#pageHeader").append("@Raw(Regex.Replace(AssetFilter().ToString(), @"\r|\n", ""))");
 
