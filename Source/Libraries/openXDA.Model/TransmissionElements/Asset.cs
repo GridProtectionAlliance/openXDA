@@ -27,6 +27,7 @@ using GSF.Data.Model;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
@@ -69,6 +70,7 @@ namespace openXDA.Model
 
         public string Description { get; set; }
 
+        [DefaultValue("")]
         public string AssetName { get; set; }
 
         [Required]
