@@ -3411,7 +3411,6 @@ namespace openXDA.Hubs
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-
                 TableOperations<LineSegment> tableOperations = new TableOperations<LineSegment>(connection);
                 RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -3449,7 +3448,6 @@ namespace openXDA.Hubs
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-
                 new TableOperations<LineSegment>(connection).UpdateRecord(record);
             }
         }
