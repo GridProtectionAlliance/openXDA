@@ -151,6 +151,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.XMLConfig", "Librar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.APIAuthentication", "Libraries\openXDA.APIAuthentication\openXDA.APIAuthentication.csproj", "{93FF1E73-CD8B-4F01-89BC-A4A242FA06A6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.NotificationDataSources", "Libraries\OpenXDA.NotificationDataSources\openXDA.NotificationDataSources.csproj", "{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -561,6 +563,18 @@ Global
 		{93FF1E73-CD8B-4F01-89BC-A4A242FA06A6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{93FF1E73-CD8B-4F01-89BC-A4A242FA06A6}.Release|x86.ActiveCfg = Release|Any CPU
 		{93FF1E73-CD8B-4F01-89BC-A4A242FA06A6}.Release|x86.Build.0 = Release|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Debug|x86.Build.0 = Debug|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Mono|Any CPU.ActiveCfg = Debug|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Mono|Any CPU.Build.0 = Debug|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Mono|x86.ActiveCfg = Debug|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Mono|x86.Build.0 = Debug|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Release|x86.ActiveCfg = Release|Any CPU
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -605,6 +619,7 @@ Global
 		{3DEC81F1-9A02-4BBF-8325-F332AC63393E} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{280F475D-7D5C-4BB7-98BE-DB0F3CBE40BB} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{93FF1E73-CD8B-4F01-89BC-A4A242FA06A6} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
+		{2813A92F-8CB5-4EC3-976C-8690C90C6DD0} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77720899-DA0C-45E0-AE45-677A89071A7B}

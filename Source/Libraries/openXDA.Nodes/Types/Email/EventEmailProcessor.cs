@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  EventEmailType.cs - Gbtc
+//  EventEmailProcessor.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  02/13/2021 - Stephen C. Wills
 //       Generated original version of source code.
+//  11/15/2021 - C. Lackner
+//       Overhaul of Email Engine to be more modular.
 //
 //******************************************************************************************************
 
@@ -26,13 +28,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using GSF.Data;
 using GSF.Threading;
 using log4net;
 using openXDA.Model;
 
 namespace openXDA.Nodes.Types.Email
 {
-    internal class EventEmailType
+    internal class EventEmailProcessor
     {
         #region [ Members ]
 
@@ -42,9 +45,10 @@ namespace openXDA.Nodes.Types.Email
         private const int StopTimerAction = 2;
 
         // Fields
-        private EventEmailParameters m_parameters;
+        private EmailType m_emailModel;
+        private Func<AdoDataConnection> m_connectionFactory;
         private ConcurrentQueue<Event> m_triggeredEvents;
-        private Action<EventEmailParameters, List<Event>> m_sendEmailCallback;
+        private Action<EmailType, List<Event>> m_sendEmailCallback;
 
         private ISynchronizedOperation m_synchronizedOperation;
         private ICancellationToken m_minDelayCancellationToken;
@@ -56,7 +60,7 @@ namespace openXDA.Nodes.Types.Email
 
         #region [ Constructors ]
 
-        public EventEmailType(Action<EventEmailParameters, List<Event>> sendEmailCallback)
+        public EventEmailProcessor(Action<EmailType, List<Event>> sendEmailCallback)
         {
             m_triggeredEvents = new ConcurrentQueue<Event>();
             m_sendEmailCallback = sendEmailCallback;
@@ -67,13 +71,19 @@ namespace openXDA.Nodes.Types.Email
 
         #region [ Properties ]
 
-        public EventEmailParameters Parameters
+        public EmailType EmailModel
         {
-            get => Interlocked.CompareExchange(ref m_parameters, null, null);
-            set => Interlocked.Exchange(ref m_parameters, value);
+            get => Interlocked.CompareExchange(ref m_emailModel, null, null);
+            set => Interlocked.Exchange(ref m_emailModel, value);
         }
 
-        public int EmailTypeID => Parameters.EmailTypeID;
+        public Func<AdoDataConnection> ConnectionFactory
+        {
+            get => Interlocked.CompareExchange(ref m_connectionFactory, null, null);
+            set => Interlocked.Exchange(ref m_connectionFactory, value);
+        }
+
+        public int EmailTypeID => EmailModel.ID;
 
         #endregion
 
@@ -81,10 +91,26 @@ namespace openXDA.Nodes.Types.Email
 
         public void Process(Event evt)
         {
-            if (Parameters.TriggersEmail(evt.ID))
+            if (EventTrigger(evt))
             {
                 m_triggeredEvents.Enqueue(evt);
                 m_synchronizedOperation.Run();
+            }
+        }
+
+        /// <summary>
+        /// Determine Whether the Email should be Triggered based on SQL
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <returns></returns>
+        private bool EventTrigger(Event evt)
+        {
+            if ((object)ConnectionFactory == null)
+                throw new InvalidOperationException("ConnectionFactory is undefined");
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                return connection.ExecuteScalar<bool>(m_emailModel.TriggerEmailSQL, evt.ID);
             }
         }
 
@@ -142,7 +168,7 @@ namespace openXDA.Nodes.Types.Email
                 return;
 
             Action sendEmailAction = new Action(SendEmail);
-            int delay = (int)Math.Round(Parameters.MinDelaySpan.TotalMilliseconds);
+            int delay = (int)Math.Round(TimeSpan.FromSeconds(EmailModel.MinDelay).TotalMilliseconds);
             cancellationToken = sendEmailAction.DelayAndExecute(delay);
             Interlocked.Exchange(ref m_minDelayCancellationToken, cancellationToken);
         }
@@ -165,7 +191,7 @@ namespace openXDA.Nodes.Types.Email
                 return;
 
             Action sendEmailAction = new Action(SendEmail);
-            int delay = (int)Math.Round(Parameters.MaxDelaySpan.TotalMilliseconds);
+            int delay = (int)Math.Round(TimeSpan.FromSeconds(EmailModel.MaxDelay).TotalMilliseconds);
             cancellationToken = sendEmailAction.DelayAndExecute(delay);
             Interlocked.Exchange(ref m_maxDelayCancellationToken, cancellationToken);
         }
@@ -184,7 +210,7 @@ namespace openXDA.Nodes.Types.Email
                 triggeredEvents.Add(evt);
 
             if (triggeredEvents.Any())
-                m_sendEmailCallback(Parameters, triggeredEvents);
+                m_sendEmailCallback(EmailModel, triggeredEvents);
         }
 
         private void HandleException(Exception ex)
@@ -197,7 +223,7 @@ namespace openXDA.Nodes.Types.Email
         #region [ Static ]
 
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(EventEmailType));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(EventEmailProcessor));
 
         #endregion
     }

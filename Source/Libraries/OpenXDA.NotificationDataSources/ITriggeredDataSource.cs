@@ -1,12 +1,12 @@
 ﻿//******************************************************************************************************
-//  EmailType.cs - Gbtc
+//  ITriggeredDataSource.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,40 +16,24 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  11/15/2021 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using GSF.Data.Model;
+using openXDA.Model;
+using System;
+using System.Xml.Linq;
 
-namespace openXDA.Model
+namespace openXDA.NotificationDataSources
 {
-    public class EmailType
+    public interface ITriggeredDataSource
     {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
+        TriggeredEmailDataSource Model { get; }
 
-        public bool SMS { get; set; }
+        EmailType EmailModel { get; }
+        void Configure();
 
-        public string Name { get; set; }
-
-        public string TriggerEmailSQL { get; set; }
-
-        public string CombineEventsSQL { get; set; }
-
-        public double MinDelay { get; set; }
-
-        public double MaxDelay { get; set; }
-
-        public string Template { get; set; }
-
-        public int EmailCategoryID { get; set; }
-    }
-
-    public class EmailTypeView : EmailType
-    {
-        [Searchable]
-        public string EmailCategory { get; set; }
+        XElement Process(Event evt);
     }
 }
