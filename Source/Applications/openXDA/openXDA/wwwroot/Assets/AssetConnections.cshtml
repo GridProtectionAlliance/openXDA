@@ -76,7 +76,7 @@ new[] { "AssetRelationshipType", "Connection Type", "text-left"},
 {
     <div class="col-md-12">
         @Raw(dataContext.AddSelectField<AssetConnection, Asset>("ParentID", "ID", "AssetKey", fieldLabel: "Asset 1"))
-        @Raw(dataContext.AddSelectField<AssetConnection, Meter>("ChildID", "ID", "AssetKey", fieldLabel: "Asset 2"))
+        @Raw(dataContext.AddSelectField<AssetConnection, Asset>("ChildID", "ID", "AssetKey", fieldLabel: "Asset 2"))
         @Raw(dataContext.AddSelectField<AssetConnection, AssetConnectionType>("AssetRelationshipTypeID", "ID", "Name", fieldLabel: "Connection Type"))
     </div>
         }
