@@ -424,7 +424,7 @@ namespace openXDA.Nodes.Types.Email
 
         public void ApplyChartTransform(List<Attachment> attachments, XDocument htmlDocument)
         {
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = CreateDbConnection())
             {
                 htmlDocument.TransformAll("chart", (element, index) =>
                 {

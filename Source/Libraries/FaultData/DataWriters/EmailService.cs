@@ -99,20 +99,7 @@ namespace FaultData.DataWriters
             }
         }
 
-        public XDocument ApplyTemplate(EmailType emailType, string templateData)
-        {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                TableOperations<XSLTemplate> templateTable = new TableOperations<XSLTemplate>(connection);
-                XSLTemplate xslTemplate = templateTable.QueryRecordWhere("ID = {0}", emailType.XSLTemplateID);
-                string htmlText = templateData.ApplyXSLTransform(xslTemplate.Template);
-
-                XDocument htmlDocument = XDocument.Parse(htmlText, LoadOptions.PreserveWhitespace);
-                htmlDocument.TransformAll("format", element => element.Format());
-                return htmlDocument;
-            }
-        }
-
+        
         public int LoadSentEmail(DateTime now, List<string> recipients, XDocument htmlDocument)
         {
             using (AdoDataConnection connection = ConnectionFactory())
