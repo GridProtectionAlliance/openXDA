@@ -502,8 +502,9 @@ CREATE TABLE BreakerAttributes
 	Speed FLOAT NOT NULL DEFAULT(0),
 	TripTime INT NOT NULL DEFAULT(0),
 	PickupTime INT NOT NULL DEFAULT(0),
-	TripCoilCondition FLOAT NOT NULL DEFAULT(0)
-)
+	TripCoilCondition FLOAT NOT NULL DEFAULT(0),
+    AirGapResistor BIT NOT NULL DEFAULT(0)
+    )
 GO
 
 CREATE TABLE CapacitorBankAttributes
@@ -771,7 +772,8 @@ CREATE VIEW Breaker AS
 		TripTime,
 		PickupTime,
 		TripCoilCondition,
-		Spare
+		Spare,
+        AirGapResistor
 	FROM Asset JOIN BreakerAttributes ON Asset.ID = BreakerAttributes.AssetID
 GO
 
@@ -788,14 +790,15 @@ BEGIN
 			Spare AS Spare
 	FROM INSERTED
 
-	INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed, TripTime, PickupTime, TripCoilCondition)
+	INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed, TripTime, PickupTime, TripCoilCondition, AirGapResistor)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			ThermalRating AS ThermalRating,
 			Speed AS Speed,
 			TripTime AS TripTime,
 			PickupTime AS PickupTime,
-			TripCoilCondition AS TripCoilCondition
+			TripCoilCondition AS TripCoilCondition,
+            AirGapResistor AS AirGapResistor
 	FROM INSERTED
 
 END
@@ -826,7 +829,8 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 			BreakerAttributes.Speed = INSERTED.Speed,
 			BreakerAttributes.TripTime = INSERTED.TripTime,
 			BreakerAttributes.PickupTime = INSERTED.PickupTime,
-			BreakerAttributes.TripCoilCondition = INSERTED.TripCoilCondition
+			BreakerAttributes.TripCoilCondition = INSERTED.TripCoilCondition,
+            BreakerAttributes.AirGapResistor = INSERTED.AirGapResistor
 		FROM
 			BreakerAttributes 
 	INNER JOIN

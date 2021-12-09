@@ -50,6 +50,8 @@ namespace openXDA.Model
 
         public double TripCoilCondition { get; set; } = 0.0D;
 
+        public bool AirGapResistor { get; set; } = false;
+
         #endregion
 
         #region [ Methods ]
