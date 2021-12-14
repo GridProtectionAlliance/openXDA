@@ -170,10 +170,6 @@ namespace DeviceDefinitionsMigrator
                 else if (operation == "export")
                 {
                     Producer producer = new Producer(connectionString, dataProvider);
-                    //MemoryStream stream = producer.Get();
-                    //byte[] buffer = new byte[stream.Length];
-                    //stream.Read(buffer, 0, buffer.Length);
-                    //File.WriteAllBytes(deviceDefinitionsFile, buffer);
                     producer.Get(deviceDefinitionsFile);
                 }
                 else
