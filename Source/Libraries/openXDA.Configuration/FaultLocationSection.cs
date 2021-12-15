@@ -29,7 +29,8 @@ namespace openXDA.Configuration
     public enum FaultCalculationCycleMethod
     {
         MaxCurrent,
-        LastFaultedCycle
+        LastFaultedCycle,
+        LastFaultedCycleExceptAirGapRes
     }
 
     public class FaultLocationSection

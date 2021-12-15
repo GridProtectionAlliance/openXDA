@@ -426,9 +426,11 @@ namespace FaultData.DataResources
                 if (!lightningDataResource.LightningStrikeLookup.TryGetValue(dataGroup, out List<ILightningStrike> lightningStrikes))
                     lightningStrikes = new List<ILightningStrike>();
 
-                foreach (Fault fault in faults)
-                    PopulateFaultInfo(fault, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes);
-
+                using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+                {
+                    foreach (Fault fault in faults)
+                        PopulateFaultInfo(fault, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes, connection);
+                }
                 // Create a fault group and add it to the lookup table
                 bool faultValidationLogicResult = CheckFaultValidationLogic(faults);
                 FaultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
@@ -963,10 +965,10 @@ namespace FaultData.DataResources
             return GetCycle(viCycleDataGroup, 0);
         }
 
-        private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes)
+        private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes, AdoDataConnection connection)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
-            int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
+            int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle, connection);
             DateTime startTime = dataGroup[0][fault.StartSample].Time;
             DateTime endTime = dataGroup[0][fault.EndSample].Time;
             double prefaultPeak = GetPrefaultPeak(fault, dataGroup, viCycleDataGroup);
@@ -1152,7 +1154,7 @@ namespace FaultData.DataResources
                 .Min();
         }
 
-        private int GetCalculationCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        private int GetCalculationCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle, AdoDataConnection connection)
         {
             if (!fault.Curves.Any())
                 return -1;
@@ -1170,9 +1172,31 @@ namespace FaultData.DataResources
 
                 case FaultCalculationCycleMethod.LastFaultedCycle:
                     return GetLastFaultedCycle(fault, samplesPerCycle);
+                case FaultCalculationCycleMethod.LastFaultedCycleExceptAirGapRes:
+                    if (isAirGapResistorCurrent(viCycleDataGroup, connection))
+                        return GetCycleWithMaximumCurrent(fault, viCycleDataGroup, samplesPerCycle);
+                    return GetLastFaultedCycle(fault, samplesPerCycle);
             }
         }
 
+        private bool isAirGapResistorCurrent(VICycleDataGroup viCycleDataGroup, AdoDataConnection connection)
+        {
+            AssetTypes breakerType = new TableOperations<AssetTypes>(connection).QueryRecordWhere("Name = 'Breaker'");
+            if (breakerType == null)
+                return false;
+
+            Func<Asset, bool> isBreaker = new Func<Asset, bool>((asset) => asset.AssetTypeID == breakerType.ID);
+            Func<Asset, bool> hasAirGapResistor = new Func<Asset, bool>((asset) => Breaker.DetailedBreaker(asset,connection).AirGapResistor);
+
+            if (isBreaker(viCycleDataGroup.IA.Asset) && hasAirGapResistor(viCycleDataGroup.IA.Asset))
+                return true;
+            if (isBreaker(viCycleDataGroup.IB.Asset) && hasAirGapResistor(viCycleDataGroup.IB.Asset))
+                return true;
+            if (isBreaker(viCycleDataGroup.IC.Asset) && hasAirGapResistor(viCycleDataGroup.IC.Asset))
+                return true;
+
+            return false;
+        }
         private int GetCycleWithMaximumCurrent(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
         {
             Func<int, double> sumPhases = i =>
