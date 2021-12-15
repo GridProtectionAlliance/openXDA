@@ -156,7 +156,13 @@ namespace FaultData.DataResources
         private List<ILightningDataProvider> GetDataProviders()
         {
             if (string.IsNullOrEmpty(LightningDataSettings.DataProviders))
-                return new List<ILightningDataProvider> { GetDataProvider(LightningDataSettings) };
+            {
+                ILightningDataProvider provider = GetDataProvider(LightningDataSettings);
+                if (provider == null)
+                    return new List<ILightningDataProvider>();  
+                return new List<ILightningDataProvider> { provider };
+            }
+                
 
             ConnectionStringParser<SettingAttribute, CategoryAttribute> connectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
 
