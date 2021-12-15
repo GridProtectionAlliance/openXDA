@@ -99,7 +99,7 @@ namespace FaultData.DataOperations
         private void FilterProcessedDataGroups(MeterDataSet meterDataSet)
         {
             DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
-            List<DataGroup> dataGroups = new List<DataGroup>(dataGroupsResource.DataGroups);
+            List<DataGroup> dataGroups = dataGroupsResource.DataGroups;
 
             if (!dataGroups.Any(dataGroup => dataGroup.Classification == DataClassification.Event))
                 return;
