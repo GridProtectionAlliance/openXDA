@@ -41,7 +41,9 @@ namespace openXDA.Model
         Breaker = 3,
         CapacitorBank = 4,
         LineSegement = 5,
-        Transformer = 6
+        Transformer = 6,
+        CapBankRelay = 7,
+        DER = 8
     }
 
     [TableName("AssetType")]
