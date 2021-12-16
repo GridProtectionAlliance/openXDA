@@ -606,21 +606,21 @@ GO
 
 
 -- Default Asset Types
-INSERT INTO AssetType (Name, Description) VALUES ('Line','Transmission Line')
+INSERT INTO AssetType (ID, Name, Description) VALUES (1,'Line','Transmission Line')
 GO
-INSERT INTO AssetType (Name, Description) VALUES ('Bus','Bus')
+INSERT INTO AssetType (ID, Name, Description) VALUES (2,'Bus','Bus')
 GO
-INSERT INTO AssetType (Name, Description) VALUES ('Breaker','Breaker')
+INSERT INTO AssetType (ID, Name, Description) VALUES (3,'Breaker','Breaker')
 GO
-INSERT INTO AssetType (Name, Description) VALUES ('CapacitorBank','Bank of Capacitors')
+INSERT INTO AssetType (ID, Name, Description) VALUES (4,'CapacitorBank','Bank of Capacitors')
 GO
-INSERT INTO AssetType (Name, Description) VALUES ('LineSegment','Segment of a Transmission Line')
+INSERT INTO AssetType (ID, Name, Description) VALUES (5,'LineSegment','Segment of a Transmission Line')
 GO
-INSERT INTO AssetType (Name, Description) VALUES ('Transformer','Transformer')
+INSERT INTO AssetType (ID, Name, Description) VALUES (6,'Transformer','Transformer')
 GO
-INSERT INTO AssetType (Name, Description) VALUES ('CapacitorBankRelay','Relay for a Capacitor Bank')
+INSERT INTO AssetType (ID, Name, Description) VALUES (7,'CapacitorBankRelay','Relay for a Capacitor Bank')
 GO
-INSERT INTO AssetType (Name, Description) VALUES ('DER','DER governed by IEEE Standard 1547-2018')
+INSERT INTO AssetType (ID, Name, Description) VALUES (8,'DER','DER governed by IEEE Standard 1547-2018')
 GO
 
 -- Default Asset Connections
