@@ -289,24 +289,51 @@ namespace FaultData.DataOperations
         private void LoadWorstDisturbance(AdoDataConnection connection, int eventID, List<Disturbance> worstDisturbances)
         {
             TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
-            DbDisturbance worstDisturbance = disturbanceTable.QueryRecordWhere("PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND EventID = {0}", eventID);
-           
-            if (worstDisturbance == null)
+
+            if (worstDisturbances.Count == 0)
                 return;
 
-            Disturbance worstLLDisturbance = worstDisturbances.Where(d => d.IsLLDisturbance).FirstOrDefault();
-            Disturbance worstLNDisturbance = worstDisturbances.Where(d => d.IsLNDisturbance).FirstOrDefault();
-
-
-            EventWorstDisturbance worstDisturbanceRecord = new EventWorstDisturbance()
+            foreach (IGrouping <EventClassification, Disturbance> typeGrouping in worstDisturbances.GroupBy(evt => evt.EventType))
             {
-                EventID = eventID,
-                WorstDisturbanceID = worstDisturbance.ID,
-                WorstLLDisturbanceID = GetDisturbanceID(connection, disturbanceTable, worstLLDisturbance, eventID),
-                WorstLNDisturbanceID = GetDisturbanceID(connection, disturbanceTable, worstLNDisturbance, eventID)
-            };
+                foreach (IGrouping<int, Disturbance> overlap in typeGrouping.GroupBy(evt => evt.WorstDisturbanceGrouping))
+                {
+                    Disturbance worst = overlap.Where(item => item.IsTotalWorstDisturbance).FirstOrDefault();
+                    if (worst == null)
+                        continue;
 
-            new TableOperations<EventWorstDisturbance>(connection).AddNewRecord(worstDisturbanceRecord);
+                    Disturbance worstLL = overlap.Where(item => item.IsLLDisturbance).FirstOrDefault();
+                    Disturbance worstLN = overlap.Where(item => item.IsLNDisturbance).FirstOrDefault();
+
+                    int? worstLLID = GetDisturbanceID(connection, disturbanceTable, worstLL, eventID);
+                    int? worstLNID = GetDisturbanceID(connection, disturbanceTable, worstLN, eventID);
+
+                    int worstID = -1;
+                    if (worstLL != null && worstLL.StartIndex == worst.StartIndex && worstLL.PerUnitMagnitude == worst.PerUnitMagnitude)
+                        worstID = worstLLID ?? -1;
+                    if (worstLN != null && worstLN.StartIndex == worst.StartIndex && worstLN.PerUnitMagnitude == worst.PerUnitMagnitude)
+                        worstID = worstLNID ?? -1;
+
+                    if (worstID == -1)
+                        worstID = GetDisturbanceID(connection, disturbanceTable, worst, eventID) ?? -1;
+
+                    if (worstID == -1)
+                        continue;
+
+                    EventWorstDisturbance worstDisturbanceRecord = new EventWorstDisturbance()
+                    {
+                        EventID = eventID,
+                        WorstDisturbanceID = worstID,
+                        WorstLLDisturbanceID = worstLLID,
+                        WorstLNDisturbanceID = worstLNID
+                    };
+                    new TableOperations<EventWorstDisturbance>(connection).AddNewRecord(worstDisturbanceRecord);
+
+                }
+            }
+                
+            
+
+           
         }
 
         private int? GetDisturbanceID(AdoDataConnection connection, TableOperations<DbDisturbance> disturbanceTable, Disturbance disturbance, int eventID)
@@ -320,16 +347,14 @@ namespace FaultData.DataOperations
             sql += "PhaseID = {1} AND ";
             sql += "Magnitude = {2} AND ";
             sql += "PerUnitMagnitude = {3} AND ";
-            sql += "StartTime = {4} AND ";
-            sql += "EndTime = {5} AND ";
-            sql += "DurationSeconds = {6} AND ";
-            sql += "DurationCycles = {7} AND ";
-            sql += "StartIndex = {8} AND ";
-            sql += "EndIndex = {9} AND ";
-            sql += "EventID = {10}";
+            sql += "DurationSeconds = {4} AND ";
+            sql += "DurationCycles = {5} AND ";
+            sql += "StartIndex = {6} AND ";
+            sql += "EndIndex = {7} AND ";
+            sql += "EventID = {8}";
 
             dbDisturbance = disturbanceTable.QueryRecordWhere(sql, dbDisturbance.EventTypeID, dbDisturbance.PhaseID, dbDisturbance.Magnitude, dbDisturbance.PerUnitMagnitude,
-                dbDisturbance.StartTime, dbDisturbance.EndTime, dbDisturbance.DurationSeconds, dbDisturbance.DurationCycles, 
+                dbDisturbance.DurationSeconds, dbDisturbance.DurationCycles, 
                 dbDisturbance.StartIndex, dbDisturbance.EndIndex, eventID);
 
             return dbDisturbance?.ID;
@@ -389,22 +414,20 @@ namespace FaultData.DataOperations
             TransientDataResource transientDataResource = meterDataSet.GetResource<TransientDataResource>();
 
             List<Disturbance> disturbances = new List<Disturbance>();
-
             if (dataGroup.Classification == DataClassification.Unknown)
                 return disturbances;
 
-            if (sagDataResource.Sags.TryGetValue(dataGroup, out disturbances))
-                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
+            if (sagDataResource.Sags.TryGetValue(dataGroup, out List<Disturbance> sags))
+                disturbances.AddRange(sags.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst));
                
+            if (swellDataResource.Swells.TryGetValue(dataGroup, out List<Disturbance> swells))
+                disturbances.AddRange(swells.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst));
 
-            if (swellDataResource.Swells.TryGetValue(dataGroup, out disturbances))
-                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
+            if (interruptionDataResource.Interruptions.TryGetValue(dataGroup, out List<Disturbance> interruptions))
+                disturbances.AddRange(interruptions.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst));
 
-            if (interruptionDataResource.Interruptions.TryGetValue(dataGroup, out disturbances))
-                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
-
-            if (transientDataResource.Transients.TryGetValue(dataGroup, out disturbances))
-                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
+            if (transientDataResource.Transients.TryGetValue(dataGroup, out List<Disturbance> transients))
+               disturbances.AddRange(transients.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst));
 
             return disturbances;
         }

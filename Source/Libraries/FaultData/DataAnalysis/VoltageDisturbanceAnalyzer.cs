@@ -153,8 +153,8 @@ namespace FaultData.DataAnalysis
 
             IEnumerable<Range<DateTime>> allDisturbanceRanges = disturbanceList
                 .Select(ToDateRange);
-            
 
+            int distGroupIndex = 1;
             IEnumerable<Disturbance> worstDisturbances = Range<DateTime>.MergeAllOverlapping(allDisturbanceRanges)
                 .Select(range =>
                 {
@@ -173,13 +173,23 @@ namespace FaultData.DataAnalysis
                     }
 
                     if (worstLL != null)
+                    {
                         worstLL.IsWorstDisturbance = true;
+                        worstLL.WorstDisturbanceGrouping = distGroupIndex;
+                    }
+
                     if (worstLN != null)
+                    {
                         worstLN.IsWorstDisturbance = true;
+                        worstLN.WorstDisturbanceGrouping = distGroupIndex;
+                    }
 
                     worst.IsWorstDisturbance = true;
+                    worst.IsTotalWorstDisturbance = true;
+                    worst.WorstDisturbanceGrouping = distGroupIndex;
                     worst = worst.Clone();
                     worst.Phase = Phase.Worst;
+                    distGroupIndex++;
                     return worst;
                 });
 
@@ -213,6 +223,7 @@ namespace FaultData.DataAnalysis
                 .Concat(bcPhaseDisturbanceRanges)
                 .Concat(caPhaseDisturbanceRanges);
 
+            int distGroupIndex = 1;
             IEnumerable<Disturbance> worstDisturbances = Range<int>.MergeAllOverlapping(allDisturbanceRanges)
                 .Select(range =>
                 {
@@ -231,13 +242,22 @@ namespace FaultData.DataAnalysis
                     }
 
                     if (worstLL != null)
+                    {
                         worstLL.IsWorstDisturbance = true;
+                        worstLL.WorstDisturbanceGrouping = distGroupIndex;
+                    }
                     if (worstLN != null)
+                    {
                         worstLN.IsWorstDisturbance = true;
+                        worstLN.WorstDisturbanceGrouping = distGroupIndex;
+                    }
 
                     worst.IsWorstDisturbance = true;
+                    worst.IsTotalWorstDisturbance = true;
+                    worst.WorstDisturbanceGrouping = distGroupIndex;
                     worst = worst.Clone();
                     worst.Phase = Phase.Worst;
+                    distGroupIndex++;
                     return worst;
                 });
 

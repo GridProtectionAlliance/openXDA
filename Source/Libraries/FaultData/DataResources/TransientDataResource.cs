@@ -96,12 +96,15 @@ namespace FaultData.DataResources
 
             if (worstLN != null)
                 worstLN.IsWorstDisturbance = true;
+            
             if (worstLL != null)
                 worstLL.IsWorstDisturbance = true;
+            
 
             if (worst != null)
             {
                 worst.IsWorstDisturbance = true;
+                worst.IsTotalWorstDisturbance = true;
                 worst = worst.Clone();
                 worst.Phase = Phase.Worst;
                 transientList.Add(worst);
