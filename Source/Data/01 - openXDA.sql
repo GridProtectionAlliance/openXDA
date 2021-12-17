@@ -1977,7 +1977,7 @@ CREATE TABLE EmailType
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     SMS BIT NOT NULL DEFAULT 0,
     Name VARCHAR(100) NOT NULL,
-    TriggersEmailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
+    TriggerEmailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
     CombineEventsSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT ID FROM Event WHERE ID = {0}',
     MinDelay FLOAT NOT NULL DEFAULT 10,
     MaxDelay FLOAT NOT NULL DEFAULT 60,
@@ -2006,6 +2006,23 @@ CREATE TABLE UserAccountEmailType
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
     Approved BIT NOT NULL DEFAULT(0)
 )
+GO
+
+CREATE VIEW SubscribeEmails
+AS
+SELECT
+	UserAccountEmailType.ID,
+	UserAccountEmailType.Approved,
+	EmailType.ID as EmailID,
+	UserAccount.FirstName as FirstName,
+	UserAccount.LastName as LastName,
+	UserAccount.Email as Email,
+	AssetGroup.Name as AssetGroup
+FROM
+	UserAccountEmailType JOIN
+	EmailType ON EmailType.ID = UserAccountEmailType.EmailTypeID JOIN
+	UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID JOIN
+	AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID
 GO
 
 CREATE TABLE UserAccountScheduledEmailType
@@ -5275,11 +5292,8 @@ GO
 CREATE VIEW EmailTypeView
 AS
 SELECT
-    EmailType.EmailCategoryID,
-    EmailType.ID,
-    EmailCategory.Name AS EmailCategory,
-    EmailType.Template,
-    EmailType.Name
+    EmailType.*,
+    EmailCategory.Name AS EmailCategory
 FROM
     EmailType JOIN
     EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID

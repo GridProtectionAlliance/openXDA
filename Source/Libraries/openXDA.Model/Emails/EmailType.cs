@@ -25,8 +25,15 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("EmailType")]
+    [UseEscapedName]
     public class EmailType
     {
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -47,6 +54,12 @@ namespace openXDA.Model
         public int EmailCategoryID { get; set; }
     }
 
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("EmailTypeView")]
+    [UseEscapedName]
     public class EmailTypeView : EmailType
     {
         [Searchable]

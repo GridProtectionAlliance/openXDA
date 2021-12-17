@@ -107,6 +107,7 @@
     <Compile Include="Emails\ScheduledEmailDataSourceEmailType.cs" />
     <Compile Include="Emails\ScheduledEmailDataSourceSetting.cs" />
     <Compile Include="Emails\SMSProvider.cs" />
+    <Compile Include="Emails\SubscribeEmails.cs" />
     <Compile Include="Emails\TriggeredEmailDataSourceEmailType.cs" />
     <Compile Include="Emails\ScheduledEmailType.cs" />
     <Compile Include="Emails\EmailTemplateUser.cs" />

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  EmailCategory.cs - Gbtc
+//  SubscribeEmails.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,26 +16,42 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  12/16/2021 - Samuel Robinson
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace openXDA.Model
+namespace openXDA.Model.Emails
 {
     [AllowSearch]
     [DeleteRoles("Administrator")]
     [PatchRoles("Administrator")]
     [PostRoles("Administrator")]
-    [TableName("EmailCategory")]
+    [TableName("SubscribeEmails")]
     [UseEscapedName]
-    public class EmailCategory
+    public class SubscribeEmails
     {
-        [PrimaryKey(true)]
+        [PrimaryKey()]
         public int ID { get; set; }
 
-        public string Name { get; set; }
+        public bool Approved { get; set; }
+
+        [ParentKey(typeof(UserAccountEmailType))]
+        public int EmailID { get; set; }
+
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+
+        public string Email { get; set; }
+
+        public string AssetGroup { get; set; }
     }
 }
