@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
@@ -208,6 +210,46 @@ namespace openXDA.Model
                 channel.LazyContext = LazyContext;
 
             return LazyContext.GetChannel(channel);
+        }
+
+        #endregion
+
+        #region [Static]
+        public static Series GetInfo(Meter meter, int seriesID) {
+            List<Channel> channels = meter.Channels;
+
+            // Disable lazy loading
+            var connectionFactory = meter.ConnectionFactory;
+            meter.ConnectionFactory = null;
+
+            // Search for a series that has already been loaded
+            Series seriesInfo = channels
+                .Where(channel => (object)channel.Series != null)
+                .SelectMany(channel => channel.Series)
+                .FirstOrDefault(series => series.ID == seriesID);
+
+            // Restore lazy loading
+            meter.ConnectionFactory = connectionFactory;
+
+            // If the series was found without
+            // lazy loading, return that series
+            if ((object)seriesInfo != null)
+                return seriesInfo;
+
+            int channelID;
+
+            using (AdoDataConnection connection = meter.ConnectionFactory())
+            {
+                // Get the channel ID of the series so we can skip lazy loading series collections for irrelevant channels
+                channelID = connection.ExecuteScalar<int>("SELECT ChannelID FROM Series WHERE ID = {0}", seriesID);
+            }
+
+            // Now filter to the appropriate channel and search its series collection
+            return channels
+                .Where(channel => channel.ID == channelID)
+                .SelectMany(channel => channel.Series)
+                .FirstOrDefault(series => series.ID == seriesID);
+
         }
 
         #endregion

@@ -252,6 +252,101 @@ namespace FaultData.DataAnalysis
             return new CycleDataGroup(dataGroup, dataSeries.SeriesInfo.Channel.Asset);
         }
 
+        public static DataSeries ToRMS(DataSeries dataSeries, double frequency, bool compress = false)
+        {
+            DataSeries rmsSeries = new DataSeries();
+
+            int samplesPerCycle;
+            double[] yValues;
+            double[] tValues;
+            double sum;
+
+            DateTime cycleTime;
+
+            if ((object)dataSeries == null)
+                return null;
+
+            // Set series info to the source series info
+            rmsSeries.SeriesInfo = dataSeries.SeriesInfo;
+
+
+            // Get samples per cycle of the data series based on the given frequency
+            samplesPerCycle = Transform.CalculateSamplesPerCycle(dataSeries, frequency);
+
+            //preinitialize size of SeriesInfo
+            int ncycleData = dataSeries.DataPoints.Count - samplesPerCycle;
+            rmsSeries.DataPoints = new List<DataPoint>(ncycleData);
+
+
+
+            // Initialize arrays of y-values and t-values for calculating cycle data as necessary
+            yValues = new double[samplesPerCycle];
+            tValues = new double[samplesPerCycle];
+
+            // Obtain a list of time gaps in the data series
+            List<int> gapIndexes = Enumerable.Range(0, dataSeries.DataPoints.Count - 1)
+                .Where(index =>
+                {
+                    DataPoint p1 = dataSeries[index];
+                    DataPoint p2 = dataSeries[index + 1];
+                    double cycleDiff = (p2.Time - p1.Time).TotalSeconds * frequency;
+
+                    // Detect gaps larger than a quarter cycle.
+                    // Tolerance of 0.000062 calculated
+                    // assuming 3.999 samples per cycle
+                    return (cycleDiff > 0.250062);
+                })
+                .ToList();
+
+            sum = 0;
+
+            if (dataSeries.DataPoints.Count > samplesPerCycle)
+            {
+                sum = dataSeries.DataPoints.Take(samplesPerCycle).Sum(pt => pt.Value * pt.Value);
+
+                rmsSeries.DataPoints.Add(new DataPoint()
+                {
+                    Time = dataSeries.DataPoints[0].Time,
+                    Value = Math.Sqrt(sum / samplesPerCycle)
+                });
+
+                cycleTime = dataSeries.DataPoints[0].Time;
+
+                // Reduce RMS to max 2 pt per cycle to get half cycle RMS
+                int step = 1;
+                if (compress)
+                    step = (int)Math.Floor(samplesPerCycle / 2.0D);
+                if (step == 0)
+                    step = 1;
+
+                for (int i = step; i < dataSeries.DataPoints.Count - samplesPerCycle; i = i + step)
+                {
+
+                    for (int j = 0; j < step; j++)
+                    {
+                        sum = sum - dataSeries.DataPoints[i - step + j].Value * dataSeries.DataPoints[i - step + j].Value;
+                        sum = sum + dataSeries.DataPoints[i - step + j + samplesPerCycle].Value * dataSeries.DataPoints[i - step + j + samplesPerCycle].Value;
+                    }
+
+                    // If the cycle following i contains a data gap, do not calculate cycle data
+                    if (gapIndexes.Any(index => i <= index && (i + samplesPerCycle - 1) > index))
+                        continue;
+
+                    // Use the time of the first data point in the cycle as the time of the cycle
+                    cycleTime = dataSeries.DataPoints[i].Time;
+
+                    rmsSeries.DataPoints.Add(new DataPoint()
+                    {
+                        Time = cycleTime,
+                        Value = Math.Sqrt(sum / samplesPerCycle)
+                    });
+
+                }
+            }
+
+            return rmsSeries;
+        }
+
         public static List<double> ToValues(DataSeries series)
         {
             return series.DataPoints

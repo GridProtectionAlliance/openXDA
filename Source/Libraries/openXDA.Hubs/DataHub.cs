@@ -31,7 +31,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using GSF;
 using GSF.Collections;
@@ -3399,8 +3398,9 @@ namespace openXDA.Hubs
 
                     //Because we are looking through the Line Segment View it does not matter if there are other
                     // Assets caught with this restriction.
-                    restriction = restriction + new RecordRestriction("ID in ({0})", string.Join(",", connectionID));
+                    restriction &= new RecordRestriction($"ID in ({string.Join(",", connectionID)})");
                 }
+
                 return tableOperations.QueryRecordCount(restriction);
             }
         }
@@ -3411,7 +3411,6 @@ namespace openXDA.Hubs
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-
                 TableOperations<LineSegment> tableOperations = new TableOperations<LineSegment>(connection);
                 RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -3426,7 +3425,7 @@ namespace openXDA.Hubs
                             return item.ParentID;
                         }).ToList();
 
-                    restriction = restriction + new RecordRestriction("ID in ({0})", string.Join(",", connectionID));
+                    restriction &= new RecordRestriction($"ID in ({string.Join(", ", connectionID)})");
                 }
 
                 return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
@@ -3449,7 +3448,6 @@ namespace openXDA.Hubs
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-
                 new TableOperations<LineSegment>(connection).UpdateRecord(record);
             }
         }
@@ -3460,15 +3458,36 @@ namespace openXDA.Hubs
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                int added = new TableOperations<LineSegment>(connection).AddNewRecord(record);
-                if (added != 0)
-                {
-                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
-                    record.ID = index;
-
-                }
+                TableOperations<LineSegment> lineSegmentTable = new TableOperations<LineSegment>(connection);
+                lineSegmentTable.AddNewRecord(record);
             }
-            
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public void AddNewLineSegmentForLine(LineSegment record, int lineID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<LineSegment> lineSegmentTable = new TableOperations<LineSegment>(connection);
+                int added = lineSegmentTable.AddNewRecord(record);
+
+                if (added == 0)
+                    return;
+
+                record.ID = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+
+                int lineToLineSegment = connection.ExecuteScalar<int>("SELECT ID FROM AssetRelationshipType WHERE Name = 'Line-LineSegment'");
+
+                AssetConnection assetConnection = new AssetConnection()
+                {
+                    AssetRelationshipTypeID = lineToLineSegment,
+                    ParentID = lineID,
+                    ChildID = record.ID
+                };
+
+                TableOperations<AssetConnection> assetConnectionTable = new TableOperations<AssetConnection>(connection);
+                assetConnectionTable.AddNewRecord(assetConnection);
+            }
         }
 
         [AuthorizeHubRole("Administrator")]

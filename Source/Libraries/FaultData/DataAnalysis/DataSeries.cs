@@ -26,6 +26,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GSF;
+using Ionic.Zlib;
 using openXDA.Model;
 
 namespace FaultData.DataAnalysis
@@ -114,6 +116,33 @@ namespace FaultData.DataAnalysis
                 return m_duration.Value;
             }
         }
+
+        /// <summary>
+        /// Gets the Start Time of the dataseries.
+        /// </summary>
+        public DateTime StartTime
+        {
+            get
+            {
+                if (!m_dataPoints.Any())
+                    return DateTime.MinValue;
+                return m_dataPoints.First().Time;
+            }
+        }
+
+        /// <summary>
+        /// Gets the End Time of the dataseries.
+        /// </summary>
+        public DateTime EndTime
+        {
+            get
+            {
+                if (!m_dataPoints.Any())
+                    return DateTime.MinValue;
+                return m_dataPoints.Last().Time;
+            }
+        }
+
 
         /// <summary>
         /// Gets the Length of the series, in datapoints.
@@ -236,6 +265,7 @@ namespace FaultData.DataAnalysis
 
         #region [ Methods ]
 
+
         /// <summary>
         /// Creates a new <see cref="DataSeries"/> that is a subset.
         /// </summary>
@@ -355,6 +385,63 @@ namespace FaultData.DataAnalysis
             return m_dataPoints.FindIndex(x => x.LargerThan(value));
         }
 
+        /// <summary>
+        /// Downsamples the current DataSeries to requested sample count, if the 
+        /// </summary>
+        /// <param name="maxSampleCount"></param>
+        public void Downsample(int maxSampleCount)
+        {
+            // don't actually downsample, if it doesn't need it.
+            if (DataPoints.Count <= maxSampleCount) return;
+
+            DateTime epoch = new DateTime(1970, 1, 1);
+            double startTime = StartTime.Subtract(epoch).TotalMilliseconds;
+            double endTime = EndTime.Subtract(epoch).TotalMilliseconds;
+            List<DataPoint> data = new List<DataPoint>();
+
+            // milliseconds per returned sampled size
+            int step = (int)(Duration*1000) / maxSampleCount;
+            if (step < 1)
+                step = 1;
+
+            int index = 0;
+            for (double n = startTime * 1000; n <= endTime * 1000; n += 2 * step)
+            {
+                DataPoint min = null;
+                DataPoint max = null;
+
+                while (index < DataPoints.Count() && DataPoints[index].Time.Subtract(epoch).TotalMilliseconds * 1000 < n + 2 * step)
+                {
+                    if (min == null || min.Value > DataPoints[index].Value)
+                        min = DataPoints[index];
+
+                    if (max == null || max.Value <= DataPoints[index].Value)
+                        max = DataPoints[index];
+
+                    ++index;
+                }
+
+                if (min != null)
+                {
+                    if (min.Time < max.Time)
+                    {
+                        data.Add(min);
+                        data.Add(max);
+                    }
+                    else if (min.Time > max.Time)
+                    {
+                        data.Add(max);
+                        data.Add(min);
+                    }
+                    else
+                    {
+                        data.Add(min);
+                    }
+                }
+            }
+            DataPoints = data;
+        }
+
         #endregion
 
         #region [ Static ]
@@ -390,6 +477,74 @@ namespace FaultData.DataAnalysis
         private static DataPoint Add(DataPoint point1, DataPoint point2)
         {
             return point1.Add(point2);
+        }
+
+        public static DataSeries FromData(Meter meter, byte[] data)
+        {
+
+            if (data == null)
+                return null;
+
+            // Restore the GZip header before uncompressing
+            data[0] = 0x1F;
+            data[1] = 0x8B;
+
+            byte[] uncompressedData = GZipStream.UncompressBuffer(data);
+            int offset = 0;
+
+            int samples = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            List<DateTime> times = new List<DateTime>();
+
+            while (times.Count < samples)
+            {
+                int timeValues = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+                long currentValue = LittleEndian.ToInt64(uncompressedData, offset);
+                offset += sizeof(long);
+                times.Add(new DateTime(currentValue));
+
+                for (int i = 1; i < timeValues; i++)
+                {
+                    currentValue += LittleEndian.ToUInt16(uncompressedData, offset);
+                    offset += sizeof(ushort);
+                    times.Add(new DateTime(currentValue));
+                }
+            }
+
+            DataSeries dataSeries = new DataSeries();
+            int seriesID = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            if (seriesID > 0 && (object)meter != null)
+                dataSeries.SeriesInfo = Series.GetInfo(meter, seriesID);
+
+            const ushort NaNValue = ushort.MaxValue;
+            double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
+            double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
+            offset += 2 * sizeof(double);
+
+            for (int i = 0; i < samples; i++)
+            {
+                ushort compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
+                offset += sizeof(ushort);
+
+                double decompressedValue = decompressionScale * compressedValue + decompressionOffset;
+
+                if (compressedValue == NaNValue)
+                    decompressedValue = double.NaN;
+
+                dataSeries.DataPoints.Add(new DataPoint()
+                {
+                    Time = times[i],
+                    Value = decompressedValue
+                });
+            }
+
+            return dataSeries;
+
         }
 
         #endregion

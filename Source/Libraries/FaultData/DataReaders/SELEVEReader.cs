@@ -71,14 +71,33 @@ namespace FaultData.DataReaders
             string dataFileName = Path.GetFileName(dataFile.FilePath);
             string tempFilePath = Path.Combine(tempDataFolderPath, dataFileName);
             byte[] data = dataFile.FileBlob.Blob;
-            File.WriteAllBytes(tempFilePath, data);
 
+            try
+            {
+                if (Directory.Exists(tempDataFolderPath))
+                    Directory.Delete(tempDataFolderPath, true);
+
+                Directory.CreateDirectory(tempDataFolderPath);
+                File.WriteAllBytes(tempFilePath, data);
+                Parse(meterDataSet, tempFilePath);
+            }
+            finally
+            {
+                if (Directory.Exists(tempDataFolderPath))
+                    Directory.Delete(tempDataFolderPath, true);
+            }
+
+            return meterDataSet;
+        }
+
+        private void Parse(MeterDataSet meterDataSet, string filePath)
+        {
             double systemFrequency = DataAnalysisSettings.SystemFrequency;
             double maxEventDuration = DataAnalysisSettings.MaxEventDuration;
-            EventFile eventFile = EventFile.Parse(tempFilePath, systemFrequency, maxEventDuration);
+            EventFile eventFile = EventFile.Parse(filePath, systemFrequency, maxEventDuration);
 
             if (!eventFile.EventReports.Any() && !eventFile.CommaSeparatedEventReports.Any())
-                return meterDataSet;
+                return;
 
             Header header = eventFile.EventReports.FirstOrDefault()?.Header
                 ?? eventFile.CommaSeparatedEventReports[0].Header;
@@ -209,8 +228,6 @@ namespace FaultData.DataReaders
                     meterDataSet.Digitals.Add(dataSeries);
                 }
             }
-
-            return meterDataSet;
         }
 
         private Channel MakeParsedAnalog(EventReport report, int channelIndex)

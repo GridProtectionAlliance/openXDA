@@ -126,7 +126,7 @@ namespace openXDA.XMLConfig
 													CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 													CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 													CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-													ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+													CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 													CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 													(
 														SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -176,7 +176,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -229,7 +229,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -310,7 +310,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -371,7 +371,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -422,7 +422,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -473,7 +473,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -590,7 +590,7 @@ namespace openXDA.XMLConfig
 													CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 													CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 													CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-													ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+													CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 													CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 													(
 														SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -640,7 +640,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -693,7 +693,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -774,7 +774,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -835,7 +835,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -886,7 +886,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -937,7 +937,7 @@ namespace openXDA.XMLConfig
 												CAST(ChannelDetail.PerUnitValue as varchar(max)) as [@PerUnitValue],
 												CAST(ChannelDetail.SamplesPerHour as varchar(max)) as [@SamplesPerHour],
 												CAST(ChannelDetail.Adder as varchar(max)) as [@Adder],
-												ChannelDetail.ConnectionPriority as [@ConnectionPriority],
+												CAST(ChannelDetail.ConnectionPriority as INT) as [@ConnectionPriority],
 												CAST(ChannelDetail.Multiplier as varchar(max)) as [@Multiplier],
 												(
 													SELECT (SELECT SeriesType.Name as [@Type], Series.SourceIndexes as [@SourceIndexes] FROM Series JOIN SeriesType ON Series.SeriesTypeID = SeriesType.ID WHERE Series.ChannelID = ChannelDetail.ID FOR XML PATH('Series'),TYPE ) FOR XML PATH(''), TYPE
@@ -1024,7 +1024,9 @@ namespace openXDA.XMLConfig
 		{
 			string sql = BuildQuery( locationIDs, meterIDs, assetIDs);
 			string xml = Query(sql);
-			File.WriteAllText(filePath, xml);
+			XmlDocument document = new XmlDocument();
+			document.LoadXml(xml);
+			document.Save(filePath);
 		}
 
 		/// <summary>

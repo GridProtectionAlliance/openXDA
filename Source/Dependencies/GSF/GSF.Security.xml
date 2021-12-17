@@ -4,6 +4,21 @@
         <name>GSF.Security</name>
     </assembly>
     <members>
+        <member name="T:GSF.Security.TokenResponse">
+            <summary>
+            Defines a JSON token response for the <see cref="T:GSF.Security.OIDCSecurityProvider"/>.
+            </summary>
+        </member>
+        <member name="P:GSF.Security.TokenResponse.access_token">
+            <summary>
+            Access token.
+            </summary>
+        </member>
+        <member name="P:GSF.Security.TokenResponse.id_token">
+            <summary>
+            ID token.
+            </summary>
+        </member>
         <member name="T:GSF.Security.OIDCSecurityProvider">
             <summary>
             Represents an <see cref="T:GSF.Security.ISecurityProvider"/> that uses openID Connect
@@ -26,7 +41,9 @@
                   <add name="AuthorizationEndpoint" value="user" description="Defines the Endpoint to redirect the user for Authorization." encrypted="false" />
                   <add name="RedirectURI" value="https://localhost:8986/" description="Defines the URI the User get's redirected to after signing in." encrypted="false" />
                   <add name="ClientSecret" value="sssss-ssssss-sssss" description="Defines the Client Secret to encrypt User Information." encrypted="false" />
+                  <add name="SelfVerifiedNonce="aefgdfhf" description="Defines the Client Secret to encrypt User Information." encrypted="false" />
                   <add name="TokenEndpoint" value="user" description="Defines the Endpoint to get the User Token from." encrypted="false" />
+                  <add name="ShowDetailedError" value="true" description="Indicates if the Login Page should display detailed Debuging Information when OAuth Fails." encrypted="false" />
                 </securityProvider>
               </categorizedSettings>
             </configuration>
@@ -45,14 +62,10 @@
             </summary>
             <param name="username">Name that uniquely identifies the user.</param>
         </member>
-        <member name="M:GSF.Security.OIDCSecurityProvider.#ctor(System.String,System.Boolean,System.Boolean,System.Boolean)">
+        <member name="P:GSF.Security.OIDCSecurityProvider.UserData">
             <summary>
-            Initializes a new instance of the <see cref="T:GSF.Security.AdoSecurityProvider"/> class.
+            Gets the <see cref="T:GSF.Security.OIDCUserData"/> object containing information about the user.
             </summary>
-            <param name="username">Name that uniquely identifies the user.</param>
-            <param name="canRefreshData">true if the security provider can refresh <see cref="T:GSF.Security.UserData"/> from the backend data store, otherwise false.</param>
-            <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
-            <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
         </member>
         <member name="P:GSF.Security.OIDCSecurityProvider.LastException">
             <summary>
@@ -77,6 +90,11 @@
         <member name="P:GSF.Security.OIDCSecurityProvider.Scope">
             <summary>
             The Scope used to obtain UserInformation from the Authorization Server
+            </summary>
+        </member>
+        <member name="P:GSF.Security.OIDCSecurityProvider.SelfVerifiedNonce">
+            <summary>
+            A Nonce that has been verified manually and never expires. This is used for allowing Server-server logons.
             </summary>
         </member>
         <member name="P:GSF.Security.OIDCSecurityProvider.AuthorizationEndpoint">
@@ -115,11 +133,22 @@
             Gets the URI that user will be redirected to if <see cref="P:GSF.Security.OIDCSecurityProvider.IsRedirectRequested"/> is set.
             </summary>
         </member>
+        <member name="P:GSF.Security.OIDCSecurityProvider.ShowDetailedError">
+            <summary>
+            Indicates if the Login Page should display detailed Debugging Information when OAuth Fails.
+            </summary>
+        </member>
         <member name="M:GSF.Security.OIDCSecurityProvider.LoadSettings">
             <summary>
             Loads saved security provider settings from the config file if the <see cref="P:GSF.Security.SecurityProviderBase.PersistSettings"/> property is set to true.
             </summary>
             <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:GSF.Security.SecurityProviderBase.SettingsCategory"/> has a value of null or empty string.</exception>
+        </member>
+        <member name="M:GSF.Security.OIDCSecurityProvider.RefreshData">
+            <summary>
+            Not implemented by <see cref="T:GSF.Security.OIDCSecurityProvider"/>; always returns <c>false</c>.
+            </summary>
+            <returns>true if <see cref="P:GSF.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         </member>
         <member name="M:GSF.Security.OIDCSecurityProvider.Authenticate">
             <summary>
@@ -147,38 +176,40 @@
             </summary>
             <param name="code"> The Authorization Code returned by the Auth Server</param>
         </member>
-        <member name="M:GSF.Security.OIDCSecurityProvider.TranslateRedirect(System.String,System.String,System.String)">
+        <member name="M:GSF.Security.OIDCSecurityProvider.TranslateRedirect(System.String,System.Uri,System.String,System.String)">
             <summary>
             Performs a translation of the default login page to a different endpoint.
             </summary>
             <param name="loginUrl"> The URI of the login page specified in the AppSettings </param>
+            <param name="uri"> The URI originally requested. </param>
             <param name="encodedPath"> The URI requested by the client </param>
             <param name="referrer"> The Referrer as specified in the request header </param>
             <returns> The URI to be redirected to</returns>
         </member>
-        <member name="M:GSF.Security.OIDCSecurityProvider.RefreshData">
-            <summary>
-            Not implemented
-            </summary>
-        </member>
         <member name="M:GSF.Security.OIDCSecurityProvider.ResetPassword(System.String)">
             <summary>
-            Not implemented
+            Not implemented by <see cref="T:GSF.Security.OIDCSecurityProvider"/>; always returns <c>false</c>.
             </summary>
+            <param name="securityAnswer">Answer to the user's security question.</param>
+            <returns>true if the password is reset, otherwise false.</returns>
+            <remarks></remarks>
         </member>
         <member name="M:GSF.Security.OIDCSecurityProvider.ChangePassword(System.String,System.String)">
             <summary>
-            Not implemented
+            Not implemented by <see cref="T:GSF.Security.OIDCSecurityProvider"/>; always returns <c>false</c>.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
+        </member>
+        <member name="P:GSF.Security.OIDCSecurityProvider.CanRefreshData">
+            <summary>
+            Not implemented by <see cref="T:GSF.Security.OIDCSecurityProvider"/>; always returns <c>false</c>.
             </summary>
         </member>
-        <member name="E:GSF.Security.OIDCSecurityProvider.SecurityContextRefreshed">
+        <member name="M:GSF.Security.OIDCSecurityProvider.RequestToken(System.String)">
             <summary>
-            Raised when the security context is refreshed.
-            </summary>
-        </member>
-        <member name="F:GSF.Security.OIDCSecurityProvider.DefaultNodeID">
-            <summary>
-            Gets current default Node ID for security.
+            Obtains the Token from the OIDC Server using a code.
             </summary>
         </member>
         <member name="T:GSF.Security.AdoSecurityProvider">
@@ -410,7 +441,13 @@
             </summary>
             <returns>The LDAP path.</returns>
         </member>
-        <!-- Badly formed XML comment ignored for member "M:GSF.Security.AdoSecurityProvider.GetUserRoles(System.String)" -->
+        <member name="M:GSF.Security.AdoSecurityProvider.GetUserRoles(System.String)">
+            <summary>
+            Gets a list of Roles for this user for a specified ApplicationId.
+            </summary>
+            <param name="applicationId">The applicationId for the roles to be returned.</param>
+            <returns>The roles that the specified user has.</returns>
+        </member>
         <member name="E:GSF.Security.AdoSecurityProvider.SecurityContextRefreshed">
             <summary>
             Raised when the security context is refreshed.
@@ -862,6 +899,32 @@
             User account name, converted from security ID as needed.
             </summary>
         </member>
+        <member name="T:GSF.Security.OIDCUserData">
+            <summary>
+            Defines <see cref="T:GSF.Security.UserData"/> for the <see cref="T:GSF.Security.OIDCSecurityProvider"/>.
+            </summary>
+        </member>
+        <member name="M:GSF.Security.OIDCUserData.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:GSF.Security.OIDCUserData"/> class.
+            </summary>
+        </member>
+        <member name="M:GSF.Security.OIDCUserData.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GSF.Security.OIDCUserData"/> class.
+            </summary>
+            <param name="username">User's logon name.</param>
+        </member>
+        <member name="P:GSF.Security.OIDCUserData.Nonce">
+            <summary>
+            Gets or sets OIDC Nonce value associated with this user.
+            </summary>
+        </member>
+        <member name="P:GSF.Security.OIDCUserData.Token">
+            <summary>
+            Gets or sets the <see cref="T:GSF.Security.TokenResponse"/> associated with this user.
+            </summary>
+        </member>
         <member name="T:GSF.Security.UserRoleCache">
             <summary>
             Represents a secured inter-process cache for a <see cref="T:System.Collections.Generic.Dictionary`2"/> of serialized user role information.
@@ -1145,7 +1208,13 @@
             </summary>
             <returns>The LDAP path.</returns>
         </member>
-        <!-- Badly formed XML comment ignored for member "M:GSF.Security.LdapSecurityProvider.GetUserRoles(System.String)" -->
+        <member name="M:GSF.Security.LdapSecurityProvider.GetUserRoles(System.String)">
+            <summary>
+            Gets a list of Roles for this user for a specified ApplicationId.
+            </summary>
+            <param name="applicationId">The applicationId for the roles to be returned.</param>
+            <returns>The roles that the specified user has.</returns>
+        </member>
         <member name="T:GSF.Security.RestrictAccessAttribute">
             <summary>
             Represents an <see cref="T:System.Attribute"/> that can be used restrict access to a class when using role-based security.
@@ -1297,16 +1366,23 @@
             <param name="role">The user role to be translated.</param>
             <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
         </member>
-        <member name="M:GSF.Security.ISecurityProvider.TranslateRedirect(System.String,System.String,System.String)">
+        <member name="M:GSF.Security.ISecurityProvider.TranslateRedirect(System.String,System.Uri,System.String,System.String)">
             <summary>
             Performs a translation of the default login page to a different endpoint.
             </summary>
             <param name="loginUrl"> The URI of the login page specified in the AppSettings </param>
+            <param name="uri"> The URI originally requested. </param>
             <param name="encodedPath"> The URI requested by the client </param>
             <param name="referrer"> The Referrer as specified in the request header </param>
             <returns> The URI to be redirected to</returns>
         </member>
-        <!-- Badly formed XML comment ignored for member "M:GSF.Security.ISecurityProvider.GetUserRoles(System.String)" -->
+        <member name="M:GSF.Security.ISecurityProvider.GetUserRoles(System.String)">
+            <summary>
+            Gets a list of Roles for this user for a specified ApplicationId.
+            </summary>
+            <param name="applicationId">The applicationId for the roles to be returned.</param>
+            <returns>The roles that the specified user has.</returns>
+        </member>
         <member name="T:GSF.Security.NamespaceDoc">
             <summary>
             Contains fundamental classes that define the security framework for role-based security.
@@ -1572,16 +1648,23 @@
             <param name="role">The user role to be translated.</param>
             <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
         </member>
-        <member name="M:GSF.Security.SecurityProviderBase.TranslateRedirect(System.String,System.String,System.String)">
+        <member name="M:GSF.Security.SecurityProviderBase.TranslateRedirect(System.String,System.Uri,System.String,System.String)">
             <summary>
             Performs a translation of the default login page to a different endpoint.
             </summary>
             <param name="loginUrl"> The URI of the login page specified in the AppSettings </param>
+            <param name="uri"> The URI originally requested. </param>
             <param name="encodedPath"> The URI requested by the client </param>
             <param name="referrer"> The Referrer as specified in the request header </param>
             <returns> The URI to be redirected to</returns>
         </member>
-        <!-- Badly formed XML comment ignored for member "M:GSF.Security.SecurityProviderBase.GetUserRoles(System.String)" -->
+        <member name="M:GSF.Security.SecurityProviderBase.GetUserRoles(System.String)">
+            <summary>
+            Gets a list of Roles for this user for a specified ApplicationId.
+            </summary>
+            <param name="applicationId">The applicationId for the roles to be returned.</param>
+            <returns>The roles that the specified user has.</returns>
+        </member>
         <member name="T:GSF.Security.SecurityIdentity">
             <summary>
             A class that implements <see cref="T:System.Security.Principal.IIdentity"/> interface to facilitate custom role-based security.
@@ -1710,6 +1793,12 @@
             Number of milliseconds between calls to monitor the cache.
             </summary>
         </member>
+        <member name="M:GSF.Security.SecurityProviderCache.#ctor(System.String)">
+            <summary>
+            Creates a new <see cref="T:GSF.Security.SecurityProviderCache"/>.
+            </summary>
+            <param name="settingsCategory">Settings category.</param>
+        </member>
         <member name="M:GSF.Security.SecurityProviderCache.CreateProvider(System.String,System.Security.Principal.IPrincipal,System.Boolean)">
             <summary>
             Creates a new provider from data cached by the <see cref="T:GSF.Security.SecurityProviderCache"/>.
@@ -1811,6 +1900,7 @@
             Creates a new <see cref="T:GSF.Security.ISecurityProvider"/> based on the settings in the config file.
             </summary>
             <param name="userData">Object that contains data about the user to be used by the security provider.</param>
+            <param name="settingsCategory">The category used to store configuration settings for the provider.</param>
             <returns>An object that implements <see cref="T:GSF.Security.ISecurityProvider"/>.</returns>
         </member>
         <member name="M:GSF.Security.SecurityProviderUtility.IsResourceSecurable(System.String)">

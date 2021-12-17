@@ -44,6 +44,9 @@
     <Reference Include="GSF.EMAX">
       <HintPath>..\..\Dependencies\GSF\GSF.EMAX.dll</HintPath>
     </Reference>
+    <Reference Include="GSF.Geo">
+      <HintPath>..\..\Dependencies\GSF\GSF.Geo.dll</HintPath>
+    </Reference>
     <Reference Include="GSF.PQDIF">
       <HintPath>..\..\Dependencies\GSF\GSF.PQDIF.dll</HintPath>
     </Reference>
@@ -108,8 +111,11 @@
     <Compile Include="DataOperations\DataOperationBase.cs" />
     <Compile Include="DataOperations\DataPusherOperation.cs" />
     <Compile Include="DataOperations\DataRescueOperation.cs" />
+    <Compile Include="DataOperations\DFRLineFiles\BreakerConfiguration.cs" />
+    <Compile Include="DataOperations\DFRLineFiles\LineConfiguration.cs" />
     <Compile Include="DataOperations\GTC\MeterDataQualityOverride.cs" />
     <Compile Include="DataOperations\LightningDataOperation.cs" />
+    <Compile Include="DataOperations\DFRLineFiles\LineFileLoader.cs" />
     <Compile Include="DataOperations\PQube\PQubeClassificationOverride.cs" />
     <Compile Include="DataOperations\RelayEnergization.cs" />
     <Compile Include="DataOperations\DailyStatisticOperation.cs" />
@@ -117,6 +123,8 @@
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TVA\EPRICapBankAnalytics.cs" />
+    <Compile Include="DataOperations\TVA\RealTimeLightningDataOperation.cs" />
+    <Compile Include="DataOperations\TVA\RealTimeLightningDataProvider.cs" />
     <Compile Include="DataOperations\TVA\StructureQueryOperation.cs" />
     <Compile Include="DataReaders\DataReaderFactory.cs" />
     <Compile Include="DataReaders\SELLDPReader.cs" />

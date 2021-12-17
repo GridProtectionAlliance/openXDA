@@ -81,18 +81,31 @@ namespace FaultData.DataResources
             List<Disturbance> transientList = vaTransients.Concat(vbTransients).Concat(vcTransients).Concat(vabTransients).Concat(vbcTransients).Concat(vcaTransients).ToList();
 
             Disturbance worst = null;
-            foreach (Disturbance transiet in transientList)
+            Disturbance worstLL = null;
+            Disturbance worstLN = null;
+
+            foreach (Disturbance transient in transientList)
             {
-
-                if ((object)worst == null || transiet.PerUnitMagnitude > worst.PerUnitMagnitude)
-                    worst = transiet;
-
-                worst = worst.Clone();
-                worst.Phase = Phase.Worst;
+                if ((object)worst == null || transient.PerUnitMagnitude > worst.PerUnitMagnitude)
+                    worst = transient;
+                if (transient.IsLLDisturbance && ((object)worstLL == null || transient.PerUnitMagnitude > worstLL.PerUnitMagnitude))
+                    worstLL = transient;
+                if (transient.IsLNDisturbance && ((object)worstLN == null || transient.PerUnitMagnitude > worstLN.PerUnitMagnitude))
+                    worstLN = transient;
             }
 
+            if (worstLN != null)
+                worstLN.IsWorstDisturbance = true;
+            if (worstLL != null)
+                worstLL.IsWorstDisturbance = true;
+
             if (worst != null)
+            {
+                worst.IsWorstDisturbance = true;
+                worst = worst.Clone();
+                worst.Phase = Phase.Worst;
                 transientList.Add(worst);
+            }
 
             return transientList;
         }

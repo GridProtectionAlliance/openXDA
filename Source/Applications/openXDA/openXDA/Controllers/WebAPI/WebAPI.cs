@@ -34,6 +34,7 @@ using System.Text;
 using System.Web.Http;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.Net.Security;
 using GSF.Security.Model;
 using GSF.Web;
@@ -60,8 +61,67 @@ namespace openXDA.Controllers.WebAPI
     }
 
     [RoutePrefix("api/Meter")]
-    public class MeterController : ModelController<Meter> {}
-    
+    public class MeterController : ModelController<Meter> {
+        [HttpGet, Route("Sapphire")]
+        public IHttpActionResult GetSapphireMeters()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return Ok(connection.RetrieveData(@"
+                select 
+	                Meter.* 
+                from 
+	                meter JOIN 
+	                AdditionalFieldValue ON Meter.ID = AdditionalFieldValue.ParentTableID AND AdditionalFieldValue.AdditionalFieldID = (SELECT TOP 1 ID FROM AdditionalField WHERE ParentTable= 'Meter' AND FieldName = 'SapphireID')
+
+                "));
+            }
+        }
+        [HttpGet, Route("Sapphire/{id:int}")]
+        public IHttpActionResult GetSapphireIDForMeter(int id)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return Ok(connection.ExecuteScalar<string>(@"
+                    select 
+	                    AdditionalFieldValue.Value 
+                    from 
+	                    meter JOIN 
+	                    AdditionalFieldValue ON Meter.ID = AdditionalFieldValue.ParentTableID AND AdditionalFieldValue.AdditionalFieldID = (SELECT TOP 1 ID FROM AdditionalField WHERE ParentTable= 'Meter' AND FieldName = 'SapphireID')
+                    WHERE Meter.ID = {0}
+                ", id));
+            }
+        }
+
+        [HttpGet, Route("Sapphire/Asset/{id:int}")]
+        public IHttpActionResult GetAssetForSapphireMeter(int id)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return Ok(new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT TOP 1 AssetID FROM MeterAsset WHERE MeterID = {0})", id));
+            }
+        }
+
+        [HttpGet, Route("Sapphire/Station/{id:int}")]
+        public IHttpActionResult GetStationForSapphireMeter(int id)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return Ok(new TableOperations<Location>(connection).QueryRecordWhere("ID = (SELECT LocationID FROM Meter WHERE ID = {0})", id));
+            }
+        }
+
+        [HttpGet, Route("Sapphire/Events/{id:int}/{startTime}/{endTime}")]
+        public IHttpActionResult GetEventsForSapphireMeter(int id, string startTime, string endTime)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return Ok(new TableOperations<Event>(connection).QueryRecordsWhere("MeterID ={0} AND StartTime BETWEEN {1} AND {2}", id, startTime, endTime).ToList());
+            }
+        }
+
+    }
+
     [RoutePrefix("api/Channel")]
     public class ChannelController : ModelController<ChannelDetail> {}
 

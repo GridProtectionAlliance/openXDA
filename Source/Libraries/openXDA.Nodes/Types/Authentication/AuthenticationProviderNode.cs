@@ -22,12 +22,19 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Caching;
 using System.Text;
 using System.Web.Http;
 using System.Web.Http.Controllers;
+using GSF.Data;
+using GSF.Data.Model;
+using GSF.Identity;
+using GSF.Security.Model;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
+using Node = openXDA.Model.Node;
 
 namespace openXDA.Nodes.Types.Authentication
 {
@@ -77,6 +84,33 @@ namespace openXDA.Nodes.Types.Authentication
         public AuthenticationProviderNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
         {
+            using (AdoDataConnection connection = Host.CreateDbConnection())
+            {
+                DateTime expiration = DateTime.UtcNow.AddYears(10);
+
+                List<ApplicationSustainedUser> sessions = new TableOperations<ApplicationSustainedUser>(connection).QueryRecords().ToList();
+                sessions.ForEach((session) =>
+                {
+                    UserAccount user = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", session.UserAccountID);
+                    UserInfoAuth userInfoAuth = new UserInfoAuth()
+                    {
+                        UserId = user.ID.ToString(),
+                        UserName = user.Name,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Email = user.Email,
+                        Phone = user.Phone,
+                        Roles = "Viewer",
+                        Expires = expiration,
+                        AppId = session.ApplicationNodeID.ToString(),
+                        Nonce = "Not A Valid Nonce"
+                    };
+
+                    CacheItemPolicy cacheItemPolicy = new CacheItemPolicy();
+                    cacheItemPolicy.AbsoluteExpiration = expiration;
+                    s_codeStore.Add(session.Code, userInfoAuth, cacheItemPolicy);
+                });
+            }            
         }
 
         #endregion

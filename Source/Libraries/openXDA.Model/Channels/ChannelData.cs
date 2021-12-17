@@ -149,13 +149,35 @@ namespace openXDA.Model
             return result;
         }
 
-       /// <summary>
-       /// Decompress a EventData Blob, add it as multiple CHannelData Blobs and remove it from EventData
-       /// </summary>
-       /// <param name="eventID"> The ID of the Event</param>
-       /// <param name="requestedSeriesID"> The ID of the Series actually requested. </param>
-       /// <param name="connection"> An <see cref="AdoDataConnection"/>.</param>
-       /// <returns> A single Channel Data Blob for the  requested Series</returns>
+        // This is going through this function to migtrate all EventdataBlobs over to ChannelDataBlobs as they are read eventually removing the legacy table (eventData)
+        public static byte[] DataFromEvent(int eventID, int channelID, Func<AdoDataConnection> connectionFactory)
+        {
+            using (AdoDataConnection connection = connectionFactory())
+            {
+                ChannelDetail channel = new TableOperations<ChannelDetail>(connection).QueryRecordWhere("ID = {0}", channelID);
+                channel.ConnectionFactory = connectionFactory;
+                if (channel.MeasurementCharacteristic != "Instantaneous")
+                    channel = new TableOperations<ChannelDetail>(connection).QueryRecordWhere("MeasurementTypeID = {0} AND MeasurementCharacteristic = 'Instantaneous' AND PhaseID = {1} AND MeterID = {2} AND AssetID = {3}", channel.MeasurementTypeID, channel.PhaseID, channel.MeterID, channel.AssetID);
+
+                Series series = new TableOperations<Series>(connection).QueryRecordWhere("ChannelID = {0} AND SeriesTypeID = (SELECT ID FROM SeriesType WHERE Name = 'Values')", channel.ID);
+                ChannelData channelData = new TableOperations<ChannelData>(connection).QueryRecordWhere("SeriesID = {0} AND EventID = {1}", series.ID, eventID);
+                if (channelData?.TimeDomainData == null)
+                {
+                    channelData.TimeDomainData = ProcessLegacyBlob(eventID, series.ID, connection);
+                }
+
+                return channelData.TimeDomainData;
+            }
+        }
+
+
+        /// <summary>
+        /// Decompress a EventData Blob, add it as multiple CHannelData Blobs and remove it from EventData
+        /// </summary>
+        /// <param name="eventID"> The ID of the Event</param>
+        /// <param name="requestedSeriesID"> The ID of the Series actually requested. </param>
+        /// <param name="connection"> An <see cref="AdoDataConnection"/>.</param>
+        /// <returns> A single Channel Data Blob for the  requested Series</returns>
         private static byte[] ProcessLegacyBlob(int eventID, int requestedSeriesID, AdoDataConnection connection)
         {
             int? eventDataID = connection.ExecuteScalar<int?>("SELECT EventDataID FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", requestedSeriesID, eventID);

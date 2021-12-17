@@ -10,6 +10,117 @@ CREATE TABLE [SEBrowser.Setting]
 )
 GO
 
+/*
+	Required Fields are:
+		EventID for matching,
+		DisturbanceID for matching
+		Time for showing the Time of the Event,
+		Asset
+	Everything else can be customized to appear in the UI.
+*/
+
+CREATE VIEW [dbo].[SEBrowser.EventSearchEventView] AS
+	SELECT
+		Event.ID AS EventID,
+		FORMAT(Event.StartTime,'MM/dd/yyyy <br> HH:mm:ss.fffffff') AS Time,
+		Meter.AssetKey AS [Meter Key],
+		Meter.Name AS [Meter],
+		Meter.Alias AS [Meter Alias],
+		Meter.ShortName AS [Meter ShortName],
+		Meter.Make AS [Meter Make],
+		Meter.Model AS [Meter Model],
+		Meter.TimeZone AS [Meter TimeZone],
+		Meter.Description AS [Meter Desc],
+		--Meter Sector
+--Meter Firmware Version
+--Meter Template Version
+--Meter Connection Type
+		Location.Name AS [Station],
+		Location.LocationKey AS [Station Key],
+		Location.ShortName AS [Station ShortName],
+		Location.Alias AS [Station Alias],
+		Location.Description AS [Station Desc],
+--TSC
+		Asset.AssetName AS [Asset Name],
+		AssetType.Name AS [Asset Type],
+		Asset.VoltageKV AS [Nom Voltage (kV)],
+		Asset.Description AS [Asset Desc]
+--Asset Manufacturer
+--Asset Model
+	FROM Event LEFT JOIN
+		Meter ON Meter.ID = Event.MeterID LEFT JOIN 
+		Location ON Meter.LocationID = Location.ID LEFT JOIN
+		Asset ON Asset.ID = Event.AssetID LEFT JOIN
+		AssetType ON Asset.AssetTypeID = AssetType.ID
+GO
+
+CREATE VIEW [dbo].[SEBrowser.EventSearchDetailsView] AS
+	SELECT
+		EventWorstDisturbance.EventID AS EventID,
+		NULL AS FaultID,
+		Disturbance.ID AS DisturbanceID,
+		Phase.Name AS [Phase],
+		FORMAT(Disturbance.DurationCycles, 'F2') AS [Duration (cycles)],
+		Format(Disturbance.DurationSeconds, 'F4') AS [Duration (sec)],
+		Disturbance.PerUnitMagnitude AS [MagDurMagnitude],
+		Disturbance.DurationSeconds AS [MagDurDuration],
+		Format((SELECT D.PerUnitMagnitude FROM Disturbance D WHERE D.ID = EventWorstDisturbance.WorstLLDisturbanceID )*100.0,'F2') as [Worst LL Magnitude (%nominal)],
+        Format((SELECT D.PerUnitMagnitude FROM Disturbance D WHERE D.ID = EventWorstDisturbance.WorstLNDisturbanceID )*100.0,'F2')  as [Worst LN Magnitude (%nominal)],
+		EventType.Name AS [Event Type],
+		NULL AS [Fault Dist Alg],
+		NULL AS [Fault Dist],
+		NULL AS [Fault Current Mag],
+		NULL AS [Fault Inception]
+	FROM EventWorstDisturbance  LEFT JOIN
+		Disturbance ON EventWorstDisturbance.WorstDisturbanceID = Disturbance.ID LEFT JOIN
+		Phase ON Disturbance.PhaseID = Phase.ID LEFT JOIN
+		EventType ON Disturbance.EventTypeID = EventType.ID
+	UNION
+	SELECT 
+		Event.ID AS EventID,
+		NULL AS FaultID,
+		NULL AS DisturbanceID,
+		NULL AS [Phase],
+		NULL AS [Duration (cycles)],
+		NULL AS [Duration (sec)],
+		NULL AS [MagDurMagnitude],
+		NULL AS [MagDurDuration],
+		NULL as [Worst LL Magnitude (%nominal)],
+        NULL  as [Worst LN Magnitude (%nominal)],
+		EventType.Name AS [Event Type],
+		NULL AS [Fault Dist Alg],
+		NULL AS [Fault Dist],
+		NULL AS [Fault Current Mag],
+		NULL AS [Fault Inception]
+	FROM Event LEFT JOIN
+		EventType ON EventType.ID = Event.EventTypeID 
+	WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name IN ('BreakerOpen','Other'))
+	UNION 
+	SELECT 
+		Event.ID AS EventID,
+		FaultSummary.FaultNumber AS FaultID,
+		NULL AS DisturbanceID,
+		FaultSummary.FaultType AS [Phase],
+		FORMAT(FaultSummary.DurationCycles, 'F2')  AS [Duration (cycles)],
+		FORMAT(FaultSummary.DurationSeconds, 'F4')  AS [Duration (sec)],
+		NULL AS [MagDurMagnitude],
+		NULL AS [MagDurDuration],
+		NULL as [Worst LL Magnitude (%nominal)],
+        NULL  as [Worst LN Magnitude (%nominal)],
+		EventType.Name AS [Event Type],
+		FaultSummary.Algorithm AS [Fault Dist Alg],
+		FORMAT(FaultSummary.Distance, 'F2') AS [Fault Dist],
+		FORMAT(FaultSummary.CurrentMagnitude, 'F0') AS [Fault Current Mag],
+		FORMAT(FaultSummary.Inception,'HH:mm:ss.fffffff') AS [Fault Inception]
+	FROM Event LEFT JOIN
+		EventType ON EventType.ID = Event.EventTypeID LEFT JOIN
+		FaultSummary ON FaultSummary.IsSelectedAlgorithm <> 0 AND
+			FaultSummary.IsValid <> 0 AND FaultSummary.IsSuppressed = 0 AND
+			FaultSummary.EventID = Event.ID
+	WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name IN ('Fault','RecloseIntoFault'))
+GO
+
+
 
 INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationName', N'SEBrowser', 0, N'Administrator')
 GO
@@ -79,4 +190,10 @@ CREATE TABLE [SEBrowser.Links] (
 	Display varchar(100) NOT NULL,
 	Value varchar(max) NOT NULL
 )
+GO
+
+INSERT INTO [SEBrowser.Links] (Name, Display,Value) VALUES
+	('Breaker Report',0,'breakerreport'),
+	('TCE  Report',0,'relayreport'),
+	('CapBank Report',0,'capbankreport')
 GO

@@ -100,6 +100,7 @@
     <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="DataPush\FilesToDataPush.cs" />
     <Compile Include="DBCleanup.cs" />
+    <Compile Include="DERAnalytic\DERAnalyticResult.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
@@ -108,6 +109,7 @@
     <Compile Include="Emails\EmailType.cs" />
     <Compile Include="Emails\EventEmailParameters.cs" />
     <Compile Include="Events\BreakerRestrike.cs" />
+    <Compile Include="Events\Disturbances\EventWorstDisturbance.cs" />
     <Compile Include="Events\Disturbances\VoltageCurve.cs" />
     <Compile Include="Events\Disturbances\VoltageEnvelopeCurve.cs" />
     <Compile Include="Events\RelayPerformance.cs" />
@@ -139,6 +141,8 @@
     <Compile Include="Nodes\Node.cs" />
     <Compile Include="Nodes\NodeSetting.cs" />
     <Compile Include="Note.cs" />
+    <Compile Include="Security\ApplicationSustainedUser.cs" />
+    <Compile Include="Security\ApplicationNode.cs" />
     <Compile Include="Settings\BreakerReportsSettings.cs" />
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />

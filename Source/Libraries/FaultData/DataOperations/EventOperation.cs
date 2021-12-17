@@ -90,8 +90,9 @@ namespace FaultData.DataOperations
                 List<DataGroup> dataGroups = new List<DataGroup>(cycleDataResource.DataGroups);
                 dataGroups.AddRange(dataGroupsResource.DataGroups.Where(dataGroup => dataGroup.DataSeries.Count == 0));
 
-                List<Event> events = GetEvents(connection, meterDataSet, dataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
-                LoadEvents(connection, events, meterDataSet);
+                List<DataGroup> processedDataGroups;
+                List<Event> events = GetEvents(connection, meterDataSet, dataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications, out processedDataGroups);
+                LoadEvents(connection, events, meterDataSet, processedDataGroups);
             }
         }
 
@@ -133,7 +134,7 @@ namespace FaultData.DataOperations
             }
         }
 
-        private List<Event> GetEvents(AdoDataConnection connection, MeterDataSet meterDataSet, List<DataGroup> dataGroups, List<VICycleDataGroup> viCycleDataGroups, Dictionary<DataGroup, EventClassification> eventClassifications)
+        private List<Event> GetEvents(AdoDataConnection connection, MeterDataSet meterDataSet, List<DataGroup> dataGroups, List<VICycleDataGroup> viCycleDataGroups, Dictionary<DataGroup, EventClassification> eventClassifications, out List<DataGroup> processedDataGroups)
         {
             int count = dataGroups
                 .Where(dataGroup => dataGroup.Classification != DataClassification.Trend)
@@ -141,6 +142,7 @@ namespace FaultData.DataOperations
                 .Where(dataGroup => eventClassifications.ContainsKey(dataGroup))
                 .Count();
 
+            processedDataGroups = new List<DataGroup>();
             if (count == 0)
             {
                 Log.Info($"No events found for file '{meterDataSet.FilePath}'.");
@@ -227,6 +229,7 @@ namespace FaultData.DataOperations
 
                 evt.Disturbances.AddRange(GetDisturbances(connection, meterDataSet, dataGroup));
 
+                processedDataGroups.Add(dataGroup);
                 events.Add(evt);
             }
 
@@ -235,12 +238,13 @@ namespace FaultData.DataOperations
             return events;
         }
 
-        private void LoadEvents(AdoDataConnection connection, List<Event> events, MeterDataSet meterDataSet)
+        private void LoadEvents(AdoDataConnection connection, List<Event> events, MeterDataSet meterDataSet, List<DataGroup> dataGroups)
         {
             TableOperations<Event> eventTable = new TableOperations<Event>(connection);
             TableOperations<ChannelData> eventDataTable = new TableOperations<ChannelData>(connection);
             TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
 
+            int i = 0;
             foreach (Event evt in events)
             {
                 IDbDataParameter startTime2 = ToDateTime2(connection, evt.StartTime);
@@ -274,9 +278,61 @@ namespace FaultData.DataOperations
                     disturbanceTable.AddNewRecord(disturbance);
                 }
 
+                LoadWorstDisturbance(connection, evt.ID, GetWorstDisturbances(connection,meterDataSet,dataGroups[i]));
+
                 CheckPQIComponents(meterDataSet, connection, evt);
                 ProcessSnapshots(meterDataSet, evt.ID, connection);
+                i++;
             }
+        }
+
+        private void LoadWorstDisturbance(AdoDataConnection connection, int eventID, List<Disturbance> worstDisturbances)
+        {
+            TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
+            DbDisturbance worstDisturbance = disturbanceTable.QueryRecordWhere("PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND EventID = {0}", eventID);
+           
+            if (worstDisturbance == null)
+                return;
+
+            Disturbance worstLLDisturbance = worstDisturbances.Where(d => d.IsLLDisturbance).FirstOrDefault();
+            Disturbance worstLNDisturbance = worstDisturbances.Where(d => d.IsLNDisturbance).FirstOrDefault();
+
+
+            EventWorstDisturbance worstDisturbanceRecord = new EventWorstDisturbance()
+            {
+                EventID = eventID,
+                WorstDisturbanceID = worstDisturbance.ID,
+                WorstLLDisturbanceID = GetDisturbanceID(connection, disturbanceTable, worstLLDisturbance, eventID),
+                WorstLNDisturbanceID = GetDisturbanceID(connection, disturbanceTable, worstLNDisturbance, eventID)
+            };
+
+            new TableOperations<EventWorstDisturbance>(connection).AddNewRecord(worstDisturbanceRecord);
+        }
+
+        private int? GetDisturbanceID(AdoDataConnection connection, TableOperations<DbDisturbance> disturbanceTable, Disturbance disturbance, int eventID)
+        {
+            if (disturbance == null)
+                return null;
+
+            DbDisturbance dbDisturbance = GetDisturbanceRow(connection, disturbance);
+            
+            string sql = "EventTypeID = {0} AND ";
+            sql += "PhaseID = {1} AND ";
+            sql += "Magnitude = {2} AND ";
+            sql += "PerUnitMagnitude = {3} AND ";
+            sql += "StartTime = {4} AND ";
+            sql += "EndTime = {5} AND ";
+            sql += "DurationSeconds = {6} AND ";
+            sql += "DurationCycles = {7} AND ";
+            sql += "StartIndex = {8} AND ";
+            sql += "EndIndex = {9} AND ";
+            sql += "EventID = {10}";
+
+            dbDisturbance = disturbanceTable.QueryRecordWhere(sql, dbDisturbance.EventTypeID, dbDisturbance.PhaseID, dbDisturbance.Magnitude, dbDisturbance.PerUnitMagnitude,
+                dbDisturbance.StartTime, dbDisturbance.EndTime, dbDisturbance.DurationSeconds, dbDisturbance.DurationCycles, 
+                dbDisturbance.StartIndex, dbDisturbance.EndIndex, eventID);
+
+            return dbDisturbance?.ID;
         }
 
         private List<DbDisturbance> GetDisturbances(AdoDataConnection connection, MeterDataSet meterDataSet, DataGroup dataGroup)
@@ -325,6 +381,34 @@ namespace FaultData.DataOperations
             return dbDisturbances;
         }
         
+        private List<Disturbance> GetWorstDisturbances(AdoDataConnection connection, MeterDataSet meterDataSet, DataGroup dataGroup)
+        {
+            SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
+            SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
+            InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
+            TransientDataResource transientDataResource = meterDataSet.GetResource<TransientDataResource>();
+
+            List<Disturbance> disturbances = new List<Disturbance>();
+
+            if (dataGroup.Classification == DataClassification.Unknown)
+                return disturbances;
+
+            if (sagDataResource.Sags.TryGetValue(dataGroup, out disturbances))
+                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
+               
+
+            if (swellDataResource.Swells.TryGetValue(dataGroup, out disturbances))
+                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
+
+            if (interruptionDataResource.Interruptions.TryGetValue(dataGroup, out disturbances))
+                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
+
+            if (transientDataResource.Transients.TryGetValue(dataGroup, out disturbances))
+                return disturbances.Where(d => d.IsWorstDisturbance && d.Phase != GSF.PQDIF.Logical.Phase.Worst).ToList();
+
+            return disturbances;
+        }
+
         private DbDisturbance GetDisturbanceRow(AdoDataConnection connection, Disturbance disturbance)
         {
             TableOperations<EventType> eventTypeTable = new TableOperations<EventType>(connection);

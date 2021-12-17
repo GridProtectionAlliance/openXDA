@@ -57,9 +57,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
+    <Reference Include="log4net, Version=2.0.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\log4net.2.0.12\lib\net45\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -81,6 +86,7 @@
     <Content Include="ldconfig.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\FaultData\FaultData.csproj">
@@ -90,6 +96,10 @@
     <ProjectReference Include="..\..\Libraries\openXDA.Model\openXDA.Model.csproj">
       <Project>{A1A0BC13-50ED-4DC9-8C1E-3293B0B69281}</Project>
       <Name>openXDA.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\openXDA.XMLConfigLoader\openXDA.XMLConfig.csproj">
+      <Project>{280f475d-7d5c-4bb7-98be-db0f3cbe40bb}</Project>
+      <Name>openXDA.XMLConfig</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

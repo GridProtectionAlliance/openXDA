@@ -266,6 +266,9 @@ GO
 INSERT INTO NodeType VALUES('EPRICapBankAnalysis', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.EPRICapBankAnalysis.EPRICapBankAnalysisNode')
 GO
 
+INSERT INTO NodeType VALUES('Authorization', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode')
+GO
+
 CREATE TABLE Node
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -292,6 +295,9 @@ INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes
 GO
 
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, 'Analyzer', 4)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode'), NULL, 'SSO Provider', 1)
 GO
 
 CREATE TABLE NodeSetting
@@ -323,7 +329,7 @@ GO
 
 CREATE TABLE AssetType
 (
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ID INT NOT NULL PRIMARY KEY,
     Name VARCHAR(50) NOT NULL,
     Description VARCHAR(MAX) NULL
 )
@@ -496,8 +502,9 @@ CREATE TABLE BreakerAttributes
 	Speed FLOAT NOT NULL DEFAULT(0),
 	TripTime INT NOT NULL DEFAULT(0),
 	PickupTime INT NOT NULL DEFAULT(0),
-	TripCoilCondition FLOAT NOT NULL DEFAULT(0)
-)
+	TripCoilCondition FLOAT NOT NULL DEFAULT(0),
+    AirGapResistor BIT NOT NULL DEFAULT(0)
+    )
 GO
 
 CREATE TABLE CapacitorBankAttributes
@@ -765,7 +772,8 @@ CREATE VIEW Breaker AS
 		TripTime,
 		PickupTime,
 		TripCoilCondition,
-		Spare
+		Spare,
+        AirGapResistor
 	FROM Asset JOIN BreakerAttributes ON Asset.ID = BreakerAttributes.AssetID
 GO
 
@@ -782,14 +790,15 @@ BEGIN
 			Spare AS Spare
 	FROM INSERTED
 
-	INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed, TripTime, PickupTime, TripCoilCondition)
+	INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed, TripTime, PickupTime, TripCoilCondition, AirGapResistor)
 		SELECT 
 			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
 			ThermalRating AS ThermalRating,
 			Speed AS Speed,
 			TripTime AS TripTime,
 			PickupTime AS PickupTime,
-			TripCoilCondition AS TripCoilCondition
+			TripCoilCondition AS TripCoilCondition,
+            AirGapResistor AS AirGapResistor
 	FROM INSERTED
 
 END
@@ -820,7 +829,8 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 			BreakerAttributes.Speed = INSERTED.Speed,
 			BreakerAttributes.TripTime = INSERTED.TripTime,
 			BreakerAttributes.PickupTime = INSERTED.PickupTime,
-			BreakerAttributes.TripCoilCondition = INSERTED.TripCoilCondition
+			BreakerAttributes.TripCoilCondition = INSERTED.TripCoilCondition,
+            BreakerAttributes.AirGapResistor = INSERTED.AirGapResistor
 		FROM
 			BreakerAttributes 
 	INNER JOIN
@@ -1805,6 +1815,9 @@ CREATE TABLE ApplicationNode (
 )
 GO
 
+INSERT INTO ApplicationNode VALUES ('00000000-0000-0000-0000-000000000000','OpenXDA')
+GO
+
 CREATE TABLE SecurityGroup
 (
     ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
@@ -1892,6 +1905,14 @@ AS BEGIN
     FROM inserted UserAccount CROSS JOIN AssetGroup
     WHERE AssetGroup.Name = 'AllAssets'
 END
+GO
+
+CREATE TABLE ApplicationSustainedUser (
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ApplicationNodeID  UNIQUEIDENTIFIER NOT NULL REFERENCES ApplicationNode(ID),
+    UserAccountID  UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
+    Code VARCHAR(200) NOT NULL
+)
 GO
 
 INSERT INTO UserAccount(Name, UseADAuthentication, Approved) VALUES('External', 0, 1)
@@ -2229,6 +2250,21 @@ GO
 CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime_ID_EventID_PhaseID
 ON Disturbance ( StartTime ASC ) INCLUDE ( ID, EventID, PhaseID)
 GO
+
+Create Table EventWorstDisturbance (
+ ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+ EventID INT NOT NULL REFERENCES Event(ID),
+ WorstDisturbanceID INT NOT NULL REFERENCES Disturbance(ID),
+ WorstLLDisturbanceID INT NULL REFERENCES Disturbance(ID),
+ WorstLNDisturbanceID  INT NULL REFERENCES Disturbance(ID)
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventWorstDisturbance_EventID
+ON EventWorstDisturbance ( EventID ASC )
+GO
+
+
 
 CREATE TABLE BreakerRestrike (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -3112,17 +3148,39 @@ GO
 INSERT INTO SegmentType(Name, Description) VALUES('Postfault', 'After the fault ends')
 GO
 
-CREATE TABLE LightningStrike(
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	EventID int NOT NULL FOREIGN KEY REFERENCES Event(ID),
-	Service varchar(50) NOT NULL,
-	UTCTime datetime2(7) NOT NULL,
-	DisplayTime varchar(50) NOT NULL,
-	Amplitude float NOT NULL,
-	Latitude float NOT NULL,
-	Longitude float NOT NULL
+CREATE TABLE LightningStrike
+(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	EventID INT NOT NULL REFERENCES Event(ID),
+	Service VARCHAR(50) NOT NULL,
+	UTCTime DATETIME2 NOT NULL,
+	DisplayTime VARCHAR(50) NOT NULL,
+	Amplitude FLOAT NOT NULL,
+	Latitude FLOAT NOT NULL,
+	Longitude FLOAT NOT NULL
 )
+GO
 
+CREATE TABLE VaisalaExtendedLightningData
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    LightningStrikeID INT NOT NULL REFERENCES LightningStrike(ID),
+    PeakCurrent SMALLINT NOT NULL,
+    FlashMultiplicity TINYINT NOT NULL,
+    ParticipatingSensors TINYINT NOT NULL,
+    DegreesOfFreedom TINYINT NOT NULL,
+    EllipseAngle FLOAT NOT NULL,
+    SemiMajorAxisLength FLOAT NOT NULL,
+    SemiMinorAxisLength FLOAT NOT NULL,
+    ChiSquared FLOAT NOT NULL,
+    Risetime FLOAT NOT NULL,
+    PeakToZeroTime FLOAT NOT NULL,
+    MaximumRateOfRise FLOAT NOT NULL,
+    CloudIndicator BIT NOT NULL,
+    AngleIndicator BIT NOT NULL,
+    SignalIndicator BIT NOT NULL,
+    TimingIndicator BIT NOT NULL
+)
 GO
 
 
@@ -3855,6 +3913,8 @@ INSERT INTO [NoteApplication] (Name) VALUES ('SystemCenter')
 GO
 INSERT INTO [NoteApplication] (Name) VALUES ('OpenHistorian')
 GO
+INSERT INTO [NoteApplication] (Name) VALUES ('SEbrowser')
+GO
 INSERT INTO [NoteApplication] (Name) VALUES ('All')
 GO
 
@@ -4427,6 +4487,7 @@ CREATE TABLE CBCapBankResult (
     VUIEEE FLOAT NULL
 )
 GO
+
 ----- FUNCTIONS -----
 
 CREATE FUNCTION AdjustDateTime2

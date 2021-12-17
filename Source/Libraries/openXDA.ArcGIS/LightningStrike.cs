@@ -66,5 +66,6 @@ namespace openXDA.ArcGIS
         public double Amplitude { get; }
         public double Latitude { get; }
         public double Longitude { get; }
+        public T GetExtendedData<T>() where T : class => default(T);
     }
 }

@@ -33,6 +33,7 @@ using Esri.ArcGISRuntime.Data;
 using Esri.ArcGISRuntime.Geometry;
 using FaultData.DataResources;
 using GSF.Configuration;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace openXDA.ArcGIS
@@ -65,19 +66,22 @@ namespace openXDA.ArcGIS
 
     public class LightningDataProvider : ILightningDataProvider
     {
-        public LightningDataProvider() =>
+        public LightningDataProvider()
+        {
+            SystemSettings = new SystemSection();
             LightningDataSettings = new LightningDataProviderSettings();
+        }
 
-        [Setting]
-        [SettingName(nameof(XDATimeZone))]
-        public string XDATimeZoneID { get; set; }
+        [Category]
+        [SettingName(SystemSection.CategoryName)]
+        public SystemSection SystemSettings { get; }
 
         [Category]
         [SettingName(LightningDataProviderSettings.CategoryName)]
         public LightningDataProviderSettings LightningDataSettings { get; }
 
         private TimeZoneInfo XDATimeZone =>
-            TimeZoneInfo.FindSystemTimeZoneById(XDATimeZoneID);
+            SystemSettings.XDATimeZoneInfo;
 
         public IEnumerable<ILightningStrike> GetLightningStrikes(string lineKey, DateTime start, DateTime end) =>
             QueryLightningStrikes(lineKey, start, end).GetAwaiter().GetResult();

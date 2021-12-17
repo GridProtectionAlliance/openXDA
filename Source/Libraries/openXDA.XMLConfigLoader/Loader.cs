@@ -66,6 +66,7 @@ namespace openXDA.XMLConfig
             status.Error = error;
             status.Complete = complete;
 
+            Log.Info($"{step}({percent}%): {message} ... {overallPercent}%");
             UpdateStatus(connectionID, status);
         }
 
@@ -765,6 +766,16 @@ namespace openXDA.XMLConfig
                 int childID = connection.ExecuteScalar<int>("SELECT ID FROM Asset WHERE AssetKey = {0}", childKey);
                 string assetConnectionType = connectionNode.Attributes["Type"].Value;
                 int assetConnectionTypeID = connection.ExecuteScalar<int>("SELECT ID FROM AssetRelationshipType WHERE Name = {0}", assetConnectionType);
+
+                if(parentID <= 0){
+                    Log.Error($"Unable to link ${parentKey} AND ${childKey}, ${parentKey} does not exist in the database.");
+                    return;
+                }
+                else if (childID <= 0)
+                {
+                    Log.Error($"Unable to link ${parentKey} AND ${childKey}, ${childKey} does not exist in the database.");
+                    return;
+                }
 
                 AssetConnection record = new TableOperations<AssetConnection>(connection).QueryRecordWhere("ParentID = {0} AND ChildID = {1} AND AssetRelationshipTypeID = {2}", parentID, childID, assetConnectionTypeID);
 
