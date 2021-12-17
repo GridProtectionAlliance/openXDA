@@ -75,6 +75,8 @@
     <Compile Include="Alarms\ChannelsWithNormalLimits.cs" />
     <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
     <Compile Include="Alarms\MetersWithNormalLimits.cs" />
+    <Compile Include="ApplicationCategories\ApplicationCategory.cs" />
+    <Compile Include="ApplicationCategories\PQApplications.cs" />
     <Compile Include="CapBankAnalytic\CBReportEventTable.cs" />
     <Compile Include="CapBankAnalytic\CBCapBankResult.cs" />
     <Compile Include="CapBankAnalytic\CBBankHealth.cs" />
@@ -97,6 +99,7 @@
     <Compile Include="Dashboard\ContourClasses.cs" />
     <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="DataPush\FilesToDataPush.cs" />
+    <Compile Include="DBCleanup.cs" />
     <Compile Include="DERAnalytic\DERAnalyticResult.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmGroups\AlarmLog.cs" />
@@ -276,6 +279,7 @@
     <Compile Include="WorkbenchVoltageCurveView.cs" />
     <Compile Include="Emails\XSLTemplate.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
