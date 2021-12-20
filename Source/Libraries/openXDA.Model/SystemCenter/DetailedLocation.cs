@@ -36,6 +36,7 @@ namespace SystemCenter.Model
             l.ShortName,
             l.Latitude,
             l.Longitude,
+            l.Description,
             COUNT(DISTINCT m.ID) as Meters,
             COUNT(DISTINCT al.AssetID) as Assets
     FROM 
@@ -75,6 +76,7 @@ namespace SystemCenter.Model
         public string ShortName { get; set; }
         public double Longitude {get; set;}
         public double Latitude {get; set;}
+        public string Description { get; set; }
         public int Meters { get; set; }
         public int Assets { get; set; } 
     }
