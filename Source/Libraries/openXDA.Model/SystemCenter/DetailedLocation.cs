@@ -51,7 +51,8 @@ namespace SystemCenter.Model
         l.Alias,
         l.ShortName,
         l.Latitude,
-        l.Longitude
+        l.Longitude,
+        l.Description
     "), AllowSearch]
     [AdditionalFieldSearch("ParentTable = 'Location'", @"
     (SELECT
