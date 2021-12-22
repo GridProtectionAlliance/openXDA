@@ -25,11 +25,19 @@ using GSF.Data.Model;
 
 namespace openXDA.Model.Emails
 {
+
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("TriggeredEmailDataSourceEmailType")]
+    [UseEscapedName]
     public class TriggeredEmailDataSourceEmailType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [ParentKey(typeof(EmailType))]
         public int EmailTypeID { get; set; }
 
         public int TriggeredEmailDataSourceID { get; set; }
