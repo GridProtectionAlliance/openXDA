@@ -38,8 +38,8 @@
     <Reference Include="GSF.Core">
       <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
-    <Reference Include="HIDS, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\HIDS.1.0.0\lib\netstandard2.0\HIDS.dll</HintPath>
+    <Reference Include="HIDS, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\HIDS.1.0.2\lib\netstandard2.0\HIDS.dll</HintPath>
     </Reference>
     <Reference Include="InfluxDB.Client, Version=3.2.0.0, Culture=neutral, PublicKeyToken=2ffdb0e6ebde0d3f, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\InfluxDB.Client.3.2.0\lib\netstandard2.0\InfluxDB.Client.dll</HintPath>
