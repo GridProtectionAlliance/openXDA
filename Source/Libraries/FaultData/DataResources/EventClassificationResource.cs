@@ -100,7 +100,7 @@ namespace FaultData.DataResources
 
                 EventClassification classification = Classify(meterDataSet, dataGroup);
 
-                if (!ValidateEventType(classification, (AssetType)dataGroup.Asset.AssetTypeID))
+                if (!(dataGroup.Asset is null) && !ValidateEventType(classification, (AssetType)dataGroup.Asset.AssetTypeID))
                     classification = EventClassification.Other;
 
                 Classifications.Add(dataGroup, classification);
