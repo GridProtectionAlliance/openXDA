@@ -28,27 +28,31 @@ import Legend from "./Legend";
 import DistributionPlot from './DistributionPlot';
 import SummaryStat from './SummaryStat';
 import LineChart from './LineChart';
+import { PeriodicDataDisplay } from './global'
 
-export default class Measurement extends React.Component<any, any>{
-    periodicDataDisplayService: PeriodicDataDisplayService;
-    options: object;
-    plot: any;
-    state: {legend: object, hover: number, display: string, distributions: Array<DistributionPlot>, legendRows: object}
-    constructor(props) {
-        super(props);
+interface Props {
+    meterID: number,
+    startDate: string,
+    endDate: string,
+    key: string,
+    data: PeriodicDataDisplay.MeasurementCharateristics,
+    type: string,
+    height: number,
+    detailedReport: boolean,
+    width: number,
+    returnedMeasurement: () => void
+}
 
-        this.state = {
-            legend: {},
-            hover: null,
-            display: 'block',
-            distributions: [],
-            legendRows: []
-        }
+const Measurement = (props: Props) => {
+    const periodicDataDisplayService = new PeriodicDataDisplayService();
+    const [legend, setLegend] = React.useState<PeriodicDataDisplay.Legend>({});
+    const [display, setDisplay] = React.useState<'block' | 'none'>('block');
 
-        this.periodicDataDisplayService = new PeriodicDataDisplayService();
-    }
+    React.useEffect(() => {
+        getData();
+    }, [props.data]);
 
-    getColor(index) {
+    function getColor(index: number) {
         switch (index % 20) {
             case 0: return "#dcc582";
             case 1: return "#cb4b4b";
@@ -74,115 +78,74 @@ export default class Measurement extends React.Component<any, any>{
         }
     }
 
-    componentWillReceiveProps(nextProps) {
-
-        var props = _.clone(this.props) as any;
-        var nextPropsClone = _.clone(nextProps);
-
-        delete props.data;
-        delete props.stateSetter;
-        delete props.height;
-        delete nextPropsClone.data;
-        delete nextPropsClone.stateSetter;
-        delete nextPropsClone.height;
-
-        if (!(_.isEqual(props, nextPropsClone))) {
-            this.getData(nextProps);
-
-        }
-    }
-
-    componentDidMount() {
-        this.getData(this.props);
-    }
-
-
-
-
-    getData(props) {
-        props.stateSetter()
-        this.periodicDataDisplayService.getData(props.meterID, props.startDate, props.endDate, window.innerWidth, props.data.MeasurementCharacteristicID, props.data.MeasurementTypeID,this.props.type).done(data => {
-            this.props.returnedMeasurement();
+    function getData() {
+        periodicDataDisplayService.getData(props.meterID, props.startDate, props.endDate, window.innerWidth, props.data.MeasurementCharacteristicID, props.data.MeasurementTypeID,props.data.HarmonicGroup,props.type).done(data => {
+            props.returnedMeasurement();
 
             if (Object.keys(data).length == 0) {
-                this.setState({ display: 'none' });
+                setDisplay('none');
                 return;
             }
 
-            this.setState({ display: 'block' });
-
-            var legend = this.createLegendRows(data);
-            this.createDistributionPlots(legend);
+            setDisplay('block');
+            createLegendRows(data);
         });
 
     }
 
-    createDistributionPlots(legend) {
-        var distributions = Object.keys(legend).map(key => {
-            var data = { key: key, data: legend[key] };
-            return (
-                <li key={key} style={{ height: '270px', width: '600px', display: 'inline-block' }}>
-                    <table className="table" style={{ height: '270px', width: '600px'}}>
-                        <tbody>
-                            <tr style={{ height: '270px', width: '600px' }}>
-                                <td style={{ height: 'inherit', width: '50%' }}><DistributionPlot data={data} bins={40} /></td>
-                                <td style={{ height: 'inherit', width: '50%' }}><SummaryStat data={data} /></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </li>
-            );
-        });
-
-        this.setState({ distributions: distributions});
-
-    }
-
-
-    createLegendRows(data) {
-        var ctrl = this;
-
-        var legend = (this.state.legend != undefined ? this.state.legend : {});
+    function createLegendRows(data: PeriodicDataDisplay.ReturnData) {
+        let newLegend = _.clone(legend);
 
         $.each(Object.keys(data), function (i, key) {
-            if (legend[key] == undefined)
-                legend[key] = { color: ctrl.getColor(i), enabled: true, data: data[key] };
+            if (newLegend[key] == undefined)
+                newLegend[key] = { color: getColor(i), enabled: true, data: data[key] };
             else
-                legend[key].data = data[key];
+                newLegend[key].data = data[key];
         });
 
-        this.setState({ legendRows: legend });
-        return legend;
+        setLegend(newLegend);
     }
 
-    render() {
-        return (
-            <div id={this.props.data.ID} className="list-group-item panel-default" style={{ padding: 0, display: this.state.display }}>
-                <div className="panel-heading">{this.props.data.MeasurementCharacteristic} - {this.props.data.MeasurementType}</div>
-                <div className="panel-body">
-                    <div style={{ height: this.props.height, float: 'left', width: '100%', marginBottom: '10px'}}>
-                        <div id={'graph'} style={{ height: 'inherit', width: this.props.width, position: 'absolute' }}>
-                            <LineChart legend={this.state.legendRows} startDate={this.props.startDate} endDate={this.props.endDate} width={this.props.width}/>
-                        </div>
-                        <div id={'legend'} className='legend' style={{ position: 'absolute', right: '0' , width: '200px', height: this.props.height - 38, marginTop: '6px', borderStyle: 'solid', borderWidth: '2px', overflowY: 'auto' }}>
-                            <Legend data={this.state.legendRows} callback={() => {
-                                this.setState({ legend: this.state.legend });
-                            }} />
-                        </div>
+    return (
+        <div className="list-group-item panel-default" style={{ padding: 0, display: display }}>
+            <div className="panel-heading">{props.data.MeasurementCharacteristic} - {props.data.MeasurementType}{(props.data.MeasurementCharacteristic == 'SpectraHGroup' ? ' HG:' + props.data.HarmonicGroup : '')}</div>
+            <div className="panel-body">
+                <div style={{ height: props.height, float: 'left', width: '100%', marginBottom: '10px'}}>
+                    <div style={{ height: 'inherit', width: props.width, position: 'absolute' }}>
+                        <LineChart key={`${props.data.MeasurementCharacteristic}-${props.data.MeasurementType}${(props.data.MeasurementCharacteristic == 'SpectraHGroup' ? ' HG:' + props.data.HarmonicGroup : '')}chart`} legend={legend} startDate={props.startDate} endDate={props.endDate} width={props.width}/>
                     </div>
-                    { (this.props.detailedReport?
-                        <div style={{ width: '100%', margin: '10px' }}>
-                            <label style={{ width: '100%' }}>Distributions</label>
-
-                            <ul style={{ display: 'inline', position: 'relative', width: '100%', marginTop: '25px', paddingLeft: '0' }}>
-                                {this.state.distributions}
-                            </ul>
-                        </div>: null) 
-                    }
+                    <div key={`${props.data.MeasurementCharacteristic}-${props.data.MeasurementType}${(props.data.MeasurementCharacteristic == 'SpectraHGroup' ? ' HG:' + props.data.HarmonicGroup : '')}legend`} className='legend' style={{ position: 'absolute', right: '0' , width: '200px', height: props.height - 38, marginTop: '6px', borderStyle: 'solid', borderWidth: '2px', overflowY: 'auto' }}>
+                        <Legend data={legend} callback={() => setLegend(legend)} />
+                    </div>
                 </div>
-                <br />
+                { (props.detailedReport?
+                    <div style={{ width: '100%', margin: '10px' }}>
+                        <label style={{ width: '100%' }}>Distributions</label>
+
+                        <ul style={{ display: 'inline', position: 'relative', width: '100%', marginTop: '25px', paddingLeft: '0' }}>
+                            {Object.keys(legend).map(key => {
+                                var data = { key: key, data: legend[key] };
+                                return (
+                                    <li key={key} style={{ height: '270px', width: '600px', display: 'inline-block' }}>
+                                        <table className="table" style={{ height: '270px', width: '600px' }}>
+                                            <tbody>
+                                                <tr style={{ height: '270px', width: '600px' }}>
+                                                    <td style={{ height: 'inherit', width: '50%' }}><DistributionPlot data={data} bins={40} /></td>
+                                                    <td style={{ height: 'inherit', width: '50%' }}><SummaryStat data={legend[key]} key={key} /></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>: null) 
+                }
             </div>
-        );
-    }
+            <br />
+        </div>
+    );
 
 }
+
+export default Measurement;

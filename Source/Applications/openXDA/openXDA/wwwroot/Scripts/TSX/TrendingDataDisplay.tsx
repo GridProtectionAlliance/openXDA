@@ -172,7 +172,7 @@ class TrendingDataDisplay extends React.Component<any, any>{
                         <DistributionPlot data={this.state.distributionData} bins={40} />
                     </div>
                     <div style={{ width: 'inherit', height: '50%', padding: '5px' }}>
-                        <SummaryStat data={this.state.distributionData} />
+                        <SummaryStat data={this.state.distributionData.data} key={this.state.distributionData.key} />
                     </div>
                 </div>
             </div>

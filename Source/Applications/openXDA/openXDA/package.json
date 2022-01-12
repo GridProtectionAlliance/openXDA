@@ -1,10 +1,15 @@
 {
-  "version": "2.0.0",
+  "version": "3.0.0",
   "name": "openxda",
   "private": true,
   "devDependencies": {
     "webpack": "4.29.6",
     "webpack-cli": "3.3.0"
+  },
+  "scripts": {
+    "build": "npm prune && npm install && webpack --mode=development",
+    "watch": "webpack --watch --color --mode=development",
+    "update": "npx npm-check-updates"
   },
   "dependencies": {
     "@types/jquery": "3.3.1",

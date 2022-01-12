@@ -22,70 +22,32 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as _ from "lodash";
+import { PeriodicDataDisplay } from './global'
 
-export default class Legend extends React.Component<any, any>{
-    constructor(props) {
-        super(props);
-    }
+interface Props {
+    data: PeriodicDataDisplay.Legend,
+    callback: () => void
+}
+const Legend = (props: Props) => {
+    if (props.data == null || Object.keys(props.data).length == 0) return null;
 
-    render() {
-        if (this.props.data == null || Object.keys(this.props.data).length == 0) return null;
+    let rows = Object.keys(props.data).sort().map(row => {
+        return <Row key={row} label={row} color={props.data[row].color} enabled={props.data[row].enabled} callback={() => {
+            props.data[row].enabled = !props.data[row].enabled;
+            props.callback();
+        }} />
+    });
 
-        let rows = Object.keys(this.props.data).sort().map(row => {
-            return <Row key={row} label={row} color={this.props.data[row].color} enabled={this.props.data[row].enabled} callback={() => {
-                this.props.data[row].enabled = !this.props.data[row].enabled;
-                this.props.callback();
-            }} />
-        });
-
-        return (
-            <div>
-                <table>
-                    <tbody>
-                        {rows}
-                    </tbody>
-                </table>
-            </div>
-        );
-    }
-
-    toggleWave(event) {
-        var data = this.props.data;
-        var flag = false;
-        _.each(Object.keys(data).filter(d => { return d.indexOf('RMS') < 0 && d.indexOf('Amplitude') < 0 && d.indexOf('Phase') < 0}), (key, i:any) => {
-            if (i == 0) flag = !data[key].enabled;
-            data[key].enabled = flag;
-            $('[name="' + key + '"]').prop('checked', flag)
-        });
-
-        if (flag)
-            event.target.className = "active";
-        else
-            event.target.className = "";
-
-        this.props.callback();
-    }
-
-    toggleAll(type, event) {
-        var data = this.props.data;
-        var flag = false;
-
-        _.each(Object.keys(data).filter(d => { return d.indexOf(type) >= 0 }), (key, i: any) => {
-            if (i == 0) flag = !data[key].enabled;
-            data[key].enabled = flag;
-            $('[name="' + key + '"]').prop('checked', flag)
-        });
-
-        if (flag)
-            event.target.className = "active";
-        else
-            event.target.className = "";
-
-        this.props.callback();
-
-    }
+    return (
+        <div>
+            <table>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 const Row = (props) => {
@@ -113,3 +75,5 @@ function convertHex(hex, opacity) {
     var result = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity / 100 + ')';
     return result;
 }
+
+export default Legend;

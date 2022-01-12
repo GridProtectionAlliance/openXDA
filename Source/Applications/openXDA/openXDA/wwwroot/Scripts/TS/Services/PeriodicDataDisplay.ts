@@ -21,9 +21,10 @@
 //
 //******************************************************************************************************
 import * as moment from 'moment';
+import { PeriodicDataDisplay } from './../../TSX/global'
 
 export default class PeriodicDataDisplayService {
-    getData(meterID, startDate, endDate, pixels, measurementCharacteristicID, measurementTypeID, type) {
+    getData(meterID: number, startDate: string, endDate:string, pixels: number, measurementCharacteristicID:number, measurementTypeID:number,harmonicGroup: number, type) {
         return $.ajax({
             type: "GET",
             url: `${window.location.origin}/api/PeriodicDataDisplay/GetData?MeterID=${meterID}` +
@@ -31,13 +32,14 @@ export default class PeriodicDataDisplayService {
                 `&endDate=${moment(endDate).format('YYYY-MM-DD')}` +
                 `&pixels=${pixels}` +
                 `&MeasurementCharacteristicID=${measurementCharacteristicID}` + 
-                `&MeasurementTypeID=${measurementTypeID}` + 
+                `&MeasurementTypeID=${measurementTypeID}` +
+                `&HarmonicGroup=${harmonicGroup}` +
                 `&type=${type}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
             async: true
-        });
+        }) as JQuery.jqXHR<PeriodicDataDisplay.ReturnData>;
     }
 
     getMeters() {
@@ -55,12 +57,12 @@ export default class PeriodicDataDisplayService {
         return $.ajax({
             type: "GET",
             url: `${window.location.origin}/api/PeriodicDataDisplay/GetMeasurementCharacteristics` +
-                 `${(fromStepChangeWebReport ? `?MeterID=${meterID}` : ``)}`,
+                `${(fromStepChangeWebReport ? `?MeterID=${meterID}` : ``)}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
             async: true
-        });
+        }) as JQuery.jqXHR<PeriodicDataDisplay.MeasurementCharateristics[]>;
     }
 
 
