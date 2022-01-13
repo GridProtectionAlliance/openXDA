@@ -25,7 +25,7 @@ using openXDA.Model;
 using System;
 using System.Xml.Linq;
 
-namespace openXDA.NotificationDataSources
+namespace openXDA.Model
 {
     public interface ITriggeredDataSource
     {
