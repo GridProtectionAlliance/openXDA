@@ -130,8 +130,8 @@ const Measurement = (props: Props) => {
                                         <table className="table" style={{ height: '270px', width: '600px' }}>
                                             <tbody>
                                                 <tr style={{ height: '270px', width: '600px' }}>
-                                                    <td style={{ height: 'inherit', width: '50%' }}><DistributionPlot data={data} bins={40} /></td>
-                                                    <td style={{ height: 'inherit', width: '50%' }}><SummaryStat data={legend[key]} key={key} /></td>
+                                                    <td style={{ height: 'inherit', width: '50%' }}><DistributionPlot data={legend[key]?.data} label={key} bins={40} /></td>
+                                                    <td style={{ height: 'inherit', width: '50%' }}><SummaryStat data={legend[key]?.data} /></td>
                                                 </tr>
                                             </tbody>
                                         </table>

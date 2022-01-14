@@ -27,19 +27,20 @@ import * as moment from 'moment';
 import * as _ from "lodash";
 import './../flot/jquery.flot.min.js';
 import * as stats from 'stats-lite';
+import { PeriodicDataDisplay } from './global'
 
 interface Props{
-    data: { data: {color: string, data: [number, number][]}, key: string }, bins: number
+    data: PeriodicDataDisplay.Points, label: string , bins: number
 }
 
 const DistributionPlot = (props: Props) => {
     const ref = React.useRef(null);
 
     React.useEffect(() => {
-        if (props.data == null) return null;
+        if (props.data == null) return;
+        else if (props.data.length == 0) return;
 
-        if (props.data.data.data.length == 0) return null;
-        let stat = stats.histogram(props.data.data.data.map(d => d[1]), props.bins)
+        let stat = stats.histogram(props.data.map(d => d[1]), props.bins)
         let totalCount = stat.values.reduce((t, x) => { return t + x });
         let options = {
             series: {
@@ -85,13 +86,13 @@ const DistributionPlot = (props: Props) => {
             return [bin, (d / totalCount) * 100]
         });
 
-        ($ as any).plot($(ref.current), [{ label: props.data.key, data: data }], options);
+        ($ as any).plot($(ref.current), [{ label: props.label, data: data }], options);
 
-    }, []);
+    }, [props.data, props.label, props.bins]);
 
     return (
         <div style={{ height: '100%', margin: '10px'}}>
-            <label style={{textAlign: 'center'}}>{props.data.key}</label>
+            <label style={{ textAlign: 'center' }}>{props.label}</label>
             <div ref={ref} style={{ height: 'calc(100% - 20px)', width: 'inherit' }}></div>
         </div>
     );

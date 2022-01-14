@@ -29,15 +29,15 @@ import './../flot/jquery.flot.crosshair.min.js';
 import './../flot/jquery.flot.navigate.min.js';
 import './../flot/jquery.flot.selection.min.js';
 import './../flot/jquery.flot.time.min.js';
+import { PeriodicDataDisplay } from './global'
 
-export default class TrendingChart extends React.Component<any, any>{
+interface Props { startDate: string, endDate: string, data: PeriodicDataDisplay.ReturnData, type: Array<string>, stateSetter: Function }
+export default class TrendingChart extends React.Component<Props, {}>{
     plot: any;
     zoomId: any;
-    props: { startDate: string, endDate: string, data: JSON, type: Array<string>, stateSetter: Function }
     hover: number;
     startDate: string;
     endDate: string;
-    state: {}
     options: { canvas: boolean, legend: object, crosshair: object, selection: object, grid: object, xaxis: {mode: string, tickLength: number, reserveSpace: boolean, ticks: Function, tickFormatter: Function, max: number, min: number}, yaxis: object, }
 
     constructor(props) {

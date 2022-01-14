@@ -23,11 +23,24 @@
 
 export namespace PeriodicDataDisplay {
     type MeasurementCharateristics = { MeasurementType: string, MeasurementTypeID: number, MeasurementCharacteristic: string, MeasurementCharacteristicID: number, HarmonicGroup: number }
+    interface LegendRow { color: string, data: Points, enabled: boolean }
+    interface Legend { [key: string]: LegendRow }
+
+    type Point = [number, number];
+    type Points = Point[];
+    interface ReturnData {
+        [key: string]: Points
+    }
+}
+
+export namespace TrendingcDataDisplay {
+    type MeasurementCharateristics = { MeasurementType: string, MeasurementTypeID: number, MeasurementCharacteristic: string, MeasurementCharacteristicID: number, HarmonicGroup: number }
     interface LegendRow { color: string, data: [number, number][], enabled: boolean }
     interface Legend { [key: string]: LegendRow }
 
     type Point = [number, number];
     type Points = Point[];
+    type Type = 'Minimum' | 'Average' | 'Maximum';
     interface ReturnData {
         [key: string]: Points
     }

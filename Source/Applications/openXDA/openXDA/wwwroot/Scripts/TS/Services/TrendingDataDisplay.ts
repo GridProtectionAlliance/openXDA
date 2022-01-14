@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 import * as moment from 'moment';
+import { PeriodicDataDisplay } from './../../TSX/global'
 
 export default class TrendingDataDisplayService {
     getData(channelID: number, startDate: string, endDate: string, pixels: number) {
@@ -34,7 +35,7 @@ export default class TrendingDataDisplayService {
             dataType: 'json',
             cache: true,
             async: true
-        });
+        }) as JQuery.jqXHR<PeriodicDataDisplay.ReturnData>;
     }
 
     getMeasurements(meterID: number) {

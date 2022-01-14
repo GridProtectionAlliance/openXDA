@@ -26,16 +26,17 @@ import * as _ from "lodash";
 import * as stats from 'stats-lite';
 import { PeriodicDataDisplay } from './global'
 
-const SummaryStat = (props: {data: PeriodicDataDisplay.LegendRow, key: string}) =>{
+const SummaryStat = (props: {data: PeriodicDataDisplay.Points}) =>{
     if (props.data == null) return null;
+    if (props.data.length == 0) return null;
 
-    var avg = stats.mean(props.data.data.map(d => d[1]));
-    var median = stats.median(props.data.data.map(d => d[1]));
-    var variance = stats.variance(props.data.data.map(d => d[1]));
-    var stdev = stats.stdev(props.data.data.map(d => d[1]));
-    var sum = stats.sum(props.data.data.map(d => d[1]));
-    var min = _.min(props.data.data.map(d => d[1]));
-    var max = _.max(props.data.data.map(d => d[1]));
+    var avg = stats.mean(props.data.map(d => d[1]));
+    var median = stats.median(props.data.map(d => d[1]));
+    var variance = stats.variance(props.data.map(d => d[1]));
+    var stdev = stats.stdev(props.data.map(d => d[1]));
+    var sum = stats.sum(props.data.map(d => d[1]));
+    var min = _.min(props.data.map(d => d[1]));
+    var max = _.max(props.data.map(d => d[1]));
 
     return (
         <div>

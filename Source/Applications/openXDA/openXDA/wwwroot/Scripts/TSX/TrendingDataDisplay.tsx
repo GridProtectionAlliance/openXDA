@@ -34,15 +34,15 @@ import TrendingChart from './TrendingChart';
 import DateTimeRangePicker from './DateTimeRangePicker';
 import DistributionPlot from './DistributionPlot';
 import SummaryStat from './SummaryStat';
+import { PeriodicDataDisplay } from './global'
 
-declare interface state { meterID: number, startDate: string, endDate: string, width: number, data: JSON, measurementID: number, type: Array<string>, distributionData: any };
+declare interface state { meterID: number, startDate: string, endDate: string, width: number, data: PeriodicDataDisplay.ReturnData, measurementID: number, type: string[], distributionData: PeriodicDataDisplay.Legend };
 
-class TrendingDataDisplay extends React.Component<any, any>{
+class TrendingDataDisplay extends React.Component<{}, state>{
     history: object;
     trendingDataDisplayService: TrendingDataDisplayService;
     resizeId: any;
     updateUrlId: any;
-    state: state
     constructor(props) {
         super(props);
 
@@ -59,7 +59,7 @@ class TrendingDataDisplay extends React.Component<any, any>{
             width: window.innerWidth - 475,
             type: ["Minimum", "Maximum", "Average"],
             data: null,
-            distributionData: null
+            distributionData: {}
         }
 
         this.history['listen']((location, action) => {
@@ -85,7 +85,9 @@ class TrendingDataDisplay extends React.Component<any, any>{
     getData() {
         $(this.refs.loader).show();
         this.trendingDataDisplayService.getData(this.state.measurementID, this.state.startDate, this.state.endDate, this.state.width).done(data => {
-            this.setState({ data: data, distributionData: { key: '', data: {data: data['Average']}} }, () => $(this.refs.loader).hide() );
+            let dD = { ...this.state.distributionData };
+            dD['Average'] = { data: data['Average'], color: '', enabled: true };
+            this.setState({ data: data, distributionData: dD }, () => $(this.refs.loader).hide() );
         });
     }
 
@@ -136,7 +138,7 @@ class TrendingDataDisplay extends React.Component<any, any>{
                     </div>
                     <div className="form-group">
                         <label>Data Type: </label>
-                    <select onChange={(obj) => this.setState({ type: $(obj.currentTarget).val() })} className="form-control" style={{overflowY: "hidden"}} defaultValue={this.state.type} multiple>
+                    <select onChange={(obj) => this.setState({ type: $(obj.currentTarget).val() as string[]})} className="form-control" style={{overflowY: "hidden"}} defaultValue={this.state.type} multiple>
                             <option value="Average">Average</option>
                             <option value="Maximum">Maximum</option>
                             <option value="Minimum">Minimum</option>
@@ -168,12 +170,12 @@ class TrendingDataDisplay extends React.Component<any, any>{
                 </div>
                 <div style={{width: sideWidth, height: 'inherit', position: 'relative', float: 'right'}}>
                     <h4>Statistics</h4>
-                    <div style={{ width: 'inherit', height: 'calc(50% - 100px)', padding: '5px', marginTop: 50, marginBottom: 50 }}>
-                        <DistributionPlot data={this.state.distributionData} bins={40} />
-                    </div>
-                    <div style={{ width: 'inherit', height: '50%', padding: '5px' }}>
-                        <SummaryStat data={this.state.distributionData.data} key={this.state.distributionData.key} />
-                    </div>
+                        <div style={{ width: 'inherit', height: 'calc(50% - 100px)', padding: '5px', marginTop: 50, marginBottom: 50 }}>
+                            <DistributionPlot data={this.state.distributionData['Average']?.data} label='Average' bins={40} />
+                        </div>
+                        <div style={{ width: 'inherit', height: '50%', padding: '5px' }}>
+                            <SummaryStat data={this.state.distributionData['Average']?.data} />
+                        </div>
                 </div>
             </div>
         </div>
