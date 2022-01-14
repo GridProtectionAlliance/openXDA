@@ -34,14 +34,24 @@ export namespace PeriodicDataDisplay {
 }
 
 export namespace TrendingcDataDisplay {
+    interface Measurement { ID: number, MeterID: number, MeterName: string, MeasurementName: string, Maximum: boolean, MaxColor: string, Average: boolean, AvgColor: string, Minimum: boolean, MinColor: string, Data?: Points, Axis: number }
+
     type MeasurementCharateristics = { MeasurementType: string, MeasurementTypeID: number, MeasurementCharacteristic: string, MeasurementCharacteristicID: number, HarmonicGroup: number }
     interface LegendRow { color: string, data: [number, number][], enabled: boolean }
     interface Legend { [key: string]: LegendRow }
 
-    type Point = [number, number];
+    type Point = {Time: number, Minimum: number, Average: number, Maximum: number};
     type Points = Point[];
     type Type = 'Minimum' | 'Average' | 'Maximum';
     interface ReturnData {
         [key: string]: Points
+    }
+
+    interface FlotAxis {
+        position: 'left' | 'right',
+        color: 'black',
+        axisLabel: string,
+        axisLabelUseCanvas: true,
+        show: true
     }
 }

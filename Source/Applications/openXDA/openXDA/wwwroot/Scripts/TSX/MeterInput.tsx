@@ -25,49 +25,32 @@ import * as React from 'react';
 import PeriodicDataDisplayService from './../TS/Services/PeriodicDataDisplay';
 import * as _ from "lodash";
 
-declare var meters: Array<{ ID: number, Name: string }>;
+type meters =  Array<{ ID: number, Name: string }>;
 
-export default class MeterInput extends React.Component<any, any>{
+export default class MeterInput extends React.Component<{ value: number, onChange: Function }, { options: JSX.Element[] }>{
     periodicDataDisplayService: PeriodicDataDisplayService;
-    props: { value: number, onChange: Function };
-    state: { select: JSX.Element }
     constructor(props) {
         super(props);
 
-        if (meters == undefined) {
-            this.state = {
-                select: null
-            }
-        }
-        else {
-            this.state = {
-                select: this.getSelect(meters)
-            }
+        this.state = {
+            options: []
         }
 
         this.periodicDataDisplayService = new PeriodicDataDisplayService();
     }
 
     componentDidMount() {
-        if (meters != undefined) return;
 
         this.periodicDataDisplayService.getMeters().done(data => {
-            var select = this.getSelect(data);
-            this.setState({ select: select });
+            this.setState({ options: data.map(d => <option key={d.ID} value={d.ID}>{d.Name}</option>) });
         });
     }
 
     render() {
-        return this.state.select;
+        return (
+            <select className='form-control' onChange={(e) => { this.props.onChange({ meterID: parseInt(e.target.value), meterName: e.target.selectedOptions[0].text, measurementID: null }); }} value={this.props.value}>
+                <option value='0'></option>
+                {this.state.options}
+            </select>);
     }
-
-    getSelect(data) {
-        if (data.length == 0) return <select className='form-control'></select>;
-
-        var value = (this.props.value ? this.props.value : data[0].ID)
-        var options = data.map(d => <option key={d.ID} value={d.ID}>{d.Name}</option>);
-        this.props.onChange({ meterID: value });
-        return <select className='form-control' onChange={(e) => { this.props.onChange({ meterID: e.target.value, measurementID: null }); }} defaultValue={value}>{options}</select>;
-    }
-
 }

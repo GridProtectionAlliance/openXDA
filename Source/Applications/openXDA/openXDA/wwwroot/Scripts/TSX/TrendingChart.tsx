@@ -29,16 +29,18 @@ import './../flot/jquery.flot.crosshair.min.js';
 import './../flot/jquery.flot.navigate.min.js';
 import './../flot/jquery.flot.selection.min.js';
 import './../flot/jquery.flot.time.min.js';
-import { PeriodicDataDisplay } from './global'
+import './../flot/jquery.flot.axislabels.js';
 
-interface Props { startDate: string, endDate: string, data: PeriodicDataDisplay.ReturnData, type: Array<string>, stateSetter: Function }
+import { TrendingcDataDisplay } from './global'
+
+interface Props { startDate: string, endDate: string, data: TrendingcDataDisplay.Measurement[], axes: TrendingcDataDisplay.FlotAxis[],stateSetter: Function }
 export default class TrendingChart extends React.Component<Props, {}>{
     plot: any;
     zoomId: any;
     hover: number;
     startDate: string;
     endDate: string;
-    options: { canvas: boolean, legend: object, crosshair: object, selection: object, grid: object, xaxis: {mode: string, tickLength: number, reserveSpace: boolean, ticks: Function, tickFormatter: Function, max: number, min: number}, yaxis: object, }
+    options: { canvas: boolean, legend: object, crosshair: object, selection: object, grid: object, xaxis: {mode: string, tickLength: number, reserveSpace: boolean, ticks: Function, tickFormatter: Function, max: number, min: number}, yaxis: object, yaxes: object[] }
 
     constructor(props) {
         super(props);
@@ -101,38 +103,36 @@ export default class TrendingChart extends React.Component<Props, {}>{
                     else
                         return val.toFixed(axis.tickDecimals);
                 }
-            }
+            },
+            yaxes: []
         }
 
     }
 
 
-    getColor(key) {
-        if (key == "Average") return '#261083';
-        if (key == "Minimum") return '#30AF47';
-        if (key == "Maximum") return '#DB0404';
-        return '#000000';
-    }
-
-    createDataRows(props) {
+    createDataRows(props: Props) {
         // if start and end date are not provided calculate them from the data set
         if (this.plot != undefined) $(this.refs.graph).children().remove();
 
-        var ctrl = this;
         var startString = this.startDate;
         var endString = this.endDate;
         var newVessel = [];
 
         if (props.data != null) {
-            $.each(Object.keys(props.data), (i, key) => {
-                if(props.type.indexOf(key) >= 0)
-                    newVessel.push({ label: key, data: props.data[key], color: this.getColor(key) })
+            $.each(props.data, (i, measurement) => {
+                if(measurement.Maximum && measurement.Data?.length > 0)
+                    newVessel.push({ label: `${measurement.MeasurementName}-Max`, data: measurement.Data.map(d => [d.Time,d.Maximum]), color: measurement.MaxColor, yaxis: measurement.Axis })
+                if (measurement.Average && measurement.Data?.length > 0)
+                    newVessel.push({ label: `${measurement.MeasurementName}-Avg`, data: measurement.Data.map(d => [d.Time, d.Average]), color: measurement.AvgColor, yaxis: measurement.Axis  })
+                if (measurement.Minimum && measurement.Data?.length > 0)
+                    newVessel.push({ label: `${measurement.MeasurementName}-Min`, data: measurement.Data.map(d => [d.Time, d.Minimum]), color: measurement.MinColor, yaxis: measurement.Axis  })
+
             });
         }
         newVessel.push([[this.getMillisecondTime(startString), null], [this.getMillisecondTime(endString), null]]);
         this.options.xaxis.max = this.getMillisecondTime(endString);
         this.options.xaxis.min = this.getMillisecondTime(startString);
-
+        this.options.yaxes = this.props.axes;
         this.plot = ($ as any).plot($(this.refs.graph), newVessel, this.options);
         this.plotSelected();
         this.plotZoom();
