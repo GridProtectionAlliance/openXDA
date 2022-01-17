@@ -52,6 +52,8 @@ export namespace TrendingcDataDisplay {
         color: 'black',
         axisLabel: string,
         axisLabelUseCanvas: true,
-        show: true
+        show: true,
+        min?: number,
+        max?: number
     }
 }

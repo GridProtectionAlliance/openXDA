@@ -78,7 +78,7 @@ const TrendingDataDisplay = () => {
 
     React.useEffect(() => {
         sessionStorage.setItem('TrendingDataDisplay-axes', JSON.stringify(axes))
-    }, [axes.length]);
+    }, [axes]);
 
     function getData() {
         $(loader.current).show();
@@ -118,104 +118,26 @@ const TrendingDataDisplay = () => {
                                 setEndDate(obj.endDate);
                         }} />
                     </div>
-                    <div className="form-group">
+                    <div className="form-group" style={{height: 50}}>
                         <div style={{ float: 'left' }} ref={loader} hidden>
                             <div style={{ border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' }}></div>
                             <span>Loading...</span>
                         </div>
                     </div>
 
-                    <AddMeasurement Add={(msnt) => setMeasurements(measurements.concat(msnt))} />
 
                     <div className="form-group">
                         <div className="panel-group">
                             <div className="panel panel-default">
-                                <div className="panel-heading">
-                                    <h4 className="panel-title">
+                                <div className="panel-heading" style={{ position: 'relative', height: 60}}>
+                                    <h4 className="panel-title" style={{ position: 'absolute', left: 15, width: '60%' }}>
                                         <a data-toggle="collapse" href="#MeasurementCollapse">Measurements:</a>
                                     </h4>
+                                    <AddMeasurement Add={(msnt) => setMeasurements(measurements.concat(msnt))} />
                                 </div>
                                 <div id='MeasurementCollapse' className='panel-collapse'>
                                     <ul className='list-group'>
-                                        {measurements.map((ms,i) => (
-                                            <li className='list-group-item' key={ms.ID}>
-                                                <div>{ms.MeterName}</div><button type="button" style={{position: 'relative', top: -20}} className="close" onClick={() => {
-                                                    let meas = [...measurements];
-                                                    meas.splice(i, 1);
-                                                    setMeasurements(meas)
-                                                }}>&times;</button>
-                                                <div>{ms.MeasurementName}</div>
-                                                <div>
-                                                    <select className='form-control' value={ms.Axis} onChange={(evt) => {
-                                                        let meas = [...measurements];
-                                                        meas[i].Axis = parseInt(evt.target.value);
-                                                        setMeasurements(meas)
-                                                    }}>
-                                                        {axes.map((a, ix) => <option key={ix } value={ix + 1}>{a.axisLabel}</option> )}
-                                                    </select>
-
-                                                </div>
-
-                                                <div className='row'>
-                                                    <div className='col-lg-4'>
-                                                        <div className="">
-                                                            <div className="checkbox">
-                                                                <label><input type="checkbox" checked={ms.Maximum} value={ms.Maximum.toString()} onChange={() => {
-                                                                    let meas = [...measurements];
-                                                                    meas[i].Maximum = !meas[i].Maximum;
-                                                                    setMeasurements(meas)
-                                                                }} /> Max</label>
-                                                            </div>
-                                                        </div>
-                                                        <div className="">
-                                                            <input type="color" className="form-control" value={ms.MaxColor} onChange={(evt) => {
-                                                                let meas = [...measurements];
-                                                                meas[i].MaxColor = evt.target.value;
-                                                                setMeasurements(meas)
-                                                            }} />
-                                                        </div>
-                                                    </div>
-                                                    <div className='col-lg-4'>
-                                                        <div className="">
-                                                            <div className="checkbox">
-                                                                <label><input type="checkbox" checked={ms.Average} value={ms.Average.toString()} onChange={() => {
-                                                                    let meas = [...measurements];
-                                                                    meas[i].Average = !meas[i].Average;
-                                                                    setMeasurements(meas)
-                                                                }} /> Avg</label>
-                                                            </div>
-                                                        </div>
-                                                        <div className="">
-                                                            <input type="color" className="form-control" value={ms.AvgColor} onChange={(evt) => {
-                                                                let meas = [...measurements];
-                                                                meas[i].AvgColor = evt.target.value;
-                                                                setMeasurements(meas)
-                                                            }} />
-                                                        </div>
-                                                    </div>
-                                                    <div className='col-lg-4'>
-                                                        <div className="">
-                                                            <div className="checkbox">
-                                                                <label><input type="checkbox" checked={ms.Minimum} value={ms.Minimum.toString()} onChange={() => {
-                                                                    let meas = [...measurements];
-                                                                    meas[i].Minimum = !meas[i].Minimum;
-                                                                    setMeasurements(meas)
-                                                                }} /> Min</label>
-                                                            </div>
-                                                        </div>
-                                                        <div className="">
-                                                            <input type="color" className="form-control" value={ms.MinColor} onChange={(evt) => {
-                                                                let meas = [...measurements];
-                                                                meas[i].MinColor = evt.target.value;
-                                                                setMeasurements(meas)
-                                                            }} />
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-
-                                            </li>
-                                        ))}
+                                        {measurements.map((ms, i) => <MeasurementRow key={i} Measurement={ms} Measurements={measurements} Axes={axes} Index={i} SetMeasurements={setMeasurements} />)}
                                     </ul>
                                 </div>
                             </div>
@@ -223,37 +145,19 @@ const TrendingDataDisplay = () => {
                         </div>
                     </div>
 
-                    <AddAxis Add={(axis) => setAxes(axes.concat(axis))} />
 
                     <div className="form-group">
                         <div className="panel-group">
                             <div className="panel panel-default">
-                                <div className="panel-heading">
-                                    <h4 className="panel-title">
+                                <div className="panel-heading" style={{ position: 'relative', height: 60 }}>
+                                    <h4 className="panel-title" style={{ position: 'absolute', left: 15, width: '60%' }}>
                                         <a data-toggle="collapse" href="#axesCollapse">Axes:</a>
                                     </h4>
+                                    <AddAxis Add={(axis) => setAxes(axes.concat(axis))} />
                                 </div>
                                 <div id='axesCollapse' className='panel-collapse'>
                                     <ul className='list-group'>
-                                        {axes.map((axis, i) => (
-                                            <li className='list-group-item' key={i}>
-                                                <div>{axis.axisLabel}</div><button type="button" style={{ position: 'relative', top: -20 }} className="close" onClick={() => {
-                                                    let a = [...axes];
-                                                    a.splice(i, 1);
-                                                    setAxes(a)
-                                                }}>&times;</button>
-                                                <div>
-                                                    <select className='form-control' value={axis.position} onChange={(evt) => {
-                                                        let a = [...axes];
-                                                        a[i].position = evt.target.value as 'left' | 'right';
-                                                        setAxes(a)
-                                                    }}>
-                                                        <option value='left'>left</option>
-                                                        <option value='right'>right</option>
-                                                    </select>
-                                                </div>
-                                            </li>
-                                        ))}
+                                        {axes.map((axis, i) => <AxisRow key={i} Axes={axes} Index={i} SetAxes={setAxes}/>)}
                                     </ul>
                                 </div>
                             </div>
@@ -278,10 +182,10 @@ const AddMeasurement = (props: { Add: (msnt:TrendingcDataDisplay.Measurement) =>
 
     return (
         <>
-            <button type="button" className="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal" onClick={() => {
+            <button type="button" style={{ position: 'absolute', right: 15}} className="btn btn-info" data-toggle="modal" data-target="#measurementModal" onClick={() => {
                 setMeasurement({ ID: 0, MeterID: 0, MeterName: '', MeasurementName: '', Maximum: true, MaxColor: RandomColor(), Average: true, AvgColor: RandomColor(), Minimum: true, MinColor: RandomColor(), Axis: 1 });
-            }}>Add Measurement</button>
-            <div id="myModal" className="modal fade" role="dialog">
+            }}>Add</button>
+            <div id="measurementModal" className="modal fade" role="dialog">
                 <div className="modal-dialog">
                     <div className="modal-content">
                         <div className="modal-header">
@@ -306,7 +210,7 @@ const AddMeasurement = (props: { Add: (msnt:TrendingcDataDisplay.Measurement) =>
                                     </div>
                                 </div>
                                 <div className="col-lg-6">
-                                    <input type="color" className="form-control" value={measurement.MaxColor} onChange={(evt) => setMeasurement({ ...measurement, MaxColor: evt.target.value })} />
+                                    <input type="color" style={{textAlign:'left'}} className="form-control" value={measurement.MaxColor} onChange={(evt) => setMeasurement({ ...measurement, MaxColor: evt.target.value })} />
                                 </div>
 
                             </div>
@@ -317,7 +221,7 @@ const AddMeasurement = (props: { Add: (msnt:TrendingcDataDisplay.Measurement) =>
                                     </div>
                                 </div>
                                 <div className="col-lg-6">
-                                    <input type="color" className="form-control" value={measurement.AvgColor} onChange={(evt) => setMeasurement({ ...measurement, AvgColor: evt.target.value })} />
+                                    <input type="color" style={{ textAlign: 'left' }} className="form-control" value={measurement.AvgColor} onChange={(evt) => setMeasurement({ ...measurement, AvgColor: evt.target.value })} />
                                 </div>
 
                             </div>
@@ -328,7 +232,7 @@ const AddMeasurement = (props: { Add: (msnt:TrendingcDataDisplay.Measurement) =>
                                     </div>
                                 </div>
                                 <div className="col-lg-6">
-                                    <input type="color" className="form-control" value={measurement.MinColor} onChange={(evt) => setMeasurement({ ...measurement, MinColor: evt.target.value })} />
+                                    <input type="color" style={{ textAlign: 'left' }} className="form-control" value={measurement.MinColor} onChange={(evt) => setMeasurement({ ...measurement, MinColor: evt.target.value })} />
                                 </div>
 
                             </div>
@@ -346,14 +250,97 @@ const AddMeasurement = (props: { Add: (msnt:TrendingcDataDisplay.Measurement) =>
     );
 }
 
+const MeasurementRow = (props: { Measurement: TrendingcDataDisplay.Measurement, Measurements: TrendingcDataDisplay.Measurement[], Index: number, SetMeasurements: (measurements: TrendingcDataDisplay.Measurement[]) => void, Axes: TrendingcDataDisplay.FlotAxis[]}) => {
+    return (
+        <li className='list-group-item' key={props.Measurement.ID}>
+            <div>{props.Measurement.MeterName}</div><button type="button" style={{ position: 'relative', top: -20 }} className="close" onClick={() => {
+                let meas = [...props.Measurements];
+                meas.splice(props.Index, 1);
+                props.SetMeasurements(meas)
+            }}>&times;</button>
+            <div>{props.Measurement.MeasurementName}</div>
+            <div>
+                <select className='form-control' value={props.Measurement.Axis} onChange={(evt) => {
+                    let meas = [...props.Measurements];
+                    meas[props.Index].Axis = parseInt(evt.target.value);
+                    props.SetMeasurements(meas)
+                }}>
+                    {props.Axes.map((a, ix) => <option key={ix} value={ix + 1}>{a.axisLabel}</option>)}
+                </select>
+
+            </div>
+
+            <div className='row'>
+                <div className='col-lg-4'>
+                    <div className="">
+                        <div className="checkbox">
+                            <label><input type="checkbox" checked={props.Measurement.Maximum} value={props.Measurement.Maximum.toString()} onChange={() => {
+                                let meas = [...props.Measurements];
+                                meas[props.Index].Maximum = !meas[props.Index].Maximum;
+                                props.SetMeasurements(meas)
+                            }} /> Max</label>
+                        </div>
+                    </div>
+                    <div className="">
+                        <input type="color" className="form-control" value={props.Measurement.MaxColor} onChange={(evt) => {
+                            let meas = [...props.Measurements];
+                            meas[props.Index].MaxColor = evt.target.value;
+                            props.SetMeasurements(meas)
+                        }} />
+                    </div>
+                </div>
+                <div className='col-lg-4'>
+                    <div className="">
+                        <div className="checkbox">
+                            <label><input type="checkbox" checked={props.Measurement.Average} value={props.Measurement.Average.toString()} onChange={() => {
+                                let meas = [...props.Measurements];
+                                meas[props.Index].Average = !meas[props.Index].Average;
+                                props.SetMeasurements(meas)
+                            }} /> Avg</label>
+                        </div>
+                    </div>
+                    <div className="">
+                        <input type="color" className="form-control" value={props.Measurement.AvgColor} onChange={(evt) => {
+                            let meas = [...props.Measurements];
+                            meas[props.Index].AvgColor = evt.target.value;
+                            props.SetMeasurements(meas)
+                        }} />
+                    </div>
+                </div>
+                <div className='col-lg-4'>
+                    <div className="">
+                        <div className="checkbox">
+                            <label><input type="checkbox" checked={props.Measurement.Minimum} value={props.Measurement.Minimum.toString()} onChange={() => {
+                                let meas = [...props.Measurements];
+                                meas[props.Index].Minimum = !meas[props.Index].Minimum;
+                                props.SetMeasurements(meas)
+                            }} /> Min</label>
+                        </div>
+                    </div>
+                    <div className="">
+                        <input type="color" className="form-control" value={props.Measurement.MinColor} onChange={(evt) => {
+                            let meas = [...props.Measurements];
+                            meas[props.Index].MinColor = evt.target.value;
+                            props.SetMeasurements(meas)
+                        }} />
+                    </div>
+                </div>
+
+            </div>
+
+        </li>
+
+    );
+}
+
 const AddAxis = (props: { Add: (axis: TrendingcDataDisplay.FlotAxis) => void }) => {
     const [axis, setAxis] = React.useState<TrendingcDataDisplay.FlotAxis>({ position: 'left', color: 'black', axisLabel: '', axisLabelUseCanvas: true, show: true });
 
     return (
         <>
-            <button type="button" className="btn btn-info btn-lg" data-toggle="modal" data-target="#axisModal" onClick={() => {
+            <button type="button" style={{ position: 'absolute', right: 15 }}  className="btn btn-info" data-toggle="modal" data-target="#axisModal" onClick={() => {
                 setAxis({ position: 'left', color: 'black', axisLabel: '', axisLabelUseCanvas: true, show: true });
-            }}>Add Axis</button>
+            }}>Add</button>
             <div id="axisModal" className="modal fade" role="dialog">
                 <div className="modal-dialog">
                     <div className="modal-content">
@@ -388,6 +375,65 @@ const AddAxis = (props: { Add: (axis: TrendingcDataDisplay.FlotAxis) => void }) 
     );
 }
 
+const AxisRow = (props: { Index: number, Axes: TrendingcDataDisplay.FlotAxis[], SetAxes: ( axes: TrendingcDataDisplay.FlotAxis[]) => void}) => {
+    return (
+        <li className='list-group-item' key={props.Index}>
+            <div>{props.Axes[props.Index].axisLabel}</div><button type="button" style={{ position: 'relative', top: -20 }} className="close" onClick={() => {
+                let a = [...props.Axes];
+                a.splice(props.Index, 1);
+                props.SetAxes(a)
+            }}>&times;</button>
+            <div>
+                <select className='form-control' value={props.Axes[props.Index].position} onChange={(evt) => {
+                    let a = [...props.Axes];
+                    a[props.Index].position = evt.target.value as 'left' | 'right';
+                    props.SetAxes(a)
+                }}>
+                    <option value='left'>left</option>
+                    <option value='right'>right</option>
+                </select>
+            </div>
+            <div className='row'>
+                <div className='col-lg-6'>
+                    <div className='form-group'>
+                        <label>Min</label>
+                        <input className='form-control' type="number" value={props.Axes[props.Index]?.min ?? ''} onChange={(evt) => {
+                            let axes = [...props.Axes];
+                            if (evt.target.value == '')
+                                delete axes[props.Index].min;
+                            else
+                                axes[props.Index].min = parseFloat(evt.target.value);
+                            props.SetAxes(axes)
+                            }} /> 
+                    </div>
+                </div>
+                <div className='col-lg-6'>
+                    <div className='form-group'>
+                        <label>Max</label>
+                        <input className='form-control' type="number" value={props.Axes[props.Index]?.max ?? ''} onChange={(evt) => {
+                            let axes = [...props.Axes];
+                            if (evt.target.value == '')
+                                delete axes[props.Index].max;
+                            else
+                                axes[props.Index].max = parseFloat(evt.target.value);
+                            props.SetAxes(axes)
+                        }} />
+                    </div>
+                </div>
 
+            </div>
+            <button className='btn btn-info' onClick={() => {
+                let axes = [...props.Axes];
+                delete axes[props.Index].max;
+                delete axes[props.Index].min;
+
+                props.SetAxes(axes)
+
+            }} >Use Default</button>
+
+        </li>
+
+);
+}
 
 ReactDOM.render(<TrendingDataDisplay />, document.getElementById('bodyContainer'));
