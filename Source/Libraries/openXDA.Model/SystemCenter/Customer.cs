@@ -38,6 +38,7 @@ namespace SystemCenter.Model
 	    Customer.Name,
 	    Customer.Phone,
 	    Customer.Description,
+        Customer.LSCVS,
 	    COUNT([CustomerAccess].ID) as Meters
     FROM
 	    Customer LEFT JOIN
@@ -48,7 +49,8 @@ namespace SystemCenter.Model
 	    Customer.CustomerKey,
 	    Customer.Name,
 	    Customer.Phone,
-	    Customer.Description")]
+	    Customer.Description,
+        Customer.LSCVS")]
     [PatchRoles("Administrator, Transmission SME")]
     [PostRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]
@@ -62,6 +64,7 @@ namespace SystemCenter.Model
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Description { get; set; }
+        public bool LSCVS { get; set; }
 
         [NonRecordField]
         public int Meters { get; set; }
