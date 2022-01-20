@@ -377,7 +377,8 @@ CREATE TABLE Customer
     CustomerKey VARCHAR(50) NOT NULL UNIQUE,
     Name VARCHAR(200) NULL,
     Phone VARCHAR(20) NULL,
-	Description VARCHAR(200) NULL
+	Description VARCHAR(200) NULL,
+    LSCVS BIT NOT NULL Default(0)
 )
 GO
 
