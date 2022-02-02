@@ -46,6 +46,7 @@ namespace FaultData.DataOperations
         {
             public double Multiplier;
             public int ChannelIndex;
+            public bool FindMatch;
 
             public static SourceIndex Parse(string text)
             {
@@ -61,8 +62,11 @@ namespace FaultData.DataOperations
                 if (!double.TryParse(multiplier, out sourceIndex.Multiplier))
                     throw new FormatException($"Incorrect format for multiplier {multiplier} found in source index {text}.");
 
-                if (channelIndex == "NONE")
-                    return null;
+                if (channelIndex == "IDENT")
+                {
+                    sourceIndex.FindMatch = true;
+                    return sourceIndex;
+                }
 
                 if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
                     throw new FormatException($"Incorrect format for channel index {channelIndex} found in source index {text}.");
@@ -256,38 +260,64 @@ namespace FaultData.DataOperations
 
         private void AddCalculatedDataSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
         {
-            List<SourceIndex> sourceIndexes;
-            DataSeries dataSeries;
+            if (series.SourceIndexes == "NONE")
+                return;
 
-            sourceIndexes = series.SourceIndexes.Split(',')
+            List<DataSeries> searchList = (series.Channel.MeasurementType.Name != "Digital")
+                ? meterDataSet.DataSeries
+                : meterDataSet.Digitals;
+
+            ILookup<SeriesKey, DataSeries> lookup = searchList.ToLookup(dataSeries => new SeriesKey(dataSeries.SeriesInfo));
+
+            List<SourceIndex> sourceIndexes = series.SourceIndexes.Split(',')
                 .Select(SourceIndex.Parse)
-                .Where(sourceIndex => (object)sourceIndex != null)
                 .ToList();
 
             if (sourceIndexes.Count == 0)
                 return;
 
-            if (series.Channel.MeasurementType.Name != "Digital")
+            DataSeries FindSource(SourceIndex sourceIndex)
             {
-                if (sourceIndexes.Any(sourceIndex => sourceIndex.ChannelIndex >= meterDataSet.DataSeries.Count))
-                    return;
+                if (sourceIndex.FindMatch)
+                {
+                    Channel channel = series.Channel;
+                    int harmonicGroup = channel.HarmonicGroup;
+                    string name = channel.Name;
+                    string measurementType = channel.MeasurementType.Name;
+                    string measurementCharacteristic = channel.MeasurementCharacteristic.Name;
+                    string phase = channel.Phase.Name;
 
-                dataSeries = sourceIndexes
-                    .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
-                    .Aggregate((series1, series2) => series1.Add(series2));
+                    ChannelKey channelKey = new ChannelKey(0, harmonicGroup, name, measurementType, measurementCharacteristic, phase);
+                    SeriesKey seriesKey = new SeriesKey(channelKey, series.SeriesType.Name);
+                    DataSeries matchSeries = lookup[seriesKey].FirstOrDefault();
+
+                    if (matchSeries is null)
+                        return null;
+
+                    // Force removal of the matched series
+                    matchSeries.SeriesInfo.SeriesType.Name = "Unknown";
+                    return matchSeries.Multiply(sourceIndex.Multiplier);
+                }
+
+                if (sourceIndex.ChannelIndex >= searchList.Count)
+                    return null;
+
+                return searchList[sourceIndex.ChannelIndex]
+                    .Multiply(sourceIndex.Multiplier);
             }
-            else
-            {
-                if (sourceIndexes.Any(sourceIndex => Math.Abs(sourceIndex.ChannelIndex) >= meterDataSet.Digitals.Count))
-                    return;
 
-                dataSeries = sourceIndexes
-                    .Select(sourceIndex => meterDataSet.Digitals[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
-                    .Aggregate((series1, series2) => series1.Add(series2));
-            }
+            List<DataSeries> sourceDataSeriesList = sourceIndexes
+                .Select(FindSource)
+                .ToList();
 
-            dataSeries.SeriesInfo = series;
-            calculatedDataSeriesList.Add(dataSeries);
+            if (sourceDataSeriesList.Any(dataSeries => dataSeries is null))
+                return;
+
+            DataSeries calculatedDataSeries = sourceDataSeriesList
+                .Aggregate((series1, series2) => series1.Add(series2));
+
+            calculatedDataSeries.SeriesInfo = series;
+            calculatedDataSeriesList.Add(calculatedDataSeries);
         }
 
         private void AddUndefinedChannels(MeterDataSet meterDataSet)
