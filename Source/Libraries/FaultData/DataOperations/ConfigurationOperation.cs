@@ -267,7 +267,9 @@ namespace FaultData.DataOperations
                 ? meterDataSet.DataSeries
                 : meterDataSet.Digitals;
 
-            ILookup<SeriesKey, DataSeries> lookup = searchList.ToLookup(dataSeries => new SeriesKey(dataSeries.SeriesInfo));
+            ILookup<SeriesKey, DataSeries> lookup = searchList
+                .Where(dataSeries => !(dataSeries.SeriesInfo is null))
+                .ToLookup(dataSeries => new SeriesKey(dataSeries.SeriesInfo));
 
             List<SourceIndex> sourceIndexes = series.SourceIndexes.Split(',')
                 .Select(SourceIndex.Parse)
