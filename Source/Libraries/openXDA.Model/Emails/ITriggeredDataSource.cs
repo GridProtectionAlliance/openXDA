@@ -29,11 +29,6 @@ namespace openXDA.Model
 {
     public interface ITriggeredDataSource
     {
-        TriggeredEmailDataSource Model { get; }
-
-        EmailType EmailModel { get; }
-        void Configure();
-
         XElement Process(Event evt);
     }
 }
