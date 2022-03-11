@@ -21,12 +21,6 @@ CREATE TABLE AccessLog(
 )
 GO
 
-CREATE TABLE SMSProvider(
-    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Name varchar(200) NOT NULL,
-    Format varchar(200) NOT NULL
-)
-
 CREATE TABLE Setting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -36,7 +30,7 @@ CREATE TABLE Setting
 )
 GO
 
-CREATE TABLE Carrier
+CREATE TABLE CellCarrier
 (
     ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NULL,
@@ -1909,8 +1903,7 @@ CREATE TABLE UserAccountAssetGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
-    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
-    Dashboard BIT NOT NULL DEFAULT 1,
+    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID)
 )
 GO
 
@@ -1975,26 +1968,26 @@ GO
 CREATE TABLE EmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    SMS BIT NOT NULL DEFAULT 0,
+    EmailCategoryID INT NOT NULL REFERENCES EmailCategory(ID),
     Name VARCHAR(100) NOT NULL,
+    Template VARCHAR(MAX) NOT NULL,
     TriggerEmailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
     CombineEventsSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT ID FROM Event WHERE ID = {0}',
     MinDelay FLOAT NOT NULL DEFAULT 10,
     MaxDelay FLOAT NOT NULL DEFAULT 60,
-    Template VARCHAR(MAX) NOT NULL,
-    EmailCategoryID INT NOT NULL REFERENCES EmailCategory(ID)
+    SMS BIT NOT NULL DEFAULT 0
 )
 GO
 
 CREATE TABLE ScheduledEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    SMS BIT NOT NULL DEFAULT 0,
+    EmailCategoryID INT NOT NULL REFERENCES EmailCategory(ID),
     Name VARCHAR(100) NOT NULL,
-    TriggersEmailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
     Schedule VARCHAR(100) NOT NULL,
     Template VARCHAR(MAX) NOT NULL,
-    EmailCategoryID INT NOT NULL REFERENCES EmailCategory(ID)
+    TriggersEmailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
+    SMS BIT NOT NULL DEFAULT 0
 )
 GO
 
@@ -2004,25 +1997,25 @@ CREATE TABLE UserAccountEmailType
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
     EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
-    Approved BIT NOT NULL DEFAULT(0)
+    Approved BIT NOT NULL DEFAULT 0
 )
 GO
 
 CREATE VIEW SubscribeEmails
 AS
 SELECT
-	UserAccountEmailType.ID,
-	UserAccountEmailType.Approved,
-	EmailType.ID as EmailID,
-	UserAccount.FirstName as FirstName,
-	UserAccount.LastName as LastName,
-	UserAccount.Email as Email,
-	AssetGroup.Name as AssetGroup
+    UserAccountEmailType.ID,
+    UserAccountEmailType.Approved,
+    EmailType.ID as EmailID,
+    UserAccount.FirstName as FirstName,
+    UserAccount.LastName as LastName,
+    UserAccount.Email as Email,
+    AssetGroup.Name as AssetGroup
 FROM
-	UserAccountEmailType JOIN
-	EmailType ON EmailType.ID = UserAccountEmailType.EmailTypeID JOIN
-	UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID JOIN
-	AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID
+    UserAccountEmailType JOIN
+    EmailType ON EmailType.ID = UserAccountEmailType.EmailTypeID JOIN
+    UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID JOIN
+    AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID
 GO
 
 CREATE TABLE UserAccountScheduledEmailType
@@ -2074,8 +2067,8 @@ CREATE TABLE TriggeredEmailDataSourceSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     TriggeredEmailDataSourceID INT NOT NULL REFERENCES TriggeredEmailDataSource(ID),
-    Value VARCHAR(200) NOT NULL,
-    Name VARCHAR(200) NOT NULL
+    Name VARCHAR(200) NOT NULL,
+    Value VARCHAR(MAX) NOT NULL
 )
 GO
 
@@ -2083,8 +2076,8 @@ CREATE TABLE ScheduledEmailDataSourceSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     ScheduledEmailDataSourceID INT NOT NULL REFERENCES ScheduledEmailDataSource(ID),
-    Value VARCHAR(200) NOT NULL,
-    Name VARCHAR(200) NOT NULL
+    Name VARCHAR(200) NOT NULL,
+    Value VARCHAR(MAX) NOT NULL
 )
 GO
 
@@ -5085,7 +5078,6 @@ SELECT
     UserAccountAssetGroup.ID,
     UserAccountAssetGroup.UserAccountID,
     UserAccountAssetGroup.AssetGroupID,
-    UserAccountAssetGroup.Dashboard,
     UserAccount.Name AS Username,
     AssetGroup.Name AS GroupName
 FROM
@@ -5292,8 +5284,16 @@ GO
 CREATE VIEW EmailTypeView
 AS
 SELECT
-    EmailType.*,
-    EmailCategory.Name AS EmailCategory
+    EmailType.ID,
+    EmailType.EmailCategoryID,
+    EmailCategory.Name AS EmailCategory,
+    EmailType.Name,
+    EmailType.Template,
+    EmailType.TriggerEmailSQL,
+    EmailType.CombineEventsSQL,
+    EmailType.MinDelay,
+    EmailType.MaxDelay,
+    EmailType.SMS
 FROM
     EmailType JOIN
     EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID
