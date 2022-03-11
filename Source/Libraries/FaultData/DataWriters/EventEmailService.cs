@@ -37,6 +37,7 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Xml;
+using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
 using openXDA.Model.Emails;
@@ -81,52 +82,41 @@ namespace FaultData.DataWriters
         // #Todo Implement SMS based on userAdditionalFields
         private List<string> GetRecipients(EmailType emailType, List<int> eventIDs)
         {
-            string emailAddressQuery;
-            List<int> assetGroups = GetAssetgroups(eventIDs).Select(item => item.ID).ToList();
+            List<int> assetGroups = GetAssetGroups(eventIDs)
+                .Select(item => item.ID)
+                .ToList();
 
             if (assetGroups.Count == 0)
                 return new List<string>();
 
-            if (emailType.SMS)
+            string emailAddressQuery;
+
+            if (!emailType.SMS)
             {
-
-                Dictionary<int, string> cellCarrierTransforms = CellCarrierTransformations();
-
                 emailAddressQuery =
-                   $"SELECT DISTINCT UserAccount.Email AS Email " +
-                   $"FROM " +
-                   $"    UserAccountEmailType JOIN " +
-                   $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
-                   $"WHERE " +
-                   $"    UserAccountEmailType.EmailTypeID = {{0}} AND " +
-                   $"    UserAccount.EmailConfirmed <> 0 AND " +
-                   $"    UserAccount.Approved <> 0 AND " +
-                   $"    UserAccountEmailType.AssetGroupID IN ({{1}}) ";
-
-                // Needs to be implemented at some point
-                return new List<string>();
+                    "SELECT DISTINCT UserAccount.Email AS Email " +
+                    "FROM " +
+                    "    UserAccountEmailType JOIN " +
+                    "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
+                    "WHERE " +
+                    "    UserAccountEmailType.EmailTypeID = {0} AND " +
+                    "    UserAccount.EmailConfirmed <> 0 AND " +
+                    "    UserAccount.Approved <> 0 AND " +
+                    "    UserAccountEmailType.AssetGroupID IN ({1})";
             }
             else
             {
-                emailAddressQuery =
-                   $"SELECT DISTINCT UserAccount.Email AS Email,  " +
-                   $"FROM " +
-                   $"    UserAccountEmailType JOIN " +
-                   $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
-                   $"WHERE " +
-                   $"    UserAccountEmailType.EmailTypeID = {{0}} AND " +
-                   $"    UserAccount.EmailConfirmed <> 0 AND " +
-                   $"    UserAccount.Approved <> 0 AND " +
-                   $"    UserAccountEmailType.AssetGroupID IN ({{1}}) ";
+                // Needs to be implemented at some point
+                return new List<string>();
+            }
 
-                using (AdoDataConnection connection = ConnectionFactory())
-                using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID, string.Join(",", assetGroups)))
-                {
-                    return emailAddressTable
-                        .Select()
-                        .Select(row => row.ConvertField<string>("Email"))
-                        .ToList();
-                }
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID, string.Join(",", assetGroups)))
+            {
+                return emailAddressTable
+                    .Select()
+                    .Select(row => row.ConvertField<string>("Email"))
+                    .ToList();
             }
         }
 
@@ -135,55 +125,35 @@ namespace FaultData.DataWriters
         {
             string emailAddressQuery;
           
-            if (emailType.SMS)
+            if (!emailType.SMS)
             {
-
-                Dictionary<int, string> cellCarrierTransforms = CellCarrierTransformations();
-
                 emailAddressQuery =
-                   $"SELECT DISTINCT UserAccount.Email AS Email " +
-                   $"FROM " +
-                   $"    UserAccountEmailType JOIN " +
-                   $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
-                   $"WHERE " +
-                   $"    UserAccountEmailType.EmailTypeID = {{0}} AND " +
-                   $"    UserAccount.EmailConfirmed <> 0 AND " +
-                   $"    UserAccount.Approved <> 0 AND " +
-                   $"    UserAccountEmailType.AssetGroupID IN ({{1}}) ";
-
-                // Needs to be implemented at some point
-                return new List<string>();
+                   "SELECT DISTINCT UserAccount.Email AS Email " +
+                   "FROM " +
+                   "    UserAccountEmailType JOIN " +
+                   "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
+                   "WHERE " +
+                   "    UserAccountEmailType.EmailTypeID = {0} AND " +
+                   "    UserAccount.EmailConfirmed <> 0 AND " +
+                   "    UserAccount.Approved <> 0";
             }
             else
             {
-                emailAddressQuery =
-                   $"SELECT DISTINCT UserAccount.Email AS Email,  " +
-                   $"FROM " +
-                   $"    UserAccountEmailType JOIN " +
-                   $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
-                   $"WHERE " +
-                   $"    UserAccountEmailType.EmailTypeID = {{0}} AND " +
-                   $"    UserAccount.EmailConfirmed <> 0 AND " +
-                   $"    UserAccount.Approved <> 0";
+                // Needs to be implemented at some point
+                return new List<string>();
+            }
 
-                using (AdoDataConnection connection = ConnectionFactory())
-                using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID))
-                {
-                    return emailAddressTable
-                        .Select()
-                        .Select(row => row.ConvertField<string>("Email"))
-                        .ToList();
-                }
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID))
+            {
+                return emailAddressTable
+                    .Select()
+                    .Select(row => row.ConvertField<string>("Email"))
+                    .ToList();
             }
         }
 
-        private Dictionary<int, string> CellCarrierTransformations()
-        {
-            Dictionary<int, string> cellCarrierTransforms = new Dictionary<int, string>();
-            return cellCarrierTransforms;
-        }
-
-        private List<AssetGroup> GetAssetgroups(List<int> eventIDs)
+        private List<AssetGroup> GetAssetGroups(List<int> eventIDs)
         {
             if (eventIDs.Count == 0)
                 return new List<AssetGroup>();
@@ -221,7 +191,7 @@ namespace FaultData.DataWriters
                     Dictionary<int, TriggeredEmailDataSource> dataSourceModels = new TableOperations<TriggeredEmailDataSource>(connection).QueryRecordsWhere("ID IN ({0})", email.ID).ToDictionary((m) => m.ID);
 
                     List<ITriggeredDataSource> dataSources = ds.Select(m => { dataSourceModels.TryGetValue(m.TriggeredEmailDataSourceID, out TriggeredEmailDataSource model); return model; })
-                        .Where(i => i != null).Select(model => CreatedataSource(model, email)).ToList();
+                        .Where(i => i != null).Select(model => CreateDataSource(model, email)).ToList();
 
                     XElement data = new XElement("data");
 
@@ -229,21 +199,17 @@ namespace FaultData.DataWriters
 
                     XDocument htmlDocument = ApplyTemplate(email, data.ToString());
 
-                    
-
                     ApplyChartTransform(attachments, htmlDocument);
                     ApplyFTTTransform(attachments, htmlDocument);
                     SendEmail(recipients, htmlDocument, attachments);
                
                     LoadSentEmail(xdaNow, recipients, htmlDocument, eventIDs);
-
                 }
             }
             finally
             {
                 attachments?.ForEach(attachment => attachment.Dispose());
             }
-
         }
 
         private XDocument ApplyTemplate(EmailType emailType, string templateData)
@@ -273,7 +239,6 @@ namespace FaultData.DataWriters
                 });
             }
         }
-
 
         public void ApplyFTTTransform(List<Attachment> attachments, XDocument htmlDocument)
         {
@@ -308,6 +273,7 @@ namespace FaultData.DataWriters
                 }
             });
         }
+
         private void LoadSentEmail(DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
         {
             int sentEmailID = LoadSentEmail(now, recipients, htmlDocument);
@@ -329,14 +295,10 @@ namespace FaultData.DataWriters
             }
         }
 
-
-
-
-        private ITriggeredDataSource CreatedataSource(TriggeredEmailDataSource model, EmailType emailModel)
+        private ITriggeredDataSource CreateDataSource(TriggeredEmailDataSource model, EmailType emailModel)
         {
             try
             {
-
                 string assemblyName = model.AssemblyName;
                 string typeName = model.TypeName;
                 PluginFactory<ITriggeredDataSource> pluginFactory = new PluginFactory<ITriggeredDataSource>();
@@ -344,10 +306,10 @@ namespace FaultData.DataWriters
             }
             catch (Exception ex)
             {
+                Log.Debug($"Failed to create ITriggeredDataSource of type {model.TypeName}", ex);
                 return null;
             }
         }
-
 
         public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
         {
@@ -472,6 +434,14 @@ namespace FaultData.DataWriters
                 return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(EventEmailService));
+
         #endregion
     }
 }
