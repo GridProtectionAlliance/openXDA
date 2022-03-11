@@ -2530,50 +2530,6 @@ namespace openXDA.Hubs
 
         #endregion
 
-        #region [ Emails ]
-
-        #region [Event Criterion]
-
-        public class EventCriterion
-        {
-            public bool five;
-            public bool four;
-            public bool three;
-            public bool two;
-            public bool one;
-            public bool zero;
-            public bool disturbances;
-            public bool fault;
-        }
-
-        public EventCriterion GetEventCriterion(int EmailGroupID)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                EventCriterion ec = new EventCriterion();
-
-                ec.five = connection.ExecuteScalar("SELECT ID FROM DisturbanceEmailCriterion WHERE EmailGroupID = {0} AND SeverityCode = 5", EmailGroupID) != null;
-                ec.four = connection.ExecuteScalar("SELECT ID FROM DisturbanceEmailCriterion WHERE EmailGroupID = {0} AND SeverityCode = 4", EmailGroupID) != null;
-                ec.three = connection.ExecuteScalar("SELECT ID FROM DisturbanceEmailCriterion WHERE EmailGroupID = {0} AND SeverityCode = 3", EmailGroupID) != null;
-                ec.two = connection.ExecuteScalar("SELECT ID FROM DisturbanceEmailCriterion WHERE EmailGroupID = {0} AND SeverityCode = 2", EmailGroupID) != null;
-                ec.one = connection.ExecuteScalar("SELECT ID FROM DisturbanceEmailCriterion WHERE EmailGroupID = {0} AND SeverityCode = 1", EmailGroupID) != null;
-                ec.zero = connection.ExecuteScalar("SELECT ID FROM DisturbanceEmailCriterion WHERE EmailGroupID = {0} AND SeverityCode = 0", EmailGroupID) != null;
-                ec.fault = connection.ExecuteScalar("SELECT ID FROM FaultEmailCriterion WHERE EmailGroupID = {0}", EmailGroupID) != null;
-                ec.disturbances = ec.five || ec.four || ec.three || ec.two || ec.one || ec.zero;
-
-                return ec;
-            }
-        }
-
-        public void UpdateEventCriterion(EventCriterion record, int EmailGroupID)
-        {
-           
-        }
-
-        #endregion
-
-        #endregion
-
         #region [ External Links]
         #region [ PQViewSite Table Operations ]
 
