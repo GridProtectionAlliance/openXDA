@@ -26,28 +26,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Mail;
-using System.Security;
 using System.Text;
 using System.Threading;
 using System.Web.Http;
 using System.Web.Http.Controllers;
-using System.Xml.Linq;
-using FaultData;
 using FaultData.DataOperations;
 using FaultData.DataWriters;
-using FaultData.DataWriters.GTC;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Xml;
 using openXDA.Configuration;
 using openXDA.Model;
-using openXDA.Model.Emails;
-using SystemCenter.Model;
 
 namespace openXDA.Nodes.Types.Email
 {
