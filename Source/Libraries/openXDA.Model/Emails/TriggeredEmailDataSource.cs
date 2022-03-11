@@ -38,5 +38,4 @@ namespace openXDA.Model
 
         public string ConfigUI { get; set; }
     }
-
 }

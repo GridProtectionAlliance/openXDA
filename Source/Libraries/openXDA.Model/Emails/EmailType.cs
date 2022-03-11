@@ -33,7 +33,6 @@ namespace openXDA.Model
     [UseEscapedName]
     public class EmailType
     {
-
         [PrimaryKey(true)]
         public int ID { get; set; }
 

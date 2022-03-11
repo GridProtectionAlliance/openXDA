@@ -33,6 +33,5 @@ namespace openXDA.Model.Emails
         public int ScheduledEmailTypeID { get; set; }
 
         public int ScheduledEmailDataSourceID { get; set; }
-
     }
 }
