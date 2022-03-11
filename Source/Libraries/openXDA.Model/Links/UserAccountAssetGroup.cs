@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.ComponentModel;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
@@ -36,9 +35,6 @@ namespace openXDA.Model
         public Guid UserAccountID { get; set; }
 
         public int AssetGroupID { get; set; }
-
-        [DefaultValue(true)]
-        public bool Dashboard { get; set; }
     }
 
     [PrimaryLabel("Username")]
