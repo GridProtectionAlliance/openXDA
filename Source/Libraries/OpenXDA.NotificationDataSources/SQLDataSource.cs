@@ -50,7 +50,7 @@ namespace openXDA.NotificationDataSources
         public SQLDataSource(TriggeredEmailDataSource definition, Func<AdoDataConnection> connectionFactory)
         {
             Definition = definition;
-            Connectionfactory = connectionFactory;
+            ConnectionFactory = connectionFactory;
         }
 
         #endregion
@@ -58,8 +58,7 @@ namespace openXDA.NotificationDataSources
         #region [ Properties ]
       
         public TriggeredEmailDataSource Definition { get; }
-
-        public Func<AdoDataConnection> Connectionfactory { get; }
+        public Func<AdoDataConnection> ConnectionFactory { get; }
 
         #endregion
 
@@ -67,9 +66,8 @@ namespace openXDA.NotificationDataSources
         
         protected Action<object> GetConfigurator()
         {
-            int dataSoruceID = Definition.ID;
-
-            ConfigurationLoader configurationLoader = new ConfigurationLoader(Definition.ID, Connectionfactory);
+            int dataSourceID = Definition.ID;
+            ConfigurationLoader configurationLoader = new ConfigurationLoader(Definition.ID, ConnectionFactory);
             return configurationLoader.Configure;
         }
 
@@ -79,7 +77,7 @@ namespace openXDA.NotificationDataSources
             {
                 Settings settings = new Settings(GetConfigurator());
 
-                using (AdoDataConnection connection = Connectionfactory())
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     return XElement.Parse(connection.ExecuteScalar<string>(settings.SQL, evt.ID));
                 }
