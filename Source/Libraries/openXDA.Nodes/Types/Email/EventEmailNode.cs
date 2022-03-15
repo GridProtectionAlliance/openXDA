@@ -228,31 +228,22 @@ namespace openXDA.Nodes.Types.Email
         /// <param name="events"></param>
         private void SendEmail(EmailType parameters, List<Event> events)
         {
-            
-
             while (events.Any())
             {
-                int nextEventID = events[0].ID;
-
-                List<int> eventIDs = new List<int>(events[0].ID);
-                try
-                {
-                    using (AdoDataConnection connection = CreateDbConnection())
-                    {
-                        DataTable dT = connection.RetrieveData(parameters.CombineEventsSQL, events[0].ID);
-
-                        foreach (DataRow row in dT.Rows)
-                            eventIDs.Add(row.Field<int>(0));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    continue;
-                }
-
                 Event evt = events[0];
-                events.RemoveAll(e => eventIDs.Contains(e.ID));
+                int nextEventID = evt.ID;
+                List<int> eventIDs;
 
+                using (AdoDataConnection connection = CreateDbConnection())
+                {
+                    eventIDs = connection
+                        .RetrieveData(parameters.CombineEventsSQL, nextEventID)
+                        .AsEnumerable()
+                        .Select(row => row.Field<int>(0))
+                        .ToList();
+                }
+
+                events.RemoveAll(e => eventIDs.Contains(e.ID));
                
                 Action<object> configurator = GetConfigurator();
                 Settings settings = new Settings(configurator);
@@ -270,11 +261,9 @@ namespace openXDA.Nodes.Types.Email
                 DateTime now = DateTime.UtcNow;
                 TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
                 DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
-                EmailService.SendEmail(parameters, eventIDs, evt, xdaNow );
+                EmailService.SendEmail(parameters, eventIDs, evt, xdaNow);
                    
                 DailyStatisticOperation.UpdateEmailProcessingStatistic(eventIDs);
-                
-                
             }
         }
 
@@ -360,7 +349,6 @@ namespace openXDA.Nodes.Types.Email
             message.AppendLine($"Reply to this message to send a message to all event email subscribers.");
             EmailService.SendAdminEmail(subject, message.ToString(), replyTo);
         }
-
 
         #endregion
     }
