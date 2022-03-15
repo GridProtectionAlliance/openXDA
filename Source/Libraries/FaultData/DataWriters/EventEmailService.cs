@@ -79,8 +79,57 @@ namespace FaultData.DataWriters
 
         #region [ Methods ]
 
+        public void SendEmail(EmailType email, List<int> eventIDs, Event evt, DateTime xdaNow)
+        {
+            if (eventIDs.Count == 0)
+                return;
+
+            List<string> recipients = GetRecipients(email, eventIDs);
+
+            if (recipients.Count == 0)
+                return;
+
+            List<Attachment> attachments = new List<Attachment>();
+
+            try
+            {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    /* Load All DataSources */
+                    const string DataSourceIDQueryFormat =
+                        "SELECT TriggeredEmailDataSourceID " +
+                        "FROM TriggeredEmailDataSourceEmailType " +
+                        "WHERE EmailTypeID = {0}";
+
+                    TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
+
+                    List<ITriggeredDataSource> dataSources = dataSourceTable
+                        .QueryRecordsWhere($"ID IN ({DataSourceIDQueryFormat})", email.ID)
+                        .Select(dataSourceRecord => CreateDataSource(dataSourceRecord, email))
+                        .Where(dataSource => !(dataSource is null))
+                        .ToList();
+
+                    if (dataSources.Count == 0)
+                        return;
+
+                    XElement data = new XElement("data");
+                    data.Add(dataSources.Select(d => d.Process(evt)));
+
+                    XDocument htmlDocument = ApplyTemplate(email, data.ToString());
+                    ApplyChartTransform(attachments, htmlDocument);
+                    ApplyFTTTransform(attachments, htmlDocument);
+                    SendEmail(recipients, htmlDocument, attachments);
+                    LoadSentEmail(xdaNow, recipients, htmlDocument, eventIDs);
+                }
+            }
+            finally
+            {
+                attachments?.ForEach(attachment => attachment.Dispose());
+            }
+        }
+
         // #Todo Implement SMS based on userAdditionalFields
-        private List<string> GetRecipients(EmailType emailType, List<int> eventIDs)
+        public List<string> GetRecipients(EmailType emailType, List<int> eventIDs)
         {
             List<int> assetGroups = GetAssetGroups(eventIDs)
                 .Select(item => item.ID)
@@ -120,11 +169,11 @@ namespace FaultData.DataWriters
             }
         }
 
-        // #ToDo Implement SMS based on userAddditionlFields
+        // #ToDo Implement SMS based on userAdditionalFields
         public List<string> GetRecipients(EmailType emailType)
         {
             string emailAddressQuery;
-          
+
             if (!emailType.SMS)
             {
                 emailAddressQuery =
@@ -153,6 +202,31 @@ namespace FaultData.DataWriters
             }
         }
 
+        public XDocument ApplyTemplate(EmailType emailType, string templateData)
+        {
+            string htmlText = templateData.ApplyXSLTransform(emailType.Template);
+
+            XDocument htmlDocument = XDocument.Parse(htmlText, LoadOptions.PreserveWhitespace);
+            htmlDocument.TransformAll("format", element => element.Format());
+            return htmlDocument;
+        }
+
+        private ITriggeredDataSource CreateDataSource(TriggeredEmailDataSource model, EmailType emailModel)
+        {
+            try
+            {
+                string assemblyName = model.AssemblyName;
+                string typeName = model.TypeName;
+                PluginFactory<ITriggeredDataSource> pluginFactory = new PluginFactory<ITriggeredDataSource>();
+                return pluginFactory.Create(assemblyName, typeName, this, model, emailModel);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"Failed to create ITriggeredDataSource of type {model.TypeName}", ex);
+                return null;
+            }
+        }
+
         private List<AssetGroup> GetAssetGroups(List<int> eventIDs)
         {
             if (eventIDs.Count == 0)
@@ -166,59 +240,25 @@ namespace FaultData.DataWriters
             }
         }
 
-        public void SendEmail(EmailType email, List<int> eventIDs, Event evt, DateTime xdaNow)
+        private void LoadSentEmail(DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
         {
-            if (eventIDs.Count == 0)
-                return;
+            int sentEmailID = LoadSentEmail(now, recipients, htmlDocument);
 
-            List<string> recipients = GetRecipients(email, eventIDs);
-
-            if (recipients.Count == 0)
-                return;
-
-            List<Attachment> attachments = new List<Attachment>();
-
-            try
+            using (AdoDataConnection connection = ConnectionFactory())
             {
-                using (AdoDataConnection connection = ConnectionFactory())
+                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
+
+                foreach (int eventID in eventIDs)
                 {
-                    /* Load All DataSources */
-                    IEnumerable<TriggeredEmailDataSourceEmailType> ds = new TableOperations<TriggeredEmailDataSourceEmailType>(connection).QueryRecordsWhere("EmailTypeID = {0}", email.ID);
+                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
+                        continue;
 
-                    if (ds.Count() == 0)
-                        return;
-
-                    Dictionary<int, TriggeredEmailDataSource> dataSourceModels = new TableOperations<TriggeredEmailDataSource>(connection).QueryRecordsWhere("ID IN ({0})", email.ID).ToDictionary((m) => m.ID);
-
-                    List<ITriggeredDataSource> dataSources = ds.Select(m => { dataSourceModels.TryGetValue(m.TriggeredEmailDataSourceID, out TriggeredEmailDataSource model); return model; })
-                        .Where(i => i != null).Select(model => CreateDataSource(model, email)).ToList();
-
-                    XElement data = new XElement("data");
-
-                    data.Add(dataSources.Select(d => d.Process(evt)));
-
-                    XDocument htmlDocument = ApplyTemplate(email, data.ToString());
-
-                    ApplyChartTransform(attachments, htmlDocument);
-                    ApplyFTTTransform(attachments, htmlDocument);
-                    SendEmail(recipients, htmlDocument, attachments);
-               
-                    LoadSentEmail(xdaNow, recipients, htmlDocument, eventIDs);
+                    EventSentEmail eventSentEmail = new EventSentEmail();
+                    eventSentEmail.EventID = eventID;
+                    eventSentEmail.SentEmailID = sentEmailID;
+                    eventSentEmailTable.AddNewRecord(eventSentEmail);
                 }
             }
-            finally
-            {
-                attachments?.ForEach(attachment => attachment.Dispose());
-            }
-        }
-
-        private XDocument ApplyTemplate(EmailType emailType, string templateData)
-        {
-            string htmlText = templateData.ApplyXSLTransform(emailType.Template);
-
-            XDocument htmlDocument = XDocument.Parse(htmlText, LoadOptions.PreserveWhitespace);
-            htmlDocument.TransformAll("format", element => element.Format());
-            return htmlDocument;
         }
 
         public void ApplyChartTransform(List<Attachment> attachments, XDocument htmlDocument)
@@ -272,43 +312,6 @@ namespace FaultData.DataWriters
                     return new XElement("div", content);
                 }
             });
-        }
-
-        private void LoadSentEmail(DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
-        {
-            int sentEmailID = LoadSentEmail(now, recipients, htmlDocument);
-
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
-
-                foreach (int eventID in eventIDs)
-                {
-                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
-                        continue;
-
-                    EventSentEmail eventSentEmail = new EventSentEmail();
-                    eventSentEmail.EventID = eventID;
-                    eventSentEmail.SentEmailID = sentEmailID;
-                    eventSentEmailTable.AddNewRecord(eventSentEmail);
-                }
-            }
-        }
-
-        private ITriggeredDataSource CreateDataSource(TriggeredEmailDataSource model, EmailType emailModel)
-        {
-            try
-            {
-                string assemblyName = model.AssemblyName;
-                string typeName = model.TypeName;
-                PluginFactory<ITriggeredDataSource> pluginFactory = new PluginFactory<ITriggeredDataSource>();
-                return pluginFactory.Create(assemblyName, typeName, this, model, emailModel);
-            }
-            catch (Exception ex)
-            {
-                Log.Debug($"Failed to create ITriggeredDataSource of type {model.TypeName}", ex);
-                return null;
-            }
         }
 
         public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
