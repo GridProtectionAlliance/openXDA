@@ -36,9 +36,11 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public bool SMS { get; set; }
+        public int EmailCategoryID { get; set; }
 
         public string Name { get; set; }
+
+        public string Template { get; set; }
 
         public string TriggerEmailSQL { get; set; }
 
@@ -48,9 +50,7 @@ namespace openXDA.Model
 
         public double MaxDelay { get; set; }
 
-        public string Template { get; set; }
-
-        public int EmailCategoryID { get; set; }
+        public bool SMS { get; set; }
     }
 
     [AllowSearch]
