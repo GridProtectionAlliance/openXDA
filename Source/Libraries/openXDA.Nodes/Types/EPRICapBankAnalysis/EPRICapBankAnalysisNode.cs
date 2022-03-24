@@ -889,21 +889,17 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
 
         private void GenerateParameterFile(Event evt)
         {
-
             CapBank capBank;
             List<CapBankRelay> relays;
             VIDataGroup datagroup = QueryVIDataGroup(evt.ID, evt.MeterID);
 
             double iSamples = datagroup.Data.Where(item =>
-                item.SeriesInfo.Channel.AssetID == evt.AssetID &&
                 item.SeriesInfo.Channel.MeasurementType.Name == "Current" &&
-                item.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous").First()?.SampleRate ?? -1.0;
+                item.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous").FirstOrDefault()?.SampleRate ?? -1.0;
 
             double vSamples = datagroup.Data.Where(item =>
-                item.SeriesInfo.Channel.AssetID == evt.AssetID &&
                 item.SeriesInfo.Channel.MeasurementType.Name == "Voltage" &&
-                item.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous").First()?.SampleRate ?? -1.0;
-
+                item.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous").FirstOrDefault()?.SampleRate ?? -1.0;
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
