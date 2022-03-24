@@ -60,10 +60,13 @@ namespace FaultData.DataAnalysis
                 dataGroup.IR
             };
 
-            return new VICycleDataGroup(cycleSeries
-                .Where(dataSeries => (object)dataSeries != null)
+            List<CycleDataGroup> cycleDataGroups = cycleSeries
                 .Select(dataSeries => ToCycleDataGroup(dataSeries, frequency))
-                .ToList());
+                .Where(cycleDataGroup => !(cycleDataGroup is null))
+                .Where(cycleDataGroup => cycleDataGroup?.ToDataGroup().DataSeries.Any() ?? false)
+                .ToList();
+
+            return new VICycleDataGroup(cycleDataGroups);
         }
 
         public static CycleDataGroup ToCycleDataGroup(DataSeries dataSeries, double frequency)
