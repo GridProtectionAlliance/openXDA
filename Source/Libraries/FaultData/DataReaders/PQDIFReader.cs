@@ -171,6 +171,30 @@ namespace FaultData.DataReaders
             // Create the list of series instances so we can
             // build it as we process each channel instance
             List<SeriesInstance> seriesInstances = new List<SeriesInstance>();
+            ParseDataSeries(meterDataSet, channelInstances, seriesInstances);
+            ParseReportedDisturbances(meterDataSet, channelInstances);
+
+            // Build a list of series definitions that were not instanced by this PQDIF file
+            List<SeriesDefinition> seriesDefinitions = dataSources
+                .SelectMany(dataSource => dataSource.ChannelDefinitions)
+                .SelectMany(channelDefinition => channelDefinition.SeriesDefinitions)
+                .Distinct()
+                .Except(seriesInstances.Select(seriesInstance => seriesInstance.Definition))
+                .ToList();
+
+            // Add each of the series definitions which were not instanced to the meter's list of channels
+            foreach (SeriesDefinition seriesDefinition in seriesDefinitions)
+                meter.Channels.Add(ParseSeries(seriesDefinition));
+
+            // Parse triggers from PQube data
+            meterDataSet.Triggers = PQubeReader.GetTriggers(containerRecord, observationRecords);
+
+            return meterDataSet;
+        }
+
+        private void ParseDataSeries(MeterDataSet meterDataSet, List<ChannelInstance> channelInstances, List<SeriesInstance> seriesInstances)
+        {
+            Meter meter = meterDataSet.Meter;
 
             foreach (ChannelInstance channelInstance in channelInstances)
             {
@@ -202,7 +226,10 @@ namespace FaultData.DataReaders
                     meterDataSet.DataSeries.Add(dataSeries);
                 }
             }
+        }
 
+        private void ParseReportedDisturbances(MeterDataSet meterDataSet, List<ChannelInstance> channelInstances)
+        {
             foreach (ChannelInstance channelInstance in channelInstances)
             {
                 bool magDurChannel =
@@ -269,23 +296,6 @@ namespace FaultData.DataReaders
                     meterDataSet.ReportedDisturbances.Add(new ReportedDisturbance(channelInstance.Definition.Phase, time, max, min, avg, dur, units));
                 }
             }
-
-            // Build a list of series definitions that were not instanced by this PQDIF file
-            List<SeriesDefinition> seriesDefinitions = dataSources
-                .SelectMany(dataSource => dataSource.ChannelDefinitions)
-                .SelectMany(channelDefinition => channelDefinition.SeriesDefinitions)
-                .Distinct()
-                .Except(seriesInstances.Select(seriesInstance => seriesInstance.Definition))
-                .ToList();
-
-            // Add each of the series definitions which were not instanced to the meter's list of channels
-            foreach (SeriesDefinition seriesDefinition in seriesDefinitions)
-                meter.Channels.Add(ParseSeries(seriesDefinition));
-
-            // Parse triggers from PQube data
-            meterDataSet.Triggers = PQubeReader.GetTriggers(containerRecord, observationRecords);
-
-            return meterDataSet;
         }
 
         #endregion
