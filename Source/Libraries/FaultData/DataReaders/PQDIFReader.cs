@@ -215,9 +215,13 @@ namespace FaultData.DataReaders
                     seriesInstances.Add(seriesInstance);
                     Channel channel = ParseSeries(seriesInstance);
 
+                    // Convert percent to per-unit
+                    QuantityUnits units = seriesInstance.Definition.QuantityUnits;
+                    double scale = (units == QuantityUnits.Percent) ? 0.01D : 1.0D;
+
                     // Parse the values and zip them with time data to create data points
                     DataSeries dataSeries = new DataSeries();
-                    dataSeries.DataPoints = timeData.Zip(ParseValueData(seriesInstance), (time, d) => new DataPoint() { Time = time, Value = d }).ToList();
+                    dataSeries.DataPoints = timeData.Zip(ParseValueData(seriesInstance), (time, d) => new DataPoint() { Time = time, Value = d * scale }).ToList();
                     dataSeries.SeriesInfo = channel.Series[0];
 
                     // Add the new channel to the meter's channel list
