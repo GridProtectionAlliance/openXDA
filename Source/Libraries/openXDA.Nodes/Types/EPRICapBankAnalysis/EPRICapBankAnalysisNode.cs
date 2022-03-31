@@ -113,7 +113,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
             if (!settings.AnalyticSettings.Enabled)
                 return;
 
-            Log.Info($"Adding file group (ID={fileGroupID}) to CapBank Analytic Queue");
+            Log.Info($"Attempting to Add file group (ID={fileGroupID}) to CapBank Analytic Queue");
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -124,6 +124,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     .QueryRecordsWhere("FileGroupID = {0} AND FileVersion = {1}", fileGroupID, fileVersion)
                     .ToList();
 
+                int addedEvents = 0;
                 foreach (IGrouping<int, Event> group in events.GroupBy<Event, int>(item => item.AssetID))
                 {
                     Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", group.Key);
@@ -133,14 +134,18 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     EPRICapBankAnalytics analytic = new EPRICapBankAnalytics(RunAnalytic, settings.AnalyticSettings.Delay);
                     analytic.Process(group.ToList(), fileGroupID);
                     analytic.StartTimer();
-
+                    addedEvents++;
                     lock (s_eventFileLock)
                     {
                         using (FileBackedDictionary<int, List<int>> dictionary = new FileBackedDictionary<int, List<int>>("./CapBankAnalytic.bin"))
                             dictionary.Add(fileGroupID, group.Select(item => item.ID).ToList());
                     }
                 }
+
+                Log.Info($"Added {addedEvents} events to CapBank Analytic Queue");
             }
+
+            
         }
 
         protected override void OnReconfigure(Action<object> configurator) =>
