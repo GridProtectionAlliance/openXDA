@@ -817,6 +817,7 @@ namespace DeviceDefinitionsMigrator
             segment.X0 = Convert.ToDouble((string)imepdanceElement.Element("X0") ?? "0.0");
             segment.X1 = Convert.ToDouble((string)imepdanceElement.Element("X1") ?? "0.0");
             segment.Length = Convert.ToDouble((string)lineElement.Element("length") ?? "0.0");
+            segment.IsEnd = true;
 
             TableOperations<LineSegment> lineSegmentTable = new TableOperations<LineSegment>(connection);
             lineSegmentTable.AddNewOrUpdateRecord(segment);
