@@ -21,16 +21,12 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Xml;
 using GSF.Data;
 using log4net;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
 
 namespace openXDA.XMLConfig
 {

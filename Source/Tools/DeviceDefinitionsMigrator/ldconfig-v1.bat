@@ -1,0 +1,1 @@
+powershell -ExecutionPolicy ByPass -File ldconfig.ps1 load_v1

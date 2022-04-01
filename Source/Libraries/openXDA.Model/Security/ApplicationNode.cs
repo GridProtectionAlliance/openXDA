@@ -31,10 +31,10 @@ namespace openXDA.Model
 {
     [UseEscapedName]
     [AllowSearch]
-    [GetRoles("Admin")]
-    [PostRoles("Admin")]
-    [PatchRoles("Admin")]
-    [DeleteRoles("Admin")]
+    [GetRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [DeleteRoles("Administrator")]
     public class ApplicationNode
     {
         public Guid ID { get; set; }

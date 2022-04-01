@@ -224,15 +224,18 @@ GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.WatchDirectories', 'Watch', 'Watch')
 GO
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.Host', 'https://localhost:8086', 'https://localhost:8086')
-GO
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.PointBucket', 'point_bucket', 'point_bucket')
-GO
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.OrganizationID', 'gpa', 'gpa')
-GO
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.TokenID', '', '')
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.Host', '', '')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.PointBucket', 'point_bucket', 'point_bucket')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.OrganizationID', 'gpa', 'gpa')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.TokenID', '', '')
+GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.InstanceName', 'XDA', 'XDA')
 GO

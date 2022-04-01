@@ -22,6 +22,10 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using GSF.Web.Model;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 
 namespace SystemCenter.Model
 {
@@ -36,6 +40,7 @@ namespace SystemCenter.Model
             l.ShortName,
             l.Latitude,
             l.Longitude,
+            l.Description,
             COUNT(DISTINCT m.ID) as Meters,
             COUNT(DISTINCT al.AssetID) as Assets
     FROM 
@@ -50,7 +55,8 @@ namespace SystemCenter.Model
         l.Alias,
         l.ShortName,
         l.Latitude,
-        l.Longitude
+        l.Longitude,
+        l.Description
     "), AllowSearch]
     [AdditionalFieldSearch("ParentTable = 'Location'", @"
     (SELECT
@@ -75,7 +81,52 @@ namespace SystemCenter.Model
         public string ShortName { get; set; }
         public double Longitude {get; set;}
         public double Latitude {get; set;}
+        public string Description { get; set; }
         public int Meters { get; set; }
         public int Assets { get; set; } 
+    }
+    public class DetailedLocationController<T> : ModelController<T> where T : DetailedLocation, new()
+    {
+        protected override DataTable GetSearchResults(PostData postData)
+        {
+            List<Search> searches = postData.Searches.ToList();
+            searches = searches.Select((s) =>
+            {
+                if (s.FieldName == "Meter")
+                    return new Search() { 
+                        Type = "query",
+                        Operator = ">",
+                        isPivotColumn = false,
+                        SearchText = "0",
+                        FieldName = $"(SELECT Count(*) FROM Meter WHERE Meter.AssetKey {Transform(s)} AND Meter.LocationID = FullTbl.ID)",
+                    };
+                if (s.FieldName == "Asset")
+                    return new Search()
+                    {
+                        Type = "query",
+                        Operator = ">",
+                        isPivotColumn = false,
+                        SearchText = "0",
+                        FieldName = $"(SELECT Count(*) FROM Asset LEFT JOIN AssetLocation ON AssetLocation.AssetID = Asset.ID WHERE Asset.AssetKey {Transform(s)} AND AssetLocation.LocationID = FullTbl.ID)",
+                    };
+                return s;
+
+            }).ToList();
+            postData.Searches = searches;
+
+            return base.GetSearchResults(postData);
+        }
+        
+        private string Transform(Search search)
+        {
+            if (search.SearchText == string.Empty) search.SearchText = "%";
+            else search.SearchText = search.SearchText.Replace("*", "%");
+            search.SearchText = $"'{search.SearchText}'";
+
+            string escape = "ESCAPE '$'";
+            if (search.Operator != "LIKE")
+                escape = "";
+            return $"{search.Operator} {search.SearchText} {escape}";
+        } 
     }
 }

@@ -86,6 +86,9 @@
     <Content Include="ldconfig.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="ldconfig-v1.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -113,6 +116,7 @@ IF EXIST "%25XDAPATH%25" (
     XCOPY "$(TargetPath)" "%25XDAPATH%25" /Y
     XCOPY "$(TargetDir)\.\ldconfig.ps1" "%25XDAPATH%25" /Y
     XCOPY "$(TargetDir)\.\ldconfig.bat" "%25XDAPATH%25" /Y
+    XCOPY "$(TargetDir)\.\ldconfig-v1.bat" "%25XDAPATH%25" /Y
     XCOPY "$(TargetDir)\.\DeviceDefinitionsGenerator.sql" "%25XDAPATH%25" /Y
 )</PostBuildEvent>
   </PropertyGroup>

@@ -24,8 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using GSF.Data;
@@ -667,7 +665,8 @@ namespace openXDA.XMLConfig
                 record.R1 = int.Parse(lineSegmentNode.Attributes["R1"]?.Value ?? "0");
                 record.X1 = int.Parse(lineSegmentNode.Attributes["X1"]?.Value ?? "0");
                 record.ThermalRating = double.Parse(lineSegmentNode.Attributes["ThermalRating"]?.Value ?? "0.0");
-                record.Length = double.Parse(lineSegmentNode.Attributes["ThermalRating"]?.Value ?? "0.0");
+                record.Length = double.Parse(lineSegmentNode.Attributes["Length"]?.Value ?? "0.0");
+                record.IsEnd = XmlConvert.ToBoolean(lineSegmentNode.Attributes["IsEnd"]?.Value ?? "false");
 
                 new TableOperations<LineSegment>(connection).AddNewOrUpdateRecord(record);
 

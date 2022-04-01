@@ -1,10 +1,15 @@
 {
-  "version": "2.0.0",
+  "version": "3.0.0",
   "name": "openxda",
   "private": true,
   "devDependencies": {
     "webpack": "4.29.6",
     "webpack-cli": "3.3.0"
+  },
+  "scripts": {
+    "build": "npm prune && npm install && webpack --mode=development",
+    "watch": "webpack --watch --color --mode=development",
+    "update": "npx npm-check-updates"
   },
   "dependencies": {
     "@types/jquery": "3.3.1",
@@ -12,6 +17,7 @@
     "@types/react": "^16.8.15",
     "@types/react-dom": "^16.8.3",
     "@types/react-router-dom": "^4.3.5",
+    "@gpa-gemstone/helper-functions": "0.0.14",
     "acorn": "^7.0.0",
     "css-loader": "^3.2.0",
     "history": "4.7.2",
@@ -27,7 +33,7 @@
     "stats-lite": "2.1.1",
     "style-loader": "0.21.0",
     "ts-loader": "4.5.0",
-    "typescript": "^3.4.1",
+    "typescript": "4.5.4",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "url-loader": "1.0.1"
   }

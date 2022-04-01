@@ -24,67 +24,65 @@
 import * as React from 'react';
 import * as _ from "lodash";
 import * as stats from 'stats-lite';
+import { PeriodicDataDisplay } from './global'
 
-export default class SummaryStat extends React.Component<any, any>{
-    props: { data: { data: { data: any }, key: string } }
+const SummaryStat = (props: {data: PeriodicDataDisplay.Points}) =>{
+    if (props.data == null) return null;
+    if (props.data.length == 0) return null;
 
-    constructor(props) {
-        super(props);
-    }
+    var avg = stats.mean(props.data.map(d => d[1]));
+    var median = stats.median(props.data.map(d => d[1]));
+    var variance = stats.variance(props.data.map(d => d[1]));
+    var stdev = stats.stdev(props.data.map(d => d[1]));
+    var sum = stats.sum(props.data.map(d => d[1]));
+    var min = _.min(props.data.map(d => d[1]));
+    var max = _.max(props.data.map(d => d[1]));
 
-    render() {
-        if (this.props.data == null) return null;
+    return (
+        <div>
+            <table className="table">
+                <thead>
+                    <tr>
+                        <td>Stat</td>
+                        <td>Value</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Average</td>
+                        <td>{format(avg) }</td>
+                    </tr>
+                    <tr>
+                        <td>Median</td>
+                        <td>{format(median) }</td>
+                    </tr>
+                    <tr>
+                        <td>Variance</td>
+                        <td>{format(variance)}</td>
+                    </tr>
+                    <tr>
+                        <td>Std Dev</td>
+                        <td>{format(stdev) }</td>
+                    </tr>
+                    <tr>
+                        <td>Maximum</td>
+                        <td>{format(max) }</td>
+                    </tr>
+                    <tr>
+                        <td>Minimum</td>
+                        <td>{format(min) }</td>
+                    </tr>
+                    <tr>
+                        <td>Sum</td>
+                        <td>{format(sum) }</td>
+                    </tr>
+                </tbody>
 
-        var avg = stats.mean(this.props.data.data.data.map(d => d[1]));
-        var median = stats.median(this.props.data.data.data.map(d => d[1]));
-        var variance = stats.variance(this.props.data.data.data.map(d => d[1]));
-        var stdev = stats.stdev(this.props.data.data.data.map(d => d[1]));
-        var sum = stats.sum(this.props.data.data.data.map(d => d[1]));
-        var min = _.min(this.props.data.data.data.map(d => d[1]));
-        var max = _.max(this.props.data.data.data.map(d => d[1]));
+            </table>
+        </div>
+    );
 
-        return (
-            <div>
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <td>Stat</td>
-                            <td>Value</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Average</td>
-                            <td>{ this.format(avg) }</td>
-                        </tr>
-                        <tr>
-                            <td>Median</td>
-                            <td>{this.format(median) }</td>
-                        </tr>
-                        <tr>
-                            <td>Std Dev</td>
-                            <td>{this.format(stdev) }</td>
-                        </tr>
-                        <tr>
-                            <td>Maximum</td>
-                            <td>{this.format(max) }</td>
-                        </tr>
-                        <tr>
-                            <td>Minimum</td>
-                            <td>{this.format(min) }</td>
-                        </tr>
-                        <tr>
-                            <td>Sum</td>
-                            <td>{this.format(sum) }</td>
-                        </tr>
-                    </tbody>
-
-                </table>
-            </div>
-        );
-    }
-
-    format(val) {
+    function format(val:number ) {
         if (val > 1000000 || val < -1000000)
             return ((val / 1000000) | 0) + "M";
         else if (val > 1000 || val < -1000)
@@ -98,3 +96,5 @@ export default class SummaryStat extends React.Component<any, any>{
     }
 
 }
+
+export default SummaryStat;

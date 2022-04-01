@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 import * as moment from 'moment';
+import { PeriodicDataDisplay, TrendingcDataDisplay } from './../../TSX/global'
 
 export default class TrendingDataDisplayService {
     getData(channelID: number, startDate: string, endDate: string, pixels: number) {
@@ -34,8 +35,21 @@ export default class TrendingDataDisplayService {
             dataType: 'json',
             cache: true,
             async: true
-        });
+        }) as JQuery.jqXHR<PeriodicDataDisplay.ReturnData>;
     }
+    getPostData(measurements: TrendingcDataDisplay.Measurement[], startDate: string, endDate: string, pixels: number) {
+        return $.ajax({
+            type: "POST",
+            url: `${window.location.origin}/api/TrendingDataDisplay/GetData`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            data: JSON.stringify({Channels: measurements.map(ms => ms.ID), StartDate: startDate, EndDate: endDate, Pixels: pixels }),
+            cache: true,
+            async: true
+        }) as JQuery.jqXHR<TrendingcDataDisplay.ReturnData>;
+    }
+
+
 
     getMeasurements(meterID: number) {
         return $.ajax({

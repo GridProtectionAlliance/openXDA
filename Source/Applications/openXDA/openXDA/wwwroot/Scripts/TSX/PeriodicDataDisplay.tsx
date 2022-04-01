@@ -24,127 +24,89 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import PeriodicDataDisplayService from './../TS/Services/PeriodicDataDisplay';
-import createHistory from "history/createBrowserHistory"
+import { createBrowserHistory as createHistory, History} from "history"
 import * as queryString from "query-string";
 import * as moment from 'moment';
 import * as _ from "lodash";
 import MeterInput from './MeterInput';
 import DatetimeRangePicker from 'react-datetime-range-picker';
 import Measurement from './Measurement';
+import { PeriodicDataDisplay as PDD, PeriodicDataDisplay} from './global'
 
-export class PeriodicDataDisplay extends React.Component<any, any>{
-    history: object;
-    periodicDataDisplayService: PeriodicDataDisplayService;
-    resizeId: any;
-    props: {};
-    state: { meterID: number, startDate: string, endDate: string, type: string, detailedReport: boolean, measurements: Array<Measurement>, width: number, data: any, numMeasurements: number, measurementsReturned: number, fromStepChangeWebReport: boolean};
-    constructor(props) {
-        super(props);
+type XDATrendDataPointField = 'Minimum' | 'Maximum' | 'Average';
 
-        this.history = createHistory();
-        this.periodicDataDisplayService = new PeriodicDataDisplayService();
+const PeriodicDataDisplay = () => {
+    let history = createHistory();
+    let periodicDataDisplayService = new PeriodicDataDisplayService();
+    const query = queryString.parse(history['location'].search);
+    const [meterID, setMeterID] = React.useState<number>((query['meterID'] != undefined ? query['meterID'] : 0));
+    const [startDate, setStartDate] = React.useState<string>((query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DD')));
+    const [endDate, setEndDate] = React.useState<string>((query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')));
+    const [type, setType] = React.useState<XDATrendDataPointField>((query['type'] != undefined ? query['type'] : "Average"));
+    const [detailedReport, setDetailedReport] = React.useState<boolean>(query['detailedReport'] != undefined ? query['detailedReport'] == "true" : false);
+    const [fromStepChangeWebReport, setFromStepChangeWebReport] = React.useState<boolean>(query['fromStepChangeWebReport'] != undefined ? query['fromStepChangeWebReport'] == "true" : false);
+    const [width, setWidth] = React.useState<number>(window.innerWidth - 475);
+    const [data, setData] = React.useState<PeriodicDataDisplay.MeasurementCharateristics[]>([]);
+    const [measurementsReturned, setMeasurementsReturned] = React.useState<number>(0);
+    let resizeID = React.useRef(0);
+    let loader = React.useRef(null);
 
-        var query = queryString.parse(this.history['location'].search);
+    React.useEffect(() => {
+        window.addEventListener("resize", handleScreenSizeChange.bind(this));
+        if (meterID != 0) getData();
 
-        this.state = {
-            meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
-            startDate: (query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DD')),
-            endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')),
-            type: (query['type'] != undefined ? query['type'] : "Average"),
-            detailedReport: (query['detailedReport'] != undefined ? query['detailedReport'] == "true" : false),
-            fromStepChangeWebReport: (query['fromStepChangeWebReport'] != undefined ? query['fromStepChangeWebReport'] == "true" : false),
-            measurements: [],
-            width: window.innerWidth - 475,
-            data: null,
-            numMeasurements: 0,
-            measurementsReturned: 0
-        }
+    }, [meterID, startDate, endDate, type, detailedReport]);
 
-    }
+    React.useEffect(() => {
+        window.addEventListener("resize", handleScreenSizeChange.bind(this));
+        return () => $(window).off('resize');
+    }, []);
 
-    getData() {
-        $(this.refs.loader).show();
 
-        this.periodicDataDisplayService.getMeasurementCharacteristics(this.state.fromStepChangeWebReport, this.state.meterID).done(data => {
-            this.setState({ data: data, numMeasurements: data.length });
-            this.createMeasurements(data);
+    function getData() {
+        $(loader).show();
+
+        periodicDataDisplayService.getMeasurementCharacteristics(fromStepChangeWebReport, meterID).done(data => {
+            setData(data);
         });
     }
 
-    returnedMeasurement() {
-        if (this.state.numMeasurements == this.state.measurementsReturned + 1) $(this.refs.loader).hide();
-        this.setState({ measurementsReturned: ++this.state.measurementsReturned })
+    function returnedMeasurement() {
+        if (data.length == measurementsReturned + 1) $(loader.current).hide();
+        setMeasurementsReturned(measurementsReturned + 1);
 
     }
-    createMeasurements(data) {
-        if (data == null || data.length == 0) {
-            $(this.refs.loader).hide();
-            return;
-        };
 
-        $(this.refs.loader).show();
-
-        var list = data.map(d =>
-            <Measurement
-                meterID={this.state.meterID}
-                startDate={this.state.startDate}
-                endDate={this.state.endDate}
-                key={d.MeasurementType + d.MeasurementCharacteristic}
-                data={d}
-                type={this.state.type}
-                height={300}
-                stateSetter={(obj) => this.setState(obj, this.updateUrl)}
-                detailedReport={this.state.detailedReport}
-                width={this.state.width}
-                returnedMeasurement={this.returnedMeasurement.bind(this)}
-            />);
-        this.setState({ measurements: list }, () => this.updateUrl());
-    }
-
-    componentDidMount() {
-        window.addEventListener("resize", this.handleScreenSizeChange.bind(this));
-        if (this.state.meterID != 0) this.getData();
-    }   
-
-    componentWillUnmount() {
-        $(window).off('resize');
-    }
-
-    handleScreenSizeChange() {
-        clearTimeout(this.resizeId);
-        this.resizeId = setTimeout(() => {
-            this.setState({ width: window.innerWidth - 475 }, () => { this.createMeasurements(this.state.data)});
+    function handleScreenSizeChange() {
+        clearTimeout(resizeID.current);
+        resizeID.current = setTimeout(() => {
+            setWidth(window.innerWidth - 475)
         }, 100);
     }
 
-    updateUrl() {
-
-        var state = _.clone(this.state);
-        delete state.measurements;
-        delete state.data;
-        delete state.numMeasurements;
-        delete state.measurementsReturned;
-        delete state.width;
-        this.history['push']('PeriodicDataDisplay.cshtml?' + queryString.stringify(state, { encode: false }))
+    function updateUrl() {
+        history['push']('PeriodicDataDisplay.cshtml?' + queryString.stringify({meterID, startDate, endDate, type, detailedReport, fromStepChangeWebReport}, { encode: false }))
     }
 
-    render() {
-        var height = window.innerHeight -  60;
+    let height = window.innerHeight - 60;
 
-        return (
+    return (
         <div>
             <div className="screen" style={{ height: height, width: window.innerWidth }}>
                 <div className="vertical-menu">
                     <div className="form-group">
                         <label>Meter: </label>
-                        <MeterInput value={this.state.meterID} onChange={(obj) => this.setState(obj)} />
+                        <MeterInput value={meterID} onChange={(obj) => setMeterID(parseInt(obj.meterID.toString()))} />
                     </div>
                     <div className="form-group">
                         <label>Time Range: </label>
                         <DatetimeRangePicker
-                            startDate={new Date(this.state.startDate)}
-                            endDate={new Date(this.state.endDate)}
-                            onChange={(obj) => { this.setState({ startDate: moment(obj.start).format('YYYY-MM-DD'), endDate: moment(obj.end).format('YYYY-MM-DD') }) }}
+                            startDate={new Date(startDate)}
+                            endDate={new Date(endDate)}
+                            onChange={(obj) => {
+                                setStartDate(moment(obj.start).format('YYYY-MM-DD'));
+                                setEndDate(moment(obj.end).format('YYYY-MM-DD'));
+                            }}
                             inputProps={{ style: { width: '100px', margin: '5px' }, className: 'form-control' }}
                             className='form'
                             timeFormat={false}
@@ -152,38 +114,48 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
                     </div>
                     <div className="form-group">
                         <label>Data Type: </label>
-                        <select onChange={(obj) => this.setState({ type: obj.target.value })} className="form-control" defaultValue={this.state.type}>
+                        <select onChange={(obj) => setType(obj.target.value as XDATrendDataPointField)} className="form-control" value={type}>
                             <option value="Average">Average</option>
                             <option value="Maximum">Maximum</option>
                             <option value="Minimum">Minimum</option>
                         </select>
                     </div>
                     <div className="form-group">
-                        <label>Detailed Report: <input type="checkbox" value={this.state.detailedReport.toString()} defaultChecked={this.state.detailedReport} onChange={(e) => {
-                            this.setState({ detailedReport: !this.state.detailedReport })
-                        }} /></label>
+                        <label>Detailed Report: <input type="checkbox" value={detailedReport.toString()} defaultChecked={detailedReport} onChange={(e) => setDetailedReport(!detailedReport) } /></label>
                     </div>
 
                     <div className="form-group">
-                        <div style={{ float: 'left' }} ref={'loader'} hidden>
+                        <div style={{ float: 'left' }} ref={loader} hidden>
                             <div style={{ border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' }}></div>
                             <span>Loading...</span>
                         </div>
 
-                        <button className='btn btn-primary' style={{ float: 'right' }} onClick={() => { this.updateUrl(); this.getData(); }}>Apply</button>
+                        <button className='btn btn-primary' style={{ float: 'right' }} onClick={() => { updateUrl(); getData(); }}>Apply</button>
                     </div>
 
 
                 </div>
                 <div className="waveform-viewer" style={{ width: window.innerWidth }}>
-                    <div className="list-group" style={{ maxHeight:height, overflowY: 'auto' }}>
-                            {this.state.measurements}
+                    <div className="list-group" style={{ maxHeight: height, overflowY: 'auto' }}>
+                        {data.map(d =>
+                            <Measurement
+                                meterID={meterID}
+                                startDate={startDate}
+                                endDate={endDate}
+                                key={d.MeasurementType + d.MeasurementCharacteristic + d.HarmonicGroup}
+                                data={d}
+                                type={type}
+                                height={300}
+                                detailedReport={detailedReport}
+                                width={width}
+                                returnedMeasurement={returnedMeasurement.bind(this)}
+                            />)}
                     </div>
                 </div>
             </div>
         </div>
-        );
-    }
+    );
 }
+
 
 ReactDOM.render(<PeriodicDataDisplay />, document.getElementById('bodyContainer'));

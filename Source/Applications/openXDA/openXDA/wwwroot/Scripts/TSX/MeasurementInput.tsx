@@ -25,14 +25,12 @@ import * as React from 'react';
 import TrendingDataDisplayService from './../TS/Services/TrendingDataDisplay';
 import * as _ from "lodash";
 
-export default class MeasurementInput extends React.Component<any, any>{
+export default class MeasurementInput extends React.Component<{ value: number, meterID: number, onChange: Function }, { options: any[] }>{
     trendingDataDisplayService: TrendingDataDisplayService;
-    state: { select: Array<any> };
-    props: { value: number, meterID: number, onChange: Function };
     constructor(props) {
         super(props);
         this.state = {
-            select: null
+            options: []
         }
 
         this.trendingDataDisplayService = new TrendingDataDisplayService();
@@ -53,15 +51,16 @@ export default class MeasurementInput extends React.Component<any, any>{
 
             var value = (this.props.value ? this.props.value : data[0].ID)
             var options = data.map(d => <option key={d.ID} value={d.ID}>{d.Name}</option>);
-            var select = <select className='form-control' onChange={(e) => { this.props.onChange({ measurementID: e.target.value }); }} defaultValue={value}>{options}</select>
-            this.props.onChange({ measurementID: value });
-            this.setState({ select: select });
+            this.setState({ options });
         });
 
     }
 
     render() {
-        return this.state.select;
+        return (<select className='form-control' onChange={(e) => { this.props.onChange({ measurementID: parseInt(e.target.value), measurementName: e.target.selectedOptions[0].text }); }} value={this.props.value}>
+            <option value='0'></option>
+            {this.state.options}
+        </select>);
     }
 
 }

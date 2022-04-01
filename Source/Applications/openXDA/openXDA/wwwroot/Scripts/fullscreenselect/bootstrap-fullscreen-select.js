@@ -320,7 +320,7 @@ if (typeof jQuery === 'undefined') {
             if (!this.isMultiple)
                 selectedOptions = [selectedOptions];
             this.$c.find('a').removeClass('selected');
-            for (var i in selectedOptions) {
+            for (var i of selectedOptions) {
                 this.$c.find('a[data-value="' + selectedOptions[i] + '"]').addClass('selected');
             }
         },

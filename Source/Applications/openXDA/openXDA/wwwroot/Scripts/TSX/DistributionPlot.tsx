@@ -27,31 +27,22 @@ import * as moment from 'moment';
 import * as _ from "lodash";
 import './../flot/jquery.flot.min.js';
 import * as stats from 'stats-lite';
+import { PeriodicDataDisplay } from './global'
 
-export default class DistributionPlot extends React.Component<any, any>{
-    options: object;
-    props: { data: {data: any, key: string}, bins: number}
-    constructor(props) {
-        super(props);
+interface Props{
+    data: PeriodicDataDisplay.Points, label: string , bins: number
+}
 
-    }
+const DistributionPlot = (props: Props) => {
+    const ref = React.useRef(null);
 
-    componentDidMount() {
-        if (this.props.data != null)
-            this.makeChart(this.props);
-    }
+    React.useEffect(() => {
+        if (props.data == null) return;
+        else if (props.data.length == 0) return;
 
-    componentWillReceiveProps(nextProps, nextContext) {
-        if (this.props.data != nextProps.data)
-            this.makeChart(nextProps);    
-    }
-
-    makeChart(props) {
-        if (props.data.data.data.length == 0) return null;
-        var stat = stats.histogram(props.data.data.data.map(d => d[1]), props.bins)
-        var totalCount = stat.values.reduce((t, x) => { return t + x });
-
-        var options = {
+        let stat = stats.histogram(props.data.map(d => d[1]), props.bins)
+        let totalCount = stat.values.reduce((t, x) => { return t + x });
+        let options = {
             series: {
                 bars: {
                     show: true,
@@ -90,22 +81,22 @@ export default class DistributionPlot extends React.Component<any, any>{
 
         }
 
-        var data = stat.values.map((d, i) => {
+        let data = stat.values.map((d, i) => {
             var bin = stat.binLimits[0] + i * stat.binWidth;
             return [bin, (d / totalCount) * 100]
         });
-        ($ as any).plot($(this.refs.chartHolder), [{ label: props.data.key, data: data }], options);
-    }
 
-    render() {
-        if (this.props.data == null) return null;
+        ($ as any).plot($(ref.current), [{ label: props.label, data: data }], options);
 
-        return (
-            <div style={{ height: '100%', margin: '10px'}}>
-                <label style={{textAlign: 'center'}}>{this.props.data.key}</label>
-                <div ref="chartHolder" style={{ height: 'calc(100% - 20px)', width: 'inherit' }}></div>
-            </div>
-        );
-    }
+    }, [props.data, props.label, props.bins]);
+
+    return (
+        <div style={{ height: '100%', margin: '10px'}}>
+            <label style={{ textAlign: 'center' }}>{props.label}</label>
+            <div ref={ref} style={{ height: 'calc(100% - 20px)', width: 'inherit' }}></div>
+        </div>
+    );
 
 }
+
+export default DistributionPlot;

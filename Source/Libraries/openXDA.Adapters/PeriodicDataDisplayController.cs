@@ -34,6 +34,7 @@ using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web;
+using HIDS;
 using openHistorian.XDALink;
 using openXDA.Model;
 
@@ -76,6 +77,7 @@ namespace openXDA.Adapters
             int meterId = int.Parse(query["MeterID"]);
             int measurementCharacteristicId = int.Parse(query["MeasurementCharacteristicID"]);
             int measurementTypeId = int.Parse(query["MeasurementTypeID"]);
+            int harmonicGroup = int.Parse(query["HarmonicGroup"]);
 
             int pixels = int.Parse(query["pixels"]);
             string type = query["type"] ?? "Average";
@@ -92,32 +94,25 @@ namespace openXDA.Adapters
                     stopWatch.Start();
 
 
-                    string target = "PeriodicDataDisplay" + meterId.ToString() + measurementCharacteristicId.ToString() + startDate.Subtract(epoch).TotalMilliseconds.ToString() + endDate.Subtract(epoch).TotalMilliseconds.ToString() + type;
+                    string target = "PeriodicDataDisplay" + meterId.ToString() + measurementTypeId.ToString()+ measurementCharacteristicId.ToString() + harmonicGroup.ToString() + startDate.Subtract(epoch).TotalMilliseconds.ToString() + endDate.Subtract(epoch).TotalMilliseconds.ToString() + type;
                     Dictionary<string, List<double[]>> data = (Dictionary<string, List<double[]>>)s_memoryCache.Get(target);
                     if (data == null)
                     {
                         data = new Dictionary<string, List<double[]>>();
-                        IEnumerable<Channel> channels = (new TableOperations<Channel>(connection)).QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = {1} AND MeasurementTypeID = {2}", meterId, measurementCharacteristicId, measurementTypeId);
+                        IEnumerable<Channel> channels = (new TableOperations<Channel>(connection)).QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = {1} AND MeasurementTypeID = {2} AND HarmonicGroup = {3}", meterId, measurementCharacteristicId, measurementTypeId, harmonicGroup);
 
-                        string historianServer = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-                        string historianInstance = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-
-                        using (Historian historian = new Historian(historianServer, historianInstance))
+                        IEnumerable<Point> points = QueryHIDS(channels, startDate, endDate);
+                        foreach (Point point in points)
                         {
-                            foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channels.Select(x => x.ID), startDate, endDate))
-                            {
-                                if (point.SeriesID.ToString() == type)
-                                {
-                                    Channel channel = channels.First(x => x.ID == point.ChannelID);
-                                    if (!data.ContainsKey(channel.Name))
-                                        data.Add(channel.Name, new List<double[]>() { new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, point.Value } });
-                                    else
-                                        data[channel.Name].Add(new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, point.Value });
-                                }
-                            }
+                            Channel channel = channels.First(x => x.ID.ToString("x8") == point.Tag);
+                            if (!data.ContainsKey(channel.Name))
+                                data.Add(channel.Name, new List<double[]>() { new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, GetValue(point, type) } });
+                            else
+                                data[channel.Name].Add(new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, GetValue(point, type) });
                         }
 
                         s_memoryCache.Add(target, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(0.5D) });
+
 
                     }
                     Console.WriteLine(stopWatch.Elapsed);
@@ -128,6 +123,39 @@ namespace openXDA.Adapters
 
         }
 
+        private double GetValue(Point point, string type) {
+            if (type == "Average") return point.Average;
+            else if (type == "Minimum") return point.Minimum;
+            else return point.Maximum;
+        }
+
+        private IEnumerable<Point> QueryHIDS(IEnumerable<Channel> channels, DateTime startDate, DateTime endDate) {
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (API hids = new API())
+            {
+
+                string host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'") ?? "127.0.0.1";
+                string tokenID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'") ?? "";
+                string pointBucket = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.PointBucket'") ?? "point_bucket";
+                string orgID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'") ?? "gpa";
+
+
+                hids.TokenID = tokenID;
+                hids.PointBucket = pointBucket;
+                hids.OrganizationID = orgID;
+                hids.Connect(host);
+
+
+                List<Point> points = hids.ReadPointsAsync((t) =>
+                {
+                    t.FilterTags(channels.Select(c => c.ID.ToString("x8")));
+                    t.Range(startDate, endDate);
+                }).ToListAsync().Result;
+
+                return points;
+            }
+
+        }
         [HttpGet]
         public Task<IOrderedEnumerable<Meter>> GetMeters(CancellationToken cancellationToken)
         {
@@ -150,69 +178,52 @@ namespace openXDA.Adapters
         }
 
         [HttpGet]
-        public Task<IOrderedEnumerable<PeriodicMeasurements>> GetMeasurementCharacteristics(CancellationToken cancellationToken)
+        public IHttpActionResult GetMeasurementCharacteristics(CancellationToken cancellationToken)
         {
             Dictionary<string, string> query = Request.QueryParameters();
             if (query.ContainsKey("MeterID"))
             {
                 int meterId = int.Parse(query["MeterID"]);
-                return Task.Factory.StartNew(() =>
-                {
-                    return GetMeasurementCharacteristicsForWebReport();
-                }, cancellationToken);
+                return Ok(GetMeasurementCharacteristicsForWebReport());
             }
             else
-            {
-                return Task.Factory.StartNew(() =>
-                {
-                    return GetAllMeasurementCharacteristics();
-                }, cancellationToken);
-            }
+                return Ok(GetAllMeasurementCharacteristics());
 
         }
 
-        private IOrderedEnumerable<PeriodicMeasurements> GetAllMeasurementCharacteristics()
+        private DataTable GetAllMeasurementCharacteristics()
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                string target = "PeriodicDataDisplayMeasurementCharacteristicsAll";
-                IOrderedEnumerable<PeriodicMeasurements> data = (IOrderedEnumerable<PeriodicMeasurements>)s_memoryCache.Get(target);
-                if (data == null)
-                {
                     string query = @"
                             SELECT DISTINCT 
 	                            MeasurementType.Name as MeasurementType,
                                 MeasurementType.ID as MeasurementTypeID,
 	                            MeasurementCharacteristic.Name as MeasurementCharacteristic,
-	                            MeasurementCharacteristic.ID as MeasurementCharacteristicID
+	                            MeasurementCharacteristic.ID as MeasurementCharacteristicID,
+                                HarmonicGroup
                             FROM 
 	                            Channel JOIN
 	                            MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID JOIN
 	                            MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID
+                            ORDER BY MeasurementCharacteristic, MeasurementType
                         ";
 
-                    data = connection.RetrieveData(query).Select().Select(row => new PeriodicMeasurements() { MeasurementType = row["MeasurementType"].ToString(), MeasurementTypeID = int.Parse(row["MeasurementTypeID"].ToString()), MeasurementCharacteristic = row["MeasurementCharacteristic"].ToString(), MeasurementCharacteristicID = int.Parse(row["MeasurementCharacteristicID"].ToString()) }).OrderBy(x => x.MeasurementCharacteristic).ThenBy(x => x.MeasurementType);
-                    s_memoryCache.Add(target, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
-                }
-
-                return data;
+                    return connection.RetrieveData(query);
             }
         }
 
-        private IOrderedEnumerable<PeriodicMeasurements> GetMeasurementCharacteristicsForWebReport()
+        private DataTable GetMeasurementCharacteristicsForWebReport()
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                string target = "PeriodicDataDisplayMeasurementCharacteristicsForWebReport";
-                IOrderedEnumerable<PeriodicMeasurements> data = (IOrderedEnumerable<PeriodicMeasurements>)s_memoryCache.Get(target);
-                if (data == null)
-                {
                     string query = @"
                             SELECT DISTINCT 
 	                            MeasurementType.Name as MeasurementType,
                                 MeasurementType.ID as MeasurementTypeID,
 	                            MeasurementCharacteristic.Name as MeasurementCharacteristic,
-	                            MeasurementCharacteristic.ID as MeasurementCharacteristicID
+	                            MeasurementCharacteristic.ID as MeasurementCharacteristicID,
+                                HarmonicGroup
                             FROM 
 	                            Channel JOIN
 	                            MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID JOIN
@@ -228,13 +239,11 @@ namespace openXDA.Adapters
 			                        PQMeasurement.MeasurementTypeID = Channel.MeasurementTypeID AND
 			                        PQMeasurement.MeasurementCharacteristicID = Channel.MeasurementCharacteristicID
                          )
+                        ORDER BY MeasurementCharacteristic, MeasurementType
+
                         ";
 
-                    data = connection.RetrieveData(query).Select().Select(row => new PeriodicMeasurements() { MeasurementType = row["MeasurementType"].ToString(), MeasurementTypeID = int.Parse(row["MeasurementTypeID"].ToString()), MeasurementCharacteristic = row["MeasurementCharacteristic"].ToString(), MeasurementCharacteristicID = int.Parse(row["MeasurementCharacteristicID"].ToString()) }).OrderBy(x => x.MeasurementCharacteristic).ThenBy(x => x.MeasurementType);
-                    s_memoryCache.Add(target, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
-                }
-
-                return data;
+                    return connection.RetrieveData(query);
             }
         }
 

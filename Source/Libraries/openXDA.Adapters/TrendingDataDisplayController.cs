@@ -34,6 +34,7 @@ using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web;
+using HIDS;
 using openHistorian.XDALink;
 using openXDA.Model;
 
@@ -50,6 +51,21 @@ namespace openXDA.Adapters
             public int MeasurementTypeID { get; set; }
             public string MeasurementCharacteristic { get; set; }
             public int MeasurementCharacteristicID { get; set; }
+        }
+
+        public class Post { 
+            public string StartDate { get; set; }
+            public string EndDate { get; set; }
+            public int Pixels { get; set; }
+            public List<int> Channels { get; set; }
+        }
+
+        public class ReturnPoint
+        {
+            public double Time { get; set; }
+            public double Minimum { get; set; }
+            public double Maximum { get; set; }
+            public double Average { get; set; }
         }
 
         #endregion
@@ -93,16 +109,15 @@ namespace openXDA.Adapters
                         data.Add("Maximum", new List<double[]>());
                         data.Add("Average", new List<double[]>());
 
-                        string historianServer = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-                        string historianInstance = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-
-                        using (Historian historian = new Historian(historianServer, historianInstance))
+                        IEnumerable<Point> points = QueryHIDS(channelID, startDate, endDate);
+                        foreach (Point point in points)
                         {
-                            foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(new[] { channelID }, startDate, endDate))
-                            {
-                                data[point.SeriesID.ToString()].Add(new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, point.Value });
-                            }
+                            data["Minimum"].Add(new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, point.Minimum });
+                            data["Maximum"].Add(new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, point.Maximum });
+                            data["Average"].Add(new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, point.Average });
                         }
+
+
 
                         s_memoryCache.Add(target, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(0.5D) });
 
@@ -113,6 +128,37 @@ namespace openXDA.Adapters
             }, cancellationToken);
 
         }
+
+        [HttpPost]
+        public Task<Dictionary<int, List<ReturnPoint>>> GetData([FromBody] Post post,CancellationToken cancellationToken)
+        {
+            DateTime epoch = new DateTime(1970, 1, 1);
+
+            DateTime startDate = DateTime.ParseExact(post.StartDate, "yyyy-MM-ddTHH:mm", CultureInfo.CurrentCulture);
+            DateTime endDate = DateTime.ParseExact(post.EndDate, "yyyy-MM-ddTHH:mm", CultureInfo.CurrentCulture);
+
+            return Task.Factory.StartNew(() =>
+            {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    Dictionary<int, List<ReturnPoint>> data = new Dictionary<int, List<ReturnPoint>>();
+
+                    IEnumerable<Point> points = QueryHIDS(post.Channels, startDate, endDate);
+                    foreach (Point point in points)
+                    {
+                        int channelID = int.Parse(point?.Tag ?? "0x0", System.Globalization.NumberStyles.HexNumber);
+                        if (!data.ContainsKey(channelID))
+                            data.Add(channelID, new List<ReturnPoint>() { new ReturnPoint { Time = point.Timestamp.Subtract(epoch).TotalMilliseconds, Minimum = point.Minimum, Average = point.Average, Maximum = point.Maximum } });
+                        else
+                            data[channelID].Add(new ReturnPoint { Time = point.Timestamp.Subtract(epoch).TotalMilliseconds, Minimum = point.Minimum, Average = point.Average, Maximum = point.Maximum });
+                    }
+                    return data;
+                }
+
+            }, cancellationToken);
+
+        }
+
 
         [HttpGet]
         public Task<IOrderedEnumerable<Channel>> GetMeasurements(CancellationToken cancellationToken)
@@ -233,6 +279,64 @@ namespace openXDA.Adapters
             }
 
             return returnData;
+
+        }
+
+        private IEnumerable<Point> QueryHIDS(int channelID, DateTime startDate, DateTime endDate)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (API hids = new API())
+            {
+
+                string host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'") ?? "127.0.0.1";
+                string tokenID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'") ?? "";
+                string pointBucket = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.PointBucket'") ?? "point_bucket";
+                string orgID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'") ?? "gpa";
+
+
+                hids.TokenID = tokenID;
+                hids.PointBucket = pointBucket;
+                hids.OrganizationID = orgID;
+                hids.Connect(host);
+
+
+                List<Point> points = hids.ReadPointsAsync((t) =>
+                {
+                    t.FilterTags(channelID.ToString("x8"));
+                    t.Range(startDate, endDate);
+                }).ToListAsync().Result;
+
+                return points;
+            }
+
+        }
+
+        private IEnumerable<Point> QueryHIDS(IEnumerable<int> channels, DateTime startDate, DateTime endDate)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (API hids = new API())
+            {
+
+                string host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'") ?? "127.0.0.1";
+                string tokenID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'") ?? "";
+                string pointBucket = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.PointBucket'") ?? "point_bucket";
+                string orgID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'") ?? "gpa";
+
+
+                hids.TokenID = tokenID;
+                hids.PointBucket = pointBucket;
+                hids.OrganizationID = orgID;
+                hids.Connect(host);
+
+
+                List<Point> points = hids.ReadPointsAsync((t) =>
+                {
+                    t.FilterTags(channels.Select(c => c.ToString("x8")));
+                    t.Range(startDate, endDate);
+                }).ToListAsync().Result;
+
+                return points;
+            }
 
         }
 
