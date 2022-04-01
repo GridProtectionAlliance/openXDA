@@ -667,7 +667,7 @@ namespace openXDA.XMLConfig
                 record.R1 = int.Parse(lineSegmentNode.Attributes["R1"]?.Value ?? "0");
                 record.X1 = int.Parse(lineSegmentNode.Attributes["X1"]?.Value ?? "0");
                 record.ThermalRating = double.Parse(lineSegmentNode.Attributes["ThermalRating"]?.Value ?? "0.0");
-                record.Length = double.Parse(lineSegmentNode.Attributes["ThermalRating"]?.Value ?? "0.0");
+                record.Length = double.Parse(lineSegmentNode.Attributes["Length"]?.Value ?? "0.0");
 
                 new TableOperations<LineSegment>(connection).AddNewOrUpdateRecord(record);
 
