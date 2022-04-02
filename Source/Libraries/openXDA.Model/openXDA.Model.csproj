@@ -133,6 +133,10 @@
     <Compile Include="Links\EDNAPoint.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="LSCVSAccount.cs" />
+    <Compile Include="LSCVS\LSCVSRecord.cs" />
+    <Compile Include="LSCVS\LSCVSSummaryEvent.cs" />
+    <Compile Include="LSCVS\LSCVSSummary.cs" />
+    <Compile Include="LSCVS\LSCVSEvent.cs" />
     <Compile Include="Meters\MeterAlarmGroup.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="Meters\MeterConfiguration.cs" />
