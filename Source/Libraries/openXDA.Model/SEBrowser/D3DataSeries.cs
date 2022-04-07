@@ -41,6 +41,7 @@ namespace SEBrowser.Model
     /// <remarks>
     /// Will need to use in SEbrowser ans OpenSEE too.
     /// </remarks>
+    [Serializable]
     public class D3Series
     {
       
@@ -50,36 +51,36 @@ namespace SEBrowser.Model
         /// <summary>
         /// Label of this Channel
         /// </summary>
-        public string ChartLabel; 
+        public string ChartLabel = "";
         /// <summary>
         /// Group used to determine buttons on top of the Legend
         /// </summary>
-        public string LegendGroup;
+        public string LegendGroup = "";
 
         /// <summary>
         /// Horizontal Legend Category
         /// </summary>
-        public string LegendHorizontal;
+        public string LegendHorizontal = "";
 
         /// <summary>
         /// Vertical Legend Category
         /// </summary>
-        public string LegendVertical;
+        public string LegendVertical = "";
 
         /// <summary>
         /// Unit of the Channel
         /// </summary>
-        public string Unit;
+        public string Unit = "";
 
         /// <summary>
         /// Color of the Channel
         /// </summary>
-        public string Color;
+        public string Color = "";
 
         /// <summary>
         /// Group used to determine vertical category - if applicable
         /// </summary>
-        public string LegendVGroup;
+        public string LegendVGroup = "";
 
         /// <summary>
         /// Base Value, can be used for p.u. computations
