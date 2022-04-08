@@ -68,9 +68,9 @@ namespace openXDA.Controllers.WebAPI
 
 
 
-        [HttpGet, Route("WaveformData/{eventId}")]
+        [HttpGet, Route("WaveformData/I/{eventId}")]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public IHttpActionResult GetData(int eventId)
+        public IHttpActionResult GetCurrentData(int eventId)
         {
             try
             {
@@ -86,82 +86,11 @@ namespace openXDA.Controllers.WebAPI
 
                     VIDataGroup dataGroup = GetDataGroup(meter, eventId);
 
-                    if (dataGroup.VA != null)
-                        list.Add(new SEBrowser.Model.D3Series() {
-                        ChartLabel = "Voltage AN",
-                        Color="#ffff00",
-                        DataPoints=dataGroup.VA.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                        Unit="kV"                        
-                        });
-
-                    if (dataGroup.VB != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "Voltage BN",
-                            Color = "#ffff00",
-                            DataPoints = dataGroup.VB.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
-
-                    if (dataGroup.VC != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "Voltage CN",
-                            Color = "#ffff00",
-                            DataPoints = dataGroup.VC.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
-
-                    if (dataGroup.VAB != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "Voltage AB",
-                            Color = "#ffff00",
-                            DataPoints = dataGroup.VAB.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
-
-                    if (dataGroup.VBC != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "Voltage BC",
-                            Color = "#ffff00",
-                            DataPoints = dataGroup.VBC.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
-
-                    if (dataGroup.VCA != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "Voltage CA",
-                            Color = "#ffff00",
-                            DataPoints = dataGroup.VCA.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
-
                     if (dataGroup.IA != null)
                         list.Add(new SEBrowser.Model.D3Series()
                         {
-                            ChartLabel = "Current A",
-                            Color = "#ffff00",
+                            ChartLabel = "A",
+                            Color = "#FF0000",
                             DataPoints = dataGroup.IA.DataPoints.Select(dataPoint => new double[] {
                             dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
                             dataPoint.Value
@@ -172,8 +101,8 @@ namespace openXDA.Controllers.WebAPI
                     if (dataGroup.IB != null)
                         list.Add(new SEBrowser.Model.D3Series()
                         {
-                            ChartLabel = "Current B",
-                            Color = "#ffff00",
+                            ChartLabel = "B",
+                            Color = "#0066CC",
                             DataPoints = dataGroup.IB.DataPoints.Select(dataPoint => new double[] {
                             dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
                             dataPoint.Value
@@ -184,8 +113,8 @@ namespace openXDA.Controllers.WebAPI
                     if (dataGroup.IC != null)
                         list.Add(new SEBrowser.Model.D3Series()
                         {
-                            ChartLabel = "Current C",
-                            Color = "#ffff00",
+                            ChartLabel = "C",
+                            Color = "#33CC33",
                             DataPoints = dataGroup.IC.DataPoints.Select(dataPoint => new double[] {
                             dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
                             dataPoint.Value
@@ -203,7 +132,103 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
+        [HttpGet, Route("WaveformData/V/{eventId}")]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        public IHttpActionResult GetVoltageData(int eventId)
+        {
+            try
+            {
 
+                List<SEBrowser.Model.D3Series> list = new List<SEBrowser.Model.D3Series>();
+
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
+                    Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
+                    meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+
+
+                    VIDataGroup dataGroup = GetDataGroup(meter, eventId);
+
+                    if (dataGroup.VA != null)
+                        list.Add(new SEBrowser.Model.D3Series()
+                        {
+                            ChartLabel = "AN",
+                            Color = "#A30000",
+                            DataPoints = dataGroup.VA.DataPoints.Select(dataPoint => new double[] {
+                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                            dataPoint.Value
+                        }).ToList(),
+                            Unit = "kV"
+                        });
+
+                    if (dataGroup.VB != null)
+                        list.Add(new SEBrowser.Model.D3Series()
+                        {
+                            ChartLabel = "BN",
+                            Color = "#0029A3",
+                            DataPoints = dataGroup.VB.DataPoints.Select(dataPoint => new double[] {
+                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                            dataPoint.Value
+                        }).ToList(),
+                            Unit = "kV"
+                        });
+
+                    if (dataGroup.VC != null)
+                        list.Add(new SEBrowser.Model.D3Series()
+                        {
+                            ChartLabel = "CN",
+                            Color = "#007A29",
+                            DataPoints = dataGroup.VC.DataPoints.Select(dataPoint => new double[] {
+                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                            dataPoint.Value
+                        }).ToList(),
+                            Unit = "kV"
+                        });
+
+                    if (dataGroup.VAB != null)
+                        list.Add(new SEBrowser.Model.D3Series()
+                        {
+                            ChartLabel = "AB",
+                            Color = "#A30000",
+                            DataPoints = dataGroup.VAB.DataPoints.Select(dataPoint => new double[] {
+                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                            dataPoint.Value
+                        }).ToList(),
+                            Unit = "kV"
+                        });
+
+                    if (dataGroup.VBC != null)
+                        list.Add(new SEBrowser.Model.D3Series()
+                        {
+                            ChartLabel = "BC",
+                            Color = "#0029A3",
+                            DataPoints = dataGroup.VBC.DataPoints.Select(dataPoint => new double[] {
+                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                            dataPoint.Value
+                        }).ToList(),
+                            Unit = "kV"
+                        });
+
+                    if (dataGroup.VCA != null)
+                        list.Add(new SEBrowser.Model.D3Series()
+                        {
+                            ChartLabel = "CA",
+                            Color = "#007A29",
+                            DataPoints = dataGroup.VCA.DataPoints.Select(dataPoint => new double[] {
+                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                            dataPoint.Value
+                        }).ToList(),
+                            Unit = "kV"
+                        });
+                }
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
 
 
         private VIDataGroup GetDataGroup(Meter meter, int eventID)
