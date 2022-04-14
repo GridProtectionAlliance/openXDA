@@ -333,15 +333,15 @@ namespace openXDA.Model
         }
 
         // Logic for Channels across Asset Connections
-        public IEnumerable<Channel> GetConnectedChannel(AdoDataConnection connection, List<Asset> ignoredAssets = null, List<Location> alowedLocations = null)
+        public IEnumerable<Channel> GetConnectedChannel(AdoDataConnection connection, Stack<Asset> ignoredAssets = null, List<Location> alowedLocations = null)
         {
-            ignoredAssets = ignoredAssets ?? new List<Asset>();
+            ignoredAssets = ignoredAssets ?? new Stack<Asset>();
             alowedLocations = alowedLocations ?? QueryAssetLocations().Select(item => item.Location).ToList();
 
 
             List<Channel> result = new List<Channel>();
 
-            ignoredAssets.Add(this);
+            ignoredAssets.Push(this);
 
             foreach (AssetConnection assetconnection in QueryConnections())
             {
@@ -366,6 +366,7 @@ namespace openXDA.Model
                     continue;
                     
                 IEnumerable<Channel> potentials = remoteAsset.GetChannel(connection);
+               
 
                 TableOperations<AssetConnectionType> assetConnectionTypeTbl = new TableOperations<AssetConnectionType>(connection);
                 string jumpSQL = assetConnectionTypeTbl.QueryRecordWhere("ID = {0}",assetconnection.AssetRelationshipTypeID).JumpConnection;
@@ -387,6 +388,8 @@ namespace openXDA.Model
                 }
 
                 potentials = remoteAsset.GetConnectedChannel(connection, ignoredAssets, alowedLocations);
+                ignoredAssets.Pop();
+
                 foreach (Channel channel in potentials)
                 {
                     string parsedPassThrough = Regex.Replace(passThrough, @"\{channelid\}", channel.ID.ToString(), RegexOptions.IgnoreCase);
@@ -397,7 +400,7 @@ namespace openXDA.Model
                 }
             }
 
-            return result;
+            return result.Distinct(new ChannelComparer());
         }
 
         // Logic to find distance between two Assets

@@ -439,6 +439,26 @@ namespace openXDA.Model
         #endregion
     }
 
+    public class ChannelComparer : IEqualityComparer<Channel>
+    {
+        public bool Equals(Channel x, Channel y)
+        {
+            if (Object.ReferenceEquals(x, y)) return true;
+
+            //Check whether any of the compared objects is null.
+            if (Object.ReferenceEquals(x, null) || Object.ReferenceEquals(y, null))
+                return false;
+
+            //Check whether the channels are equal.
+            return x.ID == y.ID;
+        }
+
+        public int GetHashCode(Channel obj)
+        {
+            return obj.ID;
+        }
+    }
+
     [TableName("ChannelDetail")]
     [AllowSearch, ViewOnly]
     [SettingsCategory("systemSettings")]
