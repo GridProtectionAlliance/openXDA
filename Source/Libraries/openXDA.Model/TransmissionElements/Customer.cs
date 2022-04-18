@@ -52,8 +52,9 @@ namespace openXDA.Model
         public string CustomerKey { get; set; }
 
         public string Name { get; set; }
-        
-        
+
+        public bool LSCVS { get; set; }
+
 
         #endregion
 

@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  LSCVSEvent.cs - Gbtc
+//  OpenXDAController.cs - Gbtc
 //
-//  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,42 +16,33 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/01/2022 - C. Lackner
+//  03/04/2020 - Billy Ernest
 //       Generated original version of source code.
 //  04/11/2022 - G. Santos
-//       Added new fields.
+//       Copied portion of source code from SEBrowser.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
-using System;
-using System.ComponentModel.DataAnnotations;
 
-namespace LSCVS.Model
+namespace openXDA.Model
 {
-    /// <summary>
-    /// LSCVS Event Model. Models an Event from the openXDA that is relevant for LSCVS Computation
-    /// </summary>
-    /// <remarks>
-    /// This will need to be extended with anything coming from the OpenXDA.
-    /// </remarks>
-    [PatchRoles("Administrator, API Account")]
-    [PostRoles("Administrator, API Account")]
-    [DeleteRoles("Administrator, API Account")]
-    public class LSCVSEvent
+    [CustomView(@"SELECT
+                    ID, Name, XHigh, XLow, YHigh, YLow, NULL AS UpperCurve, NULL AS LowerCurve,
+                    REPLACE(REPLACE(RIGHT(Area.STAsText(), len(Area.STAsText()) - charindex('(', Area.STAsText())),')',''),'(','') AS Area
+                    FROM StandardMagDurCurve")]
+    public class StandardMagDurCurve
     {
-        [PrimaryKey(true)]
+        [PrimaryKey]
         public int ID { get; set; }
-        public int OpenXDAID { get; set; }
-        public DateTime EventStart { get; set; }
-        public double Duration { get; set; }
-        public double Magnitude { get; set; }
-        public int MeterID { get; set; }
-        public int CustomerID { get; set; }
-        public int EventType { get; set; }
-        public bool InsideCurve { get; set; }
-        public double IntialMW { get; set; }
-        public double FinalMW { get; set; }
-        public bool SARFI80Flag { get; set; }
+        public string Name { get; set; }
+        public double XHigh { get; set; }
+        public double XLow { get; set; }
+        public double YHigh { get; set; }
+        public double YLow { get; set; }
+        public string UpperCurve { get; set; }
+        public string LowerCurve { get; set; }
+        public string Area { get; set; }
     }
+
 }

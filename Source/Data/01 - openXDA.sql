@@ -1791,6 +1791,9 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailyStatisticOperation', 14)
 GO
 
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.LSCVSDataOperation', 15)
+GO
+
 INSERT INTO AssetGroup(Name, DisplayDashboard) VALUES('AllAssets', 1)
 GO
 

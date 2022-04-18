@@ -46,6 +46,10 @@
     <Reference Include="Ionic.Zlib">
       <HintPath>..\..\Dependencies\DotNetZip\Ionic.Zlib.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.SqlServer.Types, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\SQL\Microsoft.SqlServer.Types.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\Dependencies\GSF\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -152,6 +156,7 @@
     <Compile Include="Settings\BreakerReportsSettings.cs" />
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
+    <Compile Include="TransmissionElements\StandardMagDurCurve.cs" />
     <Compile Include="StepChangeWebReports\StepChangeMeasurement.cs" />
     <Compile Include="StepChangeWebReports\StepChangeStat.cs" />
     <Compile Include="PQTrendingWebReports\Unit.cs" />
@@ -285,7 +290,9 @@
     <Compile Include="WorkbenchVoltageCurveView.cs" />
     <Compile Include="Emails\XSLTemplate.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Microsoft.SqlServer.Types.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
