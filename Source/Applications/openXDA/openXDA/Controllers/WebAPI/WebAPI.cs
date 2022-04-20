@@ -42,6 +42,7 @@ using GSF.Web.Model;
 using GSF.Web.Security;
 using log4net;
 using openXDA.Model;
+using SystemCenter.Model;
 
 namespace openXDA.Controllers.WebAPI
 {
@@ -198,7 +199,7 @@ namespace openXDA.Controllers.WebAPI
     public class SeriesTypeController : ModelController<SeriesType> {}
 
     [RoutePrefix("api/Setting")]
-    public class SettingController : ModelController<Setting>
+    public class SettingController : ModelController<openXDA.Model.Setting>
     {
 
         [Route("Category/{category}")]
@@ -223,5 +224,22 @@ namespace openXDA.Controllers.WebAPI
         }
     }
 
+    [RoutePrefix("api/ValueList")]
+    public class ValueListController : ModelController<ValueList>
+    {
+        [HttpGet, Route("Group/{groupName}")]
+        public IHttpActionResult GetValueListForGroup(string groupName)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            {
+                string tableName = new TableOperations<ValueListGroup>(connection).TableName;
+                IEnumerable<ValueList> records = new TableOperations<ValueList>(connection).QueryRecordsWhere($"GroupID = ( SELECT ID FROM {tableName} WHERE Name = {{0}})", groupName);
+                return Ok(records);
+            }
+        }
+    }
+
+    [RoutePrefix("api/Customer")]
+    public class CustomerController : ModelController<Meter> {}
 
 }
