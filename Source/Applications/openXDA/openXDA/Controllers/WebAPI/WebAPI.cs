@@ -240,6 +240,6 @@ namespace openXDA.Controllers.WebAPI
     }
 
     [RoutePrefix("api/Customer")]
-    public class CustomerController : ModelController<Meter> {}
+    public class CustomerController : ModelController<openXDA.Model.Customer> {}
 
 }
