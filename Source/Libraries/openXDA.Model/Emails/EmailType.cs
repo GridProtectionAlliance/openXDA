@@ -36,6 +36,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [ParentKey(typeof(EmailCategory))]
         public int EmailCategoryID { get; set; }
 
         public string Name { get; set; }
