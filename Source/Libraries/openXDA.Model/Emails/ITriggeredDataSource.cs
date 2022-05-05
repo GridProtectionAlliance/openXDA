@@ -21,12 +21,14 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Xml.Linq;
 
 namespace openXDA.Model
 {
     public interface ITriggeredDataSource
     {
+        void Configure(Action<object> configurator);
         XElement Process(Event evt);
     }
 }

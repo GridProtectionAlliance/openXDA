@@ -170,7 +170,8 @@
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataSets\INFDataSet.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
-    <Compile Include="DataWriters\EventEmailService.cs" />
+    <Compile Include="DataWriters\Emails\ConfigurationLoader.cs" />
+    <Compile Include="DataWriters\Emails\EventEmailService.cs" />
     <Compile Include="DataWriters\FaultTypeGenerator.cs" />
     <Compile Include="DataWriters\GTC\FTTImageGenerator.cs" />
     <Compile Include="DataWriters\GTC\StringExtensions.cs" />
@@ -225,7 +226,7 @@
   <ItemGroup>
     <None Include="..\..\Dependencies\eDNA\*" Exclude="..\..\Dependencies\eDNA\EzDNAApiNet64.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <EmbeddedResource Include="DataOperations\TVA\SmartFawg.sql" />
-    <Content Include="DataWriters\DisturbanceEmailTemplate.xslt" />
+    <Content Include="DataWriters\Emails\DisturbanceEmailTemplate.xslt" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\Dependencies\GSF\TagDefinitions.xml">

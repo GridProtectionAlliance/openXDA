@@ -40,9 +40,8 @@ using GSF.Xml;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
-using openXDA.Model.Emails;
 
-namespace FaultData.DataWriters
+namespace FaultData.DataWriters.Emails
 {
     public class EventEmailService
     {
@@ -57,6 +56,32 @@ namespace FaultData.DataWriters
             [Category]
             [SettingName(EmailSection.CategoryName)]
             public EmailSection EmailSettings { get; } = new EmailSection();
+        }
+
+        private class DataSourceWrapper
+        {
+            public string Name { get; }
+            public ITriggeredDataSource DataSource { get; }
+
+            public DataSourceWrapper(string name, ITriggeredDataSource dataSource)
+            {
+                Name = name;
+                DataSource = dataSource;
+            }
+
+            public XElement TryProcess(Event evt)
+            {
+                if (DataSource is null)
+                    return null;
+
+                void HandleException(Exception ex) =>
+                    Log.Error($"Email data source {Name} failed to process", ex);
+
+                XElement element = null;
+                try { element = DataSource.Process(evt); }
+                catch (Exception ex) { HandleException(ex); }
+                return element;
+            }
         }
 
         #endregion
@@ -75,6 +100,7 @@ namespace FaultData.DataWriters
 
         private Func<AdoDataConnection> ConnectionFactory { get; }
         private Action<object> Configure { get; }
+
         #endregion
 
         #region [ Methods ]
@@ -103,19 +129,20 @@ namespace FaultData.DataWriters
 
                     TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
 
-                    List<ITriggeredDataSource> dataSources = dataSourceTable
+                    List<DataSourceWrapper> dataSources = dataSourceTable
                         .QueryRecordsWhere($"ID IN ({DataSourceIDQueryFormat})", email.ID)
-                        .Select(dataSourceRecord => CreateDataSource(dataSourceRecord, email))
-                        .Where(dataSource => !(dataSource is null))
+                        .Select(CreateDataSource)
+                        .Where(wrapper => !(wrapper.DataSource is null))
                         .ToList();
 
                     if (dataSources.Count == 0)
                         return;
 
-                    XElement data = new XElement("data");
-                    data.Add(dataSources.Select(d => d.Process(evt)));
+                    IEnumerable<XElement> eventData = dataSources
+                        .Select(dataSource => dataSource.TryProcess(evt));
 
-                    XDocument htmlDocument = ApplyTemplate(email, data.ToString());
+                    XElement templateData = new XElement("data", eventData);
+                    XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                     ApplyChartTransform(attachments, htmlDocument);
                     ApplyFTTTransform(attachments, htmlDocument);
                     SendEmail(recipients, htmlDocument, attachments);
@@ -211,19 +238,22 @@ namespace FaultData.DataWriters
             return htmlDocument;
         }
 
-        private ITriggeredDataSource CreateDataSource(TriggeredEmailDataSource model, EmailType emailModel)
+        private DataSourceWrapper CreateDataSource(TriggeredEmailDataSource model)
         {
             try
             {
                 string assemblyName = model.AssemblyName;
                 string typeName = model.TypeName;
                 PluginFactory<ITriggeredDataSource> pluginFactory = new PluginFactory<ITriggeredDataSource>();
-                return pluginFactory.Create(assemblyName, typeName, this, model, emailModel);
+                ITriggeredDataSource dataSource = pluginFactory.Create(assemblyName, typeName);
+                ConfigurationLoader configurationLoader = new ConfigurationLoader(model.ID, ConnectionFactory);
+                dataSource.Configure(configurationLoader.Configure);
+                return new DataSourceWrapper(model.Name, dataSource);
             }
             catch (Exception ex)
             {
                 Log.Debug($"Failed to create ITriggeredDataSource of type {model.TypeName}", ex);
-                return null;
+                return new DataSourceWrapper(model.Name, null);
             }
         }
 

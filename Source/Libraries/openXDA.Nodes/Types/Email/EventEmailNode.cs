@@ -32,7 +32,7 @@ using System.Threading;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using FaultData.DataOperations;
-using FaultData.DataWriters;
+using FaultData.DataWriters.Emails;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
@@ -101,8 +101,6 @@ namespace openXDA.Nodes.Types.Email
         #endregion
 
         #region [ Properties ]
-
-        private EventEmailService EmailService { get; }
 
         private List<EventEmailProcessor> EmailTypes
         {
@@ -252,16 +250,18 @@ namespace openXDA.Nodes.Types.Email
                 if (!eventEmailSettings.Enabled || Tripped)
                     return;
 
+                EventEmailService emailService = new EventEmailService(CreateDbConnection, configurator);
+
                 if (TripsMaxEmailThreshold(eventEmailSettings))
                 {
-                    SendTripNotification(eventEmailSettings);
+                    SendTripNotification(eventEmailSettings, emailService);
                     return;
                 }
 
                 DateTime now = DateTime.UtcNow;
                 TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
                 DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
-                EmailService.SendEmail(parameters, eventIDs, evt, xdaNow);
+                emailService.SendEmail(parameters, eventIDs, evt, xdaNow);
                    
                 DailyStatisticOperation.UpdateEmailProcessingStatistic(eventIDs);
             }
@@ -299,7 +299,7 @@ namespace openXDA.Nodes.Types.Email
             Tripped = false;
         }
 
-        private void SendTripNotification(EventEmailSection eventEmailSettings)
+        private void SendTripNotification(EventEmailSection eventEmailSettings, EventEmailService emailService)
         {
             string subject = "openXDA email flooding detected";
             StringBuilder message = new StringBuilder();
@@ -322,7 +322,7 @@ namespace openXDA.Nodes.Types.Email
                 foreach (EmailType emailType in emailTypes)
                 {
                     emailType.SMS = false;
-                    List<string> recipients = EmailService.GetRecipients(emailType);
+                    List<string> recipients = emailService.GetRecipients(emailType);
                     replyTo.AddRange(recipients);
                 }
             }
@@ -347,7 +347,7 @@ namespace openXDA.Nodes.Types.Email
             message.AppendLine($"{xdaInstance}/RestoreEventEmail.cshtml");
             message.AppendLine();
             message.AppendLine($"Reply to this message to send a message to all event email subscribers.");
-            EmailService.SendAdminEmail(subject, message.ToString(), replyTo);
+            emailService.SendAdminEmail(subject, message.ToString(), replyTo);
         }
 
         #endregion

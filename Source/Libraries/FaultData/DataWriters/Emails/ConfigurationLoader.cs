@@ -34,11 +34,10 @@ using log4net;
 using openXDA.Model;
 using openXDA.Model.Emails;
 
-namespace openXDA.NotificationDataSources
+namespace FaultData.DataWriters.Emails
 {
     public class ConfigurationLoader
     {
-
         #region [ Constructors ]
 
         public ConfigurationLoader(Func<AdoDataConnection> connectionFactory)
@@ -133,7 +132,7 @@ namespace openXDA.NotificationDataSources
         }
 
         private string[] ToArray(string key, string value) =>
-            key.Split('.').Append(value).ToArray();
+            key.Split('.').Concat(new[] { value }).ToArray();
 
         #endregion
 

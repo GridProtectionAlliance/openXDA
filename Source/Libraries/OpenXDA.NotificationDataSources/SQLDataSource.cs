@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
+using System.Configuration;
 using System.Xml.Linq;
 using GSF.Configuration;
 using GSF.Data;
@@ -34,58 +36,67 @@ namespace openXDA.NotificationDataSources
         #region [ Members ]
 
         // Nested Types
-        private class Settings
+        private class DataSourceSettings
         {
-            public Settings(Action<object> configure) =>
+            const string DefaultDataProviderString =
+                "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; " +
+                "ConnectionType=System.Data.SqlClient.SqlConnection; " +
+                "AdapterType=System.Data.SqlClient.SqlDataAdapter";
+
+            public DataSourceSettings(Action<object> configure) =>
                 configure(this);
 
+            [Setting]
+            public string ConnectionString { get; set; }
+
+            [Setting]
+            [DefaultValue(DefaultDataProviderString)]
+            public string DataProviderString { get; set; }
+
+            [Setting]
+            [DefaultValue("SELECT NULL FOR XML PATH('Data')")]
             [SettingName("SQLStatement")]
-            public string SQL { get; } = "SELECT NULL FOR XML PATH('Data')";
-        }
+            public string SQL { get; set; }
 
-        #endregion
-
-        #region [ Constructors ]
-
-        public SQLDataSource(TriggeredEmailDataSource definition, Func<AdoDataConnection> connectionFactory)
-        {
-            Definition = definition;
-            ConnectionFactory = connectionFactory;
+            [Setting]
+            [DefaultValue(DataExtensions.DefaultTimeoutDuration)]
+            public int QueryTimeout { get; set; }
         }
 
         #endregion
 
         #region [ Properties ]
-      
-        public TriggeredEmailDataSource Definition { get; }
-        public Func<AdoDataConnection> ConnectionFactory { get; }
+
+        public string Name { get; }
+
+        private DataSourceSettings Settings { get; set; }
 
         #endregion
 
         #region [ Methods ]
-        
-        protected Action<object> GetConfigurator()
-        {
-            int dataSourceID = Definition.ID;
-            ConfigurationLoader configurationLoader = new ConfigurationLoader(Definition.ID, ConnectionFactory);
-            return configurationLoader.Configure;
-        }
+
+        public void Configure(Action<object> configurator) =>
+            Settings = new DataSourceSettings(configurator);
 
         public XElement Process(Event evt)
         {
-            try
+            using (AdoDataConnection connection = CreateDBConnection())
             {
-                Settings settings = new Settings(GetConfigurator());
+                string xml = connection.ExecuteScalar<string>(Settings.SQL, evt.ID);
+                return XElement.Parse(xml);
+            }
+        }
 
-                using (AdoDataConnection connection = ConnectionFactory())
-                {
-                    return XElement.Parse(connection.ExecuteScalar<string>(settings.SQL, evt.ID));
-                }
-            }
-            catch
-            {
-                return null;
-            }
+        private AdoDataConnection CreateDBConnection()
+        {
+            if (Settings is null)
+                throw new InvalidOperationException("SQL data source must be configured before processing");
+
+            string connectionString = Settings.ConnectionString;
+            string dataProviderString = Settings.DataProviderString;
+            AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString);
+            connection.DefaultTimeout = Settings.QueryTimeout;
+            return connection;
         }
 
         #endregion
