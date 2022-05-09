@@ -1294,6 +1294,27 @@ namespace openXDA.DataPusher
             }
         }
 
+        public bool TestInstance(int instanceId)
+        {
+            bool connectionSuccess = false;
+            try
+            {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    if (instance is null) throw new Exception($"No remote XDA instance found with this instance ID${instanceId}");
+                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    connectionSuccess = WebAPIHub.TestConnection(instance.Address, userAccount);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
+
+            return connectionSuccess;
+        }
+
 
         #endregion
 

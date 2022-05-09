@@ -429,6 +429,18 @@ namespace openXDA.Controllers.Config
             }, cancellationToken);
         }
 
+        [Route("TestRemoteInstanceConnection/{instanceId:int}"), HttpGet]
+        public Task TestRemoteInstanceConnection(int instanceId, CancellationToken cancellationToken)
+        {
+            return Task.Run(() =>
+            {
+                // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+                DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
+                engine.TestInstance(instanceId);
+            }, cancellationToken);
+
+        }
+
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherController));
     }
 }

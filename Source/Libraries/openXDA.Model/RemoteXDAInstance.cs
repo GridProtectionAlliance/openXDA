@@ -28,6 +28,8 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
     public class RemoteXDAInstance
     {
         private const string MinutePattern = "[1-5]?[0-9]";

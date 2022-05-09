@@ -408,6 +408,15 @@ namespace openXDA.Adapters
 
         }
 
+        /// <summary>
+        /// Return a 1 to request
+        /// </summary>
+        /// <returns></returns>
+        [HttpHead]
+        public IHttpActionResult Alive()
+        {
+            return Ok(1);
+        }
         #endregion
 
         #region [ PUT Operations ]
