@@ -167,6 +167,7 @@
     <Compile Include="Settings\PQReportsSettings.cs" />
     <Compile Include="SystemCenter\AdditionalField.cs" />
     <Compile Include="SystemCenter\AdditionalFieldValue.cs" />
+    <Compile Include="SystemCenter\UserIdName.cs" />
     <Compile Include="SystemCenter\DetailedAsset.cs" />
     <Compile Include="SystemCenter\DetailedLocation.cs" />
     <Compile Include="SystemCenter\DetailedMeter.cs" />

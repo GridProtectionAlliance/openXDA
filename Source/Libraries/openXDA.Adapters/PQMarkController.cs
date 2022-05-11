@@ -412,7 +412,7 @@ namespace openXDA.Adapters
         /// Return a 1 to request
         /// </summary>
         /// <returns></returns>
-        [HttpHead]
+        [HttpGet]
         public IHttpActionResult Alive()
         {
             return Ok(1);
