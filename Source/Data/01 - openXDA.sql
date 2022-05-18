@@ -1537,7 +1537,8 @@ CREATE TABLE AssetGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NOT NULL,
-    DisplayDashboard Bit NOT NULL Default(1)
+    DisplayDashboard Bit NOT NULL Default(1),
+    DisplayEmail Bit NOT NULL Default(0)
 )
 GO
 
@@ -1805,7 +1806,7 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.LSCVSDataOperation', 15)
 GO
 
-INSERT INTO AssetGroup(Name, DisplayDashboard) VALUES('AllAssets', 1)
+INSERT INTO AssetGroup(Name, DisplayDashboard, DisplayEmail) VALUES('AllAssets', 1, 1)
 GO
 
 -- -------- --
@@ -4784,6 +4785,7 @@ SELECT
     AssetGroup.ID,
     AssetGroup.Name,
     AssetGroup.DisplayDashboard,
+    AssetGroup.DisplayEmail,
     AssetGroupAssetGroup.Count AS AssetGroups,
     MeterAssetGroup.Count AS Meters,
     AssetAssetGroup.Count AS Assets,
