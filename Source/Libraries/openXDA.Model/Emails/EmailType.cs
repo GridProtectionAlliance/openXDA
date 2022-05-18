@@ -52,6 +52,8 @@ namespace openXDA.Model
         public double MaxDelay { get; set; }
 
         public bool SMS { get; set; }
+
+        public bool ShowSubscription { get; set; }
     }
 
     [AllowSearch]

@@ -1975,7 +1975,8 @@ CREATE TABLE EmailType
     CombineEventsSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT ID FROM Event WHERE ID = {0}',
     MinDelay FLOAT NOT NULL DEFAULT 10,
     MaxDelay FLOAT NOT NULL DEFAULT 60,
-    SMS BIT NOT NULL DEFAULT 0
+    SMS BIT NOT NULL DEFAULT 0,
+    ShowSubscription BIT NOT NULL DEFAULT 1
 )
 GO
 
@@ -5293,7 +5294,8 @@ SELECT
     EmailType.CombineEventsSQL,
     EmailType.MinDelay,
     EmailType.MaxDelay,
-    EmailType.SMS
+    EmailType.SMS,
+    EmailType.ShowSubscription
 FROM
     EmailType JOIN
     EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID
