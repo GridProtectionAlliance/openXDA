@@ -211,8 +211,7 @@ namespace openXDA.Nodes.Types.EPRICapBankAnalysis
                     string dstFolder = settings.AnalyticSettings.ParameterFileLocation;
                     dstFolder = Path.GetFullPath(Path.GetDirectoryName(dstFolder));
 
-                    if (settings.AnalyticSettings.KeepFiles)
-                        dstFolder = Path.Combine(dstFolder, capBank.AssetKey);
+		    dstFolder = Path.Combine(dstFolder, capBank.AssetKey);
 
                     // Compute Initial K
                     double[,] kFactors = GetKFactors(connection, events.First(), capBank.NumberOfBanks, ComputeKInitial(capBank));
