@@ -38,7 +38,7 @@ namespace openXDA.Model.Emails
 
         public bool Approved { get; set; }
 
-        [ParentKey(typeof(UserAccountEmailType))]
+        [ParentKey(typeof(EmailType))]
         public int EmailID { get; set; }
 
         public string FirstName { get; set; }
