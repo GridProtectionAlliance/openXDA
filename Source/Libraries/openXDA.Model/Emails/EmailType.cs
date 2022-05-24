@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System.ComponentModel;
 
 namespace openXDA.Model
 {
@@ -54,6 +55,9 @@ namespace openXDA.Model
         public bool SMS { get; set; }
 
         public bool ShowSubscription { get; set; }
+
+        [DefaultValue(false)]
+        public bool RequireApproval { get; set; }
     }
 
     [AllowSearch]

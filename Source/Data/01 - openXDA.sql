@@ -1962,7 +1962,8 @@ GO
 CREATE TABLE EmailCategory
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(50) NOT NULL
+    Name VARCHAR(50) NOT NULL,
+    SelfSubscribe BIT NOT NULL Default 1
 )
 GO
 
@@ -1977,7 +1978,8 @@ CREATE TABLE EmailType
     MinDelay FLOAT NOT NULL DEFAULT 10,
     MaxDelay FLOAT NOT NULL DEFAULT 60,
     SMS BIT NOT NULL DEFAULT 0,
-    ShowSubscription BIT NOT NULL DEFAULT 1
+    ShowSubscription BIT NOT NULL DEFAULT 1,
+    RequireApproval BIT NOT NULL DEFAULT 0
 )
 GO
 
@@ -5297,7 +5299,8 @@ SELECT
     EmailType.MinDelay,
     EmailType.MaxDelay,
     EmailType.SMS,
-    EmailType.ShowSubscription
+    EmailType.ShowSubscription,
+    EmailType.RequireApproval
 FROM
     EmailType JOIN
     EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID

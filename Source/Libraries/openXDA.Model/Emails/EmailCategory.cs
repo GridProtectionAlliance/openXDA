@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System.ComponentModel;
 
 namespace openXDA.Model
 {
@@ -37,5 +38,8 @@ namespace openXDA.Model
         public int ID { get; set; }
 
         public string Name { get; set; }
+
+        [DefaultValue(true)]
+        public bool SelfSubscribe { get; set; }
     }
 }
