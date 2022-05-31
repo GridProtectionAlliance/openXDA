@@ -27,11 +27,12 @@ using System.Configuration;
 using System.Xml.Linq;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Scheduling;
 using openXDA.Model;
 
 namespace openXDA.NotificationDataSources
 {
-    public class SQLDataSource : ITriggeredDataSource
+    public class SQLDataSource : ITriggeredDataSource, IScheduledDataSource
     {
         #region [ Members ]
 
@@ -85,11 +86,20 @@ namespace openXDA.NotificationDataSources
         public void Configure(Action<object> configurator) =>
             Settings = new DataSourceSettings(configurator);
 
-        public XElement Process(Event evt)
+        XElement ITriggeredDataSource.Process(Event evt)
         {
             using (AdoDataConnection connection = CreateDBConnection())
             {
                 string xml = connection.ExecuteScalar<string>(Settings.SQL, evt.ID);
+                return XElement.Parse(xml);
+            }
+        }
+
+        XElement IScheduledDataSource.Process(Schedule schedule, DateTime timeOccurred)
+        {
+            using (AdoDataConnection connection = CreateDBConnection())
+            {
+                string xml = connection.ExecuteScalar<string>(Settings.SQL, timeOccurred);
                 return XElement.Parse(xml);
             }
         }

@@ -78,6 +78,7 @@
     <Compile Include="Types\DataPusher\DataPusherNode.cs" />
     <Compile Include="Types\Email\EventEmailNode.cs" />
     <Compile Include="Types\Email\EventEmailProcessor.cs" />
+    <Compile Include="Types\Email\ScheduledEmailNode.cs" />
     <Compile Include="Types\EPRICapBankAnalysis\EPRICapBankAnalysisNode.cs" />
     <Compile Include="Types\FileProcessing\FileGroupInfo.cs" />
     <Compile Include="Types\FileProcessing\FileProcessingTask.cs" />

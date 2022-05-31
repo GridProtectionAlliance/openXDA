@@ -215,10 +215,6 @@
       <Project>{7F731255-FA83-4DBF-9E0F-C22AE4845E76}</Project>
       <Name>openHistorian.XDALink</Name>
     </ProjectReference>
-    <ProjectReference Include="..\OpenXDA.NotificationDataSources\openXDA.NotificationDataSources.csproj">
-      <Project>{2813a92f-8cb5-4ec3-976c-8690c90c6dd0}</Project>
-      <Name>openXDA.NotificationDataSources</Name>
-    </ProjectReference>
     <ProjectReference Include="..\openXDA.PQI\openXDA.PQI.csproj">
       <Project>{3dec81f1-9a02-4bbf-8325-f332ac63393e}</Project>
       <Name>openXDA.PQI</Name>
