@@ -7744,7 +7744,7 @@ namespace openXDA.Hubs
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
                 TableOperations<MetersToDataPush> table = new TableOperations<MetersToDataPush>(connection);
-                RecordRestriction restriction = table.GetSearchRestriction(filterString) + new RecordRestriction("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", remoteXDAInstanceId);
+                RecordRestriction restriction = table.GetSearchRestriction(filterString) + new RecordRestriction("RemoteXDAInstanceID = {0}", remoteXDAInstanceId);
                 return table.QueryRecordCount(restriction);
             }
         }
@@ -7757,7 +7757,7 @@ namespace openXDA.Hubs
             {
 
                 TableOperations<MetersToDataPush> table = new TableOperations<MetersToDataPush>(connection);
-                RecordRestriction restriction = table.GetSearchRestriction(filterString) + new RecordRestriction("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", remoteXDAInstanceId);
+                RecordRestriction restriction = table.GetSearchRestriction(filterString) + new RecordRestriction("RemoteXDAInstanceID = {0}", remoteXDAInstanceId);
                 return table.QueryRecords(sortField, ascending, page, pageSize, restriction).ToList();
             }
         }
@@ -7789,12 +7789,10 @@ namespace openXDA.Hubs
                 if (record.Obsfucate)
                     record.RemoteXDAAssetKey = Guid.NewGuid().ToString();
                 else
-                    record.RemoteXDAAssetKey = record.LocalXDAAssetKey;
+                    record.RemoteXDAAssetKey = new TableOperations<Meter>(connection).QueryRecordWhere("ID={0}", record.LocalXDAMeterID).AssetKey;
                 record.Synced = false;
 
                 new TableOperations<MetersToDataPush>(connection).AddNewRecord(record);
-                int meterId = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-                new TableOperations<RemoteXDAInstanceMeter>(connection).AddNewRecord(new RemoteXDAInstanceMeter() { RemoteXDAInstanceID = record.RemoteXDAInstanceId, MetersToDataPushID = meterId });
             }
         }
 
@@ -7809,7 +7807,7 @@ namespace openXDA.Hubs
                 if (record.Obsfucate && !oldrecord.Obsfucate)
                     record.RemoteXDAAssetKey = Guid.NewGuid().ToString();
                 else if (!record.Obsfucate && oldrecord.Obsfucate)
-                    record.RemoteXDAAssetKey = record.LocalXDAAssetKey;
+                    record.RemoteXDAAssetKey = new TableOperations<Meter>(connection).QueryRecordWhere("ID={0}", record.LocalXDAMeterID).AssetKey;
 
                 new TableOperations<MetersToDataPush>(connection).UpdateRecord(record);
             }

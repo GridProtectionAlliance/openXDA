@@ -167,6 +167,8 @@
     <Compile Include="Settings\PQReportsSettings.cs" />
     <Compile Include="SystemCenter\AdditionalField.cs" />
     <Compile Include="SystemCenter\AdditionalFieldValue.cs" />
+    <Compile Include="SystemCenter\RemoteXDAMeter.cs" />
+    <Compile Include="SystemCenter\RemoteXDAAsset.cs" />
     <Compile Include="SystemCenter\DetailedAsset.cs" />
     <Compile Include="SystemCenter\DetailedLocation.cs" />
     <Compile Include="SystemCenter\DetailedMeter.cs" />
@@ -269,7 +271,6 @@
     <Compile Include="PQMarkCompanyMeter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteXDAInstance.cs" />
-    <Compile Include="RemoteXDAInstanceMeter.cs" />
     <Compile Include="Events\Faults\SegmentType.cs" />
     <Compile Include="Emails\SentEmail.cs" />
     <Compile Include="Channels\Series.cs" />

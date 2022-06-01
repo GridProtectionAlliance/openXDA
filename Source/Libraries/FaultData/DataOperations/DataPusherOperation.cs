@@ -94,8 +94,7 @@ namespace FaultData.DataOperations
 
 
                 TableOperations<RemoteXDAInstance> instanceTable = new TableOperations<RemoteXDAInstance>(connection);
-                TableOperations<MetersToDataPush> meterTable = new TableOperations<MetersToDataPush>(connection);
-                IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*' AND ID IN (SELECT RemoteXDAInstanceID FROM RemoteXDAInstanceMeter WHERE MetersToDataPushID IN (SELECT ID FROM MetersToDataPush WHERE LocalXDAMeterID = {0}) )", meterDataSet.Meter.ID);
+                IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*' AND ID IN (SELECT RemoteXDAInstanceID FROM MetersToDataPush WHERE LocalXDAMeterID = {0}) )", meterDataSet.Meter.ID);
                 FileGroupPost post = new FileGroupPost();
 
                 post.FileGroup = meterDataSet.FileGroup;
@@ -113,7 +112,7 @@ namespace FaultData.DataOperations
                         continue;
                     }
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    MetersToDataPush metersToDataPush = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("LocalXDAMeterID = {0} AND ID IN (SELECT MetersToDataPushID From RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", meterDataSet.Meter.ID, instance.ID);
+                    MetersToDataPush metersToDataPush = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("LocalXDAMeterID = {0} AND RemoteXDAInstanceID = {1}", meterDataSet.Meter.ID, instance.ID);
                     post.MeterKey = metersToDataPush.RemoteXDAAssetKey;
                     Log.Info($"Sending data to intance: {instance.Name} for FileGroup: {meterDataSet.FileGroup.ID}...");
                     DataPusherEngine engine = new DataPusherEngine(meterDataSet.CreateDbConnection);

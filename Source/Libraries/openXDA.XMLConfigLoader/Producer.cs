@@ -963,8 +963,7 @@ namespace openXDA.XMLConfig
 			Location JOIN
 			Meter ON Meter.LocationID = Location.ID JOIN
 			MetersToDataPush ON Meter.ID = MetersToDataPush.LocalXDAMeterID JOIN
-			RemoteXDAInstanceMeter ON RemoteXDAInstanceMeter.MetersToDataPushID = MetersToDataPush.ID JOIN
-			RemoteXDAInstance ON RemoteXDAInstanceMeter.RemoteXDAInstanceID = RemoteXDAInstance.ID
+			RemoteXDAInstance ON MetersToDataPush.RemoteXDAInstanceID = RemoteXDAInstance.ID
 		WHERE 
 			RemoteXDAInstance.ID = ##REMOTEXDAINSTANCE_ID##
 		FOR XML PATH('Station'), ROOT('OpenXDA')

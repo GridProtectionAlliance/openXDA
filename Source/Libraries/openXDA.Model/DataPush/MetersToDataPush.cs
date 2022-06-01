@@ -31,12 +31,11 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [ParentKey(typeof(RemoteXDAInstance))]
+        public int RemoteXDAInstanceID { get; set; }
         public int LocalXDAMeterID { get; set; }
 
         public int RemoteXDAMeterID { get; set; }
-
-        [StringLength(50)]
-        public string LocalXDAAssetKey { get; set; }
 
         [StringLength(200)]
         public string RemoteXDAName { get; set; }
@@ -50,8 +49,5 @@ namespace openXDA.Model
         [Required]
         [NonRecordField]
         public string MeterSelection { get; set; }
-
-        [NonRecordField]
-        public int RemoteXDAInstanceId { get; set; }
     }
 }

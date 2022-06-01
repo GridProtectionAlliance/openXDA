@@ -45,6 +45,7 @@ using GSF.Web.Model;
 using log4net;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
+using CapacitorBank = openXDA.Model.CapBank;
 
 namespace openXDA.DataPusher
 {
@@ -111,6 +112,8 @@ namespace openXDA.DataPusher
 
         public static event EventHandler<EventArgs<string, string, int>> UpdateProgressForMeter;
 
+        private static readonly string ConnectionString = "systemSetting";
+
         private static void OnUpdateProgressForMeter(string client, string meter, int update)
         {
             if (client != string.Empty)
@@ -169,7 +172,7 @@ namespace openXDA.DataPusher
                 Scheduler.ScheduleDue += Scheduler_ScheduleDue;
                 Scheduler.Disposed += Scheduler_Disposed;
 
-                using (AdoDataConnection connection = new AdoDataConnection("systemSetting"))
+                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
                 {
                     IEnumerable<RemoteXDAInstance> instances = new TableOperations<RemoteXDAInstance>(connection).QueryRecords();
                     foreach (RemoteXDAInstance instance in instances)
@@ -196,7 +199,7 @@ namespace openXDA.DataPusher
 
         public void ReloadSystemSettings()
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSetting"))
+            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
             {
                 IEnumerable<RemoteXDAInstance> instances = new TableOperations<RemoteXDAInstance>(connection).QueryRecords();
                 foreach (RemoteXDAInstance instance in instances)
@@ -229,7 +232,7 @@ namespace openXDA.DataPusher
 
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSetting"))
+            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
             {
                 Log.Info(string.Format("DataPusher Scheduler: {0} schedule is due...", e.Argument.Name));
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("Name = {0}", e.Argument.Name);
@@ -244,24 +247,40 @@ namespace openXDA.DataPusher
         {
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSetting"))
+                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
                 {
-
-                    IEnumerable<MetersToDataPush> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instanceId);
+                    IEnumerable<MetersToDataPush> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0}", instanceId);
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
 
-                    int progressTotal = meters.Count();
+                    // Meter Updates every asset push associated with the meter
+                    IEnumerable<AssetsToDataPush> meterlessAssets = new TableOperations<AssetsToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0} and LocalXDAAssetID in (Select AssetID From MeterAsset Where MeterID not in (Select LocalXDAMeterID From MetersToDataPush Where RemoteXDAInstanceID = {0}))", instance.ID);
+
+                    // Setup Progress
+                    int progressTotal = meters.Count() + meterlessAssets.Count()+ 1;
                     int progressCount = 0;
                     OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (progressCount) / progressTotal));
+
+                    // Do other operations needed
+                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
+                    IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>(instance.Address, "all", userAccount);
+                    OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
+                    AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(instance.Address, userAccount);
+
                     foreach (MetersToDataPush meter in meters)
                     {
                         if (cancellationToken.IsCancellationRequested)
                             break;
 
-                        SyncMeterConfigurationForInstance(null, instance, meter, userAccount, cancellationToken);
+                        SyncMeterConfigurationForInstance(null, instance, meter, remoteAssetGroup, localAssetTypes, remoteAssetTypes, userAccount, cancellationToken);
                         OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
-
+                    }
+                    foreach (AssetsToDataPush asset in meterlessAssets)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
+                        SyncAssetConfigurationOnlyForInstance(instance, asset, localAssetTypes, remoteAssetTypes, userAccount, cancellationToken);
+                        OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
                     }
                 }
             }
@@ -272,30 +291,24 @@ namespace openXDA.DataPusher
 
         }
 
-        public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, MetersToDataPush meterToDataPush, UserAccount userAccount, CancellationToken cancellationToken)
+        public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, MetersToDataPush meterToDataPush, AssetGroup remoteAssetGroup, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes ,UserAccount userAccount, CancellationToken cancellationToken)
         {
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSetting"))
+                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
                 {
-
-                    IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
-                    IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>(instance.Address, "all", userAccount);
-
                     // Get local meter record
                     Meter localMeterRecord = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
                     // get local MeterLine table 
-
-                    IEnumerable<MeterAsset> localMeterAssets = new TableOperations<MeterAsset>(connection).QueryRecordsWhere("MeterID = {0}", localMeterRecord.ID);
+                    // Get Asset Datapushes assciated with this meter
+                    IEnumerable<AssetsToDataPush> assetDataPushes = new TableOperations<AssetsToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0} and LocalXDAAssetID in (Select AssetID From MeterAsset Where MeterID = {1})", instance.ID, localMeterRecord.ID);
 
 
                     // update progress
-                    int progressTotal = localMeterAssets.Count() + 2;
+                    int progressTotal = assetDataPushes.Count() + 2;
                     int progressCount = 0;
 
-                    // Add or Get remote Asset Group
-                    AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(instance.Address, userAccount);
 
                     // Add or Update remote meter location
                     Location remoteLocation = AddOrGetRemoteLocation(instance.Address, meterToDataPush, localMeterRecord, userAccount);
@@ -304,7 +317,7 @@ namespace openXDA.DataPusher
                     OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (progressCount) / progressTotal));
 
                     // if meter doesnt exist remotely add it
-                    Meter remoteMeter = AddOrGetRemoteMeter(instance.Address, meterToDataPush, localMeterRecord, remoteLocation, userAccount);
+                    AddOrGetRemoteMeter(instance.Address, meterToDataPush, localMeterRecord, remoteLocation, userAccount);
 
                     // update progress
                     OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
@@ -316,24 +329,28 @@ namespace openXDA.DataPusher
                     OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
 
                     // if there is a line for the meter ensure that its data has been uploaded remotely
-                    foreach (MeterAsset localMeterAsset in localMeterAssets)
+                    foreach (AssetsToDataPush assetToDataPush in assetDataPushes)
                     {
                         if (cancellationToken.IsCancellationRequested)
                             break;
 
                         // Add or Update Asset
-                        Asset remoteAseset = AddOrGetAsset(instance.Address, localMeterAsset, localAssetTypes, remoteAssetTypes, meterToDataPush.Obsfucate, userAccount);
+                        Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
+                        Asset remoteAseset = AddOrGetRemoteAsset(instance.Address, assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, userAccount);
                         // Note that this needs to get the Asset specifics (e.g. LineAttributes) sepperatly
                         // That broke in 3.0 
 
                         // if MeterLine association has not been previously made, make it
-                        MeterAsset remoteMeterAsset = AddMeterAsset(instance.Address, meterToDataPush, remoteAseset, userAccount, localMeterAsset);
+                        MeterAsset localMeterAsset = new TableOperations<MeterAsset>(connection).QueryRecordWhere("MeterID = {0} and AssetID = {1}", meterToDataPush.LocalXDAMeterID, assetToDataPush.LocalXDAAssetID);
+                        MeterAsset remoteMeterAsset = AddMeterAsset(instance.Address, meterToDataPush, assetToDataPush, userAccount, localMeterAsset);
 
                         // add line to meterlocationline table
                         AssetLocation remoteAssetLocation = AddOrUpdateAssetLocation(instance.Address, remoteAseset, remoteLocation, userAccount);
 
                         // Sync Channel and channel dependant data
                         AddOrUpdateChannelsForLine(instance.Address, localMeterAsset, remoteMeterAsset, userAccount);
+
+                        connection.ExecuteNonQuery("UPDATE AssetsToDataPush SET Synced = 1 where ID = {0}", assetToDataPush.ID);
 
                         OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
                     }
@@ -346,6 +363,42 @@ namespace openXDA.DataPusher
                     }
 
                     connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterToDataPush.ID);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
+
+        }
+        public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, MetersToDataPush meterToDataPush, UserAccount userAccount, CancellationToken cancellationToken)
+        {
+            try
+            {
+
+                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+                {
+                    IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
+                    IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>(instance.Address, "all", userAccount);
+                    AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(instance.Address, userAccount);
+                    SyncMeterConfigurationForInstance(clientId, instance, meterToDataPush, remoteAssetGroup, localAssetTypes, remoteAssetTypes, userAccount, cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
+        }
+        public void SyncAssetConfigurationOnlyForInstance(RemoteXDAInstance instance, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount, CancellationToken cancellationToken)
+        {
+
+            try
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+                {
+                    // Add or Update Asset
+                    Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
+                    Asset remoteAseset = AddOrGetRemoteAsset(instance.Address, assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, userAccount);
                 }
             }
             catch (Exception ex)
@@ -375,7 +428,7 @@ namespace openXDA.DataPusher
 
         private Location AddOrGetRemoteLocation(string address, MetersToDataPush meterToDataPush, Meter localMeterRecord, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSetting"))
+            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
             {
 
                 Location localLocation = new TableOperations<Location>(connection).QueryRecordWhere("ID = {0}", localMeterRecord.LocationID);
@@ -539,592 +592,82 @@ namespace openXDA.DataPusher
             }
         }
 
-        private Asset AddOrGetAsset(string address, MeterAsset meterAsset, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount)
+        private Asset AddOrGetRemoteAsset(string address, AssetsToDataPush assetToDataPush, Asset localAsset, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", meterAsset.AssetID);
-                AssetsToDataPush assetToDataPush = new TableOperations<AssetsToDataPush>(connection).QueryRecordWhere("LocalXDAAssetID = {0}", localAsset.ID);
                 Asset remoteAsset = null;
-                string assetType = localAssetTypes.First(x => x.ID == localAsset.AssetTypeID).Name;
+
+                // Todo, use gettype here later
+                string assetTypeText = localAssetTypes.First(x => x.ID == localAsset.AssetTypeID).Name;
                 //if the line does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-                if (assetType == "Line")
-                    remoteAsset = AddOrGetLine(address, localAsset, assetToDataPush, remoteAssetTypes, obsfucate, userAccount);
-                else if (assetType == "LineSegment")
-                    remoteAsset = AddOrGetLineSegment(address, localAsset, assetToDataPush, remoteAssetTypes, obsfucate, userAccount);
-                else if (assetType == "Breaker")
-                    remoteAsset = AddOrGetBreaker(address, localAsset, assetToDataPush, remoteAssetTypes, obsfucate, userAccount);
-                else if (assetType == "Transformer")
-                    remoteAsset = AddOrGetTransformer(address, localAsset, assetToDataPush, remoteAssetTypes, obsfucate, userAccount);
-                else if (assetType == "Bus")
-                    remoteAsset = AddOrGetBus(address, localAsset, assetToDataPush, remoteAssetTypes, obsfucate, userAccount);
-                else if (assetType == "CapacitorBank")
-                    remoteAsset = AddOrGetCapBank(address, localAsset, assetToDataPush, remoteAssetTypes, obsfucate, userAccount);
+                if (assetTypeText == "Line")
+                    remoteAsset = AddOrGetAssetAny<Line>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
+                else if (assetTypeText == "LineSegment")
+                    remoteAsset = AddOrGetAssetAny<LineSegment>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
+                else if (assetTypeText == "Breaker")
+                    remoteAsset = AddOrGetAssetAny<Breaker>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
+                else if (assetTypeText == "Transformer")
+                    remoteAsset = AddOrGetAssetAny<Transformer>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
+                else if (assetTypeText == "Bus")
+                    remoteAsset = AddOrGetAssetAny<Bus>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
+                else if (assetTypeText == "CapacitorBank")
+                    remoteAsset = AddOrGetAssetAny<CapacitorBank>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
 
                 if (remoteAsset == null) throw new Exception("Asset not defined.");
                 return remoteAsset;
             }
         }
-
-        private Line AddOrGetLine(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount) {
-            using (AdoDataConnection connection = ConnectionFactory()) {
-                Line remoteLine = null;
-                Line localLine = new TableOperations<Line>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
-
-                //if the line does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-                if (assetToDataPush == null)
-                {
-                    string obsfucatedAssetName = Guid.NewGuid().ToString();
-                    remoteLine = WebAPIHub.GetRecordWhere<Line>(address, $"AssetKey='{localAsset.AssetKey}'", userAccount);
-
-                    if (remoteLine == null)
-                    {
-                        remoteLine = localLine;
-                        // need to fix obsfucation
-                        if (obsfucate)
-                        {
-                            remoteLine.AssetKey = obsfucatedAssetName;
-                            remoteLine.AssetName = obsfucatedAssetName;
-                            remoteLine.Description = "";
-                        }
-
-                        remoteLine.ID = 0;
-                        remoteLine.AssetTypeID = remoteAssetTypes.First(x => x.Name == "Line").ID;
-                        remoteLine.ID = WebAPIHub.CreateRecord(address, remoteLine, userAccount);
-
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteLine.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = true
-                        };
-
-                    }
-                    else
-                    {
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteLine.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = false
-                        };
-                    }
-
-                    new TableOperations<AssetsToDataPush>(connection).AddNewRecord(assetToDataPush);
-                }
-                else
-                {
-                    remoteLine = WebAPIHub.GetRecordWhere<Line>(address, $"ID={assetToDataPush.RemoteXDAAssetID}", userAccount);
-
-                    if (remoteLine == null)
-                    {
-                        remoteLine = localLine;
-                        if (obsfucate)
-                        {
-                            remoteLine.AssetKey = assetToDataPush.RemoteXDAAssetKey;
-                            remoteLine.AssetName = assetToDataPush.RemoteXDAAssetKey;
-                            remoteLine.Description = "";
-                        }
-
-                        remoteLine.ID = 0;
-                        remoteLine.AssetTypeID = remoteAssetTypes.First(x => x.Name == "Line").ID;
-                        remoteLine.ID = WebAPIHub.CreateRecord(address, remoteLine, userAccount);
-                        remoteLine.ID = WebAPIHub.CreateRecord<Asset>(address, remoteLine, userAccount);
-
-                        assetToDataPush.RemoteXDAAssetID = remoteLine.ID;
-                        assetToDataPush.RemoteXDAAssetKey = remoteLine.AssetKey;
-                        assetToDataPush.RemoteAssetCreatedByDataPusher = true;
-
-                        new TableOperations<AssetsToDataPush>(connection).UpdateRecord(assetToDataPush);
-                    }
-                    else if (assetToDataPush.RemoteAssetCreatedByDataPusher)
-                    {
-                        remoteLine.AssetKey = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetKey);
-                        remoteLine.AssetName = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetName);
-                        remoteLine.VoltageKV = localAsset.VoltageKV;
-                        remoteLine.AssetTypeID = localAsset.AssetTypeID;
-                        remoteLine.Spare = localAsset.Spare;
-                        remoteLine.Description = (obsfucate ? "" : localAsset.Description);
-                        WebAPIHub.UpdateRecord(address, remoteLine, userAccount);
-                    }
-                }
-
-                if (remoteLine == null) throw new Exception("Asset not defined.");
-                return remoteLine;
-            }
-        }
-        private Bus AddOrGetBus(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount) {
-
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                Bus remoteBus = null;
-                Bus localBus = new TableOperations<Bus>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
-
-                //if the Bus does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-                if (assetToDataPush == null)
-                {
-                    string obsfucatedAssetName = Guid.NewGuid().ToString();
-                    remoteBus = WebAPIHub.GetRecordWhere<Bus>(address, $"AssetKey='{localAsset.AssetKey}'", userAccount);
-
-                    if (remoteBus == null)
-                    {
-                        remoteBus = localBus;
-                        // need to fix obsfucation
-                        if (obsfucate)
-                        {
-                            remoteBus.AssetKey = obsfucatedAssetName;
-                            remoteBus.AssetName = obsfucatedAssetName;
-                            remoteBus.Description = "";
-                        }
-
-                        remoteBus.ID = 0;
-                        remoteBus.AssetTypeID = remoteAssetTypes.First(x => x.Name == "Bus").ID;
-                        remoteBus.ID = WebAPIHub.CreateRecord(address, remoteBus, userAccount);
-
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteBus.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = true
-                        };
-
-                    }
-                    else
-                    {
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteBus.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = false
-                        };
-                    }
-
-                    new TableOperations<AssetsToDataPush>(connection).AddNewRecord(assetToDataPush);
-                }
-                else
-                {
-                    remoteBus = WebAPIHub.GetRecordWhere<Bus>(address, $"ID={assetToDataPush.RemoteXDAAssetID}", userAccount);
-
-                    if (remoteBus == null)
-                    {
-                        remoteBus = localBus;
-                        if (obsfucate)
-                        {
-                            remoteBus.AssetKey = assetToDataPush.RemoteXDAAssetKey;
-                            remoteBus.AssetName = assetToDataPush.RemoteXDAAssetKey;
-                            remoteBus.Description = "";
-                        }
-
-                        remoteBus.ID = 0;
-                        remoteBus.AssetTypeID = remoteAssetTypes.First(x => x.Name == "Bus").ID;
-                        remoteBus.ID = WebAPIHub.CreateRecord(address, remoteBus, userAccount);
-                        remoteBus.ID = WebAPIHub.CreateRecord<Asset>(address, remoteBus, userAccount);
-
-                        assetToDataPush.RemoteXDAAssetID = remoteBus.ID;
-                        assetToDataPush.RemoteXDAAssetKey = remoteBus.AssetKey;
-                        assetToDataPush.RemoteAssetCreatedByDataPusher = true;
-
-                        new TableOperations<AssetsToDataPush>(connection).UpdateRecord(assetToDataPush);
-                    }
-                    else if (assetToDataPush.RemoteAssetCreatedByDataPusher)
-                    {
-                        remoteBus.AssetKey = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetKey);
-                        remoteBus.AssetName = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetName);
-                        remoteBus.VoltageKV = localAsset.VoltageKV;
-                        remoteBus.AssetTypeID = localAsset.AssetTypeID;
-                        remoteBus.Spare = localAsset.Spare;
-                        remoteBus.Description = (obsfucate ? "" : localAsset.Description);
-                        WebAPIHub.UpdateRecord(address, remoteBus, userAccount);
-                    }
-                }
-
-                if (remoteBus == null) throw new Exception("Asset not defined.");
-                return remoteBus;
-            }
-        }
-        private LineSegment AddOrGetLineSegment(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount) {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                LineSegment remoteLineSegment = null;
-                LineSegment localLineSegment = new TableOperations<LineSegment>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
-
-                //if the LineSegment does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-                if (assetToDataPush == null)
-                {
-                    string obsfucatedAssetName = Guid.NewGuid().ToString();
-                    remoteLineSegment = WebAPIHub.GetRecordWhere<LineSegment>(address, $"AssetKey='{localAsset.AssetKey}'", userAccount);
-
-                    if (remoteLineSegment == null)
-                    {
-                        remoteLineSegment = localLineSegment;
-                        // need to fix obsfucation
-                        if (obsfucate)
-                        {
-                            remoteLineSegment.AssetKey = obsfucatedAssetName;
-                            remoteLineSegment.AssetName = obsfucatedAssetName;
-                            remoteLineSegment.Description = "";
-                        }
-
-                        remoteLineSegment.ID = 0;
-                        remoteLineSegment.AssetTypeID = remoteAssetTypes.First(x => x.Name == "LineSegment").ID;
-                        remoteLineSegment.ID = WebAPIHub.CreateRecord(address, remoteLineSegment, userAccount);
-
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteLineSegment.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = true
-                        };
-
-                    }
-                    else
-                    {
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteLineSegment.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = false
-                        };
-                    }
-
-                    new TableOperations<AssetsToDataPush>(connection).AddNewRecord(assetToDataPush);
-                }
-                else
-                {
-                    remoteLineSegment = WebAPIHub.GetRecordWhere<LineSegment>(address, $"ID={assetToDataPush.RemoteXDAAssetID}", userAccount);
-
-                    if (remoteLineSegment == null)
-                    {
-                        remoteLineSegment = localLineSegment;
-                        if (obsfucate)
-                        {
-                            remoteLineSegment.AssetKey = assetToDataPush.RemoteXDAAssetKey;
-                            remoteLineSegment.AssetName = assetToDataPush.RemoteXDAAssetKey;
-                            remoteLineSegment.Description = "";
-                        }
-
-                        remoteLineSegment.ID = 0;
-                        remoteLineSegment.AssetTypeID = remoteAssetTypes.First(x => x.Name == "LineSegment").ID;
-                        remoteLineSegment.ID = WebAPIHub.CreateRecord(address, remoteLineSegment, userAccount);
-                        remoteLineSegment.ID = WebAPIHub.CreateRecord<Asset>(address, remoteLineSegment, userAccount);
-
-                        assetToDataPush.RemoteXDAAssetID = remoteLineSegment.ID;
-                        assetToDataPush.RemoteXDAAssetKey = remoteLineSegment.AssetKey;
-                        assetToDataPush.RemoteAssetCreatedByDataPusher = true;
-
-                        new TableOperations<AssetsToDataPush>(connection).UpdateRecord(assetToDataPush);
-                    }
-                    else if (assetToDataPush.RemoteAssetCreatedByDataPusher)
-                    {
-                        remoteLineSegment.AssetKey = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetKey);
-                        remoteLineSegment.AssetName = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetName);
-                        remoteLineSegment.VoltageKV = localAsset.VoltageKV;
-                        remoteLineSegment.AssetTypeID = localAsset.AssetTypeID;
-                        remoteLineSegment.Spare = localAsset.Spare;
-                        remoteLineSegment.Description = (obsfucate ? "" : localAsset.Description);
-                        WebAPIHub.UpdateRecord(address, remoteLineSegment, userAccount);
-                    }
-                }
-
-                if (remoteLineSegment == null) throw new Exception("Asset not defined.");
-                return remoteLineSegment;
-            }
-        }       
-        private CapBank AddOrGetCapBank(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount)
+        private T AddOrGetAssetAny<T>(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount) where T : Asset, new()
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                CapBank remoteCapBank = null;
-                CapBank localCapBank = new TableOperations<CapBank>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
+                T remoteTypedAsset = null;
+                T localTypedAsset = new TableOperations<T>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
 
-                //if the CapBank does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-                if (assetToDataPush == null)
+                //if the asset does not exist in the PQMarkPusher Database to allow for obsfucation add it.
+                remoteTypedAsset = WebAPIHub.GetRecordWhere<T>(address, $"ID={assetToDataPush.RemoteXDAAssetID}", userAccount);
+
+                if (remoteTypedAsset == null)
                 {
-                    string obsfucatedAssetName = Guid.NewGuid().ToString();
-                    remoteCapBank = WebAPIHub.GetRecordWhere<CapBank>(address, $"AssetKey='{localAsset.AssetKey}'", userAccount);
-
-                    if (remoteCapBank == null)
+                    remoteTypedAsset = localTypedAsset;
+                    if (assetToDataPush.Obsfucate)
                     {
-                        remoteCapBank = localCapBank;
-                        // need to fix obsfucation
-                        if (obsfucate)
-                        {
-                            remoteCapBank.AssetKey = obsfucatedAssetName;
-                            remoteCapBank.AssetName = obsfucatedAssetName;
-                            remoteCapBank.Description = "";
-                        }
-
-                        remoteCapBank.ID = 0;
-                        remoteCapBank.AssetTypeID = remoteAssetTypes.First(x => x.Name == "CapBank").ID;
-                        remoteCapBank.ID = WebAPIHub.CreateRecord(address, remoteCapBank, userAccount);
-
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteCapBank.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = true
-                        };
-
-                    }
-                    else
-                    {
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteCapBank.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = false
-                        };
+                        remoteTypedAsset.AssetKey = assetToDataPush.RemoteXDAAssetKey;
+                        remoteTypedAsset.AssetName = assetToDataPush.RemoteXDAAssetKey;
+                        remoteTypedAsset.Description = "";
                     }
 
-                    new TableOperations<AssetsToDataPush>(connection).AddNewRecord(assetToDataPush);
+                    remoteTypedAsset.ID = 0;
+                    remoteTypedAsset.AssetTypeID = remoteAssetTypes.First(x => x.Name == typeof(T).Name).ID;
+                    remoteTypedAsset.ID = WebAPIHub.CreateRecord(address, remoteTypedAsset, userAccount);
+                    remoteTypedAsset.ID = WebAPIHub.CreateRecord<Asset>(address, remoteTypedAsset, userAccount);
+
+                    assetToDataPush.RemoteXDAAssetID = remoteTypedAsset.ID;
+                    assetToDataPush.RemoteXDAAssetKey = remoteTypedAsset.AssetKey;
+                    assetToDataPush.RemoteAssetCreatedByDataPusher = true;
+
+                    new TableOperations<AssetsToDataPush>(connection).UpdateRecord(assetToDataPush);
                 }
-                else
+                else if (assetToDataPush.RemoteAssetCreatedByDataPusher)
                 {
-                    remoteCapBank = WebAPIHub.GetRecordWhere<CapBank>(address, $"ID={assetToDataPush.RemoteXDAAssetID}", userAccount);
-
-                    if (remoteCapBank == null)
-                    {
-                        remoteCapBank = localCapBank;
-                        if (obsfucate)
-                        {
-                            remoteCapBank.AssetKey = assetToDataPush.RemoteXDAAssetKey;
-                            remoteCapBank.AssetName = assetToDataPush.RemoteXDAAssetKey;
-                            remoteCapBank.Description = "";
-                        }
-
-                        remoteCapBank.ID = 0;
-                        remoteCapBank.AssetTypeID = remoteAssetTypes.First(x => x.Name == "CapBank").ID;
-                        remoteCapBank.ID = WebAPIHub.CreateRecord(address, remoteCapBank, userAccount);
-                        remoteCapBank.ID = WebAPIHub.CreateRecord<Asset>(address, remoteCapBank, userAccount);
-
-                        assetToDataPush.RemoteXDAAssetID = remoteCapBank.ID;
-                        assetToDataPush.RemoteXDAAssetKey = remoteCapBank.AssetKey;
-                        assetToDataPush.RemoteAssetCreatedByDataPusher = true;
-
-                        new TableOperations<AssetsToDataPush>(connection).UpdateRecord(assetToDataPush);
-                    }
-                    else if (assetToDataPush.RemoteAssetCreatedByDataPusher)
-                    {
-                        remoteCapBank.AssetKey = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetKey);
-                        remoteCapBank.AssetName = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetName);
-                        remoteCapBank.VoltageKV = localAsset.VoltageKV;
-                        remoteCapBank.AssetTypeID = localAsset.AssetTypeID;
-                        remoteCapBank.Spare = localAsset.Spare;
-                        remoteCapBank.Description = (obsfucate ? "" : localAsset.Description);
-                        WebAPIHub.UpdateRecord(address, remoteCapBank, userAccount);
-                    }
+                    remoteTypedAsset.AssetKey = (assetToDataPush.Obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetKey);
+                    remoteTypedAsset.AssetName = (assetToDataPush.Obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetName);
+                    remoteTypedAsset.VoltageKV = localAsset.VoltageKV;
+                    remoteTypedAsset.AssetTypeID = localAsset.AssetTypeID;
+                    remoteTypedAsset.Spare = localAsset.Spare;
+                    remoteTypedAsset.Description = (assetToDataPush.Obsfucate ? "" : localAsset.Description);
+                    WebAPIHub.UpdateRecord(address, remoteTypedAsset, userAccount);
                 }
 
-                if (remoteCapBank == null) throw new Exception("Asset not defined.");
-                return remoteCapBank;
-            }
-        }
-        private Breaker AddOrGetBreaker(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount)
-        {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                Breaker remoteBreaker = null;
-                Breaker localBreaker = new TableOperations<Breaker>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
-
-                //if the Breaker does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-                if (assetToDataPush == null)
-                {
-                    string obsfucatedAssetName = Guid.NewGuid().ToString();
-                    remoteBreaker = WebAPIHub.GetRecordWhere<Breaker>(address, $"AssetKey='{localAsset.AssetKey}'", userAccount);
-
-                    if (remoteBreaker == null)
-                    {
-                        remoteBreaker = localBreaker;
-                        // need to fix obsfucation
-                        if (obsfucate)
-                        {
-                            remoteBreaker.AssetKey = obsfucatedAssetName;
-                            remoteBreaker.AssetName = obsfucatedAssetName;
-                            remoteBreaker.Description = "";
-                        }
-
-                        remoteBreaker.ID = 0;
-                        remoteBreaker.AssetTypeID = remoteAssetTypes.First(x => x.Name == "Breaker").ID;
-                        remoteBreaker.ID = WebAPIHub.CreateRecord(address, remoteBreaker, userAccount);
-
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteBreaker.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = true
-                        };
-
-                    }
-                    else
-                    {
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteBreaker.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = false
-                        };
-                    }
-
-                    new TableOperations<AssetsToDataPush>(connection).AddNewRecord(assetToDataPush);
-                }
-                else
-                {
-                    remoteBreaker = WebAPIHub.GetRecordWhere<Breaker>(address, $"ID={assetToDataPush.RemoteXDAAssetID}", userAccount);
-
-                    if (remoteBreaker == null)
-                    {
-                        remoteBreaker = localBreaker;
-                        if (obsfucate)
-                        {
-                            remoteBreaker.AssetKey = assetToDataPush.RemoteXDAAssetKey;
-                            remoteBreaker.AssetName = assetToDataPush.RemoteXDAAssetKey;
-                            remoteBreaker.Description = "";
-                        }
-
-                        remoteBreaker.ID = 0;
-                        remoteBreaker.AssetTypeID = remoteAssetTypes.First(x => x.Name == "Breaker").ID;
-                        remoteBreaker.ID = WebAPIHub.CreateRecord(address, remoteBreaker, userAccount);
-                        remoteBreaker.ID = WebAPIHub.CreateRecord<Asset>(address, remoteBreaker, userAccount);
-
-                        assetToDataPush.RemoteXDAAssetID = remoteBreaker.ID;
-                        assetToDataPush.RemoteXDAAssetKey = remoteBreaker.AssetKey;
-                        assetToDataPush.RemoteAssetCreatedByDataPusher = true;
-
-                        new TableOperations<AssetsToDataPush>(connection).UpdateRecord(assetToDataPush);
-                    }
-                    else if (assetToDataPush.RemoteAssetCreatedByDataPusher)
-                    {
-                        remoteBreaker.AssetKey = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetKey);
-                        remoteBreaker.AssetName = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetName);
-                        remoteBreaker.VoltageKV = localAsset.VoltageKV;
-                        remoteBreaker.AssetTypeID = localAsset.AssetTypeID;
-                        remoteBreaker.Spare = localAsset.Spare;
-                        remoteBreaker.Description = (obsfucate ? "" : localAsset.Description);
-                        WebAPIHub.UpdateRecord(address, remoteBreaker, userAccount);
-                    }
-                }
-
-                if (remoteBreaker == null) throw new Exception("Asset not defined.");
-                return remoteBreaker;
-            }
-        }
-        private Transformer AddOrGetTransformer(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, bool obsfucate, UserAccount userAccount)
-        {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                Transformer remoteTransformer = null;
-                Transformer localTransformer = new TableOperations<Transformer>(connection).QueryRecordWhere("AssetKey = {0}", localAsset.AssetKey);
-
-                //if the Transformer does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-                if (assetToDataPush == null)
-                {
-                    string obsfucatedAssetName = Guid.NewGuid().ToString();
-                    remoteTransformer = WebAPIHub.GetRecordWhere<Transformer>(address, $"AssetKey='{localAsset.AssetKey}'", userAccount);
-
-                    if (remoteTransformer == null)
-                    {
-                        remoteTransformer = localTransformer;
-                        // need to fix obsfucation
-                        if (obsfucate)
-                        {
-                            remoteTransformer.AssetKey = obsfucatedAssetName;
-                            remoteTransformer.AssetName = obsfucatedAssetName;
-                            remoteTransformer.Description = "";
-                        }
-
-                        remoteTransformer.ID = 0;
-                        remoteTransformer.AssetTypeID = remoteAssetTypes.First(x => x.Name == "Transformer").ID;
-                        remoteTransformer.ID = WebAPIHub.CreateRecord(address, remoteTransformer, userAccount);
-
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteTransformer.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = true
-                        };
-
-                    }
-                    else
-                    {
-                        assetToDataPush = new AssetsToDataPush()
-                        {
-                            LocalXDAAssetID = localAsset.ID,
-                            RemoteXDAAssetID = remoteTransformer.ID,
-                            LocalXDAAssetKey = localAsset.AssetKey,
-                            RemoteXDAAssetKey = (obsfucate ? obsfucatedAssetName : localAsset.AssetKey),
-                            RemoteAssetCreatedByDataPusher = false
-                        };
-                    }
-
-                    new TableOperations<AssetsToDataPush>(connection).AddNewRecord(assetToDataPush);
-                }
-                else
-                {
-                    remoteTransformer = WebAPIHub.GetRecordWhere<Transformer>(address, $"ID={assetToDataPush.RemoteXDAAssetID}", userAccount);
-
-                    if (remoteTransformer == null)
-                    {
-                        remoteTransformer = localTransformer;
-                        if (obsfucate)
-                        {
-                            remoteTransformer.AssetKey = assetToDataPush.RemoteXDAAssetKey;
-                            remoteTransformer.AssetName = assetToDataPush.RemoteXDAAssetKey;
-                            remoteTransformer.Description = "";
-                        }
-
-                        remoteTransformer.ID = 0;
-                        remoteTransformer.AssetTypeID = remoteAssetTypes.First(x => x.Name == "Transformer").ID;
-                        remoteTransformer.ID = WebAPIHub.CreateRecord(address, remoteTransformer, userAccount);
-                        remoteTransformer.ID = WebAPIHub.CreateRecord<Asset>(address, remoteTransformer, userAccount);
-
-                        assetToDataPush.RemoteXDAAssetID = remoteTransformer.ID;
-                        assetToDataPush.RemoteXDAAssetKey = remoteTransformer.AssetKey;
-                        assetToDataPush.RemoteAssetCreatedByDataPusher = true;
-
-                        new TableOperations<AssetsToDataPush>(connection).UpdateRecord(assetToDataPush);
-                    }
-                    else if (assetToDataPush.RemoteAssetCreatedByDataPusher)
-                    {
-                        remoteTransformer.AssetKey = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetKey);
-                        remoteTransformer.AssetName = (obsfucate ? assetToDataPush.RemoteXDAAssetKey.ToString() : localAsset.AssetName);
-                        remoteTransformer.VoltageKV = localAsset.VoltageKV;
-                        remoteTransformer.AssetTypeID = localAsset.AssetTypeID;
-                        remoteTransformer.Spare = localAsset.Spare;
-                        remoteTransformer.Description = (obsfucate ? "" : localAsset.Description);
-                        WebAPIHub.UpdateRecord(address, remoteTransformer, userAccount);
-                    }
-                }
-
-                if (remoteTransformer == null) throw new Exception("Asset not defined.");
-                return remoteTransformer;
+                if (remoteTypedAsset == null) throw new Exception("Asset not defined.");
+                return remoteTypedAsset;
             }
         }
 
-        private MeterAsset AddMeterAsset(string address, MetersToDataPush meter, Asset remoteLine, UserAccount userAccount, MeterAsset localMeterLine)
+        private MeterAsset AddMeterAsset(string address, MetersToDataPush meter, AssetsToDataPush asset, UserAccount userAccount, MeterAsset localMeterLine)
         {
-            MeterAsset remoteMeterLine = WebAPIHub.GetRecordWhere<MeterAsset>(address, $"MeterID = {meter.RemoteXDAMeterID} AND AssetID = {remoteLine.ID}", userAccount);
+            MeterAsset remoteMeterLine = WebAPIHub.GetRecordWhere<MeterAsset>(address, $"MeterID = {meter.RemoteXDAMeterID} AND AssetID = {asset.RemoteXDAAssetID}", userAccount);
 
             // if MeterLine association has not been previously made, make it
             if (remoteMeterLine == null)
@@ -1132,7 +675,7 @@ namespace openXDA.DataPusher
                 remoteMeterLine = new MeterAsset()
                 {
                     MeterID = meter.RemoteXDAMeterID,
-                    AssetID = remoteLine.ID,
+                    AssetID = asset.RemoteXDAAssetID,
                 };
 
                 remoteMeterLine.ID = WebAPIHub.CreateRecord(address, remoteMeterLine, userAccount);
@@ -1327,7 +870,7 @@ namespace openXDA.DataPusher
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
 
-                    IEnumerable<int> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instance.ID).Select(x => x.ID);
+                    IEnumerable<int> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0}", instance.ID).Select(x => x.ID);
                     int progressTotal = meters.Count();
                     int progressCount = 0;
                     OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (progressCount) / progressTotal));
@@ -1360,6 +903,8 @@ namespace openXDA.DataPusher
 
                     MetersToDataPush meterToDataPush = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
 
+                    string localAssetKey = new TableOperations<Meter>(connection).QueryRecordWhere("ID={0}", meterToDataPush.LocalXDAMeterID).AssetKey;
+
                     if (DataPusherSettings.TimeWindow != 0)
                         localFileGroups = new TableOperations<FileGroup>(connection).QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0} AND StartTime >= {1})", meterToDataPush.LocalXDAMeterID, timeWindowStartDate);
                     else
@@ -1368,14 +913,14 @@ namespace openXDA.DataPusher
                     int progressTotal = (localFileGroups.Count() > 0 ? localFileGroups.Count() : 1);
                     int progressCount = 0;
 
-                    OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (progressCount) / progressTotal));
-                    Log.Info($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
+                    OnUpdateProgressForMeter(clientId, localAssetKey, (int)(100 * (progressCount) / progressTotal));
+                    Log.Info($"Processing Remote data push for {localAssetKey}...");
 
                     foreach (FileGroup fileGroup in localFileGroups)
                     {
                         if (cancellationToken.IsCancellationRequested) break;
 
-                        Log.Info($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}:Filegroup:{fileGroup.ID}...");
+                        Log.Info($"Processing Remote data push for {localAssetKey}:Filegroup:{fileGroup.ID}...");
 
                         FileGroupLocalToRemote fileGroupLocalToRemote = new TableOperations<FileGroupLocalToRemote>(connection).QueryRecordWhere("LocalFileGroupID = {0} AND RemoteXDAInstanceID = {1}", fileGroup.ID, instance.ID);
 
@@ -1459,8 +1004,8 @@ namespace openXDA.DataPusher
 
                         }
 
-                        OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (++progressCount) / progressTotal));
-                        Log.Info($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (progressCount) / progressTotal)}");
+                        OnUpdateProgressForMeter(clientId, localAssetKey, (int)(100 * (++progressCount) / progressTotal));
+                        Log.Info($"Processing Remote data push for {localAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (progressCount) / progressTotal)}");
 
                     }
                 }

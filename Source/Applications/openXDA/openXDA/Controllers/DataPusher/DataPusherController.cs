@@ -170,7 +170,7 @@ namespace openXDA.Controllers.Config
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
-                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID IN ( SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instance.ID);
+                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE RemoteXDAInstanceID = {0}", instance.ID);
                         return Ok(connectionID);
                     }
                 }

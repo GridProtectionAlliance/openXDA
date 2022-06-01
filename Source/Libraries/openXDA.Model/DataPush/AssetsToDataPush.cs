@@ -31,15 +31,22 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        [ParentKey(typeof(RemoteXDAInstance))]
+        public int RemoteXDAInstanceID { get; set; }
+        [DefaultSortOrder]
         public int LocalXDAAssetID { get; set; }
         public int RemoteXDAAssetID { get; set; }
 
         [StringLength(200)]
-        public string LocalXDAAssetKey { get; set; }
-        [StringLength(200)]
         public string RemoteXDAAssetKey { get; set; }
 
+        public bool Obsfucate { get; set; }
+
+        public bool Synced { get; set; }
+
         public bool RemoteAssetCreatedByDataPusher { get; set; }
+
+
 
     }
 }
