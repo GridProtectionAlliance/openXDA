@@ -21,25 +21,25 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
-using GSF.Data.Model;
-using Newtonsoft.Json.Linq;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
+using System.Net.Http;
+using System.Runtime.Caching;
 using System.Web.Http;
+using GSF.Data;
+using GSF.Data.Model;
 using HIDS;
 using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
-using System.Runtime.Caching;
-using System.Net.Http;
+using openXDA.Model;
+using openXDA.Nodes;
 
 namespace SPCTools
 {
-    
+
     [RoutePrefix("api/SPCTools/Data")]
     public class DataController : ApiController
     {
@@ -83,7 +83,6 @@ namespace SPCTools
 
         #region [Properties]
 
-        protected virtual string Connection { get; } = "systemSettings";
         protected virtual string GetRoles { get; } = "Viewer,Administrator";
 
         private static DateTime s_epoch = new DateTime(1970, 1, 1);
@@ -91,14 +90,18 @@ namespace SPCTools
         private static MemoryCache s_memoryCache;
         private static readonly double s_cacheExipry = 5;
 
+        private Host Host { get; }
+
         #endregion
 
         #region [ Constructor ]
 
-        static DataController()
-        {
+        public DataController(Host host) =>
+            Host = host;
+
+        static DataController() =>
             s_memoryCache = new MemoryCache("SPCToolsHIDSTestData");
-        }
+
         #endregion
 
         #region [HTTPRequests]
@@ -198,10 +201,6 @@ namespace SPCTools
 
         private Dictionary<int, List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
         {
-
-            HIDSSettings settings = new HIDSSettings();
-            settings.Load();
-
             Dictionary<int, List<Point>> result = new Dictionary<int, List<Point>>();
 
             string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
@@ -221,6 +220,7 @@ namespace SPCTools
             List<Point> data;
             using (API hids = new API())
             {
+                HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
                 hids.Configure(settings);
                 data = hids.ReadPointsAsync(dataToGet, start, end).ToListAsync().Result;
             }
@@ -228,15 +228,12 @@ namespace SPCTools
             dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data.Where(pt => pt.Tag == item).ToList(), new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });
 
             return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
-
-
         }
 
         private ChannelTestResponse TestChannel(int channelIndex, List<Point> data, List<Token> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData)
         {
-
             bool upper = true;
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             {
                 AlarmType alarmType = new TableOperations<AlarmType>(connection).QueryRecordWhere("ID = {0}", alarmtypeID);
                 if (alarmType.Name == "Lower Limit")
@@ -245,7 +242,6 @@ namespace SPCTools
 
             result.FactorTests = factors.Select(f => new FactorTestResponse() { TimeInAlarm = 0, NumberRaised = 0, Factor = f }).ToList();
             result.FactorTests.Add(new FactorTestResponse() { TimeInAlarm = 0, NumberRaised = 0, Factor = 1.0 });
-
 
             // Create Hour of the week based Threshholds
             double[] threshholds = new double[168];
@@ -280,17 +276,14 @@ namespace SPCTools
                     }
             }
 
-
-
             result.FactorTests = result.FactorTests.Select(f => new FactorTestResponse() { TimeInAlarm = (data.Count > 0 ? f.TimeInAlarm / data.Count : 0.0D), NumberRaised = f.NumberRaised, Factor = f.Factor }).ToList();
             return result;
-
         }
 
         private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)
         {
             AlarmDay day;
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             {
                 day = new TableOperations<AlarmDay>(connection).QueryRecordWhere("ID = {0}", alarmValue.AlarmdayID);
             }
@@ -306,7 +299,7 @@ namespace SPCTools
 
         private Func<Point, double> GetSeriesTypeFilter(int SeriesTypeID)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             {
                 SeriesType seriesType = new TableOperations<SeriesType>(connection).QueryRecordWhere("ID={0}", SeriesTypeID);
                 if (seriesType != null && seriesType.Name == "Minimum")
@@ -317,6 +310,7 @@ namespace SPCTools
                     return (Point pt) => { return pt.Average; };
             }
         }
+
         #endregion
     } 
 }

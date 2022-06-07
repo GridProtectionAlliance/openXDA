@@ -43,8 +43,8 @@
     <Reference Include="GSF.Web">
       <HintPath>..\..\Dependencies\GSF\GSF.Web.dll</HintPath>
     </Reference>
-    <Reference Include="HIDS, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\HIDS.1.0.2\lib\netstandard2.0\HIDS.dll</HintPath>
+    <Reference Include="HIDS, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\HIDS.1.0.3\lib\netstandard2.0\HIDS.dll</HintPath>
     </Reference>
     <Reference Include="InfluxDB.Client, Version=3.2.0.0, Culture=neutral, PublicKeyToken=2ffdb0e6ebde0d3f, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\InfluxDB.Client.3.2.0\lib\netstandard2.0\InfluxDB.Client.dll</HintPath>
@@ -162,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ControllerConfig.cs" />
+    <Compile Include="HIDSController.cs" />
     <Compile Include="NodeController.cs" />
     <Compile Include="OpenSEECSVDownload.ashx.cs" />
     <Compile Include="SpectralDataDisplayController.cs" />
@@ -187,6 +188,10 @@
       <Project>{7F731255-FA83-4DBF-9E0F-C22AE4845E76}</Project>
       <Name>openHistorian.XDALink</Name>
     </ProjectReference>
+    <ProjectReference Include="..\openXDA.HIDS\openXDA.HIDS.csproj">
+      <Project>{2528ec50-0be9-4a9f-8ac3-77fc42afe8ce}</Project>
+      <Name>openXDA.HIDS</Name>
+    </ProjectReference>
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>
@@ -197,7 +202,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

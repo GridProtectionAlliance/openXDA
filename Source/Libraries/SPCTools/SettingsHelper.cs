@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  HIDSSettings.cs - Gbtc
+//  SettingsHelper.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,34 +16,34 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  10/27/2020 - Stephen C. Wills
+//  06/08/2022 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System.ComponentModel;
-using System.Configuration;
+using GSF.Configuration;
+using openXDA.HIDS;
+using openXDA.Nodes;
 
-namespace openXDA.HIDS
+namespace SPCTools
 {
-    public class HIDSSettings
+    internal static class SettingsHelper
     {
-        public const string CategoryName = "HIDS";
+        private class Settings
+        {
+            [Category]
+            [SettingName(HIDSSettings.CategoryName)]
+            public HIDSSettings HIDSSettings { get; }
+                = new HIDSSettings();
+        }
 
-        [Setting]
-        [DefaultValue("")]
-        public string Host { get; set; }
-
-        [Setting]
-        [DefaultValue("")]
-        public string TokenID { get; set; }
-
-        [Setting]
-        [DefaultValue("point_bucket")]
-        public string PointBucket { get; set; }
-
-        [Setting]
-        [DefaultValue("gpa")]
-        public string OrganizationID { get; set; }
+        public static HIDSSettings GetHIDSSettings(Host host)
+        {
+            ConfigurationLoader configurationLoader = new ConfigurationLoader(host.ID, host.CreateDbConnection);
+            Settings settings = new Settings();
+            configurationLoader.Configure(settings);
+            return settings.HIDSSettings;
+        }
     }
 }
