@@ -34,6 +34,7 @@ using LSCVS.Model;
 using log4net;
 using openXDA.Configuration;
 using DbDisturbance = openXDA.Model.Disturbance;
+using Customer = openXDA.Model.Customer;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;

@@ -47,7 +47,8 @@ namespace LSCVS.Model
         public string Meter { get; set; }
         public int CustomerID { get; set; }
         public string Customer { get; set; }
-        public string EventCurveCombined { get; set; }
+        public int EventType { get; set; }
+        public bool InsideCurve { get; set; }
         public double IntialMW { get; set; }
         public double FinalMW { get; set; }
         public bool Reviewed { get; set; }
@@ -60,6 +61,40 @@ namespace LSCVS.Model
         public DateTime PreEvent { get; set; }
         public DateTime PostEvent { get; set; }
         public double Impact { get; set; }
+
+        public LSCVSEvent GetEvent()
+        {
+            return new LSCVSEvent()
+            {
+                OpenXDAID = OpenXDAID,
+                EventStart = EventStart,
+                Duration = Duration,
+                Magnitude = Magnitude,
+                MeterID = MeterID,
+                CustomerID = CustomerID,
+                EventType = EventType,
+                InsideCurve = InsideCurve,
+                IntialMW = IntialMW,
+                FinalMW = FinalMW
+            };
+        }
+
+        public LSCVSSummary GetSummary()
+        {
+            return new LSCVSSummary()
+            {
+                Reviewed = Reviewed,
+                ParentEventID = ParentEventID,
+                ParentEventITOA = ParentEventITOA,
+                SARFI80 = SARFI80,
+                SelfCaused = SelfCaused,
+                ErroneouslyTriggered = ErroneouslyTriggered,
+                InstantenousImpact = InstantenousImpact,
+                PreEvent = PreEvent,
+                PostEvent = PostEvent,
+                Impact = Impact
+            };
+        }
 
     }
 }

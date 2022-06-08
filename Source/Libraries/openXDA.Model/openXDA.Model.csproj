@@ -137,6 +137,7 @@
     <Compile Include="Links\EDNAPoint.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="LSCVSAccount.cs" />
+    <Compile Include="LSCVS\Customer.cs" />
     <Compile Include="LSCVS\LSCVSRecord.cs" />
     <Compile Include="LSCVS\LSCVSSummaryEvent.cs" />
     <Compile Include="LSCVS\LSCVSSummary.cs" />
@@ -289,9 +290,6 @@
     <Compile Include="WorkbenchFilter.cs" />
     <Compile Include="WorkbenchVoltageCurveView.cs" />
     <Compile Include="Emails\XSLTemplate.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Microsoft.SqlServer.Types.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
