@@ -66,12 +66,14 @@ namespace LSCVS.Model
         [NonRecordField]
         public string StartDate { get; set; }
 
+        public static DateTime GetPreTime(DateTime eventStart) { return eventStart.AddHours(-5); }
+        public static DateTime GetPostTime(DateTime eventStart) { return eventStart.AddHours(4); }
         public LSCVSEvent GetEvent()
         {
             return new LSCVSEvent()
             {
                 OpenXDAID = OpenXDAID,
-                EventStart = DateTime.Parse($"{StartDate} {StartTime}"),
+                EventStart = EventStart,
                 Duration = Duration,
                 Magnitude = Magnitude,
                 MeterID = MeterID,
