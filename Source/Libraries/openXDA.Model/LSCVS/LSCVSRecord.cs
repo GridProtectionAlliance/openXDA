@@ -61,13 +61,17 @@ namespace LSCVS.Model
         public DateTime PreEvent { get; set; }
         public DateTime PostEvent { get; set; }
         public double Impact { get; set; }
+        [NonRecordField]
+        public string StartTime { get; set; }
+        [NonRecordField]
+        public string StartDate { get; set; }
 
         public LSCVSEvent GetEvent()
         {
             return new LSCVSEvent()
             {
                 OpenXDAID = OpenXDAID,
-                EventStart = EventStart,
+                EventStart = DateTime.Parse($"{StartDate} {StartTime}"),
                 Duration = Duration,
                 Magnitude = Magnitude,
                 MeterID = MeterID,
