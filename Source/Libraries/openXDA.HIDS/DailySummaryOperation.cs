@@ -21,11 +21,8 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
 using FaultData.DataAnalysis;
 using FaultData.DataOperations;
 using FaultData.DataResources;
@@ -33,9 +30,7 @@ using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using HIDS;
 using log4net;
-using openXDA.HIDS.APIExtensions;
 using openXDA.Model;
 
 namespace openXDA.HIDS
@@ -63,83 +58,26 @@ namespace openXDA.HIDS
                 return;
             }
 
+            PointAggregationResource pointAggregationResource = meterDataSet.GetResource<PointAggregationResource>();
+            List<PointAggregate> pointAggregates = pointAggregationResource.PointAggregates;
+
             using AdoDataConnection connection = meterDataSet.CreateDbConnection();
             TableOperations<DailyTrendingSummary> dailyTrendingSummaryTable = new TableOperations<DailyTrendingSummary>(connection);
 
-            async Task LoadSummariesAsync()
+            foreach (PointAggregate pointAggregate in pointAggregates)
             {
-                await foreach (DailyTrendingSummary summary in QuerySummariesAsync(trendingGroups))
-                    dailyTrendingSummaryTable.Upsert(summary);
-            }
-
-            Task loadSummariesTask = LoadSummariesAsync();
-            loadSummariesTask.GetAwaiter().GetResult();
-        }
-
-        private async IAsyncEnumerable<DailyTrendingSummary> QuerySummariesAsync(Dictionary<Channel, List<DataGroup>> trendingGroups)
-        {
-            using API hids = new API();
-            hids.Configure(HIDSSettings);
-
-            IEnumerable<string> tags = trendingGroups.Keys
-                .Select(channel => hids.ToTag(channel.ID));
-
-            DateTime startTime = trendingGroups.Values
-                .SelectMany(list => list)
-                .Min(dataGroup => dataGroup.StartTime.Date);
-
-            DateTime endTime = trendingGroups.Values
-                .SelectMany(list => list)
-                .Max(dataGroup => dataGroup.EndTime.AddDays(1.0D).AddTicks(-1L).Date);
-
-            void QueryValidPoints(IQueryBuilder queryBuilder) => queryBuilder
-                .Range(startTime, endTime)
-                .FilterTags(tags)
-                .TestQuality(~0u)
-                .Aggregate("1d");
-
-            void QueryAllPoints(IQueryBuilder queryBuilder) => queryBuilder
-                .Range(startTime, endTime)
-                .FilterTags(tags)
-                .Aggregate("1d");
-
-            IAsyncEnumerable<Point> points = hids.ReadPointsAsync(QueryValidPoints);
-            IAsyncEnumerable<PointCount> validPointCounts = hids.ReadPointCountAsync(QueryValidPoints);
-            IAsyncEnumerable<PointCount> totalPointCounts = hids.ReadPointCountAsync(QueryAllPoints);
-
-            static Func<T1, T2> ToSelector<T1, T2>(Func<T1, T2> func) => func;
-            var pointSelector = ToSelector((Point point) => new { point.Tag, point.Timestamp });
-            var countSelector = ToSelector((PointCount count) => new { count.Tag, count.Timestamp });
-
-            static Task<ulong> SumAsync(IAsyncEnumerable<PointCount> counts) => counts
-                .AggregateAsync(0Lu, (total, count) => total + count.Count)
-                .AsTask();
-
-            var records = Enumerable.Range(0, (int)endTime.Subtract(startTime).TotalDays)
-                .Select(days => startTime.AddDays(days))
-                .SelectMany(date => trendingGroups.Keys.Select(channel => new { Tag = channel.ID.ToString("x8"), Timestamp = date }))
-                .ToAsyncEnumerable()
-                .GroupJoin(points, key => key, pointSelector, (Key, points) => new { Key, PointTask = points.FirstOrDefaultAsync().AsTask() })
-                .GroupJoin(validPointCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.PointTask, ValidCountTask = SumAsync(counts) })
-                .GroupJoin(totalPointCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.PointTask, record.ValidCountTask, TotalCountTask = SumAsync(counts) })
-                .WhereAwait(async record => (await record.PointTask) != null);
-
-            await foreach (var record in records)
-            {
-                Point point = await record.PointTask;
-                ulong validCount = await record.ValidCountTask;
-                ulong totalCount = await record.TotalCountTask;
-
-                yield return new DailyTrendingSummary()
+                DailyTrendingSummary summary = new DailyTrendingSummary()
                 {
-                    ChannelID = Convert.ToInt32(record.Key.Tag, 16),
-                    Date = record.Key.Timestamp,
-                    Maximum = point.Maximum,
-                    Minimum = point.Minimum,
-                    Average = point.Average,
-                    ValidCount = (int)validCount,
-                    InvalidCount = (int)(totalCount - validCount)
+                    ChannelID = pointAggregate.Channel.ID,
+                    Date = pointAggregate.Date,
+                    Maximum = pointAggregate.Maximum,
+                    Minimum = pointAggregate.Minimum,
+                    Average = pointAggregate.TotalAverage / pointAggregate.ReceivedPoints,
+                    ValidCount = pointAggregate.ValidPoints,
+                    InvalidCount = pointAggregate.ReceivedPoints - pointAggregate.ValidPoints
                 };
+
+                dailyTrendingSummaryTable.Upsert(summary);
             }
         }
 

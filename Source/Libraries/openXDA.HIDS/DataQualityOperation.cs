@@ -63,6 +63,9 @@ namespace openXDA.HIDS
                 return;
             }
 
+            PointAggregationResource pointCountResource = meterDataSet.GetResource<PointAggregationResource>();
+            List<PointAggregate> pointAggregates = pointCountResource.PointAggregates;
+
             // Get the total cumulative samples per hour
             // of each of the enabled channels in the meter
             double meterSamplesPerHour = meterDataSet.Meter.Channels
@@ -76,114 +79,37 @@ namespace openXDA.HIDS
             TableOperations<ChannelDataQualitySummary> channelDataQualitySummaryTable = new TableOperations<ChannelDataQualitySummary>(connection);
             TableOperations<MeterDataQualitySummary> meterDataQualitySummaryTable = new TableOperations<MeterDataQualitySummary>(connection);
 
-            async Task LoadSummariesAsync()
+            foreach (var grouping in pointAggregates.GroupBy(pointCount => pointCount.Date))
             {
-
-                await foreach (IAsyncGrouping<DateTime, ChannelDataQualitySummary> grouping in QuerySummariesAsync(trendingGroups).GroupBy(summary => summary.Date))
+                MeterDataQualitySummary meterDataQualitySummary = new MeterDataQualitySummary()
                 {
-                    MeterDataQualitySummary meterDataQualitySummary = new MeterDataQualitySummary()
+                    MeterID = meterDataSet.Meter.ID,
+                    Date = grouping.Key,
+                    ExpectedPoints = (int)(24.0D * meterSamplesPerHour)
+                };
+
+                foreach (PointAggregate pointCount in grouping)
+                {
+                    ChannelDataQualitySummary channelDataQualitySummary = new ChannelDataQualitySummary()
                     {
-                        MeterID = meterDataSet.Meter.ID,
+                        ChannelID = pointCount.Channel.ID,
                         Date = grouping.Key,
-                        ExpectedPoints = (int)(24.0D * meterSamplesPerHour)
+                        ExpectedPoints = (int)(24.0D * pointCount.Channel.SamplesPerHour)
                     };
 
-                    await foreach (ChannelDataQualitySummary channelDataQualitySummary in grouping)
-                    {
-                        meterDataQualitySummary.UnreasonablePoints += channelDataQualitySummary.UnreasonablePoints;
-                        meterDataQualitySummary.LatchedPoints += channelDataQualitySummary.LatchedPoints;
-                        meterDataQualitySummary.NoncongruentPoints += channelDataQualitySummary.NoncongruentPoints;
-                        meterDataQualitySummary.GoodPoints += channelDataQualitySummary.GoodPoints;
-                        channelDataQualitySummaryTable.Upsert(channelDataQualitySummary);
-                    }
+                    meterDataQualitySummary.GoodPoints += pointCount.GoodPoints;
+                    meterDataQualitySummary.UnreasonablePoints += pointCount.UnreasonablePoints;
+                    meterDataQualitySummary.LatchedPoints += pointCount.LatchedPoints;
+                    meterDataQualitySummary.NoncongruentPoints += pointCount.NoncongruentPoints;
 
-                    meterDataQualitySummaryTable.Upsert(meterDataQualitySummary);
+                    channelDataQualitySummary.GoodPoints += pointCount.GoodPoints;
+                    channelDataQualitySummary.UnreasonablePoints += pointCount.UnreasonablePoints;
+                    channelDataQualitySummary.LatchedPoints += pointCount.LatchedPoints;
+                    channelDataQualitySummary.NoncongruentPoints += pointCount.NoncongruentPoints;
+                    channelDataQualitySummaryTable.Upsert(channelDataQualitySummary);
                 }
-            }
 
-            Task loadSummariesTask = LoadSummariesAsync();
-            loadSummariesTask.GetAwaiter().GetResult();
-        }
-
-        private async IAsyncEnumerable<ChannelDataQualitySummary> QuerySummariesAsync(Dictionary<Channel, List<DataGroup>> trendingGroups)
-        {
-            using API hids = new API();
-            hids.Configure(HIDSSettings);
-
-            IEnumerable<string> tags = trendingGroups.Keys
-                .Where(channel => channel.Enabled)
-                .Select(channel => hids.ToTag(channel.ID));
-
-            DateTime startTime = trendingGroups.Values
-                .SelectMany(list => list)
-                .Min(dataGroup => dataGroup.StartTime.Date);
-
-            DateTime endTime = trendingGroups.Values
-                .SelectMany(list => list)
-                .Max(dataGroup => dataGroup.EndTime.AddDays(1.0D).AddTicks(-1L).Date);
-
-            void QueryUnreasonablePoints(IQueryBuilder queryBuilder) => queryBuilder
-                .Range(startTime, endTime)
-                .FilterTags(tags)
-                .TestQuality((uint)QualityFlags.Unreasonable)
-                .Aggregate("1d");
-
-            void QueryLatchedPoints(IQueryBuilder queryBuilder) => queryBuilder
-                .Range(startTime, endTime)
-                .FilterTags(tags)
-                .TestQuality((uint)QualityFlags.Latched)
-                .Aggregate("1d");
-
-            void QueryNoncongruentPoints(IQueryBuilder queryBuilder) => queryBuilder
-                .Range(startTime, endTime)
-                .FilterTags(tags)
-                .TestQuality((uint)QualityFlags.Noncongruent)
-                .Aggregate("1d");
-
-            void QueryAllPoints(IQueryBuilder queryBuilder) => queryBuilder
-                .Range(startTime, endTime)
-                .FilterTags(tags)
-                .Aggregate("1d");
-
-            IAsyncEnumerable<PointCount> unreasonableCounts = hids.ReadPointCountAsync(QueryUnreasonablePoints);
-            IAsyncEnumerable<PointCount> latchedCounts = hids.ReadPointCountAsync(QueryLatchedPoints);
-            IAsyncEnumerable<PointCount> noncongruentCounts = hids.ReadPointCountAsync(QueryNoncongruentPoints);
-            IAsyncEnumerable<PointCount> totalPointCounts = hids.ReadPointCountAsync(QueryAllPoints);
-
-            static Func<T1, T2> ToSelector<T1, T2>(Func<T1, T2> func) => func;
-            var countSelector = ToSelector((PointCount count) => new { count.Tag, count.Timestamp });
-
-            static Task<ulong> SumAsync(IAsyncEnumerable<PointCount> counts) => counts
-                .AggregateAsync(0Lu, (total, count) => total + count.Count)
-                .AsTask();
-
-            var records = Enumerable.Range(0, (int)endTime.Subtract(startTime).TotalDays)
-                .Select(days => startTime.AddDays(days))
-                .SelectMany(date => trendingGroups.Keys.Select(Channel => new { Key = new { Tag = Channel.ID.ToString("x8"), Timestamp = date }, Channel }))
-                .ToAsyncEnumerable()
-                .GroupJoin(unreasonableCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, UnreasonableCountTask = SumAsync(counts) })
-                .GroupJoin(latchedCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, LatchedCountTask = SumAsync(counts) })
-                .GroupJoin(noncongruentCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, record.LatchedCountTask, NoncongruentCountTask = SumAsync(counts) })
-                .GroupJoin(totalPointCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, record.LatchedCountTask, record.NoncongruentCountTask, TotalCountTask = SumAsync(counts) });
-
-            await foreach (var record in records)
-            {
-                ulong unreasonableCount = await record.UnreasonableCountTask;
-                ulong latchedCount = await record.LatchedCountTask;
-                ulong noncongruentCount = await record.NoncongruentCountTask;
-                ulong totalCount = await record.TotalCountTask;
-                ulong expectedCount = (ulong)(24.0D * record.Channel.SamplesPerHour);
-
-                yield return new ChannelDataQualitySummary()
-                {
-                    ChannelID = Convert.ToInt32(record.Key.Tag, 16),
-                    Date = record.Key.Timestamp,
-                    UnreasonablePoints = (int)unreasonableCount,
-                    LatchedPoints = (int)latchedCount,
-                    NoncongruentPoints = (int)noncongruentCount,
-                    GoodPoints = (int)(totalCount - unreasonableCount - latchedCount - noncongruentCount),
-                    ExpectedPoints = (int)expectedCount
-                };
+                meterDataQualitySummaryTable.Upsert(meterDataQualitySummary);
             }
         }
 
