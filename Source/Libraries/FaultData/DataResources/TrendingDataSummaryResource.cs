@@ -127,6 +127,7 @@ namespace FaultData.DataResources
         #region [ Properties ]
 
         public Dictionary<Channel, List<TrendingDataSummary>> TrendingDataSummaries { get; private set; }
+        private bool AlreadyWarned { get; set; }
 
         #endregion
 
@@ -214,7 +215,8 @@ namespace FaultData.DataResources
                         TrendingDataSummary summary = new TrendingDataSummary();
 
                         // Get the date-time of the summary
-                        summary.Time = minSeries.DataPoints[i].Time;
+                        DateTime time = minSeries.DataPoints[i].Time;
+                        summary.Time = RoundTimestamp(time);
 
                         // Get the min and the max of the current sample
                         summary.Minimum = minSeries.DataPoints[i].Value;
@@ -230,10 +232,36 @@ namespace FaultData.DataResources
                         if (double.IsNaN(summary.Minimum) || double.IsNaN(summary.Maximum) || double.IsNaN(summary.Average))
                             continue;
 
+                        if (time != summary.Time)
+                            WarnAboutRounding();
+
                         summaries.Add(summary);
                     }
                 }
             }
+        }
+
+        private DateTime RoundTimestamp(DateTime timestamp)
+        {
+            long ticks = timestamp.Ticks % TimeSpan.TicksPerMinute;
+
+            if (ticks >= TimeSpan.TicksPerMinute / 2L)
+                ticks -= TimeSpan.TicksPerMinute;
+
+            return timestamp.AddTicks(-ticks);
+        }
+
+        private void WarnAboutRounding()
+        {
+            if (AlreadyWarned)
+                return;
+
+            const string WarningMessage =
+                "Floating timestamps in trending data detected! " +
+                "Rounding timestamps to the nearest minute.";
+
+            Log.Debug(WarningMessage);
+            AlreadyWarned = true;
         }
 
         #endregion
