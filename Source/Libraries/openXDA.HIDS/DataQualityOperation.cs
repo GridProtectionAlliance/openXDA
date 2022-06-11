@@ -122,46 +122,67 @@ namespace openXDA.HIDS
                 .SelectMany(list => list)
                 .Max(dataGroup => dataGroup.EndTime.AddDays(1.0D).AddTicks(-1L).Date);
 
+            void QueryUnreasonablePoints(IQueryBuilder queryBuilder) => queryBuilder
+                .Range(startTime, endTime)
+                .FilterTags(tags)
+                .TestQuality((uint)QualityFlags.Unreasonable)
+                .Aggregate("1d");
+
+            void QueryLatchedPoints(IQueryBuilder queryBuilder) => queryBuilder
+                .Range(startTime, endTime)
+                .FilterTags(tags)
+                .TestQuality((uint)QualityFlags.Latched)
+                .Aggregate("1d");
+
+            void QueryNoncongruentPoints(IQueryBuilder queryBuilder) => queryBuilder
+                .Range(startTime, endTime)
+                .FilterTags(tags)
+                .TestQuality((uint)QualityFlags.Noncongruent)
+                .Aggregate("1d");
+
             void QueryAllPoints(IQueryBuilder queryBuilder) => queryBuilder
                 .Range(startTime, endTime)
-                .FilterTags(tags);
+                .FilterTags(tags)
+                .Aggregate("1d");
 
+            IAsyncEnumerable<PointCount> unreasonableCounts = hids.ReadPointCountAsync(QueryUnreasonablePoints);
+            IAsyncEnumerable<PointCount> latchedCounts = hids.ReadPointCountAsync(QueryLatchedPoints);
+            IAsyncEnumerable<PointCount> noncongruentCounts = hids.ReadPointCountAsync(QueryNoncongruentPoints);
+            IAsyncEnumerable<PointCount> totalPointCounts = hids.ReadPointCountAsync(QueryAllPoints);
 
-            var dates = Enumerable.Range(0, (int)endTime.Subtract(startTime).TotalDays).Select(days => startTime.AddDays(days));
-            var channels = dates.SelectMany(date => trendingGroups.Keys.Select(Channel => new { ChannelID = Channel.ID, Date = date, ExpectedPoints = (int)(24.0D * Channel.SamplesPerHour) })).ToAsyncEnumerable();
+            static Func<T1, T2> ToSelector<T1, T2>(Func<T1, T2> func) => func;
+            var countSelector = ToSelector((PointCount count) => new { count.Tag, count.Timestamp });
 
+            static Task<ulong> SumAsync(IAsyncEnumerable<PointCount> counts) => counts
+                .AggregateAsync(0Lu, (total, count) => total + count.Count)
+                .AsTask();
 
-            IAsyncEnumerable<Point> points = hids.ReadPointsAsync(QueryAllPoints);
-            var latchedPoints = points.Where(x => x.QualityFlags > 1 && (x.QualityFlags & (uint)QualityFlags.Latched) == x.QualityFlags).GroupBy(x => new { Date = x.Timestamp.Date, ChannelID = Convert.ToInt32(x.Tag, 16) }).Select(x => new {Date = x.Key.Date, ChannelID = x.Key.ChannelID, Count = x.CountAsync() });
-            var noncongruentPoints = points.Where(x => x.QualityFlags > 1 && (x.QualityFlags & (uint)QualityFlags.Noncongruent) == x.QualityFlags).GroupBy(x => new { Date = x.Timestamp.Date, ChannelID = Convert.ToInt32(x.Tag, 16) }).Select(x => new { Date = x.Key.Date, ChannelID = x.Key.ChannelID, Count = x.CountAsync() });
-            var unreasonablePoints = points.Where(x => x.QualityFlags > 1 && (x.QualityFlags & (uint)QualityFlags.Unreasonable) == x.QualityFlags).GroupBy(x => new { Date = x.Timestamp.Date, ChannelID = Convert.ToInt32(x.Tag, 16) }).Select(x => new { Date = x.Key.Date, ChannelID = x.Key.ChannelID, Count = x.CountAsync() });
-            var totalPoints = points.GroupBy(x => new { Date = x.Timestamp.Date, ChannelID = Convert.ToInt32(x.Tag, 16) }).Select(x => new { Date = x.Key.Date, ChannelID = x.Key.ChannelID, Count = x.CountAsync() });
-
-            var records = channels.GroupJoin(unreasonablePoints, record => new { record.ChannelID, record.Date }, count => new { count.ChannelID, count.Date }, (record, counts) =>
-            {
-                return new { record.ChannelID, record.Date, record.ExpectedPoints, UnreasonableCount = counts.SelectAwait(x => x.Count).ToEnumerable().Sum() };
-            }).GroupJoin(latchedPoints, record => new { record.ChannelID, record.Date }, count => new { count.ChannelID, count.Date }, (record, counts) =>
-            {
-                return new { record.ChannelID, record.Date, record.ExpectedPoints, record.UnreasonableCount, LatchedCount = counts.SelectAwait(x => x.Count).ToEnumerable().Sum() };
-            }).GroupJoin(noncongruentPoints, record => new { record.ChannelID, record.Date }, count => new { count.ChannelID, count.Date }, (record, counts) =>
-            {
-                return new { record.ChannelID, record.Date, record.ExpectedPoints, record.UnreasonableCount, record.LatchedCount, NoncongruentCount = counts.SelectAwait(x => x.Count).ToEnumerable().Sum() };
-            }).GroupJoin(totalPoints, record => new { record.ChannelID, record.Date }, count => new { count.ChannelID, count.Date }, (record, counts) =>
-            {
-                return new { record.ChannelID, record.Date, record.ExpectedPoints, record.UnreasonableCount, record.LatchedCount, record.NoncongruentCount, TotalCount = counts.SelectAwait(x =>x.Count).ToEnumerable().Sum() };
-            });
+            var records = Enumerable.Range(0, (int)endTime.Subtract(startTime).TotalDays)
+                .Select(days => startTime.AddDays(days))
+                .SelectMany(date => trendingGroups.Keys.Select(Channel => new { Key = new { Tag = Channel.ID.ToString("x8"), Timestamp = date }, Channel }))
+                .ToAsyncEnumerable()
+                .GroupJoin(unreasonableCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, UnreasonableCountTask = SumAsync(counts) })
+                .GroupJoin(latchedCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, LatchedCountTask = SumAsync(counts) })
+                .GroupJoin(noncongruentCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, record.LatchedCountTask, NoncongruentCountTask = SumAsync(counts) })
+                .GroupJoin(totalPointCounts, record => record.Key, countSelector, (record, counts) => new { record.Key, record.Channel, record.UnreasonableCountTask, record.LatchedCountTask, record.NoncongruentCountTask, TotalCountTask = SumAsync(counts) });
 
             await foreach (var record in records)
             {
+                ulong unreasonableCount = await record.UnreasonableCountTask;
+                ulong latchedCount = await record.LatchedCountTask;
+                ulong noncongruentCount = await record.NoncongruentCountTask;
+                ulong totalCount = await record.TotalCountTask;
+                ulong expectedCount = (ulong)(24.0D * record.Channel.SamplesPerHour);
+
                 yield return new ChannelDataQualitySummary()
                 {
-                    ChannelID = record.ChannelID,
-                    Date = record.Date,
-                    UnreasonablePoints = record.UnreasonableCount,
-                    LatchedPoints = record.LatchedCount,
-                    NoncongruentPoints = record.NoncongruentCount,
-                    GoodPoints = record.TotalCount - record.UnreasonableCount - record.LatchedCount - record.NoncongruentCount,
-                    ExpectedPoints = record.ExpectedPoints
+                    ChannelID = Convert.ToInt32(record.Key.Tag, 16),
+                    Date = record.Key.Timestamp,
+                    UnreasonablePoints = (int)unreasonableCount,
+                    LatchedPoints = (int)latchedCount,
+                    NoncongruentPoints = (int)noncongruentCount,
+                    GoodPoints = (int)(totalCount - unreasonableCount - latchedCount - noncongruentCount),
+                    ExpectedPoints = (int)expectedCount
                 };
             }
         }
