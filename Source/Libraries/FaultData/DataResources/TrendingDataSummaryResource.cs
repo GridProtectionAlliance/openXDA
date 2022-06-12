@@ -39,35 +39,10 @@ namespace FaultData.DataResources
         // Nested Types
         public class TrendingDataSummary
         {
-            #region [ Members ]
-
-            // Fields
             public DateTime Time;
             public double Maximum;
             public double Minimum;
             public double Average;
-
-            public bool Latched;
-            public bool NonCongruent;
-            public bool Unreasonable;
-
-            public double UnreasonableValue;
-            public double HighLimit;
-            public double LowLimit;
-
-            #endregion
-
-            #region [ Properties ]
-
-            public bool IsValid
-            {
-                get
-                {
-                    return !(Latched || NonCongruent || Unreasonable);
-                }
-            }
-
-            #endregion
         }
 
         // Nested Types

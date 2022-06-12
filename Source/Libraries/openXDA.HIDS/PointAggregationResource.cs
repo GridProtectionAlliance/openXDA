@@ -72,25 +72,19 @@ namespace openXDA.HIDS
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
-            TrendingGroupsResource trendingGroupsResource = meterDataSet.GetResource<TrendingGroupsResource>();
-            Dictionary<Channel, List<DataGroup>> trendingGroups = trendingGroupsResource.TrendingGroups;
-
-            if (trendingGroups.Count == 0)
-                return;
-
-            if (string.IsNullOrEmpty(HIDSSettings.Host))
-                return;
-
-            Task<List<PointAggregate>> task = QuerySummariesAsync(trendingGroups);
+            Task<List<PointAggregate>> task = QuerySummariesAsync(meterDataSet);
             PointAggregates = task.GetAwaiter().GetResult();
         }
 
-        private async Task<List<PointAggregate>> QuerySummariesAsync(Dictionary<Channel, List<DataGroup>> trendingGroups)
+        private async Task<List<PointAggregate>> QuerySummariesAsync(MeterDataSet meterDataSet)
         {
+            TrendingGroupsResource trendingGroupsResource = meterDataSet.GetResource<TrendingGroupsResource>();
+            Dictionary<Channel, List<DataGroup>> trendingGroups = trendingGroupsResource.TrendingGroups;
+
             using API hids = new API();
             hids.Configure(HIDSSettings);
 
-            IEnumerable<string> tags = trendingGroups.Keys
+            IEnumerable<string> tags = meterDataSet.Meter.Channels
                 .Where(channel => channel.Enabled)
                 .Select(channel => hids.ToTag(channel.ID));
 
