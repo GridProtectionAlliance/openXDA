@@ -1283,6 +1283,10 @@ namespace FaultData.DataOperations
             };
 
             double samplesPerHour = (dataSeries.DataPoints.Count - 1) / (dataSeries.Duration / 3600.0D);
+
+            if (samplesPerHour >= 61.0D)
+                return samplesPerHour;
+
             double nearestCommonRate = commonSampleRates.MinBy(rate => Math.Abs(samplesPerHour - rate));
             return nearestCommonRate;
         }

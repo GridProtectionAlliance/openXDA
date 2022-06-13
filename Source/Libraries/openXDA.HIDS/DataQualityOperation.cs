@@ -67,6 +67,7 @@ namespace openXDA.HIDS
             // of each of the enabled channels in the meter
             double meterSamplesPerHour = meterDataSet.Meter.Channels
                 .Where(channel => channel.Enabled)
+                .Where(channel => channel.SamplesPerHour > 0.0D)
                 .Where(channel => channel.SamplesPerHour <= 60.0D)
                 .Select(channel => channel.SamplesPerHour)
                 .DefaultIfEmpty(0.0D)
