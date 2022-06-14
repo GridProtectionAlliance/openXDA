@@ -32,11 +32,11 @@ namespace openXDA.HIDS
         // Value flags
         Unreasonable = (uint)Bits.Bit07,
         Latched = (uint)Bits.Bit06,
-        MarkedBadByUser = (uint)Bits.Bit04,
-        MarkedBadByDevice = (uint)Bits.Bit03,
-        MarkedBadByExternalSystem = (uint)Bits.Bit02,
-        MarkedBadByDataRecovery = (uint)Bits.Bit01,
-        Empty = (uint)Bits.Bit00,
+        MarkedBadByUser = (uint)Bits.Bit03,
+        MarkedBadByDevice = (uint)Bits.Bit02,
+        MarkedBadByExternalSystem = (uint)Bits.Bit01,
+        MarkedBadByDataRecovery = (uint)Bits.Bit00,
+        Empty = (uint)Bits.Nil,
 
         // Tuple flags
         Noncongruent = (uint)Bits.Bit15,
