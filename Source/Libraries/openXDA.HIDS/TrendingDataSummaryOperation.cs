@@ -210,25 +210,32 @@ namespace openXDA.HIDS
 
             await foreach (Point point in QueryPointsAsync(hids, meterDataSet))
             {
+                bool wasLatched = false;
+                bool isLatched = false;
+
                 if (!(previousPoint is null))
                 {
                     TimeSpan timeDiff = point.Timestamp - previousPoint.Timestamp;
 
-                    bool wasLatched = (previousPoint.QualityFlags & (uint)QualityFlags.Latched) != 0;
+                    wasLatched = (previousPoint.QualityFlags & (uint)QualityFlags.Latched) != 0;
 
-                    bool isLatched =
+                    isLatched =
                         previousPoint.Tag == point.Tag &&
                         timeDiff.TotalHours < 1.0D &&
                         previousPoint.Maximum == point.Maximum &&
                         previousPoint.Minimum == point.Minimum &&
                         previousPoint.Average == point.Average;
-
-                    if (wasLatched != isLatched)
-                    {
-                        point.QualityFlags |= (uint)QualityFlags.Latched;
-                        updatedPoints.Add(point);
-                    }
                 }
+
+                if (wasLatched == isLatched)
+                    continue;
+
+                if (isLatched)
+                    point.QualityFlags |= (uint)QualityFlags.Latched;
+                else
+                    point.QualityFlags &= ~(uint)QualityFlags.Latched;
+
+                updatedPoints.Add(point);
             }
 
             if (updatedPoints.Any())
