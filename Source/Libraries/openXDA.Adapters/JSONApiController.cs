@@ -103,7 +103,7 @@ namespace openXDA.Adapters
                 $"    Name LIKE {{2}}";
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable result = connection.RetrieveData(Timeout.Infinite, queryFormat, assetKey, id, name))
+            using (DataTable result = connection.RetrieveData(0, queryFormat, assetKey, id, name))
             {
                 TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
 
@@ -135,7 +135,7 @@ namespace openXDA.Adapters
                 $"    {idFilter}";
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable result = connection.RetrieveData(Timeout.Infinite, queryFormat, assetKey, id))
+            using (DataTable result = connection.RetrieveData(0, queryFormat, assetKey, id))
             {
                 TableOperations<Line> lineTable = new TableOperations<Line>(connection);
 
@@ -169,7 +169,7 @@ namespace openXDA.Adapters
                 $"    Name LIKE {{2}}";
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable result = connection.RetrieveData(Timeout.Infinite, queryFormat, assetKey, id, name))
+            using (DataTable result = connection.RetrieveData(0, queryFormat, assetKey, id, name))
             {
                 TableOperations<Location> locationTable = new TableOperations<Location>(connection);
 
@@ -208,7 +208,7 @@ namespace openXDA.Adapters
                 $")";
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable result = connection.RetrieveData(Timeout.Infinite, queryFormat, assetKey, id, name))
+            using (DataTable result = connection.RetrieveData(0, queryFormat, assetKey, id, name))
             {
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
 
@@ -263,7 +263,7 @@ namespace openXDA.Adapters
             string queryFormat = $"SELECT * FROM Event WHERE {restriction.FilterExpression}";
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable result = connection.RetrieveData(Timeout.Infinite, queryFormat, restriction.Parameters))
+            using (DataTable result = connection.RetrieveData(0, queryFormat, restriction.Parameters))
             {
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
 
@@ -314,7 +314,7 @@ namespace openXDA.Adapters
             string queryFormat = $"SELECT * FROM FaultSummary WHERE {restriction.FilterExpression}";
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable result = connection.RetrieveData(Timeout.Infinite, queryFormat, restriction.Parameters))
+            using (DataTable result = connection.RetrieveData(0, queryFormat, restriction.Parameters))
             {
                 TableOperations<Fault> faultTable = new TableOperations<Fault>(connection);
 
@@ -365,7 +365,7 @@ namespace openXDA.Adapters
             string queryFormat = $"SELECT * FROM Disturbance WHERE {restriction.FilterExpression}";
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable result = connection.RetrieveData(Timeout.Infinite, queryFormat, restriction.Parameters))
+            using (DataTable result = connection.RetrieveData(0, queryFormat, restriction.Parameters))
             {
                 TableOperations<Disturbance> disturbanceTable = new TableOperations<Disturbance>(connection);
 
@@ -416,7 +416,7 @@ namespace openXDA.Adapters
             string queryFormat = $"SELECT * FROM BreakerOperation WHERE {restriction.FilterExpression}";
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable result = connection.RetrieveData(Timeout.Infinite, queryFormat, restriction.Parameters))
+            using (DataTable result = connection.RetrieveData(0, queryFormat, restriction.Parameters))
             {
                 TableOperations<BreakerOperation> breakerOperationTable = new TableOperations<BreakerOperation>(connection);
 
@@ -498,7 +498,7 @@ namespace openXDA.Adapters
                     int eventID = int.Parse(json.EventID);
 
                     using (AdoDataConnection connection = ConnectionFactory())
-                    using (DataTable result = connection.RetrieveData(Timeout.Infinite, QueryFormat, eventID))
+                    using (DataTable result = connection.RetrieveData(0, QueryFormat, eventID))
                     {
                         TableOperations<EventData> eventDataTable = new TableOperations<EventData>(connection);
 
