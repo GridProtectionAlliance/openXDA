@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  BreakerRestrikeResource.cs - Gbtc
+//  BreakerRestrikeDataSet.cs - Gbtc
 //
-//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,55 +16,38 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/13/2019 - Stephen C. Wills
+//  06/20/2022 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using FaultData.DataSets;
-
-namespace FaultData.DataResources.GTC
+namespace FaultData.DataSets.GTC
 {
-    public class BreakerRestrikeResource : DataResourceBase<MeterDataSet>
+    public class BreakerRestrikeDataSet
     {
-        #region [ Members ]
-
-        // Constants
         private const string APPSectionName = "APP FaultSummary";
         private const string APPKey = "BreakerRestrike";
         private const string USISectionName = "USI QuickSummary";
         private const string USIKey = "BrkrRestrike";
 
-        #endregion
+        public string BreakerRestrikeData { get; }
 
-        #region [ Constructors ]
+        private BreakerRestrikeDataSet(string breakerRestrikeData) =>
+            BreakerRestrikeData = breakerRestrikeData;
 
-        public BreakerRestrikeResource() { }
-
-        public BreakerRestrikeResource(INFDataSet infDataSet)
+        public static BreakerRestrikeDataSet Create(INFDataSet infDataSet)
         {
-            if (infDataSet == null)
-                return;
+            if (infDataSet is null)
+                return null;
 
             string value =
                 infDataSet.GetValue(APPSectionName, APPKey) ??
                 infDataSet.GetValue(USISectionName, USIKey);
 
-            BreakerRestrikeData = value;
+            if (value is null)
+                return null;
+
+            return new BreakerRestrikeDataSet(value);
         }
-
-        #endregion
-
-        #region [ Properties ]
-
-        public string BreakerRestrikeData { get; }
-
-        #endregion
-
-        #region [ Methods ]
-
-        public override void Initialize(MeterDataSet dataSet) { }
-
-        #endregion
     }
 }

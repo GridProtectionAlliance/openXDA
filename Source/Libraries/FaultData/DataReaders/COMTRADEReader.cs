@@ -28,8 +28,10 @@ using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using FaultData.DataSets.GTC;
 using GSF.COMTRADE;
 using GSF.Configuration;
+using GSF.Interop;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
@@ -143,18 +145,18 @@ namespace FaultData.DataReaders
                     meterDataSet = Parse(parser);
                 }
 
-                // TODO: Fix logic to read breaker restrike data from the INF file
-                //string infFilePath = fileGroup.DataFiles
-                //    .Where(IsINFFile)
-                //    .Select(GetPathInTempDataFolder)
-                //    .FirstOrDefault();
+                string infFilePath = fileGroup.DataFiles
+                    .Where(IsINFFile)
+                    .Select(GetPathInTempDataFolder)
+                    .FirstOrDefault();
 
-                //if (File.Exists(infFilePath))
-                //{
-                //    IniFile infFile = new IniFile(infFilePath);
-                //    INFDataSet infDataSet = new INFDataSet(infFile);
-                //    meterDataSet.GetResource(() => new BreakerRestrikeResource(infDataSet));
-                //}
+                if (File.Exists(infFilePath))
+                {
+                    IniFile infFile = new IniFile(infFilePath);
+                    INFDataSet infDataSet = new INFDataSet(infFile);
+                    BreakerRestrikeDataSet breakerRestrikeDataSet = BreakerRestrikeDataSet.Create(infDataSet);
+                    meterDataSet.BreakerRestrikeDataSet = breakerRestrikeDataSet;
+                }
 
                 return meterDataSet;
             }

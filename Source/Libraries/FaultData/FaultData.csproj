@@ -133,7 +133,6 @@
     <Compile Include="DataReaders\PQube\PQubeReader.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />
     <Compile Include="DataResources\BreakerDataResource.cs" />
-    <Compile Include="DataResources\GTC\BreakerRestrikeResource.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\EventClassificationResource.cs" />
     <Compile Include="DataResources\DataGroupsResource.cs" />
@@ -151,6 +150,7 @@
     <Compile Include="DataResources\SystemEventResource.cs" />
     <Compile Include="DataResources\SnapshotDataResource.cs" />
     <Compile Include="DataResources\TransientDataResource.cs" />
+    <Compile Include="DataSets\GTC\BreakerRestrikeDataSet.cs" />
     <Compile Include="DataSets\IDataSet.cs" />
     <Compile Include="DataResources\TrendingDataSummaryResource.cs" />
     <Compile Include="DataResources\TrendingGroupsResource.cs" />

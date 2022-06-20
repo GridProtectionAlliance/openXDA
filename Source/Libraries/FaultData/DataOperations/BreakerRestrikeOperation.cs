@@ -25,8 +25,8 @@ using System.Collections.Generic;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
-using FaultData.DataResources.GTC;
 using FaultData.DataSets;
+using FaultData.DataSets.GTC;
 using GSF.Data;
 using GSF.Data.Model;
 using openXDA.Model;
@@ -85,14 +85,13 @@ namespace FaultData.DataOperations
 
         private string GetBreakerRestrikeData(MeterDataSet meterDataSet)
         {
-            BreakerRestrikeResource breakerRestrikeResource = meterDataSet.GetResource<BreakerRestrikeResource>();
-            return breakerRestrikeResource.BreakerRestrikeData;
+            BreakerRestrikeDataSet breakerRestrikeDataSet = meterDataSet.BreakerRestrikeDataSet;
+            return breakerRestrikeDataSet?.BreakerRestrikeData;
         }
 
         private BreakerRestrike ProcessRestrike(BreakerDataResource.Restrike restrike, Phase phase, Event evt, VIDataGroup dataGroup)
         {
-
-            DataSeries voltage = (phase.Name == "AN"? dataGroup.VA: (phase.Name == "BN" ? dataGroup.VB : dataGroup.VC));
+            DataSeries voltage = (phase.Name == "AN" ? dataGroup.VA : (phase.Name == "BN" ? dataGroup.VB : dataGroup.VC));
             DataSeries current = (phase.Name == "AN" ? dataGroup.IA : (phase.Name == "BN" ? dataGroup.IB : dataGroup.IC));
 
             BreakerRestrike result = new BreakerRestrike();
@@ -113,7 +112,6 @@ namespace FaultData.DataOperations
 
             result.TransientPeakSample = restrike.transientOverVoltage;
 
-
             result.TransientPeakTime = current[restrike.transientOverVoltage].Time;
             result.TransientPeakVoltage = voltage[restrike.transientOverVoltage].Value;
             result.PerUnitTransientPeakVoltage = voltage[restrike.transientOverVoltage].Value / (voltage.SeriesInfo.Channel.Asset.VoltageKV * 1000.0D);
@@ -121,8 +119,9 @@ namespace FaultData.DataOperations
             result.FinalExtinguishSample = restrike.finalExtinction;
             result.FinalExtinguishTime = current[restrike.finalExtinction].Time;
             result.FinalExtinguishVoltage = voltage[restrike.finalExtinction].Value;
+
             double DeltaT = 1.0D / current.SampleRate;
-            result.I2t = current.ToSubSeries(restrike.restrike,restrike.finalExtinction).DataPoints.Select(item => item.Value*item.Value*DeltaT).Sum();
+            result.I2t = current.ToSubSeries(restrike.restrike, restrike.finalExtinction).DataPoints.Select(item => item.Value * item.Value * DeltaT).Sum();
 
             return result;
 
