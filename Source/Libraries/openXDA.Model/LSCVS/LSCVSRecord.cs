@@ -44,8 +44,10 @@ namespace LSCVS.Model
         public double Duration { get; set; }
         public double Magnitude { get; set; }
         public int MeterID { get; set; }
+        public string Meter { get; set; }
         public int CustomerID { get; set; }
-        public int EventTypeID { get; set; }
+        public string Customer { get; set; }
+        public int EventType { get; set; }
         public bool InsideCurve { get; set; }
         public double IntialMW { get; set; }
         public double FinalMW { get; set; }
@@ -59,6 +61,46 @@ namespace LSCVS.Model
         public DateTime PreEvent { get; set; }
         public DateTime PostEvent { get; set; }
         public double Impact { get; set; }
+        [NonRecordField]
+        public string StartTime { get; set; }
+        [NonRecordField]
+        public string StartDate { get; set; }
+
+        public static DateTime GetPreTime(DateTime eventStart) { return eventStart.AddHours(-5); }
+        public static DateTime GetPostTime(DateTime eventStart) { return eventStart.AddHours(4); }
+        public LSCVSEvent GetEvent()
+        {
+            return new LSCVSEvent()
+            {
+                OpenXDAID = OpenXDAID,
+                EventStart = EventStart,
+                Duration = Duration,
+                Magnitude = Magnitude,
+                MeterID = MeterID,
+                CustomerID = CustomerID,
+                EventType = EventType,
+                InsideCurve = InsideCurve,
+                IntialMW = IntialMW,
+                FinalMW = FinalMW
+            };
+        }
+
+        public LSCVSSummary GetSummary()
+        {
+            return new LSCVSSummary()
+            {
+                Reviewed = Reviewed,
+                ParentEventID = ParentEventID,
+                ParentEventITOA = ParentEventITOA,
+                SARFI80 = SARFI80,
+                SelfCaused = SelfCaused,
+                ErroneouslyTriggered = ErroneouslyTriggered,
+                InstantenousImpact = InstantenousImpact,
+                PreEvent = PreEvent,
+                PostEvent = PostEvent,
+                Impact = Impact
+            };
+        }
 
     }
 }
