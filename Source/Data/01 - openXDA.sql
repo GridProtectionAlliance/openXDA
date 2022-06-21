@@ -3528,13 +3528,13 @@ CREATE TABLE AlarmLog
 )
 GO
 
-CREATE TABLE ALarmDayGroup (
+CREATE TABLE AlarmDayGroup (
 	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
 	Description  VARCHAR(50)
 )
 GO
 
-CREATE TABLE ALarmDayGroupAlarmDay (
+CREATE TABLE AlarmDayGroupAlarmDay (
 	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
 	AlarmDayID INT NULL References AlarmDay(ID),
 	AlarmDayGroupID INT NOT NULL References AlarmDayGroup(ID)
@@ -3548,39 +3548,47 @@ CREATE VIEW AlarmGroupView AS
 SELECT 
 	AlarmGroup.ID,
 	AlarmGroup.Name,
-	AlarmSeverity.Name as AlarmSeverity,
-	COUNT(DISTINCT Channel.ID) as Channels,
-	COUNT(DISTINCT Channel.MeterID) as Meters,
-	MAX(AlarmLog.StartTime) AS LastAlarmStart,
-	(SELECT AL2.EndTime 
-		FROM AlarmLog AL2 
-		WHERE AL2.StartTime = MAX(AlarmLog.StartTime) AND AL2.AlarmID IN (SELECT ID FROM ALARM AL WHERE AL.AlarmGroupID = Alarmgroup.ID) AND AL2.AlarmFactorID IS NULL
-		) AS LastAlarmEnd,
-	(SELECT CH.Name 
-		FROM AlarmLog AL2 LEFT JOIN Channel CH ON AL2.AlarmID IN (SELECT A.ID FROM Alarm A LEFT JOIN Series S ON A.SeriesID = S.ID WHERE S.ChannelID = CH.ID)
-		WHERE AL2.StartTime = MAX(AlarmLog.StartTime) AND AL2.AlarmID IN (SELECT ID FROM ALARM AL WHERE AL.AlarmGroupID = Alarmgroup.ID) AND AL2.AlarmFactorID IS NULL
-		) AS LastChannel,
-	(SELECT M.Name 
-		FROM AlarmLog AL2 LEFT JOIN Channel CH ON AL2.AlarmID IN (SELECT A.ID FROM Alarm A LEFT JOIN Series S ON A.SeriesID = S.ID WHERE S.ChannelID = CH.ID)
-			LEFT JOIN Meter M ON M.ID = Ch.MeterID
-		WHERE AL2.StartTime = MAX(AlarmLog.StartTime) AND AL2.AlarmID IN (SELECT ID FROM ALARM AL WHERE AL.AlarmGroupID = Alarmgroup.ID) AND AL2.AlarmFactorID IS NULL
-		) AS LastMeter,
+	AlarmSeverity.Name AlarmSeverity,
+	CountStats.ChannelCount Channels,
+	CountStats.MeterCount Meters,
+	LastAlarm.StartTime LastAlarmStart,
+	LastAlarm.EndTime LastAlarmEnd,
+	LastAlarm.ChannelName LastChannel,
+	LastAlarm.MeterName LastMeter,
 	AlarmType.Description AS AlarmType
-	 
 FROM 
 	AlarmGroup LEFT JOIN
-	Alarm ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
-	AlarmType ON AlarmGroup.AlarmTypeID = AlarmType.ID LEFT JOIN
-	Series ON Alarm.SeriesID = Series.ID LEFT JOIN
-	Channel ON Series.ChannelID = Channel.ID LEFT JOIN 
 	AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID LEFT JOIN
-	AlarmLog ON AlarmLog.AlarmID = Alarm.ID
-WHERE AlarmLog.AlarmFactorID IS NULL
-GROUP BY
-	AlarmGroup.ID,
-	AlarmGroup.Name,
-	AlarmSeverity.Name,
-	AlarmType.Description
+	AlarmType ON AlarmGroup.AlarmTypeID = AlarmType.ID OUTER APPLY
+    (
+        SELECT
+            COUNT(DISTINCT Channel.ID) ChannelCount,
+            COUNT(DISTINCT Channel.MeterID) MeterCount
+        FROM
+            Channel JOIN
+            Series ON Series.ChannelID = Channel.ID JOIN
+            Alarm ON Alarm.SeriesID = Series.ID
+        WHERE Alarm.AlarmGroupID = AlarmGroup.ID
+    ) CountStats OUTER APPLY
+    (
+        SELECT TOP 1
+            AlarmLog.StartTime,
+            AlarmLog.EndTime,
+            Channel.Name ChannelName,
+            Meter.Name MeterName
+        FROM
+            AlarmLog JOIN
+            Alarm ON AlarmLog.AlarmID = Alarm.ID JOIN
+            Series ON Alarm.SeriesID = Series.ID JOIN
+            Channel ON Series.ChannelID = Channel.ID JOIN
+            Meter ON Channel.MeterID = Meter.ID
+        WHERE
+            Alarm.AlarmGroupID = AlarmGroup.ID AND
+            AlarmLog.AlarmFactorID IS NULL
+        ORDER BY
+            AlarmLog.StartTime DESC,
+            AlarmLog.ID DESC
+    ) LastAlarm
 GO
 
 CREATE VIEW ChannelOverviewView AS
@@ -3657,7 +3665,7 @@ CREATE VIEW ActiveAlarmView AS SELECT
 	Alarm.SeriesID AS SeriesID,
 	AlarmFactor.Factor AS Value
 FROM
-(SELECT ID, Factor, AlarmGroupID FROM Alarmfactor UNION SELECT 0 AS ID, 1.0 as Factor, AlarmGroup.ID AS AlarmGroupID FROM AlarmGroup) AlarmFactor LEFT JOIN
+(SELECT ID, Factor, AlarmGroupID FROM Alarmfactor UNION SELECT NULL AS ID, 1.0 as Factor, AlarmGroup.ID AS AlarmGroupID FROM AlarmGroup) AlarmFactor LEFT JOIN
     Alarm ON AlarmFactor.AlarmGroupID = alarm.AlarmGroupID LEFT JOIN
     AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID
 GO
@@ -3799,7 +3807,6 @@ CREATE TABLE MeterAlarmSummary
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
-    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
     Date DATE NOT NULL,
     AlarmPoints INT NOT NULL
 )
@@ -3807,10 +3814,6 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_MeterID
 ON MeterAlarmSummary(MeterID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_AlarmTypeID
-ON MeterAlarmSummary(AlarmTypeID ASC)
 GO
 
 CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_Date
@@ -3825,7 +3828,6 @@ CREATE TABLE ChannelAlarmSummary
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     ChannelID INT NOT NULL REFERENCES Channel(ID),
-    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
     Date DATE NOT NULL,
     AlarmPoints INT NOT NULL
 )
@@ -3833,10 +3835,6 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_ChannelID
 ON ChannelAlarmSummary(ChannelID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_AlarmTypeID
-ON ChannelAlarmSummary(AlarmTypeID ASC)
 GO
 
 CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_Date

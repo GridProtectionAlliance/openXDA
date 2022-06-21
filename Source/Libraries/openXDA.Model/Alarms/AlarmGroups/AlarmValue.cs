@@ -37,7 +37,7 @@ namespace openXDA.Model
 
         public int AlarmID { get; set; }
 
-        public int? AlarmdayID { get; set; }
+        public int? AlarmDayID { get; set; }
 
         public int StartHour { get; set; }
 
