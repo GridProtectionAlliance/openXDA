@@ -110,7 +110,10 @@ namespace FaultData.DataReaders
 
             string firstFilePath = fileGroup.DataFiles.Select(dataFile => dataFile.FilePath).First();
             string tempDataFolderName = Path.GetFileNameWithoutExtension(firstFilePath);
-            string tempDataFolderPath = Path.Combine(TempDataFolder, tempDataFolderName);
+
+            // The temp data folder may be deeply nested;
+            // long path syntax prevents errors due to large file names
+            string tempDataFolderPath = @"\\?\" + Path.Combine(TempDataFolder, tempDataFolderName);
 
             string GetPathInTempDataFolder(DataFile dataFile)
             {

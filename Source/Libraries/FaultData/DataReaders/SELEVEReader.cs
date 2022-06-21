@@ -67,7 +67,11 @@ namespace FaultData.DataReaders
 
             DataFile dataFile = GetPrimaryDataFile(fileGroup);
             string tempDataFolderName = Path.GetFileNameWithoutExtension(dataFile.FilePath);
-            string tempDataFolderPath = Path.Combine(TempDataFolder, tempDataFolderName);
+
+            // The temp data folder may be deeply nested;
+            // long path syntax prevents errors due to large file names
+            string tempDataFolderPath = @"\\?\" + Path.Combine(TempDataFolder, tempDataFolderName);
+
             string dataFileName = Path.GetFileName(dataFile.FilePath);
             string tempFilePath = Path.Combine(tempDataFolderPath, dataFileName);
             byte[] data = dataFile.FileBlob.Blob;
