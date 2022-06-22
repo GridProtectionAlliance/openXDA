@@ -61,8 +61,8 @@ namespace FaultData.DataOperations
                 {1, "IEEE 1668 Type I & II"},
                 {3, "IEEE 1668 Type III"}
             };
-        public const string postRoute = "api/OpenXDA/NewLCSVSEvent";
-        //private static readonly HttpClient client = new HttpClient();
+        public const string postRoute = "/api/OpenXDA/NewLCSVSEvent/";
+        private static readonly HttpClient client = new HttpClient();
 
         #endregion
 
@@ -97,14 +97,14 @@ namespace FaultData.DataOperations
                     EventStat evtSt = eventStatTable.QueryRecordWhere($"EventID = {evt.ID}");
 
                     if (evtSt.InitialMW is null || evtSt.FinalMW is null ||
-                            (!(Abs((double) ((evtSt.InitialMW - evtSt.FinalMW) / evtSt.InitialMW)) > LSCVSSettings.ReportingThreshold))) continue;
+                            (!(Abs((double)((evtSt.InitialMW - evtSt.FinalMW) / evtSt.InitialMW)) > LSCVSSettings.ReportingThreshold))) continue;
 
-                    IEnumerable <Customer> lscvsCustomers = customerTable.QueryRecordsWhere("LSCVS = 1 and ID in " +
+                    IEnumerable<Customer> lscvsCustomers = customerTable.QueryRecordsWhere("LSCVS = 1 and ID in " +
                         $"(Select CustomerID from CustomerAsset where AssetID = {evt.AssetID})");
 
                     if (!lscvsCustomers.Any()) continue;
 
-                    DbDisturbance worstDisturbance = disturbanceTable.QueryRecordWhere("ID=" +
+                    IEnumerable<DbDisturbance> worstDisturbances = disturbanceTable.QueryRecordsWhere("ID in " +
                         $"(Select wd.WorstDisturbanceID from EventWorstDisturbance wd where wd.EventID = {evt.ID})");
 
                     if (evtSt.VAMin is null || evtSt.VBMin is null || evtSt.VCMin is null) continue;
@@ -118,33 +118,36 @@ namespace FaultData.DataOperations
                     int curveStandard = 3;
                     if ((lineToNeutralVoltages.Min() / lineToNeutralVoltages.Median()) < LSCVSSettings.TypeThreshold) curveStandard = 1;
 
-
-                    foreach (Customer customer in lscvsCustomers)
+                    foreach (DbDisturbance worstDisturbance in worstDisturbances)
                     {
-                        LSCVSEvent reportData = new LSCVSEvent()
+                        //Todo: Might need to change LSCVS database to tie multiple customers to one event rather than make 2 events for 2 customers
+                        foreach (Customer customer in lscvsCustomers)
                         {
-                            MeterID = evt.MeterID,
-                            EventStart = worstDisturbance.StartTime,
-                            Magnitude = worstDisturbance.PerUnitMagnitude,
-                            Duration = worstDisturbance.DurationSeconds * 1000,
-                            EventType = curveStandard,
-                            IntialMW = (double)evtSt.InitialMW, // Should be a safe cast, null is checked for above
-                            FinalMW = (double)evtSt.FinalMW,
-                            OpenXDAID = evt.ID,
-                            CustomerID = customer.ID
-                        };
-                    reportData.InsideCurve = (
-                        stdMagDurCurveTable.QueryRecordWhere("Name='{0}' and " +
-                        $"Area.STIntersects(geometry::Point({worstDisturbance.DurationSeconds},{worstDisturbance.PerUnitMagnitude},0)) = 1", curveStandardNames[curveStandard])
-                        != null);
+                            LSCVSEvent reportData = new LSCVSEvent()
+                            {
+                                MeterID = evt.MeterID,
+                                EventStart = worstDisturbance.StartTime,
+                                Magnitude = worstDisturbance.PerUnitMagnitude,
+                                Duration = worstDisturbance.DurationSeconds * 1000,
+                                EventType = curveStandard,
+                                IntialMW = (double)evtSt.InitialMW, // Should be a safe cast, null is checked for above
+                                FinalMW = (double)evtSt.FinalMW,
+                                OpenXDAID = evt.ID,
+                                CustomerID = customer.ID
+                            };
+                            reportData.InsideCurve = (
+                                stdMagDurCurveTable.QueryRecordWhere("Name='{0}' and " +
+                                $"Area.STIntersects(geometry::Point({worstDisturbance.DurationSeconds},{worstDisturbance.PerUnitMagnitude},0)) = 1", curveStandardNames[curveStandard])
+                                != null);
 
-                    if (Min(Min((double)evtSt.VABMin, (double)evtSt.VABMin), (double)evtSt.VBCMin) < 80)
-                        reportData.SARFI80Flag = true;
-                    else
-                        reportData.SARFI80Flag = false;
+                            if (Min(Min((double)evtSt.VABMin, (double)evtSt.VABMin), (double)evtSt.VBCMin) < 80)
+                                reportData.SARFI80Flag = true;
+                            else
+                                reportData.SARFI80Flag = false;
 
-                    lscvsEventList.Add(reportData);
+                            lscvsEventList.Add(reportData);
 
+                        }
                     }
                 }
                 if (lscvsEventList.Count != 0) Post(postRoute, lscvsEventList, GenerateAntiForgeryToken()); //TODO: Add AF Token
@@ -158,33 +161,28 @@ namespace FaultData.DataOperations
         /// <returns>string token</returns>
         public string GenerateAntiForgeryToken() //Todo: When refactoring, change this to a static class...
         {
-            using (HttpClient client = new HttpClient())
-            {
+            string fullURL;
+            if (LSCVSSettings.UseCodeAuth)
+                fullURL = LSCVSSettings.URL.TrimEnd('/') + $"/api/rvht?code={LSCVSSettings.AuthCode}";
+            else
+                fullURL = LSCVSSettings.URL.TrimEnd('/') + "/api/rvht";
 
-                client.BaseAddress = new Uri(LSCVSSettings.URL);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Remove("Authorization");
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, fullURL))
+            {
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                 if (!LSCVSSettings.UseCodeAuth)
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", 
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Basic",
                         Convert.ToBase64String(Encoding.ASCII.GetBytes($"{LSCVSSettings.Username}:{LSCVSSettings.Password}")));
 
-                HttpResponseMessage response;
-                if (LSCVSSettings.UseCodeAuth)
-                    response = client.GetAsync($"api/rvhtcode={LSCVSSettings.AuthCode}").Result;
-                else
-                    response = client.GetAsync("api/rvht").Result;
-
-                if (!response.IsSuccessStatusCode)
+                using (HttpResponseMessage response = client.SendAsync(request).Result)
                 {
-                    throw new Exception($"Unable to get Anti Forger Token: {response.StatusCode} {response.ReasonPhrase}");
+                    if (!response.IsSuccessStatusCode)
+                        throw new Exception($"Unable to get Anti Forger Token: {response.StatusCode} {response.ReasonPhrase}");
+
+                    return response.Content.ReadAsStringAsync().Result;
                 }
-
-                Task<string> rsp = response.Content.ReadAsStringAsync();
-                return response.Content.ReadAsStringAsync().Result;
             }
-
         }
 
         /// <summary>
@@ -195,37 +193,35 @@ namespace FaultData.DataOperations
         /// <returns>string</returns>
         public string Post(string requestURI, IEnumerable<LSCVSEvent> events, string token = null)
         {
-            using (HttpClient client = new HttpClient())
+            string fullURL = LSCVSSettings.URL.TrimEnd('/') + requestURI;
+            if (LSCVSSettings.UseCodeAuth)
+                fullURL += $"?code={LSCVSSettings.AuthCode}";
+
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, fullURL))
             {
-                client.BaseAddress = new Uri(LSCVSSettings.URL);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Remove("Authorization");
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                 if (token != null)
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
+                    request.Headers.Add("X-GSF-Verify", token);
 
 
                 if (!LSCVSSettings.UseCodeAuth)
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{LSCVSSettings.Username}:{LSCVSSettings.Password}")));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Basic",
+                        Convert.ToBase64String(Encoding.ASCII.GetBytes($"{LSCVSSettings.Username}:{LSCVSSettings.Password}")));
 
                 string jsonData = JsonConvert.SerializeObject(events);
                 HttpContent contentData = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                request.Content = contentData;
 
-                HttpResponseMessage response;
-                if (LSCVSSettings.UseCodeAuth)
-                    response = client.PostAsync($"{requestURI}?code={LSCVSSettings.AuthCode}", contentData).Result;
-                else
-                    response = client.PostAsync(requestURI, contentData).Result;
-
-
-                if (!response.IsSuccessStatusCode)
+                using (HttpResponseMessage response = client.SendAsync(request).Result)
                 {
-                    throw new Exception("Status code " + response.StatusCode + ": " + response.ReasonPhrase);
-                }
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception("Status code " + response.StatusCode + ": " + response.ReasonPhrase);
+                    }
 
-                Task<string> rsp = response.Content.ReadAsStringAsync();
-                return response.Content.ReadAsStringAsync().Result;
+                    return response.Content.ReadAsStringAsync().Result;
+                }
             }
         }
 
