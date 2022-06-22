@@ -24,8 +24,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlTypes;
 using System.Linq;
-using System.Threading;
 using System.Web.Http;
 using FaultData.DataAnalysis;
 using GSF.Data;
@@ -238,7 +238,7 @@ namespace openXDA.Adapters
                 return new RecordRestriction(filter, parameters);
             }
 
-            DateTime startTime = json?.StartDate ?? DateTime.MinValue;
+            DateTime startTime = json?.StartDate ?? SqlDateTime.MinValue.Value;
             DateTime endTime = json?.EndDate ?? DateTime.Now;
 
             RecordRestriction restriction =
@@ -289,7 +289,7 @@ namespace openXDA.Adapters
                 return new RecordRestriction(filter, parameters);
             }
 
-            DateTime startTime = json?.StartDate ?? DateTime.MinValue;
+            DateTime startTime = json?.StartDate ?? SqlDateTime.MinValue.Value;
             DateTime endTime = json?.EndDate ?? DateTime.Now;
 
             RecordRestriction restriction =
@@ -340,7 +340,7 @@ namespace openXDA.Adapters
                 return new RecordRestriction(filter, parameters);
             }
 
-            DateTime startTime = json?.StartDate ?? DateTime.MinValue;
+            DateTime startTime = json?.StartDate ?? SqlDateTime.MinValue.Value;
             DateTime endTime = json?.EndDate ?? DateTime.Now;
 
             RecordRestriction restriction =
@@ -391,7 +391,7 @@ namespace openXDA.Adapters
                 return new RecordRestriction(filter, parameters);
             }
 
-            DateTime startTime = json?.StartDate ?? DateTime.MinValue;
+            DateTime startTime = json?.StartDate ?? SqlDateTime.MinValue.Value;
             DateTime endTime = json?.EndDate ?? DateTime.Now;
 
             RecordRestriction restriction =
