@@ -38,8 +38,8 @@ using Newtonsoft.Json;
 using openXDA.Model;
 using SystemCenter.Model;
 using openXDA.Adapters;
-using openXDA.Model;
 using openXDA.Nodes;
+using System.Collections.Generic;
 
 namespace openXDA.Controllers.WebAPI
 {
