@@ -333,6 +333,27 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.FolderPath', 'TrR[0-9]*\.dat', 'TrR[0-9]*\.dat')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.URL', 'http://localhost:53030', 'http://localhost:53030')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.UseCodeAuth', 'false', 'false')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.Username', '', '')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.Password', '', '')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.AuthCode', '', '')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.ReportingThreshold', '0', '0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.TypeThreshold', '0.95', '0.95')
+GO
+
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
 

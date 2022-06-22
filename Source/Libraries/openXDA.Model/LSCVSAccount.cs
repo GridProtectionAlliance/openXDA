@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AdditionalField.cs - Gbtc
+//  LSCVSAccount.cs - Gbtc
 //
 //  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,57 +16,35 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/20/2019 - Billy Ernest
+//  01/28/2022 - Samuel Robinson
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+
 using GSF.Data.Model;
-using System.ComponentModel.DataAnnotations;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace SystemCenter.Model
 {
-    /// <summary>
-    /// Customer Model. Distinct and joined to PQViewSiteID to reduce number of duplicate Customers coming from PQView
-    /// </summary>
     [AllowSearch]
-    [CustomView(@"
-    SELECT
-        DISTINCT
-        Customer.ID,
-	    Customer.CustomerKey,
-	    Customer.Name,
-	    Customer.Phone,
-	    Customer.Description,
-        Customer.LSCVS,
-	    COUNT([CustomerAccess].ID) as Meters
-    FROM
-	    Customer LEFT JOIN
-	    CustomerAccess ON Customer.ID = [CustomerAccess].CustomerID LEFT JOIN
-	    PQViewSite ON [CustomerAccess].PQViewSiteID = PQViewSite.ID 
-    GROUP BY
-        Customer.ID,
-	    Customer.CustomerKey,
-	    Customer.Name,
-	    Customer.Phone,
-	    Customer.Description,
-        Customer.LSCVS")]
-    [PatchRoles("Administrator, Transmission SME")]
-    [PostRoles("Administrator, Transmission SME")]
-    [DeleteRoles("Administrator, Transmission SME")]
-    public class Customer
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("LSCVSAccount")]
+    [UseEscapedName]
+    public class LSCVSAccount
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        [Required]
-        [DefaultSortOrder]
-        public string CustomerKey { get; set; }
-        public string Name { get; set; }
-        public string Phone { get; set; }
-        public string Description { get; set; }
-        public bool LSCVS { get; set; }
 
-        [NonRecordField]
-        public int Meters { get; set; }
+        public string AccountID { get; set; }
+
+        [ParentKey(typeof(Customer))]
+        public int CustomerID { get; set; }
     }
 }

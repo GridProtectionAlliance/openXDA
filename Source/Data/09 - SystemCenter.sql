@@ -256,6 +256,14 @@ CREATE TABLE [LocationDrawing] (
 )
 GO
 
+CREATE TABLE [LSCVSAccount] (
+    ID int NOT NULL IDENTITY(1, 1) PRIMARY KEY,
+    AccountID VARCHAR(200) NOT NULL,
+    CustomerID int NOT NULL,
+    FOREIGN KEY (CustomerID) REFERENCES Customer(ID)
+)
+GO
+
 -- Default Settings --
 SET ANSI_NULLS ON
 GO

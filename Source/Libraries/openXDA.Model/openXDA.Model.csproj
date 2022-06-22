@@ -132,6 +132,11 @@
     <Compile Include="Links\PQViewSite.cs" />
     <Compile Include="Links\EDNAPoint.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
+    <Compile Include="LSCVSAccount.cs" />
+    <Compile Include="LSCVS\LSCVSRecord.cs" />
+    <Compile Include="LSCVS\LSCVSSummaryEvent.cs" />
+    <Compile Include="LSCVS\LSCVSSummary.cs" />
+    <Compile Include="LSCVS\LSCVSEvent.cs" />
     <Compile Include="Meters\MeterAlarmGroup.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="Meters\MeterConfiguration.cs" />
@@ -141,11 +146,13 @@
     <Compile Include="Nodes\Node.cs" />
     <Compile Include="Nodes\NodeSetting.cs" />
     <Compile Include="Note.cs" />
+    <Compile Include="SEBrowser\D3DataSeries.cs" />
     <Compile Include="Security\ApplicationSustainedUser.cs" />
     <Compile Include="Security\ApplicationNode.cs" />
     <Compile Include="Settings\BreakerReportsSettings.cs" />
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
+    <Compile Include="TransmissionElements\StandardMagDurCurve.cs" />
     <Compile Include="StepChangeWebReports\StepChangeMeasurement.cs" />
     <Compile Include="StepChangeWebReports\StepChangeStat.cs" />
     <Compile Include="PQTrendingWebReports\Unit.cs" />
@@ -279,7 +286,6 @@
     <Compile Include="WorkbenchVoltageCurveView.cs" />
     <Compile Include="Emails\XSLTemplate.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

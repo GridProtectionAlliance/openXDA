@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BreakerSection.cs" />
+    <Compile Include="LSCVSSection.cs" />
     <Compile Include="COMTRADESection.cs" />
     <Compile Include="EDNASection.cs" />
     <Compile Include="EmailSection.cs" />

@@ -377,7 +377,8 @@ CREATE TABLE Customer
     CustomerKey VARCHAR(50) NOT NULL UNIQUE,
     Name VARCHAR(200) NULL,
     Phone VARCHAR(20) NULL,
-	Description VARCHAR(200) NULL
+	Description VARCHAR(200) NULL,
+    LSCVS BIT NOT NULL Default(0)
 )
 GO
 
@@ -1788,6 +1789,9 @@ INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.d
 GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailyStatisticOperation', 14)
+GO
+
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.LSCVSDataOperation', 15)
 GO
 
 INSERT INTO AssetGroup(Name, DisplayDashboard) VALUES('AllAssets', 1)

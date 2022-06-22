@@ -319,7 +319,8 @@
     <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebPages.3.2.4\lib\net45\System.Web.Helpers.dll</HintPath>
     </Reference>
-    <Reference Include="System.Web.Http">
+    <Reference Include="System.Web.Http, Version=5.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Dependencies\GSF\System.Web.Http.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Http.Cors">
@@ -369,6 +370,7 @@
     <Compile Include="Controllers\SPCTools\AssetGroupController.cs" />
     <Compile Include="Controllers\WebAPI\AlarmValueController.cs" />
     <Compile Include="Controllers\WebAPI\ControllerHelpers.cs" />
+    <Compile Include="Controllers\WebAPI\LSCVSController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
     <Compile Include="DatabaseConnectionFactory.cs" />

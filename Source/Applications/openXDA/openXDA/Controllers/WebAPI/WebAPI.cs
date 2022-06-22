@@ -33,9 +33,13 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web.Model;
 using GSF.Web.Security;
-using openXDA.Adapters;
+using log4net;
+using Newtonsoft.Json;
 using openXDA.Model;
+using SystemCenter.Model;
+using openXDA.Adapters;
 using openXDA.Nodes;
+using System.Collections.Generic;
 
 namespace openXDA.Controllers.WebAPI
 {
@@ -201,7 +205,7 @@ namespace openXDA.Controllers.WebAPI
     public class SeriesTypeController : ModelController<SeriesType> {}
 
     [RoutePrefix("api/Setting")]
-    public class SettingController : ModelController<Setting>
+    public class SettingController : ModelController<openXDA.Model.Setting>
     {
 
         [Route("Category/{category}")]
@@ -226,5 +230,43 @@ namespace openXDA.Controllers.WebAPI
         }
     }
 
+    [RoutePrefix("api/ValueList")]
+    public class ValueListController : ModelController<ValueList>
+    {
+        [HttpGet, Route("Group/{groupName}")]
+        public IHttpActionResult GetValueListForGroup(string groupName)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            {
+                string tableName = new TableOperations<ValueListGroup>(connection).TableName;
+                IEnumerable<ValueList> records = new TableOperations<ValueList>(connection).QueryRecordsWhere($"GroupID = ( SELECT ID FROM {tableName} WHERE Name = {{0}})", groupName);
+                return Ok(records);
+            }
+        }
+    }
+
+    public class XDAEndController<T> : ModelController<T> where T: class, new()
+    {
+        public override IHttpActionResult GetSearchableList([FromBody] PostData postData)
+        {
+            if (GetAuthCheck() && !AllowSearch)
+                return Unauthorized();
+
+            try
+            {
+                DataTable table = GetSearchResults(postData);
+                return Ok(table);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+    }
+    [RoutePrefix("api/Customer")]
+    public class CustomerController : XDAEndController<SystemCenter.Model.Customer> { }
+
+    [RoutePrefix("api/DetailedMeter")]
+    public class DetailedMeterController : XDAEndController<SystemCenter.Model.DetailedMeter> { }
 
 }
