@@ -41,6 +41,7 @@ using GSF.Web;
 using GSF.Web.Model;
 using GSF.Web.Security;
 using log4net;
+using Newtonsoft.Json;
 using openXDA.Model;
 using SystemCenter.Model;
 
@@ -239,7 +240,28 @@ namespace openXDA.Controllers.WebAPI
         }
     }
 
+    public class XDAEndController<T> : ModelController<T> where T: class, new()
+    {
+        public override IHttpActionResult GetSearchableList([FromBody] PostData postData)
+        {
+            if (GetAuthCheck() && !AllowSearch)
+                return Unauthorized();
+
+            try
+            {
+                DataTable table = GetSearchResults(postData);
+                return Ok(table);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+    }
     [RoutePrefix("api/Customer")]
-    public class CustomerController : ModelController<openXDA.Model.Customer> {}
+    public class CustomerController : XDAEndController<SystemCenter.Model.Customer> { }
+
+    [RoutePrefix("api/DetailedMeter")]
+    public class DetailedMeterController : XDAEndController<SystemCenter.Model.DetailedMeter> { }
 
 }
