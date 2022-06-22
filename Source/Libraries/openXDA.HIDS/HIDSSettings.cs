@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System.ComponentModel;
 using System.Configuration;
 
@@ -46,18 +45,5 @@ namespace openXDA.HIDS
         [Setting]
         [DefaultValue("gpa")]
         public string OrganizationID { get; set; }
-
-        public void Load()
-        {
-            using(AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                Host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'");
-                TokenID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'");
-                PointBucket = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.PointBucket'");
-                OrganizationID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'");
-            }
-        }
     }
-
-
 }

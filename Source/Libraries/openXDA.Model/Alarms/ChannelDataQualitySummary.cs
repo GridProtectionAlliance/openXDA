@@ -59,11 +59,11 @@ namespace openXDA.Model
                 "WHEN MATCHED THEN " +
                 "    UPDATE SET " +
                 "        Target.ExpectedPoints = Source.ExpectedPoints, " +
-                "        Target.GoodPoints = Target.GoodPoints + Source.GoodPoints, " +
-                "        Target.LatchedPoints = Target.LatchedPoints + Source.LatchedPoints, " +
-                "        Target.UnreasonablePoints = Target.UnreasonablePoints + Source.UnreasonablePoints, " +
-                "        Target.NoncongruentPoints = Target.NoncongruentPoints + Source.NoncongruentPoints, " +
-                "        Target.DuplicatePoints = Target.DuplicatePoints + Source.DuplicatePoints " +
+                "        Target.GoodPoints = Source.GoodPoints, " +
+                "        Target.LatchedPoints = Source.LatchedPoints, " +
+                "        Target.UnreasonablePoints = Source.UnreasonablePoints, " +
+                "        Target.NoncongruentPoints = Source.NoncongruentPoints, " +
+                "        Target.DuplicatePoints = Source.DuplicatePoints " +
                 "WHEN NOT MATCHED THEN " +
                 "    INSERT VALUES(Source.ChannelID, Source.Date, Source.ExpectedPoints, Source.GoodPoints, Source.LatchedPoints, Source.UnreasonablePoints, Source.NoncongruentPoints, Source.DuplicatePoints);";
 

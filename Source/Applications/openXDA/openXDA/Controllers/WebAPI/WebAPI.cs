@@ -22,28 +22,24 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Web.Http;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Net.Security;
-using GSF.Security.Model;
-using GSF.Web;
 using GSF.Web.Model;
 using GSF.Web.Security;
 using log4net;
 using Newtonsoft.Json;
 using openXDA.Model;
 using SystemCenter.Model;
+using openXDA.Adapters;
+using openXDA.Model;
+using openXDA.Nodes;
 
 namespace openXDA.Controllers.WebAPI
 {
@@ -139,14 +135,24 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/Event")]
     public class EventController : ModelController<Event>
     {
+        private Host Host { get; }
+
+        public EventController(Host host) =>
+            Host = host;
+
         [HttpPost, Route("TrenDAP")]
         public IHttpActionResult GetEventsForTrenDAP([FromBody] HIDSPost post)
         {
+            DataTable hidsTable;
+            try { hidsTable = HIDSController.GetTable(Host, post); }
+            catch (ArgumentException ex) { return BadRequest(ex.Message); }
+
             string hours = string.Join(",", Enumerable.Range(0, 24).Where(index => (post.Hours & (1Lu << index)) > 0).Select(h => h.ToString()));
             string days = string.Join(",", Enumerable.Range(0, 7).Where(index => (post.Days & (1Lu << index)) > 0).Select(h => (h + 1).ToString()));
             string weeks = string.Join(",", Enumerable.Range(0, 53).Where(index => (post.Weeks & (1Lu << index)) > 0).Select(h => h.ToString()));
             string months = string.Join(",", Enumerable.Range(0, 12).Where(index => (post.Months & (1Lu << index)) > 0).Select(h => (h + 1).ToString()));
-            string channels = string.Join(",", HIDSController.GetTable(post).Select().Select(row => row["ID"].ToString()));
+            string channels = string.Join(",", hidsTable.AsEnumerable().Select(row => row.ConvertField<string>("ID")));
+
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 string sql = @"
@@ -166,7 +172,6 @@ namespace openXDA.Controllers.WebAPI
                 return Ok(table);
             }
         }
-
     }
 
     [RoutePrefix("api/MeasurementType")]

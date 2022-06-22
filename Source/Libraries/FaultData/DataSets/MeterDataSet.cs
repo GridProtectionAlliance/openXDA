@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
+using FaultData.DataSets.GTC;
 using GSF.Data;
 using GSF.Data.Model;
 using openXDA.Model;
@@ -85,6 +86,7 @@ namespace FaultData.DataSets
         public List<string> Triggers { get; set; }
 
         private Dictionary<Type, object> Resources { get; set; }
+        public BreakerRestrikeDataSet BreakerRestrikeDataSet { get; set; }
 
         #endregion
 

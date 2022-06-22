@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props')" />
   <PropertyGroup>
@@ -140,8 +140,8 @@
     <Reference Include="GSF.Web">
       <HintPath>..\..\..\Dependencies\GSF\GSF.Web.dll</HintPath>
     </Reference>
-    <Reference Include="HIDS, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\Dependencies\NuGet\HIDS.1.0.2\lib\netstandard2.0\HIDS.dll</HintPath>
+    <Reference Include="HIDS, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\HIDS.1.0.3\lib\netstandard2.0\HIDS.dll</HintPath>
     </Reference>
     <Reference Include="InfluxDB.Client, Version=3.2.0.0, Culture=neutral, PublicKeyToken=2ffdb0e6ebde0d3f, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\InfluxDB.Client.3.2.0\lib\netstandard2.0\InfluxDB.Client.dll</HintPath>

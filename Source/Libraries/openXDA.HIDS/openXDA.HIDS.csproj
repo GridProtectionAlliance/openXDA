@@ -38,8 +38,8 @@
     <Reference Include="GSF.Core">
       <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
-    <Reference Include="HIDS, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\HIDS.1.0.2\lib\netstandard2.0\HIDS.dll</HintPath>
+    <Reference Include="HIDS, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\HIDS.1.0.3\lib\netstandard2.0\HIDS.dll</HintPath>
     </Reference>
     <Reference Include="InfluxDB.Client, Version=3.2.0.0, Culture=neutral, PublicKeyToken=2ffdb0e6ebde0d3f, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\InfluxDB.Client.3.2.0\lib\netstandard2.0\InfluxDB.Client.dll</HintPath>
@@ -190,9 +190,9 @@
     <Compile Include="DailySummaryOperation.cs" />
     <Compile Include="DataQualityOperation.cs" />
     <Compile Include="HIDSSettings.cs" />
+    <Compile Include="PointAggregationResource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QualityFlags.cs" />
-    <Compile Include="TrendingDataQuery.cs" />
     <Compile Include="TrendingDataSummaryOperation.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -206,7 +206,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -21,25 +21,22 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
-using GSF.Data.Model;
-using Newtonsoft.Json.Linq;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
-using System.Net.Http;
+using System.Runtime.Caching;
 using System.Web.Http;
+using GSF.Data;
+using GSF.Data.Model;
 using HIDS;
 using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
-using System.Runtime.Caching;
+using openXDA.Model;
+using openXDA.Nodes;
 
 namespace SPCTools
 {
-    
     [RoutePrefix("api/SPCTools/Token")]
     public class TokenController : ApiController
     {
@@ -52,7 +49,6 @@ namespace SPCTools
             public DateTime StatisticsStart { get; set; }
             public DateTime StatisticsEnd { get; set; }
             public List<int> StatisticsChannelID { get; set; }
-
         }
 
         public class TokenParseResponse
@@ -61,13 +57,12 @@ namespace SPCTools
             public string Message { get; set; }
             public bool IsScalar { get; set; }
             public List<double> Value { get; set; }
-
         }
+
         #endregion
 
         #region [Properties]
 
-        protected virtual string Connection { get; } = "systemSettings";
         protected virtual string GetRoles { get; } = "Viewer,Administrator";
 
         private static DateTime s_epoch = new DateTime(1970, 1, 1);
@@ -75,14 +70,18 @@ namespace SPCTools
         private static MemoryCache s_memoryCache;
         private static readonly double s_cacheExipry = 5;
 
+        private Host Host { get; }
+
         #endregion
 
         #region [ Constructor ]
 
-        static TokenController()
-        {
+        public TokenController(Host host) =>
+            Host = host;
+
+        static TokenController() =>
             s_memoryCache = new MemoryCache("SPCToolsHIDSData");
-        }
+
         #endregion
 
         #region [HTTPRequests]
@@ -140,10 +139,6 @@ namespace SPCTools
         // This needs to change before TVA deployment
         private Dictionary<int, List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
         {
-
-            HIDSSettings settings = new HIDSSettings();
-            settings.Load();
-
             Dictionary<int, List<Point>> result = new Dictionary<int, List<Point>>();
 
             string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
@@ -164,6 +159,7 @@ namespace SPCTools
             List<Point> data;
             using (API hids = new API())
             {
+                HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
                 hids.Configure(settings);
                 data = hids.ReadPointsAsync(dataToGet, start, end).ToListAsync().Result;
             }
@@ -171,14 +167,12 @@ namespace SPCTools
             dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data.Where(pt => pt.Tag == item).ToList(), new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });
 
             return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag== item.ToString("x8")).ToList());
-
-
         }
 
         private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)
         {
             AlarmDay day;
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             {
                 day = new TableOperations<AlarmDay>(connection).QueryRecordWhere("ID = {0}", alarmValue.AlarmdayID);
             }
@@ -191,6 +185,7 @@ namespace SPCTools
 
             return (DateTime input) => { return (input.Hour >= alarmValue.StartHour && input.Hour < alarmValue.EndHour); };
         }
+
         #endregion
     }
 }

@@ -27,8 +27,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
-using FaultData.DataResources.GTC;
 using FaultData.DataSets;
+using FaultData.DataSets.GTC;
 using GSF.COMTRADE;
 using GSF.Configuration;
 using GSF.Interop;
@@ -110,7 +110,10 @@ namespace FaultData.DataReaders
 
             string firstFilePath = fileGroup.DataFiles.Select(dataFile => dataFile.FilePath).First();
             string tempDataFolderName = Path.GetFileNameWithoutExtension(firstFilePath);
-            string tempDataFolderPath = Path.Combine(TempDataFolder, tempDataFolderName);
+
+            // The temp data folder may be deeply nested;
+            // long path syntax prevents errors due to large file names
+            string tempDataFolderPath = @"\\?\" + Path.Combine(TempDataFolder, tempDataFolderName);
 
             string GetPathInTempDataFolder(DataFile dataFile)
             {
@@ -145,18 +148,18 @@ namespace FaultData.DataReaders
                     meterDataSet = Parse(parser);
                 }
 
-                // TODO: Fix logic to read breaker restrike data from the INF file
-                //string infFilePath = fileGroup.DataFiles
-                //    .Where(IsINFFile)
-                //    .Select(GetPathInTempDataFolder)
-                //    .FirstOrDefault();
+                string infFilePath = fileGroup.DataFiles
+                    .Where(IsINFFile)
+                    .Select(GetPathInTempDataFolder)
+                    .FirstOrDefault();
 
-                //if (File.Exists(infFilePath))
-                //{
-                //    IniFile infFile = new IniFile(infFilePath);
-                //    INFDataSet infDataSet = new INFDataSet(infFile);
-                //    meterDataSet.GetResource(() => new BreakerRestrikeResource(infDataSet));
-                //}
+                if (File.Exists(infFilePath))
+                {
+                    IniFile infFile = new IniFile(infFilePath);
+                    INFDataSet infDataSet = new INFDataSet(infFile);
+                    BreakerRestrikeDataSet breakerRestrikeDataSet = BreakerRestrikeDataSet.Create(infDataSet);
+                    meterDataSet.BreakerRestrikeDataSet = breakerRestrikeDataSet;
+                }
 
                 return meterDataSet;
             }

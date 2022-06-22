@@ -79,6 +79,16 @@ namespace openXDA.Adapters
             );
 
             config.Routes.MapHttpRoute(
+                name: "HIDS",
+                routeTemplate: "api/hids/{action}",
+                defaults: new
+                {
+                    controller = "HIDS",
+                    action = "LegacyPost"
+                }
+            );
+
+            config.Routes.MapHttpRoute(
                 name: "PeriodicDataDisplay",
                 routeTemplate: "api/PeriodicDataDisplay/{action}",
                 defaults: new

@@ -143,11 +143,8 @@ namespace FaultData.DataResources
                 VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
                 VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
 
-
                 IEnumerable<Restrike> iaRestrikes = FindRestrikes(viCycleDataGroup.IA, viDataGroup.IA, viDataGroup.VA);
-
                 IEnumerable<Restrike> ibRestrikes = FindRestrikes(viCycleDataGroup.IB, viDataGroup.IB, viDataGroup.VB);
-
                 IEnumerable<Restrike> icRestrikes = FindRestrikes(viCycleDataGroup.IC, viDataGroup.IC, viDataGroup.VC);
 
                 List<Restrike> allRestrikes = Enumerable.Empty<Restrike>()
@@ -165,9 +162,8 @@ namespace FaultData.DataResources
         {
             List<Restrike> restrikes = new List<Restrike>();
 
-            if (cycleData == null || pointOnWaveData == null)
+            if (cycleData is null || pointOnWaveData is null || VPOW is null)
                 return restrikes;
-
            
             int fullCycle = (int)Math.Ceiling(pointOnWaveData.SampleRate / DataAnalysisSettings.SystemFrequency);
             // This needs to be tuned

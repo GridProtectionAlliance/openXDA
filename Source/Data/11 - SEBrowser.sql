@@ -75,7 +75,7 @@ CREATE VIEW [dbo].[SEBrowser.EventSearchDetailsView] AS
 		Disturbance ON EventWorstDisturbance.WorstDisturbanceID = Disturbance.ID LEFT JOIN
 		Phase ON Disturbance.PhaseID = Phase.ID LEFT JOIN
 		EventType ON Disturbance.EventTypeID = EventType.ID
-	UNION
+	UNION ALL
 	SELECT 
 		Event.ID AS EventID,
 		NULL AS FaultID,
@@ -95,7 +95,7 @@ CREATE VIEW [dbo].[SEBrowser.EventSearchDetailsView] AS
 	FROM Event LEFT JOIN
 		EventType ON EventType.ID = Event.EventTypeID 
 	WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name IN ('BreakerOpen','Other'))
-	UNION 
+	UNION ALL
 	SELECT 
 		Event.ID AS EventID,
 		FaultSummary.FaultNumber AS FaultID,

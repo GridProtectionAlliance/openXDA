@@ -21,25 +21,22 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
-using GSF.Data.Model;
-using Newtonsoft.Json.Linq;
-using openXDA.Model;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
-using System.Net.Http;
 using System.Web.Http;
+using GSF.Data;
+using GSF.Data.Model;
 using HIDS;
+using Newtonsoft.Json;
 using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
-using Newtonsoft.Json;
+using openXDA.Model;
+using openXDA.Nodes;
 
 namespace SPCTools
 {
-    
     [RoutePrefix("api/SPCTools/Wizard")]
     public class WizardController : ApiController
     {
@@ -59,7 +56,6 @@ namespace SPCTools
             public DateTime StatisticsEnd { get; set; }
             public DataFilter StatisticsFilter { get; set; }
             public int SeriesTypeID { get; set; }
-
         }
 
         public class LoadResponse
@@ -71,19 +67,26 @@ namespace SPCTools
             public List<MeterDetail> SelectedMeter { get; set; }
             public List<AlarmValue> AlarmValues { get; set; }
             public List<AlarmFactor> AlarmFactors { get; set; }
-
         }
+
         #endregion
 
         #region [Properties]
 
-        protected virtual string Connection { get; } = "systemSettings";
         protected virtual string SaveRoles { get; } = "Administrator";
 
         private static DateTime s_epoch = new DateTime(1970, 1, 1);
 
+        private Host Host { get; }
+
         #endregion
 
+        #region [ Constructor ]
+
+        public WizardController(Host host) =>
+            Host = host;
+
+        #endregion
 
         #region [HTTPRequests]
 
@@ -98,7 +101,7 @@ namespace SPCTools
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = Host.CreateDbConnection())
                 {
                     bool isNew = false;
                     if (request.AlarmGroup.ID == -1)
@@ -191,11 +194,7 @@ namespace SPCTools
                             alarmValueTbl.AddNewRecord(alarmValue);
 
                         });
-
-
                     });
-
-
                 }
 
                 return Ok(true);
@@ -204,8 +203,6 @@ namespace SPCTools
             {
                 return InternalServerError(ex);
             }
-
-
         }
 
 
@@ -220,7 +217,7 @@ namespace SPCTools
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = Host.CreateDbConnection())
                 {
                     string voltageSQL = $@"SELECT DISTINCT Asset.VoltageKV 
                         FROM 
@@ -231,9 +228,7 @@ namespace SPCTools
 
                     DataTable tbl = connection.RetrieveData(voltageSQL);
 
-
-
-                return Ok(JsonConvert.SerializeObject(tbl));
+                    return Ok(JsonConvert.SerializeObject(tbl));
                 }
             }
             catch (Exception ex)
@@ -253,7 +248,7 @@ namespace SPCTools
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = Host.CreateDbConnection())
                 {
                     string phaseSQL = $@"SELECT * FROM Phase 
                         WHERE ID IN 
@@ -285,7 +280,7 @@ namespace SPCTools
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = Host.CreateDbConnection())
                 {
                     AlarmGroup alarmGroup = (new TableOperations<AlarmGroup>(connection)).LoadRecord(id);
                     if (alarmGroup == null)
@@ -347,10 +342,6 @@ namespace SPCTools
 
         private Dictionary<int, List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
         {
-
-            HIDSSettings settings = new HIDSSettings();
-            settings.Load();
-
             Dictionary<int, List<Point>> result = new Dictionary<int, List<Point>>();
 
             string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
@@ -359,20 +350,18 @@ namespace SPCTools
             List<Point> data;
             using (API hids = new API())
             {
+                HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
                 hids.Configure(settings);
                 data = hids.ReadPointsAsync(dataToGet, start, end).ToListAsync().Result;
             }
 
-
             return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
-
-
         }
 
         private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)
         {
             AlarmDay day;
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             {
                 day = new TableOperations<AlarmDay>(connection).QueryRecordWhere("ID = {0}", alarmValue.AlarmdayID);
             }
@@ -388,5 +377,4 @@ namespace SPCTools
 
         #endregion
     }
-
 }
