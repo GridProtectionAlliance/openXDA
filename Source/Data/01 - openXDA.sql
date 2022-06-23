@@ -3988,6 +3988,9 @@ CREATE TABLE MetersToDataPush
 )
 GO
 
+CREATE UNIQUE INDEX unq_remoteID_meterID ON MetersToDataPush(RemoteXDAInstanceID, LocalXDAMeterID)
+GO
+
 CREATE TABLE AssetsToDataPush
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -3999,6 +4002,9 @@ CREATE TABLE AssetsToDataPush
     Obsfucate bit NOT NULL,
     Synced bit NOT NULL
 )
+GO
+
+CREATE UNIQUE INDEX unq_remoteID_assetID ON AssetsToDataPush(RemoteXDAInstanceID, LocalXDAAssetID)
 GO
 
 CREATE TABLE FileGroupLocalToRemote
