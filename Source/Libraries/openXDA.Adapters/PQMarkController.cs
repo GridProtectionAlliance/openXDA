@@ -22,14 +22,14 @@
 //******************************************************************************************************
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
-using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Reflection;
@@ -38,6 +38,8 @@ using GSF.Web.Security;
 using log4net;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
+using openXDA.Nodes;
+using openXDA.Nodes.Types.Analysis;
 
 namespace openXDA.Adapters
 {
@@ -48,20 +50,21 @@ namespace openXDA.Adapters
     {
         #region [ Constructors ]
 
-        public PQMarkController(Func<AdoDataConnection> connectionFactory) =>
-            ConnectionFactory = connectionFactory;
+        public PQMarkController(Host host) =>
+            Host = host;
 
         #endregion
 
         #region [ Properties ]
 
-        private Func<AdoDataConnection> ConnectionFactory { get; }
+        private Host Host { get; }
 
         #endregion
 
         #region [ Methods ]
 
         #region [ GET Operations ]
+
         // This generates a request verification token that will need to be added to the headers
         // of a web request before calling PUT, POST, or DELETE operations since these methods
         // validate the header token to prevent CSRF attacks in a browser. Browsers will not
@@ -88,7 +91,7 @@ namespace openXDA.Adapters
         {
             object result;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             using (DataContext dataContext = new DataContext(connection))
             {
                 try
@@ -135,7 +138,7 @@ namespace openXDA.Adapters
         {
             object collection;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             using (DataContext dataContext = new DataContext(connection))
             {
                 try
@@ -185,7 +188,7 @@ namespace openXDA.Adapters
         {
             object record;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             using (DataContext dataContext = new DataContext(connection))
             {
                 try
@@ -221,7 +224,7 @@ namespace openXDA.Adapters
         {
             object record;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             using (DataContext dataContext = new DataContext(connection))
             {
                 try
@@ -262,7 +265,7 @@ namespace openXDA.Adapters
         {
             object record;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             using (DataContext dataContext = new DataContext(connection))
             {
                 try
@@ -298,7 +301,6 @@ namespace openXDA.Adapters
         /// Returns multiple records
         /// </summary>
         /// <returns></returns>
-
         [HttpGet]
         public IHttpActionResult GetRecords(string id, string modelName)
         {
@@ -323,7 +325,7 @@ namespace openXDA.Adapters
                 return BadRequest("The id field must be a comma separated integer list.");
             }
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             using (DataContext dataContext = new DataContext(connection))
             {
                 try
@@ -371,7 +373,7 @@ namespace openXDA.Adapters
         {
             object record;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             {
                 try
                 {
@@ -405,15 +407,16 @@ namespace openXDA.Adapters
             return Ok(record);
 
         }
+
         #endregion
 
         #region [ PUT Operations ]
 
         [HttpPut]
-        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        [ValidateRequestVerificationToken]
         public IHttpActionResult UpdateRecord(string modelName, [FromBody] JObject record)
         {
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             using (DataContext dataContext = new DataContext(connection))
             {
                 try
@@ -433,10 +436,10 @@ namespace openXDA.Adapters
         }
 
         [HttpPut]
-        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        [ValidateRequestVerificationToken]
         public IHttpActionResult AppendToFileBlob([FromBody] JObject record)
         {
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             {
                 try
                 {
@@ -459,30 +462,29 @@ namespace openXDA.Adapters
         #region [ POST Operations ]
 
         [HttpPost]
-        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        [ValidateRequestVerificationToken]
         public IHttpActionResult CreateRecord(string modelName, [FromBody] JObject record)
         {
             int recordId;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             using (DataContext dataContext = new DataContext(connection))
             {
                 try
                 {
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
+                    ITableOperations table = dataContext.Table(type);
                     object obj = record.ToObject(type);
-                    PQMarkRestrictedAttribute attribute;
+                    table.AddNewRecord(obj);
 
-                    dataContext.Table(type).AddNewRecord(obj);
+                    PropertyInfo assetKeyProperty = type.GetProperty("AssetKey");
 
-                    if (modelName == "Meter")
-                        recordId = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = {0}", ((Meter)obj).AssetKey).ID;
-                    else if (modelName == "Line")
-                        recordId = dataContext.Table<Line>().QueryRecordWhere("AssetKey = {0}", ((Line)obj).AssetKey).ID;
+                    if (!(assetKeyProperty is null))
+                        recordId = connection.ExecuteScalar<int>($"SELECT ID FROM {table.TableName} WHERE AssetKey = {{0}}", assetKeyProperty.GetValue(obj));
                     else
                         recordId = connection.ExecuteScalar<int>("SELECT @@Identity");
 
-                    if (type.TryGetAttribute(out attribute))
+                    if (type.TryGetAttribute(out PQMarkRestrictedAttribute attribute))
                         connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, {1}, {2})", recordId, modelName, Thread.CurrentPrincipal.Identity.Name);
                 }
                 catch (Exception ex)
@@ -499,12 +501,12 @@ namespace openXDA.Adapters
 
 
         [HttpPost]
-        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        [ValidateRequestVerificationToken]
         public IHttpActionResult CreateChannel([FromBody] JObject record)
         {
             int channelId;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             {
                 try
                 {
@@ -568,10 +570,10 @@ namespace openXDA.Adapters
         }
 
         [HttpPost]
-        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        [ValidateRequestVerificationToken]
         public IHttpActionResult UpdateChannel([FromBody] JObject record)
         {
-            using (AdoDataConnection connection = ConnectionFactory())
+            using (AdoDataConnection connection = Host.CreateDbConnection())
             {
                 try
                 {
@@ -634,12 +636,30 @@ namespace openXDA.Adapters
 
 
         [HttpPost]
-        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
-        public IHttpActionResult ProcessFileGroup([FromBody] JObject record)
+        [ValidateRequestVerificationToken]
+        public async Task<IHttpActionResult> ProcessFileGroup([FromBody] JObject record, CancellationToken cancellationToken)
         {
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                Type analysisNodeType = typeof(AnalysisNode);
+                string url = Host.BuildURL(analysisNodeType, "PollTaskQueue");
+                request.RequestUri = new Uri(url);
+                request.Method = HttpMethod.Post;
+            }
+
             try
             {
-                OnReprocessFiles(record["FileGroupID"].Value<int>(), record["MeterID"].Value<int>());
+                using (AdoDataConnection connection = Host.CreateDbConnection())
+                {
+                    TableOperations<AnalysisTask> analysisTaskTable = new TableOperations<AnalysisTask>(connection);
+                    AnalysisTask analysisTask = new AnalysisTask();
+                    analysisTask.FileGroupID = record.Value<int>("FileGroupID");
+                    analysisTask.MeterID = record.Value<int>("MeterID");
+                    analysisTask.Priority = 3;
+                    analysisTaskTable.AddNewRecord(analysisTask);
+                }
+
+                await Host.SendWebRequestAsync(ConfigureRequest, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -656,12 +676,12 @@ namespace openXDA.Adapters
         #region [ DELETE Operations ]
 
         [HttpDelete]
-        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        [ValidateRequestVerificationToken]
         public IHttpActionResult DeleteRecord(int id, string modelName)
         {
             try
             {
-                using (AdoDataConnection connection = ConnectionFactory())
+                using (AdoDataConnection connection = Host.CreateDbConnection())
                 using (DataContext dataContext = new DataContext(connection))
                 {
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
@@ -695,17 +715,6 @@ namespace openXDA.Adapters
 
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(PQMarkController));
-
-        #region [ Static Event Handlers ]
-
-        public static event EventHandler<EventArgs<int, int>> ReprocessFilesEvent;
-
-        private static void OnReprocessFiles(int fileGroupID, int meterID)
-        {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int, int>(fileGroupID, meterID));
-        }
-
-        #endregion
 
         #endregion
     }
