@@ -29,7 +29,7 @@ import AlarmGroupHome from './AlarmGroup/AlarmGroup';
 import ChannelOverview from './ChannelOverview/ChannelOverview';
 import MeterOverview from './MeterOverview/MeterOverview';
 
-import { Provider, useSelector, useDispatch } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
 import store from './store/store';
 import { ResetWizzard } from './Wizard/DynamicWizzardSlice';
 import { FetchAlarmDay } from './store/AlarmDaySlice';
@@ -77,11 +77,11 @@ const SPCTools: React.FunctionComponent = (props: {}) => {
 
 //Load General Options
 
-store.dispatch(FetchAlarmDay());
-store.dispatch(FetchAlarmDayGroup());
-store.dispatch(FetchMeasurmentTypes());
-store.dispatch(FetchAlarmType());
-store.dispatch(FetchSeriesType());
-store.dispatch(FetchSeverities());
+store.dispatch<any>(FetchAlarmDay());
+store.dispatch<any>(FetchAlarmDayGroup());
+store.dispatch<any>(FetchMeasurmentTypes());
+store.dispatch<any>(FetchAlarmType());
+store.dispatch<any>(FetchSeriesType());
+store.dispatch<any>(FetchSeverities());
 
 ReactDOM.render(<Provider store={store}><SPCTools/></Provider>, document.getElementById('body'));

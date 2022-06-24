@@ -245,9 +245,9 @@ const ChannelTable = (props: { selectAll: boolean }) => {
                 ]}
                 tableClass="table table-hover"
                 data={channelList}
-                sortField={sort}
+                sortKey={sort}
                 ascending={asc}
-                onSort={(d) => dispatch(SortAffectedChanels({ Ascending: d.ascending, SortField: d.col }))}
+                onSort={(d) => dispatch(SortAffectedChanels({ Ascending: d.ascending, SortField: d.colField }))}
                 onClick={(d) => { }}
                 theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                 tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 400, width: '100%' }}

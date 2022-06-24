@@ -80,13 +80,13 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
                             ]}
                             tableClass="table table-hover"
                             data={meters}
-                            sortField={mSort}
+                            sortKey={mSort}
                             ascending={mAsc}
                             onSort={(d) => {
-                                if (d.col == mSort)
+                                if (d.colKey == mSort)
                                     dispatch(SortMeters({ SortField: mSort, Ascending: !mAsc }));
                                 else
-                                    dispatch(SortMeters({ SortField: d.col, Ascending: mAsc }));
+                                    dispatch(SortMeters({ SortField: d.colKey, Ascending: mAsc }));
                             }}
                             onClick={(d) => setMeterID(d.row.ID)}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
@@ -106,13 +106,13 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
                             ]}
                             tableClass="table table-hover"
                             data={alarmGroups}
-                            sortField={agSort}
+                            sortKey={agSort}
                             ascending={agAsc}
                             onSort={(d) => {
-                                if (d.col == agSort)
+                                if (d.colKey == agSort)
                                     dispatch(SortMeterAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
                                 else
-                                    dispatch(SortMeterAlarmGroups({ SortField: d.col, Ascending: agAsc }));
+                                    dispatch(SortMeterAlarmGroups({ SortField: d.colKey, Ascending: agAsc }));
                             }}
                             onClick={(d) => { }}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}

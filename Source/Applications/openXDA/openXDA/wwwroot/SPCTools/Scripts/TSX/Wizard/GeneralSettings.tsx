@@ -125,9 +125,9 @@ const GeneralSettings = (props: IProps) => {
                                 ]}
                                 tableClass="table table-hover"
                                 data={selectedMeter}
-                                sortField={sort}
+                                sortKey={sort}
                                 ascending={asc}
-                                onSort={(d) => { dispatch(sortSelectedMeters({ field: d.col, asc: d.ascending })) }}
+                                onSort={(d) => { dispatch(sortSelectedMeters({ field: d.colField, asc: d.ascending })) }}
                                 onClick={(d) => { }}
                                 theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                 tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 300, width: '100%' }}
@@ -230,15 +230,15 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                             ]}
                             tableClass="table table-hover"
                             data={meterList}
-                            sortField={sort}
+                            sortKey={sort}
                             ascending={asc}
                             onSort={(d) => {
-                                if (d.col == sort) {
+                                if (d.colKey == sort) {
                                     setAsc(!asc);
                                 }
                                 else {
                                     setAsc(asc);
-                                    setSort(d.col);
+                                    setSort(d.colField);
                                 }
                             }}
                             onClick={(d) => { }}
@@ -349,15 +349,15 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                             ]}
                             tableClass="table table-hover"
                             data={assetGroupList}
-                            sortField={sort}
+                            sortKey={sort}
                             ascending={asc}
                             onSort={(d) => {
-                                if (d.col == sort) {
+                                if (d.colField == sort) {
                                     setAsc(!asc);
                                 }
                                 else {
                                     setAsc(asc);
-                                    setSort(d.col);
+                                    setSort(d.colField);
                                 }
                             }}
                             onClick={(d) => { setSelectedAssetGroupID(d.row.ID) }}

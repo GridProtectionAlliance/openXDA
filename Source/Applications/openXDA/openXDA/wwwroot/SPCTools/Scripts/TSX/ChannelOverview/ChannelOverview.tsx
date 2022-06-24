@@ -84,13 +84,13 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
                             ]}
                             tableClass="table table-hover"
                             data={channels}
-                            sortField={coSort}
+                            sortKey={coSort}
                             ascending={coAsc}
                             onSort={(d) => {
-                                if (d.col == coSort)
+                                if (d.colKey == coSort)
                                     dispatch(SortChannelOverviews({ SortField: coSort, Ascending: !coAsc }));
                                 else
-                                    dispatch(SortChannelOverviews({ SortField: d.col, Ascending: coAsc }));
+                                    dispatch(SortChannelOverviews({ SortField: d.colKey, Ascending: coAsc }));
                             }}
                             onClick={(d) => setChannelID(d.row.ID)}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
@@ -109,13 +109,13 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
                             ]}
                             tableClass="table table-hover"
                             data={alarmGroups}
-                            sortField={agSort}
+                            sortKey={agSort}
                             ascending={agAsc}
                             onSort={(d) => {
-                                if (d.col == agSort)
+                                if (d.colKey == agSort)
                                     dispatch(SortChannelAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
                                 else
-                                    dispatch(SortChannelAlarmGroups({ SortField: d.col, Ascending: agAsc }));
+                                    dispatch(SortChannelAlarmGroups({ SortField: d.colKey, Ascending: agAsc }));
                             }}
                             onClick={(d) => { }}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}

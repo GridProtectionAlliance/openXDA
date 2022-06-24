@@ -281,7 +281,7 @@ export const selectAlarmDayGroupID = (state: Redux.StoreState) => state.DynamicW
 
 export const SelectStatisticsrange = (state: Redux.StoreState) => state.DynamicWizzard.StatisticsRange;
 export const SelectStatisticsFilter = (state: Redux.StoreState) => state.DynamicWizzard.StatisticsFilter;
-export const SelectStatisticsChannels = createSelector(SelectAffectedChannels, (state: Redux.StoreState) => state.DynamicWizzard.StatisticsChannelIDs, (channels, ids) => channels.filter(item => ids.findIndex(i => i == item.ID) > -1));
+export const SelectStatisticsChannels = createSelector(SelectAffectedChannels, (state: Redux.StoreState) => state.DynamicWizzard.StatisticsChannelIDs, (channels, ids) => channels.filter(item => ids.findIndex(i => i == item.ID) > -1) as openXDA.IChannel[]) ;
 export const SelectAlarmFactors = (state: Redux.StoreState) => state.DynamicWizzard.AlarmFactors;
 
 export const SelectSetPointAlarmDays = createSelector(selectAlarmDayGroupID, SelectAlarmDayGroups, SelectAlarmDays, (id, alarmDayGroups, alarmDays) => {

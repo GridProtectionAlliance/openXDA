@@ -27,13 +27,12 @@ import GeneralSettings from './GeneralSettings';
 import {selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror} from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 
-import ReactTooltip from 'react-tooltip';
+import { ToolTip } from '@gpa-gemstone/react-interactive';
 import { Requirements } from '../CommonComponents/Requirments';
 import SelectStatisticsData from './SelectStatisticsData';
 import SetPointCreator from './SetPointCreator';
 import { FunctionHelp } from '../CommonComponents/FunctionHelp';
 import WizardTest from './WizardTest';
-import { SPCTools } from '../global';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -49,6 +48,7 @@ const WizardHome = (props: IProps) => {
     const errors = useSelector(selectErrors);
     const wizardError = useSelector(selectWizardEror);
 
+    const [hover, setHover] = React.useState<boolean>(false);
 
     function Continue() {
         
@@ -106,7 +106,7 @@ const WizardHome = (props: IProps) => {
                 <div className="col" style={{width: '100%'}}>
                     <div className="btn-group mr-2 float-right" role="group">
                         <button type="button" className={"btn btn-success" + (errors.some(item => (item.complete == 'required')) ? ' disabled' : '')}
-                            onClick={() => Continue() } data-tip data-for="registerTip">
+                            onClick={() => Continue()} data-tooltip='registerTip' onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
                             {status != 'idle' ? <span className="spinner-border spinner-border-sm"></span> : (tab == "test" ? "Save" : "Continue")}
                         </button> 
                     </div>
@@ -117,11 +117,10 @@ const WizardHome = (props: IProps) => {
                     </div>
                 </div>
             </div>
-            {tab != 'test'?
-                <ReactTooltip id={'registerTip'} place={'top'} effect="solid" getContent={() => {
-                    return (<div style={{ width: '600px' }}> {errors.map((item, index) => <Requirements {...item} key={index} />)} </div>)
-                }}>
-                </ReactTooltip>
+            {tab != 'test' ?
+                <ToolTip Show={hover && errors.length > 0} Position={'top'} Theme={'dark'} Target={"registerTip"}>
+                    {errors.map((item, index) => <Requirements {...item} key={index} />)}
+                </ToolTip>
                 : null}
             {tab == 'setpoint' ? <FunctionHelp /> : null}
         </div>      

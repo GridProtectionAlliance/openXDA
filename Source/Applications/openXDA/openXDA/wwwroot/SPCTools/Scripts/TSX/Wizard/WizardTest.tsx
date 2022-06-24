@@ -245,13 +245,13 @@ const WizardTest = (props: IProps) => {
                                     ]}
                                     tableClass="table table-hover"
                                     data={channelList}
-                                    sortField={sort}
+                                    sortKey={sort}
                                     ascending={asc}
                                     onSort={(d) => {
-                                        if (sort === d.col)
+                                        if (sort === d.colKey)
                                             setAsc(!asc)
                                         else
-                                            setSort(d.col)
+                                            setSort(d.colField)
                                     }}
                                     onClick={(d) => setSelectedChannel(d.row.ID)}
                                     theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
@@ -287,7 +287,7 @@ const WizardTest = (props: IProps) => {
                                     ]}
                                     tableClass="table thead-dark table-striped"
                                     data={resultSummary}
-                                    sortField={'Severity'}
+                                    sortKey={'Severity'}
                                     ascending={false}
                                     onSort={(d) => {
                                     }}
@@ -321,7 +321,7 @@ const WizardTest = (props: IProps) => {
                                     ]}
                                     tableClass="table thead-dark table-striped"
                                     data={channelSummary}
-                                    sortField={'Severity'}
+                                    sortKey={'Severity'}
                                     ascending={false}
                                     onSort={(d) => {
                                     }}

@@ -59,7 +59,7 @@ export const FunctionHelp = (props: {}) => {
                     ]}
                         tableClass="table table-striped"
                         data={(type == 'dynamic' ? [...staticData, ...dynamicData] : staticData)}
-                        sortField={''}
+                        sortKey={''}
                         ascending={true}
                         onSort={() => { }}
                         onClick={(d) => { }}

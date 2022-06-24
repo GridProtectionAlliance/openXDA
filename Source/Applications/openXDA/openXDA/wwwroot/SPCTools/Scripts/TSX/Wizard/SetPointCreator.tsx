@@ -56,13 +56,13 @@ const SetPointCreator = (props: IProps) => {
     const dispatch = useDispatch();
 
     const factors = useSelector(SelectAlarmFactors);
-    const availableChannels = useSelector(SelectStatisticsChannels)
+    const availableChannels = useSelector(SelectStatisticsChannels) as openXDA.IChannel[]
     
     const statisticsTime = useSelector(SelectStatisticsrange);
 
     // This only triggers on First render to create a List of Available Meters for the Graph Dropdown
     React.useEffect(() => {
-        let meterIds = _.uniq(availableChannels.map((item) => item.MeterID))
+        let meterIds: number[]  = _.uniq(availableChannels.map((item) => item.MeterID))
 
         setMeterList(meterIds.map(id => {
             return { MeterId: id, Channels: availableChannels.filter(ch => ch.MeterID == id), Name: availableChannels.find(ch => ch.MeterID == id).MeterName }

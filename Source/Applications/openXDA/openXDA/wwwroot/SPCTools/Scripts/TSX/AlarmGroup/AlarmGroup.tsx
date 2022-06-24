@@ -94,13 +94,13 @@ const AlarmGroupHome = (props: {loadAlarm: () => void}) => {
                                 ]}
                                 tableClass="table table-hover"
                                 data={alarmGroups}
-                                sortField={agSort}
+                                sortKey={agSort}
                                 ascending={agAsc}
-                                onSort={(d) => {
-                                    if (d.col == agSort)
+                            onSort={(d) => {
+                                if (d.colKey == agSort)
                                         dispatch(SortAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
                                     else
-                                        dispatch(SortAlarmGroups({ SortField: d.col, Ascending: agAsc }));
+                                    dispatch(SortAlarmGroups({ SortField: d.colKey, Ascending: agAsc }));
                                 }}
                                 onClick={(d) => { seSelectedAlarmGroup(d.row) }}
                                 theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
@@ -120,7 +120,7 @@ const AlarmGroupHome = (props: {loadAlarm: () => void}) => {
                                     ]}
                                     tableClass="table thead-dark table-striped"
                                     data={detailedData}
-                                    sortField={'Content'}
+                                    sortKey={'Content'}
                                     ascending={false}
                                     onSort={(d) => { }}
                                     onClick={(d) => { }}
