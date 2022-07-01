@@ -454,6 +454,10 @@
       <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
       <Name>openHistorian.XDALink</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.APIAuthentication\openXDA.APIAuthentication.csproj">
+      <Project>{93ff1e73-cd8b-4f01-89bc-a4a242fa06a6}</Project>
+      <Name>openXDA.APIAuthentication</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.Configuration\openXDA.Configuration.csproj">
       <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
       <Name>openXDA.Configuration</Name>
