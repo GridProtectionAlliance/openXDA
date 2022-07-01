@@ -21,37 +21,29 @@
 //
 //******************************************************************************************************
 
-
-using GSF.Data;
-using GSF.Data.Model;
 using System;
-using System.Data;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using GSF.Data;
 
 namespace openXDA.APIAuthentication
 {
     /// <summary>
-    /// class to create and make an API Query to another App.
+    /// Issues requests to the API using API authentication.
     /// This class handles the GSF token and authentication
     /// </summary>
     public class APIQuery
     {
-        #region[Properties]
-
-        private Func<AdoDataConnection> ConnectionFactory { get; }
-        public string APIKey { get; }
-        public string APIToken { get; }
-        public string HostURL { get; }
-
-        private int DbTimeout { get; set; } =
-           DataExtensions.DefaultTimeoutDuration;
-
-        #endregion[Properties]
-
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="APIQuery"/> class.
+        /// </summary>
+        /// <param name="connectionFactory">Factory function for creating database connections.</param>
+        /// <param name="apiKey">The API key used to identify the user of the API.</param>
+        /// <param name="apiToken">The token used to authenticate the user of the API.</param>
+        /// <param name="host">Comma-separated list of hosts providing access to the API.</param>
         public APIQuery(Func<AdoDataConnection> connectionFactory, string apiKey, string apiToken, string host)
         {
             ConnectionFactory = connectionFactory;
@@ -60,33 +52,55 @@ namespace openXDA.APIAuthentication
             HostURL = host;
         }
 
-        #endregion [ Constructors ]
+        #endregion
+
+        #region[ Properties ]
+
+        /// <summary>
+        /// The API key identifying the user of the API.
+        /// </summary>
+        public string APIKey { get; }
+
+        /// <summary>
+        /// The API token used to authenticate the user.
+        /// </summary>
+        public string APIToken { get; }
+
+        /// <summary>
+        /// A comma-separated list of URLs used to locate the hosts in
+        /// the cluster of systems that provide access to the API.
+        /// </summary>
+        public string HostURL { get; }
+
+        private Func<AdoDataConnection> ConnectionFactory { get; }
+
+        private int DbTimeout { get; set; } =
+           DataExtensions.DefaultTimeoutDuration;
+
+        #endregion
 
         #region [ Methods ]
 
-        private AdoDataConnection CreateDbConnection()
-        {
-            AdoDataConnection connection = ConnectionFactory();
-            connection.DefaultTimeout = DbTimeout;
-            return connection;
-        }
-
-        #endregion [ Methods ]
-
+        /// <summary>
+        /// Sends a web request to the host using the credentials for API authentication.
+        /// </summary>
+        /// <param name="configure"></param>
+        /// <param name="endpoint"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string endpoint, GSF.Threading.CancellationToken cancellationToken = default)
         {
-           
-            
             string[] urls = HostURL.Split(';');
             bool success = false;
             int i = 0;
+
             while (i < urls.Length && !success)
             {
                 using (HttpRequestMessage request = new HttpRequestMessage())
                 {
                     string cleanHostURL = urls[i].Trim().TrimEnd('/');
                     string fullurl = $"{cleanHostURL}/{endpoint.Trim().TrimStart('/')}";
-                
+
                     request.RequestUri = new Uri(fullurl);
                     configure(request);
 
@@ -103,16 +117,24 @@ namespace openXDA.APIAuthentication
                         return r;
                 }
             }
+
             return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
         }
+
+        private AdoDataConnection CreateDbConnection()
+        {
+            AdoDataConnection connection = ConnectionFactory();
+            connection.DefaultTimeout = DbTimeout;
+            return connection;
+        }
+
+        #endregion
 
         #region [ Static ]
 
         private static HttpClient HttpClient { get; }
             = new HttpClient();
 
-        #endregion [ Static ]
+        #endregion
     }
-
-
 }
