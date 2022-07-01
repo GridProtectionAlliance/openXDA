@@ -47,6 +47,7 @@ using Microsoft.Owin.Cors;
 using Microsoft.Owin.Extensions;
 using Newtonsoft.Json;
 using openXDA.Adapters;
+using openXDA.APIAuthentication.Extensions;
 using openXDA.Hubs;
 using openXDA.Model;
 using openXDA.Nodes;
@@ -441,6 +442,9 @@ namespace openXDA.WebHosting
 
             // Enable GSF role-based security authentication
             app.UseHostAuthentication(ConnectionFactory);
+
+            app.UseWhen(context => !(context.Request.User is SecurityPrincipal),
+                branch => branch.UseAPIAuthentication(ConnectionFactory));
 
             app.UseWhen(context => !(context.Request.User is SecurityPrincipal),
                 branch => branch.UseAuthentication(AuthenticationOptions));
