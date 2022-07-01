@@ -34,7 +34,7 @@ using Owin;
 namespace openXDA.APIAuthentication
 {
     /// <summary>
-    /// MidleWare to allow API Authentication via <see cref="APIAccesKey"/>
+    /// Middleware to authenticate users of the API via <see cref="APIAccessKey"/>.
     /// </summary>
     public class APIAuthenticationMiddleware : OwinMiddleware
     {
@@ -103,6 +103,11 @@ namespace openXDA.APIAuthentication
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="APIAuthenticationMiddleware"/> class.
+        /// </summary>
+        /// <param name="next">The next middleware in the pipeline.</param>
+        /// <param name="connectionFactory">Factory function for creating database connections.</param>
         public APIAuthenticationMiddleware(OwinMiddleware next, Func<AdoDataConnection> connectionFactory)
             : base(next)
         {
@@ -119,6 +124,11 @@ namespace openXDA.APIAuthentication
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Process an individual request.
+        /// </summary>
+        /// <param name="context">The context in which the request is made.</param>
+        /// <returns>The task that indicates when the request has been processed.</returns>
         public async override Task Invoke(IOwinContext context)
         {
             IOwinRequest request = context.Request;
@@ -166,8 +176,16 @@ namespace openXDA.APIAuthentication
 
     namespace Extensions
     {
+        /// <summary>
+        /// Extension methods for hosting API authentication.
+        /// </summary>
         public static class APIAuthenticationMiddlewareExtensions
         {
+            /// <summary>
+            /// Enables use of the API authentication middleware in the app.
+            /// </summary>
+            /// <param name="app">The app in which the middlware will be used.</param>
+            /// <param name="connectionFactory">Factory for creating database connections.</param>
             public static void UseAPIAuthentication(this IAppBuilder app, Func<AdoDataConnection> connectionFactory) =>
                 app.Use<APIAuthenticationMiddleware>(connectionFactory);
         }

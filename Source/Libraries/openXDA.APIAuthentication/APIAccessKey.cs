@@ -21,9 +21,8 @@
 //
 //******************************************************************************************************
 
-
-using GSF.Data.Model;
 using System;
+using GSF.Data.Model;
 
 namespace openXDA.APIAuthentication
 {
@@ -32,17 +31,25 @@ namespace openXDA.APIAuthentication
     /// </summary>
     public class APIAccessKey
     {
-        #region[Properties]
-        public string APIToken { get; set; }
-        public string RegistrationKey { get; set; }
-
+        /// <summary>
+        /// Unique identifier for the API access key.
+        /// </summary>
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        /// <summary>
+        /// Unique registration key to identify the user.
+        /// </summary>
+        public string RegistrationKey { get; set; }
+
+        /// <summary>
+        /// The access token used to authenticate the user.
+        /// </summary>
+        public string APIToken { get; set; }
+
+        /// <summary>
+        /// The date and time at which the access key is no longer valid.
+        /// </summary>
         public DateTime Expires { get; set; }
-        #endregion[Properties]
-
     }
-
-
 }
