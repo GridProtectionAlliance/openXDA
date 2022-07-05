@@ -47,6 +47,7 @@ namespace openXDA.NotificationDataSources
                 configure(this);
 
             [Setting]
+            [DefaultValue(null)]
             public string ConnectionString { get; set; }
 
             [Setting]
@@ -65,10 +66,16 @@ namespace openXDA.NotificationDataSources
 
         #endregion
 
+        #region [ Constructors ]
+
+        public SQLDataSource(Func<AdoDataConnection> xdaConnectionFactory) =>
+            XDAConnectionFactory = xdaConnectionFactory;
+
+        #endregion
+
         #region [ Properties ]
 
-        public string Name { get; }
-
+        private Func<AdoDataConnection> XDAConnectionFactory { get; }
         private DataSourceSettings Settings { get; set; }
 
         #endregion
@@ -92,11 +99,22 @@ namespace openXDA.NotificationDataSources
             if (Settings is null)
                 throw new InvalidOperationException("SQL data source must be configured before processing");
 
+            if (string.IsNullOrEmpty(Settings.ConnectionString))
+                return CreateXDAConnection();
+
             string connectionString = Settings.ConnectionString;
             string dataProviderString = Settings.DataProviderString;
             AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString);
             connection.DefaultTimeout = Settings.QueryTimeout;
             return connection;
+        }
+
+        private AdoDataConnection CreateXDAConnection()
+        {
+            if (XDAConnectionFactory is null)
+                throw new ArgumentNullException(nameof(Settings.ConnectionString));
+
+            return XDAConnectionFactory();
         }
 
         #endregion
