@@ -23,6 +23,7 @@
 
 using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using GSF.Data;
@@ -70,6 +71,10 @@ namespace openXDA.APIAuthentication
         /// </summary>
         public string HostURL { get; }
 
+        /// <summary>
+        /// The GSF AntiForgeryToken used to secure POST Requests
+        /// </summary>
+        public string AntiForgeryToken { get; private set; } = null;
         #endregion
 
         #region [ Methods ]
@@ -97,6 +102,13 @@ namespace openXDA.APIAuthentication
                     request.RequestUri = new Uri(fullurl);
                     configure(request);
 
+
+                    if (request.Method != HttpMethod.Get && AntiForgeryToken == null)
+                        AntiForgeryToken = await GenerateAntiForgeryToken();
+
+                    if (request.Method != HttpMethod.Get)
+                        HttpClient.DefaultRequestHeaders.Add("X-GSF-Verify", AntiForgeryToken);
+
                     const string type = "XDA-API";
                     string decode = $"{APIKey}:{APIToken}";
                     Encoding utf8 = new UTF8Encoding(false);
@@ -113,7 +125,25 @@ namespace openXDA.APIAuthentication
 
             return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
         }
-      
+
+        /// <summary>
+        /// Gets AntiForgeryToken from the <see cref="RequestVerificationHeaderTokenController"/>
+        /// </summary>
+        /// <returns>string token</returns>
+        public async Task<string> GenerateAntiForgeryToken()
+        {
+            Action<HttpRequestMessage> tokenRequest = (HttpRequestMessage request) => {
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                request.Method = HttpMethod.Get;
+            };
+
+           using (HttpResponseMessage response = await SendWebRequestAsync(tokenRequest, "/api/rvht"))
+           {
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Unable to get Anti Forger Token: {response.StatusCode} {response.ReasonPhrase}");
+                return response.Content.ReadAsStringAsync().Result;
+            }
+        }
         #endregion
 
         #region [ Static ]
