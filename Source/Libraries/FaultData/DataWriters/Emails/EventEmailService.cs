@@ -152,7 +152,7 @@ namespace FaultData.DataWriters.Emails
                     ApplyChartTransform(attachments, htmlDocument);
                     ApplyFTTTransform(attachments, htmlDocument);
                     SendEmail(recipients, htmlDocument, attachments);
-                    LoadSentEmail(xdaNow, recipients, htmlDocument, eventIDs);
+                    LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
                 }
             }
             finally
@@ -280,9 +280,9 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void LoadSentEmail(DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
+        private void LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
         {
-            int sentEmailID = LoadSentEmail(now, recipients, htmlDocument);
+            int sentEmailID = LoadSentEmail(email, now, recipients, htmlDocument);
 
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -466,14 +466,14 @@ namespace FaultData.DataWriters.Emails
             return new SmtpClient(host);
         }
 
-        private int LoadSentEmail(DateTime now, List<string> recipients, XDocument htmlDocument)
+        private int LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 string toLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
                 string subject = GetSubject(htmlDocument);
                 string body = GetBody(htmlDocument);
-                connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3})", now, toLine, subject, body);
+                connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3}, {4})", email.ID, now, toLine, subject, body);
                 return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
         }
