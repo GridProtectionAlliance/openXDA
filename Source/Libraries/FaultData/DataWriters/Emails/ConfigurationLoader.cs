@@ -32,7 +32,6 @@ using GSF.Data;
 using GSF.Data.Model;
 using log4net;
 using openXDA.Model;
-using openXDA.Model.Emails;
 
 namespace FaultData.DataWriters.Emails
 {

@@ -23,7 +23,7 @@
 
 using GSF.Data.Model;
 
-namespace openXDA.Model.Emails
+namespace openXDA.Model
 {
     public class ScheduledEmailType
     {
