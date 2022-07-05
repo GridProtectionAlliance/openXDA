@@ -40,13 +40,11 @@ namespace openXDA.APIAuthentication
         /// <summary>
         /// Creates a new instance of the <see cref="APIQuery"/> class.
         /// </summary>
-        /// <param name="connectionFactory">Factory function for creating database connections.</param>
         /// <param name="apiKey">The API key used to identify the user of the API.</param>
         /// <param name="apiToken">The token used to authenticate the user of the API.</param>
         /// <param name="host">Comma-separated list of hosts providing access to the API.</param>
-        public APIQuery(Func<AdoDataConnection> connectionFactory, string apiKey, string apiToken, string host)
+        public APIQuery(string apiKey, string apiToken, string host)
         {
-            ConnectionFactory = connectionFactory;
             APIKey = apiKey;
             APIToken = apiToken;
             HostURL = host;
@@ -71,11 +69,6 @@ namespace openXDA.APIAuthentication
         /// the cluster of systems that provide access to the API.
         /// </summary>
         public string HostURL { get; }
-
-        private Func<AdoDataConnection> ConnectionFactory { get; }
-
-        private int DbTimeout { get; set; } =
-           DataExtensions.DefaultTimeoutDuration;
 
         #endregion
 
@@ -120,14 +113,7 @@ namespace openXDA.APIAuthentication
 
             return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
         }
-
-        private AdoDataConnection CreateDbConnection()
-        {
-            AdoDataConnection connection = ConnectionFactory();
-            connection.DefaultTimeout = DbTimeout;
-            return connection;
-        }
-
+      
         #endregion
 
         #region [ Static ]
