@@ -132,8 +132,13 @@ namespace FaultData.DataWriters.Emails
                     List<DataSourceWrapper> dataSources = dataSourceTable
                         .QueryRecordsWhere($"ID IN ({DataSourceIDQueryFormat})", email.ID)
                         .Select(CreateDataSource)
-                        .Where(wrapper => !(wrapper.DataSource is null))
                         .ToList();
+
+                    if (dataSources.Any(wrapper => wrapper.DataSource is null))
+                    {
+                        Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
+                        return;
+                    }
 
                     if (dataSources.Count == 0)
                         return;
