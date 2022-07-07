@@ -76,11 +76,11 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
                     <div className="col" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
                         <Table<SPCTools.IChannelOverview>
                             cols={[
-                                { key: 'Meter', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Channel', label: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Type', label: 'Type', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Phase', label: 'Phase', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } }, 
-                                { key: 'Asset', label: 'Asset', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },    
+                                { key: 'Meter', label: 'Meter', field: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Channel', label: 'Channel', field: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Type', label: 'Type', field: 'Type', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Phase', label: 'Phase', field: 'Phase', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Asset', label: 'Asset', field: 'Asset', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                             ]}
                             tableClass="table table-hover"
                             data={channels}
@@ -103,9 +103,9 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
                     <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
                         <Table<SPCTools.IChannelAlarmGroup>
                             cols={[
-                                { key: 'Name', label: 'AlarmGroup', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'AlarmSeverity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'TimeInAlarm', label: 'Time In Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Name', label: 'AlarmGroup', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'AlarmSeverity', label: 'Severity', field: 'AlarmSeverity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'TimeInAlarm', label: 'Time In Alarm', field: 'TimeInAlarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                             ]}
                             tableClass="table table-hover"
                             data={alarmGroups}

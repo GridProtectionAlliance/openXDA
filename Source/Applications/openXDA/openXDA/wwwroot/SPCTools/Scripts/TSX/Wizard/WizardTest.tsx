@@ -237,9 +237,9 @@ const WizardTest = (props: IProps) => {
                                 <Table<IChannelList>
                                     tableStyle={{ height: '100%' }}
                                     cols={[
-                                        { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'Name', label: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'NumberRaised', label: 'Raised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'MeterName', label: 'Meter', field: 'MeterName', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'Name', label: 'Channel', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                         { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
                                         
                                     ]}
@@ -282,7 +282,7 @@ const WizardTest = (props: IProps) => {
                                     cols={[
                                         { key: 'Severity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p> },
                                         { key: 'Threshhold', label: 'Threshhold', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => (item.Threshhold == undefined ? "N/A" : item.Threshhold) },
-                                        { key: 'NumberRaised', label: 'Raised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                         { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
                                     ]}
                                     tableClass="table thead-dark table-striped"
@@ -316,7 +316,7 @@ const WizardTest = (props: IProps) => {
                                     cols={[
                                         { key: 'Severity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p> },
                                         { key: 'Threshhold', label: 'Threshhold', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => (item.Threshhold == undefined ? "N/A" : item.Threshhold) },
-                                        { key: 'NumberRaised', label: 'Raised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                         { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + " %" },
                                     ]}
                                     tableClass="table thead-dark table-striped"

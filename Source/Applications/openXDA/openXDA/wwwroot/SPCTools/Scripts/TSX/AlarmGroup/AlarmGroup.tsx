@@ -86,10 +86,10 @@ const AlarmGroupHome = (props: {loadAlarm: () => void}) => {
                         <div className="col-8">
                             <Table<SPCTools.IAlarmGroupView>
                                 cols={[
-                                    { key: 'Name', label: 'Alarm Group', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'Meters', label: 'Number of Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'Channels', label: 'Number of Channels', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'AlarmSeverity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },    
+                                    { key: 'Name', label: 'Alarm Group', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                    { key: 'Meters', label: 'Number of Meters', field: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                    { key: 'Channels', label: 'Number of Channels', field: 'Channels', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                    { key: 'AlarmSeverity', label: 'Severity', field: 'AlarmSeverity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                     { key: null, label: 'Time in Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: () => 'N/A' },
                                 ]}
                                 tableClass="table table-hover"
@@ -115,8 +115,8 @@ const AlarmGroupHome = (props: {loadAlarm: () => void}) => {
                             <div className="col">
                                 <Table<IDetailRow>
                                     cols={[
-                                        { key: 'Content', label: '', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'Value', label: '', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } }
+                                        { key: 'Content', label: '', field: 'Content', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'Value', label: '', field: 'Value', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } }
                                     ]}
                                     tableClass="table thead-dark table-striped"
                                     data={detailedData}

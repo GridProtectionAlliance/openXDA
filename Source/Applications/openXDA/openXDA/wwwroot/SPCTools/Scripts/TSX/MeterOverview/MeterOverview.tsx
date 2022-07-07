@@ -74,9 +74,9 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
                     <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
                         <Table<openXDA.IMeter>
                             cols={[
-                                { key: 'Name', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Make', label: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Model', label: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Name', label: 'Meter', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Make', label: 'Make', field: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Model', label: 'Model', field: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                             ]}
                             tableClass="table table-hover"
                             data={meters}
@@ -99,10 +99,10 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
                     <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
                         <Table<SPCTools.IMeterAlarmGroup>
                             cols={[
-                                { key: 'Name', label: 'AlarmGroup', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'AlarmSeverity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Channel', label: 'Num. of Channels', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'TimeInAlarm', label: 'Time In Alarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Name', label: 'AlarmGroup', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'AlarmSeverity', label: 'Severity', field: 'AlarmSeverity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Channel', label: 'Num. of Channels', field: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'TimeInAlarm', label: 'Time In Alarm', field: 'TimeInAlarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                             ]}
                             tableClass="table table-hover"
                             data={alarmGroups}

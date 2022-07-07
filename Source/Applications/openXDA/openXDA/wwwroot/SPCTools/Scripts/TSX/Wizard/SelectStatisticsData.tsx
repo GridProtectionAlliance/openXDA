@@ -238,10 +238,10 @@ const ChannelTable = (props: { selectAll: boolean }) => {
         <div style={{ width: '100%', height: '100%' }}>
             <MultiSelectTable<openXDA.IChannel>
                 cols={[
-                    { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                    { key: 'AssetKey', label: 'Asset', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                    { key: 'Name', label: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                    { key: 'Phase', label: 'Phase', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                    { key: 'MeterName', label: 'Meter', field: 'MeterName', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                    { key: 'AssetKey', label: 'Asset', field: 'AssetKey', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                    { key: 'Name', label: 'Channel', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                    { key: 'Phase', label: 'Phase', field: 'Phase', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                 ]}
                 tableClass="table table-hover"
                 data={channelList}

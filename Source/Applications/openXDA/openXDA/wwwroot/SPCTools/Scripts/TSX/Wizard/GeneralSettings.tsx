@@ -119,8 +119,8 @@ const GeneralSettings = (props: IProps) => {
                             <Table<openXDA.IMeter>
                                 tableStyle={{height: '100%'}}
                                 cols={[
-                                    { key: 'Name', label: 'Name', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
-                                    { key: 'Location', label: 'Substation', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
+                                    { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
+                                    { key: 'Location', label: 'Substation', field: 'Location', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
                                     { key: null, label: '', headerStyle: { width: '10%' }, rowStyle: { width: '10%' }, content: (item, key) => <div onClick={() => dispatch(removeMeter([item]))} style={{ width: '100%', height: '100%', marginTop: '2px', textAlign: 'center' }}><i className="fa fa-trash-o"></i></div> },
                                 ]}
                                 tableClass="table table-hover"
@@ -223,10 +223,10 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                         <FilterWindow<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType }} Direction={'right'} SetFilter={setFilters} />
                         <MultiSelectTable<openXDA.IMeter>
                             cols={[
-                                { key: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Location', label: 'Substation', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Make', label: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Model', label: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Location', label: 'Substation', field: 'Location', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Make', label: 'Make', field: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Model', label: 'Model', field: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                             ]}
                             tableClass="table table-hover"
                             data={meterList}
@@ -343,8 +343,8 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                         <FilterWindow<openXDA.IAssetGroup> Id='FilterAssetGroup' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType }} SetFilter={setFilters} Direction={'right'} />
                         <Table<openXDA.IAssetGroup>
                             cols={[
-                                { key: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Meters', label: 'Num. of Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Meters', label: 'Num. of Meters', field: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                 
                             ]}
                             tableClass="table table-hover"
