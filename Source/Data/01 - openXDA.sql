@@ -3665,12 +3665,6 @@ GO
 INSERT INTO AlarmType(Name, Description) VALUES ('Lower Limit', 'Triggered when value is below setpoint')
 GO
 
-INSERT INTO AlarmType(Name, Description) VALUES ('In Range', 'Triggered when value is oustide specified Range')
-GO
-
-INSERT INTO AlarmType(Name, Description) VALUES ('Out of Range', 'Triggered when Value is within specified Range')
-GO
-
 INSERT INTO AlarmSeverity(Name, Color) VALUES ('Severe', '#ED1C16')
 GO
 INSERT INTO AlarmSeverity(Name, Color) VALUES ('Alert', '#F65314')
