@@ -122,10 +122,10 @@ function GetAffectedChannels(meterIDs: number[], measurementTypeID: number, seri
             Type: "integer"
         },
         {
-            FieldName: `(SELECT COUNT(Series.ID) FROM SERIES WHERE Series.ChannelID = ChannelDetail.ID AND Series.SeriesTypeID = ${seriesTypeID})`,
+            FieldName: `(SELECT COUNT(Series.ID) FROM SERIES WHERE Series.ChannelID = FullTbl.ID AND Series.SeriesTypeID = ${seriesTypeID})`,
             SearchText: "0",
             Operator: ">",
-            Type: "integer"
+            Type: "query"
         },
         {
             FieldName: "PhaseID",
@@ -134,10 +134,10 @@ function GetAffectedChannels(meterIDs: number[], measurementTypeID: number, seri
             Type: "integer"
         },
         {
-            FieldName: "(SELECT VoltageKV FROM Asset WHERE Asset.ID = ChannelDetail.AssetID)",
+            FieldName: "(SELECT VoltageKV FROM Asset WHERE Asset.ID = FullTbl.AssetID)",
             SearchText: `(${(voltages.length > 0 ? voltages.join(',') : 0)})`,
             Operator: "IN",
-            Type: "integer"
+            Type: "query"
         }
     ];
 

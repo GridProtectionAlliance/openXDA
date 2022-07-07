@@ -96,10 +96,10 @@ export const SelectMetersFilters = (state: Redux.StoreState) => state.Meter.Filt
 function GetMeter(filters: Filter.IFilter<openXDA.IMeter>[], sort, asc): JQuery.jqXHR<string> {
     let expandedFilter = [
         {
-            FieldName: '(SELECT COUNT(Alarm.ID) FROM Alarm LEFT JOIN Series ON Alarm.SeriesID = Series.ID LEFT JOIN Channel ON Series.ChannelID = Channel.ID WHERE Channel.MeterID = Meter.ID)',
+            FieldName: '(SELECT COUNT(Alarm.ID) FROM Alarm LEFT JOIN Series ON Alarm.SeriesID = Series.ID LEFT JOIN Channel ON Series.ChannelID = Channel.ID WHERE Channel.MeterID = FullTbl.ID)',
             SearchText: '0',
             Operator: '>',
-            Type: 'integer'
+            Type: 'query'
         }, ...filters]
     return $.ajax({
         type: "POST",

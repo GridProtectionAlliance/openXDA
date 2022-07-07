@@ -96,10 +96,10 @@ export const SelectChannelOverviewsFilters = (state: Redux.StoreState) => state.
 function GetChannelOverview(filters, sort, asc): JQuery.jqXHR<string> {
     let expandedFilter = [
         {
-            FieldName: '(SELECT COUNT(Alarm.ID) FROM Alarm LEFT JOIN Series ON Alarm.SeriesID = Series.ID WHERE Series.channelID = ChannelOverviewView.ID)',
+            FieldName: '(SELECT COUNT(Alarm.ID) FROM Alarm LEFT JOIN Series ON Alarm.SeriesID = Series.ID WHERE Series.channelID = FullTbl.ID)',
             SearchText: '0',
             Operator: '>',
-            Type: 'integer'
+            Type: 'query'
         }, ...filters]
 
     return $.ajax({
