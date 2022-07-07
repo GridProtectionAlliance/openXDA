@@ -178,7 +178,7 @@
         function updatePerformanceStatistics() {
             if (hubIsConnected)
                 serviceHub.getPerformanceStatistics().done(function (statistics) {
-                    $("#performanceStatistics").html(statistics);
+                    $("#performanceStatistics").text(statistics);
                 });
         }
 
