@@ -318,7 +318,7 @@ export const selectErrors = createSelector(
         let setPointScalar = !setPointResults.some(item => !item.IsScalar);
         let validStartDate = !isNaN(new Date(statisticsRange.start).getTime()) && statisticsRange.start != null;
         let validEndDate = !isNaN(new Date(statisticsRange.end).getTime()) && statisticsRange.end != null &&
-            (new Date(statisticsRange.end).getDate() > new Date(statisticsRange.start).getDate() || !validStartDate)
+            (new Date(statisticsRange.end) > new Date(statisticsRange.start) || !validStartDate)
         if (step == 'general') {
             result.push({ text: "A Name is required", complete: (name ? 'complete' : 'required') });
             result.push({ text: "At least 1 Meter needs to be selected", complete: (meterCount ? 'complete' : 'required') });
