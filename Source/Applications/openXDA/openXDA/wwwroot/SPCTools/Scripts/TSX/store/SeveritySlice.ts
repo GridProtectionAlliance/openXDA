@@ -51,7 +51,7 @@ export const SeveritySlice = createSlice({
         builder.addCase(FetchSeverities.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            state.Data = JSON.parse(action.payload) as SPCTools.ISeverity[];
+            state.Data = action.payload as SPCTools.ISeverity[];
 
         });
         builder.addCase(FetchSeverities.pending, (state, action) => {
@@ -79,7 +79,7 @@ export const SelectSeverityStatus = (state: Redux.StoreState) => state.Severity.
 
 // #region [ Async Functions ]
 
-function GetAlarmSeverities(): JQuery.jqXHR<string> {
+function GetAlarmSeverities(): JQuery.jqXHR<SPCTools.ISeverity[]> {
     return $.ajax({
         type: "GET",
         url: `${apiHomePath}api/SPCTools/AlarmSeverity`,

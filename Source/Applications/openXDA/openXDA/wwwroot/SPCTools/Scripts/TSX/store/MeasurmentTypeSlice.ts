@@ -51,7 +51,7 @@ export const MeasurementTypeSlice = createSlice({
         builder.addCase(FetchMeasurmentTypes.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            state.Data = JSON.parse(action.payload) as SPCTools.IMeasurementType[];
+            state.Data = action.payload as SPCTools.IMeasurementType[];
 
         });
         builder.addCase(FetchMeasurmentTypes.pending, (state, action) => {
@@ -80,7 +80,7 @@ export const SelectMeasurmentTypeStatus = (state: Redux.StoreState) => state.Mea
 
 // #region [ Async Functions ]
 
-function GetMeasurmentTypes(): JQuery.jqXHR<string> {
+function GetMeasurmentTypes(): JQuery.jqXHR<SPCTools.IMeasurementType[]> {
     return $.ajax({
         type: "GET",
         url: `${apiHomePath}api/ChannelGroupType`,

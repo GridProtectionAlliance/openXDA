@@ -51,7 +51,7 @@ export const AlarmDayGroupSlice = createSlice({
         builder.addCase(FetchAlarmDayGroup.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            let tmp = JSON.parse(action.payload);
+            let tmp = action.payload;
             let grp = _.groupBy(tmp, item => item.ID as number);
             state.Data = Object.keys(grp).map(id => {
                 return {
@@ -87,7 +87,7 @@ export const SelectAlarmDayGroupsStatus = (state: Redux.StoreState) => state.Ala
 
 // #region [ Async Functions ]
 
-function GetAlarmDayGroup(): JQuery.jqXHR<string> {
+function GetAlarmDayGroup(): JQuery.jqXHR<any> {
     return $.ajax({
         type: "GET",
         url: `${apiHomePath}api/AlarmDayGroup`,

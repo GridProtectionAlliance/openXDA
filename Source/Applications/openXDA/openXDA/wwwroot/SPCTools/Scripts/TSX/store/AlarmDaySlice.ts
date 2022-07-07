@@ -51,7 +51,7 @@ export const AlarmDaySlice = createSlice({
         builder.addCase(FetchAlarmDay.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            state.Data = JSON.parse(action.payload) as DynamicWizzard.IAlarmDay[];
+            state.Data = action.payload as DynamicWizzard.IAlarmDay[];
 
         });
         builder.addCase(FetchAlarmDay.pending, (state, action) => {
@@ -79,7 +79,7 @@ export const SelectAlarmDayByID = (state: Redux.StoreState, id) => state.AlarmDa
 
 // #region [ Async Functions ]
 
-function GetAlarmDay(): JQuery.jqXHR<string> {
+function GetAlarmDay(): JQuery.jqXHR<DynamicWizzard.IAlarmDay[]> {
     return $.ajax({
         type: "GET",
         url: `${apiHomePath}api/AlarmDay`,
