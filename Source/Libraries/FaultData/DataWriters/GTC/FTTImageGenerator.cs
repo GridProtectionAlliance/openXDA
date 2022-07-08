@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -45,7 +46,8 @@ namespace FaultData.DataWriters.GTC
         public FTTImageGenerator(FTTOptions options)
         {
             CLIPath = options.CLIPath;
-            URLFormat = options.URLFormat;
+            URL = options.URL;
+            QueryStringFormat = options.QueryStringFormat;
             QueryTimeout = options.QueryTimeout;
 
             ImageWidth = options.ImageWidth;
@@ -57,7 +59,8 @@ namespace FaultData.DataWriters.GTC
         #region [ Properties ]
 
         private string CLIPath { get; }
-        private string URLFormat { get; }
+        private string URL { get; }
+        private string QueryStringFormat { get; }
         private TimeSpan QueryTimeout { get; }
 
         private int ImageWidth { get; }
@@ -67,9 +70,20 @@ namespace FaultData.DataWriters.GTC
 
         #region [ Methods ]
 
-        public Stream QueryToImageStream(string stationName, string lineKey, double distance, DateTime eventTime)
+        public Stream QueryToImageStream(params FTTRecord[] records) =>
+            QueryToImageStream(records.AsEnumerable());
+
+        public Stream QueryToImageStream(IEnumerable<FTTRecord> records)
         {
-            string url = GetURL(stationName, lineKey, distance, eventTime);
+            UriBuilder builder = new UriBuilder(URL);
+
+            IEnumerable<string> queryParts = new[] { builder.Query.TrimStart('?') }
+                .Concat(records.Select(GetQueryString))
+                .Where(queryPart => !string.IsNullOrEmpty(queryPart));
+
+            builder.Query = string.Join("&", queryParts);
+
+            string url = builder.ToString();
             return QueryToImageStreamAsync(url).GetAwaiter().GetResult();
         }
 
@@ -166,21 +180,18 @@ namespace FaultData.DataWriters.GTC
             }
         }
 
-        private string GetURL(string station, string line, double distance, DateTime eventTime)
+        private string GetQueryString(FTTRecord record, int index)
         {
-            var parameters = new { station, line, distance, eventTime };
-            string url = URLFormat.Interpolate(parameters);
+            var parameters = new
+            {
+                index,
+                station = record.StationName,
+                line = record.LineKey,
+                distance = record.Distance,
+                eventTime = record.EventTime
+            };
 
-            long now = DateTime.UtcNow.Ticks;
-            string nocache = $"nocache={now:X}";
-            UriBuilder builder = new UriBuilder(url);
-            string query = builder.Query?.TrimStart('?');
-
-            builder.Query = !string.IsNullOrEmpty(query)
-                ? string.Join("&", query, nocache)
-                : nocache;
-
-            return builder.ToString();
+            return QueryStringFormat.Interpolate(parameters);
         }
 
         private string GenerateFilePath()
@@ -220,7 +231,8 @@ namespace FaultData.DataWriters.GTC
                 ? TimeSpan.FromSeconds(queryTimeoutSeconds)
                 : TimeSpan.FromSeconds(60);
 
-            string urlFormat = (string)fttElement.Attribute("url");
+            string url = (string)fttElement.Attribute("url");
+            string queryStringFormat = (string)fttElement.Attribute("queryStringFormat");
             string fttWidth = (string)fttElement.Attribute("width");
             string fttHeight = (string)fttElement.Attribute("height");
 
@@ -233,23 +245,30 @@ namespace FaultData.DataWriters.GTC
             FTTOptions options = new FTTOptions();
             options.CLIPath = cliPath;
             options.QueryTimeout = queryTimeout;
-            options.URLFormat = urlFormat;
+            options.URL = url;
+            options.QueryStringFormat = queryStringFormat;
             options.ImageWidth = imageWidth;
             options.ImageHeight = imageHeight;
 
-            string stationName = (string)fttElement.Attribute("stationName");
-            string lineKey = (string)fttElement.Attribute("lineKey");
-            string fttDistance = (string)fttElement.Attribute("distance");
-            string fttEventTime = (string)fttElement.Attribute("eventTime");
+            List<FTTRecord> fttRecords = fttElement
+                .Elements("fttRecord")
+                .Select(FTTRecord.ToRecord)
+                .ToList();
 
-            if (!double.TryParse(fttDistance, out double distance))
-                throw new FormatException($"FTT distance '{fttDistance}' is not a number.");
-
-            if (!DateTime.TryParse(fttEventTime, out DateTime eventTime))
-                throw new FormatException($"FTT eventTime '{fttEventTime}' is not a valid date/time.");
+            foreach (FTTRecord record in fttRecords)
+                Validate(record);
 
             FTTImageGenerator generator = new FTTImageGenerator(options);
-            return generator.QueryToImageStream(stationName, lineKey, distance, eventTime);
+            return generator.QueryToImageStream(fttRecords);
+        }
+
+        private static void Validate(FTTRecord record)
+        {
+            if (!double.TryParse(record.Distance, out double _))
+                throw new FormatException($"FTT distance '{record.Distance}' is not a number.");
+
+            if (!DateTime.TryParse(record.EventTime, out DateTime _))
+                throw new FormatException($"FTT eventTime '{record.EventTime}' is not a valid date/time.");
         }
 
         #endregion
