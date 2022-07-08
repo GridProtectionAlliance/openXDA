@@ -24,6 +24,7 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using GSF.Data;
@@ -116,14 +117,44 @@ namespace openXDA.APIAuthentication
                     string credentials = Convert.ToBase64String(credentialData);
                     request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(type, credentials);
 
-                    HttpResponseMessage r = await HttpClient.SendAsync(request, cancellationToken);
-                    i++;
-                    if (r.StatusCode != System.Net.HttpStatusCode.NotFound || i == urls.Length)
-                        return r;
+                    HttpResponseMessage response;
+                    try
+                    {
+                        response = await HttpClient.SendAsync(request, cancellationToken);
+                        
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        if (!IsUnreachableException(ex))
+                            new Exception($"Unhandled Exception sending request to: {fullurl}", ex);
+                    }
+                    catch (Exception ex)
+                    {
+                        new Exception($"Unhandled Exception sending request to: {fullurl}",ex);
+                    }
+                    finally
+                    {
+                        i++;
+                    }
+                   
                 }
             }
 
             return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+        }
+
+        /// <summary>
+        /// Checks Recursively if an <see cref="HttpRequestException"/> is caused by the Host being unreachable.
+        /// </summary>
+        /// <param name="innerEx">The <see cref="Exception"/></param>
+        /// <returns><see cref="true"/> if there is a <see cref="SocketException"/> with <see cref="SocketError.TimedOut"/> or <see cref="SocketError.ConnectionRefused"/></returns>
+        private bool IsUnreachableException(Exception innerEx)
+        {
+            if (innerEx.GetType() == typeof(SocketException))
+                return ((SocketException)innerEx).SocketErrorCode == SocketError.ConnectionRefused || ((SocketException)innerEx).SocketErrorCode == SocketError.TimedOut;
+            if (innerEx.InnerException is null)
+                return false;
+            return IsUnreachableException(innerEx.InnerException);
         }
 
         /// <summary>
