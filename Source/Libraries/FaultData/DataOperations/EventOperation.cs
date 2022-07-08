@@ -94,6 +94,8 @@ namespace FaultData.DataOperations
                 List<Event> events = GetEvents(connection, meterDataSet, dataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications, out processedDataGroups);
                 LoadEvents(connection, events, meterDataSet, processedDataGroups);
             }
+
+            LoadReportedEventType(meterDataSet);
         }
 
         private void FilterProcessedDataGroups(MeterDataSet meterDataSet)
@@ -326,14 +328,26 @@ namespace FaultData.DataOperations
                         WorstLLDisturbanceID = worstLLID,
                         WorstLNDisturbanceID = worstLNID
                     };
-                    new TableOperations<EventWorstDisturbance>(connection).AddNewRecord(worstDisturbanceRecord);
 
+                    new TableOperations<EventWorstDisturbance>(connection).AddNewRecord(worstDisturbanceRecord);
                 }
             }
-                
-            
+        }
 
-           
+        private void LoadReportedEventType(MeterDataSet meterDataSet)
+        {
+            AnalysisDataSet faultLocationDataSet = meterDataSet.AnalysisDataSet;
+            string eventType = faultLocationDataSet?.EventType;
+
+            if (string.IsNullOrWhiteSpace(eventType))
+                return;
+
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                const string FieldName = "EventType";
+                const string Description = "Type of event as determined by the meter.";
+                meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, eventType, Description);
+            }
         }
 
         private int? GetDisturbanceID(AdoDataConnection connection, TableOperations<DbDisturbance> disturbanceTable, Disturbance disturbance, int eventID)

@@ -327,6 +327,24 @@ namespace FaultData.DataOperations
                 m_faultSummarizer.FaultGroup = faultGroup;
                 m_faultSummarizer.SummarizeFault();
             }
+
+            LoadReportedFaultLocation(meterDataSet);
+        }
+
+        private void LoadReportedFaultLocation(MeterDataSet meterDataSet)
+        {
+            AnalysisDataSet faultLocationDataSet = meterDataSet.AnalysisDataSet;
+            double faultLocation = faultLocationDataSet?.FaultLocation ?? double.NaN;
+
+            if (double.IsNaN(faultLocation))
+                return;
+
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                const string FieldName = "FaultLocation";
+                const string Description = "Fault location computed by the meter.";
+                meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, faultLocation.ToString(), Description);
+            }
         }
 
         #endregion

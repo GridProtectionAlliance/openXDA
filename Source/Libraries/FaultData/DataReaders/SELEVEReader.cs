@@ -189,6 +189,13 @@ namespace FaultData.DataReaders
 
             foreach (CommaSeparatedEventReport report in eventFile.CommaSeparatedEventReports)
             {
+                AnalysisDataSet analysisDataSet = new AnalysisDataSet();
+                analysisDataSet.EventType = report.Event;
+                meterDataSet.AnalysisDataSet = analysisDataSet;
+
+                if (!double.IsNaN(report.Location))
+                    analysisDataSet.FaultLocation = report.Location;
+
                 for (int i = 0; i < report.AnalogSection.AnalogChannels.Count; i++)
                 {
                     Channel channel = MakeParsedAnalog(report, i);

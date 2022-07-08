@@ -87,6 +87,7 @@ namespace FaultData.DataSets
 
         private Dictionary<Type, object> Resources { get; set; }
         public BreakerRestrikeDataSet BreakerRestrikeDataSet { get; set; }
+        public AnalysisDataSet AnalysisDataSet { get; set; }
 
         #endregion
 
