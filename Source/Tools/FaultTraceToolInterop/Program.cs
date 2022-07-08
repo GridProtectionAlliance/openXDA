@@ -124,7 +124,7 @@ namespace FaultTraceToolInterop
                 long now = DateTime.UtcNow.Ticks;
                 string nocache = $"nocache={now:X}";
 
-                IEnumerable<string> queryParts = new[] { builder.Query, nocache }
+                IEnumerable<string> queryParts = new[] { builder.Query.TrimStart('?'), nocache }
                     .Where(str => !string.IsNullOrEmpty(str));
 
                 builder.Query = string.Join("&", queryParts);
