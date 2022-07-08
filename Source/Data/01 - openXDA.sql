@@ -279,6 +279,9 @@ GO
 INSERT INTO NodeType VALUES('Authorization', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode')
 GO
 
+INSERT INTO NodeType VALUES('DataPusher', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.DataPusher.DataPusherNode')
+GO
+
 CREATE TABLE Node
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -308,6 +311,9 @@ INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes
 GO
 
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode'), NULL, 'SSO Provider', 1)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.DataPusher.DataPusherNode'), NULL, 'Data Pusher', 1)
 GO
 
 CREATE TABLE NodeSetting

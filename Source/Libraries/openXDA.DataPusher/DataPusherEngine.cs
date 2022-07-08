@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -45,7 +46,6 @@ using GSF.Web.Model;
 using log4net;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
-using CapacitorBank = openXDA.Model.CapBank;
 
 namespace openXDA.DataPusher
 {
@@ -255,7 +255,7 @@ namespace openXDA.DataPusher
                     // Meter Updates every asset push associated with the meter
                     IEnumerable<AssetsToDataPush> meterlessAssets = new TableOperations<AssetsToDataPush>(connection).
                         QueryRecordsWhere(@"RemoteXDAInstanceID = {0} and LocalXDAAssetID in 
-                        (Select Asset.ID From Asset Full Outer Join MeterAsset On MeterAsset.AssetID = Asset.ID Where MeterID not in 
+                        (Select Asset.ID From Asset Full Outer Join MeterAsset On MeterAsset.AssetID = Asset.ID Where MeterID is null or MeterID not in 
                         (Select LocalXDAMeterID From MetersToDataPush Where RemoteXDAInstanceID = {0}))", instance.ID);
 
                     // Setup Progress
@@ -522,10 +522,16 @@ namespace openXDA.DataPusher
 
                 if (meter.Obsfucate)
                 {
+                    string newShortName;
+                    if (meter.RemoteXDAName.Length > 20)
+                        newShortName = meter.RemoteXDAName.Substring(0, 20);
+                    else
+                        newShortName = meter.RemoteXDAName;
+                        
                     remoteMeter = new Meter()
                     {
                         Alias = meter.RemoteXDAName,
-                        ShortName = meter.RemoteXDAName.Take(20).ToString(),
+                        ShortName = newShortName
                     };
 
                 }
@@ -605,27 +611,26 @@ namespace openXDA.DataPusher
             {
                 Asset remoteAsset = null;
 
-                // Todo, use gettype here later
                 string assetTypeText = localAssetTypes.First(x => x.ID == localAsset.AssetTypeID).Name;
-                //if the line does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-                if (assetTypeText == "Line")
-                    remoteAsset = AddOrGetAssetAny<Line>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
-                else if (assetTypeText == "LineSegment")
-                    remoteAsset = AddOrGetAssetAny<LineSegment>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
-                else if (assetTypeText == "Breaker")
-                    remoteAsset = AddOrGetAssetAny<Breaker>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
-                else if (assetTypeText == "Transformer")
-                    remoteAsset = AddOrGetAssetAny<Transformer>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
-                else if (assetTypeText == "Bus")
-                    remoteAsset = AddOrGetAssetAny<Bus>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
+                Type type;
+                // Check is needed since there is a disconnect between the typename and the model name for capbanks
+                if (assetTypeText == "CapacitorBankRelay")
+                    type = typeof(CapBankRelay);
                 else if (assetTypeText == "CapacitorBank")
-                    remoteAsset = AddOrGetAssetAny<CapacitorBank>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
+                    type = typeof(CapBank);
+                else
+                    type = typeof(Asset).Assembly.GetType("openXDA.Model." + assetTypeText);
 
-                if (remoteAsset == null) throw new Exception("Asset not defined.");
+                if (type is null || (type != typeof(Asset) && !type.IsSubclassOf(typeof(Asset))))
+                    throw new Exception($"Non-valid asset type {assetTypeText} defined for asset with asset key {localAsset.AssetKey}.");
+                var assetAnyMethod = typeof(DataPusherEngine).GetMethod("AddOrGetAssetAny", BindingFlags.Instance | BindingFlags.NonPublic);
+                var assetTypedMethod = assetAnyMethod.MakeGenericMethod(new[] { type });
+
+                remoteAsset = (Asset) assetTypedMethod.Invoke(this, new object[] { address, assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, userAccount });
                 return remoteAsset;
             }
         }
-        private T AddOrGetAssetAny<T>(string address, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount) where T : Asset, new()
+        private Asset AddOrGetAssetAny<T>(string address, string assetTypeText, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount) where T : Asset, new()
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -634,10 +639,17 @@ namespace openXDA.DataPusher
 
                 // Case where the typed asset doesn't exist locally, just do regular asset
                 if (localTypedAsset is null)
-                    return (T) AddOrGetAssetAny<Asset>(address, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
+                    return AddOrGetAssetAny<Asset>(address, assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
 
                 //if the asset does not exist in the PQMarkPusher Database to allow for obsfucation add it.
                 remoteTypedAsset = WebAPIHub.GetRecordWhere<T>(address, $"ID={assetToDataPush.RemoteXDAAssetID}", userAccount);
+
+                if (remoteTypedAsset is null)
+                {
+                    Asset checkKey = WebAPIHub.GetRecordWhere<Asset>(address, $"AssetKey='{(assetToDataPush.Obsfucate ? assetToDataPush.RemoteXDAAssetKey : localTypedAsset.AssetKey)}'", userAccount);
+                    if (!(checkKey is null))
+                        throw new Exception($"An asset with this Asset Key ({assetToDataPush.RemoteXDAAssetKey}) already exists.  Please update the Remote Asset Key field in the data pusher.");
+                }
 
                 if (remoteTypedAsset == null)
                 {
@@ -650,7 +662,7 @@ namespace openXDA.DataPusher
                     }
 
                     remoteTypedAsset.ID = 0;
-                    remoteTypedAsset.AssetTypeID = remoteAssetTypes.First(x => x.Name == typeof(T).Name).ID;
+                    remoteTypedAsset.AssetTypeID = remoteAssetTypes.First(x => x.Name == assetTypeText).ID; //Can't find based on T since T might be different than type text
                     remoteTypedAsset.ID = WebAPIHub.CreateRecord<T>(address, remoteTypedAsset, userAccount);
 
                     assetToDataPush.RemoteXDAAssetID = remoteTypedAsset.ID;
@@ -904,16 +916,16 @@ namespace openXDA.DataPusher
         {
             try
             {
-                
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
-
                     IEnumerable<FileGroup> localFileGroups;
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
 
                     DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(DataPusherSettings.TimeWindow * -1);
 
                     MetersToDataPush meterToDataPush = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
+                    if (meterToDataPush.RemoteXDAMeterID <= 0)
+                        throw new Exception($"Meter (ID:{meterId}) that was to have its files synced has not yet been pushed to instance (ID:{instance.ID}).");
 
                     string localAssetKey = new TableOperations<Meter>(connection).QueryRecordWhere("ID={0}", meterToDataPush.LocalXDAMeterID).AssetKey;
 
@@ -947,7 +959,7 @@ namespace openXDA.DataPusher
                                 Error = fileGroup.Error,
                                 MeterID = meterToDataPush.RemoteXDAMeterID
                             };
-                            int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, fg, userAccount);
+                            int remoteFileGroupId = WebAPIHub.CreateRecord<FileGroup>(instance.Address, fg, userAccount);
                             fileGroupLocalToRemote = new FileGroupLocalToRemote()
                             {
                                 RemoteXDAInstanceID = instance.ID,

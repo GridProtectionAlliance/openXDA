@@ -53,6 +53,7 @@
     <Compile Include="EPRICapBankAnalyticSection.cs" />
     <Compile Include="EventEmailSection.cs" />
     <Compile Include="FaultLocationSection.cs" />
+    <Compile Include="DataPusherSection.cs" />
     <Compile Include="FilePrunerSection.cs" />
     <Compile Include="PQDIFSection.cs" />
     <Compile Include="PQISection.cs" />

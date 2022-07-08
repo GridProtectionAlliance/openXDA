@@ -75,6 +75,7 @@
     <Compile Include="Types\Analysis\AnalysisTaskPublisher.cs" />
     <Compile Include="ConfigurationLoader.cs" />
     <Compile Include="Types\Authentication\AuthenticationProviderNode.cs" />
+    <Compile Include="Types\DataPusher\DataPusherNode.cs" />
     <Compile Include="Types\Email\EventEmailNode.cs" />
     <Compile Include="Types\Email\EventEmailType.cs" />
     <Compile Include="Types\EPRICapBankAnalysis\EPRICapBankAnalysisNode.cs" />
@@ -98,6 +99,10 @@
     <ProjectReference Include="..\openXDA.Configuration\openXDA.Configuration.csproj">
       <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
       <Name>openXDA.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\openXDA.DataPusher\openXDA.DataPusher.csproj">
+      <Project>{666EB8A6-FBA9-454C-8537-9113C2EE68D4}</Project>
+      <Name>openXDA.DataPusher</Name>
     </ProjectReference>
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
