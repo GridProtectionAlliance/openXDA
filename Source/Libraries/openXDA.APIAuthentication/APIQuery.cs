@@ -147,8 +147,8 @@ namespace openXDA.APIAuthentication
         /// <returns><c>true</c> if there exists an socket exception with <see cref="SocketError.TimedOut"/> or <see cref="SocketError.ConnectionRefused"/></returns>
         private bool IsUnreachableException(Exception ex)
         {
-            if (ex.GetType() == typeof(SocketException))
-                return ((SocketException)ex).SocketErrorCode == SocketError.ConnectionRefused || ((SocketException)ex).SocketErrorCode == SocketError.TimedOut;
+            if (ex is SocketException socketException)
+                return socketException.SocketErrorCode == SocketError.ConnectionRefused || socketException.SocketErrorCode == SocketError.TimedOut;
             if (ex.InnerException is null)
                 return false;
             return IsUnreachableException(ex.InnerException);
