@@ -22,10 +22,14 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace openXDA.APIAuthentication
@@ -36,6 +40,27 @@ namespace openXDA.APIAuthentication
     /// </summary>
     public class APIQuery
     {
+        #region [ Members ]
+
+        // Nested Types
+        private class Host
+        {
+            public Host(string url) =>
+                URL = url;
+
+            public string URL { get; }
+            public string AntiForgeryToken { get; set; }
+        }
+
+        private class HostUnreachableException : Exception
+        {
+        }
+
+        // Fields
+        private int m_hostIndex;
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -43,12 +68,30 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <param name="apiKey">The API key used to identify the user of the API.</param>
         /// <param name="apiToken">The token used to authenticate the user of the API.</param>
-        /// <param name="host">Semicolon-separated list of hosts providing access to the API.</param>
-        public APIQuery(string apiKey, string apiToken, string host)
+        /// <param name="hostURL">URL that locates the host providing access to the API.</param>
+        public APIQuery(string apiKey, string apiToken, string hostURL)
+            : this(apiKey, apiToken, new[] { hostURL })
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="APIQuery"/> class.
+        /// </summary>
+        /// <param name="apiKey">The API key used to identify the user of the API.</param>
+        /// <param name="apiToken">The token used to authenticate the user of the API.</param>
+        /// <param name="hostURLs">List of URLs that locate the hosts providing access to the API.</param>
+        public APIQuery(string apiKey, string apiToken, IEnumerable<string> hostURLs)
         {
             APIKey = apiKey;
             APIToken = apiToken;
-            HostURL = host;
+
+            Hosts = hostURLs
+                .Select(url => new Host(url))
+                .ToList();
+
+            // Select a random host for the first API call attempt
+            if (Hosts.Count > 1)
+                Interlocked.Exchange(ref m_hostIndex, InitialHostIndex);
         }
 
         #endregion
@@ -66,15 +109,16 @@ namespace openXDA.APIAuthentication
         public string APIToken { get; }
 
         /// <summary>
-        /// A comma-separated list of URLs used to locate the hosts in
-        /// the cluster of systems that provide access to the API.
+        /// The list of URLs that locate the hosts providing access to the API.
         /// </summary>
-        public string HostURL { get; }
+        public IEnumerable<string> HostsURLs => Hosts
+            .Select(host => host.URL);
 
-        /// <summary>
-        /// The CSRF token used to validate POST requests.
-        /// </summary>
-        public string AntiForgeryToken { get; private set; }
+        private List<Host> Hosts { get; }
+
+        private int InitialHostIndex => Tuple
+            .Create(Environment.TickCount, Environment.MachineName)
+            .GetHashCode() % Hosts.Count;
 
         #endregion
 
@@ -87,90 +131,121 @@ namespace openXDA.APIAuthentication
         /// <param name="path">Path to the API endpoint locating the resource to be requested.</param>
         /// <param name="cancellationToken">Token used to cancel the request before it has completed.</param>
         /// <returns>The HTTP response returned by the host that handled the request.</returns>
-        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, GSF.Threading.CancellationToken cancellationToken = default)
+        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, CancellationToken cancellationToken = default)
         {
-            string[] urls = HostURL.Split(';');
-            bool success = false;
-            int i = 0;
+            int initialHostIndex = Interlocked.CompareExchange(ref m_hostIndex, 0, 0);
 
-            while (i < urls.Length && !success)
+            void UpdateHostIndex(int hostIndex) =>
+                Interlocked.CompareExchange(ref m_hostIndex, hostIndex, initialHostIndex);
+
+            for (int i = 0; i < Hosts.Count; i++)
             {
-                using (HttpRequestMessage request = new HttpRequestMessage())
+                int hostIndex = (initialHostIndex + i) % Hosts.Count;
+                Host host = Hosts[hostIndex];
+
+                try
                 {
-                    string cleanHostURL = urls[i].Trim().TrimEnd('/');
-                    string fullurl = $"{cleanHostURL}/{path.Trim().TrimStart('/')}";
-
-                    request.RequestUri = new Uri(fullurl);
-                    configure(request);
-
-                    if (request.Method != HttpMethod.Get && AntiForgeryToken == null)
-                        AntiForgeryToken = await GenerateAntiForgeryToken();
-
-                    if (request.Method != HttpMethod.Get)
-                        HttpClient.DefaultRequestHeaders.Add("X-GSF-Verify", AntiForgeryToken);
-
-                    const string type = "XDA-API";
-                    string decode = $"{APIKey}:{APIToken}";
-                    Encoding utf8 = new UTF8Encoding(false);
-                    byte[] credentialData = utf8.GetBytes(decode);
-                    string credentials = Convert.ToBase64String(credentialData);
-                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(type, credentials);
-
-                    HttpResponseMessage response;
-                    try
-                    {
-                        response = await HttpClient.SendAsync(request, cancellationToken);
-                    }
-                    catch (HttpRequestException ex)
-                    {
-                        if (!IsUnreachableException(ex))
-                            new Exception($"Unhandled Exception sending request to: {fullurl}", ex);
-                    }
-                    catch (Exception ex)
-                    {
-                        new Exception($"Unhandled Exception sending request to: {fullurl}",ex);
-                    }
-                    finally
-                    {
-                        i++;
-                    }
+                    HttpResponseMessage response = await SendWebRequestToAsync(host, configure, path, cancellationToken);
+                    UpdateHostIndex(hostIndex);
+                    return response;
+                }
+                catch (HostUnreachableException)
+                {
+                    continue;
+                }
+                catch
+                {
+                    UpdateHostIndex(hostIndex);
+                    throw;
                 }
             }
 
-            return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
         }
 
-        /// <summary>
-        /// Recursively search for a <see cref="SocketException"/> that would indicate the host is currently unreachable.
-        /// </summary>
-        /// <param name="ex">The ancestor of the socket exception.</param>
-        /// <returns><c>true</c> if there exists an socket exception with <see cref="SocketError.TimedOut"/> or <see cref="SocketError.ConnectionRefused"/></returns>
-        private bool IsUnreachableException(Exception ex)
+        private async Task<HttpResponseMessage> SendWebRequestToAsync(Host host, Action<HttpRequestMessage> configure, string path, CancellationToken cancellationToken)
+        {
+            using (HttpRequestMessage request = BuildRequest(host, path, configure))
+            {
+                if (request.Method != HttpMethod.Get)
+                {
+                    if (host.AntiForgeryToken == null)
+                        host.AntiForgeryToken = await GetAntiForgeryTokenAsync(host, cancellationToken);
+
+                    request.Headers.Add("X-GSF-Verify", host.AntiForgeryToken);
+                }
+
+                return await CallAPIAsync(request, cancellationToken);
+            }
+        }
+
+        private async Task<string> GetAntiForgeryTokenAsync(Host host, CancellationToken cancellationToken)
+        {
+            void ConfigureTokenRequest(HttpRequestMessage tokenRequest)
+            {
+                MediaTypeWithQualityHeaderValue mediaType = new MediaTypeWithQualityHeaderValue("text/plain");
+                tokenRequest.Headers.Accept.Add(mediaType);
+                tokenRequest.Method = HttpMethod.Get;
+            }
+
+            using (HttpRequestMessage tokenRequest = BuildRequest(host, "api/rvht", ConfigureTokenRequest))
+            using (HttpResponseMessage tokenResponse = await CallAPIAsync(tokenRequest, cancellationToken))
+            {
+                tokenResponse.EnsureSuccessStatusCode();
+                return await tokenResponse.Content.ReadAsStringAsync();
+            }
+        }
+
+        private async Task<HttpResponseMessage> CallAPIAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return await HttpClient.SendAsync(request, cancellationToken);
+            }
+            catch (HttpRequestException ex)
+            {
+                if (IndicatesHostIsUnreachable(ex))
+                    throw new HostUnreachableException();
+
+                throw;
+            }
+        }
+
+        private HttpRequestMessage BuildRequest(Host host, string path, Action<HttpRequestMessage> configure)
+        {
+            HttpRequestMessage request = new HttpRequestMessage();
+
+            try
+            {
+                string cleanHostURL = host.URL.Trim().TrimEnd('/');
+                string cleanPath = path.Trim().TrimStart('/');
+                string fullurl = $"{cleanHostURL}/{cleanPath}";
+                request.RequestUri = new Uri(fullurl);
+                configure(request);
+
+                const string type = "XDA-API";
+                string decode = $"{APIKey}:{APIToken}";
+                Encoding utf8 = new UTF8Encoding(false);
+                byte[] credentialData = utf8.GetBytes(decode);
+                string credentials = Convert.ToBase64String(credentialData);
+                request.Headers.Authorization = new AuthenticationHeaderValue(type, credentials);
+
+                return request;
+            }
+            catch
+            {
+                request.Dispose();
+                throw;
+            }
+        }
+
+        private bool IndicatesHostIsUnreachable(Exception ex)
         {
             if (ex is SocketException socketException)
                 return socketException.SocketErrorCode == SocketError.ConnectionRefused || socketException.SocketErrorCode == SocketError.TimedOut;
             if (ex.InnerException is null)
                 return false;
-            return IsUnreachableException(ex.InnerException);
-        }
-
-        /// <summary>
-        /// Gets a CSRF token from the host for validating POST requests.
-        /// </summary>
-        /// <returns>The CSRF token.</returns>
-        public async Task<string> GenerateAntiForgeryToken()
-        {
-            Action<HttpRequestMessage> tokenRequest = (HttpRequestMessage request) => {
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                request.Method = HttpMethod.Get;
-            };
-
-           using (HttpResponseMessage response = await SendWebRequestAsync(tokenRequest, "/api/rvht"))
-           {
-                if (!response.IsSuccessStatusCode)
-                    throw new Exception($"Unable to get Anti Forger Token: {response.StatusCode} {response.ReasonPhrase}");
-                return response.Content.ReadAsStringAsync().Result;
-            }
+            return IndicatesHostIsUnreachable(ex.InnerException);
         }
 
         #endregion
