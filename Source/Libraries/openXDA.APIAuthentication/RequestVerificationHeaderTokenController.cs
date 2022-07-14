@@ -30,21 +30,46 @@ using GSF.Web.Security;
 namespace openXDA.APIAuthentication
 {
     /// <summary>
-    /// Provides Endpoint to request the GSFRequestverification Token.
-    /// This needs to be included and Loaded in all Apps that support APIAuthentication
+    /// Provides the endpoint for requests to retrieve CSRF anti-forgery tokens.
+    /// This needs to be included in all apps that support APIAuthentication.
     /// </summary>
-    [RoutePrefix("api/rvht")]
     public class RequestVerificationHeaderTokenController : ApiController
     {
-
-        [HttpGet, Route("")]
+        /// <summary>
+        /// Generates a new request verification header token and sends it to the client.
+        /// </summary>
+        /// <returns>The HTTP response that contains the token.</returns>
         public HttpResponseMessage Get()
         {
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(Request.GenerateRequestVerficationHeaderToken(), Encoding.UTF8, "text/plain")
-            };
+            string token = Request.GenerateRequestVerficationHeaderToken();
+            Encoding utf8 = new UTF8Encoding(false);
+            HttpContent content = new StringContent(token, utf8, "text/plain");
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = content };
         }
     }
 
+    namespace Extensions
+    {
+        /// <summary>
+        /// Extension methods for using request verification header tokens.
+        /// </summary>
+        public static class RequestVerificationHeaderTokenControllerExtensions
+        {
+            /// <summary>
+            /// Maps the <see cref="RequestVerificationHeaderTokenController"/> to the <c>api/rvht</c> path.
+            /// </summary>
+            /// <param name="routes">The route collection</param>
+            public static void MapRequestVerificationHeaderTokenRoute(this HttpRouteCollection routes)
+            {
+                routes.MapHttpRoute(
+                    name: "RequestVerificationHeaderToken",
+                    routeTemplate: "api/rvht",
+                    defaults: new
+                    {
+                        controller = "RequestVerificationHeaderToken"
+                    }
+                );
+            }
+        }
+    }
 }

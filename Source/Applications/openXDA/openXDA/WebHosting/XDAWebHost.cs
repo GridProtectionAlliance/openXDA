@@ -474,6 +474,7 @@ namespace openXDA.WebHosting
             httpConfig.Services.Replace(typeof(IHttpActionSelector), actionSelector);
 
             // Set configuration to use reflection to setup routes
+            httpConfig.Routes.MapRequestVerificationHeaderTokenRoute();
             ControllerConfig.Register(httpConfig);
 
             // Load the WebPageController class and assign its routes
