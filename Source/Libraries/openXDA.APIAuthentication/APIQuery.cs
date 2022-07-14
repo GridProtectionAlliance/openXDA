@@ -27,7 +27,6 @@ using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using GSF.Data;
 
 namespace openXDA.APIAuthentication
 {
@@ -44,7 +43,7 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <param name="apiKey">The API key used to identify the user of the API.</param>
         /// <param name="apiToken">The token used to authenticate the user of the API.</param>
-        /// <param name="host">Comma-separated list of hosts providing access to the API.</param>
+        /// <param name="host">Semicolon-separated list of hosts providing access to the API.</param>
         public APIQuery(string apiKey, string apiToken, string host)
         {
             APIKey = apiKey;
@@ -73,9 +72,10 @@ namespace openXDA.APIAuthentication
         public string HostURL { get; }
 
         /// <summary>
-        /// The GSF AntiForgeryToken used to secure POST Requests
+        /// The CSRF token used to validate POST requests.
         /// </summary>
-        public string AntiForgeryToken { get; private set; } = null;
+        public string AntiForgeryToken { get; private set; }
+
         #endregion
 
         #region [ Methods ]
@@ -83,11 +83,11 @@ namespace openXDA.APIAuthentication
         /// <summary>
         /// Sends a web request to the host using the credentials for API authentication.
         /// </summary>
-        /// <param name="configure"></param>
-        /// <param name="endpoint"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string endpoint, GSF.Threading.CancellationToken cancellationToken = default)
+        /// <param name="configure">Action that configures the HTTP request.</param>
+        /// <param name="path">Path to the API endpoint locating the resource to be requested.</param>
+        /// <param name="cancellationToken">Token used to cancel the request before it has completed.</param>
+        /// <returns>The HTTP response returned by the host that handled the request.</returns>
+        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, GSF.Threading.CancellationToken cancellationToken = default)
         {
             string[] urls = HostURL.Split(';');
             bool success = false;
@@ -98,11 +98,10 @@ namespace openXDA.APIAuthentication
                 using (HttpRequestMessage request = new HttpRequestMessage())
                 {
                     string cleanHostURL = urls[i].Trim().TrimEnd('/');
-                    string fullurl = $"{cleanHostURL}/{endpoint.Trim().TrimStart('/')}";
+                    string fullurl = $"{cleanHostURL}/{path.Trim().TrimStart('/')}";
 
                     request.RequestUri = new Uri(fullurl);
                     configure(request);
-
 
                     if (request.Method != HttpMethod.Get && AntiForgeryToken == null)
                         AntiForgeryToken = await GenerateAntiForgeryToken();
@@ -121,7 +120,6 @@ namespace openXDA.APIAuthentication
                     try
                     {
                         response = await HttpClient.SendAsync(request, cancellationToken);
-                        
                     }
                     catch (HttpRequestException ex)
                     {
@@ -136,7 +134,6 @@ namespace openXDA.APIAuthentication
                     {
                         i++;
                     }
-                   
                 }
             }
 
@@ -144,23 +141,23 @@ namespace openXDA.APIAuthentication
         }
 
         /// <summary>
-        /// Checks Recursively if an <see cref="HttpRequestException"/> is caused by the Host being unreachable.
+        /// Recursively search for a <see cref="SocketException"/> that would indicate the host is currently unreachable.
         /// </summary>
-        /// <param name="innerEx">The <see cref="Exception"/></param>
-        /// <returns><see cref="true"/> if there is a <see cref="SocketException"/> with <see cref="SocketError.TimedOut"/> or <see cref="SocketError.ConnectionRefused"/></returns>
-        private bool IsUnreachableException(Exception innerEx)
+        /// <param name="ex">The ancestor of the socket exception.</param>
+        /// <returns><c>true</c> if there exists an socket exception with <see cref="SocketError.TimedOut"/> or <see cref="SocketError.ConnectionRefused"/></returns>
+        private bool IsUnreachableException(Exception ex)
         {
-            if (innerEx.GetType() == typeof(SocketException))
-                return ((SocketException)innerEx).SocketErrorCode == SocketError.ConnectionRefused || ((SocketException)innerEx).SocketErrorCode == SocketError.TimedOut;
-            if (innerEx.InnerException is null)
+            if (ex.GetType() == typeof(SocketException))
+                return ((SocketException)ex).SocketErrorCode == SocketError.ConnectionRefused || ((SocketException)ex).SocketErrorCode == SocketError.TimedOut;
+            if (ex.InnerException is null)
                 return false;
-            return IsUnreachableException(innerEx.InnerException);
+            return IsUnreachableException(ex.InnerException);
         }
 
         /// <summary>
-        /// Gets AntiForgeryToken from the <see cref="RequestVerificationHeaderTokenController"/>
+        /// Gets a CSRF token from the host for validating POST requests.
         /// </summary>
-        /// <returns>string token</returns>
+        /// <returns>The CSRF token.</returns>
         public async Task<string> GenerateAntiForgeryToken()
         {
             Action<HttpRequestMessage> tokenRequest = (HttpRequestMessage request) => {
@@ -175,6 +172,7 @@ namespace openXDA.APIAuthentication
                 return response.Content.ReadAsStringAsync().Result;
             }
         }
+
         #endregion
 
         #region [ Static ]
