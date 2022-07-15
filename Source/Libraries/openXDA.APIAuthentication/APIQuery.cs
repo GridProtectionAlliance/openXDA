@@ -35,6 +35,29 @@ using System.Threading.Tasks;
 namespace openXDA.APIAuthentication
 {
     /// <summary>
+    /// Exceptions thrown during an API query.
+    /// </summary>
+    public class APIQueryException : Exception
+    {
+        /// <summary>
+        /// Creates a new instance of the <see cref="APIQueryException"/> class.
+        /// </summary>
+        /// <param name="hostURL">The URL of the host that issued the failure.</param>
+        /// <param name="message">The error message that explains the reason for the exception.</param>
+        /// <param name="innerException">The exception that is the cause of the current exception.</param>
+        public APIQueryException(string hostURL, string message, Exception innerException)
+            : base(message, innerException)
+        {
+            HostURL = hostURL;
+        }
+
+        /// <summary>
+        /// The URL of the host that issued the failure.
+        /// </summary>
+        public string HostURL { get; }
+    }
+
+    /// <summary>
     /// Issues requests to the API using API authentication.
     /// This class handles the GSF token and authentication
     /// </summary>
@@ -153,10 +176,12 @@ namespace openXDA.APIAuthentication
                 {
                     continue;
                 }
-                catch
+                catch (Exception ex)
                 {
                     UpdateHostIndex(hostIndex);
-                    throw;
+
+                    string message = $"Failed when sending API query to host {host.URL}: {ex.Message}";
+                    throw new APIQueryException(host.URL, message, ex);
                 }
             }
 
