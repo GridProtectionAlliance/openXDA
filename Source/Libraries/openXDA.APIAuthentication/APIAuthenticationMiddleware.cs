@@ -165,7 +165,7 @@ namespace openXDA.APIAuthentication
                 const string QueryFormat =
                     "SELECT APIToken " +
                     "FROM APIAccessKey " +
-                    "WHERE RegistrationKey = {0} AND (Expired IS NULL OR Expired > GETUTCDATE())";
+                    "WHERE RegistrationKey = {0} AND (Expires IS NULL OR Expires > GETUTCDATE())";
 
                 return connection.ExecuteScalar<string>(QueryFormat, new object[] { registrationKey });
             }
