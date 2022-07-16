@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+
 using System.Web.Http;
 
 namespace openXDA.Adapters

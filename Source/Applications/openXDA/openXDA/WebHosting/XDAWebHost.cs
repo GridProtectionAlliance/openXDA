@@ -47,6 +47,7 @@ using Microsoft.Owin.Cors;
 using Microsoft.Owin.Extensions;
 using Newtonsoft.Json;
 using openXDA.Adapters;
+using openXDA.APIAuthentication.Extensions;
 using openXDA.Hubs;
 using openXDA.Model;
 using openXDA.Nodes;
@@ -443,6 +444,9 @@ namespace openXDA.WebHosting
             app.UseHostAuthentication(ConnectionFactory);
 
             app.UseWhen(context => !(context.Request.User is SecurityPrincipal),
+                branch => branch.UseAPIAuthentication(ConnectionFactory));
+
+            app.UseWhen(context => !(context.Request.User is SecurityPrincipal),
                 branch => branch.UseAuthentication(AuthenticationOptions));
 
             if (AllowedDomainList == "*")
@@ -470,6 +474,7 @@ namespace openXDA.WebHosting
             httpConfig.Services.Replace(typeof(IHttpActionSelector), actionSelector);
 
             // Set configuration to use reflection to setup routes
+            httpConfig.Routes.MapRequestVerificationHeaderTokenRoute();
             ControllerConfig.Register(httpConfig);
 
             // Load the WebPageController class and assign its routes

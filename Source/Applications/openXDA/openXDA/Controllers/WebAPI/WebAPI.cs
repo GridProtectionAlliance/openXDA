@@ -22,42 +22,23 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web.Model;
-using GSF.Web.Security;
-using log4net;
-using Newtonsoft.Json;
-using openXDA.Model;
-using SystemCenter.Model;
 using openXDA.Adapters;
+using openXDA.Model;
 using openXDA.Nodes;
-using System.Collections.Generic;
+using SystemCenter.Model;
 
 namespace openXDA.Controllers.WebAPI
 {
-
-    [RoutePrefix("api/rvht")]
-    public class RequestVerificationHeaderTokenController: ApiController
-    {
-
-        [HttpGet,Route("")]
-        public HttpResponseMessage Get()
-        {
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(Request.GenerateRequestVerficationHeaderToken(), Encoding.UTF8, "text/plain")
-             };
-        }
-    }
-
     [RoutePrefix("api/Meter")]
     public class MeterController : ModelController<Meter> {
         [HttpGet, Route("Sapphire")]
