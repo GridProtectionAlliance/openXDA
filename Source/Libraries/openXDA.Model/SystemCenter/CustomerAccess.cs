@@ -38,4 +38,43 @@ namespace SystemCenter.Model
         public int CustomerID { get; set; }
         public int MeterID { get; set; }
     }
+
+    [UseEscapedName]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    public class CustomerMeterDetail
+    {
+        #region [ Members ]
+
+        #endregion
+
+        #region [ Properties ]
+
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        [Searchable]
+        public string CustomerKey { get; set; }
+
+        public string CustomerName { get; set; }
+
+        [Searchable]
+        public string MeterKey { get; set; }
+
+        public string MeterName { get; set; }
+
+        public string MeterLocation { get; set; }
+
+        public int MeterID { get; set; }
+
+        [ParentKey(typeof(Customer))]
+        public int CustomerID { get; set; }
+
+        #endregion
+
+        #region [ Methods ]      
+
+        #endregion
+    }
 }

@@ -57,6 +57,11 @@ namespace openXDA.Model
         #endregion
     }
 
+    [ViewOnly()]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+
     public class CustomerAssetDetail
     {
         #region [ Members ]
@@ -82,6 +87,7 @@ namespace openXDA.Model
 
         public int AssetID { get; set; }
 
+        [ParentKey(typeof(Customer))]
         public int CustomerID { get; set; }
 
         #endregion
