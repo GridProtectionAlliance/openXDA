@@ -25,17 +25,17 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
-    [UseEscapedName, TableName("CustomerAccess")]
+    [UseEscapedName, TableName("CustomerMeter")]
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]
-    public class CustomerAccess
+    public class CustomerMeter
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
         [ParentKey(typeof(Customer))]
         public int CustomerID { get; set; }
-        public int PQViewSiteID { get; set; }
+        public int MeterID { get; set; }
     }
 }
