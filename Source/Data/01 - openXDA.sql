@@ -329,13 +329,6 @@ CREATE TABLE AnalysisTask
 )
 GO
 
-CREATE TABLE MeterFacility
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    MeterID INT NOT NULL REFERENCES Meter(ID),
-    FacilityID INT NOT NULL
-)
-GO
 
 CREATE TABLE AssetType
 (
@@ -388,7 +381,8 @@ CREATE TABLE Customer
     Name VARCHAR(200) NULL,
     Phone VARCHAR(20) NULL,
 	Description VARCHAR(200) NULL,
-    LSCVS BIT NOT NULL Default(0)
+    LSCVS BIT NOT NULL Default(0),
+    PQIFacilityID INT NOT NULL Default(-1)
 )
 GO
 
@@ -4742,6 +4736,28 @@ FROM
     Phase ON CBAnalyticResult.PhaseID = Phase.ID LEFT JOIN
     CBStatus ON CBAnalyticResult.CBStatusID = CBStatus.ID LEFT JOIN
     CBOperation ON CBAnalyticResult.CBOperationID = CBOperation.ID
+GO
+
+CREATE VIEW  MeterFacility AS
+(
+SELECT 
+    CustomerMeter.ID AS ID,
+    CustomerMeter.MeterID AS MeterID,
+    Customer.PQIFacilityID AS FacilityID
+FROM
+    Customer INNER JOIN CustomerMeter ON CustomerMeter.CustomerID = Customer.ID
+)
+UNION
+(
+SELECT 
+    CustomerAsset.ID AS ID,
+    MeterAsset.MeterID AS MeterID,
+    Customer.PQIFacilityID AS FacilityID
+FROM
+    Customer INNER JOIN CustomerAsset ON CustomerAsset.CustomerID = Customer.ID LEFT JOIN
+	MeterAsset ON MeterAsset.AssetID = CustomerAsset.AssetID
+)
+
 GO
 
 CREATE VIEW AssetGroupView AS
