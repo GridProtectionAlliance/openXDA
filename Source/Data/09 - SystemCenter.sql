@@ -175,12 +175,12 @@ GO
 
 Create View [CustomerMeterDetail] AS
 SELECT 
-	CustomerAsset.ID AS ID,
+	CustomerMeter.ID AS ID,
 	Customer.CustomerKey AS CustomerKey,
 	Customer.Name AS CustomerName,
 	Meter.AssetKey AS MeterKey,
 	Meter.Name AS MeterName,
-	Location.Name AS LocationName,
+	Location.Name AS MeterLocation,
 	Customer.ID AS CustomerID,
 	Meter.ID AS MeterID
 FROM
