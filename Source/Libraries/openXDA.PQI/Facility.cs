@@ -42,6 +42,12 @@ namespace openXDA.PQI
         /// Utility voltage supplied to the facility
         /// </summary>
         public string UtilitySupplyVoltage { get; set; }
-       
+
+        /// <summary>
+        /// Path to query this Facility 
+        /// </summary>
+        public string Path { get; set; }
+
+
     }
 }
