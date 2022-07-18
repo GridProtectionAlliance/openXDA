@@ -60,7 +60,7 @@ namespace openXDA.Model
     [ViewOnly()]
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
-    [DeleteRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME"), AllowSearch]
 
     public class CustomerAssetDetail
     {
