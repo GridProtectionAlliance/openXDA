@@ -171,7 +171,7 @@ namespace openXDA.Controllers.Config
         }
 
         [Route("ReprocessFile/{fileGroupID:int}"), HttpPost]
-        public async Task ReprocessFile(int fileGroupID)
+        public async Task<int> ReprocessFile(int fileGroupID)
         {
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
@@ -218,7 +218,7 @@ namespace openXDA.Controllers.Config
                 }
 
                 if (meterID is null)
-                    return;
+                    return 0;
 
                 CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
                 CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
@@ -232,6 +232,7 @@ namespace openXDA.Controllers.Config
 
                 Type analysisNodeType = typeof(AnalysisNode);
                 await NotifyNodes(analysisNodeType, "PollTaskQueue");
+                return 1;
             }
         }
 
