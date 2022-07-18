@@ -160,6 +160,9 @@ namespace openXDA.APIAuthentication
 
         private string GetAPIToken(string registrationKey)
         {
+            if (registrationKey is null)
+                return null;
+
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 const string QueryFormat =
