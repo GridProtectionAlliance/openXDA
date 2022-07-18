@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Equipment.cs" />
+    <Compile Include="Facility.cs" />
     <Compile Include="PingClient.cs" />
     <Compile Include="FacilityInfo.cs" />
     <Compile Include="HttpClientExtensions.cs" />

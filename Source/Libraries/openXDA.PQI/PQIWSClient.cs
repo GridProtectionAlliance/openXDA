@@ -43,6 +43,24 @@ namespace openXDA.PQI
         private string BaseURL { get; }
         private Func<string> TokenProvider { get; }
 
+        public async Task<List<Facility>> GetAllFacilities(CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, "Facility");
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<List<Facility>>();
+        }
+
         public async Task<FacilityInfo> GetFacilityInfoAsync(int facilityID, CancellationToken cancellationToken = default)
         {
             string url = BuildURL(BaseURL, BasePath, "GetFacilityInfo");
