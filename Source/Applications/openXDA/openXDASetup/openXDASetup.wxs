@@ -467,6 +467,7 @@
       <ComponentRef Id="openHistorian.XDALink" />
       <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
+      <ComponentRef Id="openXDA.APIAuthentication" />
       <ComponentRef Id="openXDA.Nodes" />
       <ComponentRef Id="openXDA.XMLConfig" />
       <ComponentRef Id="openXDA.PQI" />
@@ -652,6 +653,9 @@
       </Component>
       <Component Id="openXDA.Model">
         <File Id="openXDA.Model.dll" Name="$(var.openXDA.Model.TargetFileName)" Source="$(var.openXDA.Model.TargetPath)" />
+      </Component>
+      <Component Id="openXDA.APIAuthentication">
+        <File Id="openXDA.APIAuthentication.dll" Name="$(var.openXDA.APIAuthentication.TargetFileName)" Source="$(var.openXDA.APIAuthentication.TargetPath)" />
       </Component>
       <Component Id="openXDA.Nodes">
         <File Id="openXDA.Nodes.dll" Name="$(var.openXDA.Nodes.TargetFileName)" Source="$(var.openXDA.Nodes.TargetPath)" />

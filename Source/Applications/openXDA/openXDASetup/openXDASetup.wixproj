@@ -74,6 +74,14 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.APIAuthentication\openXDA.APIAuthentication.csproj">
+      <Name>openXDA.APIAuthentication</Name>
+      <Project>{93ff1e73-cd8b-4f01-89bc-a4a242fa06a6}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.ArcGIS\openXDA.ArcGIS.csproj">
       <Name>openXDA.ArcGIS</Name>
       <Project>{a74aebc8-4a3f-49df-a95b-b992ed8f6cef}</Project>
