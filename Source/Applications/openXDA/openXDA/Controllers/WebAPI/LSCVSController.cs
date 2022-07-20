@@ -64,7 +64,7 @@ namespace openXDA.Controllers.WebAPI
         { 
             get 
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettigns"))
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                     return double.Parse(connection.ExecuteScalar<string>("SELECT TOP 1 Value FROM Setting WHERE Name = 'DataAnalysis.SystemFrequency' UNION (SELECT '60.0' AS Value)"));
             }
         }
