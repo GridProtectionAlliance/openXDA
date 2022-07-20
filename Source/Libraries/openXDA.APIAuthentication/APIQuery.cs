@@ -168,7 +168,7 @@ namespace openXDA.APIAuthentication
 
                 try
                 {
-                    HttpResponseMessage response = await SendWebRequestToAsync(host, configure, path, cancellationToken);
+                    HttpResponseMessage response = await SendWebRequestToAsync(host, configure, path, cancellationToken).ConfigureAwait(false);
                     UpdateHostIndex(hostIndex);
                     return response;
                 }
@@ -195,12 +195,12 @@ namespace openXDA.APIAuthentication
                 if (request.Method != HttpMethod.Get)
                 {
                     if (host.AntiForgeryToken == null)
-                        host.AntiForgeryToken = await GetAntiForgeryTokenAsync(host, cancellationToken);
+                        host.AntiForgeryToken = await GetAntiForgeryTokenAsync(host, cancellationToken).ConfigureAwait(false);
 
                     request.Headers.Add("X-GSF-Verify", host.AntiForgeryToken);
                 }
 
-                return await CallAPIAsync(request, cancellationToken);
+                return await CallAPIAsync(request, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -214,10 +214,10 @@ namespace openXDA.APIAuthentication
             }
 
             using (HttpRequestMessage tokenRequest = BuildRequest(host, "api/rvht", ConfigureTokenRequest))
-            using (HttpResponseMessage tokenResponse = await CallAPIAsync(tokenRequest, cancellationToken))
+            using (HttpResponseMessage tokenResponse = await CallAPIAsync(tokenRequest, cancellationToken).ConfigureAwait(false))
             {
                 tokenResponse.EnsureSuccessStatusCode();
-                return await tokenResponse.Content.ReadAsStringAsync();
+                return await tokenResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
         }
 
@@ -225,7 +225,7 @@ namespace openXDA.APIAuthentication
         {
             try
             {
-                return await HttpClient.SendAsync(request, cancellationToken);
+                return await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
             {
