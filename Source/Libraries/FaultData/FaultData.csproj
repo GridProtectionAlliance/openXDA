@@ -190,6 +190,10 @@
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\openXDA.APIAuthentication\openXDA.APIAuthentication.csproj">
+      <Project>{93FF1E73-CD8B-4F01-89BC-A4A242FA06A6}</Project>
+      <Name>openXDA.APIAuthentication</Name>
+    </ProjectReference>
     <ProjectReference Include="..\openXDA.Configuration\openXDA.Configuration.csproj">
       <Project>{83d8122c-2bcc-4813-b449-224d9f7e5aee}</Project>
       <Name>openXDA.Configuration</Name>

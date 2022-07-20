@@ -336,16 +336,10 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.URL', 'http://localhost:53030', 'http://localhost:53030')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.UseCodeAuth', 'false', 'false')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.APIKey', '', '')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.Username', '', '')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.Password', '', '')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.AuthCode', '', '')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.APIToken', '', '')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.ReportingThreshold', '0', '0')

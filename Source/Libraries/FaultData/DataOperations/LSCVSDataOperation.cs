@@ -42,7 +42,7 @@ using System.Text;
 using static System.Math;
 using MathNet.Numerics.Statistics;
 using Newtonsoft.Json;
-
+using openXDA.APIAuthentication;
 
 namespace FaultData.DataOperations
 {
@@ -62,9 +62,8 @@ namespace FaultData.DataOperations
                 {3, "IEEE 1668 Type III"}
             };
         public const string postRoute = "/api/OpenXDA/NewLCSVSEvent/";
-        private static readonly HttpClient client = new HttpClient();
 
-        #endregion
+       #endregion
 
         #region [ Properties ]
 
@@ -150,81 +149,28 @@ namespace FaultData.DataOperations
                         }
                     }
                 }
-                if (lscvsEventList.Count != 0) Post(postRoute, lscvsEventList, GenerateAntiForgeryToken()); //TODO: Add AF Token
-            }
-        }
-
-        /// <summary>
-        /// Gets AntiForgeryToken from openXDA
-        /// TODO: Refactor this
-        /// </summary>
-        /// <returns>string token</returns>
-        public string GenerateAntiForgeryToken() //Todo: When refactoring, change this to a static class...
-        {
-            string fullURL;
-            if (LSCVSSettings.UseCodeAuth)
-                fullURL = LSCVSSettings.URL.TrimEnd('/') + $"/api/rvht?code={LSCVSSettings.AuthCode}";
-            else
-                fullURL = LSCVSSettings.URL.TrimEnd('/') + "/api/rvht";
-
-            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, fullURL))
-            {
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                if (!LSCVSSettings.UseCodeAuth)
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Basic",
-                        Convert.ToBase64String(Encoding.ASCII.GetBytes($"{LSCVSSettings.Username}:{LSCVSSettings.Password}")));
-
-                using (HttpResponseMessage response = client.SendAsync(request).Result)
+                if (lscvsEventList.Count != 0)
                 {
-                    if (!response.IsSuccessStatusCode)
-                        throw new Exception($"Unable to get Anti Forger Token: {response.StatusCode} {response.ReasonPhrase}");
+                    APIQuery query = new APIQuery(LSCVSSettings.APIKey, LSCVSSettings.APIToken, LSCVSSettings.URL.Split(';'));
 
-                    return response.Content.ReadAsStringAsync().Result;
-                }
-            }
-        }
+                    string jsonData = JsonConvert.SerializeObject(lscvsEventList);
+                    HttpContent contentData = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
-        /// <summary>
-        /// Processes Get request on openXDA + requestURI using provided credentials using Basic auth
-        /// </summary>
-        /// <param name="requestURI">Path to specific API request</param>
-        /// <param name="token">anti forgery token, defaults to null</param>
-        /// <returns>string</returns>
-        public string Post(string requestURI, IEnumerable<LSCVSEvent> events, string token = null)
-        {
-            string fullURL = LSCVSSettings.URL.TrimEnd('/') + requestURI;
-            if (LSCVSSettings.UseCodeAuth)
-                fullURL += $"?code={LSCVSSettings.AuthCode}";
-
-            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, fullURL))
-            {
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                if (token != null)
-                    request.Headers.Add("X-GSF-Verify", token);
-
-
-                if (!LSCVSSettings.UseCodeAuth)
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Basic",
-                        Convert.ToBase64String(Encoding.ASCII.GetBytes($"{LSCVSSettings.Username}:{LSCVSSettings.Password}")));
-
-                string jsonData = JsonConvert.SerializeObject(events);
-                HttpContent contentData = new StringContent(jsonData, Encoding.UTF8, "application/json");
-                request.Content = contentData;
-
-                using (HttpResponseMessage response = client.SendAsync(request).Result)
-                {
-                    if (!response.IsSuccessStatusCode)
+                    void ConfigureRequest(HttpRequestMessage request)
                     {
-                        throw new Exception("Status code " + response.StatusCode + ": " + response.ReasonPhrase);
+                        request.Method = HttpMethod.Post;
+                        request.Content = contentData;
                     }
 
-                    return response.Content.ReadAsStringAsync().Result;
+                    HttpResponseMessage responseMessage = query.SendWebRequestAsync(ConfigureRequest, postRoute).Result;
+                    if (!responseMessage.IsSuccessStatusCode)
+                    {
+                        throw new Exception("Status code " + responseMessage.StatusCode + ": " + responseMessage.ReasonPhrase);
+                    }
                 }
+                
             }
         }
-
 
         #endregion
     }

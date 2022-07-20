@@ -38,32 +38,18 @@ namespace openXDA.Configuration
         public string URL { get; set; }
 
         /// <summary>
-        /// Boolean to decide wether or not to use code authentication over username/password.
-        /// </summary>
-        [Setting]
-        [DefaultValue(false)]
-        public bool UseCodeAuth { get; set; }
-
-        /// <summary>
-        /// Login username to LSCVS Event Database.
+        /// The API Key to use to authenticate to LSCVS
         /// </summary>
         [Setting]
         [DefaultValue("")]
-        public string Username { get; set; }
+        public string APIKey { get; set; }
 
         /// <summary>
-        /// Login hashed password to LSCVS Event Database.
+        /// The API Token to use to authenticate to LSCVS
         /// </summary>
         [Setting]
         [DefaultValue("")]
-        public string Password { get; set; }
-
-        /// <summary>
-        /// Login code to LSCVS Event Databse.
-        /// </summary>
-        [Setting]
-        [DefaultValue("")]
-        public string AuthCode { get; set; }
+        public string APIToken { get; set; }
 
         /// <summary>
         /// MW ratio threshold to report LSCVS event.
