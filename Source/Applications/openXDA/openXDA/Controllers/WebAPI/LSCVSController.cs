@@ -78,7 +78,6 @@ namespace openXDA.Controllers.WebAPI
 
 
         [HttpGet, Route("WaveformData/I/{eventId}")]
-        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult GetCurrentData(int eventId)
         {
             try
@@ -185,7 +184,6 @@ namespace openXDA.Controllers.WebAPI
         }
 
         [HttpGet, Route("WaveformData/V/{eventId}")]
-        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult GetVoltageData(int eventId)
         {
             try
