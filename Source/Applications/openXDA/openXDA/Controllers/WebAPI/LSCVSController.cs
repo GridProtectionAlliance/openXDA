@@ -95,19 +95,7 @@ namespace openXDA.Controllers.WebAPI
                     VIDataGroup dataGroup = GetDataGroup(meter, eventId);
                     VICycleDataGroup cycleData = Transform.ToVICycleDataGroup(dataGroup, FBase, true);
 
-                    if (dataGroup.IA != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "A WaveForm",
-                            LegendGroup = "WaveForm",
-                            Color = "#FF0000",
-                            DataPoints = dataGroup.IA.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "A"
-                        });
-
+                   
                     if (cycleData.IA != null)
                         list.Add(new SEBrowser.Model.D3Series()
                         {
@@ -121,19 +109,7 @@ namespace openXDA.Controllers.WebAPI
                             Unit = "A"
                         });
 
-                    if (dataGroup.IB != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "B WaveForm",
-                            Color = "#0066CC",
-                            LegendGroup = "WaveForm",
-                            DataPoints = dataGroup.IB.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "A"
-                        });
-
+                 
                     if (cycleData.IB != null)
                         list.Add(new SEBrowser.Model.D3Series()
                         {
@@ -141,19 +117,6 @@ namespace openXDA.Controllers.WebAPI
                             Color = "#0066CC",
                             LegendGroup="RMS",
                             DataPoints = cycleData.IB.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "A"
-                        });
-
-                    if (dataGroup.IC != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "C WaveForm",
-                            Color = "#33CC33",
-                            LegendGroup = "WaveForm",
-                            DataPoints = dataGroup.IC.DataPoints.Select(dataPoint => new double[] {
                             dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
                             dataPoint.Value
                         }).ToList(),
@@ -200,19 +163,7 @@ namespace openXDA.Controllers.WebAPI
                     VIDataGroup dataGroup = GetDataGroup(meter, eventId);
                     VICycleDataGroup cycleData = Transform.ToVICycleDataGroup(dataGroup, FBase, true);
 
-                    if (dataGroup.VA != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "AN WaveForm",
-                            Color = "#A30000",
-                            LegendGroup= "WaveForm",
-                            DataPoints = dataGroup.VA.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
-
+                   
                     if (cycleData.VA != null)
                         list.Add(new SEBrowser.Model.D3Series()
                         {
@@ -226,19 +177,7 @@ namespace openXDA.Controllers.WebAPI
                             Unit = "kV"
                         });
 
-                    if (dataGroup.VB != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "BN WaveForm",
-                            Color = "#0029A3",
-                            LegendGroup = "WaveForm",
-                            DataPoints = dataGroup.VB.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
-
+                    
                     if (cycleData.VB != null)
                         list.Add(new SEBrowser.Model.D3Series()
                         {
@@ -246,19 +185,6 @@ namespace openXDA.Controllers.WebAPI
                             Color = "#0029A3",
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VB.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
-
-                    if (dataGroup.VC != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "CN WaveForm",
-                            Color = "#007A29",
-                            LegendGroup = "WaveForm",
-                            DataPoints = dataGroup.VC.DataPoints.Select(dataPoint => new double[] {
                             dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
                             dataPoint.Value
                         }).ToList(),
@@ -278,18 +204,7 @@ namespace openXDA.Controllers.WebAPI
                             Unit = "kV"
                         });
 
-                    if (dataGroup.VAB != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "AB WaveForm",
-                            Color = "#A30000",
-                            LegendGroup = "WaveForm",
-                            DataPoints = dataGroup.VAB.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
+                  
 
                     if (cycleData.VAB != null)
                         list.Add(new SEBrowser.Model.D3Series()
@@ -304,19 +219,7 @@ namespace openXDA.Controllers.WebAPI
                             Unit = "kV"
                         });
 
-                    if (dataGroup.VBC != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "BC WaveForm",
-                            Color = "#0029A3",
-                            LegendGroup = "WaveForm",
-                            DataPoints = dataGroup.VBC.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
-
+                    
                     if (cycleData.VBC != null)
                         list.Add(new SEBrowser.Model.D3Series()
                         {
@@ -330,18 +233,7 @@ namespace openXDA.Controllers.WebAPI
                             Unit = "kV"
                         });
 
-                    if (dataGroup.VCA != null)
-                        list.Add(new SEBrowser.Model.D3Series()
-                        {
-                            ChartLabel = "CA WaveForm",
-                            Color = "#007A29",
-                            LegendGroup = "WaveForm",
-                            DataPoints = dataGroup.VCA.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
-                            Unit = "kV"
-                        });
+                   
 
                     if (cycleData.VCA != null)
                         list.Add(new SEBrowser.Model.D3Series()
