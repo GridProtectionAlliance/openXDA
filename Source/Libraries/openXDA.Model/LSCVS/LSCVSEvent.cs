@@ -52,7 +52,6 @@ namespace LSCVS.Model
         public bool InsideCurve { get; set; }
         public double IntialMW { get; set; }
         public double FinalMW { get; set; }
-        [NonRecordField]
         public bool SARFI80Flag { get; set; }
     }
 }
