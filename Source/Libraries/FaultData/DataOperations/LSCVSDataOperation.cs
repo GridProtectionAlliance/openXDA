@@ -84,7 +84,6 @@ namespace FaultData.DataOperations
                 TableOperations<EventStat> eventStatTable = new TableOperations<EventStat>(connection);
                 TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
                 TableOperations<Customer> customerTable = new TableOperations<Customer>(connection);
-                TableOperations<StandardMagDurCurve> stdMagDurCurveTable = new TableOperations<StandardMagDurCurve>(connection);
                 TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
 
                 IEnumerable<Event> fileGroupEvents = eventTable.QueryRecordsWhere("FileGroupID={0}", meterDataSet.FileGroup.ID);
@@ -119,7 +118,6 @@ namespace FaultData.DataOperations
 
                     foreach (DbDisturbance worstDisturbance in worstDisturbances)
                     {
-                        //Todo: Might need to change LSCVS database to tie multiple customers to one event rather than make 2 events for 2 customers
                         foreach (Customer customer in lscvsCustomers)
                         {
                             LSCVSEvent reportData = new LSCVSEvent()
@@ -134,10 +132,12 @@ namespace FaultData.DataOperations
                                 OpenXDAID = evt.ID,
                                 CustomerID = customer.ID
                             };
-                            reportData.InsideCurve = (
-                                stdMagDurCurveTable.QueryRecordWhere("Name='{0}' and " +
-                                $"Area.STIntersects(geometry::Point({worstDisturbance.DurationSeconds},{worstDisturbance.PerUnitMagnitude},0)) = 1", curveStandardNames[curveStandard])
-                                != null);
+
+                            string curveCheck = $"Area.STIntersects(geometry::Point({worstDisturbance.DurationSeconds},{worstDisturbance.PerUnitMagnitude},0)) = 1";
+                            if (connection.ExecuteScalar<int>("SELECT COUNT(ID) FROM StandardMagDurCurve WHERE Name={0}", curveStandardNames[curveStandard]) == 1)
+                                reportData.InsideCurve = connection.ExecuteScalar<int>($"SELECT COUNT(ID) FROM StandardMagDurCurve WHERE Name={{0}} AND {curveCheck}", curveStandardNames[curveStandard]) == 1;
+                            else
+                                Log.Error($"Standard Mag-Dur Curve for {curveStandardNames[curveStandard]} was not found");
 
                             if (Min(Min((double)evtSt.VABMin, (double)evtSt.VABMin), (double)evtSt.VBCMin) < 80)
                                 reportData.SARFI80Flag = true;
