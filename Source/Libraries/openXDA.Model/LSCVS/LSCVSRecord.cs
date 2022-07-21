@@ -81,7 +81,8 @@ namespace LSCVS.Model
                 EventType = EventType,
                 InsideCurve = InsideCurve,
                 IntialMW = IntialMW,
-                FinalMW = FinalMW
+                FinalMW = FinalMW,
+                SARFI80Flag = SARFI80
             };
         }
 
