@@ -24,11 +24,15 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using FaultData.DataAnalysis;
 using FaultData.DataOperations;
 using FaultData.DataResources;
 using FaultData.DataSets;
+using GSF;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
@@ -36,6 +40,7 @@ using HIDS;
 using log4net;
 using openXDA.HIDS.APIExtensions;
 using openXDA.Model;
+using AlarmDayFilter = System.Func<System.DateTime, bool>;
 
 namespace openXDA.HIDS
 {
@@ -43,28 +48,239 @@ namespace openXDA.HIDS
     {
         #region [ Members ]
 
-        // Fields
-        [Category]
-        [SettingName(HIDSSettings.CategoryName)]
-        public HIDSSettings HIDSSettings { get; }
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new <see cref="HIDSAlarmOperation"/>.
-        /// </summary>
-        public HIDSAlarmOperation()
+        // Nested Types
+        private class AlarmLoader
         {
-            HIDSSettings = new HIDSSettings();
+            #region [ Constructors ]
+
+            public AlarmLoader(AdoDataConnection connection) =>
+                Connection = connection;
+
+            #endregion
+
+            #region [ Properties ]
+
+            private AdoDataConnection Connection { get; }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public Dictionary<int, List<AlarmTester>> LoadChannelTestersLookup(Meter meter)
+            {
+                Dictionary<int, List<AlarmTester>> alarmDataLookup = new Dictionary<int, List<AlarmTester>>();
+
+                const string AlarmQueryFormat =
+                    "SELECT " +
+                    "    Channel.ID ChannelID, " +
+                    "    SeriesType.Name SeriesType, " +
+                    "    AlarmType.Name AlarmType, " +
+                    "    ActiveAlarm.* " +
+                    "FROM " +
+                    "    ActiveAlarmView ActiveAlarm JOIN " +
+                    "    AlarmType ON ActiveAlarm.AlarmTypeID = AlarmType.ID JOIN " +
+                    "    Series ON ActiveAlarm.SeriesID = Series.ID JOIN " +
+                    "    Channel ON Series.ChannelID = Channel.ID JOIN " +
+                    "    SeriesType ON Series.SeriesTypeID = SeriesType.ID " +
+                    "WHERE Channel.MeterID = {0}";
+
+                using (DataTable table = Connection.RetrieveData(AlarmQueryFormat, meter.ID))
+                {
+                    TableOperations<ActiveAlarm> activeAlarmTable = new TableOperations<ActiveAlarm>(Connection);
+
+                    foreach (DataRow row in table.Rows)
+                    {
+                        int channelID = row.ConvertField<int>("ChannelID");
+                        string seriesType = row.ConvertField<string>("SeriesType");
+                        string alarmType = row.ConvertField<string>("AlarmType");
+                        ActiveAlarm alarm = activeAlarmTable.LoadRecord(row);
+                        AlarmData alarmData = new AlarmData(alarm, alarmType, seriesType);
+                        AlarmTester alarmTester = new AlarmTester(this, alarmData);
+                        List<AlarmTester> channelTesters = alarmDataLookup.GetOrAdd(channelID, _ => new List<AlarmTester>());
+                        channelTesters.Add(alarmTester);
+                    }
+                }
+
+                return alarmDataLookup;
+            }
+
+            public List<AlarmValue> LoadAlarmValues(ActiveAlarm alarm)
+            {
+                TableOperations<AlarmValue> alarmValueTable = new TableOperations<AlarmValue>(Connection);
+
+                return alarmValueTable
+                    .QueryRecordsWhere("AlarmID = {0}", alarm.AlarmID)
+                    .ToList();
+            }
+
+            public List<AlarmDay> LoadAlarmDays()
+            {
+                TableOperations<AlarmDay> alarmDayTable = new TableOperations<AlarmDay>(Connection);
+
+                return alarmDayTable
+                    .QueryRecords()
+                    .ToList();
+            }
+
+            #endregion
+        }
+
+        private class AlarmTester
+        {
+            #region [ Constructors ]
+
+            public AlarmTester(AlarmLoader alarmLoader, AlarmData alarmData)
+            {
+                AlarmLoader = alarmLoader;
+                AlarmData = alarmData;
+
+                ValueSelector = InitializeValueSelector();
+                LazyThresholdSelector = new Lazy<Func<DateTime, double>>(InitializeThresholdSelector);
+                Comparer = InitializeComparer();
+
+                LazyAlarmDayFilterLookup = new Lazy<Dictionary<int, AlarmDayFilter>>(InitializeAlarmDayFilterLookup);
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public AlarmData AlarmData { get; }
+            private AlarmLoader AlarmLoader { get; }
+
+            private Func<Point, double> ValueSelector { get; }
+            private Lazy<Func<DateTime, double>> LazyThresholdSelector { get; }
+            private Func<double, double, bool> Comparer { get; }
+
+            private Lazy<Dictionary<int, AlarmDayFilter>> LazyAlarmDayFilterLookup { get; }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public bool Test(Point point)
+            {
+                double value = ValueSelector(point);
+                double threshold = LazyThresholdSelector.Value(point.Timestamp);
+                return Comparer(value, threshold);
+            }
+
+            private Func<Point, double> InitializeValueSelector()
+            {
+                switch (AlarmData.SeriesType)
+                {
+                    case "Maximum": return pt => pt.Maximum;
+                    case "Minimum": return pt => pt.Minimum;
+                    case "Average": return pt => pt.Average;
+                    default: return _ => double.NaN;
+                }
+            }
+
+            private Func<DateTime, double> InitializeThresholdSelector()
+            {
+                List<AlarmValue> alarmValues = AlarmLoader.LoadAlarmValues(AlarmData.Alarm);
+
+                if (alarmValues.Count == 1)
+                {
+                    AlarmValue alarmValue = alarmValues.Single();
+                    double alarmValueThreshold = alarmValue.Value * AlarmData.Alarm.Value;
+                    return timestamp => alarmValueThreshold;
+                }
+
+                return timestamp => alarmValues
+                    .Where(alarmValue => AlarmValueApplies(timestamp, alarmValue))
+                    .Select(alarmValue => alarmValue.Value * AlarmData.Alarm.Value)
+                    .DefaultIfEmpty(double.NaN)
+                    .FirstOrDefault();
+            }
+
+            private Func<double, double, bool> InitializeComparer()
+            {
+                switch (AlarmData.AlarmType)
+                {
+                    case "Upper Limit": return (value, threshold) => value > threshold;
+                    case "Lower Limit": return (value, threshold) => value < threshold;
+                    default: return (_, __) => false;
+                }
+            }
+
+            private Dictionary<int, AlarmDayFilter> InitializeAlarmDayFilterLookup() =>
+                AlarmLoader.LoadAlarmDays().ToDictionary(alarmDay => alarmDay.ID, ToAlarmDayFilter);
+
+            private AlarmDayFilter ToAlarmDayFilter(AlarmDay alarmDay)
+            {
+                bool IsWeekend(DayOfWeek dayOfWeek) =>
+                    dayOfWeek == DayOfWeek.Saturday ||
+                    dayOfWeek == DayOfWeek.Sunday;
+
+                bool IsWeekday(DayOfWeek dayOfWeek) =>
+                    !IsWeekend(dayOfWeek);
+
+                switch (alarmDay.Name)
+                {
+                    case "Weekend": return dt => IsWeekend(dt.DayOfWeek);
+                    case "Weekday": return dt => IsWeekday(dt.DayOfWeek);
+                    case "Monday": return dt => dt.DayOfWeek == DayOfWeek.Monday;
+                    case "Tuesday": return dt => dt.DayOfWeek == DayOfWeek.Tuesday;
+                    case "Wednesday": return dt => dt.DayOfWeek == DayOfWeek.Wednesday;
+                    case "Thursday": return dt => dt.DayOfWeek == DayOfWeek.Thursday;
+                    case "Friday": return dt => dt.DayOfWeek == DayOfWeek.Friday;
+                    case "Saturday": return dt => dt.DayOfWeek == DayOfWeek.Saturday;
+                    case "Sunday": return dt => dt.DayOfWeek == DayOfWeek.Sunday;
+                    default: return _ => true;
+                }
+            }
+
+            private bool AlarmValueApplies(DateTime timestamp, AlarmValue alarmValue)
+            {
+                if (timestamp.Hour < alarmValue.StartHour)
+                    return false;
+                if (timestamp.Hour >= alarmValue.EndHour)
+                    return false;
+
+                if (alarmValue.AlarmDayID is null)
+                    return true;
+
+                int alarmDayID = alarmValue.AlarmDayID.GetValueOrDefault();
+                if (!LazyAlarmDayFilterLookup.Value.TryGetValue(alarmDayID, out AlarmDayFilter alarmDayFilter))
+                    return false;
+
+                return alarmDayFilter(timestamp);
+            }
+
+            #endregion
+        }
+
+        private class AlarmData
+        {
+            #region [ Constructors ]
+
+            public AlarmData(ActiveAlarm alarm, string alarmType, string seriesType)
+            {
+                Alarm = alarm;
+                AlarmType = alarmType;
+                SeriesType = seriesType;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public ActiveAlarm Alarm { get; }
+            public string AlarmType { get; }
+            public string SeriesType { get; }
+
+            #endregion
         }
 
         #endregion
 
         #region [ Properties ]
 
-       
+        [Category]
+        [SettingName(HIDSSettings.CategoryName)]
+        public HIDSSettings HIDSSettings { get; }
+            = new HIDSSettings();
 
         #endregion
 
@@ -87,10 +303,136 @@ namespace openXDA.HIDS
                 return;
             }
 
+            using AdoDataConnection connection = meterDataSet.CreateDbConnection();
+            AlarmLoader alarmLoader = new AlarmLoader(connection);
+            Dictionary<int, List<AlarmTester>> channelTestersLookup = alarmLoader.LoadChannelTestersLookup(meterDataSet.Meter);
+
+            if (!channelTestersLookup.Any())
+            {
+                Log.Debug($"No alarms defined for meter {meterDataSet.Meter.Name}; skipping {nameof(HIDSAlarmOperation)}.");
+                return;
+            }
+
             using API hids = new API();
             hids.Configure(HIDSSettings);
+
+            CountAlarms(channelTestersLookup, meterDataSet, connection, hids);
+            LogAlarms(channelTestersLookup, meterDataSet, connection, hids);
+        }
+
+        private void CountAlarms(Dictionary<int, List<AlarmTester>> channelTestersLookup, MeterDataSet meterDataSet, AdoDataConnection connection, API hids) =>
+            CountAlarmsAsync(channelTestersLookup, meterDataSet, connection, hids).GetAwaiter().GetResult();
+
+        private async Task CountAlarmsAsync(Dictionary<int, List<AlarmTester>> channelTestersLookup, MeterDataSet meterDataSet, AdoDataConnection connection, API hids)
+        {
+            TrendingGroupsResource trendingGroupsResource = meterDataSet.GetResource<TrendingGroupsResource>();
+            Dictionary<Channel, List<DataGroup>> trendingGroups = trendingGroupsResource.TrendingGroups;
+
+            List<Channel> trendingChannels = meterDataSet.Meter.Channels
+                .Where(channel => channel.ID != 0)
+                .Where(channel => channel.Enabled)
+                .Where(channel => channel.MeasurementCharacteristic.Name != "Instantaneous")
+                .ToList();
+
+            IEnumerable<string> tags = trendingChannels
+                .Select(channel => hids.ToTag(channel.ID));
+
+            DateTime startTime = trendingGroups.Values
+                .SelectMany(list => list)
+                .Min(dataGroup => dataGroup.StartTime.Date);
+
+            DateTime endTime = trendingGroups.Values
+                .SelectMany(list => list)
+                .Max(dataGroup => dataGroup.EndTime.AddDays(1.0D).AddTicks(-1L).Date);
+
+            void QueryAllPoints(IQueryBuilder queryBuilder) => queryBuilder
+                .Range(startTime, endTime)
+                .FilterTags(tags);
+
+            int totalDays = (int)(endTime - startTime).TotalDays;
+
+            var channelCounts = Enumerable
+                .Range(0, totalDays)
+                .Select(day => startTime.AddDays(day))
+                .SelectMany(_ => trendingChannels, (date, channel) => new { ChannelID = channel.ID, Date = date })
+                .ToDictionary(key => key, _ => 0);
+
+            Dictionary<DateTime, int> meterCounts = Enumerable
+                .Range(0, totalDays)
+                .Select(day => startTime.AddDays(day))
+                .ToDictionary(date => date, _ => 0);
+
+            await foreach (Point point in hids.ReadPointsAsync(QueryAllPoints))
+            {
+                int channelID = hids.ToChannelID(point.Tag);
+                DateTime date = point.Timestamp.Date;
+                var key = new { ChannelID = channelID, Date = date };
+
+                if (!channelTestersLookup.TryGetValue(channelID, out List<AlarmTester> channelTesters))
+                    continue;
+
+                foreach (AlarmTester channelTester in channelTesters)
+                {
+                    if (!channelTester.Test(point))
+                        continue;
+
+                    channelCounts[key]++;
+                    meterCounts[date]++;
+                }
+            }
+
+            TableOperations<ChannelAlarmSummary> channelAlarmSummaryTable = new TableOperations<ChannelAlarmSummary>(connection);
+
+            foreach (var kvp in channelCounts)
+            {
+                int channelID = kvp.Key.ChannelID;
+                DateTime date = kvp.Key.Date;
+                int count = kvp.Value;
+
+                if (count == 0)
+                {
+                    string filter = "ChannelID = {0} AND Date = {1}";
+                    channelAlarmSummaryTable.DeleteRecordWhere(filter, channelID, date);
+                    continue;
+                }
+
+                channelAlarmSummaryTable.Upsert(new ChannelAlarmSummary()
+                {
+                    ChannelID = channelID,
+                    Date = date,
+                    AlarmPoints = count
+                });
+            }
+
+            TableOperations<MeterAlarmSummary> meterAlarmSummaryTable = new TableOperations<MeterAlarmSummary>(connection);
+
+            foreach (var kvp in meterCounts)
+            {
+                int meterID = meterDataSet.Meter.ID;
+                DateTime date = kvp.Key.Date;
+                int count = kvp.Value;
+
+                if (count == 0)
+                {
+                    string filter = "MeterID = {0} AND Date = {1}";
+                    meterAlarmSummaryTable.DeleteRecordWhere(filter, meterID, date);
+                    continue;
+                }
+
+                meterAlarmSummaryTable.Upsert(new MeterAlarmSummary()
+                {
+                    MeterID = meterID,
+                    Date = date,
+                    AlarmPoints = count
+                });
+            }
+        }
+
+        private void LogAlarms(Dictionary<int, List<AlarmTester>> channelTestersLookup, MeterDataSet meterDataSet, AdoDataConnection connection, API hids)
+        {
             TrendingDataSummaryResource trendingDataSummaryResource = meterDataSet.GetResource<TrendingDataSummaryResource>();
             Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = trendingDataSummaryResource.TrendingDataSummaries;
+            TableOperations<AlarmLog> alarmLogTable = new TableOperations<AlarmLog>(connection);
 
             foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
             {
@@ -107,150 +449,54 @@ namespace openXDA.HIDS
                     Minimum = summary.Minimum
                 });
 
-                List<Point> data = points.ToList();
-                data.Sort((pt1, pt2) => pt1.Timestamp.CompareTo(pt2.Timestamp));
+                List<Point> data = points
+                    .OrderBy(pt => pt.Timestamp)
+                    .ToList();
 
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                if (!channelTestersLookup.TryGetValue(channelID, out List<AlarmTester> channelTesters))
+                    continue;
+
+                foreach (AlarmTester channelTester in channelTesters)
                 {
-                    IEnumerable<SeriesType> seriesTypes = new TableOperations<SeriesType>(connection).QueryRecordsWhere("Name = 'Average' OR Name = 'Maximum' OR Name = 'Minimum'");
-                    TableOperations<AlarmLog> alarmLogTbl = new TableOperations<AlarmLog>(connection);
-                    foreach (SeriesType sT in seriesTypes)
-                    {
-                        // Find Any Alarms for this channel
-                        IEnumerable<ActiveAlarm> alarms = new TableOperations<ActiveAlarm>(connection).QueryRecordsWhere("SeriesID IN (SELECT ID FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1})", channelID, sT.ID);
-
-                        if (alarms.Count() == 0)
-                            continue;
-
-                        Func<Point, double> pointProcessor = (Point pt) => pt.Average;
-
-                        if (sT.Name == "Maximum")
-                            pointProcessor = (Point pt) => pt.Maximum;
-                        if (sT.Name == "Minimum")
-                            pointProcessor = (Point pt) => pt.Minimum;
-
-                        foreach (ActiveAlarm alarm in alarms)
-                        {
-                            ProcessSeriesAlarm(alarm, data, pointProcessor).ForEach(item => alarmLogTbl.AddNewRecord(item));
-                        }
-                    }
+                    foreach (AlarmLog alarmLog in ProcessSeriesAlarm(channelTester, data))
+                        alarmLogTable.AddNewRecord(alarmLog);
                 }
             }
         }
 
-        private List<AlarmLog> ProcessSeriesAlarm(ActiveAlarm alarm, List<Point> data, Func<Point,double> processPoint)
+        private List<AlarmLog> ProcessSeriesAlarm(AlarmTester alarmTester, List<Point> data)
         {
-            bool upper = true;
-            IEnumerable<AlarmValue> alarmValues;
-            using (AdoDataConnection connection = new AdoDataConnection("SystemSettings"))
-            {
-                AlarmType alarmType = new TableOperations<AlarmType>(connection).QueryRecordWhere("ID = {0}", alarm.AlarmTypeID);
-                if (alarmType.Name == "Lower Limit")
-                    upper = false;
-
-                alarmValues = new TableOperations<AlarmValue>(connection).QueryRecordsWhere("AlarmID = {0}", alarm.AlarmID);
-            }
-
             List<AlarmLog> result = new List<AlarmLog>();
 
-            // Create Hour of the week based Threshholds
-            bool isSingle = alarmValues.Count() == 1;
+            List<Range<DateTime>> alarmRanges = new List<Range<DateTime>>();
+            bool wasInAlarm = false;
+            DateTime start = DateTime.MinValue;
 
-            int nHours = (data.Last().Timestamp- data.First().Timestamp).Hours + 1;
-
-            double[] threshholds = new double[nHours];
-
-            if (isSingle)
+            foreach (Point point in data)
             {
-                threshholds = Enumerable.Repeat(alarmValues.First().Value * alarm.Value, nHours).ToArray();
-            }
-            else
-            {
-                // start with First TS of the List
-                DateTime dt = data.Min(pt => pt.Timestamp).Date;
-                dt = dt.AddHours(data.Min(pt => pt.Timestamp).Hour);
+                bool isInAlarm = alarmTester.Test(point);
 
-                for (int i = 0; i < nHours; i++)
-                {
-                    AlarmValue current = alarmValues.Where(item => Applies(dt.AddHours(i),item)).FirstOrDefault();
-                    if (current == null)
-                        threshholds[i] = double.NaN;
-                    else
-                        threshholds[i] = current.Value * alarm.Value;
-                }
+                if (!wasInAlarm && isInAlarm)
+                    start = point.Timestamp;
+
+                if (wasInAlarm && !isInAlarm)
+                    alarmRanges.Add(new Range<DateTime>(start, point.Timestamp));
+
+                wasInAlarm = isInAlarm;
             }
 
-            DateTime startTime = data[0].Timestamp;
-            //Find Threshholds Crossings
-            List<DateTime> start = data.Skip(1).Where((pt, index) => {
-                int hourofWeek = (data[index+1].Timestamp - startTime).Hours;
-                double threshold = threshholds[hourofWeek];
+            if (wasInAlarm)
+                alarmRanges.Add(new Range<DateTime>(start, data.Last().Timestamp));
 
-                double p1 = (processPoint(data[index]) - threshold) * (upper ? 1.0D : -1.0D);
-                double p2 = (processPoint(data[index + 1]) - threshold) * (upper ? 1.0D : -1.0D);
+            ActiveAlarm alarm = alarmTester.AlarmData.Alarm;
 
-                return (p1 * p2) < 0 && p2 > 0;
-            }).Select(pt => pt.Timestamp).ToList();
-
-            List<DateTime> end = data.Take(data.Count - 1).Where((pt, index) => {
-                int hourofWeek = (data[index].Timestamp - startTime).Hours;
-                double threshold = threshholds[hourofWeek];
-
-                double p1 = (processPoint(data[index]) - threshold) * (upper ? 1.0D : -1.0D);
-                double p2 = (processPoint(data[index + 1]) - threshold) * (upper ? 1.0D : -1.0D);
-
-                return (p1 * p2) < 0 && p2 < 0;
-            }).Select(pt => pt.Timestamp).ToList();
-
-            // Check if Alarm is on in first point
-            double threshold = threshholds[0];
-
-            double p1 = (processPoint(data[0]) - threshold) * (upper ? 1.0D : -1.0D);
-
-            if (start.Count() == 0 && end.Count() == 0 && p1 < 0)
-                return new List<AlarmLog>();
-
-            //Special case if the whole Window is in Alarm
-            if (start.Count() == 0 && end.Count() == 0 && p1 > 0)
-                return new List<AlarmLog>() { 
-                    new AlarmLog() {
-                        AlarmID= alarm.AlarmID, 
-                        AlarmFactorID = alarm.AlarmFactorID,
-                        EndTime=data.Last().Timestamp,
-                        StartTime = data.First().Timestamp
-                    }
-                };
-
-            // case if new or old Window are bleeding over 
-            // this needs to be handled seperately later...
-            if (start.Count() > end.Count())
-                end.Add(data.Last().Timestamp);
-            if (start.Count() < end.Count())
-                start = start.Prepend(data.First().Timestamp).ToList();
-
-            return start.Select((item, index) => new AlarmLog() {
+            return alarmRanges.Select(range => new AlarmLog()
+            {
                 AlarmID = alarm.AlarmID,
                 AlarmFactorID = alarm.AlarmFactorID,
-                EndTime = end[index],
-                StartTime = item
+                StartTime = range.Start,
+                EndTime = range.End
             }).ToList();
-        }
-
-        private bool Applies(DateTime time, AlarmValue value)
-        {
-            AlarmDay day;
-            using (AdoDataConnection connection = new AdoDataConnection("SystemSettings"))
-            {
-                day = new TableOperations<AlarmDay>(connection).QueryRecordWhere("ID = {0}", value.AlarmdayID);
-            }
-            if (day == null)
-                return (time.Hour >= value.StartHour && time.Hour < value.EndHour);
-            if (day.Name == "WeekEnd")
-              return (time.Hour >= value.StartHour && time.Hour < value.EndHour && (time.DayOfWeek == DayOfWeek.Sunday || time.DayOfWeek == DayOfWeek.Saturday)); 
-            if (day.Name == "WeekDay")
-                 return (time.Hour >= value.StartHour && time.Hour < value.EndHour && !(time.DayOfWeek == DayOfWeek.Sunday || time.DayOfWeek == DayOfWeek.Saturday)); 
-
-            return (time.Hour >= value.StartHour && time.Hour < value.EndHour); 
         }
 
         #endregion

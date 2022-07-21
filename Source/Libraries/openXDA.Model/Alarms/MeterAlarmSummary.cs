@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using GSF.Data;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -33,8 +32,6 @@ namespace openXDA.Model
         public int ID { get; set; }
 
         public int MeterID { get; set; }
-
-        public int AlarmTypeID { get; set; }
 
         public DateTime Date { get; set; } 
 
@@ -47,20 +44,19 @@ namespace openXDA.Model
         {
             const string UpsertQuery =
                 "MERGE MeterAlarmSummary WITH (HOLDLOCK) AS Target " +
-                "USING (VALUES({0}, {1}, {2}, {3})) AS Source(MeterID, AlarmTypeID, Date, AlarmPoints) " +
-                "ON Target.MeterID = Source.MeterID AND Target.AlarmTypeID = Source.AlarmTypeID AND Target.Date = Source.Date " +
+                "USING (VALUES({0}, {1}, {2})) AS Source(MeterID, Date, AlarmPoints) " +
+                "ON Target.MeterID = Source.MeterID AND Target.Date = Source.Date " +
                 "WHEN MATCHED THEN " +
                 "    UPDATE SET " +
                 "        Target.AlarmPoints = Source.AlarmPoints " +
                 "WHEN NOT MATCHED THEN " +
-                "    INSERT VALUES(Source.MeterID, Source.AlarmTypeID, Source.Date, Source.AlarmPoints);";
+                "    INSERT VALUES(Source.MeterID, Source.Date, Source.AlarmPoints);";
 
             int meterID = meterAlarmSummary.MeterID;
-            int alarmTypeID = meterAlarmSummary.AlarmTypeID;
             DateTime date = meterAlarmSummary.Date;
             int alarmPoints = meterAlarmSummary.AlarmPoints;
 
-            meterAlarmSummaryTable.Connection.ExecuteNonQuery(UpsertQuery, meterID, alarmTypeID, date, alarmPoints);
+            meterAlarmSummaryTable.Connection.ExecuteNonQuery(UpsertQuery, meterID, date, alarmPoints);
         }
     }
 }

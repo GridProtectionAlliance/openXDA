@@ -178,14 +178,14 @@ namespace SPCTools
                         {
                             if (!isNew)
                             {
-                                connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID.Item1} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmdayID == null ? "IS NULL" : ("= " + value.AlarmdayID.ToString()))}");
+                                connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID.Item1} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmDayID == null ? "IS NULL" : ("= " + value.AlarmDayID.ToString()))}");
                             
                             }
                             AlarmValue alarmValue = new AlarmValue()
                             {
                                 StartHour = value.StartHour,
                                 EndHour = value.EndHour,
-                                AlarmdayID = value.AlarmdayID,
+                                AlarmDayID = value.AlarmDayID,
                                 AlarmID = alarmID.Item1,
                                 Formula = value.Formula,
                                 Value = (token.isScalar ? token.Scalar : token.Slice[request.StatisticChannelsID.FindIndex(item => item == alarmID.Item2)])
@@ -363,7 +363,7 @@ namespace SPCTools
             AlarmDay day;
             using (AdoDataConnection connection = Host.CreateDbConnection())
             {
-                day = new TableOperations<AlarmDay>(connection).QueryRecordWhere("ID = {0}", alarmValue.AlarmdayID);
+                day = new TableOperations<AlarmDay>(connection).QueryRecordWhere("ID = {0}", alarmValue.AlarmDayID);
             }
             if (day == null)
                 return (DateTime input) => { return (input.Hour >= alarmValue.StartHour && input.Hour < alarmValue.EndHour); };

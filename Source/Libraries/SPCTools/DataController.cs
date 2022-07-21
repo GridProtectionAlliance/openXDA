@@ -285,7 +285,7 @@ namespace SPCTools
             AlarmDay day;
             using (AdoDataConnection connection = Host.CreateDbConnection())
             {
-                day = new TableOperations<AlarmDay>(connection).QueryRecordWhere("ID = {0}", alarmValue.AlarmdayID);
+                day = new TableOperations<AlarmDay>(connection).QueryRecordWhere("ID = {0}", alarmValue.AlarmDayID);
             }
             if (day == null)
                 return (DateTime input) => { return (input.Hour >= alarmValue.StartHour && input.Hour < alarmValue.EndHour); };

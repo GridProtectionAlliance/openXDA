@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using GSF.Data;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -33,8 +32,6 @@ namespace openXDA.Model
         public int ID { get; set; }
 
         public int ChannelID { get; set; }
-
-        public int AlarmTypeID { get; set; }
 
         public DateTime Date { get; set; } 
 
@@ -47,20 +44,19 @@ namespace openXDA.Model
         {
             const string UpsertQuery =
                 "MERGE ChannelAlarmSummary WITH (HOLDLOCK) AS Target " +
-                "USING (VALUES({0}, {1}, {2}, {3})) AS Source(ChannelID, AlarmTypeID, Date, AlarmPoints) " +
-                "ON Target.ChannelID = Source.ChannelID AND Target.AlarmTypeID = Source.AlarmTypeID AND Target.Date = Source.Date " +
+                "USING (VALUES({0}, {1}, {2})) AS Source(ChannelID, Date, AlarmPoints) " +
+                "ON Target.ChannelID = Source.ChannelID AND Target.Date = Source.Date " +
                 "WHEN MATCHED THEN " +
                 "    UPDATE SET " +
                 "        Target.AlarmPoints = Source.AlarmPoints " +
                 "WHEN NOT MATCHED THEN " +
-                "    INSERT VALUES(Source.ChannelID, Source.AlarmTypeID, Source.Date, Source.AlarmPoints);";
+                "    INSERT VALUES(Source.ChannelID, Source.Date, Source.AlarmPoints);";
 
             int channelID = channelAlarmSummary.ChannelID;
-            int alarmTypeID = channelAlarmSummary.AlarmTypeID;
             DateTime date = channelAlarmSummary.Date;
             int alarmPoints = channelAlarmSummary.AlarmPoints;
 
-            channelAlarmSummaryTable.Connection.ExecuteNonQuery(UpsertQuery, channelID, alarmTypeID, date, alarmPoints);
+            channelAlarmSummaryTable.Connection.ExecuteNonQuery(UpsertQuery, channelID, date, alarmPoints);
         }
     }
 }

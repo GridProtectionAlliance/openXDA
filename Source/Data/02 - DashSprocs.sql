@@ -4072,7 +4072,7 @@ BEGIN
         Meter.ID as meterid,
         Channel.ID as channelid,
         Meter.Name as sitename,
-        [dbo].[AlarmType].[Name] as eventtype,
+        'Alarm' as eventtype,
         [dbo].[MeasurementCharacteristic].[Name] as characteristic,
         [dbo].[MeasurementType].[Name] as measurementtype,
         [dbo].[Phase].[Name] as phasename,
@@ -4084,15 +4084,12 @@ BEGIN
 
         join ChannelAlarmSummary on ChannelAlarmSummary.ChannelID = Channel.ID and Date = @theDate
         join Meter on Channel.MeterID = Meter.ID and [MeterID] in ( Select * from @MeterIDs)
-        join [dbo].[AlarmType] on
-            [dbo].[AlarmType].[ID] = ChannelAlarmSummary.AlarmTypeID and
-            ([dbo].[AlarmType].[Name] = 'OffNormal' or [dbo].[AlarmType].[Name] = 'Alarm')
 
         join [dbo].[MeasurementCharacteristic] on Channel.MeasurementCharacteristicID = [dbo].[MeasurementCharacteristic].[ID]
         join [dbo].[MeasurementType] on Channel.MeasurementTypeID =  [dbo].[MeasurementType].ID
         join [dbo].[Phase] on Channel.PhaseID = [dbo].[Phase].ID
 
-        Group By Meter.ID , Channel.ID , Meter.Name , [dbo].[AlarmType].[Name], [MeasurementCharacteristic].[Name] , [MeasurementType].[Name] , [dbo].[Phase].[Name], Channel.HarmonicGroup
+        Group By Meter.ID , Channel.ID , Meter.Name , [MeasurementCharacteristic].[Name] , [MeasurementType].[Name] , [dbo].[Phase].[Name], Channel.HarmonicGroup
         Order By Meter.ID
 
 END
@@ -4637,12 +4634,11 @@ FROM String_To_Int_Table(@MeterID, ',')
 
 SELECT AlarmDate as thedate, COALESCE(OffNormal,0) as Offnormal, COALESCE(Alarm,0) as Alarm
 FROM(
-    SELECT Date AS AlarmDate, AlarmType.Name, SUM(AlarmPoints) as AlarmPoints
+    SELECT Date AS AlarmDate, 'Alarm' Name, SUM(AlarmPoints) as AlarmPoints
     FROM ChannelAlarmSummary JOIN
-         Channel ON ChannelAlarmSummary.ChannelID = Channel.ID JOIN
-         AlarmType ON AlarmType.ID = ChannelAlarmSummary.AlarmTypeID
+         Channel ON ChannelAlarmSummary.ChannelID = Channel.ID
     WHERE MeterID IN (SELECT * FROM #selectedMeters) AND Date >= @startDate AND Date < @endDate
-    GROUP BY Date, AlarmType.Name
+    GROUP BY Date
 ) AS table1
 PIVOT(
     SUM(table1.AlarmPoints)

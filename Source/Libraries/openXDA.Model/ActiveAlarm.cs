@@ -21,8 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.ComponentModel;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -34,12 +32,10 @@ namespace openXDA.Model
     public class ActiveAlarm
     {
         public int AlarmID { get; set; }
+        public int AlarmGroupID { get; set; }
+        public int AlarmTypeID { get; set; }
         public int? AlarmFactorID { get; set; }
         public int SeriesID { get; set; }
         public double Value { get; set; }
-        public int AlarmTypeID { get; set; }
     }
-
-    
-
 }
