@@ -4740,6 +4740,25 @@ WHERE
     CheckedIn > DATEADD(MINUTE, -5, GETUTCDATE())
 GO
 
+CREATE VIEW ActiveSubscription AS
+	SELECT 
+        
+		UserAccountEmailType.ID AS UserAccountEmailID,
+		UserAccountEmailType.UserAccountID AS UserAccountID,
+		UserAccountEmailType.Approved AS Approved,
+		AssetGroup.Name AS AssetGroup,
+		EmailType.Name AS Email,
+		EmailCategory.Name AS Category,
+		EmailType.ID AS EmailTypeID,
+		SentEmail.Subject AS Subject,
+		SentEmail.TimeSent AS LastSent
+	FROM UserAccountEmailType LEFT JOIN
+		AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
+		EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID LEFT JOIN
+		EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
+		SentEmail ON SentEmail.EmailTypeID = EmailType.ID 
+GO
+
 CREATE VIEW CBReportEventTable AS
 SELECT
     CBAnalyticResult.ID AS ID,

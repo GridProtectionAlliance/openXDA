@@ -114,6 +114,7 @@
     <Compile Include="Emails\EmailTemplateUser.cs" />
     <Compile Include="Emails\TriggeredEmailDataSource.cs" />
     <Compile Include="Emails\TriggeredEmailDataSourceSetting.cs" />
+    <Compile Include="Emails\ActiveSubscription.cs" />
     <Compile Include="Emails\UserEmailTemplate.cs" />
     <Compile Include="Emails\EmailType.cs" />
     <Compile Include="Events\BreakerRestrike.cs" />
