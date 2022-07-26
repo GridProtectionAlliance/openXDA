@@ -1979,7 +1979,8 @@ CREATE TABLE EmailType
     MaxDelay FLOAT NOT NULL DEFAULT 60,
     SMS BIT NOT NULL DEFAULT 0,
     ShowSubscription BIT NOT NULL DEFAULT 1,
-    RequireApproval BIT NOT NULL DEFAULT 0
+    RequireApproval BIT NOT NULL DEFAULT 0,
+    FilePath VARCHAR(200) NULL DEFAULT NULL
 )
 GO
 
@@ -5320,7 +5321,8 @@ SELECT
     EmailType.MaxDelay,
     EmailType.SMS,
     EmailType.ShowSubscription,
-    EmailType.RequireApproval
+    EmailType.RequireApproval,
+    FilePath.FilePath
 FROM
     EmailType JOIN
     EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID

@@ -58,6 +58,8 @@ namespace openXDA.Model
 
         [DefaultValue(false)]
         public bool RequireApproval { get; set; }
+
+        public string FilePath { get; set; }
     }
 
     [AllowSearch]

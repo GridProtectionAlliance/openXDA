@@ -40,6 +40,6 @@ namespace openXDA.Model
 		public string Category { get; set; }
 		public int EmailTypeID { get; set; }
 		public string Subject { get; set; }
-		public DateTime LastSent { get; set; }
+		public DateTime? LastSent { get; set; }
 	}
 }

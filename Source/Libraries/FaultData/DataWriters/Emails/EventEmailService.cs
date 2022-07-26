@@ -151,7 +151,7 @@ namespace FaultData.DataWriters.Emails
                     XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                     ApplyChartTransform(attachments, htmlDocument);
                     ApplyFTTTransform(attachments, htmlDocument);
-                    SendEmail(recipients, htmlDocument, attachments);
+                    SendEmail(recipients, htmlDocument, attachments,email.FilePath);
                     LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
                 }
             }
@@ -354,7 +354,7 @@ namespace FaultData.DataWriters.Emails
             });
         }
 
-        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
+        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, string filePath=null)
         {
             Settings settings = new Settings(Configure);
             EmailSection emailSettings = settings.EmailSettings;
@@ -399,9 +399,26 @@ namespace FaultData.DataWriters.Emails
 
                 // Send the email
                 smtpClient.Send(emailMessage);
+
+                //Write the email to a File
+                WriteEmailToFile(filePath,emailMessage);
             }
         }
 
+        private void WriteEmailToFile(string path, MailMessage mail)
+        {
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            string datafolder = Path.GetDirectoryName(path);
+            string dstFile = Path.Combine(datafolder, mail.Subject);
+
+            if (File.Exists(dstFile))
+                File.Delete(dstFile);
+            using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(dstFile)))
+                fileWriter.Write(mail.Body);
+                
+        }
         public void SendAdminEmail(string subject, string message, List<string> replyToRecipients)
         {
             Settings settings = new Settings(Configure);
