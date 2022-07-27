@@ -5347,7 +5347,7 @@ SELECT
     EmailType.SMS,
     EmailType.ShowSubscription,
     EmailType.RequireApproval,
-    FilePath.FilePath
+    EmailType.FilePath
 FROM
     EmailType JOIN
     EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID
