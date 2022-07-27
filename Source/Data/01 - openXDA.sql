@@ -393,6 +393,14 @@ CREATE TABLE Customer
 )
 GO
 
+CREATE TABLE CustomerMeter
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    CustomerID INT NOT NULL FOREIGN KEY REFERENCES Customer(ID),
+    MeterID INT NOT NULL FOREIGN KEY REFERENCES Meter(ID)
+)
+GO
+
 CREATE TABLE CustomerAsset
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -4781,26 +4789,43 @@ FROM
     CBOperation ON CBAnalyticResult.CBOperationID = CBOperation.ID
 GO
 
+CREATE VIEW CustomerMeterDetail AS
+SELECT
+    CustomerMeter.ID AS ID,
+    Customer.CustomerKey AS CustomerKey,
+    Customer.Name AS CustomerName,
+    Meter.AssetKey AS MeterKey,
+    Meter.Name AS MeterName,
+    Location.Name AS MeterLocation,
+    Customer.ID AS CustomerID,
+    Meter.ID AS MeterID
+FROM
+    CustomerMeter LEFT JOIN Meter ON Meter.ID = CustomerMeter.MeterID LEFT OUTER JOIN
+    Customer ON Customer.ID = CustomerMeter.CustomerID LEFT OUTER JOIN
+    Location ON Meter.LocationID = Location.ID
+GO
+
 CREATE VIEW  MeterFacility AS
 (
-SELECT 
-    CustomerMeter.ID AS ID,
-    CustomerMeter.MeterID AS MeterID,
-    Customer.PQIFacilityID AS FacilityID
-FROM
-    Customer INNER JOIN CustomerMeter ON CustomerMeter.CustomerID = Customer.ID
+    SELECT
+        CustomerMeter.ID AS ID,
+        CustomerMeter.MeterID AS MeterID,
+        Customer.PQIFacilityID AS FacilityID
+    FROM
+        Customer JOIN
+        CustomerMeter ON CustomerMeter.CustomerID = Customer.ID
 )
 UNION
 (
-SELECT 
-    CustomerAsset.ID AS ID,
-    MeterAsset.MeterID AS MeterID,
-    Customer.PQIFacilityID AS FacilityID
-FROM
-    Customer INNER JOIN CustomerAsset ON CustomerAsset.CustomerID = Customer.ID LEFT JOIN
-	MeterAsset ON MeterAsset.AssetID = CustomerAsset.AssetID
+    SELECT
+        CustomerAsset.ID AS ID,
+        MeterAsset.MeterID AS MeterID,
+        Customer.PQIFacilityID AS FacilityID
+    FROM
+        Customer JOIN
+        CustomerAsset ON CustomerAsset.CustomerID = Customer.ID LEFT OUTER JOIN
+        MeterAsset ON MeterAsset.AssetID = CustomerAsset.AssetID
 )
-
 GO
 
 CREATE VIEW AssetGroupView AS

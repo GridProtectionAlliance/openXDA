@@ -165,31 +165,6 @@ CREATE Table [extDBTables] (
 )
 GO
 
-CREATE TABLE [CustomerMeter] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(ID),
-	MeterID int NOT NULL FOREIGN KEY REFERENCES Meter(ID)
-)
-GO
-
-
-Create View [CustomerMeterDetail] AS
-SELECT 
-	CustomerMeter.ID AS ID,
-	Customer.CustomerKey AS CustomerKey,
-	Customer.Name AS CustomerName,
-	Meter.AssetKey AS MeterKey,
-	Meter.Name AS MeterName,
-	Location.Name AS MeterLocation,
-	Customer.ID AS CustomerID,
-	Meter.ID AS MeterID
-FROM
-	CustomerMeter LEFT JOIN Meter ON Meter.ID = CustomerMeter.MeterID LEFT JOIN
-	Customer ON Customer.ID = CustomerMeter.CustomerID LEFT JOIN
-	Location ON Meter.LocationID = Location.ID
-GO
-
-
 CREATE TABLE [ADRole] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	Name varchar(200) NOT NULL,
