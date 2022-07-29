@@ -310,3 +310,5 @@ INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.APIKey
 GO
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.APIToken', '', '')
 GO
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.ClientID', 'LocalXDAClient', 'LocalXDAClient')
+GO
