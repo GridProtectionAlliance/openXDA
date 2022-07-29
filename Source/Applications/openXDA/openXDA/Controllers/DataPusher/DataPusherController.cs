@@ -411,36 +411,23 @@ namespace openXDA.Controllers.Config
                 DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                 engine.SyncInstanceConfiguration(connectionId, instanceId, cancellationToken);
             }, cancellationToken);
-
         }
 
-        [Route("SyncInstanceFiles/{connectionId}/{instanceId:int}"), HttpGet]
-        public Task SyncFilesForInstance(string connectionId, int instanceId, CancellationToken cancellationToken)
+        [Route("TestConnection/{instanceId:int}"), HttpGet]
+        public IHttpActionResult TestRemoteInstanceConnection(int instanceId)
         {
-            return Task.Run(() =>
-            {
-                using (AdoDataConnection connection = ConnectionFactory())
-                {
-                    // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
-                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    engine.SyncInstanceFiles(connectionId, instance, cancellationToken);
-                }
-            }, cancellationToken);
-        }
-
-        [Route("TestRemoteInstanceConnection/{instanceId:int}"), HttpGet]
-        public Task TestRemoteInstanceConnection(int instanceId, CancellationToken cancellationToken)
-        {
-            return Task.Run(() =>
+            try
             {
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
-                engine.TestInstance(instanceId);
-            }, cancellationToken);
+                return Ok(engine.TestInstance(instanceId) ? 1 : 0);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
 
         }
-
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherController));
     }
 }

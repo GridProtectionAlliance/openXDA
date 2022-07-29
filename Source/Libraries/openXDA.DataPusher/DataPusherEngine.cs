@@ -339,7 +339,10 @@ namespace openXDA.DataPusher
 
                         // Add or Update Asset
                         Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
-                        Asset remoteAseset = AddOrGetRemoteAsset(instance.Address, assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, userAccount);
+                        // Is null if this fails, error logged in func
+                        Asset remoteAsset = AddOrGetRemoteAsset(instance.Address, assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, userAccount);
+                        if (remoteAsset is null)
+                            continue;
                         // Note that this needs to get the Asset specifics (e.g. LineAttributes) sepperatly
                         // That broke in 3.0 
 
@@ -348,7 +351,7 @@ namespace openXDA.DataPusher
                         MeterAsset remoteMeterAsset = AddMeterAsset(instance.Address, meterToDataPush, assetToDataPush, userAccount, localMeterAsset);
 
                         // add line to meterlocationline table
-                        AssetLocation remoteAssetLocation = AddOrUpdateAssetLocation(instance.Address, remoteAseset, remoteLocation, userAccount);
+                        AssetLocation remoteAssetLocation = AddOrUpdateAssetLocation(instance.Address, remoteAsset, remoteLocation, userAccount);
 
                         // Sync Channel and channel dependant data
                         AddOrUpdateChannelsForLine(instance.Address, localMeterAsset, remoteMeterAsset, userAccount);
@@ -404,7 +407,11 @@ namespace openXDA.DataPusher
                 {
                     // Add or Update Asset
                     Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
-                    Asset remoteAseset = AddOrGetRemoteAsset(instance.Address, assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, userAccount);
+
+                    // Is null if this fails, error logged in func
+                    Asset remoteAsset = AddOrGetRemoteAsset(instance.Address, assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, userAccount);
+                    if (remoteAsset is null)
+                        return;
                     connection.ExecuteNonQuery("UPDATE AssetsToDataPush SET Synced = 1 where ID = {0}", assetToDataPush.ID);
                 }
             }
@@ -557,8 +564,11 @@ namespace openXDA.DataPusher
             {
                 if (meter.Obsfucate)
                 {
+                    if (meter.RemoteXDAName.Length > 20)
+                        remoteMeter.ShortName = meter.RemoteXDAName.Substring(0, 20);
+                    else
+                        remoteMeter.ShortName = meter.RemoteXDAName;
                     remoteMeter.Alias = meter.RemoteXDAName;
-                    remoteMeter.ShortName = meter.RemoteXDAName.Take(20).ToString();
                 }
                 else
                 {
@@ -574,7 +584,7 @@ namespace openXDA.DataPusher
                 remoteMeter.Description = localMeterRecord.Description;
                 remoteMeter.TimeZone = localMeterRecord.TimeZone;
 
-                WebAPIHub.UpdateRecord(address, remoteMeter, userAccount);
+                WebAPIHub.UpdateRecord<Meter>(address, remoteMeter, userAccount);
                 meter.RemoteXDAMeterID = remoteMeter.ID;
 
             }
@@ -607,27 +617,35 @@ namespace openXDA.DataPusher
 
         private Asset AddOrGetRemoteAsset(string address, AssetsToDataPush assetToDataPush, Asset localAsset, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = ConnectionFactory())
+            try
             {
-                Asset remoteAsset = null;
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    Asset remoteAsset = null;
 
-                string assetTypeText = localAssetTypes.First(x => x.ID == localAsset.AssetTypeID).Name;
-                Type type;
-                // Check is needed since there is a disconnect between the typename and the model name for capbanks
-                if (assetTypeText == "CapacitorBankRelay")
-                    type = typeof(CapBankRelay);
-                else if (assetTypeText == "CapacitorBank")
-                    type = typeof(CapBank);
-                else
-                    type = typeof(Asset).Assembly.GetType("openXDA.Model." + assetTypeText);
+                    string assetTypeText = localAssetTypes.First(x => x.ID == localAsset.AssetTypeID).Name;
+                    Type type;
+                    // Check is needed since there is a disconnect between the typename and the model name for capbanks
+                    if (assetTypeText == "CapacitorBankRelay")
+                        type = typeof(CapBankRelay);
+                    else if (assetTypeText == "CapacitorBank")
+                        type = typeof(CapBank);
+                    else
+                        type = typeof(Asset).Assembly.GetType("openXDA.Model." + assetTypeText);
 
-                if (type is null || (type != typeof(Asset) && !type.IsSubclassOf(typeof(Asset))))
-                    throw new Exception($"Non-valid asset type {assetTypeText} defined for asset with asset key {localAsset.AssetKey}.");
-                var assetAnyMethod = typeof(DataPusherEngine).GetMethod("AddOrGetAssetAny", BindingFlags.Instance | BindingFlags.NonPublic);
-                var assetTypedMethod = assetAnyMethod.MakeGenericMethod(new[] { type });
+                    if (type is null || (type != typeof(Asset) && !type.IsSubclassOf(typeof(Asset))))
+                        throw new Exception($"Non-valid asset type {assetTypeText} defined for asset with asset key {localAsset.AssetKey}.");
+                    var assetAnyMethod = typeof(DataPusherEngine).GetMethod("AddOrGetAssetAny", BindingFlags.Instance | BindingFlags.NonPublic);
+                    var assetTypedMethod = assetAnyMethod.MakeGenericMethod(new[] { type });
 
-                remoteAsset = (Asset) assetTypedMethod.Invoke(this, new object[] { address, assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, userAccount });
-                return remoteAsset;
+                    remoteAsset = (Asset)assetTypedMethod.Invoke(this, new object[] { address, assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, userAccount });
+                    return remoteAsset;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return null;
             }
         }
         private Asset AddOrGetAssetAny<T>(string address, string assetTypeText, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount) where T : Asset, new()
@@ -648,7 +666,7 @@ namespace openXDA.DataPusher
                 {
                     Asset checkKey = WebAPIHub.GetRecordWhere<Asset>(address, $"AssetKey='{(assetToDataPush.Obsfucate ? assetToDataPush.RemoteXDAAssetKey : localTypedAsset.AssetKey)}'", userAccount);
                     if (!(checkKey is null))
-                        throw new Exception($"An asset with this Asset Key ({assetToDataPush.RemoteXDAAssetKey}) already exists.  Please update the Remote Asset Key field in the data pusher.");
+                        throw new Exception($"An asset with this Asset Key ({(assetToDataPush.Obsfucate ? assetToDataPush.RemoteXDAAssetKey : localTypedAsset.AssetKey)}) already exists.  Please update the Remote Asset Key field in the data pusher.");
                 }
 
                 if (remoteTypedAsset == null)
@@ -863,23 +881,13 @@ namespace openXDA.DataPusher
 
         public bool TestInstance(int instanceId)
         {
-            bool connectionSuccess = false;
-            try
+            using (AdoDataConnection connection = ConnectionFactory())
             {
-                using (AdoDataConnection connection = ConnectionFactory())
-                {
-                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    if (instance is null) throw new Exception($"No remote XDA instance found with this instance ID${instanceId}");
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    connectionSuccess = WebAPIHub.TestConnection(instance.Address, userAccount);
-                }
+                RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                if (instance is null) throw new Exception($"No remote XDA instance found with this instance ID${instanceId}");
+                UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                return WebAPIHub.TestConnection(instance.Address, userAccount).GetAwaiter().GetResult();
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex);
-            }
-
-            return connectionSuccess;
         }
 
 
@@ -896,6 +904,7 @@ namespace openXDA.DataPusher
 
                     IEnumerable<int> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0}", instance.ID).Select(x => x.ID);
                     int progressTotal = meters.Count();
+                    if (progressTotal == 0) return;
                     int progressCount = 0;
                     OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (progressCount) / progressTotal));
                     foreach (int meter in meters)
