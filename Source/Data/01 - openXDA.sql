@@ -2079,7 +2079,7 @@ GO
 CREATE TABLE TriggeredEmailDataSourceSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    TriggeredEmailDataSourceID INT NOT NULL REFERENCES TriggeredEmailDataSource(ID),
+    TriggeredEmailDataSourceEmailTypeID INT NOT NULL REFERENCES TriggeredEmailDataSourceEmailType(ID),
     Name VARCHAR(200) NOT NULL,
     Value VARCHAR(MAX) NOT NULL
 )

@@ -30,7 +30,8 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int TriggeredEmailDataSourceID { get; set; }
+        [ParentKey(typeof(TriggeredEmailDataSourceEmailType))]
+        public int TriggeredEmailDataSourceEmailTypeID { get; set; }
         
         public string Value { get; set; }
 

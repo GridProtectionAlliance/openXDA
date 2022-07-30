@@ -45,17 +45,18 @@ namespace FaultData.DataWriters.Emails
             LazyConfigureAction = new Lazy<Action<object>>(CreateConfigureAction);
         }
 
-        public ConfigurationLoader(int dataSourceID, Func<AdoDataConnection> connectionFactory)
+        public ConfigurationLoader(int dataSourceEmailTypeID,Func<AdoDataConnection> connectionFactory)
             : this(connectionFactory)
         {
-            DataSourceID = dataSourceID;
+            DataSourceEmailTypeID = dataSourceEmailTypeID;
         }
 
         #endregion
 
         #region [ Properties ]
 
-        private int? DataSourceID { get; }
+        private int? DataSourceEmailTypeID { get; }
+
         private Func<AdoDataConnection> ConnectionFactory { get; }
         private Lazy<Action<object>> LazyConfigureAction { get; }
 
@@ -115,11 +116,11 @@ namespace FaultData.DataWriters.Emails
 
         private IEnumerable<string[]> LoadDataSourceSettings(AdoDataConnection connection)
         {
-            if (DataSourceID is null)
+            if (DataSourceEmailTypeID is null)
                 return Enumerable.Empty<string[]>();
 
             TableOperations<TriggeredEmailDataSourceSetting> settingTable = new TableOperations<TriggeredEmailDataSourceSetting>(connection);
-            List<TriggeredEmailDataSourceSetting> settingList = settingTable.QueryRecordsWhere("TriggeredEmailDataSourceID = {0}", DataSourceID).ToList();
+            List<TriggeredEmailDataSourceSetting> settingList = settingTable.QueryRecordsWhere("TriggeredEmailDataSourceEmailTypeID = {0}", DataSourceEmailTypeID).ToList();
 
             foreach (IGrouping<string, TriggeredEmailDataSourceSetting> grouping in settingList.GroupBy(setting => setting.Name))
             {

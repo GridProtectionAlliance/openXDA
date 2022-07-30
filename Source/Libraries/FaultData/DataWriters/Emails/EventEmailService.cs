@@ -129,10 +129,12 @@ namespace FaultData.DataWriters.Emails
                         "WHERE EmailTypeID = {0}";
 
                     TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
+                    TableOperations<TriggeredEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<TriggeredEmailDataSourceEmailType>(connection);
 
-                    List<DataSourceWrapper> dataSources = dataSourceTable
-                        .QueryRecordsWhere($"ID IN ({DataSourceIDQueryFormat})", email.ID)
-                        .Select(CreateDataSource)
+                    List<DataSourceWrapper> dataSources = dataSourceEmailTypeTable
+                        .QueryRecordsWhere("EmailTypeID = {0}", email.ID)
+                        .Select((cm) => new Tuple<TriggeredEmailDataSourceEmailType, TriggeredEmailDataSource>(cm, dataSourceTable.QueryRecordWhere("ID = {0}", cm.TriggeredEmailDataSourceID)))
+                        .Select((m) => CreateDataSource(m.Item2, m.Item1))
                         .ToList();
 
                     if (dataSources.Any(wrapper => wrapper.DataSource is null))
@@ -244,7 +246,7 @@ namespace FaultData.DataWriters.Emails
             return htmlDocument;
         }
 
-        private DataSourceWrapper CreateDataSource(TriggeredEmailDataSource model)
+        private DataSourceWrapper CreateDataSource(TriggeredEmailDataSource model, TriggeredEmailDataSourceEmailType connectionModel)
         {
             try
             {
@@ -256,7 +258,7 @@ namespace FaultData.DataWriters.Emails
                 ConstructorInfo constructor = pluginType.GetConstructor(new[] { dbFactoryType });
                 object[] parameters = (constructor is null) ? Array.Empty<object>() : new object[] { ConnectionFactory };
                 ITriggeredDataSource dataSource = pluginFactory.Create(assemblyName, typeName, parameters);
-                ConfigurationLoader configurationLoader = new ConfigurationLoader(model.ID, ConnectionFactory);
+                ConfigurationLoader configurationLoader = new ConfigurationLoader(connectionModel.ID, ConnectionFactory);
                 dataSource.Configure(configurationLoader.Configure);
                 return new DataSourceWrapper(model.Name, dataSource);
             }
