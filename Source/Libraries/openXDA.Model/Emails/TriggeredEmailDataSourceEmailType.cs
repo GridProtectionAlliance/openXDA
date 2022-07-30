@@ -42,4 +42,15 @@ namespace openXDA.Model
 
         public int TriggeredEmailDataSourceID { get; set; }
     }
+
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("TriggeredEmailDataSourceEmailTypeView")]
+    [UseEscapedName]
+    public class TriggeredEmailDataSourceEmailTypeView : TriggeredEmailDataSourceEmailType
+    {
+        public string TriggeredEmailDataSourceName { get;set; }
+    }
 }

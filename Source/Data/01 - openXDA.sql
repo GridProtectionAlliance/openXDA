@@ -5211,6 +5211,16 @@ GO
      EventType ON Event.EventTypeID = EventType.ID
 GO
 
+CREATE VIEW TriggeredEmailDataSourceEmailTypeView 
+AS
+SELECT 
+    TriggeredEmailDataSourceEmailType.*,
+    TriggeredEmailDataSource.Name AS TriggeredEmailDataSourceName
+FROM
+    TriggeredEmailDataSourceEmailType LEFT JOIN 
+    TriggeredEmailDataSource ON TriggeredEmailDataSourceEmailType.TriggeredEmailDataSourceID = TriggeredEmailDataSource.ID
+GO
+
 -- CREATE VIEW DisturbanceView
 -- AS
 -- SELECT
