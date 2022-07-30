@@ -28,8 +28,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using GSF.Data;
-using GSF.Threading;
 using log4net;
 using openXDA.Model;
 
@@ -40,21 +40,17 @@ namespace openXDA.Nodes.Types.Email
         #region [ Members ]
 
         // Constants
-        private const int DoNothingAction = 0;
-        private const int StartTimerAction = 1;
-        private const int StopTimerAction = 2;
+        private const int Idle = 0;
+        private const int TimerRunning = 1;
 
         // Fields
         private EmailType m_emailModel;
         private Func<AdoDataConnection> m_connectionFactory;
-        private ConcurrentQueue<Event> m_triggeredEvents;
         private Action<EmailType, List<Event>> m_sendEmailCallback;
 
-        private ISynchronizedOperation m_synchronizedOperation;
-        private ICancellationToken m_minDelayCancellationToken;
-        private ICancellationToken m_maxDelayCancellationToken;
-        private int m_timerAction;
-        private int m_sendEmail;
+        private ConcurrentQueue<Event> m_triggeredEvents;
+        private Action m_skipMaxDelayAction;
+        private int m_state;
 
         #endregion
 
@@ -64,7 +60,6 @@ namespace openXDA.Nodes.Types.Email
         {
             m_triggeredEvents = new ConcurrentQueue<Event>();
             m_sendEmailCallback = sendEmailCallback;
-            m_synchronizedOperation = new LongSynchronizedOperation(UpdateTimersAndSendEmail, HandleException) { IsBackground = true };
         }
 
         #endregion
@@ -89,121 +84,85 @@ namespace openXDA.Nodes.Types.Email
 
         #region [ Methods ]
 
-        public void Process(Event evt)
+        public void Process(IEnumerable<Event> events)
         {
-            if (EventTrigger(evt))
+            foreach (Event evt in events)
             {
+                if (!TriggersEmail(evt))
+                    continue;
+
                 m_triggeredEvents.Enqueue(evt);
-                m_synchronizedOperation.Run();
             }
+
+            _ = StartTimerAsync();
         }
 
-        /// <summary>
-        /// Determine Whether the Email should be Triggered based on SQL
-        /// </summary>
-        /// <param name="evt"></param>
-        /// <returns></returns>
-        private bool EventTrigger(Event evt)
+        public void SkipMaxDelayTimer()
         {
-            if ((object)ConnectionFactory == null)
-                throw new InvalidOperationException("ConnectionFactory is undefined");
+            Action skipAction = Interlocked.CompareExchange(ref m_skipMaxDelayAction, null, null);
+            skipAction?.Invoke();
+        }
 
-            using (AdoDataConnection connection = ConnectionFactory())
+        private async Task StartTimerAsync()
+        {
+            while (!m_triggeredEvents.IsEmpty)
             {
-                return connection.ExecuteScalar<bool>(m_emailModel.TriggerEmailSQL, evt.ID);
+                int previousState = Interlocked.CompareExchange(ref m_state, TimerRunning, Idle);
+
+                if (previousState != Idle)
+                    return;
+
+                try { await RunTimerAsync(); }
+                catch (Exception ex) { HandleException(ex); }
+                finally { Interlocked.Exchange(ref m_state, Idle); }
             }
         }
 
-        public void StartTimer()
+        private async Task RunTimerAsync()
         {
-            Interlocked.Exchange(ref m_timerAction, StartTimerAction);
-            m_synchronizedOperation.Run();
-        }
+            DateTime timeStarted = DateTime.UtcNow;
+            TimeSpan minDelay = TimeSpan.FromSeconds(EmailModel.MinDelay);
+            await Task.Delay(minDelay);
 
-        public void StopTimer()
-        {
-            Interlocked.Exchange(ref m_timerAction, StopTimerAction);
-            m_synchronizedOperation.Run();
-        }
+            CancellationTokenSource maxTimerTokenSource = new CancellationTokenSource();
+            CancellationToken maxTimerToken = maxTimerTokenSource.Token;
 
-        private void SendEmail()
-        {
-            Interlocked.Exchange(ref m_sendEmail, 1);
-            m_synchronizedOperation.Run();
-        }
-
-        // Actions are synchronized to prevent race
-        // conditions when starting and stopping timers.
-        private void UpdateTimersAndSendEmail()
-        {
-            int timerAction = Interlocked.Exchange(ref m_timerAction, DoNothingAction);
-            int sendEmail = Interlocked.Exchange(ref m_sendEmail, 0);
-
-            switch (timerAction)
+            try
             {
-                case StartTimerAction:
-                    StartMinDelayTimer();
-                    break;
+                void SkipMaxTimer()
+                {
+                    CancellationTokenSource tokenSource = Interlocked.Exchange(ref maxTimerTokenSource, null);
 
-                case StopTimerAction:
-                    StopMinDelayTimer();
-                    break;
+                    if (tokenSource is null)
+                        return;
+
+                    tokenSource.Cancel();
+                    tokenSource.Dispose();
+                }
+
+                Interlocked.Exchange(ref m_skipMaxDelayAction, SkipMaxTimer);
+
+                if (IsAnalysisRunning())
+                {
+                    TimeSpan maxDelay = TimeSpan.FromSeconds(EmailModel.MaxDelay);
+                    TimeSpan elapsed = DateTime.UtcNow - timeStarted;
+                    TimeSpan diff = maxDelay - elapsed;
+
+                    try { await Task.Delay(diff, maxTimerToken); }
+                    catch (TaskCanceledException) { }
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref maxTimerTokenSource, null)?.Dispose();
+                Interlocked.Exchange(ref m_skipMaxDelayAction, null);
             }
 
-            StartMaxDelayTimer();
-
-            if (sendEmail != 0)
-                ExecuteSendEmailCallback();
-        }
-
-        private void StartMinDelayTimer()
-        {
-            if (m_triggeredEvents.IsEmpty)
-                return;
-
-            ICancellationToken cancellationToken = Interlocked.CompareExchange(ref m_minDelayCancellationToken, null, null);
-
-            // Check if the timer has already been started
-            if ((object)cancellationToken != null)
-                return;
-
-            Action sendEmailAction = new Action(SendEmail);
-            int delay = (int)Math.Round(TimeSpan.FromSeconds(EmailModel.MinDelay).TotalMilliseconds);
-            cancellationToken = sendEmailAction.DelayAndExecute(delay);
-            Interlocked.Exchange(ref m_minDelayCancellationToken, cancellationToken);
-        }
-
-        private void StopMinDelayTimer()
-        {
-            ICancellationToken cancellationToken = Interlocked.Exchange(ref m_minDelayCancellationToken, null);
-            cancellationToken?.Cancel();
-        }
-
-        private void StartMaxDelayTimer()
-        {
-            if (m_triggeredEvents.IsEmpty)
-                return;
-
-            ICancellationToken cancellationToken = Interlocked.CompareExchange(ref m_maxDelayCancellationToken, null, null);
-
-            // Check if the timer has already been started
-            if ((object)cancellationToken != null)
-                return;
-
-            Action sendEmailAction = new Action(SendEmail);
-            int delay = (int)Math.Round(TimeSpan.FromSeconds(EmailModel.MaxDelay).TotalMilliseconds);
-            cancellationToken = sendEmailAction.DelayAndExecute(delay);
-            Interlocked.Exchange(ref m_maxDelayCancellationToken, cancellationToken);
+            ExecuteSendEmailCallback();
         }
 
         private void ExecuteSendEmailCallback()
         {
-            ICancellationToken minDelayCancellationToken = Interlocked.Exchange(ref m_minDelayCancellationToken, null);
-            ICancellationToken maxDelayCancellationToken = Interlocked.Exchange(ref m_maxDelayCancellationToken, null);
-
-            minDelayCancellationToken?.Cancel();
-            maxDelayCancellationToken?.Cancel();
-
             List<Event> triggeredEvents = new List<Event>();
 
             while (m_triggeredEvents.TryDequeue(out Event evt))
@@ -213,10 +172,32 @@ namespace openXDA.Nodes.Types.Email
                 m_sendEmailCallback(EmailModel, triggeredEvents);
         }
 
-        private void HandleException(Exception ex)
+        private bool TriggersEmail(Event evt)
         {
-            Log.Error(ex.Message, ex);
+            if ((object)ConnectionFactory is null)
+                throw new InvalidOperationException("ConnectionFactory is undefined");
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                return connection.ExecuteScalar<bool>(m_emailModel.TriggerEmailSQL, evt.ID);
+            }
         }
+
+        private bool IsAnalysisRunning()
+        {
+            if ((object)ConnectionFactory is null)
+                throw new InvalidOperationException("ConnectionFactory is undefined");
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                const string Query = "SELECT COUNT(*) FROM AnalysisTask";
+                int analysisTaskCount = connection.ExecuteScalar<int>(Query);
+                return analysisTaskCount > 0;
+            }
+        }
+
+        private void HandleException(Exception ex) =>
+            Log.Error(ex.Message, ex);
 
         #endregion
 

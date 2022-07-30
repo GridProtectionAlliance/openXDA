@@ -80,6 +80,10 @@ namespace openXDA.Nodes.Types.Email
                 Node.Process(eventIDs);
 
             [HttpPost]
+            public void SkipMaxDelayTimers() =>
+                Node.SkipMaxDelayTimers();
+
+            [HttpPost]
             public void RestoreEventEmails() =>
                 Node.Restore();
         }
@@ -164,23 +168,16 @@ namespace openXDA.Nodes.Types.Email
 
             List<EventEmailProcessor> triggeredEmailTypes = EmailTypes.ToList();
 
-            foreach (Event evt in events)
-            {
-                foreach (EventEmailProcessor emailProcessor in triggeredEmailTypes)
-                    emailProcessor.Process(evt);
-            }
+            foreach (EventEmailProcessor emailProcessor in triggeredEmailTypes)
+                emailProcessor.Process(events);
         }
 
-        public void StartTimer()
+        private void SkipMaxDelayTimers()
         {
-            foreach (EventEmailProcessor emailType in EmailTypes)
-                emailType.StartTimer();
-        }
+            List<EventEmailProcessor> triggeredEmailTypes = EmailTypes.ToList();
 
-        public void StopTimer()
-        {
-            foreach (EventEmailProcessor emailType in EmailTypes)
-                emailType.StopTimer();
+            foreach (EventEmailProcessor emailProcessor in triggeredEmailTypes)
+                emailProcessor.SkipMaxDelayTimer();
         }
 
         private void UpdateEmailTypes()
