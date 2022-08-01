@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FilePrunerNode.cs - Gbtc
+//  DataPusherNode.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
