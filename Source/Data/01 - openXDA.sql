@@ -3984,7 +3984,7 @@ GO
 CREATE TABLE MetersToDataPush
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    RemoteXDAInstanceID INT NOT NULL,
+    RemoteXDAInstanceID INT NOT NULL FOREIGN KEY REFERENCES [RemoteXDAInstance](ID),
     LocalXDAMeterID INT NOT NULL,
     RemoteXDAMeterID INT NULL,
     RemoteXDAAssetKey varchar(200) NOT NULL,
@@ -3998,7 +3998,7 @@ GO
 CREATE TABLE AssetsToDataPush
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    RemoteXDAInstanceID INT NOT NULL,
+    RemoteXDAInstanceID INT NOT NULL FOREIGN KEY REFERENCES [RemoteXDAInstance](ID),
     LocalXDAAssetID INT NOT NULL,
     RemoteXDAAssetID INT NULL,
     RemoteXDAAssetKey VARCHAR(200) NOT NULL,
