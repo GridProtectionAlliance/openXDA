@@ -33,7 +33,7 @@ namespace openXDA.Model
     [TableName("MetersToDataPush"), CustomView(@"
     SELECT
         MetersToDataPush.ID,
-		MetersToDataPush.RemoteXDAInstanceID,
+        MetersToDataPush.RemoteXDAInstanceID,
         MetersToDataPush.LocalXDAMeterID,
         MetersToDataPush.RemoteXDAMeterID,
         MetersToDataPush.RemoteXDAName,
@@ -44,8 +44,8 @@ namespace openXDA.Model
         Meter.Name as LocalMeterName,
         Meter.AssetKey as LocalAssetKey
     FROM
-	    MetersToDataPush LEFT JOIN
-	    Meter ON MetersToDataPush.LocalXDAMeterID = Meter.ID")]
+        MetersToDataPush LEFT JOIN
+        Meter ON MetersToDataPush.LocalXDAMeterID = Meter.ID")]
     public class RemoteXDAMeter : MetersToDataPush
     {
         public string LocalAlias { get; set; }
