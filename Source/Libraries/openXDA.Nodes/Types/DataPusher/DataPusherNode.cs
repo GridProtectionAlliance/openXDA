@@ -102,15 +102,14 @@ namespace openXDA.Nodes.Types.DataPusher
         {
             Settings settings = new Settings(configurator);
             DataEngine = new DataPusherEngine(() => new AdoDataConnection(settings.DataPusherNodeSettings.ConnectionString));
-            IEnumerable<RemoteXDAInstance> allInstances;
             using (AdoDataConnection connection = new AdoDataConnection(settings.DataPusherNodeSettings.ConnectionString))
             {
-                allInstances = new TableOperations<RemoteXDAInstance>(connection).QueryRecordsWhere("Frequency != '*'");
-            }
-            foreach (RemoteXDAInstance instance in allInstances)
-            {
-                string name = $"{nameof(SyncInstance)}_ID:{instance.ID}";
-                Host.RegisterScheduledProcess(this, SyncInstance(instance), name, instance.Frequency);
+                IEnumerable<RemoteXDAInstance> allInstances = new TableOperations<RemoteXDAInstance>(connection).QueryRecordsWhere("Frequency != '*'");
+                foreach (RemoteXDAInstance instance in allInstances)
+                {
+                    string name = $"{nameof(SyncInstance)}_ID:{instance.ID}";
+                    Host.RegisterScheduledProcess(this, SyncInstance(instance), name, instance.Frequency);
+                }
             }
         }
 

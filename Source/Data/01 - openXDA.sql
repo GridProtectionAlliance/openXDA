@@ -3990,11 +3990,9 @@ CREATE TABLE MetersToDataPush
     RemoteXDAAssetKey varchar(200) NOT NULL,
     RemoteXDAName varchar(200) NOT NULL,
     Obsfucate bit NOT NULL,
-    Synced bit NOT NULL
+    Synced bit NOT NULL,
+    CONSTRAINT IX_MetersToDataPush_RemoteXDAInstanceID_LocalXDAMeterID UNIQUE(RemoteXDAInstanceID, LocalXDAMeterID)
 )
-GO
-
-CREATE UNIQUE INDEX unq_remoteID_meterID ON MetersToDataPush(RemoteXDAInstanceID, LocalXDAMeterID)
 GO
 
 CREATE TABLE AssetsToDataPush
@@ -4006,11 +4004,9 @@ CREATE TABLE AssetsToDataPush
     RemoteXDAAssetKey VARCHAR(200) NOT NULL,
     RemoteAssetCreatedByDataPusher bit NOT NULL DEFAULT (1),
     Obsfucate bit NOT NULL,
-    Synced bit NOT NULL
+    Synced bit NOT NULL,
+    CONSTRAINT IX_AssetsToDataPush_RemoteXDAInstanceID_LocalXDAAssetID UNIQUE(RemoteXDAInstanceID, LocalXDAAssetID)
 )
-GO
-
-CREATE UNIQUE INDEX unq_remoteID_assetID ON AssetsToDataPush(RemoteXDAInstanceID, LocalXDAAssetID)
 GO
 
 CREATE TABLE FileGroupLocalToRemote
