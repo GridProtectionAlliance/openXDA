@@ -3991,7 +3991,7 @@ CREATE TABLE MetersToDataPush
     RemoteXDAName varchar(200) NOT NULL,
     Obsfucate bit NOT NULL,
     Synced bit NOT NULL,
-    CONSTRAINT IX_MetersToDataPush_RemoteXDAInstanceID_LocalXDAMeterID UNIQUE(RemoteXDAInstanceID, LocalXDAMeterID)
+    CONSTRAINT UC_MetersToDataPush_RemoteXDAInstanceID_LocalXDAMeterID UNIQUE(RemoteXDAInstanceID, LocalXDAMeterID)
 )
 GO
 
@@ -4005,7 +4005,7 @@ CREATE TABLE AssetsToDataPush
     RemoteAssetCreatedByDataPusher bit NOT NULL DEFAULT (1),
     Obsfucate bit NOT NULL,
     Synced bit NOT NULL,
-    CONSTRAINT IX_AssetsToDataPush_RemoteXDAInstanceID_LocalXDAAssetID UNIQUE(RemoteXDAInstanceID, LocalXDAAssetID)
+    CONSTRAINT UC_AssetsToDataPush_RemoteXDAInstanceID_LocalXDAAssetID UNIQUE(RemoteXDAInstanceID, LocalXDAAssetID)
 )
 GO
 
