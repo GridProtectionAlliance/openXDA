@@ -4751,21 +4751,23 @@ GO
 
 CREATE VIEW ActiveSubscription AS
 	SELECT 
-        
 		UserAccountEmailType.ID AS UserAccountEmailID,
 		UserAccountEmailType.UserAccountID AS UserAccountID,
 		UserAccountEmailType.Approved AS Approved,
 		AssetGroup.Name AS AssetGroup,
-		EmailType.Name AS Email,
+		EmailType.Name AS EmailName,
 		EmailCategory.Name AS Category,
 		EmailType.ID AS EmailTypeID,
 		SentEmail.Subject AS Subject,
-		SentEmail.TimeSent AS LastSent
+		SentEmail.TimeSent AS LastSent,
+        UserAccount.Name AS UserName,
+		UserAccount.Email AS Email
 	FROM UserAccountEmailType LEFT JOIN
 		AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
 		EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID LEFT JOIN
 		EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
-		SentEmail ON SentEmail.EmailTypeID = EmailType.ID 
+		SentEmail ON SentEmail.EmailTypeID = EmailType.ID  LEFT JOIN
+		UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID
 GO
 
 CREATE VIEW CBReportEventTable AS
