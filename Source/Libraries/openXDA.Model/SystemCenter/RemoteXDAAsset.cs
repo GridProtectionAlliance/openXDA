@@ -33,7 +33,7 @@ namespace openXDA.Model
     [TableName("AssetsToDataPush"), CustomView(@"
     SELECT
         AssetsToDataPush.ID,
-		AssetsToDataPush.RemoteXDAInstanceID,
+        AssetsToDataPush.RemoteXDAInstanceID,
         AssetsToDataPush.LocalXDAAssetID,
         AssetsToDataPush.RemoteXDAAssetID,
         AssetsToDataPush.RemoteXDAAssetKey,
@@ -43,8 +43,8 @@ namespace openXDA.Model
         Asset.AssetName as LocalAssetName,
         Asset.AssetKey as LocalAssetKey
     FROM
-	    AssetsToDataPush LEFT JOIN
-	    Asset ON AssetsToDataPush.LocalXDAAssetID = [Asset].ID")]
+        AssetsToDataPush LEFT JOIN
+        Asset ON AssetsToDataPush.LocalXDAAssetID = [Asset].ID")]
     public class RemoteXDAAsset : AssetsToDataPush
     {
         public string LocalAssetName { get; set; }
