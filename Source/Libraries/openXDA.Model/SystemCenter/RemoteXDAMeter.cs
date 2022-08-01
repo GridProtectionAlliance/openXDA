@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AdditionalField.cs - Gbtc
+//  RemoteXDAMeter.cs - Gbtc
 //
 //  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
 //
