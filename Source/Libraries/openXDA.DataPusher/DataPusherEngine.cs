@@ -24,12 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Security;
+using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -42,7 +42,6 @@ using GSF.Net.Security;
 using GSF.Scheduling;
 using GSF.Security.Model;
 using GSF.Web;
-using GSF.Web.Model;
 using log4net;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
@@ -289,12 +288,10 @@ namespace openXDA.DataPusher
             {
                 Log.Error(ex);
             }
-
         }
 
         public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, MetersToDataPush meterToDataPush, AssetGroup remoteAssetGroup, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes ,UserAccount userAccount, CancellationToken cancellationToken)
         {
-
             try
             {
                 using (AdoDataConnection connection = ConnectionFactory())
@@ -376,13 +373,12 @@ namespace openXDA.DataPusher
             {
                 Log.Error(ex);
             }
-
         }
+
         public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, MetersToDataPush meterToDataPush, UserAccount userAccount, CancellationToken cancellationToken)
         {
             try
             {
-
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
@@ -396,9 +392,9 @@ namespace openXDA.DataPusher
                 Log.Error(ex);
             }
         }
+
         public void SyncAssetConfigurationOnlyForInstance(RemoteXDAInstance instance, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount, CancellationToken cancellationToken)
         {
-
             try
             {
                 using (AdoDataConnection connection = ConnectionFactory())
@@ -417,7 +413,6 @@ namespace openXDA.DataPusher
             {
                 Log.Error(ex);
             }
-
         }
 
         private AssetGroup AddOrGetRemoteAssetGroup(string address, UserAccount userAccount)
@@ -646,6 +641,7 @@ namespace openXDA.DataPusher
                 return null;
             }
         }
+
         private Asset AddOrGetAssetAny<T>(string address, string assetTypeText, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount) where T : Asset, new()
         {
             using (AdoDataConnection connection = ConnectionFactory())
@@ -899,7 +895,6 @@ namespace openXDA.DataPusher
             {
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
-
                     IEnumerable<int> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0}", instance.ID).Select(x => x.ID);
                     int progressTotal = meters.Count();
                     if (progressTotal == 0) return;
@@ -1037,10 +1032,8 @@ namespace openXDA.DataPusher
 
                         OnUpdateProgressForMeter(clientId, localAssetKey, (int)(100 * (++progressCount) / progressTotal));
                         Log.Info($"Processing Remote data push for {localAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (progressCount) / progressTotal)}");
-
                     }
                 }
-
             }
             catch (Exception ex)
             {

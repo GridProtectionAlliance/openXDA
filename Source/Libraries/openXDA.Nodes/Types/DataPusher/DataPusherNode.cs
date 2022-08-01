@@ -24,16 +24,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.IO;
 using GSF.Threading;
 using log4net;
 using openXDA.Configuration;

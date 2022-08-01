@@ -21,9 +21,8 @@
 //
 //******************************************************************************************************
 
-using GSF.Data.Model;
-using System;
 using System.ComponentModel.DataAnnotations;
+using GSF.Data.Model;
 
 namespace openXDA.Model
 {
@@ -31,8 +30,10 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+
         [ParentKey(typeof(RemoteXDAInstance))]
         public int RemoteXDAInstanceID { get; set; }
+
         [DefaultSortOrder]
         public int LocalXDAAssetID { get; set; }
         public int RemoteXDAAssetID { get; set; }
@@ -45,8 +46,5 @@ namespace openXDA.Model
         public bool Synced { get; set; }
 
         public bool RemoteAssetCreatedByDataPusher { get; set; }
-
-
-
     }
 }

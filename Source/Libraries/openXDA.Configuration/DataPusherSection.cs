@@ -21,10 +21,8 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.ComponentModel;
 using System.Configuration;
-using GSF.Configuration;
 
 namespace openXDA.Configuration
 {

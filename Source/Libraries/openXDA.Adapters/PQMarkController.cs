@@ -417,6 +417,7 @@ namespace openXDA.Adapters
         {
             return Ok(1);
         }
+
         #endregion
 
         #region [ PUT Operations ]

@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -416,18 +415,11 @@ namespace openXDA.Controllers.Config
         [Route("TestConnection/{instanceId:int}"), HttpGet]
         public IHttpActionResult TestRemoteInstanceConnection(int instanceId)
         {
-            try
-            {
-                // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
-                return Ok(engine.TestInstance(instanceId) ? 1 : 0);
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
-
+            // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+            DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
+            return Ok(engine.TestInstance(instanceId) ? 1 : 0);
         }
+
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherController));
     }
 }
