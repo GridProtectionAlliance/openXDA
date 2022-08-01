@@ -4004,7 +4004,7 @@ CREATE TABLE AssetsToDataPush
     LocalXDAAssetID INT NOT NULL,
     RemoteXDAAssetID INT NULL,
     RemoteXDAAssetKey VARCHAR(200) NOT NULL,
-	RemoteAssetCreatedByDataPusher bit NOT NULL DEFAULT (1),
+    RemoteAssetCreatedByDataPusher bit NOT NULL DEFAULT (1),
     Obsfucate bit NOT NULL,
     Synced bit NOT NULL
 )
