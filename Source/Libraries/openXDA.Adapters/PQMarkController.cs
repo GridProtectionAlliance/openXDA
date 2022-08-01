@@ -488,7 +488,7 @@ namespace openXDA.Adapters
 
                     PropertyInfo assetKeyProperty = type.GetProperty("AssetKey");
 
-                    if (!(assetKeyProperty is null)) //TODO: Make sure this works with asset subtypes
+                    if (!(assetKeyProperty is null)) 
                         recordId = connection.ExecuteScalar<int>($"SELECT ID FROM {table.TableName} WHERE AssetKey = {{0}}", assetKeyProperty.GetValue(obj));
                     else
                         recordId = connection.ExecuteScalar<int>("SELECT @@Identity");

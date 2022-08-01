@@ -112,8 +112,6 @@ namespace openXDA.DataPusher
 
         public static event EventHandler<EventArgs<string, string, int>> UpdateProgressForMeter;
 
-        private static readonly string ConnectionString = "systemSettings";
-
         private static void OnUpdateProgressForMeter(string client, string meter, int update)
         {
             if (client != string.Empty)
@@ -172,7 +170,7 @@ namespace openXDA.DataPusher
                 Scheduler.ScheduleDue += Scheduler_ScheduleDue;
                 Scheduler.Disposed += Scheduler_Disposed;
 
-                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     IEnumerable<RemoteXDAInstance> instances = new TableOperations<RemoteXDAInstance>(connection).QueryRecords();
                     foreach (RemoteXDAInstance instance in instances)
@@ -199,7 +197,7 @@ namespace openXDA.DataPusher
 
         public void ReloadSystemSettings()
         {
-            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 IEnumerable<RemoteXDAInstance> instances = new TableOperations<RemoteXDAInstance>(connection).QueryRecords();
                 foreach (RemoteXDAInstance instance in instances)
@@ -232,7 +230,7 @@ namespace openXDA.DataPusher
 
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 Log.Info(string.Format("DataPusher Scheduler: {0} schedule is due...", e.Argument.Name));
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("Name = {0}", e.Argument.Name);
@@ -247,7 +245,7 @@ namespace openXDA.DataPusher
         {
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     IEnumerable<MetersToDataPush> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0}", instanceId);
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
@@ -299,7 +297,7 @@ namespace openXDA.DataPusher
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     // Get local meter record
                     Meter localMeterRecord = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
@@ -385,7 +383,7 @@ namespace openXDA.DataPusher
             try
             {
 
-                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
                     IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>(instance.Address, "all", userAccount);
@@ -403,7 +401,7 @@ namespace openXDA.DataPusher
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     // Add or Update Asset
                     Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
@@ -442,7 +440,7 @@ namespace openXDA.DataPusher
 
         private Location AddOrGetRemoteLocation(string address, MetersToDataPush meterToDataPush, Meter localMeterRecord, UserAccount userAccount)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
 
                 Location localLocation = new TableOperations<Location>(connection).QueryRecordWhere("ID = {0}", localMeterRecord.LocationID);
