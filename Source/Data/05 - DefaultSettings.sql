@@ -97,6 +97,17 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.Username', '', '')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.ConfirmSubject', 'OpenXDA Confirm Email', 'OpenXDA Confirm Email')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.ConfirmTemplate', 'Please click the following Link to confirm your email address \n http://localhost/SystemCenterNotification/ConfirmEmail', 'Please click the following Link to confirm your email address \n http://localhost/SystemCenterNotification/ConfirmEmail')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.RequireConfirmation', 'true', 'true')
+GO
+
+
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EMAX.ApplyTimestampCorrection', 'True', 'True')
 GO
 
