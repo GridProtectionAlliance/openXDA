@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FaultEmailCriterion.cs - Gbtc
+//  ScheduledEmailDataSource.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  11/9/2021 - Samuel Robinson
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,11 +25,17 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class FaultEmailCriterion
+    public class ScheduledEmailDataSource
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        
+        public string Name { get; set; }
 
-        public int EmailGroupID { get; set; }
+        public string AssemblyName { get; set; }
+
+        public string TypeName { get; set; }
+
+        public string ConfigUI { get; set; }
     }
 }

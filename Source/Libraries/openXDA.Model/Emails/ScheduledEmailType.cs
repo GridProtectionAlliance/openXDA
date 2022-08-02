@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AlarmEmailCriterion.cs - Gbtc
+//  ScheduledEmailType.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  11/09/2021 - Samuel Robinson
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,15 +25,22 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class AlarmEmailCriterion
+    public class ScheduledEmailType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int EmailGroupID { get; set; }
+        public bool SMS { get; set; }
 
-        public int MeasurementTypeID { get; set; }
+        public string Name { get; set; }
 
-        public int MeasurementCharacteristicID { get; set; }
+        public string TriggerEmailSQL { get; set; }
+        
+        public string Schedule { get; set; }
+
+        public string Template { get; set; }
+
+        public int EmailCategoryID { get; set; }
     }
 }
+

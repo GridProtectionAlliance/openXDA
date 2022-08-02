@@ -164,6 +164,7 @@ namespace openXDA.Nodes.Types.Analysis
                     {
                         Process(task);
                         taskProcessor.Dequeue(task);
+                        _ = NotifyEventEmailNodeWhenIdle();
                     }
                     finally
                     {
@@ -384,6 +385,56 @@ namespace openXDA.Nodes.Types.Analysis
                 queryParameters.Add("processingVersion", processingVersion.ToString());
 
                 string url = Host.BuildURL(nodeID, action, queryParameters);
+                request.Method = HttpMethod.Post;
+                request.RequestUri = new Uri(url);
+            }
+
+            using (HttpResponseMessage response = await Host.SendWebRequestAsync(ConfigureRequest))
+            {
+                if (!response.IsSuccessStatusCode)
+                {
+                    string body = await response.Content.ReadAsStringAsync();
+
+                    string logMessage = new StringBuilder()
+                        .AppendLine("Event email notification failed.")
+                        .AppendLine($"Status: {response.StatusCode}")
+                        .AppendLine("Body:")
+                        .Append(body)
+                        .ToString();
+
+                    Log.Debug(logMessage);
+                }
+            }
+        }
+
+        private async Task NotifyEventEmailNodeWhenIdle()
+        {
+            bool IsAnalysisRunning()
+            {
+                using (AdoDataConnection connection = CreateDbConnection())
+                {
+                    const string Query = "SELECT COUNT(*) FROM AnalysisTask";
+                    int analysisTaskCount = connection.ExecuteScalar<int>(Query);
+                    return analysisTaskCount > 0;
+                }
+            }
+
+            if (IsAnalysisRunning())
+                return;
+
+            Type nodeType = typeof(Email.EventEmailNode);
+            string typeName = nodeType.FullName;
+            int? result = QueryNodeID(typeName);
+
+            if (result is null)
+                return;
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                int nodeID = result.GetValueOrDefault();
+                string action = "SkipMaxDelayTimers";
+
+                string url = Host.BuildURL(nodeID, action);
                 request.Method = HttpMethod.Post;
                 request.RequestUri = new Uri(url);
             }

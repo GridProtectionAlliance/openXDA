@@ -25,22 +25,19 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
+using System.Data;
 using System.Linq;
-using System.Net.Mail;
 using System.Text;
 using System.Threading;
 using System.Web.Http;
 using System.Web.Http.Controllers;
-using System.Xml.Linq;
 using FaultData.DataOperations;
-using FaultData.DataWriters;
+using FaultData.DataWriters.Emails;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using openXDA.Configuration;
 using openXDA.Model;
-using SystemCenter.Model;
 
 namespace openXDA.Nodes.Types.Email
 {
@@ -75,12 +72,16 @@ namespace openXDA.Nodes.Types.Email
                 Node = node;
 
             [HttpPost]
-            public void TriggerForFileGroup(int fileGroupID, int processingVersion, string triggerSource = "") =>
-                Node.Process(fileGroupID, processingVersion, triggerSource);
+            public void TriggerForFileGroup(int fileGroupID, int processingVersion) =>
+                Node.Process(fileGroupID, processingVersion);
 
             [HttpPost]
-            public void TriggerForEvents([FromUri] List<int> eventIDs, string triggerSource = "") =>
-                Node.Process(eventIDs, triggerSource);
+            public void TriggerForEvents([FromUri] List<int> eventIDs) =>
+                Node.Process(eventIDs);
+
+            [HttpPost]
+            public void SkipMaxDelayTimers() =>
+                Node.SkipMaxDelayTimers();
 
             [HttpPost]
             public void RestoreEventEmails() =>
@@ -88,7 +89,7 @@ namespace openXDA.Nodes.Types.Email
         }
 
         // Fields
-        private List<EventEmailType> m_emailTypes;
+        private List<EventEmailProcessor> m_emailTypes;
         private int m_tripped;
 
         #endregion
@@ -98,16 +99,14 @@ namespace openXDA.Nodes.Types.Email
         public EventEmailNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
         {
-            m_emailTypes = new List<EventEmailType>();
+            m_emailTypes = new List<EventEmailProcessor>();
         }
 
         #endregion
 
         #region [ Properties ]
 
-        private EventEmailService EventEmailService { get; }
-
-        private List<EventEmailType> EmailTypes
+        private List<EventEmailProcessor> EmailTypes
         {
             get => Interlocked.CompareExchange(ref m_emailTypes, null, null);
             set => Interlocked.Exchange(ref m_emailTypes, value);
@@ -128,17 +127,26 @@ namespace openXDA.Nodes.Types.Email
         public override IHttpController CreateWebController() =>
             new EventEmailWebController(this);
 
-        private void Process(int fileGroupID, int processingVersion, string triggerSource)
+        /// <summary>
+        /// Process All Emails Belonging to a given FileGroup
+        /// </summary>
+        /// <param name="fileGroupID"></param>
+        /// <param name="processingVersion"></param>
+        private void Process(int fileGroupID, int processingVersion)
         {
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 IEnumerable<Event> events = eventTable.QueryRecordsWhere("FileGroupID = {0} AND FileVersion = {1}", fileGroupID, processingVersion);
-                Process(events, triggerSource);
+                Process(events);
             }
         }
 
-        private void Process(List<int> eventIDs, string triggerSource)
+        /// <summary>
+        /// Process all emails belonging to a given List of Event IDs
+        /// </summary>
+        /// <param name="eventIDs"></param>
+        private void Process(List<int> eventIDs)
         {
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -147,197 +155,113 @@ namespace openXDA.Nodes.Types.Email
                 object[] queryParameters = eventIDs.Cast<object>().ToArray();
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 IEnumerable<Event> events = eventTable.QueryRecordsWhere($"ID IN ({idList})", queryParameters);
-                Process(events, triggerSource);
+                Process(events);
             }
         }
 
-        private void Process(IEnumerable<Event> events, string triggerSource)
+        /// <summary>
+        /// Process all emails belonging to a given List of Event
+        /// </summary>
+        private void Process(IEnumerable<Event> events)
         {
             UpdateEmailTypes();
 
-            List<EventEmailType> triggeredEmailTypes = EmailTypes
-                .Where(emailType => string.Equals(emailType.Parameters.TriggerSource, triggerSource, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            List<EventEmailProcessor> triggeredEmailTypes = EmailTypes.ToList();
 
-            foreach (Event evt in events)
-            {
-                foreach (EventEmailType emailType in triggeredEmailTypes)
-                    emailType.Process(evt);
-            }
+            foreach (EventEmailProcessor emailProcessor in triggeredEmailTypes)
+                emailProcessor.Process(events);
         }
 
-        public void StartTimer()
+        private void SkipMaxDelayTimers()
         {
-            foreach (EventEmailType emailType in EmailTypes)
-                emailType.StartTimer();
-        }
+            List<EventEmailProcessor> triggeredEmailTypes = EmailTypes.ToList();
 
-        public void StopTimer()
-        {
-            foreach (EventEmailType emailType in EmailTypes)
-                emailType.StopTimer();
+            foreach (EventEmailProcessor emailProcessor in triggeredEmailTypes)
+                emailProcessor.SkipMaxDelayTimer();
         }
 
         private void UpdateEmailTypes()
         {
-            List<EventEmailType> emailTypes = new List<EventEmailType>(EmailTypes);
-            List<EventEmailParameters> parametersList;
+            List<EventEmailProcessor> emailTypes = new List<EventEmailProcessor>(EmailTypes);
+            List<EmailType> parametersList;
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
-                TableOperations<EventEmailParameters> eventEmailParametersTable = new TableOperations<EventEmailParameters>(connection);
-                parametersList = eventEmailParametersTable.QueryRecords().ToList();
-                parametersList.ForEach(parameters => parameters.ConnectionFactory = CreateDbConnection);
+                TableOperations<EmailType> eventEmailTypeTable = new TableOperations<EmailType>(connection);
+                parametersList = eventEmailTypeTable.QueryRecords().ToList();
             }
 
-            List<EventEmailParameters> newParameters = parametersList
-                .Where(parameters => !emailTypes.Any(emailType => emailType.EmailTypeID == parameters.EmailTypeID))
+            List<EmailType> newParameters = parametersList
+                .Where(parameters => !emailTypes.Any(emailType => emailType.EmailTypeID == parameters.ID))
                 .ToList();
 
-            List<EventEmailType> newEmailTypes = newParameters
-                .Select(parameters => new EventEmailType(SendEmail) { Parameters = parameters })
+            List<EventEmailProcessor> newEmailTypes = newParameters
+                .Select(parameters => new EventEmailProcessor(SendEmail) { EmailModel = parameters, ConnectionFactory = CreateDbConnection })
                 .ToList();
 
-            foreach (EventEmailType emailType in emailTypes)
+            foreach (EventEmailProcessor emailType in emailTypes)
             {
-                EventEmailParameters parametersUpdate = parametersList
-                    .Where(parameters => parameters.EmailTypeID == emailType.EmailTypeID)
+                EmailType parametersUpdate = parametersList
+                    .Where(parameters => parameters.ID == emailType.EmailTypeID)
                     .FirstOrDefault();
 
                 if ((object)parametersUpdate == null)
                     continue;
 
-                emailType.Parameters = parametersUpdate;
+                emailType.EmailModel = parametersUpdate;
+                emailType.ConnectionFactory = CreateDbConnection;
                 newEmailTypes.Add(emailType);
             }
 
             EmailTypes = newEmailTypes;
         }
 
-        private void SendEmail(EventEmailParameters parameters, List<Event> events)
+        /// <summary>
+        /// Logic to Send the Email.
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <param name="events"></param>
+        private void SendEmail(EmailType parameters, List<Event> events)
         {
-            EmailType emailType;
-
-            using (AdoDataConnection connection = CreateDbConnection())
-            {
-                TableOperations<EmailType> emailTypeTable = new TableOperations<EmailType>(connection);
-                emailType = emailTypeTable.QueryRecordWhere("ID = {0}", parameters.EmailTypeID);
-
-                if ((object)emailType == null)
-                    return;
-
-                // Because we are able to rely on event email parameters,
-                // we don't really need to check the email category,
-                // but it should be validated for the sake of correctness
-                TableOperations<EmailCategory> emailCategoryTable = new TableOperations<EmailCategory>(connection);
-                EmailCategory emailCategory = emailCategoryTable.QueryRecordWhere("ID = {0}", emailType.EmailCategoryID);
-
-                if (emailCategory.Name != "Event")
-                    return;
-            }
-
             while (events.Any())
             {
-                int nextEventID = events[0].ID;
-                string templateData = parameters.GetEventDetail(nextEventID);
+                Event evt = events[0];
+                int nextEventID = evt.ID;
+                List<int> eventIDs;
 
-                List<int> eventIDs = EventEmailService.GetEventIDs(templateData);
-                eventIDs.Add(nextEventID);
-                events.RemoveAll(evt => eventIDs.Contains(evt.ID));
-
-                List<string> recipients = EventEmailService.GetRecipients(emailType, eventIDs);
-                XDocument htmlDocument = EventEmailService.ApplyTemplate(emailType, templateData);
-                List<Attachment> attachments = new List<Attachment>();
-
-                try
+                using (AdoDataConnection connection = CreateDbConnection())
                 {
-                    Action<object> configurator = GetConfigurator();
-                    Settings settings = new Settings(configurator);
-                    EventEmailSection eventEmailSettings = settings.EventEmailSettings;
-
-                    if (!eventEmailSettings.Enabled || Tripped)
-                        return;
-
-                    if (TripsMaxEmailThreshold(eventEmailSettings))
-                    {
-                        SendTripNotification(eventEmailSettings);
-                        return;
-                    }
-
-                    EventEmailService.ApplyChartTransform(attachments, htmlDocument);
-                    EventEmailService.ApplyFTTTransform(attachments, htmlDocument);
-                    EventEmailService.SendEmail(recipients, htmlDocument, attachments);
-
-                    DateTime now = DateTime.UtcNow;
-                    TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
-                    DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
-                    EventEmailService.LoadSentEmail(xdaNow, recipients, htmlDocument, eventIDs);
-                    DailyStatisticOperation.UpdateEmailProcessingStatistic(eventIDs);
+                    eventIDs = connection
+                        .RetrieveData(parameters.CombineEventsSQL, nextEventID)
+                        .AsEnumerable()
+                        .Select(row => row.Field<int>(0))
+                        .ToList();
                 }
-                finally
+
+                events.RemoveAll(e => eventIDs.Contains(e.ID));
+               
+                Action<object> configurator = GetConfigurator();
+                Settings settings = new Settings(configurator);
+                EventEmailSection eventEmailSettings = settings.EventEmailSettings;
+
+                if (!eventEmailSettings.Enabled || Tripped)
+                    return;
+
+                EventEmailService emailService = new EventEmailService(CreateDbConnection, configurator);
+
+                if (TripsMaxEmailThreshold(eventEmailSettings))
                 {
-                    attachments?.ForEach(attachment => attachment.Dispose());
+                    SendTripNotification(eventEmailSettings, emailService);
+                    return;
                 }
+
+                DateTime now = DateTime.UtcNow;
+                TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
+                DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
+                emailService.SendEmail(parameters, eventIDs, evt, xdaNow);
+                   
+                DailyStatisticOperation.UpdateEmailProcessingStatistic(eventIDs);
             }
-        }
-
-        private void SendTripNotification(EventEmailSection eventEmailSettings)
-        {
-            string subject = "openXDA email flooding detected";
-            StringBuilder message = new StringBuilder();
-            List<string> replyTo = new List<string>();
-            string xdaInstance = "http://localhost:8989";
-
-            using (AdoDataConnection connection = CreateDbConnection())
-            {
-                TableOperations<DashSettings> dashSettingsTable = new TableOperations<DashSettings>(connection);
-                DashSettings xdaInstanceSetting = dashSettingsTable.QueryRecordWhere("Name = 'System.XDAInstance'");
-
-                if ((object)xdaInstanceSetting != null)
-                    xdaInstance = xdaInstanceSetting.Value.TrimEnd('/');
-
-                TableOperations<EmailType> emailTypeTable = new TableOperations<EmailType>(connection);
-                string emailTypeIDs = string.Join(",", m_emailTypes.Select(type => type.EmailTypeID));
-                int eventEmailCategoryID = connection.ExecuteScalar<int>("SELECT ID FROM EmailCategory WHERE Name = 'Event'");
-                IEnumerable<EmailType> emailTypes = emailTypeTable.QueryRecordsWhere($"ID IN ({emailTypeIDs}) AND EmailCategoryID = {eventEmailCategoryID}");
-
-                foreach (EmailType emailType in emailTypes)
-                {
-                    emailType.SMS = false;
-                    List<string> recipients = EventEmailService.GetAllRecipients(emailType);
-                    replyTo.AddRange(recipients);
-                }
-            }
-
-            int maxEmailCount = eventEmailSettings.MaxEmailCount;
-            TimeSpan maxEmailSpan = eventEmailSettings.MaxEmailSpan;
-            string maxEmailSpanText = maxEmailSpan.ToString();
-
-            if (maxEmailSpan.Ticks % TimeSpan.TicksPerDay == 0)
-                maxEmailSpanText = $"{maxEmailSpan.Days} {(maxEmailSpan.Days == 1 ? "day" : "days")}";
-            else if (maxEmailSpan.Ticks % TimeSpan.TicksPerHour == 0)
-                maxEmailSpanText = $"{maxEmailSpan.Hours} {(maxEmailSpan.Hours == 1 ? "hour" : "hours")}";
-            else if (maxEmailSpan.Ticks % TimeSpan.TicksPerMinute == 0)
-                maxEmailSpanText = $"{maxEmailSpan.Minutes} {(maxEmailSpan.Minutes == 1 ? "minute" : "minutes")}";
-            else if (maxEmailSpan.Ticks % TimeSpan.TicksPerSecond == 0)
-                maxEmailSpanText = $"{maxEmailSpan.Seconds} {(maxEmailSpan.Seconds == 1 ? "second" : "seconds")}";
-
-            message.AppendLine($"openXDA has detected that over {maxEmailCount} emails were sent within {maxEmailSpanText}.");
-            message.AppendLine();
-            message.AppendLine($"Event email notifications have been disabled until further notice.");
-            message.AppendLine($"Visit the following page to restore event email notifications.");
-            message.AppendLine($"{xdaInstance}/RestoreEventEmail.cshtml");
-            message.AppendLine();
-            message.AppendLine($"Reply to this message to send a message to all event email subscribers.");
-            EventEmailService.SendAdminEmail(subject, message.ToString(), replyTo);
-        }
-
-        private void Restore()
-        {
-            while (!TaggedEmails.IsEmpty)
-                TaggedEmails.TryDequeue(out _);
-
-            Tripped = false;
         }
 
         private bool TripsMaxEmailThreshold(EventEmailSection eventEmailSettings)
@@ -364,6 +288,64 @@ namespace openXDA.Nodes.Types.Email
             return true;
         }
 
+        private void Restore()
+        {
+            while (!TaggedEmails.IsEmpty)
+                TaggedEmails.TryDequeue(out _);
+
+            Tripped = false;
+        }
+
+        private void SendTripNotification(EventEmailSection eventEmailSettings, EventEmailService emailService)
+        {
+            string subject = "openXDA email flooding detected";
+            StringBuilder message = new StringBuilder();
+            List<string> replyTo = new List<string>();
+            string xdaInstance = "http://localhost:8989";
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                TableOperations<DashSettings> dashSettingsTable = new TableOperations<DashSettings>(connection);
+                DashSettings xdaInstanceSetting = dashSettingsTable.QueryRecordWhere("Name = 'System.XDAInstance'");
+
+                if ((object)xdaInstanceSetting != null)
+                    xdaInstance = xdaInstanceSetting.Value.TrimEnd('/');
+
+                TableOperations<EmailType> emailTypeTable = new TableOperations<EmailType>(connection);
+                string emailTypeIDs = string.Join(",", m_emailTypes.Select(type => type.EmailTypeID));
+                int eventEmailCategoryID = connection.ExecuteScalar<int>("SELECT ID FROM EmailCategory WHERE Name = 'Event'");
+                IEnumerable<EmailType> emailTypes = emailTypeTable.QueryRecordsWhere($"ID IN ({emailTypeIDs}) AND EmailCategoryID = {eventEmailCategoryID}");
+
+                foreach (EmailType emailType in emailTypes)
+                {
+                    emailType.SMS = false;
+                    List<string> recipients = emailService.GetRecipients(emailType);
+                    replyTo.AddRange(recipients);
+                }
+            }
+
+            int maxEmailCount = eventEmailSettings.MaxEmailCount;
+            TimeSpan maxEmailSpan = eventEmailSettings.MaxEmailSpan;
+            string maxEmailSpanText = maxEmailSpan.ToString();
+
+            if (maxEmailSpan.Ticks % TimeSpan.TicksPerDay == 0)
+                maxEmailSpanText = $"{maxEmailSpan.Days} {(maxEmailSpan.Days == 1 ? "day" : "days")}";
+            else if (maxEmailSpan.Ticks % TimeSpan.TicksPerHour == 0)
+                maxEmailSpanText = $"{maxEmailSpan.Hours} {(maxEmailSpan.Hours == 1 ? "hour" : "hours")}";
+            else if (maxEmailSpan.Ticks % TimeSpan.TicksPerMinute == 0)
+                maxEmailSpanText = $"{maxEmailSpan.Minutes} {(maxEmailSpan.Minutes == 1 ? "minute" : "minutes")}";
+            else if (maxEmailSpan.Ticks % TimeSpan.TicksPerSecond == 0)
+                maxEmailSpanText = $"{maxEmailSpan.Seconds} {(maxEmailSpan.Seconds == 1 ? "second" : "seconds")}";
+
+            message.AppendLine($"openXDA has detected that over {maxEmailCount} emails were sent within {maxEmailSpanText}.");
+            message.AppendLine();
+            message.AppendLine($"Event email notifications have been disabled until further notice.");
+            message.AppendLine($"Visit the following page to restore event email notifications.");
+            message.AppendLine($"{xdaInstance}/RestoreEventEmail.cshtml");
+            message.AppendLine();
+            message.AppendLine($"Reply to this message to send a message to all event email subscribers.");
+            emailService.SendAdminEmail(subject, message.ToString(), replyTo);
+        }
 
         #endregion
     }

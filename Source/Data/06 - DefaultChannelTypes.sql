@@ -629,24 +629,24 @@ INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnec
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Bus-Line','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Bus-Line','only Voltages are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name = ''Voltage'' THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 0')
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Bus-Breaker','only Voltages and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) IN (1,5) THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Bus-Breaker','only Voltages and Breaker Status are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name IN (''Voltage'', ''Digital'') THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 0')
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Line-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) IN (1,2,5) THEN 1 ELSE 0 END)','SELECT 1')
+	VALUES ('Line-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name IN (''Voltage'', ''Current'', ''Digital'') THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 1')
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Line-(Double)Breaker','only Voltage are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)')
+	VALUES ('Line-(Double)Breaker','only Voltage are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name = ''Voltage'' THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT CASE WHEN MeasurementType.Name = ''Voltage'' THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}')
 GO
 
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Bus-CapBank','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Bus-CapBank','only Voltages are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name = ''Voltage'' THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 0')
 GO
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
 	VALUES ('Bus-Relay','only Voltages are passed across this connection.',0,'SELECT 0','SELECT 0')
@@ -656,30 +656,30 @@ INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnec
 GO
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Transformer-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) IN (1,2,5) THEN 1 ELSE 0 END)','SELECT 1')
+	VALUES ('Transformer-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name IN (''Voltage'', ''Current'', ''Digital'') THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 1')
 GO
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('CapBank-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) IN (1,2,5) THEN 1 ELSE 0 END)','SELECT 1')
+	VALUES ('CapBank-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name IN (''Voltage'', ''Current'', ''Digital'') THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 1')
 GO
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Bus-Transformer','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Bus-Transformer','only Voltages are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name = ''Voltage'' THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 0')
 GO
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Line-Transformer','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Line-Transformer','only Voltages are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name = ''Voltage'' THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 0')
 GO
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Line-CapBank','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Line-CapBank','only Voltages are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name = ''Voltage'' THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 0')
 GO
 
 
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('DER-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) IN (1,2,5) THEN 1 ELSE 0 END)','SELECT 1')
+	VALUES ('DER-(Single)Breaker','Currents, Voltage and Breaker Status are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name IN (''Voltage'', ''Current'', ''Digital'') THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 1')
 GO
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('Line-DER','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('Line-DER','only Voltages are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name = ''Voltage'' THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 0')
 GO
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
-	VALUES ('DER-Transformer','only Voltages are passed across this connection.',1,'SELECT (CASE WHEN (SELECT MeasurementTypeID FROM Channel WHERE ID = {ChannelID}) = 1 THEN 1 ELSE 0 END)','SELECT 0')
+	VALUES ('DER-Transformer','only Voltages are passed across this connection.',1,'SELECT CASE WHEN MeasurementType.Name = ''Voltage'' THEN 1 ELSE 0 END FROM Channel JOIN MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID WHERE Channel.ID = {ChannelID}','SELECT 0')
 GO
 
 -- Add Connection between AssetTypes and AssetRelationshipTypes for SystemCenter UI to reduce potential for Config issues

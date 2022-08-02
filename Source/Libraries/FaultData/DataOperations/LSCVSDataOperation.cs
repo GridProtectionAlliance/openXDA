@@ -61,7 +61,7 @@ namespace FaultData.DataOperations
                 {1, "IEEE 1668 Type I & II"},
                 {3, "IEEE 1668 Type III"}
             };
-        public const string postRoute = "/api/OpenXDA/NewLCSVSEvent/";
+        public const string postRoute = "/api/OpenXDA/NewLCSVSEvent";
 
        #endregion
 

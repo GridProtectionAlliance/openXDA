@@ -34,5 +34,9 @@ namespace openXDA.Model
         public Guid UserAccountID { get; set; }
 
         public int EmailTypeID { get; set; }
+
+        public int AssetGroupID { get; set; }
+
+        public bool Approved { get; set; }
     }
 }

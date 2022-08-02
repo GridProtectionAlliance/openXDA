@@ -482,6 +482,10 @@
       <Project>{565e38b7-24c0-48b6-9f28-2521b2ccd87d}</Project>
       <Name>openXDA.Nodes</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\OpenXDA.NotificationDataSources\openXDA.NotificationDataSources.csproj">
+      <Project>{2813a92f-8cb5-4ec3-976c-8690c90c6dd0}</Project>
+      <Name>openXDA.NotificationDataSources</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.PQTrendingWebReport\openXDA.PQTrendingWebReport.csproj">
       <Project>{2635efe2-ef6f-4110-9229-8d91f02df143}</Project>
       <Name>openXDA.PQTrendingWebReport</Name>

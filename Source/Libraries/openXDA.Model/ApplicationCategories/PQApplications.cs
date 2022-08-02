@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -44,8 +45,5 @@ namespace openXDA.Model
         public int CategoryID { get; set; }
 
         public int SortOrder { get; set; }
-
-
     }
 }
-

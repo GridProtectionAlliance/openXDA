@@ -21,31 +21,56 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("EmailType")]
+    [UseEscapedName]
     public class EmailType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [ParentKey(typeof(EmailCategory))]
         public int EmailCategoryID { get; set; }
 
-        public int XSLTemplateID { get; set; }
+        public string Name { get; set; }
+
+        public string Template { get; set; }
+
+        public string TriggerEmailSQL { get; set; }
+
+        public string CombineEventsSQL { get; set; }
+
+        public double MinDelay { get; set; }
+
+        public double MaxDelay { get; set; }
 
         public bool SMS { get; set; }
+
+        public bool ShowSubscription { get; set; }
+
+        [DefaultValue(false)]
+        public bool RequireApproval { get; set; }
+
+        public string FilePath { get; set; }
     }
 
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("EmailTypeView")]
+    [UseEscapedName]
     public class EmailTypeView : EmailType
     {
         [Searchable]
         public string EmailCategory { get; set; }
-
-        [Searchable]
-        public string XSLTemplate { get; set; }
-
-        [Searchable]
-        public string Name { get; set; }
     }
 }

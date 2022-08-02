@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DisturbanceEmailCriterion.cs - Gbtc
+//  TriggeredEmailDataSourceSetting.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  11/19/2021 - Samuel Robinson
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,13 +25,16 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class DisturbanceEmailCriterion
+    public class TriggeredEmailDataSourceSetting
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int EmailGroupID { get; set; }
+        [ParentKey(typeof(TriggeredEmailDataSourceEmailType))]
+        public int TriggeredEmailDataSourceEmailTypeID { get; set; }
+        
+        public string Value { get; set; }
 
-        public int SeverityCode { get; set; }
+        public string Name { get; set; }
     }
 }

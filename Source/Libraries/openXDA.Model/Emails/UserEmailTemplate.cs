@@ -21,9 +21,9 @@
 //
 //******************************************************************************************************
 
+using System;
 using GSF.Data.Model;
 using GSF.Identity;
-using System;
 
 namespace openXDA.Model
 {

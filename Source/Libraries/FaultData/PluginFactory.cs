@@ -28,7 +28,7 @@ namespace FaultData
 {
     public class PluginFactory<T>
     {
-        public T Create(string assemblyName, string typeName, params object[] parameters)
+        public Type GetPluginType(string assemblyName, string typeName)
         {
             if (assemblyName is null)
                 throw new ArgumentNullException(nameof(assemblyName));
@@ -39,14 +39,19 @@ namespace FaultData
             try
             {
                 Assembly assembly = Assembly.LoadFrom(assemblyName);
-                Type type = assembly.GetType(typeName);
-                return Create(type, parameters);
+                return assembly.GetType(typeName);
             }
             catch (Exception ex)
             {
-                string message = $"Failed to create object of type {typeName}: {ex.Message}";
+                string message = $"Failed to locate type {typeName} from assembly: {ex.Message}";
                 throw new TypeLoadException(message, ex);
             }
+        }
+
+        public T Create(string assemblyName, string typeName, params object[] parameters)
+        {
+            Type type = GetPluginType(assemblyName, typeName);
+            return Create(type, parameters);
         }
 
         public T Create(Type type, params object[] parameters)

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  XSLTemplate.cs - Gbtc
+//  TriggeredEmailDataSourceEmailType.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,41 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  11/9/2021 - Samuel Robinson
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class XSLTemplate
+
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("TriggeredEmailDataSourceEmailType")]
+    [UseEscapedName]
+    public class TriggeredEmailDataSourceEmailType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        [Required]
-        [Searchable]
-        public string Name { get; set; }
+        [ParentKey(typeof(EmailType))]
+        public int EmailTypeID { get; set; }
 
-        [Required]
-        [Searchable]
-        public string Template { get; set; }
+        public int TriggeredEmailDataSourceID { get; set; }
+    }
+
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("TriggeredEmailDataSourceEmailTypeView")]
+    [UseEscapedName]
+    public class TriggeredEmailDataSourceEmailTypeView : TriggeredEmailDataSourceEmailType
+    {
+        public string TriggeredEmailDataSourceName { get;set; }
     }
 }

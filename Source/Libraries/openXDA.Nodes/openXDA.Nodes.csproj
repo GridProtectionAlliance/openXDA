@@ -77,7 +77,7 @@
     <Compile Include="Types\Authentication\AuthenticationProviderNode.cs" />
     <Compile Include="Types\DataPusher\DataPusherNode.cs" />
     <Compile Include="Types\Email\EventEmailNode.cs" />
-    <Compile Include="Types\Email\EventEmailType.cs" />
+    <Compile Include="Types\Email\EventEmailProcessor.cs" />
     <Compile Include="Types\EPRICapBankAnalysis\EPRICapBankAnalysisNode.cs" />
     <Compile Include="Types\FileProcessing\FileGroupInfo.cs" />
     <Compile Include="Types\FileProcessing\FileProcessingTask.cs" />
@@ -107,6 +107,10 @@
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenXDA.NotificationDataSources\openXDA.NotificationDataSources.csproj">
+      <Project>{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}</Project>
+      <Name>openXDA.NotificationDataSources</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

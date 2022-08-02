@@ -41,6 +41,9 @@ namespace openXDA.Model
 
         [DefaultValue(true)]
         public bool DisplayDashboard { get; set; }
+
+        [DefaultValue(false)]
+        public bool DisplayEmail { get; set; }
     }
 
     [TableName("AssetGroupView")]

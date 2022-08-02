@@ -21,15 +21,25 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("EmailCategory")]
+    [UseEscapedName]
     public class EmailCategory
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
         public string Name { get; set; }
+
+        [DefaultValue(true)]
+        public bool SelfSubscribe { get; set; }
     }
 }
