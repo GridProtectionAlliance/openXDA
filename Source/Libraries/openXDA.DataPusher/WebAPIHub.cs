@@ -34,6 +34,7 @@ using GSF;
 using GSF.Configuration;
 using GSF.Net.Security;
 using GSF.Security.Model;
+using GSF.Web;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
@@ -47,6 +48,8 @@ namespace openXDA.DataPusher
         public static event EventHandler<EventArgs<string>> LogStatusMessageEvent;
 
         public static event EventHandler<EventArgs<string>> LogExceptionMessageEvent;
+        
+        private static readonly HttpClient staticClient = new HttpClient();
 
         private static void OnLogStatusMessage(string message)
         {
@@ -277,8 +280,6 @@ namespace openXDA.DataPusher
             }
         }
 
-
-
         private static bool HandleCertificateValidation(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             SimpleCertificateChecker simpleCertificateChecker = new SimpleCertificateChecker();
@@ -300,6 +301,26 @@ namespace openXDA.DataPusher
             }
 
             return simpleCertificateChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+        }
+        public static async Task<bool> TestConnection(string instance, UserAccount userAccount)
+        {
+            string url = BuildURL(instance, "api/PQMark/Alive");
+
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url))
+            {
+                ConfigureRequest(request, userAccount);
+                try
+                {
+                    using (HttpResponseMessage response = await HttpClient.SendAsync(request))
+                    {
+                        return response.IsSuccessStatusCode;
+                    }
+                }
+                catch (Exception ex) //Exception here is a fail state, must be caught reported back so that testers know the failpoint is downstream
+                {
+                    return false;
+                }
+            }
         }
 
         static WebAPIHub()

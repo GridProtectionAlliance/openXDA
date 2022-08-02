@@ -408,6 +408,16 @@ namespace openXDA.Adapters
 
         }
 
+        /// <summary>
+        /// Return a 1 to request
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IHttpActionResult Alive()
+        {
+            return Ok(1);
+        }
+
         #endregion
 
         #region [ PUT Operations ]
@@ -479,7 +489,7 @@ namespace openXDA.Adapters
 
                     PropertyInfo assetKeyProperty = type.GetProperty("AssetKey");
 
-                    if (!(assetKeyProperty is null))
+                    if (!(assetKeyProperty is null)) 
                         recordId = connection.ExecuteScalar<int>($"SELECT ID FROM {table.TableName} WHERE AssetKey = {{0}}", assetKeyProperty.GetValue(obj));
                     else
                         recordId = connection.ExecuteScalar<int>("SELECT @@Identity");

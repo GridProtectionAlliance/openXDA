@@ -286,6 +286,9 @@ GO
 INSERT INTO NodeType VALUES('Authorization', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode')
 GO
 
+INSERT INTO NodeType VALUES('DataPusher', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.DataPusher.DataPusherNode')
+GO
+
 CREATE TABLE Node
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -315,6 +318,9 @@ INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes
 GO
 
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode'), NULL, 'SSO Provider', 1)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.DataPusher.DataPusherNode'), NULL, 'Data Pusher', 1)
 GO
 
 CREATE TABLE NodeSetting
@@ -3999,30 +4005,6 @@ CREATE NONCLUSTERED INDEX IX_EventNote_EventID
 ON EventNote(EventID ASC)
 GO
 
-CREATE TABLE MetersToDataPush
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    LocalXDAMeterID INT NOT NULL,
-    RemoteXDAMeterID INT NULL,
-    LocalXDAAssetKey varchar(200) NOT NULL,
-    RemoteXDAAssetKey varchar(200) NOT NULL,
-    RemoteXDAName varchar(200) NOT NULL,
-    Obsfucate bit NOT NULL,
-    Synced bit NOT NULL
-)
-GO
-
-CREATE TABLE AssetsToDataPush
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    LocalXDAAssetID INT NOT NULL,
-    RemoteXDAAssetID INT NULL,
-    LocalXDAAssetKey VARCHAR(200) NOT NULL,
-    RemoteXDAAssetKey VARCHAR(200) NOT NULL,
-	RemoteAssetCreatedByDataPusher bit NOT NULL DEFAULT (1)
-)
-GO
-
 CREATE TABLE RemoteXDAInstance
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -4033,19 +4015,32 @@ CREATE TABLE RemoteXDAInstance
 )
 GO
 
-CREATE TABLE RemoteXDAInstanceMeter(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    RemoteXDAInstanceID INT NOT NULL,
-    MetersToDataPushID INT NOT NULL
+CREATE TABLE MetersToDataPush
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    RemoteXDAInstanceID INT NOT NULL FOREIGN KEY REFERENCES [RemoteXDAInstance](ID),
+    LocalXDAMeterID INT NOT NULL,
+    RemoteXDAMeterID INT NULL,
+    RemoteXDAAssetKey varchar(200) NOT NULL,
+    RemoteXDAName varchar(200) NOT NULL,
+    Obsfucate bit NOT NULL,
+    Synced bit NOT NULL,
+    CONSTRAINT UC_MetersToDataPush_RemoteXDAInstanceID_LocalXDAMeterID UNIQUE(RemoteXDAInstanceID, LocalXDAMeterID)
 )
 GO
 
-ALTER TABLE RemoteXDAInstanceMeter WITH CHECK ADD FOREIGN KEY(RemoteXDAInstanceID)
-REFERENCES RemoteXDAInstance(ID)
-GO
-
-ALTER TABLE RemoteXDAInstanceMeter WITH CHECK ADD FOREIGN KEY(MetersToDataPushID)
-REFERENCES MetersToDataPush(ID)
+CREATE TABLE AssetsToDataPush
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    RemoteXDAInstanceID INT NOT NULL FOREIGN KEY REFERENCES [RemoteXDAInstance](ID),
+    LocalXDAAssetID INT NOT NULL,
+    RemoteXDAAssetID INT NULL,
+    RemoteXDAAssetKey VARCHAR(200) NOT NULL,
+    RemoteAssetCreatedByDataPusher bit NOT NULL DEFAULT (1),
+    Obsfucate bit NOT NULL,
+    Synced bit NOT NULL,
+    CONSTRAINT UC_AssetsToDataPush_RemoteXDAInstanceID_LocalXDAAssetID UNIQUE(RemoteXDAInstanceID, LocalXDAAssetID)
+)
 GO
 
 CREATE TABLE FileGroupLocalToRemote

@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -170,7 +169,7 @@ namespace openXDA.Controllers.Config
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
-                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID IN ( SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instance.ID);
+                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE RemoteXDAInstanceID = {0}", instance.ID);
                         return Ok(connectionID);
                     }
                 }
@@ -411,22 +410,14 @@ namespace openXDA.Controllers.Config
                 DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                 engine.SyncInstanceConfiguration(connectionId, instanceId, cancellationToken);
             }, cancellationToken);
-
         }
 
-        [Route("SyncInstanceFiles/{connectionId}/{instanceId:int}"), HttpGet]
-        public Task SyncFilesForInstance(string connectionId, int instanceId, CancellationToken cancellationToken)
+        [Route("TestConnection/{instanceId:int}"), HttpGet]
+        public IHttpActionResult TestRemoteInstanceConnection(int instanceId)
         {
-            return Task.Run(() =>
-            {
-                using (AdoDataConnection connection = ConnectionFactory())
-                {
-                    // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
-                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    engine.SyncInstanceFiles(connectionId, instance, cancellationToken);
-                }
-            }, cancellationToken);
+            // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+            DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
+            return Ok(engine.TestInstance(instanceId) ? 1 : 0);
         }
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherController));
