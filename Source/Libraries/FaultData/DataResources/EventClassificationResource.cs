@@ -88,7 +88,7 @@ namespace FaultData.DataResources
 
                 EventClassification classification = Classify(meterDataSet, dataGroup, viDataGroup, faultGroup);
 
-                if (!ValidateEventType(classification, (AssetType)dataGroup.Asset.AssetTypeID))
+                if (!ValidateEventType(classification, dataGroup.Asset))
                     classification = EventClassification.Other;
 
                 Classifications.Add(dataGroup, classification);
@@ -101,7 +101,7 @@ namespace FaultData.DataResources
 
                 EventClassification classification = Classify(meterDataSet, dataGroup);
 
-                if (!(dataGroup.Asset is null) && !ValidateEventType(classification, (AssetType)dataGroup.Asset.AssetTypeID))
+                if (!(dataGroup.Asset is null) && !ValidateEventType(classification, dataGroup.Asset))
                     classification = EventClassification.Other;
 
                 Classifications.Add(dataGroup, classification);
@@ -163,30 +163,32 @@ namespace FaultData.DataResources
             return EventClassification.Other;
         }
 
-        private static bool ValidateEventType(EventClassification eventClassification, AssetType asset)
+        private static bool ValidateEventType(EventClassification eventClassification, Asset asset)
         {
-            
+            AssetType assetType = (AssetType)asset.AssetTypeID;
+
             switch (eventClassification)
             {
-                case (EventClassification.BreakerOpen):
-                    return (asset == AssetType.Breaker);
-                case (EventClassification.Fault):
-                    return ((asset == AssetType.Transformer)||(asset == AssetType.Line));
-                case (EventClassification.RecloseIntoFault):
-                    return ((asset == AssetType.Transformer) || (asset == AssetType.Line));
-                case (EventClassification.Interruption):
-                    return ((asset == AssetType.Bus) || (asset == AssetType.CapacitorBank));
-                case (EventClassification.Sag):
-                    return ((asset == AssetType.Bus) || (asset == AssetType.CapacitorBank));
-                case (EventClassification.Swell):
-                    return ((asset == AssetType.Bus) || (asset == AssetType.CapacitorBank));
-                case (EventClassification.Transient):
-                    return ((asset == AssetType.Bus) || (asset == AssetType.CapacitorBank));
+                case EventClassification.BreakerOpen:
+                    return assetType == AssetType.Breaker;
+
+                case EventClassification.Fault:
+                case EventClassification.RecloseIntoFault:
+                    return (assetType == AssetType.Transformer) || (assetType == AssetType.Line);
+
+                case EventClassification.Interruption:
+                case EventClassification.Sag:
+                case EventClassification.Swell:
+                case EventClassification.Transient:
+                    return (assetType == AssetType.Bus) || (assetType == AssetType.CapacitorBank) || HasDirectConnectedVoltages(asset);
+
                 default:
                     return true;
             }
-
         }
+
+        private static bool HasDirectConnectedVoltages(Asset asset) => asset.DirectChannels
+            .Any(channel => channel.MeasurementType.Name == "Voltage" && channel.MeasurementCharacteristic.Name == "Instantaneous");
 
         private static bool HasBreakerChannels(DataGroup dataGroup)
         {
