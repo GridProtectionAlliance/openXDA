@@ -93,7 +93,7 @@ namespace FaultData.DataOperations
 
 
                 TableOperations<RemoteXDAInstance> instanceTable = new TableOperations<RemoteXDAInstance>(connection);
-                IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*' AND ID IN (SELECT RemoteXDAInstanceID FROM MetersToDataPush WHERE LocalXDAMeterID = {0}) )", meterDataSet.Meter.ID);
+                IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*' AND ID IN (SELECT RemoteXDAInstanceID FROM MetersToDataPush WHERE LocalXDAMeterID = {0})", meterDataSet.Meter.ID);
                 FileGroupPost post = new FileGroupPost();
 
                 post.FileGroup = meterDataSet.FileGroup;
