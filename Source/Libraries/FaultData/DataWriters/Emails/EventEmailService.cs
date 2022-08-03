@@ -163,6 +163,55 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
+        public void SendEmail(EmailType email, Event evt, string recipient)
+        {
+            List<Attachment> attachments = new List<Attachment>();
+
+            try
+            {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    /* Load All DataSources */
+                    const string DataSourceIDQueryFormat =
+                        "SELECT TriggeredEmailDataSourceID " +
+                        "FROM TriggeredEmailDataSourceEmailType " +
+                        "WHERE EmailTypeID = {0}";
+
+                    TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
+                    TableOperations<TriggeredEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<TriggeredEmailDataSourceEmailType>(connection);
+
+                    List<DataSourceWrapper> dataSources = dataSourceEmailTypeTable
+                        .QueryRecordsWhere("EmailTypeID = {0}", email.ID)
+                        .Select((cm) => new Tuple<TriggeredEmailDataSourceEmailType, TriggeredEmailDataSource>(cm, dataSourceTable.QueryRecordWhere("ID = {0}", cm.TriggeredEmailDataSourceID)))
+                        .Select((m) => CreateDataSource(m.Item2, m.Item1))
+                        .ToList();
+
+                    if (dataSources.Any(wrapper => wrapper.DataSource is null))
+                    {
+                        Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
+                        return;
+                    }
+
+                    if (dataSources.Count == 0)
+                        return;
+
+                    IEnumerable<XElement> eventData = dataSources
+                        .Select(dataSource => dataSource.TryProcess(evt));
+
+                    XElement templateData = new XElement("data", eventData);
+                    XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
+                    ApplyChartTransform(attachments, htmlDocument);
+                    ApplyFTTTransform(attachments, htmlDocument);
+                    SendEmail(new List<string>() { recipient }, htmlDocument, attachments, null);
+                    
+                }
+            }
+            finally
+            {
+                attachments?.ForEach(attachment => attachment.Dispose());
+            }
+        }
+
         // #Todo Implement SMS based on userAdditionalFields
         public List<string> GetRecipients(EmailType emailType, List<int> eventIDs)
         {
