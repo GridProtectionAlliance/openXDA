@@ -45,6 +45,7 @@ namespace FaultData.DataResources
         Swell,
         Transient,
         Other,
+        Breaker,
         Snapshot,
         MeterDataQuality
     }
@@ -116,7 +117,7 @@ namespace FaultData.DataResources
             if ((object)viDataGroup != null)
             {
                 if (viDataGroup.DefinedNeutralVoltages == 0 && viDataGroup.DefinedLineVoltages == 0 && HasBreakerChannels(dataGroup))
-                    return EventClassification.Other;
+                    return EventClassification.Breaker;
             }
 
             if ((object)faultGroup != null)
