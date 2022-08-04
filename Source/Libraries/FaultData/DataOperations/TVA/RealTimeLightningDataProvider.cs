@@ -126,7 +126,7 @@ namespace FaultData.DataOperations.TVA
             using (AdoDataConnection lightningDbConnection = CreateLightningDbConnection())
             using (AdoDataConnection maximoConnection = CreateMaximoDbConnection())
             {
-                CoordinateReferenceSystem crs = new EPSG3857();
+               
                 List<GeoCoordinate> structureLocations = QueryStructureLocations(maximoConnection, lineKey).ToList();
 
                 foreach (ILightningStrike strike in QueryStrikes(lightningDbConnection, start, end))
@@ -135,7 +135,7 @@ namespace FaultData.DataOperations.TVA
                     double distanceThreshold = LightningDataSettings.Proximity;
 
                     bool isNearLine = structureLocations
-                        .Select(location => crs.Distance(location, strikeLocation))
+                        .Select(location => location.Distance(strikeLocation))
                         .Select(meters => ToMiles(meters))
                         .Any(miles => miles <= distanceThreshold);
 
