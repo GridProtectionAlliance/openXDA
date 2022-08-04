@@ -47,13 +47,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PQIDataSource.cs" />
     <Compile Include="SQLDataSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\openXDA.Configuration\openXDA.Configuration.csproj">
+      <Project>{83D8122C-2BCC-4813-B449-224D9F7E5AEE}</Project>
+      <Name>openXDA.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{A1A0BC13-50ED-4DC9-8C1E-3293B0B69281}</Project>
       <Name>openXDA.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\openXDA.PQI\openXDA.PQI.csproj">
+      <Project>{3DEC81F1-9A02-4BBF-8325-F332AC63393E}</Project>
+      <Name>openXDA.PQI</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
