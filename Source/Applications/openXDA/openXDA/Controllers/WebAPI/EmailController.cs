@@ -72,11 +72,15 @@ namespace openXDA.Controllers.WebAPI
 
         private Host Host { get; }
 
+        #endregion
+
         #region [ Constructor ]
         public EmailController(Host host)
         {
             Host = host;
         }
+
+        #endregion
 
         #region [ HttpMethods ]
 
@@ -86,7 +90,7 @@ namespace openXDA.Controllers.WebAPI
 
             try 
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = CreateDbConnection())
                 {
                     ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                     if (account == null)
@@ -108,7 +112,7 @@ namespace openXDA.Controllers.WebAPI
 
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = CreateDbConnection())
                 {
                     ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                     if (account == null)
@@ -126,16 +130,15 @@ namespace openXDA.Controllers.WebAPI
         [Route("testEmail/{emailID:int}/{eventID:int}/{userID}"), HttpGet]
         public IHttpActionResult SendTestEmail(int emailID, string userID, int eventID)
         {
-            ConfigurationLoader configurationLoader = new ConfigurationLoader(Host.ID, () => { return new AdoDataConnection("systemSettings"); });
-            Settings settings = new Settings(configurationLoader.Configure);
+            Settings settings = new Settings(GetConfigurator());
             EventEmailSection eventEmailSettings = settings.EventEmailSettings;
 
             if (!eventEmailSettings.Enabled )
                 return Ok(1);
 
-            EventEmailService emailService = new EventEmailService(() => { return new AdoDataConnection("systemSettings"); }, configurationLoader.Configure);
+            EventEmailService emailService = new EventEmailService(CreateDbConnection, GetConfigurator());
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = CreateDbConnection())
             {
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                 EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
@@ -144,10 +147,33 @@ namespace openXDA.Controllers.WebAPI
                 if (account == null)
                     return InternalServerError(new Exception($"User with ID {userID} does not exists"));
 
-                emailService.SendEmail(email, evt, account.Email);
+                emailService.SendEmail(email, evt, new List<string>() { account.Email });
             }
             return Ok(1);
         }
+
+        [Route("testData/{emailID:int}/{eventID:int}"), HttpGet]
+        public IHttpActionResult TestDataSource(int emailID, int eventID)
+        {
+            try
+            {
+                EventEmailService emailService = new EventEmailService(CreateDbConnection, GetConfigurator());
+
+                using (AdoDataConnection connection = CreateDbConnection())
+                {
+                    Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                    EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
+
+                    return Ok(emailService.GetData(email, evt));
+                }
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+        #endregion
 
         #region [ Methods ]
         private void SendVerificationEmail(string recipient)

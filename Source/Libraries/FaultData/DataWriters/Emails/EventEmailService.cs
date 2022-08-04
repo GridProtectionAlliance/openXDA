@@ -116,46 +116,30 @@ namespace FaultData.DataWriters.Emails
             if (recipients.Count == 0)
                 return;
 
+            SendEmail(email, evt, recipients, xdaNow, eventIDs, true);
+            
+        }
+
+        public void SendEmail(EmailType email, Event evt, List<string> recipients) => SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false);
+
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile)
+        {
             List<Attachment> attachments = new List<Attachment>();
 
             try
             {
-                using (AdoDataConnection connection = ConnectionFactory())
-                {
-                    /* Load All DataSources */
-                    const string DataSourceIDQueryFormat =
-                        "SELECT TriggeredEmailDataSourceID " +
-                        "FROM TriggeredEmailDataSourceEmailType " +
-                        "WHERE EmailTypeID = {0}";
-
-                    TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
-                    TableOperations<TriggeredEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<TriggeredEmailDataSourceEmailType>(connection);
-
-                    List<DataSourceWrapper> dataSources = dataSourceEmailTypeTable
-                        .QueryRecordsWhere("EmailTypeID = {0}", email.ID)
-                        .Select((cm) => new Tuple<TriggeredEmailDataSourceEmailType, TriggeredEmailDataSource>(cm, dataSourceTable.QueryRecordWhere("ID = {0}", cm.TriggeredEmailDataSourceID)))
-                        .Select((m) => CreateDataSource(m.Item2, m.Item1))
-                        .ToList();
-
-                    if (dataSources.Any(wrapper => wrapper.DataSource is null))
-                    {
-                        Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
-                        return;
-                    }
-
-                    if (dataSources.Count == 0)
-                        return;
-
-                    IEnumerable<XElement> eventData = dataSources
-                        .Select(dataSource => dataSource.TryProcess(evt));
-
-                    XElement templateData = new XElement("data", eventData);
+                
+                XElement templateData = GetData(email,evt);
+                if (templateData == null)
+                    return;
                     XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                     ApplyChartTransform(attachments, htmlDocument);
                     ApplyFTTTransform(attachments, htmlDocument);
-                    SendEmail(recipients, htmlDocument, attachments,email.FilePath);
-                    LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
-                }
+
+                    SendEmail(recipients, htmlDocument, attachments, (saveToFile ? email.FilePath : null));
+                    if (eventIDs.Count() > 0)
+                        LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
+                
             }
             finally
             {
@@ -163,52 +147,38 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public void SendEmail(EmailType email, Event evt, string recipient)
+        public XElement GetData(EmailType email, Event evt)
         {
-            List<Attachment> attachments = new List<Attachment>();
-
-            try
+            using (AdoDataConnection connection = ConnectionFactory())
             {
-                using (AdoDataConnection connection = ConnectionFactory())
+                /* Load All DataSources */
+                const string DataSourceIDQueryFormat =
+                    "SELECT TriggeredEmailDataSourceID " +
+                    "FROM TriggeredEmailDataSourceEmailType " +
+                    "WHERE EmailTypeID = {0}";
+
+                TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
+                TableOperations<TriggeredEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<TriggeredEmailDataSourceEmailType>(connection);
+
+                List<DataSourceWrapper> dataSources = dataSourceEmailTypeTable
+                    .QueryRecordsWhere("EmailTypeID = {0}", email.ID)
+                    .Select((cm) => new Tuple<TriggeredEmailDataSourceEmailType, TriggeredEmailDataSource>(cm, dataSourceTable.QueryRecordWhere("ID = {0}", cm.TriggeredEmailDataSourceID)))
+                    .Select((m) => CreateDataSource(m.Item2, m.Item1))
+                    .ToList();
+
+                if (dataSources.Any(wrapper => wrapper.DataSource is null))
                 {
-                    /* Load All DataSources */
-                    const string DataSourceIDQueryFormat =
-                        "SELECT TriggeredEmailDataSourceID " +
-                        "FROM TriggeredEmailDataSourceEmailType " +
-                        "WHERE EmailTypeID = {0}";
-
-                    TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
-                    TableOperations<TriggeredEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<TriggeredEmailDataSourceEmailType>(connection);
-
-                    List<DataSourceWrapper> dataSources = dataSourceEmailTypeTable
-                        .QueryRecordsWhere("EmailTypeID = {0}", email.ID)
-                        .Select((cm) => new Tuple<TriggeredEmailDataSourceEmailType, TriggeredEmailDataSource>(cm, dataSourceTable.QueryRecordWhere("ID = {0}", cm.TriggeredEmailDataSourceID)))
-                        .Select((m) => CreateDataSource(m.Item2, m.Item1))
-                        .ToList();
-
-                    if (dataSources.Any(wrapper => wrapper.DataSource is null))
-                    {
-                        Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
-                        return;
-                    }
-
-                    if (dataSources.Count == 0)
-                        return;
-
-                    IEnumerable<XElement> eventData = dataSources
-                        .Select(dataSource => dataSource.TryProcess(evt));
-
-                    XElement templateData = new XElement("data", eventData);
-                    XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
-                    ApplyChartTransform(attachments, htmlDocument);
-                    ApplyFTTTransform(attachments, htmlDocument);
-                    SendEmail(new List<string>() { recipient }, htmlDocument, attachments, null);
-                    
+                    Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
+                    return null;
                 }
-            }
-            finally
-            {
-                attachments?.ForEach(attachment => attachment.Dispose());
+
+                if (dataSources.Count == 0)
+                    return null;
+
+                IEnumerable<XElement> eventData = dataSources
+                    .Select(dataSource => dataSource.TryProcess(evt));
+
+                return new XElement("data", eventData);
             }
         }
 
