@@ -50,6 +50,7 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/email")]
     public class EmailController : ApiController
     {
+        #region [ Members ]
         private class Settings
         {
             public Settings(Action<object> configure) =>
@@ -71,11 +72,16 @@ namespace openXDA.Controllers.WebAPI
 
         private Host Host { get; }
 
-        public EmailController(Host host) =>
+        #region [ Constructor ]
+        public EmailController(Host host)
+        {
             Host = host;
+        }
 
-        [Route("sendVerification/{userid}"), HttpGet]
-        public IHttpActionResult SendVerificationEmail(string userID)
+        #region [ HttpMethods ]
+
+        [Route("sendVerification/{userID}"), HttpGet]
+        public IHttpActionResult SendEmailVerification(string userID)
         {
 
             try 
@@ -85,7 +91,7 @@ namespace openXDA.Controllers.WebAPI
                     ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                     if (account == null)
                         return InternalServerError(new Exception($"User with ID {userID} does not exists"));
-                    SendEmail(account.Email);
+                    SendVerificationEmail(account.Email);
                     return Ok(1);
                 }
 
@@ -96,7 +102,7 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
-        [Route("sendTextVerification/{userid}"), HttpGet]
+        [Route("sendTextVerification/{userID}"), HttpGet]
         public IHttpActionResult SendTextVerification(string userID)
         {
 
@@ -107,7 +113,7 @@ namespace openXDA.Controllers.WebAPI
                     ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                     if (account == null)
                         return InternalServerError(new Exception($"User with ID {userID} does not exists"));
-                    return Ok(SendText(account.Phone + "@msg.fi.google.com"));
+                    return Ok(SendVerificationText(account.Phone + "@msg.fi.google.com"));
                 }
 
             }
@@ -142,10 +148,12 @@ namespace openXDA.Controllers.WebAPI
             }
             return Ok(1);
         }
-        private void SendEmail(string recipient)
+
+        #region [ Methods ]
+        private void SendVerificationEmail(string recipient)
         {
-            ConfigurationLoader configurationLoader = new ConfigurationLoader(Host.ID, () => { return new AdoDataConnection("systemSettings"); });
-            Settings settings = new Settings(configurationLoader.Configure);
+           
+            Settings settings = new Settings(GetConfigurator());
             EmailSection emailSettings = settings.EmailSettings;
 
             string smtpServer = emailSettings.SMTPServer;
@@ -189,13 +197,14 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
-        private int SendText(string recipient)
+
+        //# ToDo use proper Text Message logic for sending Text
+        private int SendVerificationText(string recipient)
         {
             int code = -1;
             Random random = new Random();
             code = random.Next(0, 10) + random.Next(0, 10) * 10 + random.Next(0, 10) * 100 + random.Next(0, 10) * 1000 + random.Next(1, 10) * 10000;
-            ConfigurationLoader configurationLoader = new ConfigurationLoader(Host.ID, () => { return new AdoDataConnection("systemSettings"); });
-            Settings settings = new Settings(configurationLoader.Configure);
+            Settings settings = new Settings(GetConfigurator());
             EmailSection emailSettings = settings.EmailSettings;
 
             string smtpServer = emailSettings.SMTPServer;
@@ -240,6 +249,21 @@ namespace openXDA.Controllers.WebAPI
             return new SmtpClient(host);
         }
 
+        private Action<object> GetConfigurator()
+        {
+            int hostID = Host.ID;
+            ConfigurationLoader configurationLoader = new ConfigurationLoader(hostID, CreateDbConnection);
+            return configurationLoader.Configure;
+        }
+
+        private AdoDataConnection CreateDbConnection()
+        {
+            AdoDataConnection connection = Host.CreateDbConnection();
+            connection.DefaultTimeout = DataExtensions.DefaultTimeoutDuration;
+            return connection;
+        }
+
+        #endregion
 
     }
 }
