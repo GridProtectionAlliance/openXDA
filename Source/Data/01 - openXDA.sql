@@ -2309,7 +2309,19 @@ Create Table EventWorstDisturbance (
 GO
 
 CREATE NONCLUSTERED INDEX IX_EventWorstDisturbance_EventID
-ON EventWorstDisturbance ( EventID ASC )
+ON EventWorstDisturbance(EventID)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventWorstDisturbance_WorstDisturbanceID
+ON EventWorstDisturbance(WorstDisturbanceID)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventWorstDisturbance_WorstLLDisturbanceID
+ON EventWorstDisturbance(WorstLLDisturbanceID)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventWorstDisturbance_WorstLNDisturbanceID
+ON EventWorstDisturbance(WorstLNDisturbanceID)
 GO
 
 
