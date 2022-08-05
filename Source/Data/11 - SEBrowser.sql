@@ -55,69 +55,49 @@ CREATE VIEW [dbo].[SEBrowser.EventSearchEventView] AS
 GO
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchDetailsView] AS
-	SELECT
-		EventWorstDisturbance.EventID AS EventID,
-		NULL AS FaultID,
-		Disturbance.ID AS DisturbanceID,
-		Phase.Name AS [Phase],
-		FORMAT(Disturbance.DurationCycles, 'F2') AS [Duration (cycles)],
-		Format(Disturbance.DurationSeconds, 'F4') AS [Duration (sec)],
-		Disturbance.PerUnitMagnitude AS [MagDurMagnitude],
-		Disturbance.DurationSeconds AS [MagDurDuration],
-		Format((SELECT D.PerUnitMagnitude FROM Disturbance D WHERE D.ID = EventWorstDisturbance.WorstLLDisturbanceID )*100.0,'F2') as [Worst LL Magnitude (%nominal)],
-        Format((SELECT D.PerUnitMagnitude FROM Disturbance D WHERE D.ID = EventWorstDisturbance.WorstLNDisturbanceID )*100.0,'F2')  as [Worst LN Magnitude (%nominal)],
-		EventType.Name AS [Event Type],
-		NULL AS [Fault Dist Alg],
-		NULL AS [Fault Dist],
-		NULL AS [Fault Current Mag],
-		NULL AS [Fault Inception]
-	FROM EventWorstDisturbance  LEFT JOIN
-		Disturbance ON EventWorstDisturbance.WorstDisturbanceID = Disturbance.ID LEFT JOIN
-		Phase ON Disturbance.PhaseID = Phase.ID LEFT JOIN
-		EventType ON Disturbance.EventTypeID = EventType.ID
-	UNION ALL
-	SELECT 
-		Event.ID AS EventID,
-		NULL AS FaultID,
-		NULL AS DisturbanceID,
-		NULL AS [Phase],
-		NULL AS [Duration (cycles)],
-		NULL AS [Duration (sec)],
-		NULL AS [MagDurMagnitude],
-		NULL AS [MagDurDuration],
-		NULL as [Worst LL Magnitude (%nominal)],
-        NULL  as [Worst LN Magnitude (%nominal)],
-		EventType.Name AS [Event Type],
-		NULL AS [Fault Dist Alg],
-		NULL AS [Fault Dist],
-		NULL AS [Fault Current Mag],
-		NULL AS [Fault Inception]
-	FROM Event LEFT JOIN
-		EventType ON EventType.ID = Event.EventTypeID 
-	WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name IN ('BreakerOpen','Other'))
-	UNION ALL
-	SELECT 
-		Event.ID AS EventID,
-		FaultSummary.FaultNumber AS FaultID,
-		NULL AS DisturbanceID,
-		FaultSummary.FaultType AS [Phase],
-		FORMAT(FaultSummary.DurationCycles, 'F2')  AS [Duration (cycles)],
-		FORMAT(FaultSummary.DurationSeconds, 'F4')  AS [Duration (sec)],
-		NULL AS [MagDurMagnitude],
-		NULL AS [MagDurDuration],
-		NULL as [Worst LL Magnitude (%nominal)],
-        NULL  as [Worst LN Magnitude (%nominal)],
-		EventType.Name AS [Event Type],
-		FaultSummary.Algorithm AS [Fault Dist Alg],
-		FORMAT(FaultSummary.Distance, 'F2') AS [Fault Dist],
-		FORMAT(FaultSummary.CurrentMagnitude, 'F0') AS [Fault Current Mag],
-		FORMAT(FaultSummary.Inception,'HH:mm:ss.fffffff') AS [Fault Inception]
-	FROM Event LEFT JOIN
-		EventType ON EventType.ID = Event.EventTypeID LEFT JOIN
-		FaultSummary ON FaultSummary.IsSelectedAlgorithm <> 0 AND
-			FaultSummary.IsValid <> 0 AND FaultSummary.IsSuppressed = 0 AND
-			FaultSummary.EventID = Event.ID
-	WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name IN ('Fault','RecloseIntoFault'))
+SELECT
+    Event.ID EventID,
+    FaultSummary.FaultNumber FaultID,
+    WorstDisturbance.ID DisturbanceID,
+    DisturbancePhase.Name Phase,
+    FORMAT(COALESCE(WorstDisturbance.DurationCycles, FaultSummary.DurationCycles), 'F2') [Duration (cycles)],
+    FORMAT(COALESCE(WorstDisturbance.DurationSeconds, FaultSummary.DurationSeconds), 'F4') [Duration (sec)],
+    WorstDisturbance.PerUnitMagnitude MagDurMagnitude,
+    WorstDisturbance.DurationSeconds MagDurDuration,
+    CASE WHEN WorstLLDisturbance.PerUnitMagnitude <> -1E308
+        THEN FORMAT(WorstLLDisturbance.PerUnitMagnitude * 100.0, 'F2')
+        ELSE 'NaN'
+    END [Worst LL Magnitude (%nominal)],
+    CASE WHEN WorstLNDisturbance.PerUnitMagnitude <> -1E308
+        THEN FORMAT(WorstLNDisturbance.PerUnitMagnitude * 100.0, 'F2')
+        ELSE 'NaN'
+    END [Worst LN Magnitude (%nominal)],
+    EventType.Name [Event Type],
+    FaultSummary.Algorithm [Fault Dist Alg],
+    FORMAT(FaultSummary.Distance, 'F2') [Fault Dist],
+    FORMAT(FaultSummary.CurrentMagnitude, 'F0') [Fault Current Mag],
+    FORMAT(FaultSummary.Inception,'HH:mm:ss.fffffff') [Fault Inception]
+FROM
+    Event JOIN
+    EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
+    EventWorstDisturbance ON
+        EventWorstDisturbance.EventID = Event.ID AND
+        EventType.Name IN ('Sag', 'Swell', 'Interruption', 'Transient') LEFT OUTER JOIN
+    Disturbance WorstDisturbance ON EventWorstDisturbance.WorstDisturbanceID = WorstDisturbance.ID LEFT OUTER JOIN
+    Disturbance WorstLLDisturbance ON EventWorstDisturbance.WorstLLDisturbanceID = WorstLLDisturbance.ID LEFT OUTER JOIN
+    Disturbance WorstLNDisturbance ON EventWorstDisturbance.WorstLNDisturbanceID = WorstLNDisturbance.ID LEFT OUTER JOIN
+    Phase DisturbancePhase ON WorstDisturbance.PhaseID = DisturbancePhase.ID LEFT OUTER JOIN
+    EventType DisturbanceType ON WorstDisturbance.EventTypeID = DisturbanceType.ID LEFT OUTER JOIN
+    FaultSummary ON
+        FaultSummary.EventID = Event.ID AND
+        FaultSummary.IsSelectedAlgorithm <> 0 AND
+        FaultSummary.IsValid <> 0 AND
+        FaultSummary.IsSuppressed = 0 AND
+        EventType.Name IN ('Fault', 'RecloseIntoFault')
+WHERE
+    EventWorstDisturbance.ID IS NOT NULL OR
+    FaultSummary.ID IS NOT NULL OR
+    EventType.Name IN ('BreakerOpen', 'Other')
 GO
 
 
