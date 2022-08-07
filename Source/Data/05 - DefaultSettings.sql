@@ -702,6 +702,11 @@ GO
 INSERT INTO TriggeredEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VALUES
 ('SQL','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.SQLDataSource','sql')
 GO
+
+INSERT INTO TriggeredEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VALUES
+('PQI','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.PQIDataSource','pqi')
+GO
+
 -- Standard MAgDur Curves --
 INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area) VALUES (N'ITIC', 100, 0.000001,5,0, NULL, NULL, NULL)
 GO
