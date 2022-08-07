@@ -2132,6 +2132,14 @@ GO
 INSERT INTO EmailCategory(Name) VALUES('Alarm')
 GO
 
+CREATE TABLE UserAccountCarrier
+(
+    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    CarrierID INT NOT NULL REFERENCES CellCarrier(ID),
+    UserAccountID Guid NOT NULL REFERENCES UserAccount(ID)
+)
+GO
+
 -- ------ --
 -- Events --
 -- ------ --

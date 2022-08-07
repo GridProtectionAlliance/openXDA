@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  SMSProvider.cs - Gbtc
+//  CellCarrier.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -29,9 +29,9 @@ namespace openXDA.Model
     [DeleteRoles("Administrator")]
     [PatchRoles("Administrator")]
     [PostRoles("Administrator")]
-    [TableName("Carrier")]
+    [TableName("CellCarrier")]
     [UseEscapedName]
-    public class SMSProvider   
+    public class CellCarrier
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
@@ -40,4 +40,5 @@ namespace openXDA.Model
 
         public string Transform { get; set; }
     }
+
 }
