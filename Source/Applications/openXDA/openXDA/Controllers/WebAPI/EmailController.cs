@@ -117,7 +117,10 @@ namespace openXDA.Controllers.WebAPI
                     ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                     if (account == null)
                         return InternalServerError(new Exception($"User with ID {userID} does not exists"));
-                    return Ok(SendVerificationText(account.Phone + "@msg.fi.google.com"));
+                    CellCarrier cellCarrier = new TableOperations<CellCarrier>(connection).QueryRecordWhere("ID = (SELECT CarrierID FROM UserAccountCarrier WHERE UserAccountID = {0} )", account.ID);
+                    if (cellCarrier == null)
+                        return InternalServerError(new Exception($"User has not specified a Cell Carrier"));
+                    return Ok(SendVerificationText(string.Format(cellCarrier.Transform,account.Phone)));
                 }
 
             }

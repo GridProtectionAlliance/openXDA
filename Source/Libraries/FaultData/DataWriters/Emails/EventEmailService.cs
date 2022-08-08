@@ -193,6 +193,7 @@ namespace FaultData.DataWriters.Emails
                 return new List<string>();
 
             string emailAddressQuery;
+            Func<DataRow, string> processor;
 
             if (!emailType.SMS)
             {
@@ -206,11 +207,23 @@ namespace FaultData.DataWriters.Emails
                     "    UserAccount.EmailConfirmed <> 0 AND " +
                     "    UserAccount.Approved <> 0 AND " +
                     "    UserAccountEmailType.AssetGroupID IN ({1})";
+                processor = row => row.ConvertField<string>("Email");
             }
             else
             {
-                // Needs to be implemented at some point
-                return new List<string>();
+                emailAddressQuery =
+                     "SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
+                     "FROM " +
+                     "    UserAccountEmailType JOIN " +
+                     "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
+                     "    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
+                     "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
+                     "WHERE " +
+                     "    UserAccountEmailType.EmailTypeID = {0} AND " +
+                     "    UserAccount.PhoneConfirmed <> 0 AND " +
+                     "    UserAccount.Approved <> 0";
+
+                processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
             }
 
             using (AdoDataConnection connection = ConnectionFactory())
@@ -218,7 +231,7 @@ namespace FaultData.DataWriters.Emails
             {
                 return emailAddressTable
                     .Select()
-                    .Select(row => row.ConvertField<string>("Email"))
+                    .Select(processor)
                     .ToList();
             }
         }
@@ -227,6 +240,7 @@ namespace FaultData.DataWriters.Emails
         public List<string> GetRecipients(EmailType emailType)
         {
             string emailAddressQuery;
+            Func<DataRow, string> processor;
 
             if (!emailType.SMS)
             {
@@ -239,11 +253,24 @@ namespace FaultData.DataWriters.Emails
                    "    UserAccountEmailType.EmailTypeID = {0} AND " +
                    "    UserAccount.EmailConfirmed <> 0 AND " +
                    "    UserAccount.Approved <> 0";
+
+                processor = row => row.ConvertField<string>("Email");
             }
             else
             {
-                // Needs to be implemented at some point
-                return new List<string>();
+                emailAddressQuery =
+                  "SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
+                  "FROM " +
+                  "    UserAccountEmailType JOIN " +
+                  "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
+                  "    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
+                  "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
+                  "WHERE " +
+                  "    UserAccountEmailType.EmailTypeID = {0} AND " +
+                  "    UserAccount.PhoneConfirmed <> 0 AND " +
+                  "    UserAccount.Approved <> 0";
+
+                processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
             }
 
             using (AdoDataConnection connection = ConnectionFactory())
@@ -251,7 +278,7 @@ namespace FaultData.DataWriters.Emails
             {
                 return emailAddressTable
                     .Select()
-                    .Select(row => row.ConvertField<string>("Email"))
+                    .Select(processor)
                     .ToList();
             }
         }
