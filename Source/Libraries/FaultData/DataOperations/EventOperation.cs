@@ -216,12 +216,10 @@ namespace FaultData.DataOperations
                    {
                        return new ChannelData()
                        {
-                           FileGroupID = meterDataSet.FileGroup.ID,
-                           RunTimeID = i,
-                           TimeDomainData = item.Value,
-                           MarkedForDeletion = 0,
                            SeriesID = item.Key,
-                           EventID = evt.ID
+                           EventID = evt.ID,
+                           TimeDomainData = item.Value,
+                           MarkedForDeletion = 0
                        };
                    }).ToList();
 
