@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Equipment.cs - Gbtc
+//  PQIModel.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,59 +16,21 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/22/2021 - Stephen C. Wills
+//  08/09/2022 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+using System;
+
 namespace openXDA.PQI
 {
-    /// <summary>
-    /// Impacted Equipment
-    /// </summary>
-    /// <note>
-    /// This does not correspond to the PQI Equipment model. For the PQI model see <see cref="PQIEquipment"/>
-    /// </note>
-    public class Equipment
+
+    public interface PQIModel
     {
         /// <summary>
-        /// Name of the facility
+        /// Path to query this Model
         /// </summary>
-        public string Facility { get; set; }
-
-        /// <summary>
-        /// Title of the area
-        /// </summary>
-        public string Area { get; set; }
-
-        /// <summary>
-        /// Title of the equipment
-        /// </summary>
-        public string SectionTitle { get; set; }
-
-        /// <summary>
-        /// Rank of the equipment
-        /// </summary>
-        public int SectionRank { get; set; }
-
-        /// <summary>
-        /// Model of the component
-        /// </summary>
-        public string ComponentModel { get; set; }
-
-        /// <summary>
-        /// Name of the manufacturer
-        /// </summary>
-        public string Manufacturer { get; set; }
-
-        /// <summary>
-        /// Name of the series
-        /// </summary>
-        public string Series { get; set; }
-
-        /// <summary>
-        /// Type of component
-        /// </summary>
-        public string ComponentType { get; set; }
+        string Path { get; set; }
     }
 }

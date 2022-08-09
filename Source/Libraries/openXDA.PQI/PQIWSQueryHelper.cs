@@ -73,6 +73,39 @@ namespace openXDA.PQI
                 = new EquipmentComparer();
         }
 
+        private class PQIModelComparer<T>: IEqualityComparer<T> where T: class, PQIModel
+        {
+            public bool Equals(T x, T y)
+            {
+                if (x is null && y is null)
+                    return true;
+
+                if (x is null || y is null)
+                    return false;
+
+                object xKey = GetKey(x);
+                object yKey = GetKey(y);
+                return Equals(xKey, yKey);
+            }
+
+            public int GetHashCode(T facilityAudit)
+            {
+                object key = GetKey(facilityAudit);
+                return key.GetHashCode();
+            }
+
+            private object GetKey(T facilityAudit)
+            {
+                return new
+                {
+                    facilityAudit.Path
+                };
+            }
+
+            public static PQIModelComparer<T> Instance { get; }
+                = new PQIModelComparer<T>();
+        }
+
         private const string FacilityDisturbanceQueryFormat =
             "SELECT " +
             "    MeterFacility.FacilityID, " +
@@ -144,6 +177,48 @@ namespace openXDA.PQI
             }
         }
 
+        private async Task<List<Tuple<TestCurve,List<TestCurvePoint>>>> GetAllCurvesAsync(AdoDataConnection connection, int eventID, CancellationToken cancellationToken = default)
+        {
+            async Task<List<FacilityAudit>> GetFacilityAudits(DataRow facilityDisturbance)
+            {
+                int facilityID = facilityDisturbance.ConvertField<int>("FacilityID");
+                return await PQIWSClient.GetFacilityAudits(facilityID, cancellationToken);
+            }
+
+            async Task<List<PQIEquipment>> GetAuditedEquipment(FacilityAudit facilityAudit)
+            {
+                return await PQIWSClient.GetAuditedEquipment(facilityAudit, cancellationToken);
+            }
+
+            async Task<List<AuditCurve>> GetAuditCurves(PQIEquipment equipment)
+            {
+                return await PQIWSClient.GetAuditCurve(equipment, cancellationToken);
+            }
+
+            async Task<TestCurve> GetTestCurve(AuditCurve auditCurve)
+            {
+                return await PQIWSClient.GetTestCurve(auditCurve, cancellationToken);
+            }
+
+            async Task<Tuple<TestCurve,List<TestCurvePoint>>> GetTestCurvePoints(TestCurve testCurve)
+            {
+                return new Tuple<TestCurve, List<TestCurvePoint>>(testCurve, (await PQIWSClient.GetTestCurvePoints(testCurve, cancellationToken)));                
+            }
+
+            using (DataTable table = connection.RetrieveData(FacilityDisturbanceQueryFormat, eventID))
+            {
+                var tasks = table
+                    .AsEnumerable()
+                    .Select(GetFacilityAudits);
+
+                List<FacilityAudit>[] facilityAudits = await Task.WhenAll(tasks);
+                List<PQIEquipment>[] auditedEquipment = await Task.WhenAll(Flatten(facilityAudits).Select(GetAuditedEquipment));
+                List<AuditCurve>[] auditCurves = await Task.WhenAll(Flatten(auditedEquipment).Select(GetAuditCurves));
+                TestCurve[] testCurves = await Task.WhenAll(Flatten(auditCurves).Select(GetTestCurve));
+
+                return (await Task.WhenAll(testCurves.Distinct().Select(GetTestCurvePoints))).ToList();
+            }
+        }
         private async Task<List<Equipment>> GetAllImpactedEquipmentAsync(AdoDataConnection connection, int eventID, CancellationToken cancellationToken)
         {
             async Task<List<Equipment>> GetImpactedEquipmentAsync(DataRow facilityDisturbance)
@@ -168,6 +243,11 @@ namespace openXDA.PQI
         private List<Equipment> Flatten(IEnumerable<IEnumerable<Equipment>> equipmentLists) => equipmentLists
             .SelectMany(list => list)
             .Distinct(EquipmentComparer.Instance)
+            .ToList();
+
+        private List<T> Flatten<T>(IEnumerable<IEnumerable<T>> facilityAuditLists) where T: class,PQIModel => facilityAuditLists
+            .SelectMany(list => list)
+            .Distinct(PQIModelComparer<T>.Instance)
             .ToList();
     }
 }

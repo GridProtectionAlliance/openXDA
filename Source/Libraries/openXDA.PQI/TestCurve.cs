@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Equipment.cs - Gbtc
+//  TestCurve.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,59 +16,81 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/22/2021 - Stephen C. Wills
+//  08/09/2022 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+using System;
+
 namespace openXDA.PQI
 {
-    /// <summary>
-    /// Impacted Equipment
-    /// </summary>
-    /// <note>
-    /// This does not correspond to the PQI Equipment model. For the PQI model see <see cref="PQIEquipment"/>
-    /// </note>
-    public class Equipment
+   
+    public class TestCurve
     {
         /// <summary>
-        /// Name of the facility
+        /// Path to query this test curve (aka ride-through curve)
         /// </summary>
-        public string Facility { get; set; }
+        public string Path { get; set; }
 
         /// <summary>
-        /// Title of the area
+        /// Path to query the component this curve was assigned to
         /// </summary>
-        public string Area { get; set; }
+        public string Component { get; set; }
 
         /// <summary>
-        /// Title of the equipment
+        /// Path to query the audit curves associated with this test curve
         /// </summary>
-        public string SectionTitle { get; set; }
+        public string AuditCurves { get; set; }
 
         /// <summary>
-        /// Rank of the equipment
+        /// Path to query the points in the curve
         /// </summary>
-        public int SectionRank { get; set; }
+        public string Points { get; set; }
 
         /// <summary>
-        /// Model of the component
+        /// Name of the curve
         /// </summary>
-        public string ComponentModel { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
-        /// Name of the manufacturer
+        /// Description of the curve
         /// </summary>
-        public string Manufacturer { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
-        /// Name of the series
+        /// Entity
         /// </summary>
-        public string Series { get; set; }
+        public string Entity { get; set; }
 
         /// <summary>
-        /// Type of component
+        /// Location
         /// </summary>
-        public string ComponentType { get; set; }
+        public string Location { get; set; }
+
+        /// <summary>
+        /// Investigator
+        /// </summary>
+        public string Investigator { get; set; }
+
+        /// <summary>
+        /// Date
+        /// </summary>
+        public DateTime Date { get; set; }
+
+        /// <summary>
+        /// Additional notes about the curve
+        /// </summary>
+        public string Notes { get; set; }
+
+        /// <summary>
+        /// Frequency (Hz) of the voltage
+        /// </summary>
+        public double Frequency { get; set; }
+
+        /// <summary>
+        /// Voltage level (in volts) during normal conditions
+        /// </summary>
+        public double NominalVoltage { get; set; }
     }
 }

@@ -50,7 +50,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PQIModel.cs" />
+    <Compile Include="TestCurvePoint.cs" />
+    <Compile Include="TestCurve.cs" />
+    <Compile Include="AuditCurve.cs" />
+    <Compile Include="PQIEquipment.cs" />
     <Compile Include="Equipment.cs" />
+    <Compile Include="FacilityAudit.cs" />
     <Compile Include="Facility.cs" />
     <Compile Include="PingClient.cs" />
     <Compile Include="FacilityInfo.cs" />

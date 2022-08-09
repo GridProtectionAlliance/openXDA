@@ -126,6 +126,135 @@ namespace openXDA.PQI
                 return await response.Content.ReadAsAsync<List<Equipment>>();
         }
 
+        public async Task<List<FacilityAudit>> GetFacilityAudits(int facilityID, CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, "FacilityAudit");
+            string queryString = $"facilityID={facilityID}";
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}?{queryString}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<List<FacilityAudit>>();
+        }
+
+        public async Task<List<PQIEquipment>> GetAuditedEquipment(int facilityAuditID, CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, "Equipment");
+            string queryString = $"facilityAuditID={facilityAuditID}";
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}?{queryString}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<List<PQIEquipment>>();
+        }
+
+        public async Task<List<PQIEquipment>> GetAuditedEquipment(FacilityAudit facilityAudit, CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, facilityAudit.Equipment);
+            
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<List<PQIEquipment>>();
+        }
+
+        public async Task<List<AuditCurve>> GetAuditCurve(PQIEquipment equipment, CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, equipment.AuditCurves);
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<List<AuditCurve>>();
+        }
+
+        public async Task<List<AuditCurve>> GetAuditCurve(int equipmentID, CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, "AuditCurve");
+            string queryString = $"equipmentID={equipmentID}";
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}?{queryString}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<List<AuditCurve>>();
+        }
+
+        public async Task<TestCurve> GetTestCurve(AuditCurve auditCurve, CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, auditCurve.Curve);
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<TestCurve>();
+        }
+
+        public async Task<List<TestCurvePoint>> GetTestCurvePoints(TestCurve testCurve, CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, testCurve.Points);
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<List<TestCurvePoint>>();
+        }
+
         private static string BuildURL(params string[] parts)
         {
             const string Separator = "/";

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Equipment.cs - Gbtc
+//  PQIEquipment.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,59 +16,50 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/22/2021 - Stephen C. Wills
+//  08/09/2022 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 namespace openXDA.PQI
 {
-    /// <summary>
-    /// Impacted Equipment
-    /// </summary>
-    /// <note>
-    /// This does not correspond to the PQI Equipment model. For the PQI model see <see cref="PQIEquipment"/>
-    /// </note>
-    public class Equipment
+   
+    public class PQIEquipment: PQIModel
     {
         /// <summary>
-        /// Name of the facility
+        /// Path to query this equipment
         /// </summary>
-        public string Facility { get; set; }
+        public string Path { get; set; }
 
         /// <summary>
-        /// Title of the area
+        /// Path to query the facility audit in which the equipment was audited
         /// </summary>
-        public string Area { get; set; }
+        public string FacilityAudit { get; set; }
+
+        /// <summary>
+        /// Path to query the areas in which the equipment resides
+        /// </summary>
+        public string Areas { get; set; }
+
+        /// <summary>
+        /// Path to query the audit curves assigned to the equipment
+        /// </summary>
+        public string AuditCurves { get; set; }
 
         /// <summary>
         /// Title of the equipment
         /// </summary>
-        public string SectionTitle { get; set; }
+        public string Title { get; set; }
 
         /// <summary>
         /// Rank of the equipment
         /// </summary>
-        public int SectionRank { get; set; }
+        public int Rank { get; set; }
 
         /// <summary>
-        /// Model of the component
+        /// Content of the equipment
         /// </summary>
-        public string ComponentModel { get; set; }
+        public string Content { get; set; }
 
-        /// <summary>
-        /// Name of the manufacturer
-        /// </summary>
-        public string Manufacturer { get; set; }
-
-        /// <summary>
-        /// Name of the series
-        /// </summary>
-        public string Series { get; set; }
-
-        /// <summary>
-        /// Type of component
-        /// </summary>
-        public string ComponentType { get; set; }
     }
 }

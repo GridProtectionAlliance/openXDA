@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Equipment.cs - Gbtc
+//  AuditCurve.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,59 +16,41 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/22/2021 - Stephen C. Wills
+//  08/09/2022 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 namespace openXDA.PQI
 {
-    /// <summary>
-    /// Impacted Equipment
-    /// </summary>
-    /// <note>
-    /// This does not correspond to the PQI Equipment model. For the PQI model see <see cref="PQIEquipment"/>
-    /// </note>
-    public class Equipment
+   
+    public class AuditCurve: PQIModel
     {
         /// <summary>
-        /// Name of the facility
+        /// Path to query this audit curve
         /// </summary>
-        public string Facility { get; set; }
+        public string Path { get; set; }
 
         /// <summary>
-        /// Title of the area
+        /// Path to query the equipment this audit curve applies to
         /// </summary>
-        public string Area { get; set; }
+        public string Equipment { get; set; }
 
         /// <summary>
-        /// Title of the equipment
+        /// Path to query the areas in which the equipment resides
         /// </summary>
-        public string SectionTitle { get; set; }
+        public string Curve { get; set; }
 
         /// <summary>
-        /// Rank of the equipment
+        /// Path to query the curve itself
         /// </summary>
-        public int SectionRank { get; set; }
+        public string AuditCurves { get; set; }
 
         /// <summary>
-        /// Model of the component
+        /// The type of the curve (TOLERANCE, PROTECTION, PQDATA)
         /// </summary>
-        public string ComponentModel { get; set; }
+        public string CurveType { get; set; }
 
-        /// <summary>
-        /// Name of the manufacturer
-        /// </summary>
-        public string Manufacturer { get; set; }
 
-        /// <summary>
-        /// Name of the series
-        /// </summary>
-        public string Series { get; set; }
-
-        /// <summary>
-        /// Type of component
-        /// </summary>
-        public string ComponentType { get; set; }
     }
 }
