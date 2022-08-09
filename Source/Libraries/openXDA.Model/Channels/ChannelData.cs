@@ -53,160 +53,167 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int FileGroupID { get; set; }
-
-        public int RunTimeID { get; set; }
-
-        public byte[] TimeDomainData { get; set; }
-
-        // Not sure we need this but it was in EventData
-        public int MarkedForDeletion { get; set; }
-
-        //This should be ChannelID not really....
         public int SeriesID { get; set; }
 
         public int EventID { get; set; }
 
-        // This is for backwards compatibility so we can point to data that is still in a EventDataBlob.
-        // As we pull up the data it will be moved out but if this is the first time Calling the ChannelData Blob
-        // it just points back to the eventdata Blob.
-        public int? EventDataID { get; set; }
+        public byte[] TimeDomainData { get; set; }
+
+        public int MarkedForDeletion { get; set; }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Adjusts the TimeDomain Data by Moving it a certain ammount of Time
+        /// </summary>
+        /// <param name="ticks"> The number of Ticks the Data is moved. For moving it backwards in Time this needs to be < 0 </param>
+        public void AdjustData(Ticks ticks)
+        {
+            // Initially we assume Data is already migrated...
+            if (TimeDomainData == null)
+                return;
+
+            Tuple<int, List<DataPoint>> decompressed = Decompress(TimeDomainData)[0];
+            List<DataPoint> data = decompressed.Item2;
+
+            foreach (DataPoint dataPoint in data)
+                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+
+            TimeDomainData = ToData(data, decompressed.Item1);
+        }
 
         #endregion
 
         #region [ Static ]
 
-        // This is going through this function to migtrate all EventdataBlobs over to ChannelDataBlobs as they are read eventually removing the legacy table (eventData)
         public static List<byte[]> DataFromEvent(int eventID, Func<AdoDataConnection> connectionFactory)
         {
-            List<byte[]> result = new List<byte[]>();
-            List<int> directChannelIDs = new List<int>();
-
-            //This Should start by getting multiple datasets
-            string query = "SELECT SeriesID FROM ChannelData WHERE EventID = {0}";
-
             using (AdoDataConnection connection = connectionFactory())
-            using (DataTable table = connection.RetrieveData(query, eventID))
             {
-                foreach (DataRow row in table.Rows)
-                {
-                    int seriesID = row.Field<int>("SeriesID");
+                TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+                Event evt = eventTable.QueryRecordWhere("ID = {0}", eventID);
 
-                    ChannelData channelData = new TableOperations<ChannelData>(connection).QueryRecordWhere("SeriesID = {0} AND EventID = {1}", seriesID, eventID);
-                    if (channelData == null) continue;
-
-                    if (channelData.TimeDomainData == null)
-                    {
-                        channelData.TimeDomainData = ProcessLegacyBlob(eventID, seriesID, connection);
-                        if (channelData.TimeDomainData == null) continue;
-
-                    }
-                    directChannelIDs.Add(connection.ExecuteScalar<int>("SELECT ChannelID FROM Series WHERE ID = {0}", seriesID));
-                    result.Add(channelData.TimeDomainData);
-                }
-
-                //This Will get the extended Data (throught connections)....
-                Asset asset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = (SELECT AssetID FROM Event WHERE ID = {0})", eventID);
+                TableOperations<Asset> assetTable = new TableOperations<Asset>(connection);
+                Asset asset = assetTable.QueryRecordWhere("ID = {0}", evt.AssetID);
                 asset.ConnectionFactory = connectionFactory;
-                List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
 
-                foreach (int channelID in channelIDs)
+                List<Channel> channels = asset.DirectChannels
+                    .Concat(asset.ConnectedChannels)
+                    .ToList();
+
+                if (!channels.Any())
+                    return new List<byte[]>();
+
+                IEnumerable<int> assetIDs = channels
+                    .Select(channel => channel.AssetID)
+                    .Distinct();
+
+                foreach (int assetID in assetIDs)
+                    MigrateLegacyBlob(connection, evt.FileGroupID, assetID, evt.StartTime);
+
+                List<byte[]> eventData = new List<byte[]>();
+
+                foreach (Channel channel in channels)
                 {
-                    if (directChannelIDs.Contains(channelID))
+                    const string DataQueryFormat =
+                        "SELECT ChannelData.TimeDomainData " +
+                        "FROM " +
+                        "    ChannelData JOIN " +
+                        "    Series ON ChannelData.SeriesID = Series.ID JOIN " +
+                        "    Event ON ChannelData.EventID = Event.ID " +
+                        " WHERE " +
+                        "    Event.FileGroupID = {0} AND " +
+                        "    Series.ChannelID = {1} AND " +
+                        "    Event.StartTime = {2}";
+
+                    object startTime2 = ToDateTime2(connection, evt.StartTime);
+                    byte[] timeDomainData = connection.ExecuteScalar<byte[]>(DataQueryFormat, evt.FileGroupID, channel.ID, startTime2);
+
+                    if (timeDomainData is null)
                         continue;
 
-                    //Find any Series where Event happens at the same time and ChannelID is ChannelID 
-                    //-> note that this assumes any Channel is only associated with a single event at a time
-
-                    int channelDataID = connection.ExecuteScalar<int>("SELECT COUNT(ChannelData.ID) FROM ChannelData LEFT JOIN Event ON ChannelData.EventID = Event.ID " +
-                        "LEFT JOIN Series ON ChannelData.SeriesID = Series.ID " +
-                        "WHERE(Series.ChannelID = {0}) AND(Event.MeterID = (SELECT EV.MeterID FROM Event EV WHERE EV.ID = {1})) AND " +
-                        "(Event.StartTime <= (SELECT EV.EndTime FROM Event EV WHERE EV.ID = {1})) AND " +
-                        "(Event.EndTime >= (SELECT EV.StartTime FROM Event EV WHERE EV.ID = {1}))", channelID, eventID);
-
-                    if (channelDataID == 0)
-                        continue;
-
-                    channelDataID = connection.ExecuteScalar<int>("SELECT ChannelData.ID FROM ChannelData LEFT JOIN Event ON ChannelData.EventID = Event.ID " +
-                        "LEFT JOIN Series ON ChannelData.SeriesID = Series.ID " +
-                        "WHERE(Series.ChannelID = {0}) AND(Event.MeterID = (SELECT EV.MeterID FROM Event EV WHERE EV.ID = {1})) AND " +
-                        "(Event.StartTime <= (SELECT EV.EndTime FROM Event EV WHERE EV.ID = {1})) AND " +
-                        "(Event.EndTime >= (SELECT EV.StartTime FROM Event EV WHERE EV.ID = {1}))", channelID, eventID);
-
-                    byte[] singleSeriesData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM ChannelData WHERE ID = {0}"
-                            , channelDataID);
-
-                    if (singleSeriesData == null)
-                    {
-                        ChannelData channelData = new TableOperations<ChannelData>(connection).QueryRecordWhere("ID = {0}", channelDataID);
-                        singleSeriesData = ProcessLegacyBlob(channelData.EventID, channelData.SeriesID, connection);
-                    }
-
-                    result.Add(singleSeriesData);
+                    eventData.Add(timeDomainData);
                 }
-            }
 
-            return result;
+                return eventData;
+            }
         }
 
-        // This is going through this function to migtrate all EventdataBlobs over to ChannelDataBlobs as they are read eventually removing the legacy table (eventData)
         public static byte[] DataFromEvent(int eventID, int channelID, Func<AdoDataConnection> connectionFactory)
         {
             using (AdoDataConnection connection = connectionFactory())
             {
-                ChannelDetail channel = new TableOperations<ChannelDetail>(connection).QueryRecordWhere("ID = {0}", channelID);
-                channel.ConnectionFactory = connectionFactory;
-                if (channel.MeasurementCharacteristic != "Instantaneous")
-                    channel = new TableOperations<ChannelDetail>(connection).QueryRecordWhere("MeasurementTypeID = {0} AND MeasurementCharacteristic = 'Instantaneous' AND PhaseID = {1} AND MeterID = {2} AND AssetID = {3}", channel.MeasurementTypeID, channel.PhaseID, channel.MeterID, channel.AssetID);
+                TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+                Event evt = eventTable.QueryRecordWhere("ID = {0}", eventID);
+                MigrateLegacyBlob(connection, evt);
 
-                Series series = new TableOperations<Series>(connection).QueryRecordWhere("ChannelID = {0} AND SeriesTypeID = (SELECT ID FROM SeriesType WHERE Name = 'Values')", channel.ID);
-                ChannelData channelData = new TableOperations<ChannelData>(connection).QueryRecordWhere("SeriesID = {0} AND EventID = {1}", series.ID, eventID);
-                if (channelData?.TimeDomainData == null)
-                {
-                    channelData.TimeDomainData = ProcessLegacyBlob(eventID, series.ID, connection);
-                }
+                const string QueryFormat =
+                    "SELECT ChannelData.TimeDomainData " +
+                    "FROM " +
+                    "    ChannelData JOIN " +
+                    "    Series ON ChannelData.SeriesID = Series.ID " +
+                    "WHERE " +
+                    "    ChannelData.EventID = {0} AND " +
+                    "    Series.ChannelID = {1}";
 
-                return channelData.TimeDomainData;
+                return connection.ExecuteScalar<byte[]>(QueryFormat, eventID, channelID);
             }
         }
 
-
-        /// <summary>
-        /// Decompress a EventData Blob, add it as multiple CHannelData Blobs and remove it from EventData
-        /// </summary>
-        /// <param name="eventID"> The ID of the Event</param>
-        /// <param name="requestedSeriesID"> The ID of the Series actually requested. </param>
-        /// <param name="connection"> An <see cref="AdoDataConnection"/>.</param>
-        /// <returns> A single Channel Data Blob for the  requested Series</returns>
-        private static byte[] ProcessLegacyBlob(int eventID, int requestedSeriesID, AdoDataConnection connection)
+        private static void MigrateLegacyBlob(AdoDataConnection connection, int fileGroupID, int assetID, DateTime startTime)
         {
-            int? eventDataID = connection.ExecuteScalar<int?>("SELECT EventDataID FROM ChannelData WHERE SeriesID = {0} AND EventID = {1}", requestedSeriesID, eventID);
-            if (eventDataID == null) return null;
+            const string AssetQueryFilter = "FileGroupID = {0} AND AssetID = {1} AND StartTime = {2}";
+            object startTime2 = ToDateTime2(connection, startTime);
 
+            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+            Event evt = eventTable.QueryRecordWhere(AssetQueryFilter, fileGroupID, assetID, startTime2);
+            MigrateLegacyBlob(connection, evt);
+        }
+
+        private static void MigrateLegacyBlob(AdoDataConnection connection, Event evt)
+        {
+            if (evt is null || evt.EventDataID is null)
+                return;
+
+            int eventDataID = evt.EventDataID.GetValueOrDefault();
             byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", eventDataID);
-            byte[] resultData = null;
+            List<Tuple<int, List<DataPoint>>> decompressedData = Decompress(timeDomainData);
 
-            List<Tuple<int, List<DataPoint>>> data = Decompress(timeDomainData);
-           
-            foreach (Tuple<int,List<DataPoint>> item in data)
+            TableOperations<ChannelData> channelDataTable = new TableOperations<ChannelData>(connection);
+
+            foreach (Tuple<int, List<DataPoint>> tuple in decompressedData)
             {
-                if (item.Item1 == requestedSeriesID)
-                {
-                    resultData = ToData(item.Item2, item.Item1, item.Item2.Count);
-                }
+                int seriesID = tuple.Item1;
+                List<DataPoint> data = tuple.Item2;
 
-                // Insert into correct ChannelData.....
-                connection.ExecuteNonQuery("UPDATE ChannelData SET TimeDomainData = {0} WHERE SeriesID = {1} AND EventID = {2}", ToData(item.Item2, item.Item1, item.Item2.Count), item.Item1, eventID);
+                ChannelData channelData = new ChannelData();
+                channelData.SeriesID = seriesID;
+                channelData.EventID = evt.ID;
+                channelData.TimeDomainData = ToData(data, seriesID);
+
+                try
+                {
+                    channelDataTable.AddNewRecord(channelData);
+                }
+                catch (SqlException ex)
+                {
+                    // Ignore errors regarding unique key constraints
+                    // which can occur as a result of a race condition
+                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+
+                    if (!isUniqueViolation)
+                        throw;
+                }
             }
 
+            connection.ExecuteNonQuery("UPDATE Event SET EventDataID = NULL WHERE ID = {0}", evt.ID);
             connection.ExecuteNonQuery("DELETE FROM EventData WHERE ID = {0}", eventDataID);
-            connection.ExecuteNonQuery("DELETE FROM ChannelData WHERE EventDataID = {0} AND TimeDomainData IS NULL", eventDataID);
-            return resultData;
         }
 
-        private static byte[] ToData(List<DataPoint> data, int seriesID, int samples)
+        private static byte[] ToData(List<DataPoint> data, int seriesID)
         {
-
             var timeSeries = data.Select(dataPoint => new { Time = dataPoint.Time.Ticks, Compressed = false }).ToList();
 
             for (int i = 1; i < timeSeries.Count; i++)
@@ -220,14 +227,13 @@ namespace openXDA.Model
             }
 
             int timeSeriesByteLength = timeSeries.Sum(obj => obj.Compressed ? sizeof(ushort) : sizeof(int) + sizeof(long));
-            int dataSeriesByteLength = sizeof(int) + (2 * sizeof(double)) + (samples * sizeof(ushort));
+            int dataSeriesByteLength = sizeof(int) + (2 * sizeof(double)) + (data.Count * sizeof(ushort));
             int totalByteLength = sizeof(int) + timeSeriesByteLength + dataSeriesByteLength;
-
            
             byte[] result = new byte[totalByteLength];
             int offset = 0;
 
-            offset += LittleEndian.CopyBytes(samples, result, offset);
+            offset += LittleEndian.CopyBytes(data.Count, result, offset);
 
             List<int> uncompressedIndexes = timeSeries
                 .Select((obj, Index) => new { obj.Compressed, Index })
@@ -278,11 +284,6 @@ namespace openXDA.Model
             return returnArray;
         }
 
-        /// <summary>
-        /// This Decompresses the Time Domain Data into a List of DataPoints
-        /// </summary>
-        /// <param name="data"> Raw data to be decompressed</param>
-        /// <returns> Returns a <see cref="Tuple"/> with the Series ID and the List of <see cref="DataPoint"/> </returns>
         private static List<Tuple<int, List<DataPoint>>> Decompress(byte[] data)
         {
             List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
@@ -364,11 +365,6 @@ namespace openXDA.Model
             return result;
         }
 
-        /// <summary>
-        /// This Decompresses the Time Domain Data into a List of DataPoints based on the Legacy Compression Algorithm
-        /// </summary>
-        /// <param name="data"> Raw data to be decompressed</param>
-        /// <returns> Returns a <see cref="Tuple"/> with the Series ID and the List of <see cref="DataPoint"/> </returns>
         private static List<Tuple<int, List<DataPoint>>> Decompress_Legacy(byte[] data)
         {
             List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
@@ -413,27 +409,16 @@ namespace openXDA.Model
             }
             return result;
         }
-        
-        /// <summary>
-        /// Adjusts the TimeDomain Data by Moving it a certain ammount of Time
-        /// </summary>
-        /// <param name="ticks"> The number of Ticks the Data is moved. For moving it backwards in Time this needs to be < 0 </param>
-        public void AdjustData(Ticks ticks)
+
+        private static object ToDateTime2(AdoDataConnection connection, DateTime dateTime)
         {
-            // Initially we assume Data is already migrated...
-            if (this.TimeDomainData == null)
-                return;
-
-            Tuple<int,List<DataPoint>> decompressed = Decompress(this.TimeDomainData)[0];
-            List<DataPoint> data = decompressed.Item2;
-
-            foreach (DataPoint dataPoint in data)
+            using (IDbCommand command = connection.Connection.CreateCommand())
             {
-                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                IDbDataParameter parameter = command.CreateParameter();
+                parameter.DbType = DbType.DateTime2;
+                parameter.Value = dateTime;
+                return parameter;
             }
-
-            this.TimeDomainData = ToData(data, decompressed.Item1, data.Count);
-
         }
 
         #endregion

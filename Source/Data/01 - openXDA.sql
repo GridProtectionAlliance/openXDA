@@ -2180,30 +2180,21 @@ GO
 CREATE TABLE ChannelData
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    FileGroupID INT NOT NULL,
-    RuntimeID INT NOT NULL,
+    SeriesID INT NOT NULL,
+    EventID INT NOT NULL,
     TimeDomainData VARBINARY(MAX) NULL,
     MarkedForDeletion INT NOT NULL,
-	SeriesID INT NOT NULL,
-	EventID INT NOT NULL,
-	EventDataID INT NULL
+    CONSTRAINT UC_ChannelData UNIQUE(SeriesID, EventID)
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ChannelData_SeriesID
+ON ChannelData(SeriesID ASC)
+GO
 
---Indices for Channel Data potentially Neccesarry
---CREATE NONCLUSTERED INDEX IX_EventData_FileGroupID
---ON EventData(FileGroupID ASC)
---GO
-
---CREATE NONCLUSTERED INDEX IX_EventData_RuntimeID
---ON EventData(RuntimeID ASC)
---GO
-
---CREATE NONCLUSTERED INDEX IX_EventData_MarkedForDeletion
---ON EventData(MarkedForDeletion ASC)
---GO
-
+CREATE NONCLUSTERED INDEX IX_ChannelData_EventID
+ON ChannelData(EventID ASC)
+GO
 
 CREATE TABLE EventType
 (
