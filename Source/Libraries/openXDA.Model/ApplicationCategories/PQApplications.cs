@@ -42,6 +42,7 @@ namespace openXDA.Model
 
         public string Image { get; set; }
 
+        [ParentKey(typeof(ApplicationCategory))]
         public int CategoryID { get; set; }
 
         public int SortOrder { get; set; }
