@@ -63,7 +63,8 @@ namespace FaultData.DataResources
                 {
                     foreach (IGrouping<int, DataSeries> sampleCountGroup in endTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints.Count))
                     {
-                        List<int> completedAsset = new List<int>();
+                        HashSet<int> completedAsset = new HashSet<int>();
+
                         foreach (IGrouping<Asset, DataSeries> assetGroup in sampleCountGroup.GroupBy(GetAsset))
                         {
                             completedAsset.Add(assetGroup.Key.ID);
@@ -94,9 +95,6 @@ namespace FaultData.DataResources
                     }
                 }
             }
-
-            
-
 
             if (meterDataSet.Meter.MeterAssets.Count == 1)
             {
