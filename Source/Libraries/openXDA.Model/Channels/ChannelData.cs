@@ -101,6 +101,7 @@ namespace openXDA.Model
 
                 List<Channel> channels = asset.DirectChannels
                     .Concat(asset.ConnectedChannels)
+                    .Where(channel => channel.MeterID == evt.MeterID)
                     .ToList();
 
                 if (!channels.Any())
@@ -113,6 +114,10 @@ namespace openXDA.Model
                 foreach (int assetID in assetIDs)
                     MigrateLegacyBlob(connection, evt.FileGroupID, assetID, evt.StartTime);
 
+                // Optimization to avoid individually querying channels that don't have any data
+                HashSet<int> channelsWithData = QueryChannelsWithData(connection, evt);
+                channels.RemoveAll(channel => !channelsWithData.Contains(channel.ID));
+
                 List<byte[]> eventData = new List<byte[]>();
 
                 foreach (Channel channel in channels)
@@ -123,7 +128,7 @@ namespace openXDA.Model
                         "    ChannelData JOIN " +
                         "    Series ON ChannelData.SeriesID = Series.ID JOIN " +
                         "    Event ON ChannelData.EventID = Event.ID " +
-                        " WHERE " +
+                        "WHERE " +
                         "    Event.FileGroupID = {0} AND " +
                         "    Series.ChannelID = {1} AND " +
                         "    Event.StartTime = {2}";
@@ -408,6 +413,30 @@ namespace openXDA.Model
                 result.Add(new Tuple<int, List<DataPoint>>(seriesID, points));
             }
             return result;
+        }
+
+        private static HashSet<int> QueryChannelsWithData(AdoDataConnection connection, Event evt)
+        {
+            const string FilterQueryFormat =
+                "SELECT Series.ChannelID " +
+                "FROM " +
+                "    ChannelData JOIN " +
+                "    Series ON ChannelData.SeriesID = Series.ID JOIN " +
+                "    Event ON ChannelData.EventID = Event.ID " +
+                "WHERE " +
+                "    Event.FileGroupID = {0} AND " +
+                "    Event.StartTime = {1}";
+
+            object startTime2 = ToDateTime2(connection, evt.StartTime);
+
+            using (DataTable table = connection.RetrieveData(FilterQueryFormat, evt.FileGroupID, startTime2))
+            {
+                IEnumerable<int> channelsWithData = table
+                    .AsEnumerable()
+                    .Select(row => row.ConvertField<int>("ChannelID"));
+
+                return new HashSet<int>(channelsWithData);
+            }
         }
 
         private static object ToDateTime2(AdoDataConnection connection, DateTime dateTime)
