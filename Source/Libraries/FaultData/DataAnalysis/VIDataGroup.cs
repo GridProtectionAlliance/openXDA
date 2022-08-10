@@ -124,13 +124,13 @@ namespace FaultData.DataAnalysis
                         set.Vc = item.Index;
 
                     if (measurementType == "Voltage" && phase == "AB")
-                        set.Va = item.Index;
+                        set.Vab = item.Index;
 
                     if (measurementType == "Voltage" && phase == "BC")
-                        set.Vb = item.Index;
+                        set.Vbc = item.Index;
 
                     if (measurementType == "Voltage" && phase == "CA")
-                        set.Vc = item.Index;
+                        set.Vca = item.Index;
 
                     if (m_iaIndex < 0 && measurementType == "Current" && phase == "AN")
                         m_iaIndex = item.Index;
