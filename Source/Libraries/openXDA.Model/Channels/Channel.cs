@@ -35,18 +35,16 @@ namespace openXDA.Model
 {
     public class ChannelKey : IEquatable<ChannelKey>
     {
-        #region [ Members ]
-
-        // Fields
-        private readonly Tuple<int, int, string, string, string, string> m_tuple;
-
-        #endregion
-
         #region [ Constructors ]
 
         public ChannelKey(int assetID, int harmonicGroup, string name, string measurementType, string measurementCharacteristic, string phase)
         {
-            m_tuple = Tuple.Create(assetID, harmonicGroup, name, measurementType, measurementCharacteristic, phase);
+            LineID = assetID;
+            HarmonicGroup = harmonicGroup;
+            Name = name;
+            MeasurementType = measurementType;
+            MeasurementCharacteristic = measurementCharacteristic;
+            Phase = phase;
         }
 
         public ChannelKey(Channel channel)
@@ -58,53 +56,12 @@ namespace openXDA.Model
 
         #region [ Properties ]
 
-        public int LineID
-        {
-            get
-            {
-                return m_tuple.Item1;
-            }
-        }
-
-        public int HarmonicGroup
-        {
-            get
-            {
-                return m_tuple.Item2;
-            }
-        }
-
-        public string Name
-        {
-            get
-            {
-                return m_tuple.Item3;
-            }
-        }
-
-        public string MeasurementType
-        {
-            get
-            {
-                return m_tuple.Item4;
-            }
-        }
-
-        public string MeasurementCharacteristic
-        {
-            get
-            {
-                return m_tuple.Item5;
-            }
-        }
-
-        public string Phase
-        {
-            get
-            {
-                return m_tuple.Item6;
-            }
-        }
+        public int LineID { get; }
+        public int HarmonicGroup { get; }
+        public string Name { get; }
+        public string MeasurementType { get; }
+        public string MeasurementCharacteristic { get; }
+        public string Phase { get; }
 
         #endregion
 
@@ -112,7 +69,14 @@ namespace openXDA.Model
 
         public override int GetHashCode()
         {
-            return m_tuple.GetHashCode();
+            int hash = 1009;
+            hash = 9176 * hash + LineID.GetHashCode();
+            hash = 9176 * hash + HarmonicGroup.GetHashCode();
+            hash = 9176 * hash + Name.GetHashCode();
+            hash = 9176 * hash + MeasurementType.GetHashCode();
+            hash = 9176 * hash + MeasurementCharacteristic.GetHashCode();
+            hash = 9176 * hash + Phase.GetHashCode();
+            return hash;
         }
 
         public override bool Equals(object obj)
@@ -122,10 +86,16 @@ namespace openXDA.Model
 
         public bool Equals(ChannelKey other)
         {
-            if ((object)other == null)
+            if (other is null)
                 return false;
 
-            return m_tuple.Equals(other.m_tuple);
+            return
+                LineID.Equals(other.LineID) &&
+                HarmonicGroup.Equals(other.HarmonicGroup) &&
+                Name.Equals(other.Name) &&
+                MeasurementType.Equals(other.MeasurementType) &&
+                MeasurementCharacteristic.Equals(other.MeasurementCharacteristic) &&
+                Phase.Equals(other.Phase);
         }
 
         #endregion

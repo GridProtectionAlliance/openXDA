@@ -32,18 +32,12 @@ namespace openXDA.Model
 {
     public class SeriesKey : IEquatable<SeriesKey>
     {
-        #region [ Members ]
-
-        // Fields
-        private Tuple<ChannelKey, string> m_tuple;
-
-        #endregion
-
         #region [ Constructors ]
 
         public SeriesKey(ChannelKey channelKey, string seriesType)
         {
-            m_tuple = Tuple.Create(channelKey, seriesType);
+            ChannelKey = channelKey;
+            SeriesType = seriesType;
         }
 
         public SeriesKey(Series series)
@@ -55,21 +49,8 @@ namespace openXDA.Model
 
         #region [ Properties ]
 
-        public ChannelKey ChannelKey
-        {
-            get
-            {
-                return m_tuple.Item1;
-            }
-        }
-
-        public string SeriesType
-        {
-            get
-            {
-                return m_tuple.Item2;
-            }
-        }
+        public ChannelKey ChannelKey { get; }
+        public string SeriesType { get; }
 
         #endregion
 
@@ -77,7 +58,10 @@ namespace openXDA.Model
 
         public override int GetHashCode()
         {
-            return m_tuple.GetHashCode();
+            int hash = 1009;
+            hash = 9176 * hash + ChannelKey.GetHashCode();
+            hash = 9176 * hash + SeriesType.GetHashCode();
+            return hash;
         }
 
         public override bool Equals(object obj)
@@ -87,10 +71,12 @@ namespace openXDA.Model
 
         public bool Equals(SeriesKey other)
         {
-            if ((object)other == null)
+            if (other is null)
                 return false;
 
-            return m_tuple.Equals(other.m_tuple);
+            return
+                ChannelKey.Equals(other.ChannelKey) &&
+                SeriesType.Equals(other.SeriesType);
         }
 
         #endregion
