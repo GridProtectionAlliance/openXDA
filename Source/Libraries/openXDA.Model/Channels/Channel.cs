@@ -25,11 +25,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Linq;
 using System.Transactions;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
+using IsolationLevel = System.Transactions.IsolationLevel;
 
 namespace openXDA.Model
 {
@@ -66,6 +68,45 @@ namespace openXDA.Model
         #endregion
 
         #region [ Methods ]
+
+        public Channel Find(AdoDataConnection connection, int meterID)
+        {
+            const string QueryFormat =
+                "SELECT Channel.* " +
+                "FROM " +
+                "    Channel JOIN " +
+                "    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN " +
+                "    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN " +
+                "    Phase ON Channel.PhaseID = Phase.ID " +
+                "WHERE " +
+                "    Channel.MeterID = {0} AND " +
+                "    Channel.AssetID = {1} AND " +
+                "    Channel.HarmonicGroup = {2} AND " +
+                "    Channel.Name = {3} AND " +
+                "    MeasurementType.Name = {4} AND " +
+                "    MeasurementCharacteristic.Name = {5} AND " +
+                "    Phase.Name = {6}";
+
+            object[] parameters =
+            {
+                meterID,
+                LineID,
+                HarmonicGroup,
+                Name,
+                MeasurementType,
+                MeasurementCharacteristic,
+                Phase
+            };
+
+            using (DataTable table = connection.RetrieveData(QueryFormat, parameters))
+            {
+                if (table.Rows.Count == 0)
+                    return null;
+
+                TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+                return channelTable.LoadRecord(table.Rows[0]);
+            }
+        }
 
         public override int GetHashCode()
         {

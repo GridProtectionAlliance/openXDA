@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
@@ -55,6 +56,49 @@ namespace openXDA.Model
         #endregion
 
         #region [ Methods ]
+
+        public Series Find(AdoDataConnection connection, int meterID)
+        {
+            const string QueryFormat =
+                "SELECT Series.* " +
+                "FROM " +
+                "    Series JOIN " +
+                "    Channel ON Series.ChannelID = Channel.ID JOIN " +
+                "    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN " +
+                "    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN " +
+                "    Phase ON Channel.PhaseID = Phase.ID JOIN " +
+                "    SeriesType ON Series.SeriesTypeID = SeriesType.ID " +
+                "WHERE " +
+                "    Channel.MeterID = {0} AND " +
+                "    Channel.AssetID = {1} AND " +
+                "    Channel.HarmonicGroup = {2} AND " +
+                "    Channel.Name = {3} AND " +
+                "    MeasurementType.Name = {4} AND " +
+                "    MeasurementCharacteristic.Name = {5} AND " +
+                "    Phase.Name = {6} AND " +
+                "    SeriesType.Name = {7}";
+
+            object[] parameters =
+            {
+                meterID,
+                ChannelKey.LineID,
+                ChannelKey.HarmonicGroup,
+                ChannelKey.Name,
+                ChannelKey.MeasurementType,
+                ChannelKey.MeasurementCharacteristic,
+                ChannelKey.Phase,
+                SeriesType
+            };
+
+            using (DataTable table = connection.RetrieveData(QueryFormat, parameters))
+            {
+                if (table.Rows.Count == 0)
+                    return null;
+
+                TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
+                return seriesTable.LoadRecord(table.Rows[0]);
+            }
+        }
 
         public override int GetHashCode()
         {

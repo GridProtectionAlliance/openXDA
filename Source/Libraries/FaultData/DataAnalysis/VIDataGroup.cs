@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GSF.Data;
 using openXDA.Model;
 
 namespace FaultData.DataAnalysis
@@ -437,8 +438,9 @@ namespace FaultData.DataAnalysis
             ChannelKey channelKey = new ChannelKey(assetID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
             SeriesKey seriesKey = new SeriesKey(channelKey, seriesTypeName);
 
-            Channel dbChannel = meter.Channels
-                .FirstOrDefault(channel => channelKey.Equals(new ChannelKey(channel)));
+            Channel dbChannel = (meter.ConnectionFactory is null)
+                ? meter.Channels.FirstOrDefault(channel => channelKey.Equals(new ChannelKey(channel)))
+                : FastSearch(meter, channelKey);
 
             Series dbSeries = dbChannel?.Series
                 .FirstOrDefault(series => seriesKey.Equals(new SeriesKey(series)));
@@ -498,6 +500,20 @@ namespace FaultData.DataAnalysis
             }
 
             return dbSeries;
+        }
+
+        private static Channel FastSearch(Meter meter, ChannelKey channelKey)
+        {
+            using (AdoDataConnection connection = meter.ConnectionFactory())
+            {
+                Channel search = channelKey.Find(connection, meter.ID);
+
+                if (search is null)
+                    return null;
+
+                return meter.Channels
+                    .FirstOrDefault(channel => channel.ID == search.ID);
+            }
         }
 
         #endregion
