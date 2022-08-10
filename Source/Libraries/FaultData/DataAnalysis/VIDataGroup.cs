@@ -230,8 +230,6 @@ namespace FaultData.DataAnalysis
 
         public Asset Asset => m_dataGroup.Asset;
 
-        #endregion
-
         public DataSeries[] Data
         {
             get
@@ -254,7 +252,7 @@ namespace FaultData.DataAnalysis
                     if (Vindex.Vca > -1)
                         result.Add(m_dataGroup[Vindex.Vca]);
                 }
-                
+
                 if (m_iaIndex > -1)
                     result.Add(m_dataGroup[m_iaIndex]);
                 if (m_ibIndex > -1)
@@ -267,6 +265,8 @@ namespace FaultData.DataAnalysis
                 return result.ToArray();
             }
         }
+
+        #endregion
 
         #region [ Methods ]
 
