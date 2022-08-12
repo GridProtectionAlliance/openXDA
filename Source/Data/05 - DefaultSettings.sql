@@ -302,6 +302,18 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ResultsPath', 'Results', 'Results')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.Frequency', '* 0 * * *', '* 0 * * *')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.ConnectionString', 'systemSettings', 'systemSettings')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.DatabaseCommand', NULL, NULL)
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.CommandParameters', NULL, NULL)
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('StepChangeWebReport.Enabled', 'False', 'False')
 GO
 

@@ -289,6 +289,9 @@ GO
 INSERT INTO NodeType VALUES('DataPusher', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.DataPusher.DataPusherNode')
 GO
 
+INSERT INTO NodeType VALUES('SSAMS', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.SSAMS.SSAMSNode')
+GO
+
 CREATE TABLE Node
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -321,6 +324,9 @@ INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes
 GO
 
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.DataPusher.DataPusherNode'), NULL, 'Data Pusher', 1)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.SSAMS.SSAMSNode'), NULL, 'SSAMS', 1)
 GO
 
 CREATE TABLE NodeSetting
