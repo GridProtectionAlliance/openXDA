@@ -235,12 +235,8 @@ namespace openXDA.Controllers.WebAPI
         {
             string directoryPath = FilePath.GetAbsolutePath("wwwroot\\Images\\Tiles");
             string[] tileFiles = System.IO.Directory.GetFiles(directoryPath);
-            for(int tileIndex = 0; tileIndex < tileFiles.Length; tileIndex++)
-            {
-                List<string> tempArray = tileFiles[tileIndex].Split('\\').ToList();
-                tileFiles[tileIndex] = ".\\" + string.Join("\\", tempArray.GetRange(tempArray.Count - 3, 3));
-            }
-            return Ok(tileFiles);
+            IEnumerable<string> tileList = tileFiles.Select(file => ".\\" + file.Split(new string[] { "wwwroot\\" }, StringSplitOptions.None)[1]).ToList();
+            return Ok(tileList);
         }
     }
 
