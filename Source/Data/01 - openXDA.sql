@@ -326,9 +326,6 @@ GO
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.DataPusher.DataPusherNode'), NULL, 'Data Pusher', 1)
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.SSAMS.SSAMSNode'), NULL, 'SSAMS', 1)
-GO
-
 CREATE TABLE NodeSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

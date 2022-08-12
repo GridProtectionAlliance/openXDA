@@ -31,7 +31,12 @@ namespace openXDA.Configuration
     public class SSAMSSection
     {
         public const string CategoryName = "SSAMS";
-        
+
+        private const string DefaultDataProviderString = 
+            "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; " +
+            "ConnectionType=System.Data.SqlClient.SqlConnection; " +
+            "AdapterType=System.Data.SqlClient.SqlDataAdapter;";
+
         /// <summary>
         /// Cron string frequency at which the SSAMS process is scheduled.
         /// </summary>
@@ -40,24 +45,31 @@ namespace openXDA.Configuration
         public string Schedule { get; set; }
 
         /// <summary>
-        /// Defines the connection string of the external DB.
+        /// Defines the connection string of the SSAMS DB.
         /// </summary>
         [Setting]
-        [DefaultValue("systemSettings")]
+        [DefaultValue("Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI")]
         public string ConnectionString { get; set; }
+
+        /// <summary>
+        /// Defines the connection string of the SSAMS DB.
+        /// </summary>
+        [Setting]
+        [DefaultValue(DefaultDataProviderString)]
+        public string DataProviderString { get; set; }
 
         /// <summary>
         /// Command or procedure name that defines the command executed by the external DB.
         /// </summary>
         [Setting]
-        [DefaultValue(null)]
+        [DefaultValue("sp_LogSsamEvent")]
         public string DatabaseCommand { get; set; }
 
         /// <summary>
         /// Parameters for the external DB procedure.
         /// </summary>
         [Setting]
-        [DefaultValue(null)]
+        [DefaultValue("1,1,'FL_PMU_{Acronym}_HEARTBEAT','','{Acronym} adapter heartbeat at {Timestamp} UTC',''")]
         public string CommandParameters { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataPusherNode.cs - Gbtc
+//  SSAMSNode.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -53,11 +53,11 @@ namespace openXDA.Nodes.Types.SSAMS
             public SSAMSSection SSAMSSettings { get; } = new SSAMSSection();
         }
 
-        private class DataPusherWebController : ApiController
+        private class SSAMSWebController : ApiController
         {
             private SSAMSNode Node { get; }
 
-            public DataPusherWebController(SSAMSNode node) =>
+            public SSAMSWebController(SSAMSNode node) =>
                 Node = node;
         }
 
@@ -82,7 +82,7 @@ namespace openXDA.Nodes.Types.SSAMS
         #region [ Methods ]
 
         public override IHttpController CreateWebController() =>
-            new DataPusherWebController(this);
+            new SSAMSWebController(this);
 
         protected override void OnReconfigure(Action<object> configurator)
         {
@@ -94,7 +94,7 @@ namespace openXDA.Nodes.Types.SSAMS
             Settings settings = new Settings(configurator);
             string name = nameof(DatabaseOperation);
             string schedule = settings.SSAMSSettings.Schedule;
-            ConnectionFactory = () => new AdoDataConnection(settings.SSAMSSettings.ConnectionString);
+            ConnectionFactory = () => new AdoDataConnection(settings.SSAMSSettings.ConnectionString, settings.SSAMSSettings.DataProviderString);
             Host.RegisterScheduledProcess(this, DatabaseOperation, name, schedule);
         }
 
