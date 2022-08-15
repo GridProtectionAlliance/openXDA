@@ -729,4 +729,15 @@ UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.0001667 5, 0.001 2, 0.003 1.4,
 GO
 UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.001 1.2, 0.2 1.2, 0.2 1.175, 0.5 1.175,0.5 1.15,1 1.15, 1 1.10,4 1.10, 4 0.9, 3 0.9, 3 0.75, 2 0.75, 2 0.65, 0.3 0.65, 0.3 0.45, 0.15 0.45, 0.15 0, 0.001 0, 0.001 1.2))' WHERE Name = 'NERC PRC-024-2'
 GO
- 
+
+INSERT INTO CellCarrier (Name,Transform) VALUES
+('T Mobile','{0}@tmomail.net'),
+('Verizon','{0}@vtext.com'),
+('AT&T','{0}@txt.att.net'),
+('C Spire Wireless','{0}@cspire1.com'),
+('Bluegrass Cellular','{0}@sms.bluecell.com'),
+('Sprint','{0}@messaging.sprintpcs.com'),
+('Cricket Wireless', '{0}@mms.cricketwireless.net'),
+('Republic Wireless','{0}@text.republicwireless.com'),
+('Google Fi','{0}@msg.fi.google.com')
+GO
