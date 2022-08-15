@@ -287,37 +287,3 @@ INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.APITok
 GO
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.ClientID', 'LocalXDAClient', 'LocalXDAClient')
 GO
-
--- Inserting Value List--
-INSERT INTO ValueListGroup (Name, Description) VALUES ('TileImages', 'Tile Images Avaliable in OpenXDA (wwwroot/Images/Tiles/)')
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/LSCVS.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/PQDashboard.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/PQDigest.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/SEBrowser.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/SPCTools.png ', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/SystemCenter.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/TrenDAP.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/VoltageRegReport.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/dD_Assets.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/dD_Config.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/dD_Export.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/dD_Reports.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/dD_Workbench.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/miMD.png', NULL, NULL)
-GO
-INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES ((SELECT ID FROM ValueListGroup WHERE Name ='TileImages'), './Images/Tiles/openMIC.png', NULL, NULL)
-GO

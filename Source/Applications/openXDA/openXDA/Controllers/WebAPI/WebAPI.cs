@@ -31,6 +31,7 @@ using System.Net.Http.Headers;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.IO;
 using GSF.Web.Model;
 using openXDA.Adapters;
 using openXDA.Model;
@@ -223,6 +224,19 @@ namespace openXDA.Controllers.WebAPI
                 IEnumerable<ValueList> records = new TableOperations<ValueList>(connection).QueryRecordsWhere($"GroupID = ( SELECT ID FROM {tableName} WHERE Name = {{0}})", groupName);
                 return Ok(records);
             }
+        }
+    }
+
+    [RoutePrefix("api/TileList")]
+    public class TileListController : ApiController
+    {
+        [HttpGet, Route("GetAll")]
+        public IHttpActionResult GetAllTiles()
+        {
+            string directoryPath = FilePath.GetAbsolutePath("wwwroot\\Images\\Tiles");
+            string[] tileFiles = System.IO.Directory.GetFiles(directoryPath);
+            IEnumerable<string> tileList = tileFiles.Select(file => ".\\" + file.Split(new string[] { "wwwroot\\" }, StringSplitOptions.None)[1]).ToList();
+            return Ok(tileList);
         }
     }
 
