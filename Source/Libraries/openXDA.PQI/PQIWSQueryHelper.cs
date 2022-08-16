@@ -107,15 +107,25 @@ namespace openXDA.PQI
         }
 
         private const string FacilityDisturbanceQueryFormat =
-            "SELECT " +
-            "    MeterFacility.FacilityID, " +
-            "    Disturbance.PerUnitMagnitude, " +
-            "    Disturbance.DurationSeconds " +
-            "FROM " +
-            "    Disturbance JOIN " +
-            "    Event ON Disturbance.EventID = Event.ID JOIN " +
-            "    MeterFacility ON MeterFacility.MeterID = Event.MeterID " +
-            "WHERE Disturbance.EventID = {0}";
+            @"SELECT 
+                Customer.PQIFacilityID,
+                Disturbance.PerUnitMagnitude,
+                Disturbance.DurationSeconds 
+            FROM Disturbance LEFT JOIN
+                Event ON Event.ID = Disturbance.EventID  LEFT JOIN
+                CustomerMeter ON CustomerMeter.MeterID = Event.MeterID LEFT JOIN 
+                Customer ON Customer.ID = CustomerMeter.CustomerID
+            WHERE PQIFacilityID IS NOT NULL AND EventID = {0}
+            UNION
+            SELECT
+                Customer.PQIFacilityID,
+                Disturbance.PerUnitMagnitude,
+                Disturbance.DurationSeconds
+            FROM Disturbance LEFT JOIN
+                Event ON Event.ID = Disturbance.EventID LEFT JOIN
+                CustomerAsset ON CustomerAsset.AssetID = Event.AssetID LEFT JOIN
+                Customer ON Customer.ID = CustomerAsset.CustomerID
+            WHERE PQIFacilityID IS NOT NULL AND EventID = {0}";
 
         public PQIWSQueryHelper(Func<AdoDataConnection> connectionFactory, PQIWSClient pqiwsClient)
         {
@@ -194,7 +204,7 @@ namespace openXDA.PQI
         {
             async Task<List<FacilityAudit>> GetFacilityAudits(DataRow facilityDisturbance)
             {
-                int facilityID = facilityDisturbance.ConvertField<int>("FacilityID");
+                int facilityID = facilityDisturbance.ConvertField<int>("PQIFacilityID");
                 return await PQIWSClient.GetFacilityAudits(facilityID, cancellationToken);
             }
 
@@ -236,7 +246,7 @@ namespace openXDA.PQI
         {
             async Task<List<Equipment>> GetImpactedEquipmentAsync(DataRow facilityDisturbance)
             {
-                int facilityID = facilityDisturbance.ConvertField<int>("FacilityID");
+                int facilityID = facilityDisturbance.ConvertField<int>("PQIFacilityID");
                 double magnitude = facilityDisturbance.ConvertField<double>("PerUnitMagnitude");
                 double duration = facilityDisturbance.ConvertField<double>("DurationSeconds");
                 return await PQIWSClient.GetImpactedEquipmentAsync(facilityID, magnitude, duration, cancellationToken);
