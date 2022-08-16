@@ -177,6 +177,19 @@ namespace openXDA.PQI
             }
         }
 
+        public async Task<List<Tuple<TestCurve, List<TestCurvePoint>>>> GetAllTestCurvesAsync (IEnumerable<int> eventIDs, CancellationToken cancellationToken = default)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                Task<List<Tuple<TestCurve, List<TestCurvePoint>>>> _GetAllTestCurvesAsync(int eventID) =>
+                    GetAllCurvesAsync(connection, eventID, cancellationToken);
+
+                var tasks = eventIDs.Select(_GetAllTestCurvesAsync);
+                List<Tuple<TestCurve, List<TestCurvePoint>>>[] curveList = await Task.WhenAll(tasks);
+                return curveList.SelectMany(list => list).ToList();
+            }
+        }
+
         private async Task<List<Tuple<TestCurve,List<TestCurvePoint>>>> GetAllCurvesAsync(AdoDataConnection connection, int eventID, CancellationToken cancellationToken = default)
         {
             async Task<List<FacilityAudit>> GetFacilityAudits(DataRow facilityDisturbance)
