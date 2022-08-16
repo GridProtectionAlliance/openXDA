@@ -31,6 +31,7 @@ using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Parsing;
 using GSF.Threading;
 using log4net;
 using openXDA.Configuration;
@@ -107,10 +108,19 @@ namespace openXDA.Nodes.Types.SSAMS
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 List<object> parameters = new List<object>();
-                string[] commandParameters;
                 if (!(settings.SSAMSSettings.CommandParameters is null))
                 {
-                    commandParameters = settings.SSAMSSettings.CommandParameters.Split(',');
+                    Dictionary<string, string> substitutions = new Dictionary<string, string>
+                    {
+                        //["{Acronym}"] = Name,
+                        ["{Timestamp}"] = DateTime.UtcNow.ToString(TimeTagBase.DefaultFormat)
+                    };
+                    TemplatedExpressionParser parameterTemplate = new TemplatedExpressionParser
+                    {
+                        TemplatedExpression = settings.SSAMSSettings.CommandParameters
+                    };
+                    parameters = new List<object>();
+                    string[] commandParameters = parameterTemplate.Execute(substitutions).Split(',');
 
                     // Do some basic typing on command parameters
                     foreach (string commandParameter in commandParameters)
