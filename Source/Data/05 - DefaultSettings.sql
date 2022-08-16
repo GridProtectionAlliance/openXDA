@@ -319,7 +319,7 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.DatabaseCommand', '
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.CommandParameters',
-	'1,1,''FL_PMU_{Acronym}_HEARTBEAT'','''',''{Acronym} adapter heartbeat at {Timestamp} UTC'',''''',
+	'1,1,''OpenXDA_HEARTBEAT'','''',''OpenXDA heartbeat at {Timestamp} UTC'',''''',
 	'1,1,''FL_PMU_{Acronym}_HEARTBEAT'','''',''{Acronym} adapter heartbeat at {Timestamp} UTC'',''''')
 GO
 
