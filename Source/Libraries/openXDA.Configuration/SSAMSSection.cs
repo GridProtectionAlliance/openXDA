@@ -69,7 +69,7 @@ namespace openXDA.Configuration
         /// Parameters for the external DB procedure.
         /// </summary>
         [Setting]
-        [DefaultValue("1,1,'FL_PMU_{Acronym}_HEARTBEAT','','{Acronym} adapter heartbeat at {Timestamp} UTC',''")]
+        [DefaultValue("1,1,'OpenXDA_HEARTBEAT','','OpenXDA adapter heartbeat at {Timestamp} UTC',''")]
         public string CommandParameters { get; set; }
     }
 }
