@@ -66,9 +66,9 @@ namespace openXDA.APIAuthentication
 
                 byte[] credentialData = Convert.FromBase64String(Credentials);
                 string decode = Encoding.UTF8.GetString(credentialData);
-                string[] splitDecode = decode.Split(':');
-                APIKey = splitDecode[0];
-                APIToken = splitDecode.Skip(1).FirstOrDefault();
+                int index = decode.IndexOf(':');
+                APIKey = decode.Substring(0, index);
+                APIToken = decode.Substring(index + 1);
             }
 
             public string Type { get; }
