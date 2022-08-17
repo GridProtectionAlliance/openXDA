@@ -90,6 +90,7 @@
     <Compile Include="Types\FilePruning\FilePrunerNode.cs" />
     <Compile Include="INode.cs" />
     <Compile Include="NodeBase.cs" />
+    <Compile Include="Types\SSAMS\SSAMSNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FaultData\FaultData.csproj">

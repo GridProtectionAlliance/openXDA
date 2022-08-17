@@ -302,6 +302,27 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ResultsPath', 'Results', 'Results')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.Schedule', '* 0 * * *', '* 0 * * *')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.ConnectionString',
+	'Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI',
+	'Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.DataProviderString',
+	'AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter;',
+	'AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter;')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.DatabaseCommand', 'sp_LogSsamEvent', 'sp_LogSsamEvent')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.CommandParameters',
+	'1,1,''OpenXDA_HEARTBEAT'','''',''OpenXDA heartbeat at {Timestamp} UTC'',''''',
+	'1,1,''OpenXDA_HEARTBEAT'','''',''OpenXDA heartbeat at {Timestamp} UTC'',''''')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('StepChangeWebReport.Enabled', 'False', 'False')
 GO
 

@@ -289,6 +289,9 @@ GO
 INSERT INTO NodeType VALUES('DataPusher', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.DataPusher.DataPusherNode')
 GO
 
+INSERT INTO NodeType VALUES('SSAMS', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.SSAMS.SSAMSNode')
+GO
+
 CREATE TABLE Node
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
