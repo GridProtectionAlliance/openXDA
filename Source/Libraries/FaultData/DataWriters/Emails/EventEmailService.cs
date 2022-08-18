@@ -458,6 +458,7 @@ namespace FaultData.DataWriters.Emails
                 return;
 
             string datafolder = Path.GetDirectoryName(path);
+            Directory.CreateDirectory(datafolder);
             string dstFile = Path.Combine(datafolder, mail.Subject);
 
             if (File.Exists(dstFile))
