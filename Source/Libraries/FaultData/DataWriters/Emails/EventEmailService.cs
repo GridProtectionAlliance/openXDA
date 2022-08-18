@@ -215,7 +215,7 @@ namespace FaultData.DataWriters.Emails
                      "SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
                      "FROM " +
                      "    UserAccountEmailType JOIN " +
-                     "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
+                     "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID LEFT JOIN" +
                      "    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
                      "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
                      "WHERE " +
