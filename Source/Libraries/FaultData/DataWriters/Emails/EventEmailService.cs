@@ -221,7 +221,8 @@ namespace FaultData.DataWriters.Emails
                      "WHERE " +
                      "    UserAccountEmailType.EmailTypeID = {0} AND " +
                      "    UserAccount.PhoneConfirmed <> 0 AND " +
-                     "    UserAccount.Approved <> 0";
+                     "    UserAccount.Approved <> 0 AND " +
+                     "    UserAccountEmailType.AssetGroupID IN ({1})";
 
                 processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
             }
