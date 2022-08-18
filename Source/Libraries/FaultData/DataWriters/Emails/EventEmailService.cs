@@ -182,7 +182,6 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        // #Todo Implement SMS based on userAdditionalFields
         public List<string> GetRecipients(EmailType emailType, List<int> eventIDs)
         {
             List<int> assetGroups = GetAssetGroups(eventIDs)
@@ -237,7 +236,6 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        // #ToDo Implement SMS based on userAdditionalFields
         public List<string> GetRecipients(EmailType emailType)
         {
             string emailAddressQuery;
@@ -263,7 +261,7 @@ namespace FaultData.DataWriters.Emails
                   "SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
                   "FROM " +
                   "    UserAccountEmailType JOIN " +
-                  "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
+                  "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID LEFT JOIN" +
                   "    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
                   "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
                   "WHERE " +
