@@ -196,6 +196,7 @@ namespace FaultData.DataWriters.Emails
 
             if (!emailType.SMS)
             {
+
                 emailAddressQuery =
                     "SELECT DISTINCT UserAccount.Email AS Email " +
                     "FROM " +
@@ -243,6 +244,10 @@ namespace FaultData.DataWriters.Emails
 
             if (!emailType.SMS)
             {
+                bool requireEmailConfirm;
+                using (AdoDataConnection connection = ConnectionFactory())
+                    requireEmailConfirm  = connection.ExecuteScalar<bool>("SELECT Value From [Setting] Where Name = 'Subscription.RequireConfirmation'");
+
                 emailAddressQuery =
                    "SELECT DISTINCT UserAccount.Email AS Email " +
                    "FROM " +
@@ -250,7 +255,7 @@ namespace FaultData.DataWriters.Emails
                    "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
                    "WHERE " +
                    "    UserAccountEmailType.EmailTypeID = {0} AND " +
-                   "    UserAccount.EmailConfirmed <> 0 AND " +
+                   (requireEmailConfirm ? "    UserAccount.EmailConfirmed <> 0 AND " : "") +
                    "    UserAccount.Approved <> 0";
 
                 processor = row => row.ConvertField<string>("Email");
