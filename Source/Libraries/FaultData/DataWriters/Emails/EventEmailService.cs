@@ -136,7 +136,7 @@ namespace FaultData.DataWriters.Emails
                     ApplyChartTransform(attachments, htmlDocument);
                     ApplyFTTTransform(attachments, htmlDocument);
 
-                    SendEmail(recipients, htmlDocument, attachments, (saveToFile ? email.FilePath : null));
+                    SendEmail(recipients, htmlDocument, attachments, email, (saveToFile ? email.FilePath : null));
                     if (eventIDs.Count() > 0)
                         LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
                 
@@ -401,7 +401,7 @@ namespace FaultData.DataWriters.Emails
             });
         }
 
-        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, string filePath=null)
+        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailType emailType, string filePath=null)
         {
             Settings settings = new Settings(Configure);
             EmailSection emailSettings = settings.EmailSettings;
@@ -423,7 +423,7 @@ namespace FaultData.DataWriters.Emails
 
                 string fromAddress = emailSettings.FromAddress;
                 emailMessage.From = new MailAddress(fromAddress);
-                emailMessage.Subject = GetSubject(htmlDocument);
+                emailMessage.Subject = GetSubject(htmlDocument,emailType);
                 emailMessage.Body = GetBody(htmlDocument);
                 emailMessage.IsBodyHtml = true;
 
@@ -503,15 +503,13 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private string GetSubject(XDocument htmlDocument)
+        private string GetSubject(XDocument htmlDocument, EmailType emailType)
         {
-            const string DefaultSubject = "Email sent by openXDA";
-
             string subject = (string)htmlDocument
                 .Descendants("title")
                 .FirstOrDefault();
 
-            return subject ?? DefaultSubject;
+            return subject ?? emailType.Name;
         }
 
         private string GetBody(XDocument htmlDocument) => htmlDocument
@@ -536,7 +534,7 @@ namespace FaultData.DataWriters.Emails
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 string toLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
-                string subject = GetSubject(htmlDocument);
+                string subject = GetSubject(htmlDocument, email);
                 string body = GetBody(htmlDocument);
                 connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3}, {4})", email.ID, now, toLine, subject, body);
                 return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
