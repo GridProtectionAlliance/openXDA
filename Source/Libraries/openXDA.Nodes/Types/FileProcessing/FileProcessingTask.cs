@@ -93,6 +93,8 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             using (AdoDataConnection connection = ConnectionFactory())
             {
+                FixLegacyFilePathHash(connection);
+
                 bool hasChanges = CheckForChanges(connection);
 
                 if (!hasChanges)
@@ -152,6 +154,24 @@ namespace openXDA.Nodes.Types.FileProcessing
             {
                 string message = $"Reader is not ready to load the file group.";
                 throw new FileSkippedException(true, message);
+            }
+        }
+
+        private void FixLegacyFilePathHash(AdoDataConnection connection)
+        {
+            const string QueryFormat =
+                "UPDATE DataFile " +
+                "SET FilePathHash = {0} " +
+                "WHERE " +
+                "    FilePathHash = {1} AND " +
+                "    FilePath = {2}";
+
+            foreach (FileInfo fileInfo in FileList)
+            {
+                string filePath = fileInfo.FullName;
+                int filePathHash = DataFile.GetHash(filePath);
+                int legacyFilePathHash = filePath.GetHashCode();
+                connection.ExecuteNonQuery(QueryFormat, filePathHash, legacyFilePathHash, filePath);
             }
         }
 
