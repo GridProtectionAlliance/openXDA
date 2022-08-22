@@ -140,7 +140,7 @@ namespace openXDA.PQI
         {
             async Task<bool> IsImpactedAsync(DataRow facilityDisturbance)
             {
-                int facilityID = facilityDisturbance.ConvertField<int>("FacilityID");
+                int facilityID = facilityDisturbance.ConvertField<int>("PQIFacilityID");
                 double magnitude = facilityDisturbance.ConvertField<double>("PerUnitMagnitude");
                 double duration = facilityDisturbance.ConvertField<double>("DurationSeconds");
                 return await PQIWSClient.IsImpactedAsync(facilityID, magnitude, duration, cancellationToken);

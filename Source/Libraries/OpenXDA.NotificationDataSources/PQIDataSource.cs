@@ -24,6 +24,7 @@
 using System;
 using System.ComponentModel;
 using System.Configuration;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -87,8 +88,24 @@ namespace openXDA.NotificationDataSources
             PQIWSQueryHelper queryhelper = new PQIWSQueryHelper(XDAConnectionFactory, pqiwsClient);
             if (!queryhelper.HasImpactedComponentsAsync(evt.ID).Result)
                 return new XElement("ImpactedEquipment");
-            else
-                return new XElement("ImpactedEquipment", queryhelper.GetAllImpactedEquipmentAsync(evt.ID));
+            XElement result = new XElement("ImpactedEquipment");
+            queryhelper.GetAllImpactedEquipmentAsync(evt.ID).Result.ForEach((equipment) =>
+            {
+                XElement node = new XElement("Equipment");
+                node.SetAttributeValue("Facility", equipment.Facility);
+                node.SetAttributeValue("SectionTitle", equipment.SectionTitle);
+                node.SetAttributeValue("Area", equipment.Area);
+                node.SetAttributeValue("SectionRank", equipment.SectionRank);
+                node.SetAttributeValue("ComponentModel", equipment.ComponentModel);
+                node.SetAttributeValue("Manufacturer", equipment.Manufacturer);
+                node.SetAttributeValue("Series", equipment.Series);
+                node.SetAttributeValue("ComponentType", equipment.ComponentType);
+
+                result.Add(node);
+
+            });
+
+            return result;
         }
 
         #endregion
