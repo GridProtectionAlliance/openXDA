@@ -100,6 +100,7 @@ namespace openXDA.Nodes.Types.Email
             : base(host, definition, type)
         {
             m_emailTypes = new List<EventEmailProcessor>();
+            TaggedEmails = new ConcurrentQueue<DateTime>();
         }
 
         #endregion
