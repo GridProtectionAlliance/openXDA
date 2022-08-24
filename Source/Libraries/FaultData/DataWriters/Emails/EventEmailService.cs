@@ -191,6 +191,8 @@ namespace FaultData.DataWriters.Emails
             if (assetGroups.Count == 0)
                 return new List<string>();
 
+            string assetGroupFilter = string.Join(",", assetGroups);
+
             string emailAddressQuery;
             Func<DataRow, string> processor;
 
@@ -198,37 +200,38 @@ namespace FaultData.DataWriters.Emails
             {
 
                 emailAddressQuery =
-                    "SELECT DISTINCT UserAccount.Email AS Email " +
-                    "FROM " +
-                    "    UserAccountEmailType JOIN " +
-                    "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
-                    "WHERE " +
-                    "    UserAccountEmailType.EmailTypeID = {0} AND " +
-                    "    UserAccount.EmailConfirmed <> 0 AND " +
-                    "    UserAccount.Approved <> 0 AND " +
-                    "    UserAccountEmailType.AssetGroupID IN ({1})";
+                    $"SELECT DISTINCT UserAccount.Email AS Email " +
+                    $"FROM " +
+                    $"    UserAccountEmailType JOIN " +
+                    $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
+                    $"WHERE " +
+                    $"    UserAccountEmailType.EmailTypeID = {{0}} AND " +
+                    $"    UserAccount.EmailConfirmed <> 0 AND " +
+                    $"    UserAccount.Approved <> 0 AND " +
+                    $"    UserAccountEmailType.AssetGroupID IN ({assetGroupFilter})";
+
                 processor = row => row.ConvertField<string>("Email");
             }
             else
             {
                 emailAddressQuery =
-                     "SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
-                     "FROM " +
-                     "    UserAccountEmailType JOIN " +
-                     "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID LEFT JOIN" +
-                     "    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
-                     "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
-                     "WHERE " +
-                     "    UserAccountEmailType.EmailTypeID = {0} AND " +
-                     "    UserAccount.PhoneConfirmed <> 0 AND " +
-                     "    UserAccount.Approved <> 0 AND " +
-                     "    UserAccountEmailType.AssetGroupID IN ({1})";
+                     $"SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
+                     $"FROM " +
+                     $"    UserAccountEmailType JOIN " +
+                     $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID LEFT JOIN " +
+                     $"    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
+                     $"    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
+                     $"WHERE " +
+                     $"    UserAccountEmailType.EmailTypeID = {{0}} AND " +
+                     $"    UserAccount.PhoneConfirmed <> 0 AND " +
+                     $"    UserAccount.Approved <> 0 AND " +
+                     $"    UserAccountEmailType.AssetGroupID IN ({assetGroupFilter})";
 
                 processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
             }
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID, string.Join(",", assetGroups)))
+            using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID))
             {
                 return emailAddressTable
                     .Select()
