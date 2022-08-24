@@ -324,11 +324,28 @@ namespace FaultData.DataWriters.Emails
             if (eventIDs.Count == 0)
                 return new List<AssetGroup>();
 
+            string query =
+                $"SELECT DISTINCT AssetGroup.* " +
+                $"FROM " +
+                $"    AssetGroup LEFT OUTER JOIN " +
+                $"    MeterAssetGroup ON MeterAssetGroup.AssetGroupID = AssetGroup.ID LEFT OUTER JOIN " +
+                $"    AssetAssetGroup ON AssetAssetGroup.AssetGroupID = AssetGroup.ID JOIN " +
+                $"    Event ON " +
+                $"        Event.ID IN ({string.Join(",", eventIDs)}) AND " +
+                $"        (" +
+                $"            Event.MeterID = MeterAssetGroup.MeterID OR " +
+                $"            Event.AssetID = AssetAssetGroup.AssetID " +
+                $"        )";
+
             using (AdoDataConnection connection = ConnectionFactory())
+            using (DataTable table = connection.RetrieveData(query))
             {
-                string assetCondition = "(SELECT COUNT(*) FROM AssetAssetGroup WHERE AssetID IN(SELECT AssetID FROM Event WHERE ID IN({0})) AND AssetGroupID = AssetGroup.ID) > 0";
-                string meterCondition = "(SELECT COUNT(*) FROM MeterAssetGroup WHERE MeterID IN(SELECT MeterID FROM Event WHERE ID IN({0})) AND AssetGroupID = AssetGroup.ID) > 0";
-                return new TableOperations<AssetGroup>(connection).QueryRecordsWhere($"{assetCondition} OR {meterCondition}", string.Join(",", eventIDs)).ToList();
+                TableOperations<AssetGroup> assetGroupTable = new TableOperations<AssetGroup>(connection);
+
+                return table
+                    .AsEnumerable()
+                    .Select(assetGroupTable.LoadRecord)
+                    .ToList();
             }
         }
 
