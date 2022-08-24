@@ -558,10 +558,15 @@ namespace FaultData.DataWriters.Emails
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                string toLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
-                string subject = GetSubject(htmlDocument, email);
-                string body = GetBody(htmlDocument);
-                connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3}, {4})", email.ID, now, toLine, subject, body);
+                SentEmail sentEmail = new SentEmail();
+                sentEmail.EmailTypeID = email.ID;
+                sentEmail.TimeSent = now;
+                sentEmail.ToLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
+                sentEmail.Subject = GetSubject(htmlDocument, email);
+                sentEmail.Message = GetBody(htmlDocument);
+
+                TableOperations<SentEmail> sentEmailTable = new TableOperations<SentEmail>(connection);
+                sentEmailTable.AddNewRecord(sentEmail);
                 return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
         }

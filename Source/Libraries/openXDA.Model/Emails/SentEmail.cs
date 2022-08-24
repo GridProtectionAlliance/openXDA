@@ -33,6 +33,7 @@ namespace openXDA.Model
 
         [ParentKey(typeof(EmailType))]
         public int EmailTypeID { get; set; }
+
         public DateTime TimeSent { get; set; }
 
         public string ToLine { get; set; }
