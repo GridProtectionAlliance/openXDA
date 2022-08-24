@@ -469,6 +469,7 @@
       <ComponentRef Id="openXDA.Model" />
       <ComponentRef Id="openXDA.APIAuthentication" />
       <ComponentRef Id="openXDA.Nodes" />
+      <ComponentRef Id="openXDA.NotificationDataSources" />
       <ComponentRef Id="openXDA.XMLConfig" />
       <ComponentRef Id="openXDA.PQI" />
       <ComponentRef Id="openXDA.DataPusher" />
@@ -659,6 +660,9 @@
       </Component>
       <Component Id="openXDA.Nodes">
         <File Id="openXDA.Nodes.dll" Name="$(var.openXDA.Nodes.TargetFileName)" Source="$(var.openXDA.Nodes.TargetPath)" />
+      </Component>
+      <Component Id="openXDA.NotificationDataSources">
+        <File Id="openXDA.NotificationDataSources.dll" Name="$(var.openXDA.NotificationDataSources.TargetFileName)" Source="$(var.openXDA.NotificationDataSources.TargetPath)" />
       </Component>
       <Component Id="openXDA.XMLConfig">
         <File Id="openXDA.XMLConfig.dll" Name="$(var.openXDA.XMLConfig.TargetFileName)" Source="$(var.openXDA.XMLConfig.TargetPath)" />
