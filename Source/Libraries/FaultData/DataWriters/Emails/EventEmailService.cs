@@ -295,7 +295,12 @@ namespace FaultData.DataWriters.Emails
             string htmlText = templateData.ApplyXSLTransform(emailType.Template);
 
             XDocument htmlDocument = XDocument.Parse(htmlText, LoadOptions.PreserveWhitespace);
-            htmlDocument.TransformAll("format", element => element.Format());
+            htmlDocument.TransformAll("format", element => {
+                object f;
+                try { f = element.Format(); }
+                catch { f = ""; }
+                return f;
+                });
             return htmlDocument;
         }
 
