@@ -113,7 +113,7 @@ namespace FaultData.DataWriters.Emails
 
             List<string> recipients = GetRecipients(email, eventIDs);
 
-            if (recipients.Count == 0)
+            if (recipients.Count == 0 && String.IsNullOrEmpty(email.FilePath))
                 return;
 
             SendEmail(email, evt, recipients, xdaNow, eventIDs, true);
@@ -452,6 +452,12 @@ namespace FaultData.DataWriters.Emails
                 emailMessage.Body = GetBody(htmlDocument);
                 emailMessage.IsBodyHtml = true;
 
+                if (recipients.Count == 0)
+                {
+                    WriteEmailToFile(filePath, emailMessage);
+                    return;
+                }
+
                 string blindCopyAddress = emailSettings.BlindCopyAddress;
                 string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
 
@@ -530,11 +536,11 @@ namespace FaultData.DataWriters.Emails
 
         private string GetSubject(XDocument htmlDocument, EmailType emailType)
         {
-            string subject = (string)htmlDocument
+            string subject = (string)((string)htmlDocument
                 .Descendants("title")
-                .FirstOrDefault();
+                .FirstOrDefault());
 
-            return subject ?? emailType.Name;
+            return (subject ?? emailType.Name).Trim();
         }
 
         private string GetBody(XDocument htmlDocument) => htmlDocument
