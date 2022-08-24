@@ -133,6 +133,40 @@ namespace openXDA.Model
             }
         }
 
+        public List<Series> Series
+        {
+            get
+            {
+                List<Channel> channels = Channels;
+
+                if (channels is null)
+                    return null;
+
+                bool IsQueryRequired()
+                {
+                    var connectionFactory = ConnectionFactory;
+
+                    try
+                    {
+                        // Don't trigger individual queries for each channel
+                        ConnectionFactory = null;
+                        return channels.Any(channel => channel.Series is null);
+                    }
+                    finally
+                    {
+                        ConnectionFactory = connectionFactory;
+                    }
+                }
+
+                if (IsQueryRequired())
+                    return QuerySeries();
+
+                return channels
+                    .SelectMany(channel => channel.Series)
+                    .ToList();
+            }
+        }
+
         [JsonIgnore]
         [NonRecordField]
         public Func<AdoDataConnection> ConnectionFactory
@@ -180,6 +214,15 @@ namespace openXDA.Model
 
             TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
             return channelTable.QueryRecordsWhere("MeterID = {0}", ID);
+        }
+
+        public IEnumerable<Series> GetSeries(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
+            return seriesTable.QueryRecordsWhere("ChannelID IN (SELECT ID FROM Channel WHERE MeterID = {0})", ID);
         }
 
         public TimeZoneInfo GetTimeZoneInfo(TimeZoneInfo defaultTimeZone)
@@ -249,6 +292,36 @@ namespace openXDA.Model
             }
 
             return channels;
+        }
+
+        private List<Series> QuerySeries()
+        {
+            List<Series> seriesList;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                seriesList = GetSeries(connection)?
+                    .Select(LazyContext.GetSeries)
+                    .ToList();
+            }
+
+            if (!(seriesList is null))
+            {
+                ILookup<int, Series> seriesLookup = seriesList.ToLookup(series => series.ChannelID);
+
+                foreach (Channel channel in Channels)
+                {
+                    channel.Series = seriesLookup[channel.ID].ToList();
+
+                    foreach (Series series in channel.Series)
+                    {
+                        series.Channel = channel;
+                        series.LazyContext = LazyContext;
+                    }
+                }
+            }
+
+            return seriesList;
         }
 
         #endregion

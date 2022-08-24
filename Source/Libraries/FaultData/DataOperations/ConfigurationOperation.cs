@@ -211,9 +211,7 @@ namespace FaultData.DataOperations
             meterDataSet.Meter = dbMeter;
 
             // Get the list of series associated with the meter in the database
-            List<Series> seriesList = dbMeter.Channels
-                .SelectMany(channel => channel.Series)
-                .ToList();
+            List<Series> seriesList = dbMeter.Series;
 
             // Create data series for series which
             // are combinations of the parsed series
@@ -234,10 +232,7 @@ namespace FaultData.DataOperations
 
                 //Need to update Meter here to make sure we have all Series that were generated
                 dbMeter.Channels = null;
-
-                seriesList = dbMeter.Channels
-                   .SelectMany(channel => channel.Series)
-                   .ToList();
+                seriesList = dbMeter.Series;
 
                 //compute Series properly to account for multiply and Add (only deal with RMS here)
                 foreach (Series series in seriesList.Where(series => (!string.IsNullOrEmpty(series.SourceIndexes)) &&
@@ -259,10 +254,7 @@ namespace FaultData.DataOperations
 
                 //Need to update Meter here to make sure we have all Series that were generated
                 dbMeter.Channels = null;
-
-                seriesList = dbMeter.Channels
-                   .SelectMany(channel => channel.Series)
-                   .ToList();
+                seriesList = dbMeter.Series;
 
                 //compute Series properly to account for multiply and Add
                 foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
@@ -285,10 +277,7 @@ namespace FaultData.DataOperations
 
                 //Need to update Meter here to make sure we have all Series that were generated
                 dbMeter.Channels = null;
-
-                seriesList = dbMeter.Channels
-                   .SelectMany(channel => channel.Series)
-                   .ToList();
+                seriesList = dbMeter.Series;
 
                 //compute Series properly to account for multiply and Add
                 foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
@@ -595,8 +584,7 @@ namespace FaultData.DataOperations
                         .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
                 }
 
-                Dictionary<SeriesKey, Series> seriesLookup = meter.Channels
-                    .SelectMany(channel => channel.Series)
+                Dictionary<SeriesKey, Series> seriesLookup = meter.Series
                     .Where(series => series.SourceIndexes == "")
                     .GroupBy(series => new SeriesKey(series))
                     .ToDictionary(grouping =>
@@ -636,8 +624,7 @@ namespace FaultData.DataOperations
                     foreach (Channel channel in meter.Channels)
                         channel.Series = null;
 
-                    seriesLookup = meter.Channels
-                        .SelectMany(channel => channel.Series)
+                    seriesLookup = meter.Series
                         .GroupBy(series => new SeriesKey(series))
                         .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
                 }

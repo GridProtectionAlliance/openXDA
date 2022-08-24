@@ -250,9 +250,8 @@ namespace DeviceDefinitionsMigrator
 
                 meter.ConnectionFactory = () => new AdoDataConnection(connection.Connection, typeof(SqlDataAdapter), false);
 
-                return meter.Channels
-                    .Where(channel => channel.AssetID == asset.ID)
-                    .SelectMany(channel => channel.Series)
+                return meter.Series
+                    .Where(series => series.Channel.AssetID == asset.ID)
                     .Join(outputChannelTable.QueryRecords(), series => series.ID, outputChannel => outputChannel.SeriesID, Tuple.Create)
                     .ToDictionary(tuple => tuple.Item2.ChannelKey, StringComparer.OrdinalIgnoreCase);
             }

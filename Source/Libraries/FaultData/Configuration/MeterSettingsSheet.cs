@@ -242,8 +242,7 @@ namespace FaultData.Configuration
                 rootElement.Add(channelElement);
             }
 
-            IEnumerable<Series> seriesList = meter.Channels
-                .SelectMany(channel => channel.Series)
+            IEnumerable<Series> seriesList = meter.Series
                 .OrderBy(series => series.ID);
 
             foreach (Series series in seriesList)

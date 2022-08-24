@@ -423,12 +423,11 @@ namespace FaultData.DataOperations.DFRLineFiles
             TableOperations<Channel> channelTable = new TableOperations<Channel>(m_connection);
             TableOperations<Series> seriesTable = new TableOperations<Series>(m_connection);
 
-            Series series = meter.Channels
-                .Where(ch => ch.Asset.AssetKey == lineID)
-                .Where(ch => ch.MeasurementTypeID == measurementType.ID)
-                .Where(ch => ch.MeasurementCharacteristicID == measurementCharacteristic.ID)
-                .Where(ch => ch.PhaseID == phase.ID)
-                .SelectMany(channel => channel.Series)
+            Series series = meter.Series
+                .Where(s => s.Channel.Asset.AssetKey == lineID)
+                .Where(s => s.Channel.MeasurementTypeID == measurementType.ID)
+                .Where(s => s.Channel.MeasurementCharacteristicID == measurementCharacteristic.ID)
+                .Where(s => s.Channel.PhaseID == phase.ID)
                 .Where(s => s.SeriesTypeID == seriesType.ID)
                 .FirstOrDefault();
 
@@ -598,10 +597,9 @@ namespace FaultData.DataOperations.DFRLineFiles
             TableOperations<Channel> channelTable = new TableOperations<Channel>(m_connection);
             TableOperations<Series> seriesTable = new TableOperations<Series>(m_connection);
 
-            Series series = meter.Channels
-                .Where(ch => ch.Asset.AssetKey == lineID)
-                .Where(ch => ch.MeasurementTypeID == measurementType.ID)
-                .SelectMany(channel => channel.Series)
+            Series series = meter.Series
+                .Where(s => s.Channel.Asset.AssetKey == lineID)
+                .Where(s => s.Channel.MeasurementTypeID == measurementType.ID)
                 .Where(s => s.SourceIndexes == digitalInfo.Index.ToString())
                 .FirstOrDefault();
 

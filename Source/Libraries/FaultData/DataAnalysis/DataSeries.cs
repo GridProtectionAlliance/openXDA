@@ -518,8 +518,8 @@ namespace FaultData.DataAnalysis
             int seriesID = LittleEndian.ToInt32(uncompressedData, offset);
             offset += sizeof(int);
 
-            if (seriesID > 0 && (object)meter != null)
-                dataSeries.SeriesInfo = Series.GetInfo(meter, seriesID);
+            if (seriesID > 0 && !(meter is null))
+                dataSeries.SeriesInfo = meter.Series.FirstOrDefault(s => s.ID == seriesID);
 
             const ushort NaNValue = ushort.MaxValue;
             double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
