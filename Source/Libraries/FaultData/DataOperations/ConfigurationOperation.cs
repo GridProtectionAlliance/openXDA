@@ -137,15 +137,13 @@ namespace FaultData.DataOperations
             /// <returns> The Channel Index associated with this channelName. Returns -1 if it is not found</returns>
             private static int ParseName(string name, List<string> nameIndexPairs)
             {
+                string test = (name[0] == '-') ? name.Substring(1) : name;
+                int index = nameIndexPairs.IndexOf(name);
 
-                string test = (name[0] == '-' ? name.Substring(1) : name);
-                if (!nameIndexPairs.Contains(test))
-                    return -1;
-                if (nameIndexPairs.FindAll(item => item == test).Count() > 1)
+                if (index >= 0 && nameIndexPairs.IndexOf(name, index + 1) >= 0)
                     throw new FormatException($"Incorrect format for channel name {test} duplicates found in configuration.");
 
-                return nameIndexPairs.FindIndex(item => item == test);
-
+                return index;
             }
         }
 
