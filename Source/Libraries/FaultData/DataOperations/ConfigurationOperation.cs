@@ -57,44 +57,42 @@ namespace FaultData.DataOperations
             public bool IsTriggerTrend;
             public bool IsTrend { get => IsRMSTrend || IsFLKRTrend || IsTriggerTrend; }
 
-
             public static SourceIndex Parse(string text, List<string> channelNames = null)
             {
-                if (channelNames == null)
-                    channelNames = new List<string>();
+                string trim = text.Trim();
+
+                if (trim == "NONE")
+                    return null;
+
+                if (string.IsNullOrEmpty(trim))
+                    return null;
 
                 SourceIndex sourceIndex = new SourceIndex();
-                sourceIndex.ByName = false;
-                sourceIndex.IsRMSTrend = false;
-                sourceIndex.IsFLKRTrend = false;
-                sourceIndex.IsTriggerTrend = false;
+                sourceIndex.IsRMSTrend = trim.StartsWith("RMS", StringComparison.OrdinalIgnoreCase);
+                sourceIndex.IsFLKRTrend = trim.StartsWith("FLKR", StringComparison.OrdinalIgnoreCase);
+                sourceIndex.IsTriggerTrend = trim.StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase);
 
                 string channelIndex;
 
-                // Deal with RMS Trends before anythin else since they don't have a valid Name
-                if (text.Trim().StartsWith("RMS", StringComparison.OrdinalIgnoreCase) || text.Trim().StartsWith("FLKR", StringComparison.OrdinalIgnoreCase) || text.Trim().StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase))
+                // Deal with APP Trends before anything else since they don't have a valid Name
+                if (sourceIndex.IsTrend)
                 {
-                    // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n) Where n is a Channel ID (not a Series ID)
+                    // language=regex
+                    // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n) where n is a Channel ID (not a Series ID)
+                    const string Pattern = @"(?<Name>[A-Za-z]+)\((?<Channel>[0-9]+)\)";
+                    Match match = Regex.Match(trim, Pattern);
 
-                    if (text.Trim().StartsWith("RMS", StringComparison.OrdinalIgnoreCase))
-                        sourceIndex.IsRMSTrend = true;
+                    if (!match.Success)
+                        throw new FormatException($"Incorrect format for trend channel name: {trim} doesn't match format RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n).");
 
-                    if (text.Trim().StartsWith("FLKR", StringComparison.OrdinalIgnoreCase))
-                        sourceIndex.IsFLKRTrend = true;
-
-                    if (text.Trim().StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase))
-                        sourceIndex.IsTriggerTrend = true;
-
-                    channelIndex = text.Trim().Substring(text.Trim().IndexOf("(") + 1, text.Trim().IndexOf(")") - text.Trim().IndexOf("(") - 1);
-                    sourceIndex.ChannelName = text.Trim().Substring(0, text.Trim().IndexOf("("));
+                    channelIndex = match.Groups["Channel"].Value;
+                    sourceIndex.ChannelName = match.Groups["Name"].Value;
 
                     if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
-                    {
-                        throw new FormatException($"Incorrect format for channel name {channelIndex} not found.");
-                    }
+                        throw new FormatException($"Incorrect format for trend channel name: {trim} does not specify a Channel ID.");
+
                     return sourceIndex;
                 }
-
 
                 string[] parts = text.Split('*');
                 string multiplier = (parts.Length > 1) ? parts[0].Trim() : "1";
@@ -106,22 +104,17 @@ namespace FaultData.DataOperations
                 if (!double.TryParse(multiplier, out sourceIndex.Multiplier))
                     throw new FormatException($"Incorrect format for multiplier {multiplier} found in source index {text}.");
 
-                if (channelIndex == "NONE")
-                    return null;
-                if (string.IsNullOrEmpty(channelIndex))
-                    return null;
-
                 if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
                 {
-                    sourceIndex.ChannelIndex = SourceIndex.ParseName(channelIndex, channelNames);
-                    sourceIndex.ChannelName = (channelIndex[0] == '-' ? channelIndex.Substring(1) : channelIndex);
+                    sourceIndex.ChannelIndex = ParseName(channelIndex, channelNames);
+                    sourceIndex.ChannelName = (channelIndex[0] == '-') ? channelIndex.Substring(1) : channelIndex;
                     sourceIndex.ByName = true;
                 }
-
 
                 if (channelIndex[0] == '-')
                 {
                     sourceIndex.Multiplier *= -1.0D;
+
                     if (!sourceIndex.ByName)
                         sourceIndex.ChannelIndex *= -1;
                 }
