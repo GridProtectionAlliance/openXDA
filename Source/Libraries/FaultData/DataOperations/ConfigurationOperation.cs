@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -30,9 +31,11 @@ using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.Collections;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace FaultData.DataOperations
@@ -151,6 +154,15 @@ namespace FaultData.DataOperations
 
         #endregion
 
+        #region [ Properties ]
+
+        [Category]
+        [SettingName(TrendingDataSection.CategoryName)]
+        public TrendingDataSection TrendingDataSettings { get; }
+            = new TrendingDataSection();
+
+        #endregion
+
         #region [ Methods ]
 
         public override void Execute(MeterDataSet meterDataSet)
@@ -158,36 +170,10 @@ namespace FaultData.DataOperations
             // Grab the parsed meter right away as we will be replacing it in the meter data set with the meter from the database
             Meter parsedMeter = meterDataSet.Meter;
 
-            //Check if it is APP Trending Data
-            bool isRMSTrending = false;
-            string rmsTrendingMatch = null;
-            bool isFlkrTrending = false;
-            string flkrTrendingMatch = null;
-            bool isTriggerTrending = false;
-            string triggerTrendingMatch = null;
-
-            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
-            {
-                rmsTrendingMatch = connection.ExecuteScalar<string>("SELECT VALUE FROM Setting WHERE Name = 'TrendingData.RMS.FolderPath'");
-                flkrTrendingMatch = connection.ExecuteScalar<string>("SELECT VALUE FROM Setting WHERE Name = 'TrendingData.Flicker.FolderPath'");
-                triggerTrendingMatch = connection.ExecuteScalar<string>("SELECT VALUE FROM Setting WHERE Name = 'TrendingData.Trigger.FolderPath'");
-            }
-
-            if (rmsTrendingMatch != null)
-            {
-                Regex rmsTrendingRegex = new Regex(rmsTrendingMatch, RegexOptions.Compiled);
-                isRMSTrending = rmsTrendingRegex.Match(meterDataSet.FilePath).Success;
-            }
-            if (flkrTrendingMatch != null)
-            {
-                Regex flkrTrendingRegex = new Regex(flkrTrendingMatch, RegexOptions.Compiled);
-                isFlkrTrending = flkrTrendingRegex.Match(meterDataSet.FilePath).Success;
-            }
-            if (triggerTrendingMatch != null)
-            {
-                Regex triggerTrendingRegex = new Regex(triggerTrendingMatch, RegexOptions.Compiled);
-                isTriggerTrending = triggerTrendingRegex.Match(meterDataSet.FilePath).Success;
-            }
+            // Check if it is APP Trending Data
+            bool isRMSTrending = Regex.IsMatch(meterDataSet.FilePath, TrendingDataSettings.RMS.FolderPath);
+            bool isFlkrTrending = Regex.IsMatch(meterDataSet.FilePath, TrendingDataSettings.Flicker.FolderPath);
+            bool isTriggerTrending = Regex.IsMatch(meterDataSet.FilePath, TrendingDataSettings.Trigger.FolderPath);
 
             // Search the database for a meter definition that matches the parsed meter
             Meter dbMeter = LoadMeterFromDatabase(meterDataSet);

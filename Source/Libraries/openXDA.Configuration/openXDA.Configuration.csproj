@@ -66,6 +66,7 @@
     <Compile Include="FileWatcherSection.cs" />
     <Compile Include="SystemSection.cs" />
     <Compile Include="TaskProcessorSection.cs" />
+    <Compile Include="TrendingDataSection.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
