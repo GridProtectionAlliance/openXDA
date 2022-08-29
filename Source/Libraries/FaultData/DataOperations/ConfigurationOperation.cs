@@ -868,16 +868,6 @@ namespace FaultData.DataOperations
                 Phase = powChannel.Phase
             };
 
-            Dictionary<ChannelKey, Channel> channelLookup = meterDataSet.Meter.Channels
-                    .GroupBy(channel => new ChannelKey(channel))
-                    .ToDictionary(grouping =>
-                    {
-                        if (grouping.Count() > 1)
-                            Log.Warn($"Detected duplicate channel key: {grouping.First().ID}");
-
-                        return grouping.Key;
-                    }, grouping => grouping.First());
-
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
@@ -885,39 +875,34 @@ namespace FaultData.DataOperations
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
                 TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
 
-
                 rmsChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = 'RMS'");
                 rmsChannel.MeasurementCharacteristicID = rmsChannel.MeasurementCharacteristic.ID;
 
                 ChannelKey key = new ChannelKey(rmsChannel);
-                Channel conChannel;
-                if (!channelLookup.TryGetValue(key, out conChannel))
+                Channel dbChannel = key.Find(connection, meterDataSet.Meter.ID);
+
+                if (dbChannel is null)
                 {
                     channelTable.AddNewRecord(rmsChannel);
-                    meterDataSet.Meter.Channels = null;
-                    channelLookup = meterDataSet.Meter.Channels
-                    .GroupBy(channel => new ChannelKey(channel))
-                    .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
-
-                    conChannel = channelLookup[key];
+                    dbChannel = key.Find(connection, meterDataSet.Meter.ID);
                 }
 
                 //Create all 3 Series for this Channel
                 Series avgSeries = new Series()
                 {
-                    ChannelID = conChannel.ID,
+                    ChannelID = dbChannel.ID,
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Average'").ID,
                     SourceIndexes = "RMSAVG(" + powChannel.ID + ")"
                 };
                 Series minSeries = new Series()
                 {
-                    ChannelID = conChannel.ID,
+                    ChannelID = dbChannel.ID,
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Minimum'").ID,
                     SourceIndexes = "RMSMIN(" + powChannel.ID + ")"
                 };
                 Series maxSeries = new Series()
                 {
-                    ChannelID = conChannel.ID,
+                    ChannelID = dbChannel.ID,
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Maximum'").ID,
                     SourceIndexes = "RMSMAX(" + powChannel.ID + ")"
                 };
@@ -954,17 +939,6 @@ namespace FaultData.DataOperations
                 Phase = powChannel.Phase
             };
 
-            Dictionary<ChannelKey, Channel> channelLookup = meterDataSet.Meter.Channels
-                    .GroupBy(channel => new ChannelKey(channel))
-                    .ToDictionary(grouping =>
-                    {
-                        if (grouping.Count() > 1)
-                            Log.Warn($"Detected duplicate channel key: {grouping.First().ID}");
-
-                        return grouping.Key;
-                    }, grouping => grouping.First());
-
-
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
@@ -972,27 +946,22 @@ namespace FaultData.DataOperations
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
                 TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
 
-
                 flkrChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = 'FlkrPST'");
                 flkrChannel.MeasurementCharacteristicID = flkrChannel.MeasurementCharacteristic.ID;
 
                 ChannelKey key = new ChannelKey(flkrChannel);
-                Channel conChannel;
-                if (!channelLookup.TryGetValue(key, out conChannel))
+                Channel dbChannel = key.Find(connection, meterDataSet.Meter.ID);
+
+                if (dbChannel is null)
                 {
                     channelTable.AddNewRecord(flkrChannel);
-                    meterDataSet.Meter.Channels = null;
-                    channelLookup = meterDataSet.Meter.Channels
-                    .GroupBy(channel => new ChannelKey(channel))
-                    .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
-
-                    conChannel = channelLookup[key];
+                    dbChannel = key.Find(connection, meterDataSet.Meter.ID);
                 }
 
                 //Create Series for this Channel
                 Series avgSeries = new Series()
                 {
-                    ChannelID = conChannel.ID,
+                    ChannelID = dbChannel.ID,
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Values'").ID,
                     SourceIndexes = "FLKR(" + powChannel.ID + ")"
                 };
@@ -1026,16 +995,6 @@ namespace FaultData.DataOperations
                 MeasurementType = powChannel.MeasurementType,
                 Phase = powChannel.Phase
             };
-
-            Dictionary<ChannelKey, Channel> channelLookup = meterDataSet.Meter.Channels
-                    .GroupBy(channel => new ChannelKey(channel))
-                    .ToDictionary(grouping =>
-                    {
-                        if (grouping.Count() > 1)
-                            Log.Warn($"Detected duplicate channel key: {grouping.First().ID}");
-
-                        return grouping.Key;
-                    }, grouping => grouping.First());
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
@@ -1089,34 +1048,30 @@ namespace FaultData.DataOperations
                 trendChannel.MeasurementCharacteristicID = trendChannel.MeasurementCharacteristic.ID;
 
                 ChannelKey key = new ChannelKey(trendChannel);
-                Channel conChannel;
-                if (!channelLookup.TryGetValue(key, out conChannel))
+                Channel dbChannel = key.Find(connection, meterDataSet.Meter.ID);
+
+                if (dbChannel is null)
                 {
                     channelTable.AddNewRecord(trendChannel);
-                    meterDataSet.Meter.Channels = null;
-                    channelLookup = meterDataSet.Meter.Channels
-                    .GroupBy(channel => new ChannelKey(channel))
-                    .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
-
-                    conChannel = channelLookup[key];
+                    dbChannel = key.Find(connection, meterDataSet.Meter.ID);
                 }
 
                 //Create all 3 Series for this Channel
                 Series avgSeries = new Series()
                 {
-                    ChannelID = conChannel.ID,
+                    ChannelID = dbChannel.ID,
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Average'").ID,
                     SourceIndexes = "TRIGGERAVG(" + powChannel.ID + ")"
                 };
                 Series minSeries = new Series()
                 {
-                    ChannelID = conChannel.ID,
+                    ChannelID = dbChannel.ID,
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Minimum'").ID,
                     SourceIndexes = "TRIGGERMIN(" + powChannel.ID + ")"
                 };
                 Series maxSeries = new Series()
                 {
-                    ChannelID = conChannel.ID,
+                    ChannelID = dbChannel.ID,
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Maximum'").ID,
                     SourceIndexes = "TRIGGERMAX(" + powChannel.ID + ")"
                 };
