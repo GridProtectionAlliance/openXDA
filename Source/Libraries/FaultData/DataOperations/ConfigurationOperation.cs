@@ -57,7 +57,7 @@ namespace FaultData.DataOperations
             public bool IsTriggerTrend;
             public bool IsTrend { get => IsRMSTrend || IsFLKRTrend || IsTriggerTrend; }
 
-            public static SourceIndex Parse(string text, List<string> channelNames = null)
+            public static SourceIndex Parse(string text, ILookup<string, int> channelNames = null)
             {
                 string trim = text.Trim();
 
@@ -72,7 +72,7 @@ namespace FaultData.DataOperations
                 sourceIndex.IsFLKRTrend = trim.StartsWith("FLKR", StringComparison.OrdinalIgnoreCase);
                 sourceIndex.IsTriggerTrend = trim.StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase);
 
-                string channelIndex;
+                string channelMapping;
 
                 // Deal with APP Trends before anything else since they don't have a valid Name
                 if (sourceIndex.IsTrend)
@@ -83,35 +83,51 @@ namespace FaultData.DataOperations
                     Match match = Regex.Match(trim, Pattern);
 
                     if (!match.Success)
-                        throw new FormatException($"Incorrect format for trend channel name: {trim} doesn't match format RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n).");
+                    {
+                        Log.Debug($"Incorrect format for trend channel name: {trim} doesn't match format RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n).");
+                        return null;
+                    }
 
-                    channelIndex = match.Groups["Channel"].Value;
+                    channelMapping = match.Groups["Channel"].Value;
                     sourceIndex.ChannelName = match.Groups["Name"].Value;
 
-                    if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
-                        throw new FormatException($"Incorrect format for trend channel name: {trim} does not specify a Channel ID.");
+                    if (!int.TryParse(channelMapping, out sourceIndex.ChannelIndex))
+                    {
+                        Log.Debug($"Incorrect format for trend channel name: {trim} does not specify a Channel ID.");
+                        return null;
+                    }
 
                     return sourceIndex;
                 }
 
-                string[] parts = text.Split('*');
-                string multiplier = (parts.Length > 1) ? parts[0].Trim() : "1";
-                channelIndex = (parts.Length > 1) ? parts[1].Trim() : parts[0].Trim();
-
-                if (parts.Length > 2)
-                    throw new FormatException($"Too many asterisks found in source index {text}.");
+                int asterisk = text.IndexOf('*');
+                string multiplier = (asterisk >= 0) ? text.Substring(0, asterisk).Trim() : "1";
+                channelMapping = (asterisk >= 0) ? text.Substring(asterisk + 1).Trim() : text.Trim();
 
                 if (!double.TryParse(multiplier, out sourceIndex.Multiplier))
-                    throw new FormatException($"Incorrect format for multiplier {multiplier} found in source index {text}.");
-
-                if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
                 {
-                    sourceIndex.ChannelIndex = ParseName(channelIndex, channelNames);
-                    sourceIndex.ChannelName = (channelIndex[0] == '-') ? channelIndex.Substring(1) : channelIndex;
-                    sourceIndex.ByName = true;
+                    Log.Debug($"Incorrect format for multiplier {multiplier} found in source index {text}.");
+                    return null;
                 }
 
-                if (channelIndex[0] == '-')
+                if (!int.TryParse(channelMapping, out sourceIndex.ChannelIndex))
+                {
+                    sourceIndex.ByName = true;
+                    sourceIndex.ChannelName = channelMapping;
+                    sourceIndex.ChannelIndex = -1;
+
+                    if (channelNames is null)
+                        return sourceIndex;
+
+                    int? found = FindIndex(channelMapping, channelNames);
+
+                    if (found is null)
+                        return sourceIndex;
+
+                    sourceIndex.ChannelIndex = found.GetValueOrDefault();
+                }
+
+                if (channelMapping[0] == '-')
                 {
                     sourceIndex.Multiplier *= -1.0D;
 
@@ -126,18 +142,37 @@ namespace FaultData.DataOperations
             /// Attempts to Parse a channel Name into an Index.
             /// </summary>
             /// <param name="name"> The Channel Name</param>
-            /// <param name="nameIndexPairs"> A List of Channel Names in Index Order.</param>
+            /// <param name="nameIndexLookup">A lookup table for indexes by name.</param>
             /// <returns> The Channel Index associated with this channelName. Returns -1 if it is not found</returns>
-            private static int ParseName(string name, List<string> nameIndexPairs)
+            private static int? FindIndex(string name, ILookup<string, int> nameIndexLookup)
             {
                 string test = (name[0] == '-') ? name.Substring(1) : name;
-                int index = nameIndexPairs.IndexOf(name);
+                int? firstIndex = null;
 
-                if (index >= 0 && nameIndexPairs.IndexOf(name, index + 1) >= 0)
-                    throw new FormatException($"Incorrect format for channel name {test} duplicates found in configuration.");
+                foreach (int index in nameIndexLookup[test])
+                {
+                    if (!(firstIndex is null))
+                    {
+                        Log.Debug($"Incorrect format for channel name {test}: duplicates found in configuration.");
+                        return null;
+                    }
 
-                return index;
+                    firstIndex = index;
+                }
+
+                if (firstIndex is null)
+                    Log.Debug($"Incorrect format for channel name {test}: no matching channel found.");
+
+                return firstIndex;
             }
+        }
+
+        private enum APPDataType
+        {
+            PointOnWave,
+            RMS,
+            Flicker,
+            Trigger
         }
 
         // Constants
@@ -161,15 +196,10 @@ namespace FaultData.DataOperations
             // Grab the parsed meter right away as we will be replacing it in the meter data set with the meter from the database
             Meter parsedMeter = meterDataSet.Meter;
 
-            // Check if it is APP Trending Data
-            bool isRMSTrending = Regex.IsMatch(meterDataSet.FilePath, TrendingDataSettings.RMS.FolderPath);
-            bool isFlkrTrending = Regex.IsMatch(meterDataSet.FilePath, TrendingDataSettings.Flicker.FolderPath);
-            bool isTriggerTrending = Regex.IsMatch(meterDataSet.FilePath, TrendingDataSettings.Trigger.FolderPath);
-
             // Search the database for a meter definition that matches the parsed meter
             Meter dbMeter = LoadMeterFromDatabase(meterDataSet);
 
-            if ((object)dbMeter == null)
+            if (dbMeter is null)
             {
                 Log.Info(string.Format("No existing meter found matching meter with name {0}.", parsedMeter.Name));
 
@@ -187,92 +217,29 @@ namespace FaultData.DataOperations
             // the one from the database
             meterDataSet.Meter = dbMeter;
 
-            // Get the list of series associated with the meter in the database
-            List<Series> seriesList = dbMeter.Series;
+            // Check if it is APP Trending Data
+            APPDataType appDataType = new Func<string, APPDataType>(filePath =>
+            {
+                if (Regex.IsMatch(filePath, TrendingDataSettings.RMS.FolderPath))
+                    return APPDataType.RMS;
 
-            // Create data series for series which
-            // are combinations of the parsed series
+                if (Regex.IsMatch(filePath, TrendingDataSettings.Flicker.FolderPath))
+                    return APPDataType.Flicker;
+
+                if (Regex.IsMatch(filePath, TrendingDataSettings.Trigger.FolderPath))
+                    return APPDataType.Trigger;
+
+                return APPDataType.PointOnWave;
+            })(meterDataSet.FilePath);
+
+            AddMissingAPPTrendChannels(meterDataSet, appDataType);
+
+            // Create data series which are computed from parsed series
             List<DataSeries> calculatedDataSeriesList = new List<DataSeries>();
+            ILookup<Series, SourceIndex> sourceIndexLookup = BuildSourceIndexLookup(meterDataSet, appDataType);
 
-            if (isRMSTrending)
-            {
-                // Only get Trending Data for Voltages and Currents
-                List<Channel> powChannels = dbMeter.Channels.Where(channel =>
-                    (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") && channel.MeasurementCharacteristic.Name == "Instantaneous")
-                    .ToList();
-
-                List<SourceIndex> rmsSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Where(item => !string.IsNullOrEmpty(item))
-                    .Select(item => SourceIndex.Parse(item))).Where(item => item.IsRMSTrend).ToList();
-
-                // Add RMS Channels as neccesarry for PoW Channels
-                powChannels.ForEach(item => AddRMSChannel(item, rmsSourceIndices, meterDataSet));
-
-                //Need to update Meter here to make sure we have all Series that were generated
-                dbMeter.Channels = null;
-                seriesList = dbMeter.Series;
-
-                //compute Series properly to account for multiply and Add (only deal with RMS here)
-                foreach (Series series in seriesList.Where(series => (!string.IsNullOrEmpty(series.SourceIndexes)) &&
-                    (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsRMSTrend))))
-                    AddRMSTrendSeries(calculatedDataSeriesList, meterDataSet, series);
-            }
-            else if (isFlkrTrending)
-            {
-                // Only get Trending Data for Voltages and Currents
-                List<Channel> powChannels = dbMeter.Channels.Where(channel =>
-                    (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") && channel.MeasurementCharacteristic.Name == "Instantaneous")
-                    .ToList();
-
-                List<SourceIndex> flkrSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',').Where(item => !string.IsNullOrEmpty(item))
-                    .Select(item => SourceIndex.Parse(item))).Where(item => item.IsFLKRTrend).ToList();
-
-                // Add RMS Channels as neccesarry for PoW Channels
-                powChannels.ForEach(item => AddFlkrChannel(item, flkrSourceIndices, meterDataSet));
-
-                //Need to update Meter here to make sure we have all Series that were generated
-                dbMeter.Channels = null;
-                seriesList = dbMeter.Series;
-
-                //compute Series properly to account for multiply and Add
-                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
-                (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsFLKRTrend))))
-                    AddFlkrTrendSeries(calculatedDataSeriesList, meterDataSet, series);
-            }
-            else if (isTriggerTrending)
-            {
-                List<Channel> powChannels = dbMeter.Channels.Where(channel =>
-                    (channel.MeasurementType.Name == "Digital") && (channel.MeasurementCharacteristic.Name == "Trigger - RMS" ||
-                        channel.MeasurementCharacteristic.Name == "Trigger - Impulse" || channel.MeasurementCharacteristic.Name == "Trigger - THD" ||
-                        channel.MeasurementCharacteristic.Name == "Trigger - Ubal" || channel.MeasurementCharacteristic.Name == "Trigger - I"))
-                    .ToList();
-
-                List<SourceIndex> trendSourceIndices = seriesList.SelectMany(series => series.SourceIndexes.Split(',')
-                    .Where(item => !string.IsNullOrEmpty(item)).Select(item => SourceIndex.Parse(item))).Where(item => item.IsTriggerTrend).ToList();
-
-                // Add Trend Channels as neccesarry for PoW Channels
-                powChannels.ForEach(item => AddTriggerChannel(item, trendSourceIndices, meterDataSet));
-
-                //Need to update Meter here to make sure we have all Series that were generated
-                dbMeter.Channels = null;
-                seriesList = dbMeter.Series;
-
-                //compute Series properly to account for multiply and Add
-                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes) &&
-                    (series.SourceIndexes.Split(',').Any(item => SourceIndex.Parse(item).IsTriggerTrend))))
-                    AddTriggerTrendSeries(calculatedDataSeriesList, meterDataSet, series);
-            }
-            //remove Channels with RMS Trending Data Series
-            else
-            {
-                seriesList = seriesList.Where(series => !series.SourceIndexes.Split(',').Any(index => {
-                    SourceIndex sourceIndex = SourceIndex.Parse(index);
-                    return (sourceIndex == null || sourceIndex.IsTrend);
-                })).ToList();
-
-
-                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
-                    AddCalculatedDataSeries(calculatedDataSeriesList, meterDataSet, series);
-            }
+            foreach (Series series in dbMeter.Series)
+                AddCalculatedDataSeries(calculatedDataSeriesList, meterDataSet, series, sourceIndexLookup);
 
             foreach (DataSeries calculatedDataSeries in calculatedDataSeriesList)
             {
@@ -373,44 +340,207 @@ namespace FaultData.DataOperations
             }
         }
 
-        private void AddCalculatedDataSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
+        private Func<SourceIndex, bool> GetSourceIndexFilter(APPDataType appDataType)
         {
-            List<SourceIndex> sourceIndexes;
-            DataSeries dataSeries;
+            switch (appDataType)
+            {
+                default:
+                case APPDataType.PointOnWave:
+                    return sourceIndex => !sourceIndex.IsTrend;
 
-            List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null ? "" : item.SeriesInfo.Channel.Name)).ToList();
-            sourceIndexes = series.SourceIndexes.Split(',')
-                .Select(item => SourceIndex.Parse(item, channelNames))
-                .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
+                case APPDataType.RMS:
+                    return sourceIndex => sourceIndex.IsRMSTrend;
+
+                case APPDataType.Flicker:
+                    return sourceIndex => sourceIndex.IsFLKRTrend;
+
+                case APPDataType.Trigger:
+                    return sourceIndex => sourceIndex.IsTriggerTrend;
+            }
+        }
+
+        private void AddMissingAPPTrendChannels(MeterDataSet meterDataSet, APPDataType appDataType)
+        {
+            if (appDataType == APPDataType.PointOnWave)
+                return;
+
+            Func<SourceIndex, bool> sourceIndexFilter = GetSourceIndexFilter(appDataType);
+
+            Func<Channel, bool> channelFilter = new Func<APPDataType, Func<Channel, bool>>(dataType =>
+            {
+                switch (dataType)
+                {
+                    case APPDataType.RMS:
+                    case APPDataType.Flicker:
+                        return channel =>
+                            (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") &&
+                            channel.MeasurementCharacteristic.Name == "Instantaneous";
+
+                    case APPDataType.Trigger:
+                        string[] measurementCharacteristics =
+                        {
+                            "Trigger - RMS",
+                            "Trigger - Impulse",
+                            "Trigger - THD",
+                            "Trigger - Ubal",
+                            "Trigger - I"
+                        };
+
+                        return channel =>
+                            channel.MeasurementType.Name == "Digital" &&
+                            measurementCharacteristics.Contains(channel.MeasurementCharacteristic.Name);
+
+                    default:
+                        return channel => false;
+                }
+            })(appDataType);
+
+            Action<Channel, MeterDataSet> addTrendChannel = new Func<APPDataType, Action<Channel, MeterDataSet>>(dataType =>
+            {
+                switch (dataType)
+                {
+                    case APPDataType.RMS: return AddRMSChannel;
+                    case APPDataType.Flicker: return AddFlkrChannel;
+                    case APPDataType.Trigger: return AddTriggerChannel;
+                    default: return new Action<Channel, MeterDataSet>((_, __) => { });
+                }
+            })(appDataType);
+
+            Meter meter = meterDataSet.Meter;
+
+            IEnumerable<SourceIndex> sourceIndexes = meter.Series
+                .SelectMany(series => series.SourceIndexes.Split(','))
+                .Select(sourceIndex => SourceIndex.Parse(sourceIndex))
+                .Where(sourceIndex => !(sourceIndex is null))
+                .Where(sourceIndex => sourceIndex.ChannelIndex >= 0)
+                .Where(sourceIndexFilter);
+
+            IEnumerable<Channel> unmappedChannels = meter.Channels
+                .Where(channelFilter)
+                .GroupJoin(sourceIndexes, channel => channel.ID, sourceIndex => sourceIndex.ChannelIndex, (Channel, SourceIndexes) => new { Channel, SourceIndexes })
+                .Where(item => !item.SourceIndexes.Any())
+                .Select(item => item.Channel);
+
+            bool refreshChannels = false;
+
+            foreach (Channel channel in unmappedChannels)
+            {
+                addTrendChannel(channel, meterDataSet);
+                refreshChannels = true;
+            }
+
+            if (refreshChannels)
+                meter.Channels = null;
+        }
+
+        private ILookup<Series, SourceIndex> BuildSourceIndexLookup(MeterDataSet meterDataSet, APPDataType appDataType)
+        {
+            List<Series> seriesList = meterDataSet.Meter.Series;
+
+            ILookup<string, int> GetNameIndexLookup(List<DataSeries> dataSeriesList) => dataSeriesList
+                .Select((DataSeries, Index) => new { DataSeries, Index })
+                .Where(item => !(item.DataSeries.SeriesInfo is null))
+                .ToLookup(item => item.DataSeries.SeriesInfo.Channel.Name, item => item.Index);
+
+            ILookup<string, int> analogLookup = GetNameIndexLookup(meterDataSet.DataSeries);
+            ILookup<string, int> digitalLookup = GetNameIndexLookup(meterDataSet.Digitals);
+
+            ILookup<string, int> GetLookupFor(Series series) =>
+                (series.Channel.MeasurementType.Name != "Digital")
+                    ? analogLookup
+                    : digitalLookup;
+
+            var sourceIndexMap = seriesList
+                .Select(Series => new { Series, Lookup = GetLookupFor(Series) })
+                .SelectMany(item => item.Series.SourceIndexes.Split(','), (item, SourceIndex) => new { item.Series, item.Lookup, SourceIndex })
+                .Select(item => new { item.Series, SourceIndex = SourceIndex.Parse(item.SourceIndex, item.Lookup) })
+                .Where(item => !(item.SourceIndex is null))
                 .ToList();
 
-            if (sourceIndexes.Any(index => index.ChannelIndex < 0))
+            ILookup<int, SourceIndex> sourceIndexLookup = sourceIndexMap
+                .ToLookup(item => item.Series.Channel.ID, item => item.SourceIndex);
+
+            IEnumerable<SourceIndex> Translate(SourceIndex sourceIndex)
             {
-                Log.Error($"Incorrect format for channel name {series.SourceIndexes} Channel not found in File.");
+                if (!sourceIndex.IsTrend)
+                    return Enumerable.Repeat(sourceIndex, 1);
+
+                IEnumerable<SourceIndex> powIndexes = sourceIndexLookup[sourceIndex.ChannelIndex];
+                bool isRMS = sourceIndex.ChannelName.StartsWith("RMS", StringComparison.OrdinalIgnoreCase);
+                bool isTrigger = !isRMS && sourceIndex.ChannelName.StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase);
+                bool isMax = sourceIndex.ChannelName.EndsWith("MAX", StringComparison.OrdinalIgnoreCase);
+                bool isMin = !isMax && sourceIndex.ChannelName.EndsWith("MIN", StringComparison.OrdinalIgnoreCase);
+
+                string GetIndexPrefix()
+                {
+                    if (isRMS)
+                        return "A";
+                    if (isTrigger)
+                        return "T";
+                    return "";
+                }
+
+                string GetAggregatePrefix(double multiplier)
+                {
+                    if (!isRMS && !isTrigger)
+                        return "";
+                    if (isMax || (isMin && multiplier < 0.0D))
+                        return "Max_";
+                    if (isMin || (isMax && multiplier < 0.0D))
+                        return "Min_";
+                    return "Avg_";
+                }
+
+                return powIndexes.Select(powIndex =>
+                {
+                    double multiplier = powIndex.Multiplier;
+                    string channelName = powIndex.ChannelName;
+
+                    if (!powIndex.ByName)
+                    {
+                        string indexPrefix = GetIndexPrefix();
+                        channelName = $"{indexPrefix}{powIndex.ChannelIndex}";
+                    }
+
+                    string aggregatePrefix = GetAggregatePrefix(multiplier);
+                    string translated = $"{multiplier}*{aggregatePrefix}{channelName}";
+
+                    // RMS and Trigger channels are always analogs
+                    SourceIndex newIndex = SourceIndex.Parse(translated, analogLookup);
+                    newIndex.IsRMSTrend = sourceIndex.IsRMSTrend;
+                    newIndex.IsFLKRTrend = sourceIndex.IsFLKRTrend;
+                    newIndex.IsTriggerTrend = sourceIndex.IsTriggerTrend;
+                    return newIndex;
+                });
+            }
+
+            Func<SourceIndex, bool> sourceIndexFilter = GetSourceIndexFilter(appDataType);
+
+            return sourceIndexMap
+                .SelectMany(item => Translate(item.SourceIndex), (item, SourceIndex) => new { item.Series, SourceIndex })
+                .Where(item => !(item.SourceIndex is null))
+                .Where(item => sourceIndexFilter(item.SourceIndex))
+                .Where(item => item.SourceIndex.ChannelIndex >= 0)
+                .ToLookup(item => item.Series, item => item.SourceIndex);
+        }
+
+        private void AddCalculatedDataSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series, ILookup<Series, SourceIndex> sourceIndexLookup)
+        {
+            IEnumerable<SourceIndex> sourceIndexes = sourceIndexLookup[series];
+
+            if (!sourceIndexes.Any())
                 return;
-            }
 
-            if (sourceIndexes.Count == 0)
+            List<DataSeries> dataSeriesList = (series.Channel.MeasurementType.Name != "Digital")
+                ? meterDataSet.DataSeries
+                : meterDataSet.Digitals;
+
+            if (sourceIndexes.Any(sourceIndex => sourceIndex.ChannelIndex >= dataSeriesList.Count))
                 return;
 
-            if (series.Channel.MeasurementType.Name != "Digital")
-            {
-                if (sourceIndexes.Any(sourceIndex => sourceIndex.ChannelIndex >= meterDataSet.DataSeries.Count))
-                    return;
-
-                dataSeries = sourceIndexes
-                    .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
-                    .Aggregate((series1, series2) => series1.Add(series2));
-            }
-            else
-            {
-                if (sourceIndexes.Any(sourceIndex => Math.Abs(sourceIndex.ChannelIndex) >= meterDataSet.Digitals.Count))
-                    return;
-
-                dataSeries = sourceIndexes
-                    .Select(sourceIndex => meterDataSet.Digitals[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
-                    .Aggregate((series1, series2) => series1.Add(series2));
-            }
+            DataSeries dataSeries = sourceIndexes
+                .Select(sourceIndex => dataSeriesList[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
+                .Aggregate((series1, series2) => series1.Add(series2));
 
             dataSeries.SeriesInfo = series;
             calculatedDataSeriesList.Add(dataSeries);
@@ -718,12 +848,8 @@ namespace FaultData.DataOperations
         /// <param name="powChannel">The point on Wave Data Channel.</param>
         /// <param name="rmsIndices">Source Indices of the existing RMS Trend Channels.</param>
         /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
-        private void AddRMSChannel(Channel powChannel, List<SourceIndex> rmsIndices, MeterDataSet meterDataSet)
+        private void AddRMSChannel(Channel powChannel, MeterDataSet meterDataSet)
         {
-            // We Assume they get set up in pairs of 3 for now.
-            if (rmsIndices.Any(item => item.ChannelIndex == powChannel.ID))
-                return;
-
             //Create new RMS Channel and Series
             Channel rmsChannel = new Channel()
             {
@@ -751,7 +877,6 @@ namespace FaultData.DataOperations
 
                         return grouping.Key;
                     }, grouping => grouping.First());
-
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
@@ -800,10 +925,7 @@ namespace FaultData.DataOperations
                 seriesTable.AddNewRecord(avgSeries);
                 seriesTable.AddNewRecord(minSeries);
                 seriesTable.AddNewRecord(maxSeries);
-
-
             }
-
         }
 
         /// <summary>
@@ -812,12 +934,8 @@ namespace FaultData.DataOperations
         /// <param name="powChannel">The point on Wave Data Channel.</param>
         /// <param name="flkrIndices">Source Indices of the existing Flicker Trend Channels.</param>
         /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
-        private void AddFlkrChannel(Channel powChannel, List<SourceIndex> flkrIndices, MeterDataSet meterDataSet)
+        private void AddFlkrChannel(Channel powChannel, MeterDataSet meterDataSet)
         {
-            // We Assume they get set up in pairs of 3 for now.
-            if (flkrIndices.Any(item => item.ChannelIndex == powChannel.ID))
-                return;
-
             //Create new RMS Channel and Series
             Channel flkrChannel = new Channel()
             {
@@ -879,12 +997,8 @@ namespace FaultData.DataOperations
                     SourceIndexes = "FLKR(" + powChannel.ID + ")"
                 };
 
-
                 seriesTable.AddNewRecord(avgSeries);
-
-
             }
-
         }
 
         /// <summary>
@@ -893,12 +1007,8 @@ namespace FaultData.DataOperations
         /// <param name="powChannel">The point on Wave Data Channel.</param>
         /// <param name="triggerIndices">Source Indices of the existing Trigger Trend Channels.</param>
         /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
-        private void AddTriggerChannel(Channel powChannel, List<SourceIndex> triggerIndices, MeterDataSet meterDataSet)
+        private void AddTriggerChannel(Channel powChannel, MeterDataSet meterDataSet)
         {
-            // We Assume they get set up in pairs of 3 for now.
-            if (triggerIndices.Any(item => item.ChannelIndex == powChannel.ID))
-                return;
-
             //Create new RMS Channel and Series
             Channel trendChannel = new Channel()
             {
@@ -917,7 +1027,6 @@ namespace FaultData.DataOperations
                 Phase = powChannel.Phase
             };
 
-
             Dictionary<ChannelKey, Channel> channelLookup = meterDataSet.Meter.Channels
                     .GroupBy(channel => new ChannelKey(channel))
                     .ToDictionary(grouping =>
@@ -928,7 +1037,6 @@ namespace FaultData.DataOperations
                         return grouping.Key;
                     }, grouping => grouping.First());
 
-
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
@@ -936,7 +1044,6 @@ namespace FaultData.DataOperations
                 TableOperations<SeriesType> seriesTypeTable = new TableOperations<SeriesType>(connection);
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
                 TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
-
 
                 trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("ID = {0}", trendChannel.MeasurementTypeID);
                 trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("ID = {0}", trendChannel.MeasurementCharacteristicID);
@@ -981,7 +1088,6 @@ namespace FaultData.DataOperations
                 trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name ={0}", measCharacteristic);
                 trendChannel.MeasurementCharacteristicID = trendChannel.MeasurementCharacteristic.ID;
 
-
                 ChannelKey key = new ChannelKey(trendChannel);
                 Channel conChannel;
                 if (!channelLookup.TryGetValue(key, out conChannel))
@@ -1018,187 +1124,7 @@ namespace FaultData.DataOperations
                 seriesTable.AddNewRecord(avgSeries);
                 seriesTable.AddNewRecord(minSeries);
                 seriesTable.AddNewRecord(maxSeries);
-
-
             }
-
-        }
-
-        /// <summary>
-        /// Adds the Processed RMS Trend Data
-        /// </summary>
-        /// <param name="calculatedDataSeriesList">List of all processed DataSeries</param>
-        /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
-        /// <param name="series">The RMS Trend Series that is being processed</param>
-        private void AddRMSTrendSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
-        {
-            List<SourceIndex> sourceIndexes;
-            DataSeries dataSeries;
-            Series sourceSeries;
-
-            //If the corresponding Channel exists (and is attached to this Meter)
-            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).Any())
-                return;
-
-            //If that Channel has a Series Attached to it
-            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.Any())
-                return;
-
-            List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null ? "" : item.SeriesInfo.Channel.Name)).ToList();
-
-            sourceSeries = meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.First();
-            sourceIndexes = sourceSeries.SourceIndexes.Split(',')
-                .Select(item =>
-                {
-
-                    SourceIndex sourceIndex = SourceIndex.Parse(item, channelNames);
-                    if ((object)sourceIndex == null)
-                        return null;
-                    if (!sourceIndex.ByName)
-                    {
-                        item = sourceIndex.Multiplier.ToString() + "*A" + sourceIndex.ChannelIndex.ToString();
-                    }
-                    return Translate(item, SourceIndex.Parse(series.SourceIndexes), channelNames);
-                }).Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsRMSTrend)
-                .ToList();
-
-            if (sourceIndexes.Count == 0)
-                return;
-
-            dataSeries = sourceIndexes
-                    .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
-                    .Aggregate((series1, series2) => series1.Add(series2));
-
-            dataSeries.SeriesInfo = series;
-            calculatedDataSeriesList.Add(dataSeries);
-
-        }
-
-        /// <summary>
-        /// Adds the Processed Trigger Trend Data
-        /// </summary>
-        /// <param name="calculatedDataSeriesList">List of all processed DataSeries</param>
-        /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
-        /// <param name="series">The Trigger Series that is being processed</param>
-        private void AddTriggerTrendSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
-        {
-            List<SourceIndex> sourceIndexes;
-            DataSeries dataSeries;
-            Series sourceSeries;
-
-            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).Any())
-                return;
-
-            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.Any())
-                return;
-
-            List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null ? "" : item.SeriesInfo.Channel.Name)).ToList();
-
-            sourceSeries = meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.First();
-            sourceIndexes = sourceSeries.SourceIndexes.Split(',')
-                .Select(item => Translate(item, SourceIndex.Parse(series.SourceIndexes), channelNames))
-                .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsTriggerTrend)
-                .ToList();
-
-            if (sourceIndexes.Count == 0)
-                return;
-
-
-
-            dataSeries = sourceIndexes
-                    .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
-                    .Aggregate((series1, series2) => series1.Add(series2));
-
-
-
-            dataSeries.SeriesInfo = series;
-            calculatedDataSeriesList.Add(dataSeries);
-
-        }
-
-        /// <summary>
-        /// Adds the Processed Flicker Trend Data
-        /// </summary>
-        /// <param name="calculatedDataSeriesList">List of all processed DataSeries</param>
-        /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
-        /// <param name="series">The Flicker Trend Series that is being processed</param>
-        private void AddFlkrTrendSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
-        {
-            List<SourceIndex> sourceIndexes;
-            DataSeries dataSeries;
-            Series sourceSeries;
-
-            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).Any())
-                return;
-
-            if (!meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.Any())
-                return;
-
-            List<string> channelNames = meterDataSet.DataSeries.Select(item => (item.SeriesInfo == null ? "" : item.SeriesInfo.Channel.Name)).ToList();
-
-            sourceSeries = meterDataSet.Meter.Channels.Where(channel => channel.ID == SourceIndex.Parse(series.SourceIndexes).ChannelIndex).First().Series.First();
-            sourceIndexes = sourceSeries.SourceIndexes.Split(',')
-                .Select(item => {
-                    SourceIndex sourceIndex = SourceIndex.Parse(item, channelNames);
-                    if ((object)sourceIndex == null)
-                        return null;
-
-                    if (!sourceIndex.ByName)
-                    {
-                        item = sourceIndex.Multiplier.ToString() + "*A" + sourceIndex.ChannelIndex.ToString();
-                        sourceIndex = SourceIndex.Parse(item, channelNames);
-                    }
-                    return sourceIndex;
-                })
-                .Where(sourceIndex => (object)sourceIndex != null && !sourceIndex.IsFLKRTrend)
-                .ToList();
-
-            if (sourceIndexes.Count == 0)
-                return;
-
-
-
-            dataSeries = sourceIndexes
-                    .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
-                    .Aggregate((series1, series2) => series1.Add(series2));
-
-
-
-            dataSeries.SeriesInfo = series;
-            calculatedDataSeriesList.Add(dataSeries);
-
-        }
-
-        private SourceIndex Translate(string original, SourceIndex functional, List<string> seriesNames)
-        {
-            if (!functional.IsTrend)
-                return null;
-
-            string translated = original;
-            SourceIndex parsed = SourceIndex.Parse(original);
-
-            if (!parsed.ByName)
-                return null;
-
-            if (functional.ChannelName.EndsWith("AVG", StringComparison.OrdinalIgnoreCase))
-                translated = translated.Replace(parsed.ChannelName, "Avg_" + parsed.ChannelName);
-            if (functional.ChannelName.EndsWith("MIN", StringComparison.OrdinalIgnoreCase))
-                translated = translated.Replace(parsed.ChannelName, "Min_" + parsed.ChannelName);
-            if (functional.ChannelName.EndsWith("MAX", StringComparison.OrdinalIgnoreCase))
-                translated = translated.Replace(parsed.ChannelName, "Max_" + parsed.ChannelName);
-
-            // Deal with Multiplication of negative Values
-            if (parsed.Multiplier < 0)
-            {
-                if (functional.ChannelName.EndsWith("MIN", StringComparison.OrdinalIgnoreCase))
-                    translated = translated.Replace("Min_", "Max_");
-
-                if (functional.ChannelName.EndsWith("MAX", StringComparison.OrdinalIgnoreCase))
-                    translated = translated.Replace("Max_", "Min_");
-
-            }
-
-            return SourceIndex.Parse(translated, seriesNames);
         }
 
         #endregion
