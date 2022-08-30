@@ -85,7 +85,7 @@ namespace FaultData.DataWriters
 
         #region [ Methods ]
 
-        public Chart GenerateChart(string title, List<string> keys, List<string> names, DateTime startTime, DateTime endTime)
+        public Chart GenerateChart(string title, List<string> keys, List<string> names, DateTime startTime, DateTime endTime, int minimumSamples = -1)
         {
             List<DataSeries> dataSeriesList;
 
@@ -134,6 +134,7 @@ namespace FaultData.DataWriters
                 if ((object)dataSeriesList[i] == null)
                     continue;
 
+                dataSeriesList[i].Upsample(minimumSamples);
                 series = new Series(names[i]);
                 series.ChartType = SeriesChartType.FastLine;
                 series.BorderWidth = 5;
@@ -268,7 +269,7 @@ namespace FaultData.DataWriters
         private static readonly ILog Log = LogManager.GetLogger(typeof(ChartGenerator));
 
         // Static Methods
-        public static Stream ConvertToChartImageStream(AdoDataConnection connection, XElement chartElement)
+        public static Stream ConvertToChartImageStream(AdoDataConnection connection, XElement chartElement, int minimumSamples = -1)
         {
             ChartGenerator chartGenerator;
 
@@ -330,7 +331,7 @@ namespace FaultData.DataWriters
             // Create the chart generator to generate the chart
             chartGenerator = new ChartGenerator(connection, eventID);
 
-            using (Chart chart = chartGenerator.GenerateChart(title, keys, names, startTime, endTime))
+            using (Chart chart = chartGenerator.GenerateChart(title, keys, names, startTime, endTime, minimumSamples))
             {
                 // Set the chart size based on the specified width and height;
                 // this allows us to dynamically change font sizes and line

@@ -95,6 +95,13 @@ namespace openXDA.Configuration
         public bool EnableSSL { get; set; }
 
         /// <summary>
+        /// Sets the minimum number of samples in an email chart
+        /// </summary>
+        [Setting]
+        [DefaultValue(-1)]
+        public int MinimumChartSamples { get; set; }
+
+        /// <summary>
         /// Gets the password as a <see cref="SecureString"/>.
         /// </summary>
         public SecureString SecurePassword { get; private set; }
