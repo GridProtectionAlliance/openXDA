@@ -462,15 +462,16 @@ namespace FaultData.DataAnalysis
 
             SplineFit splineFit = SplineFit.ComputeCubicSplines(xValues, yValues);
 
-            long tickIncrement = EndTime.Subtract(StartTime).Ticks / sampleCount;
+            long durationTicks = EndTime.Subtract(StartTime).Ticks;
 
             List<DataPoint> data = Enumerable
                 .Range(0, sampleCount)
-                .Select(sample =>
+                .Select(sample => sample * durationTicks / sampleCount)
+                .Select(sampleTicks =>
                     new DataPoint() 
                     { 
-                        Time = StartTime.AddTicks(tickIncrement * sample),
-                        Value = splineFit.CalculateY(tickIncrement * sample) 
+                        Time = StartTime.AddTicks(sampleTicks),
+                        Value = splineFit.CalculateY(sampleTicks) 
                     }
                 ).ToList();
 
