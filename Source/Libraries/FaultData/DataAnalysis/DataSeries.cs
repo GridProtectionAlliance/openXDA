@@ -447,19 +447,23 @@ namespace FaultData.DataAnalysis
         /// Upsamples the current DataSeries to requested sample count, assuming the requested rate is larger than the current
         /// </summary>
         /// <param name="maxSampleCount"></param>
-        public void Upsample(int sampleCount)
+        public void Upsample(int minSamplesPerCycle, double systemFrequency)
         {
             // don't actually upsample, if it doesn't need it.
-            if (sampleCount <= DataPoints.Count()) return;
+            if (minSamplesPerCycle <= 0)
+                return;
+            double cycles = (EndTime.Subtract(StartTime).Milliseconds + 1) * systemFrequency / 1000.0D; // +1 acts like a ceiling func here
+            int sampleCount = (int) Math.Ceiling(cycles * minSamplesPerCycle); 
+            if (sampleCount < DataPoints.Count)
+                return;
 
+            // Creating spline fit to perform upsampling
             List<double> xValues = DataPoints
                 .Select(point => (double) point.Time.Subtract(StartTime).Ticks)
                 .ToList();
-
             List<double> yValues= DataPoints
                 .Select(point => point.Value)
                 .ToList();
-
             SplineFit splineFit = SplineFit.ComputeCubicSplines(xValues, yValues);
 
             long durationTicks = EndTime.Subtract(StartTime).Ticks;

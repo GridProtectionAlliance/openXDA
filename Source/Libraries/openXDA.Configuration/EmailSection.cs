@@ -99,7 +99,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(-1)]
-        public int MinimumChartSamples { get; set; }
+        public int MinimumChartSamplesPerCycle { get; set; }
 
         /// <summary>
         /// Gets the password as a <see cref="SecureString"/>.

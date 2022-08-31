@@ -97,6 +97,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.Username', '', '')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.MinimumChartSamplesPerCycle', '-1', '-1')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.ConfirmSubject', 'OpenXDA Confirm Email', 'OpenXDA Confirm Email')
 GO
 
