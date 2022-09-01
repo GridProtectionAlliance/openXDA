@@ -132,14 +132,13 @@ namespace FaultData.DataWriters.Emails
                 XElement templateData = GetData(email,evt);
                 if (templateData == null)
                     return;
-                    XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
-                    ApplyChartTransform(attachments, htmlDocument);
-                    ApplyFTTTransform(attachments, htmlDocument);
-
-                    SendEmail(recipients, htmlDocument, attachments, email, (saveToFile ? email.FilePath : null));
-                    if (eventIDs.Count() > 0)
-                        LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
-                
+                Settings settings = new Settings(Configure);
+                XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
+                ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
+                ApplyFTTTransform(attachments, htmlDocument);
+                SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
+                if (eventIDs.Count() > 0)
+                    LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
             }
             finally
             {
@@ -378,16 +377,21 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public void ApplyChartTransform(List<Attachment> attachments, XDocument htmlDocument)
+        public void ApplyChartTransform(List<Attachment> attachments, XDocument htmlDocument, int minSamplesPerCycle = -1)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 htmlDocument.TransformAll("chart", (element, index) =>
                 {
-                    string chartEventID = (string)element.Attribute("eventID") ?? "-1";
+                    string chartEventID = (string) element.Attribute("eventID") ?? "-1";
                     string cid = $"event{chartEventID}_chart{index:00}.png";
 
-                    Stream image = ChartGenerator.ConvertToChartImageStream(connection, element);
+                    string stringMinimum = (string) element.Attribute("minimumSamplesPerCycleOverride");
+                    int passedMinimum = minSamplesPerCycle;
+                    if (!(stringMinimum is null) && !int.TryParse(stringMinimum, out passedMinimum))
+                        passedMinimum = -1;
+
+                    Stream image = ChartGenerator.ConvertToChartImageStream(connection, element, passedMinimum);
                     Attachment attachment = new Attachment(image, cid);
                     attachment.ContentId = attachment.Name;
                     attachments.Add(attachment);
@@ -431,9 +435,8 @@ namespace FaultData.DataWriters.Emails
             });
         }
 
-        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailType emailType, string filePath=null)
+        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailType emailType, Settings settings, string filePath=null)
         {
-            Settings settings = new Settings(Configure);
             EmailSection emailSettings = settings.EmailSettings;
             string smtpServer = emailSettings.SMTPServer;
 

@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using GSF;
+using GSF.NumericalAnalysis;
 using Ionic.Zlib;
 using openXDA.Model;
 
@@ -439,6 +440,44 @@ namespace FaultData.DataAnalysis
                     }
                 }
             }
+            DataPoints = data;
+        }
+
+        /// <summary>
+        /// Upsamples the current DataSeries to requested sample count, assuming the requested rate is larger than the current
+        /// </summary>
+        /// <param name="maxSampleCount"></param>
+        public void Upsample(int minSamplesPerCycle, double systemFrequency)
+        {
+            // don't actually upsample, if it doesn't need it.
+            if (minSamplesPerCycle <= 0)
+                return;
+            TimeSpan duration = EndTime - StartTime;
+            double cycles = duration.TotalSeconds * systemFrequency;
+            int minSampleCount = (int)Math.Round(cycles * minSamplesPerCycle); 
+            if (minSampleCount <= DataPoints.Count)
+                return;
+
+            // Creating spline fit to perform upsampling
+            List<double> xValues = DataPoints
+                .Select(point => (double) point.Time.Subtract(StartTime).Ticks)
+                .ToList();
+            List<double> yValues= DataPoints
+                .Select(point => point.Value)
+                .ToList();
+            SplineFit splineFit = SplineFit.ComputeCubicSplines(xValues, yValues);
+
+            List<DataPoint> data = Enumerable
+                .Range(0, minSampleCount)
+                .Select(sample => sample * duration.Ticks / minSampleCount)
+                .Select(sampleTicks =>
+                    new DataPoint() 
+                    { 
+                        Time = StartTime.AddTicks(sampleTicks),
+                        Value = splineFit.CalculateY(sampleTicks) 
+                    }
+                ).ToList();
+
             DataPoints = data;
         }
 
