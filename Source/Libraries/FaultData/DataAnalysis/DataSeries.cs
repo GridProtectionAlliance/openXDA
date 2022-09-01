@@ -452,9 +452,10 @@ namespace FaultData.DataAnalysis
             // don't actually upsample, if it doesn't need it.
             if (minSamplesPerCycle <= 0)
                 return;
-            double cycles = (EndTime.Subtract(StartTime).Milliseconds + 1) * systemFrequency / 1000.0D; // +1 acts like a ceiling func here
-            int sampleCount = (int) Math.Ceiling(cycles * minSamplesPerCycle); 
-            if (sampleCount < DataPoints.Count)
+            TimeSpan duration = EndTime - StartTime;
+            double cycles = duration.TotalSeconds * systemFrequency;
+            int minSampleCount = (int)Math.Round(cycles * minSamplesPerCycle); 
+            if (minSampleCount <= DataPoints.Count)
                 return;
 
             // Creating spline fit to perform upsampling
@@ -466,11 +467,9 @@ namespace FaultData.DataAnalysis
                 .ToList();
             SplineFit splineFit = SplineFit.ComputeCubicSplines(xValues, yValues);
 
-            long durationTicks = EndTime.Subtract(StartTime).Ticks;
-
             List<DataPoint> data = Enumerable
-                .Range(0, sampleCount)
-                .Select(sample => sample * durationTicks / sampleCount)
+                .Range(0, minSampleCount)
+                .Select(sample => sample * duration.Ticks / minSampleCount)
                 .Select(sampleTicks =>
                     new DataPoint() 
                     { 

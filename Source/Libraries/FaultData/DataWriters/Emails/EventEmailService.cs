@@ -388,8 +388,8 @@ namespace FaultData.DataWriters.Emails
 
                     string stringMinimum = (string) element.Attribute("minimumSamplesPerCycleOverride");
                     int passedMinimum = minSamplesPerCycle;
-                    if (!(stringMinimum is null))
-                        int.TryParse(stringMinimum, out passedMinimum); //passedMinimum will be 0 if this fails
+                    if (!(stringMinimum is null) && !int.TryParse(stringMinimum, out passedMinimum))
+                        passedMinimum = -1;
 
                     Stream image = ChartGenerator.ConvertToChartImageStream(connection, element, passedMinimum);
                     Attachment attachment = new Attachment(image, cid);
