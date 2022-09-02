@@ -25,8 +25,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using GSF.Data;
 using GSF.Data.Model;
+using log4net;
 using openXDA.Model;
 
 namespace openXDA.Nodes.Types.Analysis
@@ -142,13 +144,32 @@ namespace openXDA.Nodes.Types.Analysis
 
         public void Dequeue(AnalysisTask task)
         {
-            using (AdoDataConnection connection = ConnectionFactory())
+            void RemoveAnalysisTask()
             {
-                const string QueryFormat =
-                    "DELETE FROM AnalysisTask " +
-                    "WHERE ID = {0}";
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    const string QueryFormat =
+                        "DELETE FROM AnalysisTask " +
+                        "WHERE ID = {0}";
 
-                connection.ExecuteNonQuery(QueryFormat, task.ID);
+                    connection.ExecuteNonQuery(QueryFormat, task.ID);
+                }
+            }
+
+            // If we don't make sure the analysis task is removed from the database,
+            // records can get stuck and prevent other tasks from being processed
+            while (true)
+            {
+                try
+                {
+                    RemoveAnalysisTask();
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                    Thread.Sleep(10000);
+                }
             }
         }
 
@@ -199,6 +220,13 @@ namespace openXDA.Nodes.Types.Analysis
             TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
             return meterTable.QueryRecordWhere("ID = {0}", meterID);
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(AnalysisTaskProcessor));
 
         #endregion
     }
