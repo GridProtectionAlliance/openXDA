@@ -259,8 +259,7 @@ namespace openXDA.Model
 
         public static Line DetailedLine(Asset asset, AdoDataConnection connection)
         {
-           
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             TableOperations<Line> lineTable = new TableOperations<Line>(connection);
@@ -277,7 +276,10 @@ namespace openXDA.Model
 
         public static Line DetailedLine(Asset asset)
         {
-            return DetailedLine(asset, asset.ConnectionFactory.Invoke());
+            using (AdoDataConnection connection = asset.ConnectionFactory())
+            {
+                return DetailedLine(asset, connection);
+            }
         }
         #endregion
     }
