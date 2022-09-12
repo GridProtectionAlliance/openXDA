@@ -294,9 +294,6 @@ namespace openXDA.Nodes.Types.FileProcessing
                 return;
 
             FileGroupInfo fileGroupInfo = workItem.FileGroupInfo;
-            fileGroupInfo.Refresh();
-
-            FileInfo[] fileGroup = fileGroupInfo.FileGroup;
             string filePath = workItem.FilePath;
             int priority = workItem.Priority;
             int retryCount = workItem.RetryCount;
@@ -343,6 +340,9 @@ namespace openXDA.Nodes.Types.FileProcessing
                 if (!File.Exists(filePath))
                     throw new FileSkippedException(false, $"Skipped file \"{filePath}\" because it was removed before data could be processed");
 
+                fileGroupInfo.Refresh();
+
+                FileInfo[] fileGroup = fileGroupInfo.FileGroup;
                 Action<object> configurator = GetConfigurator();
                 FileProcessingTask fileProcessingTask = new FileProcessingTask(fileGroup, filePath, priority, CreateDbConnection, configurator);
                 fileProcessingTask.Execute();
