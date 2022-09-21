@@ -1622,6 +1622,7 @@ CREATE TABLE AssetGroupAssetGroup
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     ParentAssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
     ChildAssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
+    constraint not_equal check (ChildAssetGroupID <> ParentAssetGroupID)
 )
 GO
 
