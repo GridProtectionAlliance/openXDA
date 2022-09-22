@@ -40,6 +40,7 @@ namespace SystemCenter.Model
     }
 
     [UseEscapedName]
+    [AllowSearch]
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]
