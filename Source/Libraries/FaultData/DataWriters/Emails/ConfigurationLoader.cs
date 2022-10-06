@@ -45,17 +45,9 @@ namespace FaultData.DataWriters.Emails
             LazyConfigureAction = new Lazy<Action<object>>(CreateConfigureAction);
         }
 
-        public ConfigurationLoader(int dataSourceEmailTypeID,Func<AdoDataConnection> connectionFactory)
-            : this(connectionFactory)
-        {
-            DataSourceEmailTypeID = dataSourceEmailTypeID;
-        }
-
         #endregion
 
         #region [ Properties ]
-
-        private int? DataSourceEmailTypeID { get; }
 
         private Func<AdoDataConnection> ConnectionFactory { get; }
         private Lazy<Action<object>> LazyConfigureAction { get; }
@@ -100,7 +92,7 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private IEnumerable<string[]> LoadXDASettings(AdoDataConnection connection)
+        protected IEnumerable<string[]> LoadXDASettings(AdoDataConnection connection)
         {
             TableOperations<Setting> settingTable = new TableOperations<Setting>(connection);
             List<Setting> settingList = settingTable.QueryRecords().ToList();
@@ -113,16 +105,53 @@ namespace FaultData.DataWriters.Emails
 
             return settingList.Select(setting => ToArray(setting.Name, setting.Value));
         }
-
-        private IEnumerable<string[]> LoadDataSourceSettings(AdoDataConnection connection)
+        protected virtual IEnumerable<string[]> LoadDataSourceSettings(AdoDataConnection connection)
         {
-            if (DataSourceEmailTypeID is null)
-                return Enumerable.Empty<string[]>();
+            return Enumerable.Empty<string[]>();
+        }
 
-            TableOperations<TriggeredEmailDataSourceSetting> settingTable = new TableOperations<TriggeredEmailDataSourceSetting>(connection);
-            List<TriggeredEmailDataSourceSetting> settingList = settingTable.QueryRecordsWhere("TriggeredEmailDataSourceEmailTypeID = {0}", DataSourceEmailTypeID).ToList();
+        protected string[] ToArray(string key, string value) =>
+        key.Split('.').Concat(new[] { value }).ToArray();
 
-            foreach (IGrouping<string, TriggeredEmailDataSourceSetting> grouping in settingList.GroupBy(setting => setting.Name))
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        protected static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationLoader));
+
+        // Static Properties
+        private static ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser { get; } =
+            new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
+
+        #endregion
+    }
+    public class ConfigurationLoader<T> : ConfigurationLoader where T : DataSourceSetting, new()
+    {
+        #region [Constructors]
+        public ConfigurationLoader(int dataSourceEmailTypeID, Func<AdoDataConnection> connectionFactory)
+            : base(connectionFactory)
+        {
+            DataSourceEmailTypeID = dataSourceEmailTypeID;
+        }
+        #endregion
+        #region [Properties]
+        private int DataSourceEmailTypeID { get; }
+        #endregion
+        #region [Methods]
+
+        protected override IEnumerable<string[]> LoadDataSourceSettings(AdoDataConnection connection)
+        {
+            TableOperations<T> settingTable = new TableOperations<T>(connection);
+            string query;
+            if (typeof(T) == typeof(ScheduledEmailDataSourceSetting))
+                query = "ScheduledEmailDataSourceID = {0}";
+            else
+                query = "TriggeredEmailDataSourceEmailTypeID = {0}";
+
+            List<DataSourceSetting> settingList = settingTable.QueryRecordsWhere(query, DataSourceEmailTypeID).ToList<DataSourceSetting>();
+
+            foreach (IGrouping<string, DataSourceSetting> grouping in settingList.GroupBy(setting => setting.Name))
             {
                 if (grouping.Count() > 1)
                     Log.Warn($"Duplicate record for setting {grouping.Key} detected.");
@@ -130,21 +159,6 @@ namespace FaultData.DataWriters.Emails
 
             return settingList.Select(setting => ToArray(setting.Name, setting.Value));
         }
-
-        private string[] ToArray(string key, string value) =>
-            key.Split('.').Concat(new[] { value }).ToArray();
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationLoader));
-
-        // Static Properties
-        private static ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser { get; } =
-            new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
-
         #endregion
     }
 }

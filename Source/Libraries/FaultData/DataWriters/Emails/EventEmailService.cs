@@ -62,24 +62,40 @@ namespace FaultData.DataWriters.Emails
         private class DataSourceWrapper
         {
             public string Name { get; }
-            public ITriggeredDataSource DataSource { get; }
+            public ITriggeredDataSource DataSourceTriggered { get; }
+            public IScheduledDataSource DataSourceScheduled { get; }
 
-            public DataSourceWrapper(string name, ITriggeredDataSource dataSource)
+            public DataSourceWrapper(string name, ITriggeredDataSource dataSourceTriggered = null, IScheduledDataSource dataSourceScheduled  = null)
             {
                 Name = name;
-                DataSource = dataSource;
+                DataSourceTriggered = dataSourceTriggered;
+                DataSourceScheduled = dataSourceScheduled;
             }
 
             public XElement TryProcess(Event evt)
             {
-                if (DataSource is null)
+                if (DataSourceTriggered is null)
                     return null;
 
                 void HandleException(Exception ex) =>
                     Log.Error($"Email data source {Name} failed to process", ex);
 
                 XElement element = null;
-                try { element = DataSource.Process(evt); }
+                try { element = DataSourceTriggered.Process(evt); }
+                catch (Exception ex) { HandleException(ex); }
+                return element;
+            }
+
+            public XElement TryProcess(DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
+            {
+                if (DataSourceScheduled is null)
+                    return null;
+
+                void HandleException(Exception ex) =>
+                    Log.Error($"Email data source {Name} failed to process", ex);
+
+                XElement element = null;
+                try { element = DataSourceScheduled.Process(xdaNow, xdaPrev, xdaNext); }
                 catch (Exception ex) { HandleException(ex); }
                 return element;
             }
@@ -146,6 +162,30 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
+        public void SendScheduledEmail(ScheduledEmailType email, DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
+        {
+            List<Attachment> attachments = new List<Attachment>();
+
+            try
+            {
+                string savePath = string.IsNullOrEmpty(email.FilePath) ? null : email.FilePath;
+                List<string> recipients = GetRecipients(email);
+                XElement templateData = GetData(email, xdaNow, xdaPrev, xdaNext);
+                if (templateData == null)
+                    return;
+                Settings settings = new Settings(Configure);
+                XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
+                ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
+                ApplyFTTTransform(attachments, htmlDocument);
+                SendEmail(recipients, htmlDocument, attachments, email, settings, savePath);
+                LoadSentEmail(email, xdaNow, recipients, htmlDocument);
+            }
+            finally
+            {
+                attachments?.ForEach(attachment => attachment.Dispose());
+            }
+        }
+
         public XElement GetData(EmailType email, Event evt)
         {
             using (AdoDataConnection connection = ConnectionFactory())
@@ -165,7 +205,7 @@ namespace FaultData.DataWriters.Emails
                     .Select((m) => CreateDataSource(m.Item2, m.Item1))
                     .ToList();
 
-                if (dataSources.Any(wrapper => wrapper.DataSource is null))
+                if (dataSources.Any(wrapper => wrapper.DataSourceTriggered is null))
                 {
                     Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
                     return null;
@@ -176,6 +216,35 @@ namespace FaultData.DataWriters.Emails
 
                 IEnumerable<XElement> eventData = dataSources
                     .Select(dataSource => dataSource.TryProcess(evt));
+
+                return new XElement("data", eventData);
+            }
+        }
+
+        public XElement GetData(ScheduledEmailType email, DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
+        {
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                TableOperations<ScheduledEmailDataSource> dataSourceTable = new TableOperations<ScheduledEmailDataSource>(connection);
+                TableOperations<ScheduledEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<ScheduledEmailDataSourceEmailType>(connection);
+
+                List<DataSourceWrapper> dataSources = dataSourceEmailTypeTable
+                    .QueryRecordsWhere("ScheduledEmailTypeID = {0}", email.ID)
+                    .Select((cm) => new Tuple<ScheduledEmailDataSourceEmailType, ScheduledEmailDataSource>(cm, dataSourceTable.QueryRecordWhere("ID = {0}", cm.ScheduledEmailDataSourceID)))
+                    .Select((m) => CreateDataSource(m.Item2, m.Item1))
+                    .ToList();
+
+                if (dataSources.Any(wrapper => wrapper.DataSourceScheduled is null))
+                {
+                    Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
+                    return null;
+                }
+
+                if (dataSources.Count == 0)
+                    return null;
+
+                IEnumerable<XElement> eventData = dataSources
+                    .Select(dataSource => dataSource.TryProcess(xdaNow, xdaPrev, xdaNext));
 
                 return new XElement("data", eventData);
             }
@@ -289,7 +358,57 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public XDocument ApplyTemplate(EmailType emailType, string templateData)
+        public List<string> GetRecipients(ScheduledEmailType emailType)
+        {
+            string emailAddressQuery;
+            Func<DataRow, string> processor;
+
+            if (!emailType.SMS)
+            {
+                bool requireEmailConfirm;
+                using (AdoDataConnection connection = ConnectionFactory())
+                    requireEmailConfirm = connection.ExecuteScalar<bool>("SELECT Value From [Setting] Where Name = 'Subscription.RequireConfirmation'");
+
+                emailAddressQuery =
+                   "SELECT DISTINCT UserAccount.Email AS Email " +
+                   "FROM " +
+                   "    UserAccountScheduledEmailType JOIN " +
+                   "    UserAccount ON UserAccountScheduledEmailType.UserAccountID = UserAccount.ID " +
+                   "WHERE " +
+                   "    UserAccountScheduledEmailType.ScheduledEmailTypeID = {0} AND " +
+                   (requireEmailConfirm ? "    UserAccount.EmailConfirmed <> 0 AND " : "") +
+                   "    UserAccount.Approved <> 0";
+
+                processor = row => row.ConvertField<string>("Email");
+            }
+            else
+            {
+                emailAddressQuery =
+                  "SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
+                  "FROM " +
+                  "    UserAccountScheduledEmailType JOIN " +
+                  "    UserAccount ON UserAccountScheduledEmailType.UserAccountID = UserAccount.ID LEFT JOIN" +
+                  "    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
+                  "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
+                  "WHERE " +
+                  "    UserAccountScheduledEmailType.ScheduledEmailTypeID = {0} AND " +
+                  "    UserAccount.PhoneConfirmed <> 0 AND " +
+                  "    UserAccount.Approved <> 0";
+
+                processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
+            }
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID))
+            {
+                return emailAddressTable
+                    .Select()
+                    .Select(processor)
+                    .ToList();
+            }
+        }
+
+        public XDocument ApplyTemplate(BaseEmailType emailType, string templateData)
         {
             string htmlText = templateData.ApplyXSLTransform(emailType.Template);
 
@@ -315,9 +434,32 @@ namespace FaultData.DataWriters.Emails
                 ConstructorInfo constructor = pluginType.GetConstructor(new[] { dbFactoryType });
                 object[] parameters = (constructor is null) ? Array.Empty<object>() : new object[] { ConnectionFactory };
                 ITriggeredDataSource dataSource = pluginFactory.Create(assemblyName, typeName, parameters);
-                ConfigurationLoader configurationLoader = new ConfigurationLoader(connectionModel.ID, ConnectionFactory);
+                ConfigurationLoader<TriggeredEmailDataSourceSetting> configurationLoader = new ConfigurationLoader<TriggeredEmailDataSourceSetting>(connectionModel.ID, ConnectionFactory);
                 dataSource.Configure(configurationLoader.Configure);
                 return new DataSourceWrapper(model.Name, dataSource);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"Failed to create ITriggeredDataSource of type {model.TypeName}", ex);
+                return new DataSourceWrapper(model.Name, null);
+            }
+        }
+
+        private DataSourceWrapper CreateDataSource(ScheduledEmailDataSource model, ScheduledEmailDataSourceEmailType connectionModel)
+        {
+            try
+            {
+                string assemblyName = model.AssemblyName;
+                string typeName = model.TypeName;
+                PluginFactory<IScheduledDataSource> pluginFactory = new PluginFactory<IScheduledDataSource>();
+                Type pluginType = pluginFactory.GetPluginType(assemblyName, typeName);
+                Type dbFactoryType = typeof(Func<AdoDataConnection>);
+                ConstructorInfo constructor = pluginType.GetConstructor(new[] { dbFactoryType });
+                object[] parameters = (constructor is null) ? Array.Empty<object>() : new object[] { ConnectionFactory };
+                IScheduledDataSource dataSource = pluginFactory.Create(assemblyName, typeName, parameters);
+                ConfigurationLoader<ScheduledEmailDataSourceSetting> configurationLoader = new ConfigurationLoader<ScheduledEmailDataSourceSetting>(connectionModel.ID, ConnectionFactory);
+                dataSource.Configure(configurationLoader.Configure);
+                return new DataSourceWrapper(model.Name, null, dataSource);
             }
             catch (Exception ex)
             {
@@ -435,7 +577,7 @@ namespace FaultData.DataWriters.Emails
             });
         }
 
-        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailType emailType, Settings settings, string filePath=null)
+        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, BaseEmailType emailType, Settings settings, string filePath=null)
         {
             EmailSection emailSettings = settings.EmailSettings;
             string smtpServer = emailSettings.SMTPServer;
@@ -542,7 +684,7 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private string GetSubject(XDocument htmlDocument, EmailType emailType)
+        private string GetSubject(XDocument htmlDocument, BaseEmailType emailType)
         {
             string subject = (string)((string)htmlDocument
                 .Descendants("title")
@@ -568,7 +710,7 @@ namespace FaultData.DataWriters.Emails
             return new SmtpClient(host);
         }
 
-        private int LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument)
+        private int LoadSentEmail(BaseEmailType email, DateTime now, List<string> recipients, XDocument htmlDocument)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {

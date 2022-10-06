@@ -277,6 +277,9 @@ GO
 INSERT INTO NodeType VALUES('EventEmail', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Email.EventEmailNode')
 GO
 
+INSERT INTO NodeType VALUES('ScheduledEmail', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Email.ScheduledEmailNode')
+GO
+
 INSERT INTO NodeType VALUES('FilePruner', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.FilePruning.FilePrunerNode')
 GO
 
@@ -309,6 +312,9 @@ INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes
 GO
 
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Email.EventEmailNode'), NULL, 'Emailer', 1)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Email.ScheduledEmailNode'), NULL, 'Scheduled Emailer', 1)
 GO
 
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, 'Analyzer', 1)
@@ -2009,8 +2015,9 @@ CREATE TABLE ScheduledEmailType
     Name VARCHAR(100) NOT NULL,
     Schedule VARCHAR(100) NOT NULL,
     Template VARCHAR(MAX) NOT NULL,
-    TriggersEmailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
-    SMS BIT NOT NULL DEFAULT 0
+    TriggerEmailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
+    SMS BIT NOT NULL DEFAULT 0,
+    FilePath VARCHAR(200) NULL DEFAULT NULL
 )
 GO
 

@@ -30,6 +30,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
+using FaultData.DataWriters.Emails;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
@@ -82,6 +83,8 @@ namespace openXDA.Nodes.Types.Email
             ScheduleManager = new ScheduleManager();
             ScheduleManager.ScheduleDue += ScheduleManager_ScheduleDue;
             ScheduleManager.Start();
+            Action<object> configurator = GetConfigurator();
+            OnReconfigure(configurator);
         }
 
         #endregion
@@ -128,30 +131,36 @@ namespace openXDA.Nodes.Types.Email
 
         private void ScheduleManager_ScheduleDue(object sender, GSF.EventArgs<Schedule> e)
         {
-            const string Pattern = @"\[(<ID>\d+)\] (<Name>.*)";
+            const string Pattern = @"\[(\d+)\] (.*)";
             string scheduleName = e.Argument.Name;
             Match match = Regex.Match(scheduleName, Pattern);
 
             if (!match.Success)
                 return;
 
-            string idMatch = match.Groups["ID"].Value;
+            string idMatch = match.Groups["1"].Value; //0th group is the entire string, 2nd is the name
 
             if (!int.TryParse(idMatch, out int id))
                 return;
 
             DateTime now = CurrentMinute();
+            DateTime currentScheduled = e.Argument.LastDueAt;
+            DateTime previousScheduled = e.Argument.PreviousTimeDue(currentScheduled);
+            DateTime nextScheduled = e.Argument.NextTimeDue(currentScheduled);
 
             // TODO: Think about tracking statistics on outstanding scheduled email tasks
             _ = Task.Run(() =>
             {
-                try { ProcessScheduledEmail(id, now); }
+                try { ProcessScheduledEmail(id, now, previousScheduled, nextScheduled); }
                 catch (Exception ex) { LogException(ex); }
             });
         }
 
-        private void ProcessScheduledEmail(int scheduledEmailID, DateTime now)
+        private void ProcessScheduledEmail(int scheduledEmailID, DateTime now, DateTime prevScheduled, DateTime nextScheduled)
         {
+            Action<object> configurator = GetConfigurator();
+            Settings settings = new Settings(configurator);
+
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 TableOperations<ScheduledEmailType> scheduledEmailTypeTable = new TableOperations<ScheduledEmailType>(connection);
@@ -160,12 +169,20 @@ namespace openXDA.Nodes.Types.Email
                 if (scheduledEmailType is null)
                     return;
 
-                bool triggersEmail = connection.ExecuteScalar<bool>(scheduledEmailType.TriggerEmailSQL /* TODO: Think about what to pass in */);
+                // Convert Times used to what ever the time zone is
+                TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
+                DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
+                DateTime xdaPrev = timeZoneConverter.ToXDATimeZone(prevScheduled);
+                DateTime xdaNext = timeZoneConverter.ToXDATimeZone(nextScheduled);
+
+                bool triggersEmail = connection.ExecuteScalar<bool>(scheduledEmailType.TriggerEmailSQL, xdaNow, xdaPrev, xdaNext);
 
                 if (!triggersEmail)
                     return;
 
-                // TODO: Generate the email using the data sources and template
+                EventEmailService emailService = new EventEmailService(CreateDbConnection, configurator);
+
+                emailService.SendScheduledEmail(scheduledEmailType, xdaNow, xdaPrev, xdaNext);
             }
         }
 

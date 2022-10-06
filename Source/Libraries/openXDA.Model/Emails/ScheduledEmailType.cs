@@ -25,20 +25,14 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class ScheduledEmailType
+    public class ScheduledEmailType : BaseEmailType
     {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
 
         public bool SMS { get; set; }
-
-        public string Name { get; set; }
 
         public string TriggerEmailSQL { get; set; }
         
         public string Schedule { get; set; }
-
-        public string Template { get; set; }
 
         public int EmailCategoryID { get; set; }
     }

@@ -1,12 +1,12 @@
 ﻿//******************************************************************************************************
-//  IScheduledDataSource.cs - Gbtc
+//  DataSourceSetting.cs - Gbtc
 //
-//  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
-//  file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,20 +16,22 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/06/2022 - Stephen Wills
+//  10/04/2022 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
-using System.Xml.Linq;
-using GSF.Scheduling;
+using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public interface IScheduledDataSource
+    public class DataSourceSetting
     {
-        void Configure(Action<object> configurator);
-        XElement Process(DateTime timeOccurred, DateTime prevTimeOccurred, DateTime nextTimeOccurred);
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        public string Value { get; set; }
+
+        public string Name { get; set; }
     }
 }

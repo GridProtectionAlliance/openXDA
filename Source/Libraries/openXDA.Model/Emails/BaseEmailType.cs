@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IScheduledDataSource.cs - Gbtc
+//  IEmailType.cs - Gbtc
 //
 //  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,20 +16,24 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/06/2022 - Stephen Wills
+//  10/03/2022 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
-using System.Xml.Linq;
-using GSF.Scheduling;
+using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public interface IScheduledDataSource
+    public class BaseEmailType
     {
-        void Configure(Action<object> configurator);
-        XElement Process(DateTime timeOccurred, DateTime prevTimeOccurred, DateTime nextTimeOccurred);
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        public string Name { get; set; }
+
+        public string Template { get; set; }
+
+        public string FilePath { get; set; }
     }
 }

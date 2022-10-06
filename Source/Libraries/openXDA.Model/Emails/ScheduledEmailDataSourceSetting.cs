@@ -25,15 +25,9 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class ScheduledEmailDataSourceSetting
+    public class ScheduledEmailDataSourceSetting : DataSourceSetting
     {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-
+        [ParentKey(typeof(ScheduledEmailDataSourceEmailType))]
         public int ScheduledEmailDataSourceID { get; set; }
-
-        public string Value { get; set; }
-
-        public string Name { get; set; }
     }
 }

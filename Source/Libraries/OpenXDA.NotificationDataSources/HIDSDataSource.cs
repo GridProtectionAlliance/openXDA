@@ -98,15 +98,15 @@ namespace openXDA.NotificationDataSources
         public void Configure(Action<object> configurator) =>
             Settings = new DataSourceSettings(configurator);
 
-        public XElement Process(Schedule schedule, DateTime timeOccurred)
+        public XElement Process(DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
         {
-            XElement xml = QueryXDA(timeOccurred);
+            XElement xml = QueryXDA(xdaNow);
             XDocument doc = new XDocument(xml);
 
             using (API hids = new API())
             {
                 hids.Configure(Settings.HIDSSettings);
-                Task influxQueryTask = QueryInfluxAsync(hids, timeOccurred, doc);
+                Task influxQueryTask = QueryInfluxAsync(hids, xdaNow, doc);
                 influxQueryTask.GetAwaiter().GetResult();
                 return xml;
             }

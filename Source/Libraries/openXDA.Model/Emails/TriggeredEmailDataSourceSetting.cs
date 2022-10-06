@@ -25,16 +25,9 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class TriggeredEmailDataSourceSetting
+    public class TriggeredEmailDataSourceSetting : DataSourceSetting
     {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-
         [ParentKey(typeof(TriggeredEmailDataSourceEmailType))]
         public int TriggeredEmailDataSourceEmailTypeID { get; set; }
-        
-        public string Value { get; set; }
-
-        public string Name { get; set; }
     }
 }
