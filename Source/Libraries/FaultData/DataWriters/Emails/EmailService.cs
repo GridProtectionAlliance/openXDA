@@ -44,7 +44,7 @@ using openXDA.Model;
 
 namespace FaultData.DataWriters.Emails
 {
-    public class EventEmailService
+    public class EmailService
     {
         #region [ Members ]
 
@@ -105,7 +105,7 @@ namespace FaultData.DataWriters.Emails
 
         #region [ Constructors ]
 
-        public EventEmailService(Func<AdoDataConnection> connectionFactory, Action<object> configure)
+        public EmailService(Func<AdoDataConnection> connectionFactory, Action<object> configure)
         {
             ConnectionFactory = connectionFactory;
             Configure = configure;
@@ -732,7 +732,7 @@ namespace FaultData.DataWriters.Emails
         #region [ Static ]
 
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(EventEmailService));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(EmailService));
 
         #endregion
     }

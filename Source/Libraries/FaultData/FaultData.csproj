@@ -172,7 +172,7 @@
     <Compile Include="DataSets\INFDataSet.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
     <Compile Include="DataWriters\Emails\ConfigurationLoader.cs" />
-    <Compile Include="DataWriters\Emails\EventEmailService.cs" />
+    <Compile Include="DataWriters\Emails\EmailService.cs" />
     <Compile Include="DataWriters\FaultTypeGenerator.cs" />
     <Compile Include="DataWriters\GTC\FTTImageGenerator.cs" />
     <Compile Include="DataWriters\GTC\StringExtensions.cs" />

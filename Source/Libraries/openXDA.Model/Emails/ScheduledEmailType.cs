@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class ScheduledEmailType : BaseEmailType
+    public class ScheduledEmailType : EmailTypeBase
     {
 
         public bool SMS { get; set; }

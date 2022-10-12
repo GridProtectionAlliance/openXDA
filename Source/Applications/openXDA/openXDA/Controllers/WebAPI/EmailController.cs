@@ -139,7 +139,7 @@ namespace openXDA.Controllers.WebAPI
             if (!eventEmailSettings.Enabled )
                 return Ok(1);
 
-            EventEmailService emailService = new EventEmailService(CreateDbConnection, GetConfigurator());
+            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -160,7 +160,7 @@ namespace openXDA.Controllers.WebAPI
         {
             try
             {
-                EventEmailService emailService = new EventEmailService(CreateDbConnection, GetConfigurator());
+                EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
 
                 using (AdoDataConnection connection = CreateDbConnection())
                 {
