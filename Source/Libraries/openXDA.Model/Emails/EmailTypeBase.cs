@@ -1,12 +1,12 @@
 ﻿//******************************************************************************************************
-//  ScheduledEmailType.cs - Gbtc
+//  EmailTypeBase.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/09/2021 - Samuel Robinson
+//  10/03/2022 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,16 +25,15 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class ScheduledEmailType : EmailTypeBase
+    public abstract class EmailTypeBase
     {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
 
-        public bool SMS { get; set; }
+        public string Name { get; set; }
 
-        public string TriggerEmailSQL { get; set; }
-        
-        public string Schedule { get; set; }
+        public string Template { get; set; }
 
-        public int EmailCategoryID { get; set; }
+        public string FilePath { get; set; }
     }
 }
-

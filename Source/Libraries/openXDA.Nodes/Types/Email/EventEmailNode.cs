@@ -248,7 +248,7 @@ namespace openXDA.Nodes.Types.Email
                 if (!eventEmailSettings.Enabled || Tripped)
                     return;
 
-                EventEmailService emailService = new EventEmailService(CreateDbConnection, configurator);
+                EmailService emailService = new EmailService(CreateDbConnection, configurator);
 
                 if (TripsMaxEmailThreshold(eventEmailSettings))
                 {
@@ -297,7 +297,7 @@ namespace openXDA.Nodes.Types.Email
             Tripped = false;
         }
 
-        private void SendTripNotification(EventEmailSection eventEmailSettings, EventEmailService emailService)
+        private void SendTripNotification(EventEmailSection eventEmailSettings, EmailService emailService)
         {
             string subject = "openXDA email flooding detected";
             StringBuilder message = new StringBuilder();

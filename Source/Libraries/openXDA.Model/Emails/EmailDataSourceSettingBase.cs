@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  EmailType.cs - Gbtc
+//  EmailDataSourceSettingBase.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,53 +16,22 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  10/04/2022 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.ComponentModel;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [AllowSearch]
-    [DeleteRoles("Administrator")]
-    [PatchRoles("Administrator")]
-    [PostRoles("Administrator")]
-    [TableName("EmailType")]
-    [UseEscapedName]
-    public class EmailType : EmailTypeBase
+    public abstract class EmailDataSourceSettingBase
     {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
 
-        [ParentKey(typeof(EmailCategory))]
-        public int EmailCategoryID { get; set; }
+        public string Value { get; set; }
 
-        public string TriggerEmailSQL { get; set; }
-
-        public string CombineEventsSQL { get; set; }
-
-        public double MinDelay { get; set; }
-
-        public double MaxDelay { get; set; }
-
-        public bool SMS { get; set; }
-
-        public bool ShowSubscription { get; set; }
-
-        [DefaultValue(false)]
-        public bool RequireApproval { get; set; }
-    }
-
-    [AllowSearch]
-    [DeleteRoles("Administrator")]
-    [PatchRoles("Administrator")]
-    [PostRoles("Administrator")]
-    [TableName("EmailTypeView")]
-    [UseEscapedName]
-    public class EmailTypeView : EmailType
-    {
-        [Searchable]
-        public string EmailCategory { get; set; }
+        public string Name { get; set; }
     }
 }
