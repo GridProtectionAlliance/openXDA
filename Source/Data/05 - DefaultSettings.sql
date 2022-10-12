@@ -737,7 +737,7 @@ INSERT INTO ScheduledEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VAL
 GO
 
 INSERT INTO ScheduledEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VALUES
-('HIDS','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.HIDSDataSource','pqi')
+('HIDS','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.HIDSDataSource','hids')
 GO
 
 -- Standard MAgDur Curves --
