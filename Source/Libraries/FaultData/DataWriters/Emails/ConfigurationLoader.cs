@@ -171,7 +171,7 @@ namespace FaultData.DataWriters.Emails
         #region [ Static ]
 
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationLoader));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationLoader<T>));
 
         #endregion
     }

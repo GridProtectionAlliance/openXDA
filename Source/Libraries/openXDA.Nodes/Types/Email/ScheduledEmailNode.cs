@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FilePrunerNode.cs - Gbtc
+//  ScheduledEmailNode.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
