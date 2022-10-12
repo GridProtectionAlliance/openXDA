@@ -32,7 +32,7 @@ namespace openXDA.Model
     [PostRoles("Administrator")]
     [TableName("EmailType")]
     [UseEscapedName]
-    public class EmailType : BaseEmailType
+    public class EmailType : EmailTypeBase
     {
 
         [ParentKey(typeof(EmailCategory))]

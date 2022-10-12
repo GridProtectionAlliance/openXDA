@@ -104,9 +104,9 @@
     <Compile Include="Alarms\AlarmGroups\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
     <Compile Include="Emails\CellCarrier.cs" />
-    <Compile Include="Emails\BaseEmailType.cs" />
+    <Compile Include="Emails\EmailTypeBase.cs" />
     <Compile Include="Emails\IScheduledDataSource.cs" />
-    <Compile Include="Emails\DataSourceSetting.cs" />
+    <Compile Include="Emails\EmailDataSourceSettingBase.cs" />
     <Compile Include="Emails\ITriggeredDataSource.cs" />
     <Compile Include="Emails\ScheduledEmailDataSource.cs" />
     <Compile Include="Emails\ScheduledEmailDataSourceEmailType.cs" />

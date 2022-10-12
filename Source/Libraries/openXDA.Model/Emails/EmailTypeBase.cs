@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IEmailType.cs - Gbtc
+//  EmailTypeBase.cs - Gbtc
 //
 //  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public abstract class BaseEmailType
+    public abstract class EmailTypeBase
     {
         [PrimaryKey(true)]
         public int ID { get; set; }

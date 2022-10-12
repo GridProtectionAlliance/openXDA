@@ -408,7 +408,7 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public XDocument ApplyTemplate(BaseEmailType emailType, string templateData)
+        public XDocument ApplyTemplate(EmailTypeBase emailType, string templateData)
         {
             string htmlText = templateData.ApplyXSLTransform(emailType.Template);
 
@@ -577,7 +577,7 @@ namespace FaultData.DataWriters.Emails
             });
         }
 
-        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, BaseEmailType emailType, Settings settings, string filePath=null)
+        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, Settings settings, string filePath=null)
         {
             EmailSection emailSettings = settings.EmailSettings;
             string smtpServer = emailSettings.SMTPServer;
@@ -684,7 +684,7 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private string GetSubject(XDocument htmlDocument, BaseEmailType emailType)
+        private string GetSubject(XDocument htmlDocument, EmailTypeBase emailType)
         {
             string subject = (string)((string)htmlDocument
                 .Descendants("title")
@@ -710,7 +710,7 @@ namespace FaultData.DataWriters.Emails
             return new SmtpClient(host);
         }
 
-        private int LoadSentEmail(BaseEmailType email, DateTime now, List<string> recipients, XDocument htmlDocument)
+        private int LoadSentEmail(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
