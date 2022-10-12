@@ -128,17 +128,23 @@ namespace FaultData.DataWriters.Emails
     }
     public class ConfigurationLoader<T> : ConfigurationLoader where T : DataSourceSetting, new()
     {
-        #region [Constructors]
+        #region [ Constructors ]
+
         public ConfigurationLoader(int dataSourceEmailTypeID, Func<AdoDataConnection> connectionFactory)
             : base(connectionFactory)
         {
             DataSourceEmailTypeID = dataSourceEmailTypeID;
         }
+
         #endregion
-        #region [Properties]
+
+        #region [ Properties ]
+
         private int DataSourceEmailTypeID { get; }
+
         #endregion
-        #region [Methods]
+
+        #region [ Methods ]
 
         protected override IEnumerable<string[]> LoadDataSourceSettings(AdoDataConnection connection)
         {
