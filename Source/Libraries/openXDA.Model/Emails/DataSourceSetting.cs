@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class DataSourceSetting
+    public abstract class EmailDataSourceSettingBase
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
