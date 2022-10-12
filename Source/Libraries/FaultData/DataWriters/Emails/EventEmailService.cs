@@ -243,10 +243,10 @@ namespace FaultData.DataWriters.Emails
                 if (dataSources.Count == 0)
                     return null;
 
-                IEnumerable<XElement> eventData = dataSources
+                IEnumerable<XElement> scheduleData = dataSources
                     .Select(dataSource => dataSource.TryProcess(xdaNow, xdaPrev, xdaNext));
 
-                return new XElement("data", eventData);
+                return new XElement("data", scheduleData);
             }
         }
 
