@@ -2105,7 +2105,7 @@ GO
 CREATE TABLE ScheduledEmailDataSourceSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    ScheduledEmailDataSourceEmailTypeID INT NOT NULL REFERENCES ScheduledEmailDataSource(ID),
+    ScheduledEmailDataSourceEmailTypeID INT NOT NULL REFERENCES ScheduledEmailDataSourceEmailType(ID),
     Name VARCHAR(200) NOT NULL,
     Value VARCHAR(MAX) NOT NULL
 )
