@@ -111,7 +111,7 @@ namespace FaultData.DataWriters.Emails
         }
 
         protected string[] ToArray(string key, string value) =>
-        key.Split('.').Concat(new[] { value }).ToArray();
+            key.Split('.').Concat(new[] { value }).ToArray();
 
         #endregion
 
