@@ -28,6 +28,6 @@ namespace openXDA.Model
     public class ScheduledEmailDataSourceSetting : EmailDataSourceSettingBase
     {
         [ParentKey(typeof(ScheduledEmailDataSourceEmailType))]
-        public int ScheduledEmailDataSourceID { get; set; }
+        public int ScheduledEmailDataSourceEmailTypeID { get; set; }
     }
 }

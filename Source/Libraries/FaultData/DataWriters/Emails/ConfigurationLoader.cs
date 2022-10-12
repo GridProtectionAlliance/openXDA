@@ -125,6 +125,7 @@ namespace FaultData.DataWriters.Emails
 
         #endregion
     }
+
     public class ConfigurationLoader<T> : ConfigurationLoader where T : EmailDataSourceSettingBase, new()
     {
         #region [ Constructors ]
@@ -148,11 +149,11 @@ namespace FaultData.DataWriters.Emails
         protected override IEnumerable<string[]> LoadDataSourceSettings(AdoDataConnection connection)
         {
             TableOperations<T> settingTable = new TableOperations<T>(connection);
-            string query;
-            if (typeof(T) == typeof(ScheduledEmailDataSourceSetting))
-                query = "ScheduledEmailDataSourceID = {0}";
-            else
-                query = "TriggeredEmailDataSourceEmailTypeID = {0}";
+            string dataSourceEmailTypeIDFieldName = settingTable
+                .GetFieldNames()
+                .FirstOrDefault(name => name.EndsWith("DataSourceEmailTypeID"));
+
+            string query = dataSourceEmailTypeIDFieldName + " = {0}";
 
             List<EmailDataSourceSettingBase> settingList = settingTable.QueryRecordsWhere(query, DataSourceEmailTypeID).ToList<EmailDataSourceSettingBase>();
 
@@ -164,6 +165,7 @@ namespace FaultData.DataWriters.Emails
 
             return settingList.Select(setting => ToArray(setting.Name, setting.Value));
         }
+
         #endregion
 
         #region [ Static ]
