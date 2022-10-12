@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ScheduledEmailNode.cs - Gbtc
+//  FilePrunerNode.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -143,7 +143,6 @@ namespace openXDA.Nodes.Types.Email
             if (!int.TryParse(idMatch, out int id))
                 return;
 
-            DateTime now = CurrentMinute();
             DateTime currentScheduled = e.Argument.LastDueAt;
             DateTime previousScheduled = e.Argument.PreviousTimeDue(currentScheduled);
             DateTime nextScheduled = e.Argument.NextTimeDue(currentScheduled);
@@ -151,7 +150,7 @@ namespace openXDA.Nodes.Types.Email
             // TODO: Think about tracking statistics on outstanding scheduled email tasks
             _ = Task.Run(() =>
             {
-                try { ProcessScheduledEmail(id, now, previousScheduled, nextScheduled); }
+                try { ProcessScheduledEmail(id, currentScheduled, previousScheduled, nextScheduled); }
                 catch (Exception ex) { LogException(ex); }
             });
         }
@@ -184,19 +183,6 @@ namespace openXDA.Nodes.Types.Email
 
                 emailService.SendScheduledEmail(scheduledEmailType, xdaNow, xdaPrev, xdaNext);
             }
-        }
-
-        private DateTime CurrentMinute()
-        {
-            DateTime utcTime = DateTime.UtcNow;
-            long ticks = utcTime.Ticks % TimeSpan.TicksPerMinute;
-            DateTime utcMinutes = utcTime.AddTicks(-ticks);
-
-            Action<object> configurator = GetConfigurator();
-            Settings settings = new Settings(configurator);
-            TimeZoneInfo xdaTimeZone = settings.SystemSettings.XDATimeZoneInfo;
-
-            return TimeZoneInfo.ConvertTimeFromUtc(utcMinutes, xdaTimeZone);
         }
 
         private void LogException(Exception ex) =>
