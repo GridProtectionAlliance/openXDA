@@ -131,14 +131,14 @@ namespace openXDA.Nodes.Types.Email
 
         private void ScheduleManager_ScheduleDue(object sender, GSF.EventArgs<Schedule> e)
         {
-            const string Pattern = @"\[(\d+)\] (.*)";
+            const string Pattern = @"\[(?<ID>\d+)\] (?<Name>.*)";
             string scheduleName = e.Argument.Name;
             Match match = Regex.Match(scheduleName, Pattern);
 
             if (!match.Success)
                 return;
 
-            string idMatch = match.Groups["1"].Value; //0th group is the entire string, 2nd is the name
+            string idMatch = match.Groups["ID"].Value;
 
             if (!int.TryParse(idMatch, out int id))
                 return;
