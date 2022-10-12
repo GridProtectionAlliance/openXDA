@@ -105,10 +105,9 @@ namespace FaultData.DataWriters.Emails
 
             return settingList.Select(setting => ToArray(setting.Name, setting.Value));
         }
-        protected virtual IEnumerable<string[]> LoadDataSourceSettings(AdoDataConnection connection)
-        {
-            return Enumerable.Empty<string[]>();
-        }
+
+        protected virtual IEnumerable<string[]> LoadDataSourceSettings(AdoDataConnection connection) =>
+            Enumerable.Empty<string[]>();
 
         protected string[] ToArray(string key, string value) =>
             key.Split('.').Concat(new[] { value }).ToArray();
@@ -118,7 +117,7 @@ namespace FaultData.DataWriters.Emails
         #region [ Static ]
 
         // Static Fields
-        protected static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationLoader));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationLoader));
 
         // Static Properties
         private static ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser { get; } =
@@ -126,7 +125,7 @@ namespace FaultData.DataWriters.Emails
 
         #endregion
     }
-    public class ConfigurationLoader<T> : ConfigurationLoader where T : DataSourceSetting, new()
+    public class ConfigurationLoader<T> : ConfigurationLoader where T : EmailDataSourceSettingBase, new()
     {
         #region [ Constructors ]
 
@@ -155,9 +154,9 @@ namespace FaultData.DataWriters.Emails
             else
                 query = "TriggeredEmailDataSourceEmailTypeID = {0}";
 
-            List<DataSourceSetting> settingList = settingTable.QueryRecordsWhere(query, DataSourceEmailTypeID).ToList<DataSourceSetting>();
+            List<EmailDataSourceSettingBase> settingList = settingTable.QueryRecordsWhere(query, DataSourceEmailTypeID).ToList<EmailDataSourceSettingBase>();
 
-            foreach (IGrouping<string, DataSourceSetting> grouping in settingList.GroupBy(setting => setting.Name))
+            foreach (IGrouping<string, EmailDataSourceSettingBase> grouping in settingList.GroupBy(setting => setting.Name))
             {
                 if (grouping.Count() > 1)
                     Log.Warn($"Duplicate record for setting {grouping.Key} detected.");
@@ -165,6 +164,13 @@ namespace FaultData.DataWriters.Emails
 
             return settingList.Select(setting => ToArray(setting.Name, setting.Value));
         }
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationLoader));
+
         #endregion
     }
 }

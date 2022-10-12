@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class BaseEmailType
+    public abstract class BaseEmailType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }

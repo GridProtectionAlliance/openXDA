@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class ScheduledEmailDataSourceSetting : DataSourceSetting
+    public class ScheduledEmailDataSourceSetting : EmailDataSourceSettingBase
     {
         [ParentKey(typeof(ScheduledEmailDataSourceEmailType))]
         public int ScheduledEmailDataSourceID { get; set; }
