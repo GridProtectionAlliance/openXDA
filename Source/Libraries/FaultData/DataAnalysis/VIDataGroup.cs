@@ -213,11 +213,13 @@ namespace FaultData.DataAnalysis
             ? m_dataGroup[m_irIndex]
             : null;
 
-        public int DefinedNeutralVoltages =>
-            m_vIndices.Sum(item => item.DefinedNeutralVoltages);
+        public int DefinedNeutralVoltages => m_vIndices
+            .Select(item => item.DefinedNeutralVoltages)
+            .FirstOrDefault();
 
-        public int DefinedLineVoltages =>
-            m_vIndices.Sum(item => item.DefinedLineVoltages);
+        public int DefinedLineVoltages => m_vIndices
+            .Select(item => item.DefinedLineVoltages)
+            .FirstOrDefault();
 
         public int DefinedCurrents =>
             CurrentIndexes.Count(index => index >= 0);
