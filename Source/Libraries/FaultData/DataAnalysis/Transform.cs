@@ -56,26 +56,13 @@ namespace FaultData.DataAnalysis
 
         public static CycleDataGroup ToCycleDataGroup(DataSeries dataSeries, double frequency, bool compress=false)
         {
-            DataGroup dataGroup = new DataGroup();
+            if (dataSeries is null)
+                return null;
 
             DataSeries rmsSeries = new DataSeries();
             DataSeries phaseSeries = new DataSeries();
             DataSeries peakSeries = new DataSeries();
             DataSeries errorSeries = new DataSeries();
-
-            int samplesPerCycle;
-            double[] yValues;
-            double[] tValues;
-            double sum;
-            double sinError;
-            double prevSinError = 0.0D;
-            double phase;
-
-            DateTime cycleTime;
-            SineWave sineFit;
-
-            if ((object)dataSeries == null)
-                return null;
 
             // Set series info to the source series info
             rmsSeries.SeriesInfo = dataSeries.SeriesInfo;
@@ -83,22 +70,32 @@ namespace FaultData.DataAnalysis
             peakSeries.SeriesInfo = dataSeries.SeriesInfo;
             errorSeries.SeriesInfo = dataSeries.SeriesInfo;
 
-
             // Get samples per cycle of the data series based on the given frequency
-            samplesPerCycle = Transform.CalculateSamplesPerCycle(dataSeries, frequency);
+            int samplesPerCycle = CalculateSamplesPerCycle(dataSeries, frequency);
 
             //preinitialize size of SeriesInfo
-            int ncycleData = dataSeries.DataPoints.Count - samplesPerCycle;
-            rmsSeries.DataPoints = new List<DataPoint>(ncycleData);
-            phaseSeries.DataPoints = new List<DataPoint>(ncycleData);
-            peakSeries.DataPoints = new List<DataPoint>(ncycleData);
-            errorSeries.DataPoints = new List<DataPoint>(ncycleData);
-
-
+            int ncycleData = dataSeries.DataPoints.Count - samplesPerCycle + 1;
+            rmsSeries.DataPoints.Capacity = ncycleData;
+            phaseSeries.DataPoints.Capacity = ncycleData;
+            peakSeries.DataPoints.Capacity = ncycleData;
+            errorSeries.DataPoints.Capacity = ncycleData;
 
             // Initialize arrays of y-values and t-values for calculating cycle data as necessary
-            yValues = new double[samplesPerCycle];
-            tValues = new double[samplesPerCycle];
+            double[] yValues = new double[samplesPerCycle];
+            double[] tValues = new double[samplesPerCycle];
+
+            void CaptureCycle(int cycleIndex)
+            {
+                DateTime startTime = dataSeries.DataPoints[0].Time;
+
+                for (int i = 0; i < samplesPerCycle; i++)
+                {
+                    DateTime time = dataSeries.DataPoints[cycleIndex + i].Time;
+                    double value = dataSeries.DataPoints[cycleIndex + i].Value;
+                    tValues[i] = time.Subtract(startTime).TotalSeconds;
+                    yValues[i] = value;
+                }
+            }
 
             // Obtain a list of time gaps in the data series
             List<int> gapIndexes = Enumerable.Range(0, dataSeries.DataPoints.Count - 1)
@@ -115,45 +112,48 @@ namespace FaultData.DataAnalysis
                 })
                 .ToList();
 
-            sum = 0;
+            double sum = 0;
 
-            if (dataSeries.DataPoints.Count > samplesPerCycle)
+            if (dataSeries.DataPoints.Count >= samplesPerCycle)
             {
-                sum = dataSeries.DataPoints.Take(samplesPerCycle).Sum(pt => pt.Value * pt.Value);
-                yValues = dataSeries.DataPoints.Take(samplesPerCycle).Select(item => item.Value).ToArray();
-                tValues = dataSeries.DataPoints.Take(samplesPerCycle).Select(item => (item.Time - dataSeries.DataPoints[0].Time).TotalSeconds).ToArray();
-                sineFit = WaveFit.SineFit(yValues, tValues, frequency);
-                sinError = tValues
-                            .Select(sineFit.CalculateY)
-                            .Zip(yValues, (estimate, value) => Math.Abs(estimate - value))
-                            .Sum();
-                phase = sineFit.Phase;
+                CaptureCycle(0);
+                sum = yValues.Sum(y => y * y);
+
+                DateTime cycleTime = dataSeries.DataPoints[0].Time;
+                SineWave sineFit = WaveFit.SineFit(yValues, tValues, frequency);
+                double phase = sineFit.Phase;
+
+                double ComputeSineError() => tValues
+                    .Select(sineFit.CalculateY)
+                    .Zip(yValues, (estimate, value) => Math.Abs(estimate - value))
+                    .Sum();
+
+                double sineError = ComputeSineError();
+                double previousSineError = sineError;
 
                 rmsSeries.DataPoints.Add(new DataPoint()
                 {
-                    Time = dataSeries.DataPoints[0].Time,
+                    Time = cycleTime,
                     Value = Math.Sqrt(sum / samplesPerCycle)
                 });
+
                 phaseSeries.DataPoints.Add(new DataPoint()
                 {
-                    Time = dataSeries.DataPoints[0].Time,
+                    Time = cycleTime,
                     Value = phase
                 });
 
                 peakSeries.DataPoints.Add(new DataPoint()
                 {
-                    Time = dataSeries.DataPoints[0].Time,
+                    Time = cycleTime,
                     Value = sineFit.Amplitude
                 });
 
                 errorSeries.DataPoints.Add(new DataPoint()
                 {
-                    Time = dataSeries.DataPoints[0].Time,
-                    Value = sinError
+                    Time = cycleTime,
+                    Value = sineError
                 });
-
-                prevSinError = sinError;
-                cycleTime = dataSeries.DataPoints[0].Time;
 
                 // Reduce RMS to max 2 pt per cycle to get half cycle RMS
                 int step = 1;
@@ -162,59 +162,40 @@ namespace FaultData.DataAnalysis
                 if (step == 0)
                     step = 1;
 
-                for (int i = step; i < dataSeries.DataPoints.Count - samplesPerCycle; i = i + step)
+                for (int cycleIndex = step; cycleIndex < dataSeries.DataPoints.Count - samplesPerCycle + 1; cycleIndex += step)
                 {
-
                     for (int j = 0; j < step; j++)
                     {
-                        sum = sum - dataSeries.DataPoints[i - step + j].Value * dataSeries.DataPoints[i - step + j].Value;
-                        sum = sum + dataSeries.DataPoints[i - step + j + samplesPerCycle].Value * dataSeries.DataPoints[i - step + j + samplesPerCycle].Value;
+                        int oldIndex = cycleIndex - step + j;
+                        int newIndex = oldIndex + samplesPerCycle;
+                        double oldValue = dataSeries.DataPoints[oldIndex].Value;
+                        double newValue = dataSeries.DataPoints[newIndex].Value;
+                        sum += newValue * newValue - oldValue * oldValue;
                     }
 
                     // If the cycle following i contains a data gap, do not calculate cycle data
-                    if (gapIndexes.Any(index => i <= index && (i + samplesPerCycle - 1) > index))
+                    if (gapIndexes.Any(index => cycleIndex <= index && (cycleIndex + samplesPerCycle - 1) > index))
                         continue;
 
-                    phase = phase + 2 * Math.PI * frequency * (dataSeries.DataPoints[i].Time - cycleTime).TotalSeconds;
+                    phase += 2 * Math.PI * frequency * (dataSeries.DataPoints[cycleIndex].Time - cycleTime).TotalSeconds;
 
                     // Use the time of the first data point in the cycle as the time of the cycle
-                    cycleTime = dataSeries.DataPoints[i].Time;
+                    cycleTime = dataSeries.DataPoints[cycleIndex].Time;
 
-                    yValues = dataSeries.DataPoints.Skip(i).Take(samplesPerCycle).Select(item => item.Value).ToArray();
-                    tValues = dataSeries.DataPoints.Skip(i).Take(samplesPerCycle).Select(item => (item.Time - dataSeries.DataPoints[i].Time).TotalSeconds).ToArray();
-                    sinError = tValues
-                                .Select(sineFit.CalculateY)
-                                .Zip(yValues, (estimate, value) => Math.Abs(estimate - value))
-                                .Sum();
+                    CaptureCycle(cycleIndex);
 
+                    if (compress)
+                        sineError = ComputeSineError();
 
-                    if (Math.Abs(prevSinError - sinError) > sinError * 0.0001 || !compress)
+                    if (!compress || Math.Abs(previousSineError - sineError) > sineError * 0.0001)
                     {
                         sineFit = WaveFit.SineFit(yValues, tValues, frequency);
-                        sinError = tValues
-                                    .Select(sineFit.CalculateY)
-                                    .Zip(yValues, (estimate, value) => Math.Abs(estimate - value))
-                                    .Sum();
                         phase = sineFit.Phase;
+                        sineError = ComputeSineError();
                     }
 
-                    prevSinError = sinError;
-                    //sum = 0.0D;
+                    previousSineError = sineError;
 
-                    //remove Previous and add new one
-
-                    // Copy values from the original data series into the y-value and t-value arrays
-                    //for (int j = 0; j < samplesPerCycle; j++)
-                    //{
-                    //    yValues[j] = dataSeries.DataPoints[i + j].Value;
-                    //    tValues[j] = (dataSeries.DataPoints[i + j].Time - cycleTime).TotalSeconds;
-                    //    sum += yValues[j] * yValues[j];
-                    //}
-
-                    // Use a curve fitting algorithm to estimate the sine wave over this cycle
-                    //sineFit = WaveFit.SineFit(yValues, tValues, frequency);
-
-                    // Add data points to each of the cycle data series
                     rmsSeries.DataPoints.Add(new DataPoint()
                     {
                         Time = cycleTime,
@@ -236,14 +217,13 @@ namespace FaultData.DataAnalysis
                     errorSeries.DataPoints.Add(new DataPoint()
                     {
                         Time = cycleTime,
-                        Value = prevSinError
+                        Value = sineError
                     });
-
-
                 }
             }
 
             // Add a series to the data group for each series of cycle data
+            DataGroup dataGroup = new DataGroup();
             dataGroup.Add(rmsSeries);
             dataGroup.Add(phaseSeries);
             dataGroup.Add(peakSeries);
