@@ -88,11 +88,19 @@ FROM
     Disturbance WorstLNDisturbance ON EventWorstDisturbance.WorstLNDisturbanceID = WorstLNDisturbance.ID LEFT OUTER JOIN
     Phase DisturbancePhase ON WorstDisturbance.PhaseID = DisturbancePhase.ID LEFT OUTER JOIN
     EventType DisturbanceType ON WorstDisturbance.EventTypeID = DisturbanceType.ID LEFT OUTER JOIN
+    FaultGroup ON
+        FaultGroup.EventID = Event.ID AND
+        COALESCE(FaultGroup.FaultDetectionLogicResult, 0) <> 0 LEFT OUTER JOIN
     FaultSummary ON
         FaultSummary.EventID = Event.ID AND
         FaultSummary.IsSelectedAlgorithm <> 0 AND
-        FaultSummary.IsValid <> 0 AND
-        FaultSummary.IsSuppressed = 0 AND
+        (
+            FaultGroup.ID IS NOT NULL OR
+            (
+                FaultSummary.IsValid <> 0 AND
+                FaultSummary.IsSuppressed = 0
+            )
+        ) AND
         EventType.Name IN ('Fault', 'RecloseIntoFault')
 WHERE
     EventWorstDisturbance.ID IS NOT NULL OR
