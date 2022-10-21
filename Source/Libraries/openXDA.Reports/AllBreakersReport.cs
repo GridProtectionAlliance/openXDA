@@ -21,27 +21,19 @@
 //
 //******************************************************************************************************
 
-using GSF.Web.Model;
-using openHistorian.XDALink;
-using openXDA.Model;
-using Root.Reports;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms.DataVisualization.Charting;
-using ChartSeries = System.Windows.Forms.DataVisualization.Charting.Series;
-using log4net;
-using GSF;
 using GSF.Data;
+using log4net;
+using Root.Reports;
 
 namespace openXDA.Reports
 {
-    public class AllBreakersReport : Root.Reports.Report
+    public class AllBreakersReport : Report
     {
         #region [ Members ]
         public class Point {
