@@ -194,7 +194,7 @@ namespace openXDA.Reports
             DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
 
             AllBreakersReport report = new AllBreakersReport(firstOfMonth, endOfMonth);
-            byte[] pdf = report.createPDF();
+            byte[] pdf = report.CreatePDF();
             if (pdf == null) return;
             byte[] csv = ExportAllToCSV(report.DataTable, firstOfMonth, endOfMonth);
             if (csv == null) return;
