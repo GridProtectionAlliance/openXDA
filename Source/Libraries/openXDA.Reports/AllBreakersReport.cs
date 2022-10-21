@@ -54,12 +54,12 @@ namespace openXDA.Reports
 
         private const string query =
         @"
-            SELECT 
-                MAX(BreakerOperation.TripCoilEnergized) as LastOperationDate, 
+            SELECT
+                MAX(BreakerOperation.TripCoilEnergized) as LastOperationDate,
                 BreakerOperation.BreakerNumber,
                 COUNT(BreakerOperation.ID) as Total,
                 MaximoBreaker.AssetNum,
-                MeterLine.LineName,
+                Asset.AssetName,
                 -- last timing info
                 (SELECT Name from Phase WHERE ID = (SELECT TOP 1 PhaseID FROM BreakerOperation as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized)) as LastPhase,
                 (SELECT TOP 1 BreakerTiming FROM BreakerOperation as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized) as LastWaveformTiming,
@@ -68,26 +68,36 @@ namespace openXDA.Reports
                 (SELECT Name from BreakerOperationType WHERE ID = (SELECT TOP 1 BreakerOperationTypeID FROM BreakerOperation as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized)) as OperationTiming,
                 (SELECT TOP 1 CASE WHEN StatusTiming < BreakerTiming THEN 'Status' ELSE 'Waveform' END FROM BreakerOperation as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized) as LastMethod,
                 -- last slow
-                COUNT(BOLate.ID) as TotalLateOperation,
-                MAX(BOLate.TripCoilEnergized) as LastLateOperation,
-                    -- mfr info
+                COUNT(LateBreakerOperation.ID) as TotalLateOperation,
+                MAX(LateBreakerOperation.TripCoilEnergized) as LastLateOperation,
+                -- mfr info
                 MaximoBreaker.Manufacturer,
                 MaximoBreaker.SerialNum,
                 MaximoBreaker.MfrYear,
                 MaximoBreaker.ModelNum,
                 MaximoBreaker.InterruptCurrentRating,
                 MaximoBreaker.ContinuousAmpRating
-            FROM 
-                BreakerOperation LEFT JOIN
-                BreakerOperation as BOLate ON BreakerOperation.ID = BOLate.ID AND BOLate.BreakerOperationTypeID = (SELECT ID FROM BreakerOperationType WHERE Name = 'Late') LEFT JOIN
-                MeterLine ON (SELECT LineID FROM Channel WHERE ID = (SELECT TOP 1 ChannelID FROM BreakerChannel WHERE BreakerChannel.BreakerNumber = BreakerOperation.BreakerNumber)) = MeterLine.LineID AND (SELECT MeterID FROM Channel WHERE ID = (SELECT TOP 1 ChannelID FROM BreakerChannel WHERE BreakerChannel.BreakerNumber = BreakerOperation.BreakerNumber)) = MeterLine.MeterID LEFT JOIN
+            FROM
+                BreakerOperation JOIN
+                BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID LEFT OUTER JOIN
+                BreakerOperation LateBreakerOperation ON
+                    BreakerOperation.ID = LateBreakerOperation.ID AND
+                    BreakerOperationType.Name = 'Late' OUTER APPLY
+                (
+                    SELECT TOP 1 Asset.*
+                    FROM
+                        Asset JOIN
+                        Channel ON Channel.AssetID = Asset.ID JOIN
+                        BreakerChannel ON BreakerChannel.ChannelID = Channel.ID
+                    WHERE BreakerChannel.BreakerNumber = BreakerOperation.BreakerNumber
+                    ORDER BY Asset.ID
+                ) Asset LEFT OUTER JOIN
                 MaximoBreaker ON BreakerOperation.BreakerNumber = SUBSTRING(MaximoBreaker.BreakerNum, PATINDEX('%[^0]%', MaximoBreaker.BreakerNum + '.'), LEN(MaximoBreaker.BreakerNum))
-            WHERE
-                Cast(BreakerOperation.TripCoilEnergized as Date) BETWEEN {0} AND {1}
-            GROUP BY 
+            WHERE CAST(BreakerOperation.TripCoilEnergized AS DATE) BETWEEN {0} AND {1}
+            GROUP BY
                 BreakerOperation.BreakerNumber,
                 MaximoBreaker.AssetNum,
-                MeterLine.LineName,
+                Asset.AssetName,
                 MaximoBreaker.Manufacturer,
                 MaximoBreaker.SerialNum,
                 MaximoBreaker.MfrYear,
@@ -95,7 +105,7 @@ namespace openXDA.Reports
                 MaximoBreaker.InterruptCurrentRating,
                 MaximoBreaker.ContinuousAmpRating,
                 MaximoBreaker.BreakerSpeed
-            ORDER BY 
+            ORDER BY
                 LastOperationDate
         ";
 
