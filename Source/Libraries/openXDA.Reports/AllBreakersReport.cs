@@ -36,24 +36,24 @@ namespace openXDA.Reports
     public class AllBreakersReport : Report
     {
         #region [ Members ]
-        public class Point {
+
+        // Nested Types
+        public class Point
+        {
             public DateTime Time;
             public double Value;
         }
+
         // Constants
         private const double PageMarginMillimeters = 12.7D;             // 1-inch margin
-        //private const double PageWidthMillimeters = 8.5D * 25.4D;       // 8.5 inch width
-        //private const double PageHeightMillimeters = 11.0D * 25.4D;     // 11 inch height
-        private const double PageHeightMillimeters = 8.5D * 25.4D;       // 8.5 inch width
-        private const double PageWidthMillimeters = 11.0D * 25.4D;     // 11 inch height
-
+        private const double PageHeightMillimeters = 8.5D * 25.4D;      // 8.5 inch height (landscape)
+        private const double PageWidthMillimeters = 11.0D * 25.4D;      // 11 inch width (landscape)
         private const double FooterHeightMillimeters = (10.0D / 72.0D) * 25.4D;
         private const double SpacingMillimeters = 6.0D;
 
         private const string TitleText = "All Breakers Report";
 
-        private const string query =
-        @"
+        private const string Query = @"
             SELECT
                 MAX(BreakerOperation.TripCoilEnergized) as LastOperationDate,
                 BreakerOperation.BreakerNumber,
@@ -109,50 +109,70 @@ namespace openXDA.Reports
                 LastOperationDate
         ";
 
-        private const string testQuery = @"
-            SELECT 
-                        MAX(BreakerOperation.TripCoilEnergized) as LastOperationDate, 
-                        BreakerOperation.BreakerNumber,
-                        COUNT(BreakerOperation.ID) as Total,
-                        MaximoBreaker.[Breaker Number] as AssetNum,
-                        MaximoBreaker.[Line Name] as LineName,
-                        -- last timing info
-                        (SELECT Name from Phase WHERE ID = (SELECT TOP 1 PhaseID FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized)) as LastPhase,
-                        (SELECT TOP 1 BreakerTiming FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized) as LastWaveformTiming,
-                        (SELECT TOP 1 StatusTiming FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized) as LastStatusTiming,
-                        MaximoBreaker.[Breaker Mfr Speed] as MfrSpeed,
-                        (SELECT Name from BreakerOperationType WHERE ID = (SELECT TOP 1 BreakerOperationTypeID FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized)) as OperationTiming,
-                        (SELECT TOP 1 CASE WHEN StatusTiming < BreakerTiming THEN 'Status' ELSE 'Waveform' END FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized) as LastMethod,
-                        -- last slow
-                        COUNT(BOLate.ID) as TotalLateOperation,
-                        MAX(BOLate.TripCoilEnergized) as LastLateOperation,
-                            -- mfr info
-                        MaximoBreaker.Manufacturer,
-                        MaximoBreaker.[Serial Number] as SerialNum,
-                        MaximoBreaker.[Mfr Year] as MfrYear,
-                        MaximoBreaker.[Model Number] as ModelNum,
-                        MaximoBreaker.[Interrupt current Rating (A)] as InterruptCurrentRating,
-                        MaximoBreaker.[ Continuous Amp Rating (A)] as ContinuousAmpRating
-                    FROM 
-                        GTCBreakerOperationsTable as BreakerOperation LEFT JOIN
-                        GTCBreakerOperationsTable as BOLate ON BreakerOperation.ID = BOLate.ID AND BOLate.BreakerOperationTypeID = (SELECT ID FROM BreakerOperationType WHERE Name = 'Late') LEFT JOIN
-                        MaximoBreakerInfo as MaximoBreaker ON BreakerOperation.BreakerNumber = SUBSTRING(MaximoBreaker.[Breaker Number], PATINDEX('%[^0]%', MaximoBreaker.[Breaker Number] + '.'), LEN(MaximoBreaker.[Breaker Number]))
-			        WHERE
-                        Cast(BreakerOperation.TripCoilEnergized as Date) BETWEEN {0} AND {1}
-                    GROUP BY 
-                        BreakerOperation.BreakerNumber,
-                        MaximoBreaker.[Breaker Number],
-                        MaximoBreaker.[Line Name],
-                        MaximoBreaker.Manufacturer,
-                        MaximoBreaker.[Serial Number],
-                        MaximoBreaker.[Mfr Year],
-			            MaximoBreaker.[Breaker Mfr Speed],
-                        MaximoBreaker.[Model Number],
-                        MaximoBreaker.[Interrupt current Rating (A)],
-                        MaximoBreaker.[ Continuous Amp Rating (A)]    
-                    ORDER BY 
-                        LastOperationDate
-                ";
+        private const string TestQuery = @"
+            SELECT
+                MAX(BreakerOperation.TripCoilEnergized) as LastOperationDate,
+                BreakerOperation.BreakerNumber,
+                COUNT(BreakerOperation.ID) as Total,
+                MaximoBreaker.[Breaker Number] as AssetNum,
+                MaximoBreaker.[Line Name] as LineName,
+                -- last timing info
+                (SELECT Name from Phase WHERE ID = (SELECT TOP 1 PhaseID FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized)) as LastPhase,
+                (SELECT TOP 1 BreakerTiming FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized) as LastWaveformTiming,
+                (SELECT TOP 1 StatusTiming FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized) as LastStatusTiming,
+                MaximoBreaker.[Breaker Mfr Speed] as MfrSpeed,
+                (SELECT Name from BreakerOperationType WHERE ID = (SELECT TOP 1 BreakerOperationTypeID FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized)) as OperationTiming,
+                (SELECT TOP 1 CASE WHEN StatusTiming < BreakerTiming THEN 'Status' ELSE 'Waveform' END FROM GTCBreakerOperationsTable as bo WHERE bo.BreakerNumber = BreakerOperation.BreakerNumber ORDER BY TripCoilEnergized) as LastMethod,
+                -- last slow
+                COUNT(BOLate.ID) as TotalLateOperation,
+                MAX(BOLate.TripCoilEnergized) as LastLateOperation,
+                    -- mfr info
+                MaximoBreaker.Manufacturer,
+                MaximoBreaker.[Serial Number] as SerialNum,
+                MaximoBreaker.[Mfr Year] as MfrYear,
+                MaximoBreaker.[Model Number] as ModelNum,
+                MaximoBreaker.[Interrupt current Rating (A)] as InterruptCurrentRating,
+                MaximoBreaker.[ Continuous Amp Rating (A)] as ContinuousAmpRating
+            FROM
+                GTCBreakerOperationsTable as BreakerOperation LEFT JOIN
+                GTCBreakerOperationsTable as BOLate ON BreakerOperation.ID = BOLate.ID AND BOLate.BreakerOperationTypeID = (SELECT ID FROM BreakerOperationType WHERE Name = 'Late') LEFT JOIN
+                MaximoBreakerInfo as MaximoBreaker ON BreakerOperation.BreakerNumber = SUBSTRING(MaximoBreaker.[Breaker Number], PATINDEX('%[^0]%', MaximoBreaker.[Breaker Number] + '.'), LEN(MaximoBreaker.[Breaker Number]))
+			WHERE
+                Cast(BreakerOperation.TripCoilEnergized as Date) BETWEEN {0} AND {1}
+            GROUP BY
+                BreakerOperation.BreakerNumber,
+                MaximoBreaker.[Breaker Number],
+                MaximoBreaker.[Line Name],
+                MaximoBreaker.Manufacturer,
+                MaximoBreaker.[Serial Number],
+                MaximoBreaker.[Mfr Year],
+			    MaximoBreaker.[Breaker Mfr Speed],
+                MaximoBreaker.[Model Number],
+                MaximoBreaker.[Interrupt current Rating (A)],
+                MaximoBreaker.[ Continuous Amp Rating (A)]
+            ORDER BY
+                LastOperationDate
+        ";
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public AllBreakersReport(DateTime startTime, DateTime endTime)
+        {
+            StartTime = startTime;
+            EndTime = endTime;
+            FontDefinition = new FontDef(this, FontDef.StandardFont.Helvetica);
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+#if DEBUG
+                DataTable = connection.RetrieveData(TestQuery, startTime, endTime);
+#else
+                DataTable = connection.RetrieveData(query, startTime, endTime);
+#endif
+            }
+        }
 
         #endregion
 
@@ -162,30 +182,12 @@ namespace openXDA.Reports
         public DateTime EndTime { get; set; }
         public FontDef FontDefinition { get; set; }
         public DataTable DataTable { get; set; }
-        #endregion
-
-        #region [ Constructors ]
-
-        public AllBreakersReport(  DateTime startTime, DateTime endTime)
-        {
-            StartTime = startTime;
-            EndTime = endTime;
-            FontDefinition = new FontDef(this, FontDef.StandardFont.Helvetica);
-            
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
-#if DEBUG
-                DataTable = connection.RetrieveData(testQuery, startTime, endTime);
-#else
-                DataTable = connection.RetrieveData(query, startTime, endTime);
-#endif
-            }
-        }
 
         #endregion
 
         #region [ Methods ]
 
-        public byte[] createPDF()
+        public byte[] CreatePDF()
         {
             try
             {
@@ -193,7 +195,7 @@ namespace openXDA.Reports
 
                 using (MemoryStream stream = new MemoryStream())
                 {
-                    this.formatter.Create(this, stream);
+                    formatter.Create(this, stream);
                     return stream.ToArray();
                 }
             }
@@ -206,32 +208,31 @@ namespace openXDA.Reports
         private void GenerateReport()
         {
             CreatePage();
-            double verticalMillimeters = InsertHeader();
 
-            verticalMillimeters = CreateTable(verticalMillimeters);
+            double verticalMillimeters = InsertHeader();
+            CreateTable(verticalMillimeters);
 
             foreach (Page page in enum_Page)
-            {
                 InsertFooter(page);
-            }
         }
 
         private double CreateTable(double verticalMillimeters)
         {
             if (DataTable.Rows.Count == 0)
             {
-                verticalMillimeters += InsertItalicText(verticalMillimeters, $"   No Breaker Operations during {StartTime.ToString("MM/dd/yyyy")} - {EndTime.ToString("MM/dd/yyyy")}");
+                verticalMillimeters += InsertItalicText(verticalMillimeters, $"   No Breaker Operations during {StartTime:MM/dd/yyyy} - {EndTime:MM/dd/yyyy}");
                 return verticalMillimeters;
             }
 
             FontProp headerProp = new FontProp(FontDefinition, 0);
             headerProp.rSizePoint = 7.0D;
+
             using (TableLayoutManager tlm = new TableLayoutManager(headerProp))
             {
-
                 tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                 tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                 tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
+
                 tlm.eNewContainer += (oSender, ea) =>
                 {
                     verticalMillimeters += tlm.rCurY_MM;
@@ -264,13 +265,15 @@ namespace openXDA.Reports
                 foreach (var column in columns)
                     new TlmColumnMM(tlm, column.Name, column.Width);
 
-                List<string> centeredCols = new List<string>(){ "Total", "BreakerNumber", "AssetNum", "LastPhase" };
+                List<string> centeredCols = new List<string>() { "Total", "BreakerNumber", "AssetNum", "LastPhase" };
+
                 foreach (DataRow row in DataTable.Rows)
                 {
                     tlm.NewRow();
                     int index = 0;
-                    foreach (var column in columns) {
 
+                    foreach (var column in columns)
+                    {
                         if (column.Column == "LastOperationDate" || (column.Column == "LastLateOperation" && row[column.Column].ToString() != string.Empty))
                         {
                             FontProp textProp = new FontProp(FontDefinition, 0);
@@ -281,7 +284,8 @@ namespace openXDA.Reports
                             tlm.NewLine(index);
                             tlm.Add(index++, new RepString(textProp, time));
                         }
-                        else {
+                        else
+                        {
                             FontProp textProp = new FontProp(FontDefinition, 0);
                             textProp.rSizePoint = 6.0D;
                             string value = "";
@@ -295,8 +299,6 @@ namespace openXDA.Reports
                             index++;
 
                         }
-
-
                     }
                 }
 
@@ -308,15 +310,18 @@ namespace openXDA.Reports
             return verticalMillimeters;
         }
 
-        private void AddDataColumn(TlmBase tlm, int index, string value, FontProp fontProp, double width) {
-            double initialWidth =  fontProp.rGetTextWidthMM(value);
+        private void AddDataColumn(TlmBase tlm, int index, string value, FontProp fontProp, double width)
+        {
+            double initialWidth = fontProp.rGetTextWidthMM(value);
             string remainingString = value.Trim();
+
             while (initialWidth > width)
             {
                 string[] tokens = remainingString.Split(' ');
                 string splitValue = tokens.First();
 
-                foreach (string token in tokens.Skip(1)) {
+                foreach (string token in tokens.Skip(1))
+                {
                     if (fontProp.rGetTextWidthMM(splitValue + token) < width)
                         splitValue = splitValue + ' ' + token;
                     else
@@ -328,6 +333,7 @@ namespace openXDA.Reports
                 tlm.NewLine(index);
                 initialWidth = fontProp.rGetTextWidthMM(remainingString);
             }
+
             tlm.Add(index, new RepString(fontProp, remainingString));
         }
 
@@ -361,15 +367,12 @@ namespace openXDA.Reports
             meterNameFont.rSizePoint = 12.0D;
 
             int height = 6;
-
             double reportIdentifierHorizontalPosition = PageWidthMillimeters / 2 - font.rGetTextWidthMM(ReportIdentifier) / 2;
-
             page_Cur.AddMM(reportIdentifierHorizontalPosition, height, new RepString(font, ReportIdentifier));
             page_Cur.AddMM(0, 10, new RepRectMM(new BrushProp(this, Color.Black), PageWidthMillimeters, 0.1D));
 
             return 20;
         }
-
 
         // Inserts the given text as a section header (16-pt, bold).
         private double InsertItalicText(double verticalMillimeters, string text)
@@ -400,7 +403,7 @@ namespace openXDA.Reports
 
         #region [ Static ]
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(PQReport));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(AllBreakersReport));
 
         #endregion
     }
