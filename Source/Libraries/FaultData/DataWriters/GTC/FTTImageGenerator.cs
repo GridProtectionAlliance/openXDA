@@ -22,16 +22,20 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml.Linq;
-using FaultData.DataWriters.GTC.StringExtensions;
+using GSF;
+using GSF.Data;
+using GSF.IO;
 using log4net;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace FaultData.DataWriters.GTC
 {
@@ -39,137 +43,173 @@ namespace FaultData.DataWriters.GTC
     {
         #region [ Constructors ]
 
-        public FTTImageGenerator(string urlFormat, int width, int height)
+        public FTTImageGenerator(FTTOptions options)
         {
-            URLFormat = urlFormat;
-            Width = width;
-            Height = height;
+            CLIPath = options.CLIPath;
+            URL = options.URL;
+            QueryStringFormat = options.QueryStringFormat;
+            QueryTimeout = options.QueryTimeout;
+
+            ImageWidth = options.ImageWidth;
+            ImageHeight = options.ImageHeight;
         }
 
         #endregion
 
         #region [ Properties ]
 
-        private string URLFormat { get; }
-        private int Width { get; }
-        private int Height { get; }
+        private string CLIPath { get; }
+        private string URL { get; }
+        private string QueryStringFormat { get; }
+        private TimeSpan QueryTimeout { get; }
+
+        private int ImageWidth { get; }
+        private int ImageHeight { get; }
 
         #endregion
 
         #region [ Methods ]
 
-        public Stream QueryToImageStream(string stationName, string lineKey, double distance, DateTime eventTime)
+        public Stream QueryToImageStream(params FTTRecord[] records) =>
+            QueryToImageStream(records.AsEnumerable());
+
+        public Stream QueryToImageStream(IEnumerable<FTTRecord> records)
         {
-            string url = GetURL(stationName, lineKey, distance, eventTime);
+            UriBuilder builder = new UriBuilder(URL);
+
+            IEnumerable<string> queryParts = new[] { builder.Query.TrimStart('?') }
+                .Concat(records.Select(GetQueryString))
+                .Where(queryPart => !string.IsNullOrEmpty(queryPart));
+
+            builder.Query = string.Join("&", queryParts);
+
+            string url = builder.ToString();
             return QueryToImageStreamAsync(url).GetAwaiter().GetResult();
         }
 
         private async Task<Stream> QueryToImageStreamAsync(string url)
         {
-            TaskCompletionSource<Stream> queryTaskSource = new TaskCompletionSource<Stream>();
+            StringBuilder outputData = new StringBuilder();
+            StringBuilder errorData = new StringBuilder();
 
-            Thread browserThread = new Thread(() =>
+            try
             {
-                try { RunBrowser(url, queryTaskSource.SetResult); }
-                catch (Exception ex) { queryTaskSource.SetException(ex); }
-            });
+                string filePath = await Execute(url, outputData, errorData);
+                MemoryStream memoryStream = new MemoryStream();
 
-            browserThread.SetApartmentState(ApartmentState.STA);
-            browserThread.Start();
-            return await queryTaskSource.Task;
-        }
+                using (FileStream fileStream = File.OpenRead(filePath))
+                    await fileStream.CopyToAsync(memoryStream);
 
-        private void RunBrowser(string url, Action<Stream> callback)
-        {
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
-
-            using (WebBrowser webBrowser = new WebBrowser())
+                File.Delete(filePath);
+                memoryStream.Seek(0L, SeekOrigin.Begin);
+                return memoryStream;
+            }
+            catch (Exception ex)
             {
-                TaskCompletionSource<Stream> documentHandlerTaskSource = new TaskCompletionSource<Stream>();
-                Task<Stream> documentHandlerTask = documentHandlerTaskSource.Task;
+                string stdout = outputData.ToString().Trim();
+                string stderr = errorData.ToString().Trim();
 
-                webBrowser.DocumentCompleted += (_, __) =>
-                    HandleDocumentCompleted(webBrowser.Document, documentHandlerTaskSource.SetResult);
+                string message = new StringBuilder()
+                    .AppendLine("Standard Output:")
+                    .AppendLine(stdout)
+                    .AppendLine()
+                    .AppendLine("Standard Error:")
+                    .AppendLine(stderr)
+                    .ToString();
 
-                webBrowser.Width = Width;
-                webBrowser.Height = Height;
-                webBrowser.ScriptErrorsSuppressed = true;
-                webBrowser.Navigate(url);
-
-                while (!documentHandlerTask.IsCompleted)
-                    Application.DoEvents();
-
-                callback(documentHandlerTask.Result);
+                throw new Exception(message, ex);
             }
         }
 
-        private void HandleDocumentCompleted(HtmlDocument document, Action<Stream> callback)
+        private async Task<string> Execute(string url, StringBuilder outputData, StringBuilder errorData)
         {
-            document.Window.Error += (sender, args) =>
+            string Escape(string cliArgument) =>
+                Regex.Replace(cliArgument, @"(\\*)""", @"$1$1\""");
+
+            string filePath = GenerateFilePath();
+
+            using (Process process = new Process())
             {
-                string message = new StringBuilder()
-                    .AppendLine("FTT script error:")
-                    .AppendLine($"    {args.Url}:{args.LineNumber}")
-                    .AppendLine($"    {args.Description}")
-                    .ToString();
+                string[] fttArguments =
+                {
+                    Escape(url).QuoteWrap(),
+                    ImageWidth.ToString(CultureInfo.InvariantCulture),
+                    ImageHeight.ToString(CultureInfo.InvariantCulture),
+                    QueryTimeout.TotalSeconds.ToString(CultureInfo.InvariantCulture),
+                    Escape(filePath).QuoteWrap()
+                };
 
-                Log.Error(message);
-                args.Handled = true;
-            };
+                process.StartInfo.FileName = CLIPath;
+                process.StartInfo.Arguments = string.Join(" ", fttArguments);
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardInput = true;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.EnableRaisingEvents = true;
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            var timer = new System.Windows.Forms.Timer();
-            timer.Interval = 100;
+                process.OutputDataReceived += (sender, args) =>
+                {
+                    if (string.IsNullOrEmpty(args.Data))
+                        return;
 
-            timer.Tick += (sender, args) =>
-            {
-                if (stopwatch.Elapsed > TimeSpan.FromMinutes(1))
-                    throw new TimeoutException("Timeout waiting for output from webpage.");
+                    Log.Debug($"[FTT] {args.Data}");
+                    outputData.AppendLine(args.Data);
+                };
 
-                HtmlElement output = document.GetElementById("output");
+                process.ErrorDataReceived += (sender, args) =>
+                {
+                    if (string.IsNullOrEmpty(args.Data))
+                        return;
 
-                if (string.IsNullOrEmpty(output?.InnerHtml))
-                    return;
+                    Log.Error($"[FTT] ERROR: {args.Data}");
+                    errorData.AppendLine(args.Data);
+                };
 
-                timer.Stop();
-                timer.Dispose();
+                TaskCreationOptions runContinuationsAsynchronously = TaskCreationOptions.RunContinuationsAsynchronously;
+                TaskCompletionSource<object> exitPromise = new TaskCompletionSource<object>(runContinuationsAsynchronously);
+                process.Exited += (sender, args) => exitPromise.SetResult(null);
 
-                Stream imageStream = GenerateImageStream(output);
-                callback(imageStream);
-            };
+                Log.Debug($"[FTT] Executing: \"{Escape(process.StartInfo.FileName)}\" {process.StartInfo.Arguments}");
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                await exitPromise.Task;
 
-            timer.Start();
+                return filePath;
+            }
         }
 
-        private Stream GenerateImageStream(HtmlElement output)
+        private string GetQueryString(FTTRecord record, int index)
         {
-            string imageData = output
-                .GetElementsByTagName("a")
-                .Cast<HtmlElement>()
-                .Select(a => a.GetAttribute("href"))
-                .Where(href => !string.IsNullOrEmpty(href))
-                .Select(href => href.Substring(22))
-                .FirstOrDefault();
+            var parameters = new
+            {
+                index,
+                station = record.StationName,
+                line = record.LineKey,
+                distance = record.Distance,
+                eventTime = record.EventTime
+            };
 
-            byte[] bytes = Convert.FromBase64String(imageData);
-            return new MemoryStream(bytes);
+            return QueryStringFormat.Interpolate(parameters);
         }
 
-        private string GetURL(string station, string line, double distance, DateTime eventTime)
+        private string GenerateFilePath()
         {
-            var parameters = new { station, line, distance, eventTime };
-            string url = URLFormat.Interpolate(parameters);
+            Environment.SpecialFolder programData = Environment.SpecialFolder.CommonApplicationData;
+            string programDataPath = Environment.GetFolderPath(programData);
+            string folderPath = Path.Combine(programDataPath, "FTTAPI", "Output");
+            Directory.CreateDirectory(folderPath);
 
-            long now = DateTime.UtcNow.Ticks;
-            string nocache = $"nocache={now:X}";
-            UriBuilder builder = new UriBuilder(url);
-            string query = builder.Query;
+            byte[] buffer = new byte[5];
+            Random.GetBytes(buffer);
 
-            builder.Query = !string.IsNullOrEmpty(query)
-                ? string.Join("&", query, nocache)
-                : nocache;
+            string ToHex(byte b) =>
+                Convert.ToString(b, 16);
 
-            return builder.ToString();
+            string hex = string.Join("", buffer.Select(ToHex));
+            string fileName = $"{hex}.jpg";
+            return Path.Combine(folderPath, fileName);
         }
 
         #endregion
@@ -180,19 +220,55 @@ namespace FaultData.DataWriters.GTC
         private static readonly ILog Log = LogManager.GetLogger(typeof(FTTImageGenerator));
 
         // Static Methods
-        public static Stream ConvertToFTTImageStream(XElement fttElement)
+        public static Stream ConvertToFTTImageStream(AdoDataConnection connection, XElement fttElement)
         {
-            string urlFormat = (string)fttElement.Attribute("url");
-            int width = Convert.ToInt32((string)fttElement.Attribute("width") ?? "-1");
-            int height = Convert.ToInt32((string)fttElement.Attribute("height") ?? "-1");
+            string cliPathSetting = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'FTTInterop.CLIPath'");
+            string queryTimeoutSetting = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'FTTInterop.QueryTimeout'");
 
-            string stationName = (string)fttElement.Attribute("stationName");
-            string lineKey = (string)fttElement.Attribute("lineKey");
-            double distance = Convert.ToDouble((string)fttElement.Attribute("distance") ?? "0.0D");
-            DateTime eventTime = Convert.ToDateTime((string)fttElement.Attribute("eventTime") ?? default(DateTime).ToString());
+            string cliPath = FilePath.GetAbsolutePath(cliPathSetting);
 
-            FTTImageGenerator generator = new FTTImageGenerator(urlFormat, width, height);
-            return generator.QueryToImageStream(stationName, lineKey, distance, eventTime);
+            TimeSpan queryTimeout = int.TryParse(queryTimeoutSetting, out int queryTimeoutSeconds)
+                ? TimeSpan.FromSeconds(queryTimeoutSeconds)
+                : TimeSpan.FromSeconds(60);
+
+            string url = (string)fttElement.Attribute("url");
+            string queryStringFormat = (string)fttElement.Attribute("queryStringFormat");
+            string fttWidth = (string)fttElement.Attribute("width");
+            string fttHeight = (string)fttElement.Attribute("height");
+
+            if (!int.TryParse(fttWidth, out int imageWidth))
+                throw new FormatException($"FTT width '{fttWidth}' is not an integer.");
+
+            if (!int.TryParse(fttHeight, out int imageHeight))
+                throw new FormatException($"FTT height '{fttHeight}' is not an integer.");
+
+            FTTOptions options = new FTTOptions();
+            options.CLIPath = cliPath;
+            options.QueryTimeout = queryTimeout;
+            options.URL = url;
+            options.QueryStringFormat = queryStringFormat;
+            options.ImageWidth = imageWidth;
+            options.ImageHeight = imageHeight;
+
+            List<FTTRecord> fttRecords = fttElement
+                .Elements("fttRecord")
+                .Select(FTTRecord.ToRecord)
+                .ToList();
+
+            foreach (FTTRecord record in fttRecords)
+                Validate(record);
+
+            FTTImageGenerator generator = new FTTImageGenerator(options);
+            return generator.QueryToImageStream(fttRecords);
+        }
+
+        private static void Validate(FTTRecord record)
+        {
+            if (!double.TryParse(record.Distance, out double _))
+                throw new FormatException($"FTT distance '{record.Distance}' is not a number.");
+
+            if (!DateTime.TryParse(record.EventTime, out DateTime _))
+                throw new FormatException($"FTT eventTime '{record.EventTime}' is not a valid date/time.");
         }
 
         #endregion
