@@ -31,10 +31,24 @@ namespace openXDA.Configuration
         #region [ Members ]
 
         // Nested Types
-        public class SubSection
+        public class RMSSubSection
         {
             [Setting]
-            [DefaultValue("")]
+            [DefaultValue(@"Trms.dat")]
+            public string FolderPath { get; set; }
+        }
+
+        public class FlickerSubSection
+        {
+            [Setting]
+            [DefaultValue(@"FkrR[0-9]*\.dat")]
+            public string FolderPath { get; set; }
+        }
+
+        public class TriggerSubSection
+        {
+            [Setting]
+            [DefaultValue(@"TrR[0-9]*\.dat")]
             public string FolderPath { get; set; }
         }
 
@@ -49,19 +63,19 @@ namespace openXDA.Configuration
         /// Gets RMS folder path settings.
         /// </summary>
         [Category]
-        public SubSection RMS { get; } = new SubSection();
+        public RMSSubSection RMS { get; } = new RMSSubSection();
 
         /// <summary>
         /// Gets flicker folder path settings.
         /// </summary>
         [Category]
-        public SubSection Flicker { get; } = new SubSection();
+        public FlickerSubSection Flicker { get; } = new FlickerSubSection();
 
         /// <summary>
         /// Gets trigger folder path settings.
         /// </summary>
         [Category]
-        public SubSection Trigger { get; } = new SubSection();
+        public TriggerSubSection Trigger { get; } = new TriggerSubSection();
 
         #endregion
     }
