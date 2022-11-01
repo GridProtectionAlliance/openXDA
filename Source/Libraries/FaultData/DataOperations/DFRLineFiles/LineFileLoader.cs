@@ -213,7 +213,6 @@ namespace FaultData.DataOperations.DFRLineFiles
 
             TableOperations <LineSegment> lineSegmentTable = new TableOperations<LineSegment>(m_connection);
             LineSegment lineSegment = lineSegmentTable.QueryRecordWhere("ID = {0}", lineSegmentID);
-            MeterAsset meterAsset = null;
 
             if (lineSegment is null)
             {
@@ -245,16 +244,6 @@ namespace FaultData.DataOperations.DFRLineFiles
 
                     TableOperations<AssetConnection> assetConnectionTable = new TableOperations<AssetConnection>(m_connection);
                     assetConnectionTable.AddNewRecord(assetConnection);
-
-                    meterAsset = new MeterAsset()
-                    {
-                        MeterID = meter.ID,
-                        AssetID = line.ID
-                    };
-
-                    TableOperations<MeterAsset> meterAssetTable = new TableOperations<MeterAsset>(m_connection);
-                    meterAssetTable.AddNewRecord(meterAsset);
-                    meterAsset.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM MeterAsset WHERE MeterID = {0} AND AssetID = {1}", meter.ID, line.ID);
                 }
                 catch (SqlException ex)
                 {
@@ -276,10 +265,19 @@ namespace FaultData.DataOperations.DFRLineFiles
                 lineSegmentTable.UpdateRecord(lineSegment);
             }
 
+            TableOperations<MeterAsset> meterAssetTable = new TableOperations<MeterAsset>(m_connection);
+            MeterAsset meterAsset = meterAssetTable.QueryRecordWhere("MeterID = {0} AND AssetID = {1}", meter.ID, line.ID);
+
             if (meterAsset is null)
             {
-                TableOperations<MeterAsset> meterAssetTable = new TableOperations<MeterAsset>(m_connection);
-                meterAsset = meterAssetTable.QueryRecordWhere("MeterID = {0} AND AssetID = {1}", meter.ID, line.ID);
+                meterAsset = new MeterAsset()
+                {
+                    MeterID = meter.ID,
+                    AssetID = line.ID
+                };
+
+                meterAssetTable.AddNewRecord(meterAsset);
+                meterAsset.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM MeterAsset WHERE MeterID = {0} AND AssetID = {1}", meter.ID, line.ID);
             }
 
             TableOperations<FaultDetectionLogic> faultDetectionLogicTable = new TableOperations<FaultDetectionLogic>(m_connection);
