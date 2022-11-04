@@ -169,7 +169,7 @@ namespace openXDA.Reports
 #if DEBUG
                 DataTable = connection.RetrieveData(TestQuery, startTime, endTime);
 #else
-                DataTable = connection.RetrieveData(query, startTime, endTime);
+                DataTable = connection.RetrieveData(Query, startTime, endTime);
 #endif
             }
         }
