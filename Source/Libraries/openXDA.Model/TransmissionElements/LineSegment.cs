@@ -57,6 +57,10 @@ namespace openXDA.Model
 
         public bool IsEnd { get; set; }
 
+        public string FromBus { get; set; }
+
+        public string ToBus { get; set; }
+
         [JsonIgnore]
         [NonRecordField]
         public Line Line
