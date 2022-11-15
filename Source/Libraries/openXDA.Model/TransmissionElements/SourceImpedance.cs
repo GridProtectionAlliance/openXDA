@@ -42,6 +42,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [ParentKey(typeof(AssetLocation))]
         public int AssetLocationID { get; set; }
 
         public double RSrc { get; set; }
