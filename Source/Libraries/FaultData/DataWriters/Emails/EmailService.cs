@@ -122,18 +122,19 @@ namespace FaultData.DataWriters.Emails
 
         #region [ Methods ]
 
-        public void SendEmail(EmailType email, List<int> eventIDs, Event evt, DateTime xdaNow)
+        public bool SendEmail(EmailType email, List<int> eventIDs, Event evt, DateTime xdaNow)
         {
             if (eventIDs.Count == 0)
-                return;
+                return false;
 
             List<string> recipients = GetRecipients(email, eventIDs);
 
             if (recipients.Count == 0 && String.IsNullOrEmpty(email.FilePath))
-                return;
+                return false;
 
             SendEmail(email, evt, recipients, xdaNow, eventIDs, true);
-            
+
+            return true;
         }
 
         public void SendEmail(EmailType email, Event evt, List<string> recipients) => SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false);
