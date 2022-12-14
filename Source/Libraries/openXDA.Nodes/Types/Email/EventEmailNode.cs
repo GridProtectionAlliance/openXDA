@@ -250,7 +250,6 @@ namespace openXDA.Nodes.Types.Email
 
                 EmailService emailService = new EmailService(CreateDbConnection, configurator);
 
-
                 DateTime now = DateTime.UtcNow;
                 TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
                 DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
@@ -258,11 +257,7 @@ namespace openXDA.Nodes.Types.Email
                     return;
 
                 if (TripsMaxEmailThreshold(eventEmailSettings))
-                {
                     SendTripNotification(eventEmailSettings, emailService);
-                    return;
-                }
-
                    
                 DailyStatisticOperation.UpdateEmailProcessingStatistic(eventIDs);
             }
