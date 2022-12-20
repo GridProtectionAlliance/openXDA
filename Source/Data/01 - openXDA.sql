@@ -2219,7 +2219,9 @@ CREATE TABLE EventType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NOT NULL UNIQUE,
-    Description VARCHAR(MAX) NULL
+    Description VARCHAR(MAX) NULL,
+    ShowInFilter BIT NOT NULL Default(1),
+    Category VARCHAR(200) NULL,
 )
 GO
 
