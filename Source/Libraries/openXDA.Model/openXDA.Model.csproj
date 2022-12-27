@@ -125,6 +125,7 @@
     <Compile Include="Events\Disturbances\EventWorstDisturbance.cs" />
     <Compile Include="Events\Disturbances\VoltageCurve.cs" />
     <Compile Include="Events\Disturbances\VoltageEnvelopeCurve.cs" />
+    <Compile Include="Events\EventTypeAssetType.cs" />
     <Compile Include="Events\RelayPerformance.cs" />
     <Compile Include="Events\EventStat.cs" />
     <Compile Include="Events\Faults\FaultCauseMetrics.cs" />

@@ -165,18 +165,17 @@ namespace FaultData.DataResources
 
         private static bool ValidateEventType(EventClassification eventClassification, Asset asset)
         {
-            using (AdoDataConnection connection = dataGroup.Asset.ConnectionFactory())
+            if (eventClassification == EventClassification.Other)
+                return true;
+
+            using (AdoDataConnection connection = asset.ConnectionFactory())
             {
                 EventType evtType = new TableOperations<EventType>(connection).QueryRecordWhere("Name = {0}", eventClassification.ToString());
                 EventTypeAssetType evtAssetType = new TableOperations<EventTypeAssetType>(connection).QueryRecordWhere("EventTypeID = {0} AND AssetTypeID = {1}", evtType.ID, asset.AssetTypeID);
-                
-                return (!(evtAssetType is null))
-            }        
-            //return (assetType == AssetType.Bus) || (assetType == AssetType.CapacitorBank) || HasDirectConnectedVoltages(asset);
-        }
 
-        private static bool HasDirectConnectedVoltages(Asset asset) => asset.DirectChannels
-            .Any(channel => channel.MeasurementType.Name == "Voltage" && channel.MeasurementCharacteristic.Name == "Instantaneous");
+                return (!(evtAssetType is null));
+            }        
+        }
 
         private static bool HasBreakerChannels(DataGroup dataGroup)
         {
