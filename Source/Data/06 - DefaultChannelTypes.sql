@@ -828,3 +828,21 @@ INSERT INTO CBBankHealth (ID, Description) VALUES
 	(3,'Mid-rack tap voltages are missing'),
 	(-1,'Unavailable')
 GO
+
+/* Other nad Test are al;ways allowed since those need to be used */
+INSERT INTO EventTypeAssetType (EventTypeID,AssetTypeID) VALUES
+	((SELECT ID FROM EventType WHERE Name = 'Fault'),(SELECT ID FROM AssetType WHERE Name = 'Transformer')),
+	((SELECT ID FROM EventType WHERE Name = 'Fault'),(SELECT ID FROM AssetType WHERE Name = 'Line')),
+	((SELECT ID FROM EventType WHERE Name = 'RecloseIntoFault'),(SELECT ID FROM AssetType WHERE Name = 'Breaker')),
+	((SELECT ID FROM EventType WHERE Name = 'BreakerOpen'),(SELECT ID FROM AssetType WHERE Name = 'Breaker')),
+	((SELECT ID FROM EventType WHERE Name = 'Interruption'),(SELECT ID FROM AssetType WHERE Name = 'Bus')),
+	((SELECT ID FROM EventType WHERE Name = 'Sag'),(SELECT ID FROM AssetType WHERE Name = 'Bus')),
+	((SELECT ID FROM EventType WHERE Name = 'Swell'),(SELECT ID FROM AssetType WHERE Name = 'Bus')),
+	((SELECT ID FROM EventType WHERE Name = 'Transient'),(SELECT ID FROM AssetType WHERE Name = 'Bus')),
+	((SELECT ID FROM EventType WHERE Name = 'Interruption'),(SELECT ID FROM AssetType WHERE Name = 'CapacitorBank')),
+	((SELECT ID FROM EventType WHERE Name = 'Sag'),(SELECT ID FROM AssetType WHERE Name = 'CapacitorBank')),
+	((SELECT ID FROM EventType WHERE Name = 'Swell'),(SELECT ID FROM AssetType WHERE Name = 'CapacitorBank')),
+	((SELECT ID FROM EventType WHERE Name = 'Transient'),(SELECT ID FROM AssetType WHERE Name = 'CapacitorBank')),
+	((SELECT ID FROM EventType WHERE Name = 'Snapshot'),(SELECT ID FROM AssetType WHERE Name = 'Bus')),
+	((SELECT ID FROM EventType WHERE Name = 'Snapshot'),(SELECT ID FROM AssetType WHERE Name = 'Breaker'))
+GO
