@@ -171,9 +171,11 @@ namespace FaultData.DataResources
             using (AdoDataConnection connection = asset.ConnectionFactory())
             {
                 EventType evtType = new TableOperations<EventType>(connection).QueryRecordWhere("Name = {0}", eventClassification.ToString());
-                EventTypeAssetType evtAssetType = new TableOperations<EventTypeAssetType>(connection).QueryRecordWhere("EventTypeID = {0} AND AssetTypeID = {1}", evtType.ID, asset.AssetTypeID);
+                if (evtType is null)
+                    return false;
 
-                return (!(evtAssetType is null));
+                EventTypeAssetType evtAssetType = new TableOperations<EventTypeAssetType>(connection).QueryRecordWhere("EventTypeID = {0} AND AssetTypeID = {1}", evtType.ID, asset.AssetTypeID);
+                return !(evtAssetType is null);
             }        
         }
 
