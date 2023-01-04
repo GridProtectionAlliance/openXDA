@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/29/2017 - Billy Ernest
 //       Generated original version of source code.
+//  12/20/2022 - C. Lackner
+//       Generated original version of source code.
 //
 //******************************************************************************************************
 
@@ -35,6 +37,10 @@ namespace openXDA.Model
         public string Name { get; set; }
 
         public string Description { get; set; }
+
+        public bool ShowInFilter { get; set; }
+
+        public string Category { get; set; }
     }
 
     public static partial class TableOperationsExtensions
@@ -48,6 +54,8 @@ namespace openXDA.Model
                 eventType = new EventType();
                 eventType.Name = name;
                 eventType.Description = description ?? name;
+                eventType.ShowInFilter = false;
+                eventType.Category = null;
 
                 try
                 {

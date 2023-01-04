@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  AssetTypes.cs - Gbtc
+//  EventTypeAssetType.cs - Gbtc
 //
-//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,58 +16,23 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  12/24/2019 - C. Lackner
+//  12/22/2022 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-
-using Gemstone.Data;
-using Gemstone.Data.Model;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using GSF.Data.Model;
 
-namespace OpenXDA.Model
+namespace openXDA.Model
 {
-    public enum AssetType
+    [SettingsCategory("systemSettings")]
+    public class EventTypeAssetType
     {
-        Line = 1,
-        Bus = 2,
-        Breaker = 3,
-        CapacitorBank = 4,
-        LineSegement = 5,
-        Transformer = 6,
-        CapacitorBankRelay = 7,
-        DER = 8
-    }
-
-    [TableName("AssetType")]
-    public class AssetTypes
-    {
-        #region [ Members ]
-
-      
-        #endregion
-
-        #region [ Properties ]
-
         [PrimaryKey(true)]
         public int ID { get; set; }
-
-        [StringLength(50)]
-        [Searchable]
-        public string Name { get; set; }
-
-        [StringLength(250)]
-        [Searchable]
-        public string Description { get; set; }
-      
-        #endregion
-
+        [ParentKey(typeof(EventType))]
+        public int EventTypeID { get; set; }
+        public int AssetTypeID { get; set; }
     }
 }
