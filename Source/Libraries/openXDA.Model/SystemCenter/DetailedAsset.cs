@@ -93,7 +93,7 @@ namespace SystemCenter.Model
                         Operator = ">",
                         isPivotColumn = false,
                         SearchText = "0",
-                        FieldName = $"(SELECT Count(*) FROM Meter WHERE Meter.AssetKey {Transform(s)} AND Meter.LocationID = FullTbl.ID)",
+                        FieldName = $"(SELECT Count(*) FROM Meter LEFT JOIN MeterAsset ON Meter.ID = MeterAsset.MeterID WHERE Meter.AssetKey {Transform(s)} AND MeterAsset.AssetID = FullTbl.ID)",
                     };
                 if (s.FieldName == "Location")
                     return new Search()
@@ -102,7 +102,7 @@ namespace SystemCenter.Model
                         Operator = ">",
                         isPivotColumn = false,
                         SearchText = "0",
-                        FieldName = $"(SELECT Count(*) FROM Location LEFT JOIN AssetLocation ON AssetLocation.AssetID = Location.ID WHERE Location.LocationKey {Transform(s)} AND AssetLocation.LocationID = FullTbl.ID)",
+                        FieldName = $"(SELECT Count(*) FROM Location LEFT JOIN AssetLocation ON AssetLocation.LocationID = Location.ID WHERE Location.LocationKey {Transform(s)} AND AssetLocation.AssetID = FullTbl.ID)",
                     };
                 return s;
 
