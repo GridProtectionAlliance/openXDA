@@ -295,6 +295,9 @@ GO
 INSERT INTO NodeType VALUES('SSAMS', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.SSAMS.SSAMSNode')
 GO
 
+INSERT INTO NodeType VALUES('DataBaseMaintenance', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.DataBaseMaintenance.DataBaseMaintenanceNode')
+GO
+
 CREATE TABLE Node
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
