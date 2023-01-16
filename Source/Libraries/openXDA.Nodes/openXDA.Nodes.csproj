@@ -75,6 +75,7 @@
     <Compile Include="Types\Analysis\AnalysisTaskPublisher.cs" />
     <Compile Include="ConfigurationLoader.cs" />
     <Compile Include="Types\Authentication\AuthenticationProviderNode.cs" />
+    <Compile Include="Types\DatabaseMaintenance\DataBaseMaintenanceNode.cs" />
     <Compile Include="Types\DataPusher\DataPusherNode.cs" />
     <Compile Include="Types\Email\EventEmailNode.cs" />
     <Compile Include="Types\Email\EventEmailProcessor.cs" />
