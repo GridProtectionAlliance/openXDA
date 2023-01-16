@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Text.RegularExpressions;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
@@ -34,6 +35,7 @@ using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.SELEventParser;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
@@ -167,6 +169,48 @@ namespace FaultData.DataOperations
             }
         }
 
+        private class PQDSeriesKey: IEquatable<PQDSeriesKey>
+        {
+            public string ChannelName { get; private set; }
+            public string SeriesType { get; }
+
+            public PQDSeriesKey(ChannelKey channelKey, string seriesType)
+            {
+                ChannelName = channelKey.Name;
+                SeriesType = seriesType;
+            }
+
+            public PQDSeriesKey(Series series)
+                : this(new ChannelKey(series.Channel), series.SeriesType.Name)
+            {
+                if (!string.IsNullOrEmpty(series.SourceIndexes))
+                    ChannelName = series.SourceIndexes;
+            }
+            public override int GetHashCode()
+            {
+                int hash = 1009;
+                hash = 9176 * hash + ChannelName.GetHashCode();
+                hash = 9176 * hash + SeriesType.GetHashCode();
+                return hash;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return Equals(obj as PQDSeriesKey);
+            }
+
+            public bool Equals(PQDSeriesKey other)
+            {
+                if (other is null)
+                    return false;
+
+                return
+                    ChannelName == other.ChannelName &&
+                    SeriesType.Equals(other.SeriesType);
+            }
+
+
+        }
         private enum APPDataType
         {
             PointOnWave,
@@ -643,10 +687,15 @@ namespace FaultData.DataOperations
                         return grouping.Key;
                     }, grouping => grouping.First());
 
+                Dictionary<string,Channel> channelNameLookup = meter.Channels.SelectMany(channel => channel.GetSeries(connection))
+                .GroupBy(ser => ser.SourceIndexes ?? ser.GetChannel(connection).Name)
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.First().Channel);
+
+
                 List<Channel> undefinedChannels = undefinedDataSeries
                     .Select(dataSeries => dataSeries.SeriesInfo.Channel)
                     .GroupBy(channel => new ChannelKey(channel))
-                    .Where(grouping => !channelLookup.ContainsKey(grouping.Key))
+                    .Where(grouping => !channelLookup.ContainsKey(grouping.Key) && !channelNameLookup.ContainsKey(grouping.Key.Name))
                     .Select(grouping => grouping.First())
                     .ToList();
 
@@ -708,10 +757,26 @@ namespace FaultData.DataOperations
                         return grouping.Key;
                     }, grouping => grouping.First());
 
+                Dictionary<PQDSeriesKey, Series> seriesNameLookup = meter.Series
+                    .GroupBy(series => new PQDSeriesKey(series))
+                    .ToDictionary(grouping =>
+                    {
+                        if (grouping.Count() > 1)
+                            Log.Warn($"Detected duplicate series key: {grouping.First().ID}");
+
+                        return grouping.Key;
+                    }, grouping => grouping.First());
+
                 List<Series> undefinedSeries = undefinedDataSeries
                     .SelectMany(dataSeries => dataSeries.SeriesInfo.Channel.Series)
                     .GroupBy(series => new SeriesKey(series))
                     .Where(grouping => !seriesLookup.ContainsKey(grouping.Key))
+                    .Select(grouping => grouping.First())
+                    .ToList();
+
+                //Further reduce undefinedSeries if match via ChannelName
+                undefinedSeries = undefinedSeries.GroupBy(series => new PQDSeriesKey(series))
+                    .Where(grouping => !seriesNameLookup.ContainsKey(grouping.Key))
                     .Select(grouping => grouping.First())
                     .ToList();
 
@@ -751,6 +816,14 @@ namespace FaultData.DataOperations
                     SeriesKey seriesKey = new SeriesKey(dataSeries.SeriesInfo);
                     Series series;
                     seriesLookup.TryGetValue(seriesKey, out series);
+
+                    //Attempt to do get Series by Channel name
+                    if (series is null)
+                    {
+                        PQDSeriesKey pqdSeriesKey = new PQDSeriesKey(dataSeries.SeriesInfo);
+                        seriesNameLookup.TryGetValue(pqdSeriesKey, out series);
+                    }
+
                     if (!(series is null))
                         dataSeries.SeriesInfo = series;
                 }
