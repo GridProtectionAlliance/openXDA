@@ -271,13 +271,16 @@ namespace FaultData.DataOperations
             // Only update database configuration if NOT using historic configuration.
             if (!meterDataSet.LoadHistoricConfiguration)
             {
-                // If there are any channels defined for this meter we remove all the PQDIf Channels
+                // If there are any calculated channels defined for this meter we remove all the PQDIf Channels
                 if (calculatedDataSeriesList.Count > 0)
-                    RemoveUnDefinedChannelnels(meterDataSet);
-
+                    RemoveUnDefinedChannels(meterDataSet);
+                
                 // Add channels that are not already defined in the
                 // configuration by assuming the meter monitors only one line
                 AddUndefinedChannels(meterDataSet);
+
+                // Remove the undefined dataseries that are added but couldn't be connected to an Asset
+                RemoveUnDefinedChannels(meterDataSet);
 
                 FixUpdatedChannelInfo(meterDataSet, parsedMeter);
             }
@@ -583,7 +586,7 @@ namespace FaultData.DataOperations
             if (meter.MeterAssets.Count == 0)
             {
                 Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are no lines associated with that meter.");
-                return;
+                //return;
             }
 
             if (meter.MeterAssets.Count > 1)
@@ -594,10 +597,10 @@ namespace FaultData.DataOperations
 
             Asset asset = meter.MeterAssets
                 .Select(meterLine => meterLine.Asset)
-                .First();
+                .FirstOrDefault();
 
             foreach (DataSeries series in undefinedDataSeries)
-                series.SeriesInfo.Channel.AssetID = asset.ID;
+                series.SeriesInfo.Channel.AssetID = asset?.ID ?? -1;
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
@@ -648,6 +651,9 @@ namespace FaultData.DataOperations
                     .ToList();
 
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+
+                if (asset is null)
+                    undefinedChannels = new List<Channel>();
 
                 // Add all undefined channels to the database
                 foreach (Channel channel in undefinedChannels)
@@ -711,6 +717,9 @@ namespace FaultData.DataOperations
 
                 TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
 
+                if (asset is null)
+                    undefinedSeries = new List<Series>();
+
                 // Add all undefined series objects to the database
                 foreach (Series series in undefinedSeries)
                 {
@@ -740,8 +749,10 @@ namespace FaultData.DataOperations
                 foreach (DataSeries dataSeries in undefinedDataSeries)
                 {
                     SeriesKey seriesKey = new SeriesKey(dataSeries.SeriesInfo);
-                    Series series = seriesLookup[seriesKey];
-                    dataSeries.SeriesInfo = series;
+                    Series series;
+                    seriesLookup.TryGetValue(seriesKey, out series);
+                    if (!(series is null))
+                        dataSeries.SeriesInfo = series;
                 }
             }
         }
@@ -826,7 +837,7 @@ namespace FaultData.DataOperations
             }
         }
 
-        private void RemoveUnDefinedChannelnels(MeterDataSet meterDataSet)
+        private void RemoveUnDefinedChannels(MeterDataSet meterDataSet)
         {
             for (int i = meterDataSet.DataSeries.Count - 1; i >= 0; i--)
             {
