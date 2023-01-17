@@ -23,39 +23,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Controllers;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Threading;
 using log4net;
-using openXDA.Configuration;
-using openXDA.DataPusher;
 using openXDA.Model;
 
-namespace openXDA.Nodes.Types.DataBaseMaintenance
+namespace openXDA.Nodes.Types.DatabaseMaintenance
 {
-    public class DataBaseMaintenanceNode : NodeBase
+    public class DatabaseMaintenanceNode : NodeBase
     {
-        #region [ Members ]
-
-        // Nested Types
-        private class DataBaseMaintenanceController : ApiController
-        {
-            private DataBaseMaintenanceNode Node { get; }
-
-            public DataBaseMaintenanceController(DataBaseMaintenanceNode node) =>
-                Node = node;
-        }
-
-        #endregion
-
         #region [ Constructors ]
 
-        public DataBaseMaintenanceNode(Host host, Node definition, NodeType type)
+        public DatabaseMaintenanceNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
         {
             ScheduleAllInstances();
@@ -63,26 +42,17 @@ namespace openXDA.Nodes.Types.DataBaseMaintenance
 
         #endregion
 
-        #region [ Properties ]
-
-
-        #endregion
-
         #region [ Methods ]
 
-        public override IHttpController CreateWebController() =>
-            new DataBaseMaintenanceController(this);
-
-        protected override void OnReconfigure(Action<object> configurator)
-        {
+        protected override void OnReconfigure(Action<object> configurator) =>
             ScheduleAllInstances();
-        }
 
         private void ScheduleAllInstances()
         {            
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
                 IEnumerable<DBCleanup> allInstances = new TableOperations<DBCleanup>(connection).QueryRecords();
+
                 foreach (DBCleanup instance in allInstances)
                 {
                     string name = $"{nameof(RunInstance)}_ID:{instance.ID}";
@@ -93,7 +63,8 @@ namespace openXDA.Nodes.Types.DataBaseMaintenance
 
         private Action RunInstance(DBCleanup instance)
         {
-           Action<object> configurator = GetConfigurator();
+            Action<object> configurator = GetConfigurator();
+
             return () =>
             {
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -109,7 +80,7 @@ namespace openXDA.Nodes.Types.DataBaseMaintenance
         #region [ Static ]
 
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(DataBaseMaintenanceNode));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DatabaseMaintenanceNode));
 
         #endregion
     }
