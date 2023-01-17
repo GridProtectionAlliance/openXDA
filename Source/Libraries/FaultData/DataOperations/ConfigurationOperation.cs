@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Text.RegularExpressions;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
@@ -35,7 +34,6 @@ using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.SELEventParser;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
@@ -186,6 +184,7 @@ namespace FaultData.DataOperations
                 if (!string.IsNullOrEmpty(series.SourceIndexes))
                     ChannelName = series.SourceIndexes;
             }
+
             public override int GetHashCode()
             {
                 int hash = 1009;
@@ -208,9 +207,8 @@ namespace FaultData.DataOperations
                     ChannelName == other.ChannelName &&
                     SeriesType.Equals(other.SeriesType);
             }
-
-
         }
+
         private enum APPDataType
         {
             PointOnWave,
@@ -298,13 +296,13 @@ namespace FaultData.DataOperations
             // calculating data series, these need to be removed
             for (int i = meterDataSet.DataSeries.Count - 1; i >= 0; i--)
             {
-                if ((object)meterDataSet.DataSeries[i].SeriesInfo == null)
+                if (meterDataSet.DataSeries[i].SeriesInfo is null)
                     meterDataSet.DataSeries.RemoveAt(i);
             }
 
             for (int i = meterDataSet.Digitals.Count - 1; i >= 0; i--)
             {
-                if ((object)meterDataSet.Digitals[i].SeriesInfo == null)
+                if (meterDataSet.Digitals[i].SeriesInfo is null)
                     meterDataSet.Digitals.RemoveAt(i);
             }
 
@@ -315,16 +313,13 @@ namespace FaultData.DataOperations
             // Only update database configuration if NOT using historic configuration.
             if (!meterDataSet.LoadHistoricConfiguration)
             {
-                // If there are any calculated channels defined for this meter we remove all the PQDIf Channels
-                if (calculatedDataSeriesList.Count > 0)
-                    RemoveUnDefinedChannels(meterDataSet);
-                
                 // Add channels that are not already defined in the
                 // configuration by assuming the meter monitors only one line
-                AddUndefinedChannels(meterDataSet);
+                if (calculatedDataSeriesList.Count == 0)
+                    AddUndefinedChannels(meterDataSet);
 
                 // Remove the undefined dataseries that are added but couldn't be connected to an Asset
-                RemoveUnDefinedChannels(meterDataSet);
+                RemoveUndefinedChannels(meterDataSet);
 
                 FixUpdatedChannelInfo(meterDataSet, parsedMeter);
             }
@@ -615,15 +610,13 @@ namespace FaultData.DataOperations
 
         private void AddUndefinedChannels(MeterDataSet meterDataSet)
         {
-
             List<DataSeries> undefinedDataSeries = meterDataSet.DataSeries
                 .Concat(meterDataSet.Digitals)
-                .Where(dataSeries => (object)dataSeries.SeriesInfo.Channel.Asset == null)
+                .Where(dataSeries => dataSeries.SeriesInfo.Channel.Asset is null)
                 .ToList();
 
             if (undefinedDataSeries.Count <= 0)
                 return;
-
 
             Meter meter = meterDataSet.Meter;
 
@@ -687,10 +680,9 @@ namespace FaultData.DataOperations
                         return grouping.Key;
                     }, grouping => grouping.First());
 
-                Dictionary<string,Channel> channelNameLookup = meter.Channels.SelectMany(channel => channel.GetSeries(connection))
-                .GroupBy(ser => ser.SourceIndexes ?? ser.GetChannel(connection).Name)
-                .ToDictionary(grouping => grouping.Key, grouping => grouping.First().Channel);
-
+                Dictionary<string, Channel> channelNameLookup = meter.Channels.SelectMany(channel => channel.GetSeries(connection))
+                    .GroupBy(series => series.SourceIndexes ?? series.GetChannel(connection).Name)
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.First().Channel);
 
                 List<Channel> undefinedChannels = undefinedDataSeries
                     .Select(dataSeries => dataSeries.SeriesInfo.Channel)
@@ -910,18 +902,17 @@ namespace FaultData.DataOperations
             }
         }
 
-        private void RemoveUnDefinedChannels(MeterDataSet meterDataSet)
+        private void RemoveUndefinedChannels(MeterDataSet meterDataSet)
         {
             for (int i = meterDataSet.DataSeries.Count - 1; i >= 0; i--)
             {
-
-                if ((object)meterDataSet.DataSeries[i].SeriesInfo.Channel.Asset == null)
+                if (meterDataSet.DataSeries[i].SeriesInfo.Channel.Asset is null)
                     meterDataSet.DataSeries.RemoveAt(i);
             }
 
             for (int i = meterDataSet.Digitals.Count - 1; i >= 0; i--)
             {
-                if ((object)meterDataSet.Digitals[i].SeriesInfo.Channel.Asset == null)
+                if (meterDataSet.Digitals[i].SeriesInfo.Channel.Asset is null)
                     meterDataSet.Digitals.RemoveAt(i);
             }
         }
