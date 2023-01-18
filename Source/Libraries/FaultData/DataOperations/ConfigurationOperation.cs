@@ -57,7 +57,7 @@ namespace FaultData.DataOperations
             public bool IsTriggerTrend;
             public bool IsTrend { get => IsRMSTrend || IsFLKRTrend || IsTriggerTrend; }
 
-            public static SourceIndex Parse(string text, ILookup<string, int> channelNames = null)
+            public static SourceIndex Parse(string text)
             {
                 string trim = text.Trim();
 
@@ -115,97 +115,14 @@ namespace FaultData.DataOperations
                     sourceIndex.ByName = true;
                     sourceIndex.ChannelName = channelMapping;
                     sourceIndex.ChannelIndex = -1;
-
-                    if (channelNames is null)
-                        return sourceIndex;
-
-                    int? found = FindIndex(channelMapping, channelNames);
-
-                    if (found is null)
-                        return sourceIndex;
-
-                    sourceIndex.ChannelIndex = found.GetValueOrDefault();
                 }
-
-                if (channelMapping[0] == '-')
+                else if (channelMapping[0] == '-')
                 {
                     sourceIndex.Multiplier *= -1.0D;
-
-                    if (!sourceIndex.ByName)
-                        sourceIndex.ChannelIndex *= -1;
+                    sourceIndex.ChannelIndex *= -1;
                 }
 
                 return sourceIndex;
-            }
-
-            /// <summary>
-            /// Attempts to Parse a channel Name into an Index.
-            /// </summary>
-            /// <param name="name"> The Channel Name</param>
-            /// <param name="nameIndexLookup">A lookup table for indexes by name.</param>
-            /// <returns> The Channel Index associated with this channelName. Returns -1 if it is not found</returns>
-            private static int? FindIndex(string name, ILookup<string, int> nameIndexLookup)
-            {
-                string test = (name[0] == '-') ? name.Substring(1) : name;
-                int? firstIndex = null;
-
-                foreach (int index in nameIndexLookup[test])
-                {
-                    if (!(firstIndex is null))
-                    {
-                        Log.Debug($"Incorrect format for channel name {test}: duplicates found in configuration.");
-                        return null;
-                    }
-
-                    firstIndex = index;
-                }
-
-                if (firstIndex is null)
-                    Log.Debug($"Incorrect format for channel name {test}: no matching channel found.");
-
-                return firstIndex;
-            }
-        }
-
-        private class PQDSeriesKey: IEquatable<PQDSeriesKey>
-        {
-            public string ChannelName { get; private set; }
-            public string SeriesType { get; }
-
-            public PQDSeriesKey(ChannelKey channelKey, string seriesType)
-            {
-                ChannelName = channelKey.Name;
-                SeriesType = seriesType;
-            }
-
-            public PQDSeriesKey(Series series)
-                : this(new ChannelKey(series.Channel), series.SeriesType.Name)
-            {
-                if (!string.IsNullOrEmpty(series.SourceIndexes))
-                    ChannelName = series.SourceIndexes;
-            }
-
-            public override int GetHashCode()
-            {
-                int hash = 1009;
-                hash = 9176 * hash + ChannelName.GetHashCode();
-                hash = 9176 * hash + SeriesType.GetHashCode();
-                return hash;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return Equals(obj as PQDSeriesKey);
-            }
-
-            public bool Equals(PQDSeriesKey other)
-            {
-                if (other is null)
-                    return false;
-
-                return
-                    ChannelName == other.ChannelName &&
-                    SeriesType.Equals(other.SeriesType);
             }
         }
 
@@ -313,12 +230,12 @@ namespace FaultData.DataOperations
             // Only update database configuration if NOT using historic configuration.
             if (!meterDataSet.LoadHistoricConfiguration)
             {
-                // Add channels that are not already defined in the
-                // configuration by assuming the meter monitors only one line
+                // If there are no explicitly mapped channels in the meter's configuration,
+                // automatically adjust meter configuration to include newly introduced channels
                 if (calculatedDataSeriesList.Count == 0)
                     AddUndefinedChannels(meterDataSet);
 
-                // Remove the undefined dataseries that are added but couldn't be connected to an Asset
+                // If any channels could not be mapped or added to the database, remove them now
                 RemoveUndefinedChannels(meterDataSet);
 
                 FixUpdatedChannelInfo(meterDataSet, parsedMeter);
@@ -479,23 +396,9 @@ namespace FaultData.DataOperations
         {
             List<Series> seriesList = meterDataSet.Meter.Series;
 
-            ILookup<string, int> GetNameIndexLookup(List<DataSeries> dataSeriesList) => dataSeriesList
-                .Select((DataSeries, Index) => new { DataSeries, Index })
-                .Where(item => !(item.DataSeries.SeriesInfo is null))
-                .ToLookup(item => item.DataSeries.SeriesInfo.Channel.Name, item => item.Index);
-
-            ILookup<string, int> analogLookup = GetNameIndexLookup(meterDataSet.DataSeries);
-            ILookup<string, int> digitalLookup = GetNameIndexLookup(meterDataSet.Digitals);
-
-            ILookup<string, int> GetLookupFor(Series series) =>
-                (series.Channel.MeasurementType.Name != "Digital")
-                    ? analogLookup
-                    : digitalLookup;
-
             var sourceIndexMap = seriesList
-                .Select(Series => new { Series, Lookup = GetLookupFor(Series) })
-                .SelectMany(item => item.Series.SourceIndexes.Split(','), (item, SourceIndex) => new { item.Series, item.Lookup, SourceIndex })
-                .Select(item => new { item.Series, SourceIndex = SourceIndex.Parse(item.SourceIndex, item.Lookup) })
+                .SelectMany(series => series.SourceIndexes.Split(','), (Series, SourceIndex) => new { Series, SourceIndex })
+                .Select(item => new { item.Series, SourceIndex = SourceIndex.Parse(item.SourceIndex) })
                 .Where(item => !(item.SourceIndex is null))
                 .ToList();
 
@@ -548,7 +451,7 @@ namespace FaultData.DataOperations
                     string translated = $"{multiplier}*{aggregatePrefix}{channelName}";
 
                     // RMS and Trigger channels are always analogs
-                    SourceIndex newIndex = SourceIndex.Parse(translated, analogLookup);
+                    SourceIndex newIndex = SourceIndex.Parse(translated);
                     newIndex.IsRMSTrend = sourceIndex.IsRMSTrend;
                     newIndex.IsFLKRTrend = sourceIndex.IsFLKRTrend;
                     newIndex.IsTriggerTrend = sourceIndex.IsTriggerTrend;
@@ -580,12 +483,44 @@ namespace FaultData.DataOperations
             if (sourceIndexes.Any(sourceIndex => sourceIndex.ChannelIndex >= dataSeriesList.Count))
                 return;
 
-            DataSeries dataSeries = sourceIndexes
-                .Select(sourceIndex => dataSeriesList[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
+            ILookup<string, int> nameIndexLookup = dataSeriesList
+                .Select((DataSeries, Index) => new { DataSeries, Index })
+                .Where(item => !(item.DataSeries.SeriesInfo is null))
+                .ToLookup(item => item.DataSeries.SeriesInfo.Channel.Name, item => item.Index);
+
+            int MatchCount(DataSeries dataSeries)
+            {
+                int count = 0;
+                if (dataSeries.SeriesInfo?.SeriesType.Name == series.SeriesType.Name)
+                    count++;
+                if (dataSeries.SeriesInfo?.Channel.MeasurementType.Name == series.Channel.MeasurementType.Name)
+                    count++;
+                if (dataSeries.SeriesInfo?.Channel.MeasurementCharacteristic.Name == series.Channel.MeasurementCharacteristic.Name)
+                    count++;
+                if (dataSeries.SeriesInfo?.Channel.Phase.Name == series.Channel.Phase.Name)
+                    count++;
+                if (dataSeries.SeriesInfo?.Channel.HarmonicGroup == series.Channel.HarmonicGroup)
+                    count++;
+                return count;
+            }
+
+            DataSeries FindDataSeriesByName(SourceIndex sourceIndex) => nameIndexLookup[sourceIndex.ChannelName]
+                .Select(index => dataSeriesList[index])
+                .OrderByDescending(dataSeries => MatchCount(dataSeries))
+                .FirstOrDefault();
+
+            DataSeries FindDataSeries(SourceIndex sourceIndex) => sourceIndex.ByName
+                ? FindDataSeriesByName(sourceIndex)
+                : dataSeriesList[sourceIndex.ChannelIndex];
+
+            DataSeries calculatedSeries = sourceIndexes
+                .Where(sourceIndex => sourceIndex.ByName || sourceIndex.ChannelIndex >= 0)
+                .Select(sourceIndex => new { sourceIndex.Multiplier, DataSeries = FindDataSeries(sourceIndex) })
+                .Select(obj => obj.DataSeries.Multiply(obj.Multiplier))
                 .Aggregate((series1, series2) => series1.Add(series2));
 
-            dataSeries.SeriesInfo = series;
-            calculatedDataSeriesList.Add(dataSeries);
+            calculatedSeries.SeriesInfo = series;
+            calculatedDataSeriesList.Add(calculatedSeries);
         }
 
         private void ApplySeriesAdjustments(List<DataSeries> definedSeries)
@@ -623,21 +558,21 @@ namespace FaultData.DataOperations
             if (meter.MeterAssets.Count == 0)
             {
                 Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are no lines associated with that meter.");
-                //return;
+                return;
             }
 
             if (meter.MeterAssets.Count > 1)
             {
                 Log.Warn($"Add channels to meter {meterDataSet.Meter.Name} Asset {meter.MeterAssets.First().Asset.AssetKey}. There are too many lines associated with that meter.");
-                //return;
+                return;
             }
 
             Asset asset = meter.MeterAssets
                 .Select(meterLine => meterLine.Asset)
-                .FirstOrDefault();
+                .First();
 
             foreach (DataSeries series in undefinedDataSeries)
-                series.SeriesInfo.Channel.AssetID = asset?.ID ?? -1;
+                series.SeriesInfo.Channel.AssetID = asset.ID;
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
@@ -680,21 +615,14 @@ namespace FaultData.DataOperations
                         return grouping.Key;
                     }, grouping => grouping.First());
 
-                Dictionary<string, Channel> channelNameLookup = meter.Channels.SelectMany(channel => channel.GetSeries(connection))
-                    .GroupBy(series => series.SourceIndexes ?? series.GetChannel(connection).Name)
-                    .ToDictionary(grouping => grouping.Key, grouping => grouping.First().Channel);
-
                 List<Channel> undefinedChannels = undefinedDataSeries
                     .Select(dataSeries => dataSeries.SeriesInfo.Channel)
                     .GroupBy(channel => new ChannelKey(channel))
-                    .Where(grouping => !channelLookup.ContainsKey(grouping.Key) && !channelNameLookup.ContainsKey(grouping.Key.Name))
+                    .Where(grouping => !channelLookup.ContainsKey(grouping.Key))
                     .Select(grouping => grouping.First())
                     .ToList();
 
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
-
-                if (asset is null)
-                    undefinedChannels = new List<Channel>();
 
                 // Add all undefined channels to the database
                 foreach (Channel channel in undefinedChannels)
@@ -749,16 +677,6 @@ namespace FaultData.DataOperations
                         return grouping.Key;
                     }, grouping => grouping.First());
 
-                Dictionary<PQDSeriesKey, Series> seriesNameLookup = meter.Series
-                    .GroupBy(series => new PQDSeriesKey(series))
-                    .ToDictionary(grouping =>
-                    {
-                        if (grouping.Count() > 1)
-                            Log.Warn($"Detected duplicate series key: {grouping.First().ID}");
-
-                        return grouping.Key;
-                    }, grouping => grouping.First());
-
                 List<Series> undefinedSeries = undefinedDataSeries
                     .SelectMany(dataSeries => dataSeries.SeriesInfo.Channel.Series)
                     .GroupBy(series => new SeriesKey(series))
@@ -766,16 +684,7 @@ namespace FaultData.DataOperations
                     .Select(grouping => grouping.First())
                     .ToList();
 
-                //Further reduce undefinedSeries if match via ChannelName
-                undefinedSeries = undefinedSeries.GroupBy(series => new PQDSeriesKey(series))
-                    .Where(grouping => !seriesNameLookup.ContainsKey(grouping.Key))
-                    .Select(grouping => grouping.First())
-                    .ToList();
-
                 TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
-
-                if (asset is null)
-                    undefinedSeries = new List<Series>();
 
                 // Add all undefined series objects to the database
                 foreach (Series series in undefinedSeries)
@@ -806,18 +715,8 @@ namespace FaultData.DataOperations
                 foreach (DataSeries dataSeries in undefinedDataSeries)
                 {
                     SeriesKey seriesKey = new SeriesKey(dataSeries.SeriesInfo);
-                    Series series;
-                    seriesLookup.TryGetValue(seriesKey, out series);
-
-                    //Attempt to do get Series by Channel name
-                    if (series is null)
-                    {
-                        PQDSeriesKey pqdSeriesKey = new PQDSeriesKey(dataSeries.SeriesInfo);
-                        seriesNameLookup.TryGetValue(pqdSeriesKey, out series);
-                    }
-
-                    if (!(series is null))
-                        dataSeries.SeriesInfo = series;
+                    Series series = seriesLookup[seriesKey];
+                    dataSeries.SeriesInfo = series;
                 }
             }
         }
