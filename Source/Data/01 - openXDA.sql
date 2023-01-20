@@ -624,6 +624,8 @@ CREATE TABLE LineSegmentConnections
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     ParentSegment INT REFERENCES Asset(ID),
     ChildSegment INT REFERENCES Asset(ID),
+    FromChild BIT NOT NULL DEFAULT(0),
+    FromParent BIT NOT NULL DEFAULT(0)
 )
 GO
 

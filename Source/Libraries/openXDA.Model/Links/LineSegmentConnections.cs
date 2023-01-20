@@ -49,6 +49,10 @@ namespace openXDA.Model
 
         public int ChildSegment { get; set; }
 
+        public bool FromChild { get; set; }
+
+        public int FromParent { get; set; }
+
         [JsonIgnore]
         [NonRecordField]
         public LineSegment Parent
