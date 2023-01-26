@@ -5143,27 +5143,33 @@ SELECT
     Meter.Name AS MeterName,
     Meter.ID AS MeterID,
     AssetGroupID,
-    Location.Name AS Location
+    Location.Name AS Location,
+    AssetGroup.Name,
+    AssetGroup.DisplayDashboard
 FROM
     MeterAssetGroup JOIN
     Meter ON MeterAssetGroup.MeterID = Meter.ID JOIN
+    AssetGroup ON MeterAssetGroup.AssetGroupID = AssetGroup.ID JOIN
     Location ON Meter.LocationID = Location.ID
 GO
 
  CREATE VIEW AssetAssetGroupView
  AS
  SELECT
-     AssetAssetGroup.ID,
-     Asset.AssetKey AS Assetname,
-     Asset.AssetName AS LongAssetName,
-     Asset.ID AS AssetID,
-	 AssetType.Name AS AssetType,
-	 (SELECT Top 1 LocationKey FROM Location WHERE Location.ID IN (SELECT LocationID FROM AssetLocation WHERE AssetLocation.AssetID = Asset.ID)) AS AssetLocation,
-     AssetGroupID
+    AssetAssetGroup.ID,
+    Asset.AssetKey AS Assetname,
+    Asset.AssetName AS LongAssetName,
+    Asset.ID AS AssetID,
+	AssetType.Name AS AssetType,
+	(SELECT Top 1 LocationKey FROM Location WHERE Location.ID IN (SELECT LocationID FROM AssetLocation WHERE AssetLocation.AssetID = Asset.ID)) AS AssetLocation,
+    AssetGroupID,
+    AssetGroup.Name,
+    AssetGroup.DisplayDashboard
  FROM
-     AssetAssetGroup JOIN
-     Asset ON AssetAssetGroup.AssetID = Asset.ID LEFT JOIN
-	 AssetType ON Asset.AssetTypeID = AssetType.ID
+    AssetAssetGroup JOIN
+    Asset ON AssetAssetGroup.AssetID = Asset.ID LEFT JOIN
+    AssetGroup ON AssetAssetGroup.AssetGroupID = AssetGroup.ID JOIN
+    AssetType ON Asset.AssetTypeID = AssetType.ID
 GO
 
  CREATE VIEW AssetGroupAssetGroupView
