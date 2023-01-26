@@ -26,6 +26,10 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class MeterAssetGroup
     {
         [PrimaryKey(true)]
@@ -43,6 +47,12 @@ namespace openXDA.Model
     [DeleteRoles("Administrator, Transmission SME")]
     public class MeterAssetGroupView : MeterAssetGroup
     {
+        [Searchable]
+        public string Name { get; set; }
+
+        [Searchable]
+        public bool DisplayDashboard { get; set; }
+
         [Searchable]
         public string MeterName { get; set; }
 
