@@ -178,6 +178,9 @@ namespace openXDA.Model
 
         public bool Enabled { get; set; }
 
+        [DefaultValue(false)]
+        public bool Trend { get; set; }
+
         [DefaultValue(0)]
         public int ConnectionPriority { get; set; } = 0;
     }
