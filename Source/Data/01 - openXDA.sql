@@ -1445,7 +1445,8 @@ CREATE TABLE Channel
     HarmonicGroup INT NOT NULL,
     Description VARCHAR(MAX) NULL,
     Enabled INT NOT NULL DEFAULT 1,
-    ConnectionPriority INT NOT NULL DEFAULT 0
+    ConnectionPriority INT NOT NULL DEFAULT 0,
+    Trend bit NOT NULL DEFAULT 0
 )
 GO
 
