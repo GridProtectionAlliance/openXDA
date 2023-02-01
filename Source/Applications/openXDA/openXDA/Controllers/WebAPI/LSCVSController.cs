@@ -24,34 +24,20 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
 using FaultData.DataAnalysis;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Web.Security;
-using HIDS;
+using GSF.Web.Model;
 using log4net;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using openXDA.Model;
 
 namespace openXDA.Controllers.WebAPI
 {
 
-
+    [RoutePrefix("api/LSCVSAccount")]
+    public class LSCVSAccountController : ModelController<SystemCenter.Model.LSCVSAccount> { }
 
     [RoutePrefix("api/LSCVS")]
     public class LSCVSController : ApiController
