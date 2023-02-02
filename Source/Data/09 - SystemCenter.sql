@@ -244,7 +244,7 @@ GO
 CREATE TABLE [LSCVSAccount] (
     ID int NOT NULL IDENTITY(1, 1) PRIMARY KEY,
     AccountID VARCHAR(200) NOT NULL,
-    ChannelID int NOT NULL,
+    ChannelID int NOT NULL DEFAULT(1),
     CustomerID int NOT NULL,
     FOREIGN KEY (CustomerID) REFERENCES Customer(ID)
 )
