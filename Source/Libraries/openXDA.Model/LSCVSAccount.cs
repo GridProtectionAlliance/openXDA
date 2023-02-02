@@ -44,6 +44,8 @@ namespace SystemCenter.Model
 
         public string AccountID { get; set; }
 
+        public int ChannelID { get; set; }
+
         [ParentKey(typeof(Customer))]
         public int CustomerID { get; set; }
     }
