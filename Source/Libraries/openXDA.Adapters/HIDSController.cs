@@ -145,7 +145,7 @@ namespace openXDA.Adapters
             MediaTypeHeaderValue contentType = new MediaTypeHeaderValue("text/plain");
             contentType.CharSet = "utf-8";
 
-            Stream pointStream = PointStream.QueryPoints(CreateHIDSConnection, BuildQuery);
+            Stream pointStream = PointStream.QueryPoints(CreateHIDSConnectionAsync, BuildQuery);
             StreamContent content = new StreamContent(pointStream);
             content.Headers.ContentType = contentType;
 
@@ -170,7 +170,7 @@ namespace openXDA.Adapters
 
             async Task<List<Point>> QueryHIDSAsync()
             {
-                using (API hids = CreateHIDSConnection())
+                using (API hids = await CreateHIDSConnectionAsync())
                 {
                     IEnumerable<string> tags = table
                         .AsEnumerable()
@@ -238,14 +238,14 @@ namespace openXDA.Adapters
             return response;
         }
 
-        private API CreateHIDSConnection()
+        private async Task<API> CreateHIDSConnectionAsync()
         {
             ConfigurationLoader configurationLoader = new ConfigurationLoader(Host.ID, Host.CreateDbConnection);
             Settings settings = new Settings();
             configurationLoader.Configure(settings);
 
             API hids = new API();
-            hids.Configure(settings.HIDSSettings);
+            await hids.ConfigureAsync(settings.HIDSSettings);
             return hids;
         }
 

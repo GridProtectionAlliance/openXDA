@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
@@ -350,9 +351,15 @@ namespace SPCTools
             List<Point> data;
             using (API hids = new API())
             {
-                HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
-                hids.Configure(settings);
-                data = hids.ReadPointsAsync(dataToGet, start, end).ToListAsync().Result;
+                async Task<List<Point>> QueryHIDSAsync()
+                {
+                    HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
+                    await hids.ConfigureAsync(settings);
+                    return await hids.ReadPointsAsync(dataToGet, start, end).ToListAsync();
+                }
+
+                Task<List<Point>> queryTask = QueryHIDSAsync();
+                data = queryTask.GetAwaiter().GetResult();
             }
 
             return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());

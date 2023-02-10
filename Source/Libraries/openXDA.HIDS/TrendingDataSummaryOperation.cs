@@ -83,7 +83,8 @@ namespace openXDA.HIDS
             }
 
             using API hids = new API();
-            hids.Configure(HIDSSettings);
+            Task configureTask = hids.ConfigureAsync(HIDSSettings);
+            configureTask.GetAwaiter().GetResult();
 
             using AdoDataConnection connection = meterDataSet.CreateDbConnection();
 

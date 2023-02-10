@@ -35,7 +35,6 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web;
 using HIDS;
-using openHistorian.XDALink;
 using openXDA.Model;
 
 namespace openXDA.Adapters
@@ -129,33 +128,35 @@ namespace openXDA.Adapters
             else return point.Maximum;
         }
 
-        private IEnumerable<Point> QueryHIDS(IEnumerable<Channel> channels, DateTime startDate, DateTime endDate) {
+        private List<Point> QueryHIDS(IEnumerable<Channel> channels, DateTime startDate, DateTime endDate)
+        {
             using (AdoDataConnection connection = ConnectionFactory())
             using (API hids = new API())
             {
-
                 string host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'") ?? "127.0.0.1";
                 string tokenID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'") ?? "";
                 string pointBucket = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.PointBucket'") ?? "point_bucket";
                 string orgID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'") ?? "gpa";
 
-
-                hids.TokenID = tokenID;
-                hids.PointBucket = pointBucket;
-                hids.OrganizationID = orgID;
-                hids.Connect(host);
-
-
-                List<Point> points = hids.ReadPointsAsync((t) =>
+                async Task<List<Point>> QueryAsync()
                 {
-                    t.FilterTags(channels.Select(c => c.ID.ToString("x8")));
-                    t.Range(startDate, endDate);
-                }).ToListAsync().Result;
+                    hids.TokenID = tokenID;
+                    hids.PointBucket = pointBucket;
+                    hids.OrganizationID = orgID;
+                    await hids.ConnectAsync(host);
 
-                return points;
+                    return await hids.ReadPointsAsync((t) =>
+                    {
+                        t.FilterTags(channels.Select(c => c.ID.ToString("x8")));
+                        t.Range(startDate, endDate);
+                    }).ToListAsync();
+                }
+
+                Task<List<Point>> queryTask = QueryAsync();
+                return queryTask.GetAwaiter().GetResult();
             }
-
         }
+
         [HttpGet]
         public Task<IOrderedEnumerable<Meter>> GetMeters(CancellationToken cancellationToken)
         {

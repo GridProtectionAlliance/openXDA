@@ -314,7 +314,8 @@ namespace openXDA.HIDS
             }
 
             using API hids = new API();
-            hids.Configure(HIDSSettings);
+            Task configureTask = hids.ConfigureAsync(HIDSSettings);
+            configureTask.GetAwaiter().GetResult();
 
             CountAlarms(channelTestersLookup, meterDataSet, connection, hids);
             LogAlarms(channelTestersLookup, meterDataSet, connection, hids);
