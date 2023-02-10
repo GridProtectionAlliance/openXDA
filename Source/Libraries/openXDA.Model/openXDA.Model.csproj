@@ -93,9 +93,6 @@
     <Compile Include="Channels\ChannelGroupType.cs" />
     <Compile Include="Channels\ChannelAlarmGroup.cs" />
     <Compile Include="Channels\ChannelOverview.cs" />
-    <Compile Include="Company.cs" />
-    <Compile Include="CompanyMeter.cs" />
-    <Compile Include="CompanyType.cs" />
     <Compile Include="Dashboard\ContourClasses.cs" />
     <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="DataPush\FilesToDataPush.cs" />
