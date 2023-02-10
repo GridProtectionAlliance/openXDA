@@ -518,7 +518,7 @@ namespace FaultData.DataOperations
                 .Where(obj => !(obj.DataSeries is null))
                 .Select(obj => obj.DataSeries.Multiply(obj.Multiplier));
 
-            if (seriesParts.Count() == 0)
+            if (!seriesParts.Any())
                 return;
 
             DataSeries calculatedSeries = seriesParts
