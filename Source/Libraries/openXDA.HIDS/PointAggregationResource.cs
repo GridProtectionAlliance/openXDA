@@ -82,7 +82,7 @@ namespace openXDA.HIDS
             Dictionary<Channel, List<DataGroup>> trendingGroups = trendingGroupsResource.TrendingGroups;
 
             using API hids = new API();
-            hids.Configure(HIDSSettings);
+            await hids.ConfigureAsync(HIDSSettings);
 
             IEnumerable<string> tags = meterDataSet.Meter.Channels
                 .Where(channel => channel.Enabled)

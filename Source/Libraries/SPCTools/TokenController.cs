@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Runtime.Caching;
+using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
@@ -159,9 +160,15 @@ namespace SPCTools
             List<Point> data;
             using (API hids = new API())
             {
-                HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
-                hids.Configure(settings);
-                data = hids.ReadPointsAsync(dataToGet, start, end).ToListAsync().Result;
+                async Task<List<Point>> QueryHIDSAsync()
+                {
+                    HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
+                    await hids.ConfigureAsync(settings);
+                    return await hids.ReadPointsAsync(dataToGet, start, end).ToListAsync();
+                }
+
+                Task<List<Point>> queryTask = QueryHIDSAsync();
+                data = queryTask.GetAwaiter().GetResult();
             }
 
             dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data.Where(pt => pt.Tag == item).ToList(), new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });

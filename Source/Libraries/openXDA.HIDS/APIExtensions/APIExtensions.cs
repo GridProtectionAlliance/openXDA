@@ -22,13 +22,14 @@
 //******************************************************************************************************
 
 using System;
+using System.Threading.Tasks;
 using HIDS;
 
 namespace openXDA.HIDS.APIExtensions
 {
     public static class APIExtensions
     {
-        public static void Configure(this API hids, HIDSSettings settings)
+        public static async Task ConfigureAsync(this API hids, HIDSSettings settings)
         {
             if (string.IsNullOrEmpty(settings.Host))
                 throw new ArgumentException("Unable to configure connection to HIDS: Host not specified.", nameof(settings));
@@ -42,7 +43,7 @@ namespace openXDA.HIDS.APIExtensions
             if (!string.IsNullOrEmpty(settings.OrganizationID))
                 hids.OrganizationID = settings.OrganizationID;
 
-            hids.Connect(settings.Host);
+            await hids.ConnectAsync(settings.Host);
         }
 
         public static string ToTag(this API _, int channelID) =>

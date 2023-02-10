@@ -31,7 +31,6 @@ using System.Xml.Linq;
 using GSF;
 using GSF.Configuration;
 using GSF.Data;
-using GSF.Scheduling;
 using GSF.Xml;
 using HIDS;
 using openXDA.HIDS;
@@ -105,9 +104,12 @@ namespace openXDA.NotificationDataSources
 
             using (API hids = new API())
             {
-                hids.Configure(Settings.HIDSSettings);
-                Task influxQueryTask = QueryInfluxAsync(hids, xdaNow, doc);
-                influxQueryTask.GetAwaiter().GetResult();
+                Task queryTask = new Func<Task>(async () =>
+                {
+                    await hids.ConfigureAsync(Settings.HIDSSettings);
+                    await QueryInfluxAsync(hids, xdaNow, doc);
+                })();
+                queryTask.GetAwaiter().GetResult();
                 return xml;
             }
         }
