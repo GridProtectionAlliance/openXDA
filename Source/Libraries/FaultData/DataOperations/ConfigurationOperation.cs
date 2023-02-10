@@ -461,9 +461,6 @@ namespace FaultData.DataOperations
 
             Func<SourceIndex, bool> sourceIndexFilter = GetSourceIndexFilter(appDataType);
 
-            IEnumerable<object> tmp = sourceIndexMap
-                .SelectMany(item => Translate(item.SourceIndex), (item, SourceIndex) => new { item.Series, SourceIndex });
-
             return sourceIndexMap
                 .SelectMany(item => Translate(item.SourceIndex), (item, SourceIndex) => new { item.Series, SourceIndex })
                 .Where(item => !(item.SourceIndex is null))
