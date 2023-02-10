@@ -513,10 +513,10 @@ namespace FaultData.DataOperations
                 : dataSeriesList[sourceIndex.ChannelIndex];
 
             IEnumerable<DataSeries> seriesParts = sourceIndexes
-                    .Where(sourceIndex => sourceIndex.ByName || sourceIndex.ChannelIndex >= 0)
-                    .Select(sourceIndex => new { sourceIndex.Multiplier, DataSeries = FindDataSeries(sourceIndex) })
-                    .Where(obj => !(obj.DataSeries is null))
-                    .Select(obj => obj.DataSeries.Multiply(obj.Multiplier));
+                .Where(sourceIndex => sourceIndex.ByName || sourceIndex.ChannelIndex >= 0)
+                .Select(sourceIndex => new { sourceIndex.Multiplier, DataSeries = FindDataSeries(sourceIndex) })
+                .Where(obj => !(obj.DataSeries is null))
+                .Select(obj => obj.DataSeries.Multiply(obj.Multiplier));
 
             if (seriesParts.Count() == 0)
                 return;
