@@ -461,11 +461,13 @@ namespace FaultData.DataOperations
 
             Func<SourceIndex, bool> sourceIndexFilter = GetSourceIndexFilter(appDataType);
 
+            IEnumerable<object> tmp = sourceIndexMap
+                .SelectMany(item => Translate(item.SourceIndex), (item, SourceIndex) => new { item.Series, SourceIndex });
+
             return sourceIndexMap
                 .SelectMany(item => Translate(item.SourceIndex), (item, SourceIndex) => new { item.Series, SourceIndex })
                 .Where(item => !(item.SourceIndex is null))
                 .Where(item => sourceIndexFilter(item.SourceIndex))
-                .Where(item => item.SourceIndex.ChannelIndex >= 0)
                 .ToLookup(item => item.Series, item => item.SourceIndex);
         }
 
@@ -513,14 +515,21 @@ namespace FaultData.DataOperations
                 ? FindDataSeriesByName(sourceIndex)
                 : dataSeriesList[sourceIndex.ChannelIndex];
 
-            DataSeries calculatedSeries = sourceIndexes
-                .Where(sourceIndex => sourceIndex.ByName || sourceIndex.ChannelIndex >= 0)
-                .Select(sourceIndex => new { sourceIndex.Multiplier, DataSeries = FindDataSeries(sourceIndex) })
-                .Select(obj => obj.DataSeries.Multiply(obj.Multiplier))
-                .Aggregate((series1, series2) => series1.Add(series2));
+            IEnumerable<DataSeries> seriesParts = sourceIndexes
+                    .Where(sourceIndex => sourceIndex.ByName || sourceIndex.ChannelIndex >= 0)
+                    .Select(sourceIndex => new { sourceIndex.Multiplier, DataSeries = FindDataSeries(sourceIndex) })
+                    .Where(obj => !(obj.DataSeries is null))
+                    .Select(obj => obj.DataSeries.Multiply(obj.Multiplier));
 
+            if (seriesParts.Count() == 0)
+                return;
+
+            DataSeries calculatedSeries = seriesParts
+                    .Aggregate((series1, series2) => series1.Add(series2));
+              
             calculatedSeries.SeriesInfo = series;
             calculatedDataSeriesList.Add(calculatedSeries);
+            
         }
 
         private void ApplySeriesAdjustments(List<DataSeries> definedSeries)
