@@ -522,7 +522,7 @@ namespace FaultData.DataOperations
                 return;
 
             DataSeries calculatedSeries = seriesParts
-                    .Aggregate((series1, series2) => series1.Add(series2));
+                .Aggregate((series1, series2) => series1.Add(series2));
               
             calculatedSeries.SeriesInfo = series;
             calculatedDataSeriesList.Add(calculatedSeries);
