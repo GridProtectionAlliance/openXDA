@@ -465,7 +465,6 @@ namespace FaultData.DataOperations
                 .SelectMany(item => Translate(item.SourceIndex), (item, SourceIndex) => new { item.Series, SourceIndex })
                 .Where(item => !(item.SourceIndex is null))
                 .Where(item => sourceIndexFilter(item.SourceIndex))
-                .Where(item => item.SourceIndex.ChannelIndex >= 0)
                 .ToLookup(item => item.Series, item => item.SourceIndex);
         }
 
@@ -513,12 +512,18 @@ namespace FaultData.DataOperations
                 ? FindDataSeriesByName(sourceIndex)
                 : dataSeriesList[sourceIndex.ChannelIndex];
 
-            DataSeries calculatedSeries = sourceIndexes
+            IEnumerable<DataSeries> seriesParts = sourceIndexes
                 .Where(sourceIndex => sourceIndex.ByName || sourceIndex.ChannelIndex >= 0)
                 .Select(sourceIndex => new { sourceIndex.Multiplier, DataSeries = FindDataSeries(sourceIndex) })
-                .Select(obj => obj.DataSeries.Multiply(obj.Multiplier))
-                .Aggregate((series1, series2) => series1.Add(series2));
+                .Where(obj => !(obj.DataSeries is null))
+                .Select(obj => obj.DataSeries.Multiply(obj.Multiplier));
 
+            if (!seriesParts.Any())
+                return;
+
+            DataSeries calculatedSeries = seriesParts
+                .Aggregate((series1, series2) => series1.Add(series2));
+              
             calculatedSeries.SeriesInfo = series;
             calculatedDataSeriesList.Add(calculatedSeries);
         }
