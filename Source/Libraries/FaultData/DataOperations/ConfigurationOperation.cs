@@ -526,7 +526,6 @@ namespace FaultData.DataOperations
               
             calculatedSeries.SeriesInfo = series;
             calculatedDataSeriesList.Add(calculatedSeries);
-            
         }
 
         private void ApplySeriesAdjustments(List<DataSeries> definedSeries)
