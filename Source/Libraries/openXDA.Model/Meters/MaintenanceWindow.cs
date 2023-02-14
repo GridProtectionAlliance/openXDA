@@ -26,6 +26,10 @@ using System;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
     public class MaintenanceWindow
     {
         [PrimaryKey(true)]
