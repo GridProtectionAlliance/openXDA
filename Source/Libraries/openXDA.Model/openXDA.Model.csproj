@@ -93,9 +93,6 @@
     <Compile Include="Channels\ChannelGroupType.cs" />
     <Compile Include="Channels\ChannelAlarmGroup.cs" />
     <Compile Include="Channels\ChannelOverview.cs" />
-    <Compile Include="Company.cs" />
-    <Compile Include="CompanyMeter.cs" />
-    <Compile Include="CompanyType.cs" />
     <Compile Include="Dashboard\ContourClasses.cs" />
     <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="DataPush\FilesToDataPush.cs" />
@@ -125,6 +122,8 @@
     <Compile Include="Events\Disturbances\EventWorstDisturbance.cs" />
     <Compile Include="Events\Disturbances\VoltageCurve.cs" />
     <Compile Include="Events\Disturbances\VoltageEnvelopeCurve.cs" />
+    <Compile Include="Events\EventEventTag.cs" />
+    <Compile Include="Events\EventTag.cs" />
     <Compile Include="Events\EventTypeAssetType.cs" />
     <Compile Include="Events\RelayPerformance.cs" />
     <Compile Include="Events\EventStat.cs" />

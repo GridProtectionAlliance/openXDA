@@ -2532,6 +2532,23 @@ CREATE NONCLUSTERED INDEX IX_SnapshotHarmonics_EventID
 ON SnapshotHarmonics(EventID ASC)
 GO
 
+CREATE TABLE EventTag
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL UNIQUE,
+    Description VARCHAR(MAX) NULL,
+    ShowInFilter BIT NOT NULL Default(1),
+)
+GO
+
+CREATE TABLE EventEventTag
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    EventTagID INT NOT NULL REFERENCES EventTag(ID),
+)
+GO
+
 INSERT INTO EventType(Name, Description) VALUES ('Fault', 'Fault')
 GO
 
