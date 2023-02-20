@@ -26,6 +26,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using FaultData.DataSets.GTC;
@@ -105,6 +107,9 @@ namespace FaultData.DataReaders
             bool IsSchemaFile(DataFile dataFile) =>
                 dataFile.FilePath.EndsWith(".cfg", StringComparison.OrdinalIgnoreCase);
 
+            bool IsHeaderFile(DataFile dataFile) =>
+                dataFile.FilePath.EndsWith(".hdr", StringComparison.OrdinalIgnoreCase);
+
             bool IsINFFile(DataFile dataFile) =>
                 dataFile.FilePath.EndsWith(".inf", StringComparison.OrdinalIgnoreCase);
 
@@ -161,12 +166,113 @@ namespace FaultData.DataReaders
                     meterDataSet.BreakerRestrikeDataSet = breakerRestrikeDataSet;
                 }
 
+                string headerData = fileGroup.DataFiles
+                    .Where(IsHeaderFile)
+                    .Select(file => file.FileBlob?.Blob ?? Array.Empty<byte>())
+                    .Select(blob => Encoding.UTF8.GetString(blob))
+                    .FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(headerData))
+                    ParseSELHeader(meterDataSet, headerData);
+
                 return meterDataSet;
             }
             finally
             {
                 if (Directory.Exists(tempDataFolderPath))
                     Directory.Delete(tempDataFolderPath, true);
+            }
+        }
+
+        private void ParseSELHeader(MeterDataSet meterDataSet, string headerData)
+        {
+            Lazy<AnalysisDataSet> lazyAnalysisDataSet = new Lazy<AnalysisDataSet>(() => meterDataSet.AnalysisDataSet = new AnalysisDataSet());
+
+            string[] sections = headerData.Trim()
+                .Replace("\r\n", "\n")
+                .Replace('\r', '\n')
+                .Split(new string[] { "\n\n" }, StringSplitOptions.None);
+
+            if (sections.Length < 1 || !sections[0].Contains("SEL"))
+                return;
+
+            if (sections.Length < 2)
+                return;
+
+            MatchCollection eventSummaryMatches = Regex.Matches(sections[1], @"Event: (?<Type>\S+)|Location: (?<Location>\S+)");
+
+            foreach (Match match in eventSummaryMatches)
+            {
+                Group typeGroup = match.Groups["Type"];
+                if (typeGroup.Success)
+                    lazyAnalysisDataSet.Value.EventType = typeGroup.Value;
+
+                Group locationGroup = match.Groups["Location"];
+                if (locationGroup.Success && double.TryParse(locationGroup.Value, out double location))
+                    lazyAnalysisDataSet.Value.FaultLocation = location;
+            }
+
+            if (sections.Length < 3)
+                return;
+
+            string[] measurementSummaryLines = sections[2].Split('\n');
+            MatchCollection measurementSummaryHeaders = Regex.Matches(measurementSummaryLines[0], @"I[ABCNG]|V[ABC]|3I2");
+
+            IEnumerable<string> faultMeasurementLines = measurementSummaryLines
+                .SkipWhile(line => !line.StartsWith("Fault:"))
+                .Skip(1)
+                .Take(2);
+
+            foreach (string faultMeasurementLine in faultMeasurementLines)
+            {
+                if (!faultMeasurementLine.StartsWith("MAG"))
+                    continue;
+
+                foreach (Match header in measurementSummaryHeaders)
+                {
+                    int end = header.Index + header.Length;
+
+                    string token = (end < faultMeasurementLine.Length)
+                        ? faultMeasurementLine.Remove(end)
+                        : faultMeasurementLine;
+
+                    Match match = Regex.Match(token, @"-?[\d\.]+$");
+                    if (!match.Success || !double.TryParse(match.Value, out double measurement))
+                        continue;
+
+                    switch (header.Value)
+                    {
+                        case "VA":
+                            lazyAnalysisDataSet.Value.VA = measurement;
+                            break;
+                        case "VB":
+                            lazyAnalysisDataSet.Value.VB = measurement;
+                            break;
+                        case "VC":
+                            lazyAnalysisDataSet.Value.VC = measurement;
+                            break;
+
+                        case "IA":
+                            lazyAnalysisDataSet.Value.IA = measurement;
+                            break;
+                        case "IB":
+                            lazyAnalysisDataSet.Value.IB = measurement;
+                            break;
+                        case "IC":
+                            lazyAnalysisDataSet.Value.IC = measurement;
+                            break;
+                        case "IN":
+                            lazyAnalysisDataSet.Value.IN = measurement;
+                            break;
+                        case "IG":
+                            lazyAnalysisDataSet.Value.IG = measurement;
+                            break;
+
+                        case "3I2":
+                            lazyAnalysisDataSet.Value.INeg3 = measurement;
+                            break;
+                    }
+                }
             }
         }
 

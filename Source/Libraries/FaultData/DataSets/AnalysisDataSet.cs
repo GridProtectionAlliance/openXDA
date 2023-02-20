@@ -27,5 +27,14 @@ namespace FaultData.DataSets
     {
         public string EventType { get; set; }
         public double FaultLocation { get; set; } = double.NaN;
+        public double VA { get; set; } = double.NaN;
+        public double VB { get; set; } = double.NaN;
+        public double VC { get; set; } = double.NaN;
+        public double IA { get; set; } = double.NaN;
+        public double IB { get; set; } = double.NaN;
+        public double IC { get; set; } = double.NaN;
+        public double IG { get; set; } = double.NaN;
+        public double IN { get; set; } = double.NaN;
+        public double INeg3 { get; set; } = double.NaN;
     }
 }
