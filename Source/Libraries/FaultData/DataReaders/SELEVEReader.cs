@@ -196,6 +196,25 @@ namespace FaultData.DataReaders
                 if (!double.IsNaN(report.Location))
                     analysisDataSet.FaultLocation = report.Location;
 
+                if (!double.IsNaN(report.VA))
+                    analysisDataSet.VA = report.VA;
+                if (!double.IsNaN(report.VB))
+                    analysisDataSet.VB = report.VB;
+                if (!double.IsNaN(report.VC))
+                    analysisDataSet.VC = report.VC;
+                if (!double.IsNaN(report.IA))
+                    analysisDataSet.IA = report.IA;
+                if (!double.IsNaN(report.IB))
+                    analysisDataSet.IB = report.IB;
+                if (!double.IsNaN(report.IC))
+                    analysisDataSet.IC = report.IC;
+                if (!double.IsNaN(report.IG))
+                    analysisDataSet.IG = report.IG;
+                if (!double.IsNaN(report.IN))
+                    analysisDataSet.IN = report.IN;
+                if (!double.IsNaN(report.INeg3))
+                    analysisDataSet.INeg3 = report.INeg3;
+
                 for (int i = 0; i < report.AnalogSection.AnalogChannels.Count; i++)
                 {
                     Channel channel = MakeParsedAnalog(report, i);

@@ -95,7 +95,7 @@ namespace FaultData.DataOperations
                 LoadEvents(connection, events, meterDataSet, processedDataGroups);
             }
 
-            LoadReportedEventType(meterDataSet);
+            LoadReportedAnalysis(meterDataSet);
         }
 
         private void FilterProcessedDataGroups(MeterDataSet meterDataSet)
@@ -342,19 +342,94 @@ namespace FaultData.DataOperations
             }
         }
 
-        private void LoadReportedEventType(MeterDataSet meterDataSet)
+        private void LoadReportedAnalysis(MeterDataSet meterDataSet)
         {
-            AnalysisDataSet faultLocationDataSet = meterDataSet.AnalysisDataSet;
-            string eventType = faultLocationDataSet?.EventType;
+            AnalysisDataSet analysisDataSet = meterDataSet.AnalysisDataSet;
 
-            if (string.IsNullOrWhiteSpace(eventType))
+            if (analysisDataSet is null)
                 return;
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                const string FieldName = "EventType";
-                const string Description = "Type of event as determined by the meter.";
-                meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, eventType, Description);
+                if (!string.IsNullOrEmpty(analysisDataSet.EventType))
+                {
+                    const string FieldName = "EventType";
+                    const string Description = "Type of event as determined by the meter.";
+                    string eventType = analysisDataSet.EventType;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, eventType, Description);
+                }
+
+                if (!double.IsNaN(analysisDataSet.VA))
+                {
+                    const string FieldName = "VAFault";
+                    const string Description = "A-phase fault voltage as reported by the meter.";
+                    double va = analysisDataSet.VA;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, va.ToString(), Description);
+                }
+
+                if (!double.IsNaN(analysisDataSet.VB))
+                {
+                    const string FieldName = "VBFault";
+                    const string Description = "B-phase fault voltage as reported by the meter.";
+                    double vb = analysisDataSet.VB;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, vb.ToString(), Description);
+                }
+
+                if (!double.IsNaN(analysisDataSet.VC))
+                {
+                    const string FieldName = "VCFault";
+                    const string Description = "C-phase fault voltage as reported by the meter.";
+                    double vc = analysisDataSet.VC;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, vc.ToString(), Description);
+                }
+
+                if (!double.IsNaN(analysisDataSet.IA))
+                {
+                    const string FieldName = "IAFault";
+                    const string Description = "A-phase fault current as reported by the meter.";
+                    double ia = analysisDataSet.IA;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, ia.ToString(), Description);
+                }
+
+                if (!double.IsNaN(analysisDataSet.IB))
+                {
+                    const string FieldName = "IBFault";
+                    const string Description = "B-phase fault current as reported by the meter.";
+                    double ib = analysisDataSet.IB;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, ib.ToString(), Description);
+                }
+
+                if (!double.IsNaN(analysisDataSet.IC))
+                {
+                    const string FieldName = "ICFault";
+                    const string Description = "C-phase fault current as reported by the meter.";
+                    double ic = analysisDataSet.IC;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, ic.ToString(), Description);
+                }
+
+                if (!double.IsNaN(analysisDataSet.IN))
+                {
+                    const string FieldName = "INFault";
+                    const string Description = "Neutral fault current as reported by the meter.";
+                    double neutralCurrent = analysisDataSet.IN;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, neutralCurrent.ToString(), Description);
+                }
+
+                if (!double.IsNaN(analysisDataSet.IG))
+                {
+                    const string FieldName = "IGFault";
+                    const string Description = "Ground fault current as reported by the meter.";
+                    double ig = analysisDataSet.IG;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, ig.ToString(), Description);
+                }
+
+                if (!double.IsNaN(analysisDataSet.INeg3))
+                {
+                    const string FieldName = "3I2Fault";
+                    const string Description = "Tripled negative sequence fault current as reported by the meter.";
+                    double iNeg3 = analysisDataSet.INeg3;
+                    meterDataSet.FileGroup.AddOrUpdateFieldValue(connection, FieldName, iNeg3.ToString(), Description);
+                }
             }
         }
 
