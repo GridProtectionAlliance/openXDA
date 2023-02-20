@@ -35,6 +35,7 @@ namespace SystemCenter.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
         [Required]
+        [ParentKey(typeof(DetailedLocation))]
         public int LocationID { get; set; }
         [Required]
         [DefaultSortOrder]
