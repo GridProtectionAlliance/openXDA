@@ -202,3 +202,32 @@ INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Configuration', 4)
 GO
 INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('All', 5)
 GO
+
+CREATE TABLE [SEBrowser.Widget] (
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name varchar(50) NOT NULL,
+    Enabled BIT NOT NULL
+)
+
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchFileInfo', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchNoteWindow', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchPQI', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchOpenSEE', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchFaultSegments', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchAssetVoltageDisturbances', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchEsriMap', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchAssetHistory', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('Lightning', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('StructureInfo', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('InterruptionReport', 1)
+GO
