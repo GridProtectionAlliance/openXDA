@@ -185,3 +185,20 @@ INSERT INTO [SEBrowser.Links] (Name, Display,Value) VALUES
 	('TCE  Report',0,'relayreport'),
 	('CapBank Report',0,'capbankreport')
 GO
+
+CREATE TABLE [SEBrowser.WidgetCategory] (
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name varchar(50) NOT NULL,
+    OrderBy INT NOT NULL
+)
+
+INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Waveform Analysis', 1)
+GO
+INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Fault', 2)
+GO
+INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Correlating Events', 3)
+GO
+INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Configuration', 4)
+GO
+INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('All', 5)
+GO
