@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  D3Series.cs - Gbtc
+//  Widget.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -35,12 +35,8 @@ using System.Text.RegularExpressions;
 namespace SEBrowser.Model
 {
     /// <summary>
-    /// Defines a Data Series that can be plotted on a Graph.
-    /// Primary usage in LSCVS for now
+    /// Defines a widget used in SEBrowser
     /// </summary>
-    /// <remarks>
-    /// Will need to use in SEbrowser ans OpenSEE too.
-    /// </remarks>
     [TableName("SEBrowser.Widget"), UseEscapedName]
     [PostRoles("Administrator")]
     [DeleteRoles("Administrator")]
