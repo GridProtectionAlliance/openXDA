@@ -205,7 +205,7 @@ GO
 
 CREATE TABLE [SEBrowser.Widget] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name varchar(50) NOT NULL,
+    Name varchar(50) NOT NULL DEFAULT(1),
     Enabled BIT NOT NULL
 )
 
@@ -243,6 +243,7 @@ INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchPQI', 1)
 GO
 
 CREATE TABLE [SEBrowser.WidgetWidgetCategory] (
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     WidgetID INT NOT NULL REFERENCES [SEBrowser.Widget](ID),
     CategoryID INT NOT NULL REFERENCES [SEBrowser.WidgetCategory](ID),
     CONSTRAINT UC_WidgetWidgetCategory UNIQUE(WidgetID, CategoryID)

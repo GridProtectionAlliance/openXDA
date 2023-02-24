@@ -47,6 +47,9 @@ namespace SEBrowser.Model
       
         #region [ Properties ]
 
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
         public int WidgetID { get; set; }
 
         public int CategoryID { get; set; }
