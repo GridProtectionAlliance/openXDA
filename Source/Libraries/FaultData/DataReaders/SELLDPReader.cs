@@ -115,14 +115,23 @@ namespace FaultData.DataReaders
         public DataFile GetPrimaryDataFile(FileGroup fileGroup) =>
             fileGroup.DataFiles.First();
 
+        public MeterDataSet Parse(string hexData)
+        {
+            byte[] data = ReadHex(hexData);
+            return Parse(data);
+        }
         public MeterDataSet Parse(FileGroup fileGroup)
+        {
+            DataFile dataFile = GetPrimaryDataFile(fileGroup);
+            byte[] data = ReadFile(dataFile);
+            return Parse(data);
+        }
+
+        public MeterDataSet Parse(byte[] data)
         {
             MeterDataSet meterDataSet = new MeterDataSet();
             meterDataSet.Meter = new Meter();
-
-            DataFile dataFile = GetPrimaryDataFile(fileGroup);
             List<Record> records = new List<Record>();
-            byte[] data = ReadFile(dataFile);
 
             while (data.Length > 0)
             {
@@ -212,6 +221,11 @@ namespace FaultData.DataReaders
         {
             byte[] fileData = dataFile.FileBlob.Blob;
             string hexData = Encoding.UTF8.GetString(fileData);
+            return ReadHex(hexData);
+        }
+
+        private byte[] ReadHex(string hexData)
+        {
             byte[] data = new byte[hexData.Length / 2];
 
             for (int index = 0; index < data.Length; index++)
