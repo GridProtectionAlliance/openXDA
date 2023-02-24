@@ -209,12 +209,6 @@ CREATE TABLE [SEBrowser.Widget] (
     Enabled BIT NOT NULL
 )
 
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchFileInfo', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchNoteWindow', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchPQI', 1)
-GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchOpenSEE', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchFaultSegments', 1)
@@ -229,5 +223,60 @@ INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('Lightning', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('StructureInfo', 1)
 GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchHistory', 1)
+GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('InterruptionReport', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('SIDA', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('SOE', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('LSC', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('PQWeb', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchFileInfo', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchNoteWindow', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchPQI', 1)
+GO
+
+CREATE TABLE [SEBrowser.WidgetWidgetCategory] (
+    WidgetID INT NOT NULL REFERENCES [SEBrowser.Widget](ID),
+    CategoryID INT NOT NULL REFERENCES [SEBrowser.WidgetCategory](ID),
+    CONSTRAINT UC_WidgetWidgetCategory UNIQUE(WidgetID, CategoryID)
+)
+
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (1, 1)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (2, 1)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (3, 1)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (4, 2)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (5, 2)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (6, 2)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (7, 2)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (8, 3)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (9, 3)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (10, 3)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (11, 3)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (12, 3)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (13, 3)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (14, 4)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (15, 4)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (16, 4)
 GO
