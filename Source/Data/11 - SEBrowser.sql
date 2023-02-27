@@ -215,32 +215,43 @@ INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchFaultSegments', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchAssetVoltageDisturbances', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchEsriMap', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVAESRIMap', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchAssetHistory', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVAFaultInfo', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('Lightning', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('LineParameters', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('StructureInfo', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVALightning', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVAStructureInfo', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchHistory', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('InterruptionReport', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchCorrelatedSags', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('SIDA', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVASIDA', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('SOE', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVASOE', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('LSC', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVASLC', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('PQWeb', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVAPQWeb', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('HECCOIR', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('pqi', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchFileInfo', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchNoteWindow', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchPQI', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchRelayPerformance', 1)
 GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchBreakerPerformance', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchCapBankAnalyticOverview', 1)
+GO
+
 
 CREATE TABLE [SEBrowser.WidgetWidgetCategory] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -263,9 +274,9 @@ INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (6, 2)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (7, 2)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (8, 3)
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (8, 2)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (9, 3)
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (9, 2)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (10, 3)
 GO
@@ -275,9 +286,19 @@ INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (12, 3)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (13, 3)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (14, 4)
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (14, 3)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (15, 4)
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (15, 3)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (16, 4)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (17, 4)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (18, 4)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (19, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (20, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (21, 5)
 GO
