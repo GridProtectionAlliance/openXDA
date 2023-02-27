@@ -37,6 +37,10 @@ namespace openXDA.Model
     }
 
     [PrimaryLabel("MeterName")]
+    [AllowSearch, ViewOnly]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class MeterAssetGroupView : MeterAssetGroup
     {
         [Searchable]

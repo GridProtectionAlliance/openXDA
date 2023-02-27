@@ -37,6 +37,10 @@ namespace openXDA.Model
     }
 
     [PrimaryLabel("AssetName")]
+    [AllowSearch, ViewOnly]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class AssetAssetGroupView : AssetAssetGroup
     {
         [Searchable]
