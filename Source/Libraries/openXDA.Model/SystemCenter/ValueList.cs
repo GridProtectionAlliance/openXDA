@@ -26,6 +26,10 @@ using GSF.Data.Model;
 
 namespace SystemCenter.Model
 {
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [GetRoles("Administrator, Transmission SME")]
+    [AllowSearch]
     [ TableName("ValueList"), UseEscapedName, PrimaryLabel("Text"), SettingsCategory("systemSettings")]
     public class ValueList
     {
