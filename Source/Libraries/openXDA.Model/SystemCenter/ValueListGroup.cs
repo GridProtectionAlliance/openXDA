@@ -29,6 +29,9 @@ using System.ComponentModel.DataAnnotations;
 namespace SystemCenter.Model
 {
 
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [GetRoles("Administrator, Transmission SME")]
     [TableName("ValueListGroup"), UseEscapedName, PrimaryLabel("Name"), AllowSearch]
     public class ValueListGroup
     {
