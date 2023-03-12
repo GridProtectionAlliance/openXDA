@@ -25,8 +25,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -325,6 +329,40 @@ namespace openXDA.Controllers.Config
             }
         }
 
+        [Route("Download/{fileID:int}"), HttpGet]
+        public HttpResponseMessage DownloadFile(int fileID)
+        {
+            using (AdoDataConnection connection = NodeHost.CreateDbConnection())
+            {
+                TableOperations<DataFile> fileGroupTable = new TableOperations<DataFile>(connection);
+                DataFile file = fileGroupTable.QueryRecordWhere("ID = {0}", fileID);
+                
+                if (file is null)
+                    throw new InvalidDataException("No file found");
+
+                file.FileBlob = new TableOperations<FileBlob>(connection).QueryRecordWhere("DataFileID = {0}", file.ID);
+
+                byte[] data;
+                if (file.FileBlob is null)
+                    data = File.ReadAllBytes(file.FilePath);
+                else
+                    data = file.FileBlob.Blob;
+
+                string fileName = file.FilePath.Substring(file.FilePath.LastIndexOf("\\") + 1);
+               
+                var result = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent(data)
+                };
+
+                result.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                {
+                    FileName = fileName
+                };
+
+                return result;
+            }
+        }
         private void CascadeDelete(AdoDataConnection connection, string tableName, string baseCriteria)
         {
             using (IDbCommand sc = connection.Connection.CreateCommand())
@@ -398,6 +436,7 @@ namespace openXDA.Controllers.Config
             }
         }
 
+        
         #endregion
 
         #region [ Static ]
