@@ -29,8 +29,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -330,7 +328,7 @@ namespace openXDA.Controllers.Config
         }
 
         [Route("Download/{fileID:int}"), HttpGet]
-        public HttpResponseMessage DownloadFile(int fileID)
+        public async Task<HttpResponseMessage> DownloadFile(int fileID)
         {
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
@@ -338,15 +336,17 @@ namespace openXDA.Controllers.Config
                 DataFile file = fileGroupTable.QueryRecordWhere("ID = {0}", fileID);
                 
                 if (file is null)
-                    throw new InvalidDataException("No file found");
+                    return await NotFound().ExecuteAsync(default);
 
                 file.FileBlob = new TableOperations<FileBlob>(connection).QueryRecordWhere("DataFileID = {0}", file.ID);
 
                 byte[] data;
-                if (file.FileBlob is null)
+                if (!(file.FileBlob is null))
+                    data = file.FileBlob.Blob;
+                else if (File.Exists(file.FilePath))
                     data = File.ReadAllBytes(file.FilePath);
                 else
-                    data = file.FileBlob.Blob;
+                    return await NotFound().ExecuteAsync(default);
 
                 string fileName = file.FilePath.Substring(file.FilePath.LastIndexOf("\\") + 1);
                
@@ -363,6 +363,7 @@ namespace openXDA.Controllers.Config
                 return result;
             }
         }
+
         private void CascadeDelete(AdoDataConnection connection, string tableName, string baseCriteria)
         {
             using (IDbCommand sc = connection.Connection.CreateCommand())
@@ -436,7 +437,6 @@ namespace openXDA.Controllers.Config
             }
         }
 
-        
         #endregion
 
         #region [ Static ]
