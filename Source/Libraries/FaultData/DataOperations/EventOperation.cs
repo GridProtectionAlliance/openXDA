@@ -188,7 +188,7 @@ namespace FaultData.DataOperations
                     continue;
 
                 TableOperations<MaintenanceWindow> maintenanceWindowTable = new TableOperations<MaintenanceWindow>(connection);
-                int maintenanceWindowCount = maintenanceWindowTable.QueryRecordCountWhere("MeterID = {0} AND (StartTime IS NULL OR StartTime <= {1}) AND (EndTime IS NULL OR EndTime >= {1})", meterDataSet.Meter.ID, DateTime.UtcNow);
+                int maintenanceWindowCount = maintenanceWindowTable.QueryRecordCountWhere("MeterID = {0} AND (StartTime IS NULL OR StartTime <= {1} OR StartTime <= {2}) AND (EndTime IS NULL OR EndTime >= {1} OR EndTime <= {2})", meterDataSet.Meter.ID, dataGroup.StartTime, dataGroup.EndTime);
                 string eventTypeName = (maintenanceWindowCount == 0) ? eventClassification.ToString() : "Test";
                 EventType eventType = eventTypeTable.GetOrAdd(eventTypeName);
                 TimeZoneInfo xdaTimeZone = SystemSettings.XDATimeZoneInfo;
