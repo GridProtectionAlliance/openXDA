@@ -151,38 +151,31 @@ namespace FaultData.DataWriters.Emails
             return true;
         }
 
-        public void SendEmail(EmailType email, Event evt, List<string> recipients, out List<DataSourceResponse> dataSourceResponses, out Exception exception) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, out dataSourceResponses, out exception);
+        public void SendEmail(EmailType email, Event evt, List<string> recipients, List<DataSourceResponse> dataSourceResponses) =>
+            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, dataSourceResponses);
 
         public void SendEmail(EmailType email, Event evt, List<string> recipients) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, out List<DataSourceResponse> datasourceResponses, out Exception exception);
+            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, null);
 
         private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile) =>
-            SendEmail(email, evt, recipients, xdaNow, eventIDs, saveToFile, out List<DataSourceResponse> datasourceResponses, out Exception exception);
+            SendEmail(email, evt, recipients, xdaNow, eventIDs, saveToFile, null);
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, out List<DataSourceResponse> dataSourceResponses, out Exception exception)
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, List<DataSourceResponse> dataSourceResponses)
         {
             List<Attachment> attachments = new List<Attachment>();
-            dataSourceResponses = new List<DataSourceResponse>();
-            exception = null;
+
             try
             {
-                dataSourceResponses = GetDataSourceResponse(email, evt);
-                if (dataSourceResponses is null)
-                    return;
-                XElement templateData = new XElement("data", dataSourceResponses?.Select(r => r.Data));
+                LoadDataSources(email, evt, dataSourceResponses);
 
                 Settings settings = new Settings(Configure);
+                XElement templateData = new XElement("data", dataSourceResponses?.Select(r => r.Data));
                 XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
                 ApplyFTTTransform(attachments, htmlDocument);
                 SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
                 if (eventIDs.Count() > 0)
                     LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
             }
             finally
             {
@@ -214,46 +207,39 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public List<DataSourceResponse> GetDataSourceResponse(EmailType email, Event evt)
+        public void LoadDataSources(EmailType email, Event evt, List<DataSourceResponse> responses)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 /* Load All DataSources */
-
                 TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
                 TableOperations<TriggeredEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<TriggeredEmailDataSourceEmailType>(connection);
 
-                List<DataSourceResponse> responses = dataSourceEmailTypeTable
+                IEnumerable<DataSourceResponse> responseEnumerable = dataSourceEmailTypeTable
                     .QueryRecordsWhere("EmailTypeID = {0}", email.ID)
                     .Select((cm) => new Tuple<TriggeredEmailDataSourceEmailType, TriggeredEmailDataSource>(cm, dataSourceTable.QueryRecordWhere("ID = {0}", cm.TriggeredEmailDataSourceID)))
-                    .Select((m) => {
+                    .Select((m) =>
+                    {
                         DataSourceWrapper wrapper = CreateDataSource(m.Item2, m.Item1);
-                        DataSourceResponse response = new DataSourceResponse() { Model = m.Item2 };
-                        if (wrapper is null)
-                        {
-                            response.Success = false;
-                            response.Created = false;
-                            response.Exception = new Exception("Failed to create data source");
-                            return response;
-                        }
-                        response.Created = true;
-                        response.Data = wrapper.TryProcess(evt);
-                        response.Success = true;
-                        return response;
 
+                        Exception ex = null;
+                        XElement data = wrapper?.TryProcess(evt, out ex);
+                        if (wrapper is null)
+                            ex = new Exception("Failed to create data source");
+
+                        DataSourceResponse response = new DataSourceResponse();
+                        response.Model = m.Item2;
+                        response.Created = !(wrapper is null);
+                        response.Success = !(data is null);
+                        response.Data = data;
+                        response.Exception = ex;
+                        return response;
                     }).ToList();
 
+                responses.AddRange(responseEnumerable);
                 
                 if (responses.Any(wrapper => !wrapper.Created))
-                {
                     Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
-                    return null;
-                }
-
-                if (responses.Count == 0)
-                    return null;
-
-                return responses;
             }
         }
 
