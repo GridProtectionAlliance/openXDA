@@ -32,6 +32,8 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Management;
+using System.Xml.Linq;
 using FaultData.DataWriters.Emails;
 using GSF.Configuration;
 using GSF.Data;
@@ -43,6 +45,7 @@ using openXDA.Configuration;
 using openXDA.Model;
 using openXDA.Nodes;
 using openXDA.Nodes.Types.Authentication;
+using static FaultData.DataWriters.Emails.EmailService;
 using ConfigurationLoader = openXDA.Nodes.ConfigurationLoader;
 
 namespace openXDA.Controllers.WebAPI
@@ -71,6 +74,13 @@ namespace openXDA.Controllers.WebAPI
         }
 
         private Host Host { get; }
+
+        class TestEmailResponse
+        {
+            public bool Success { get; set; }
+            public Exception Exception { get; set; }
+            public IEnumerable<DataSourceResponse> DataSourceResponses { get; set;}
+        }
 
         #endregion
 
@@ -167,7 +177,7 @@ namespace openXDA.Controllers.WebAPI
                     Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                     EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
 
-                    return Ok(emailService.GetData(email, evt));
+                    return Ok(emailService.GetDataSourceResponse(email, evt));
                 }
             }
             catch (Exception ex)
