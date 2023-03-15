@@ -23,28 +23,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Net;
-using System.Net.Http;
 using System.Net.Mail;
 using System.Security;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Management;
-using System.Xml.Linq;
 using FaultData.DataWriters.Emails;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Security;
-using GSF.Web;
-using Newtonsoft.Json.Linq;
 using openXDA.Configuration;
 using openXDA.Model;
 using openXDA.Nodes;
-using openXDA.Nodes.Types.Authentication;
 using static FaultData.DataWriters.Emails.EmailService;
 using ConfigurationLoader = openXDA.Nodes.ConfigurationLoader;
 
@@ -54,6 +44,7 @@ namespace openXDA.Controllers.WebAPI
     public class EmailController : ApiController
     {
         #region [ Members ]
+
         private class Settings
         {
             public Settings(Action<object> configure) =>
@@ -70,25 +61,23 @@ namespace openXDA.Controllers.WebAPI
             [Category]
             [SettingName(EventEmailSection.CategoryName)]
             public EventEmailSection EventEmailSettings { get; } = new EventEmailSection();
-
         }
 
         private Host Host { get; }
 
-        class TestEmailResponse
+        private class TestEmailResponse
         {
             public bool Success { get; set; }
             public Exception Exception { get; set; }
-            public IEnumerable<DataSourceResponse> DataSourceResponses { get; set;}
+            public IEnumerable<DataSourceResponse> DataSourceResponses { get; set; }
         }
 
         #endregion
 
         #region [ Constructor ]
-        public EmailController(Host host)
-        {
+
+        public EmailController(Host host) =>
             Host = host;
-        }
 
         #endregion
 
@@ -97,8 +86,7 @@ namespace openXDA.Controllers.WebAPI
         [Route("sendVerification/{userID}"), HttpGet]
         public IHttpActionResult SendEmailVerification(string userID)
         {
-
-            try 
+            try
             {
                 using (AdoDataConnection connection = CreateDbConnection())
                 {
@@ -107,7 +95,6 @@ namespace openXDA.Controllers.WebAPI
                         return InternalServerError(new Exception($"User with ID {userID} does not exists"));
                     return Ok(SendVerificationEmail(account.Email));
                 }
-
             }
             catch (Exception ex)
             {
@@ -118,7 +105,6 @@ namespace openXDA.Controllers.WebAPI
         [Route("sendTextVerification/{userID}"), HttpGet]
         public IHttpActionResult SendTextVerification(string userID)
         {
-
             try
             {
                 using (AdoDataConnection connection = CreateDbConnection())
@@ -126,12 +112,11 @@ namespace openXDA.Controllers.WebAPI
                     ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                     if (account == null)
                         return InternalServerError(new Exception($"User with ID {userID} does not exists"));
-                    CellCarrier cellCarrier = new TableOperations<CellCarrier>(connection).QueryRecordWhere("ID = (SELECT CarrierID FROM UserAccountCarrier WHERE UserAccountID = {0} )", account.ID);
+                    CellCarrier cellCarrier = new TableOperations<CellCarrier>(connection).QueryRecordWhere("ID = (SELECT CarrierID FROM UserAccountCarrier WHERE UserAccountID = {0})", account.ID);
                     if (cellCarrier == null)
                         return InternalServerError(new Exception($"User has not specified a Cell Carrier"));
-                    return Ok(SendVerificationText(string.Format(cellCarrier.Transform,account.Phone)));
+                    return Ok(SendVerificationText(string.Format(cellCarrier.Transform, account.Phone)));
                 }
-
             }
             catch (Exception ex)
             {
@@ -146,7 +131,7 @@ namespace openXDA.Controllers.WebAPI
             EventEmailSection eventEmailSettings = settings.EventEmailSettings;
 
             if (!eventEmailSettings.Enabled)
-                return Ok(new TestEmailResponse() { Success = false, Exception= new ArgumentException("Email Engine is not enabled") });
+                return Ok(new TestEmailResponse() { Success = false, Exception = new ArgumentException("Email Engine is not enabled") });
 
             EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
 
@@ -198,10 +183,10 @@ namespace openXDA.Controllers.WebAPI
         #endregion
 
         #region [ Methods ]
+
         private int SendVerificationEmail(string recipient)
         {
             int code = GenerateCode();
-
             Settings settings = new Settings(GetConfigurator());
             EmailSection emailSettings = settings.EmailSettings;
 
@@ -239,20 +224,17 @@ namespace openXDA.Controllers.WebAPI
                     emailMessage.Bcc.Add(recipient);
                 }
 
-
                 // Send the email
                 smtpClient.Send(emailMessage);
                 return code;
-
             }
         }
-
 
         //# ToDo use proper Text Message logic for sending Text
         private int SendVerificationText(string recipient)
         {
             int code = GenerateCode();
-           
+
             Settings settings = new Settings(GetConfigurator());
             EmailSection emailSettings = settings.EmailSettings;
 
@@ -279,9 +261,9 @@ namespace openXDA.Controllers.WebAPI
                 emailMessage.IsBodyHtml = false;
 
                 emailMessage.To.Add(recipient);
+
                 // Send the email
                 smtpClient.Send(emailMessage);
-
             }
 
             return code;
@@ -293,6 +275,7 @@ namespace openXDA.Controllers.WebAPI
             Random random = new Random();
             return random.Next(0, 10) + random.Next(0, 10) * 10 + random.Next(0, 10) * 100 + random.Next(0, 10) * 1000 + random.Next(1, 10) * 10000;
         }
+
         private SmtpClient CreateSmtpClient(string smtpServer)
         {
             string[] smtpServerParts = smtpServer.Split(':');
@@ -319,6 +302,5 @@ namespace openXDA.Controllers.WebAPI
         }
 
         #endregion
-
     }
 }
