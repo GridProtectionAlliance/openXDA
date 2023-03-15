@@ -206,6 +206,7 @@ GO
 CREATE TABLE [SEBrowser.Widget] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name varchar(50) NOT NULL DEFAULT(1),
+    Setting varchar(max) NOT NULL Default(''),
     Enabled BIT NOT NULL
 )
 
