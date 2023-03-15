@@ -55,4 +55,13 @@ namespace SEBrowser.Model
 
         #endregion
     }
+
+    [ViewOnly()]
+    [TableName("SEbrowser.WidgetView"), UseEscapedName, AllowSearch]
+    public class WidgetView : Widget
+    {
+        [ParentKey(typeof (WidgetCategory))]
+        public int CategoryID { get; set; }
+    }
+
 }
