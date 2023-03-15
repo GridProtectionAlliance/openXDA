@@ -86,41 +86,28 @@ namespace openXDA.Controllers.WebAPI
         [Route("sendVerification/{userID}"), HttpGet]
         public IHttpActionResult SendEmailVerification(string userID)
         {
-            try
+            using (AdoDataConnection connection = CreateDbConnection())
             {
-                using (AdoDataConnection connection = CreateDbConnection())
-                {
-                    ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
-                    if (account == null)
-                        return InternalServerError(new Exception($"User with ID {userID} does not exists"));
-                    return Ok(SendVerificationEmail(account.Email));
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
+                ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
+                if (account == null)
+                    return InternalServerError(new Exception($"User with ID {userID} does not exists"));
+                SendVerificationEmail(account.Email);
+                return Ok(1);
             }
         }
 
         [Route("sendTextVerification/{userID}"), HttpGet]
         public IHttpActionResult SendTextVerification(string userID)
         {
-            try
+            using (AdoDataConnection connection = CreateDbConnection())
             {
-                using (AdoDataConnection connection = CreateDbConnection())
-                {
-                    ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
-                    if (account == null)
-                        return InternalServerError(new Exception($"User with ID {userID} does not exists"));
-                    CellCarrier cellCarrier = new TableOperations<CellCarrier>(connection).QueryRecordWhere("ID = (SELECT CarrierID FROM UserAccountCarrier WHERE UserAccountID = {0})", account.ID);
-                    if (cellCarrier == null)
-                        return InternalServerError(new Exception($"User has not specified a Cell Carrier"));
-                    return Ok(SendVerificationText(string.Format(cellCarrier.Transform, account.Phone)));
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
+                ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
+                if (account == null)
+                    return InternalServerError(new Exception($"User with ID {userID} does not exists"));
+                CellCarrier cellCarrier = new TableOperations<CellCarrier>(connection).QueryRecordWhere("ID = (SELECT CarrierID FROM UserAccountCarrier WHERE UserAccountID = {0})", account.ID);
+                if (cellCarrier == null)
+                    return InternalServerError(new Exception($"User has not specified a Cell Carrier"));
+                return Ok(SendVerificationText(string.Format(cellCarrier.Transform, account.Phone)));
             }
         }
 
@@ -162,21 +149,14 @@ namespace openXDA.Controllers.WebAPI
         [Route("testData/{emailID:int}/{eventID:int}"), HttpGet]
         public IHttpActionResult TestDataSource(int emailID, int eventID)
         {
-            try
-            {
-                EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
 
-                using (AdoDataConnection connection = CreateDbConnection())
-                {
-                    Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
-                    EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
-
-                    return Ok(emailService.GetDataSourceResponse(email, evt));
-                }
-            }
-            catch (Exception ex)
+            using (AdoDataConnection connection = CreateDbConnection())
             {
-                return InternalServerError(ex);
+                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
+
+                return Ok(emailService.GetDataSourceResponse(email, evt));
             }
         }
 
