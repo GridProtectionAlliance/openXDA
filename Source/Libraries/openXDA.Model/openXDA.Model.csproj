@@ -162,6 +162,9 @@
     <Compile Include="Nodes\NodeSetting.cs" />
     <Compile Include="Note.cs" />
     <Compile Include="SEBrowser\D3DataSeries.cs" />
+    <Compile Include="SEBrowser\Widget.cs" />
+    <Compile Include="SEBrowser\WidgetCategory.cs" />
+    <Compile Include="SEBrowser\WidgetWidgetCategory.cs" />
     <Compile Include="Security\ApplicationSustainedUser.cs" />
     <Compile Include="Security\ApplicationNode.cs" />
     <Compile Include="Settings\BreakerReportsSettings.cs" />
