@@ -151,18 +151,27 @@ namespace FaultData.DataWriters.Emails
             return true;
         }
 
-        public void SendEmail(EmailType email, Event evt, List<string> recipients) => SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false);
+        public void SendEmail(EmailType email, Event evt, List<string> recipients, out List<DataSourceResponse> dataSourceResponses, out Exception exception) =>
+            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, out dataSourceResponses, out exception);
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile)
+        public void SendEmail(EmailType email, Event evt, List<string> recipients) =>
+            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, out List<DataSourceResponse> datasourceResponses, out Exception exception);
+
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile) =>
+            SendEmail(email, evt, recipients, xdaNow, eventIDs, saveToFile, out List<DataSourceResponse> datasourceResponses, out Exception exception);
+
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, out List<DataSourceResponse> dataSourceResponses, out Exception exception)
         {
             List<Attachment> attachments = new List<Attachment>();
-
+            dataSourceResponses = new List<DataSourceResponse>();
+            exception = null;
             try
             {
-                
-                XElement templateData = GetData(email,evt);
-                if (templateData == null)
+                dataSourceResponses = GetDataSourceResponse(email, evt);
+                if (dataSourceResponses is null)
                     return;
+                XElement templateData = new XElement("data", dataSourceResponses?.Select(r => r.Data));
+
                 Settings settings = new Settings(Configure);
                 XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
@@ -170,6 +179,10 @@ namespace FaultData.DataWriters.Emails
                 SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
                 if (eventIDs.Count() > 0)
                     LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
             }
             finally
             {
@@ -242,15 +255,6 @@ namespace FaultData.DataWriters.Emails
 
                 return responses;
             }
-        }
-
-        public XElement GetData(EmailType email, Event evt)
-        {
-            IEnumerable<XElement> eventData = GetDataSourceResponse(email,evt)?.Select( r => r.Data);
-
-            if (eventData is null)
-                return null;
-           return new XElement("data", eventData);
         }
 
         public XElement GetData(ScheduledEmailType email, DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
