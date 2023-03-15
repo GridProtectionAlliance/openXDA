@@ -105,8 +105,7 @@ namespace openXDA.Controllers.WebAPI
                     ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                     if (account == null)
                         return InternalServerError(new Exception($"User with ID {userID} does not exists"));
-                    SendVerificationEmail(account.Email);
-                    return Ok(1);
+                    return Ok(SendVerificationEmail(account.Email));
                 }
 
             }
@@ -199,16 +198,17 @@ namespace openXDA.Controllers.WebAPI
         #endregion
 
         #region [ Methods ]
-        private void SendVerificationEmail(string recipient)
+        private int SendVerificationEmail(string recipient)
         {
-           
+            int code = GenerateCode();
+
             Settings settings = new Settings(GetConfigurator());
             EmailSection emailSettings = settings.EmailSettings;
 
             string smtpServer = emailSettings.SMTPServer;
 
             if (string.IsNullOrEmpty(smtpServer))
-                return;
+                return -1;
 
             using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
             using (MailMessage emailMessage = new MailMessage())
@@ -224,7 +224,7 @@ namespace openXDA.Controllers.WebAPI
                 string fromAddress = emailSettings.FromAddress;
                 emailMessage.From = new MailAddress(fromAddress);
                 emailMessage.Subject = settings.SubscriptionSettings.ConfirmSubject;
-                emailMessage.Body = settings.SubscriptionSettings.ConfirmTemplate;
+                emailMessage.Body = string.Format(settings.SubscriptionSettings.ConfirmTemplate, code.ToString("D4"));
                 emailMessage.IsBodyHtml = true;
 
                 string blindCopyAddress = emailSettings.BlindCopyAddress;
@@ -242,6 +242,7 @@ namespace openXDA.Controllers.WebAPI
 
                 // Send the email
                 smtpClient.Send(emailMessage);
+                return code;
 
             }
         }
@@ -250,9 +251,8 @@ namespace openXDA.Controllers.WebAPI
         //# ToDo use proper Text Message logic for sending Text
         private int SendVerificationText(string recipient)
         {
-            int code = -1;
-            Random random = new Random();
-            code = random.Next(0, 10) + random.Next(0, 10) * 10 + random.Next(0, 10) * 100 + random.Next(0, 10) * 1000 + random.Next(1, 10) * 10000;
+            int code = GenerateCode();
+           
             Settings settings = new Settings(GetConfigurator());
             EmailSection emailSettings = settings.EmailSettings;
 
@@ -287,6 +287,12 @@ namespace openXDA.Controllers.WebAPI
             return code;
         }
 
+        // #toDo change to Cryptographically secure random number generator
+        private int GenerateCode()
+        {
+            Random random = new Random();
+            return random.Next(0, 10) + random.Next(0, 10) * 10 + random.Next(0, 10) * 100 + random.Next(0, 10) * 1000 + random.Next(1, 10) * 10000;
+        }
         private SmtpClient CreateSmtpClient(string smtpServer)
         {
             string[] smtpServerParts = smtpServer.Split(':');
