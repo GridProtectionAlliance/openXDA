@@ -37,6 +37,7 @@ using openXDA.Model;
 using openXDA.Nodes;
 using static FaultData.DataWriters.Emails.EmailService;
 using ConfigurationLoader = openXDA.Nodes.ConfigurationLoader;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace openXDA.Controllers.WebAPI
 {
@@ -252,12 +253,8 @@ namespace openXDA.Controllers.WebAPI
             return code;
         }
 
-        // #toDo change to Cryptographically secure random number generator
-        private int GenerateCode()
-        {
-            Random random = new Random();
-            return random.Next(0, 10) + random.Next(0, 10) * 10 + random.Next(0, 10) * 100 + random.Next(0, 10) * 1000 + random.Next(1, 10) * 10000;
-        }
+        private int GenerateCode() =>
+            Random.Int32Between(10000, 100000);
 
         private SmtpClient CreateSmtpClient(string smtpServer)
         {
