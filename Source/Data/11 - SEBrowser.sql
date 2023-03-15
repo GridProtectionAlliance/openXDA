@@ -302,3 +302,13 @@ INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (20, 5)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (21, 5)
 GO
+
+CREATE VIEW [SEBrowser.WidgetView] AS
+	SELECT 
+	Widget.*,
+    Widgetcategory.ID AS CategoryID
+FROM
+	[SEBrowser.WidgetWidgetCategory] LEFT JOIN 
+    [SEBrowser.Widget] Widget ON Widget.ID = [SEBrowser.WidgetWidgetCategory].WidgetID LEFT JOIN 
+    [SEBrowser.WidgetCategory] Widgetcategory ON Widgetcategory.ID = [SEBrowser.WidgetWidgetCategory].CategoryID
+GO
