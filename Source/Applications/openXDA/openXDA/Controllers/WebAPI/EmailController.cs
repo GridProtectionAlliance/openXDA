@@ -146,8 +146,8 @@ namespace openXDA.Controllers.WebAPI
             Settings settings = new Settings(GetConfigurator());
             EventEmailSection eventEmailSettings = settings.EventEmailSettings;
 
-            if (!eventEmailSettings.Enabled )
-                return Ok(1);
+            if (!eventEmailSettings.Enabled)
+                return Ok(new TestEmailResponse() { Success = false, Exception= new ArgumentException("Email Engine is not enabled") });
 
             EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
 
@@ -160,9 +160,19 @@ namespace openXDA.Controllers.WebAPI
                 if (account == null)
                     return InternalServerError(new Exception($"User with ID {userID} does not exists"));
 
-                emailService.SendEmail(email, evt, new List<string>() { account.Email });
+                TestEmailResponse response = new TestEmailResponse();
+                List<DataSourceResponse> dsResponse;
+                Exception ex;
+                emailService.SendEmail(email, evt, new List<string>() { account.Email }, out dsResponse, out ex);
+                response.DataSourceResponses = dsResponse;
+                response.Exception = ex;
+                if (ex is null)
+                    response.Success = true;
+                else
+                    response.Success = false;
+
+                return Ok(response);
             }
-            return Ok(1);
         }
 
         [Route("testData/{emailID:int}/{eventID:int}"), HttpGet]
