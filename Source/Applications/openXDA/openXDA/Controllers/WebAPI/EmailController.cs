@@ -67,9 +67,10 @@ namespace openXDA.Controllers.WebAPI
 
         private class TestEmailResponse
         {
-            public bool Success { get; set; }
             public Exception Exception { get; set; }
-            public IEnumerable<DataSourceResponse> DataSourceResponses { get; set; }
+
+            public List<DataSourceResponse> DataSourceResponses { get; set; }
+                = new List<DataSourceResponse>();
         }
 
         #endregion
@@ -90,7 +91,7 @@ namespace openXDA.Controllers.WebAPI
             {
                 ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                 if (account == null)
-                    return InternalServerError(new Exception($"User with ID {userID} does not exists"));
+                    return BadRequest($"User with ID {userID} does not exists");
                 SendVerificationEmail(account.Email);
                 return Ok(1);
             }
@@ -103,10 +104,10 @@ namespace openXDA.Controllers.WebAPI
             {
                 ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                 if (account == null)
-                    return InternalServerError(new Exception($"User with ID {userID} does not exists"));
+                    return BadRequest($"User with ID {userID} does not exists");
                 CellCarrier cellCarrier = new TableOperations<CellCarrier>(connection).QueryRecordWhere("ID = (SELECT CarrierID FROM UserAccountCarrier WHERE UserAccountID = {0})", account.ID);
                 if (cellCarrier == null)
-                    return InternalServerError(new Exception($"User has not specified a Cell Carrier"));
+                    return UnprocessibleEntity($"User has not specified a Cell Carrier");
                 return Ok(SendVerificationText(string.Format(cellCarrier.Transform, account.Phone)));
             }
         }
@@ -116,33 +117,34 @@ namespace openXDA.Controllers.WebAPI
         {
             Settings settings = new Settings(GetConfigurator());
             EventEmailSection eventEmailSettings = settings.EventEmailSettings;
-
-            if (!eventEmailSettings.Enabled)
-                return Ok(new TestEmailResponse() { Success = false, Exception = new ArgumentException("Email Engine is not enabled") });
-
             EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                if (evt is null)
+                    return BadRequest($"Event with ID {eventID} does not exists");
+
                 EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
+                if (email is null)
+                    return BadRequest($"Email type with ID {emailID} does not exists");
 
                 ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
-                if (account == null)
-                    return InternalServerError(new Exception($"User with ID {userID} does not exists"));
+                if (account is null)
+                    return BadRequest($"User with ID {userID} does not exists");
 
                 TestEmailResponse response = new TestEmailResponse();
-                List<DataSourceResponse> dsResponse;
-                Exception ex;
-                emailService.SendEmail(email, evt, new List<string>() { account.Email }, out dsResponse, out ex);
-                response.DataSourceResponses = dsResponse;
-                response.Exception = ex;
-                if (ex is null)
-                    response.Success = true;
-                else
-                    response.Success = false;
 
-                return Ok(response);
+                try
+                {
+                    emailService.SendEmail(email, evt, new List<string>() { account.Email }, response.DataSourceResponses);
+                    return Ok(response);
+                }
+                catch (Exception ex)
+                {
+                    response.Exception = ex;
+                    return UnprocessibleEntity(response);
+                }
             }
         }
 
@@ -155,8 +157,9 @@ namespace openXDA.Controllers.WebAPI
             {
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                 EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
-
-                return Ok(emailService.GetDataSourceResponse(email, evt));
+                List<DataSourceResponse> dataSourceResponses = new List<DataSourceResponse>();
+                emailService.LoadDataSources(email, evt, dataSourceResponses);
+                return Ok(dataSourceResponses);
             }
         }
 
@@ -280,6 +283,9 @@ namespace openXDA.Controllers.WebAPI
             connection.DefaultTimeout = DataExtensions.DefaultTimeoutDuration;
             return connection;
         }
+
+        private IHttpActionResult UnprocessibleEntity<T>(T value) =>
+            Content((HttpStatusCode)422, value);
 
         #endregion
     }
