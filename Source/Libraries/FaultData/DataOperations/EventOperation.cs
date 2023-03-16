@@ -583,12 +583,19 @@ namespace FaultData.DataOperations
                 return pingClient.AccessToken;
             }
 
-            PQIWSClient pqiwsClient = new PQIWSClient(PQISettings.BaseURL, FetchAccessToken);
-            PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(meterDataSet.CreateDbConnection, pqiwsClient);
-            Task<bool> queryTask = pqiwsQueryHelper.HasImpactedComponentsAsync(evt.ID);
+            try
+            {
+                PQIWSClient pqiwsClient = new PQIWSClient(PQISettings.BaseURL, FetchAccessToken);
+                PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(meterDataSet.CreateDbConnection, pqiwsClient);
+                Task<bool> queryTask = pqiwsQueryHelper.HasImpactedComponentsAsync(evt.ID);
 
-            if (queryTask.GetAwaiter().GetResult())
-                connection.ExecuteNonQuery("INSERT INTO PQIResult VALUES ({0})", evt.ID);
+                if (queryTask.GetAwaiter().GetResult())
+                    connection.ExecuteNonQuery("INSERT INTO PQIResult VALUES ({0})", evt.ID);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+            }
         }
 
         private double ToDbFloat(double value)
