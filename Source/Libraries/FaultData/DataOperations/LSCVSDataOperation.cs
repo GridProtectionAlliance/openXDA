@@ -82,7 +82,6 @@ namespace FaultData.DataOperations
             {
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 TableOperations<EventStat> eventStatTable = new TableOperations<EventStat>(connection);
-                TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
                 TableOperations<Customer> customerTable = new TableOperations<Customer>(connection);
                 TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
 
@@ -97,8 +96,9 @@ namespace FaultData.DataOperations
                     if (evtSt.InitialMW is null || evtSt.FinalMW is null ||
                             (!(Abs((double)((evtSt.InitialMW - evtSt.FinalMW) / evtSt.InitialMW)) > LSCVSSettings.ReportingThreshold))) continue;
 
-                    IEnumerable<Customer> lscvsCustomers = customerTable.QueryRecordsWhere("LSCVS = 1 and ID in " +
-                        $"(Select CustomerID from CustomerAsset where AssetID = {evt.AssetID})");
+                    IEnumerable<Customer> lscvsCustomers = customerTable.QueryRecordsWhere("LSCVS = 1 AND (" +
+                        "(ID in (Select CustomerID from CustomerAsset where AssetID = {0})) OR " +
+                        "(ID in (Select CustomerID from CustomerMeter where MeterID = {1})))", evt.AssetID, evt.MeterID);
 
                     if (!lscvsCustomers.Any()) continue;
 
@@ -106,6 +106,7 @@ namespace FaultData.DataOperations
                         $"(Select wd.WorstDisturbanceID from EventWorstDisturbance wd where wd.EventID = {evt.ID})");
 
                     if (evtSt.VAMin is null || evtSt.VBMin is null || evtSt.VCMin is null) continue;
+
                     List<double> lineToNeutralVoltages = new List<double>
                     {
                         (double)evtSt.VAMin,
@@ -149,6 +150,9 @@ namespace FaultData.DataOperations
                         }
                     }
                 }
+
+                Log.Info($"Sending {lscvsEventList.Count} lscvs events found for meter {meterDataSet.Meter.Name}");
+
                 if (lscvsEventList.Count != 0)
                 {
                     APIQuery query = new APIQuery(LSCVSSettings.APIKey, LSCVSSettings.APIToken, LSCVSSettings.URL.Split(';'));
