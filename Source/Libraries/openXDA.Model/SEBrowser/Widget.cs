@@ -60,6 +60,9 @@ namespace SEBrowser.Model
 
     [ViewOnly()]
     [TableName("SEbrowser.WidgetView"), UseEscapedName, AllowSearch]
+    [PostRoles("Administrator")]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
     public class WidgetView : Widget
     {
         [ParentKey(typeof (WidgetCategory))]
