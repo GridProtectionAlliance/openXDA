@@ -31,6 +31,10 @@ namespace openXDA.Model
                     ID, Name, XHigh, XLow, YHigh, YLow, NULL AS UpperCurve, NULL AS LowerCurve,
                     REPLACE(REPLACE(RIGHT(Area.STAsText(), len(Area.STAsText()) - charindex('(', Area.STAsText())),')',''),'(','') AS Area
                     FROM StandardMagDurCurve")]
+    [AllowSearch]
+    [PostRoles("Administrator")]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
     public class StandardMagDurCurve
     {
         [PrimaryKey]
