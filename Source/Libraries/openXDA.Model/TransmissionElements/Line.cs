@@ -293,7 +293,7 @@ namespace openXDA.Model
         public double X1;
         public double R1;
 
-        public IEnumerable<LineSegment> Segments;
+        public List<LineSegment> Segments;
         public Line Line; 
     }
 

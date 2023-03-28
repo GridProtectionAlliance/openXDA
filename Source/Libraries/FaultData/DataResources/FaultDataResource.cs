@@ -429,7 +429,7 @@ namespace FaultData.DataResources
                 using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
                 {
                     foreach (Fault fault in faults)
-                        PopulateFaultInfo(fault, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes, connection);
+                        PopulateFaultInfo(fault, meterDataSet.Meter, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes, connection);
                 }
                 // Create a fault group and add it to the lookup table
                 bool faultValidationLogicResult = CheckFaultValidationLogic(faults);
@@ -965,7 +965,7 @@ namespace FaultData.DataResources
             return GetCycle(viCycleDataGroup, 0);
         }
 
-        private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes, AdoDataConnection connection)
+        private void PopulateFaultInfo(Fault fault, Meter meter, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes, AdoDataConnection connection)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle, connection);
@@ -1023,14 +1023,80 @@ namespace FaultData.DataResources
 
             if (calculationCycle >= 0)
             {
+                TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+                string testQuery = "ID={0} AND LocationID in (Select LocationID from AssetLocation where AssetID={1})";
                 for (int i = 0; i < fault.Curves.Count; i++)
                 {
                     Fault.Summary summary = new Fault.Summary();
                     summary.DistanceAlgorithmIndex = i;
                     summary.DistanceAlgorithm = fault.Curves[i].Algorithm;
                     summary.Distance = fault.Curves[i][calculationCycle].Value;
-                    summary.IsValid = IsValid(summary.Distance, dataGroup);
+                    Line line = Line.DetailedLine(dataGroup.Asset);
+                    List<Fault.Path> faultPaths = new List<Fault.Path>();
+                    for (int index = 0; index < line.Path.Count; index++)
+                    {
+                        // We can break early if this condition is found because any segments after are shorter
+                        if (summary.Distance > line.Path[index].Length) break;
+                        Fault.Path forwardPath = new Fault.Path();
+                        forwardPath.TransmissionPath = line.Path[index];
+                        forwardPath.PathNumber = index;
+                        forwardPath.FaultDistance = summary.Distance;
+                        forwardPath.IsMain = false;
+                        // Skip if path doesn't exist
+                        bool useForward = true;
+                        bool useBackward = false;
+                        if (forwardPath.TransmissionPath.Segments.Count == 0) continue;
 
+                        // If we have exactly one segment then a backwards path won't be neccessary
+                        if (forwardPath.TransmissionPath.Segments.Count != 1)
+                        {
+                            bool forwardlyChiral= meterTable.QueryRecordsWhere(testQuery, meter.ID, forwardPath.TransmissionPath.Segments[0].ID).Any();
+                            bool backwardlyChiral = meterTable.QueryRecordsWhere(testQuery, meter.ID, forwardPath.TransmissionPath.Segments[forwardPath.TransmissionPath.Segments.Count - 1].ID).Any();
+                            useForward = forwardlyChiral || !backwardlyChiral;
+                            useBackward = !forwardlyChiral || backwardlyChiral;
+                        }
+
+                        if (useForward)
+                        {
+                            forwardPath.IsMain = 0 == index;
+                            double distanceRemaining = forwardPath.FaultDistance;
+                            foreach (LineSegment segment in forwardPath.TransmissionPath.Segments)
+                            {
+                                if (distanceRemaining < segment.Length)
+                                {
+                                    forwardPath.SegmentDistance = distanceRemaining;
+                                    forwardPath.FaultSegment = segment;
+                                    break;
+                                }
+                                distanceRemaining -= segment.Length;
+                            }
+                            faultPaths.Add(forwardPath);
+                        }
+                        if (useBackward)
+                        {
+                            Fault.Path backwardPath = forwardPath.ShallowCopy();
+                            backwardPath.IsMain = (0 == index) && !useForward;
+                            double distanceRemaining = backwardPath.FaultDistance;
+                            for (int pathIndex = backwardPath.TransmissionPath.Segments.Count - 1; pathIndex >= 0; pathIndex--)
+                            {
+                                LineSegment segment = backwardPath.TransmissionPath.Segments[pathIndex];
+                                if (distanceRemaining < segment.Length)
+                                {
+                                    backwardPath.SegmentDistance = distanceRemaining;
+                                    backwardPath.FaultSegment = segment;
+                                    break;
+                                }
+                                distanceRemaining -= segment.Length;
+                            }
+                            // Considering if forwardPath and backwardPath have the same result
+                            if (!useForward || forwardPath.FaultSegment.ID != backwardPath.FaultSegment.ID)
+                                faultPaths.Add(backwardPath);
+                        }
+                    }
+
+                    summary.IsValid = IsValid(summary.Distance, line);
+
+                    fault.Paths.Add(faultPaths);
                     fault.Summaries.Add(summary);
                 }
 
@@ -1059,17 +1125,16 @@ namespace FaultData.DataResources
             }
         }
 
-        private bool IsValid(double faultDistance, DataGroup dataGroup)
+        private bool IsValid(double faultDistance, Line detailedLine)
         {
-            Line line = Line.DetailedLine(dataGroup.Asset);
             double maxFaultDistanceMultiplier = FaultLocationSettings.MaxFaultDistanceMultiplier;
             double minFaultDistanceMultiplier = FaultLocationSettings.MinFaultDistanceMultiplier;
 
-            double maxDistance = line.MaxFaultDistance
-                ?? maxFaultDistanceMultiplier * line.Path[0].Length;
+            double maxDistance = detailedLine.MaxFaultDistance
+                ?? maxFaultDistanceMultiplier * detailedLine.Path[0].Length;
 
-            double minDistance = line.MinFaultDistance
-                ?? minFaultDistanceMultiplier * line.Path[0].Length;
+            double minDistance = detailedLine.MinFaultDistance
+                ?? minFaultDistanceMultiplier * detailedLine.Path[0].Length;
 
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }

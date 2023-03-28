@@ -126,6 +126,7 @@
     <Compile Include="Events\EventEventTag.cs" />
     <Compile Include="Events\EventTag.cs" />
     <Compile Include="Events\EventTypeAssetType.cs" />
+    <Compile Include="Events\Faults\FaultPath.cs" />
     <Compile Include="Events\RelayPerformance.cs" />
     <Compile Include="Events\EventStat.cs" />
     <Compile Include="Events\Faults\FaultCauseMetrics.cs" />

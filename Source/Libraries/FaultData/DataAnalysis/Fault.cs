@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultAlgorithms;
+using openXDA.Model;
 
 namespace FaultData.DataAnalysis
 {
@@ -313,6 +314,20 @@ namespace FaultData.DataAnalysis
             #endregion
         }
 
+        public class Path
+        {
+            public TransmissionPath TransmissionPath { get; set; }
+            public LineSegment FaultSegment { get; set; }
+            public double FaultDistance { get; set; }
+            public double SegmentDistance { get; set; }
+            public bool IsMain { get; set; }
+            public int PathNumber { get; set; }
+            public Path ShallowCopy()
+            {
+                return (Path) MemberwiseClone();
+            }
+        }
+
         #endregion
 
         #region [ Constructors ]
@@ -322,6 +337,7 @@ namespace FaultData.DataAnalysis
             Summaries = new List<Summary>();
             Segments = new List<Segment>();
             Curves = new List<Curve>();
+            Paths = new List<List<Path>>();
         }
 
         #endregion
@@ -357,6 +373,7 @@ namespace FaultData.DataAnalysis
         public List<Summary> Summaries { get; }
         public List<Segment> Segments { get; }
         public List<Curve> Curves { get; }
+        public List<List<Path>> Paths { get; }
 
         #endregion
 
