@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FaultSegment.cs - Gbtc
+//  FaultPath.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
