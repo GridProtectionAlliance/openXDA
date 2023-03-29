@@ -356,7 +356,7 @@ namespace FaultData.DataReaders
             return meter;
         }
 
-        private static Channel ParseSeries(SeriesDefinition seriesDefinition)
+        public static Channel ParseSeries(SeriesDefinition seriesDefinition)
         {
             ChannelDefinition channelDefinition = seriesDefinition.ChannelDefinition;
 
@@ -402,10 +402,14 @@ namespace FaultData.DataReaders
             series.SeriesType.Name = SeriesValueType.ToString(seriesDefinition.ValueTypeID) ?? seriesDefinition.ValueTypeName ?? seriesDefinition.ValueTypeID.ToString();
             series.SeriesType.Description = seriesDefinition.ValueTypeName;
 
+            channel.Trend =
+                channel.MeasurementCharacteristic.Name != QuantityCharacteristic.ToName(QuantityCharacteristic.Instantaneous) ||
+                series.SeriesType.Name != SeriesValueType.ToString(SeriesValueType.Val);
+
             return channel;
         }
 
-        private static Channel ParseSeries(SeriesInstance seriesInstance)
+        public static Channel ParseSeries(SeriesInstance seriesInstance)
         {
             Channel channel = ParseSeries(seriesInstance.Definition);
             channel.HarmonicGroup = seriesInstance.Channel.ChannelGroupID;

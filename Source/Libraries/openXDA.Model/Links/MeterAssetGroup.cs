@@ -26,10 +26,6 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [AllowSearch]
-    [PostRoles("Administrator, Transmission SME")]
-    [PatchRoles("Administrator, Transmission SME")]
-    [DeleteRoles("Administrator, Transmission SME")]
     public class MeterAssetGroup
     {
         [PrimaryKey(true)]
