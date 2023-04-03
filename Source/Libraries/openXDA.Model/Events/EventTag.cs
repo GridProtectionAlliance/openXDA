@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -36,7 +37,42 @@ namespace openXDA.Model
 
         public string Description { get; set; }
 
+        [DefaultValue(true)]
         public bool ShowInFilter { get; set; }
+    }
 
+    public static partial class TableOperationsExtensions
+    {
+        public static EventTag GetOrAdd(this TableOperations<EventTag> eventTagTable, string name, string description = null)
+        {
+            EventTag eventTag = eventTagTable.QueryRecordWhere("Name = {0}", name);
+
+            if (eventTag is null)
+            {
+                eventTag = eventTagTable.NewRecord();
+                eventTag.Name = name;
+                eventTag.Description = description ?? name;
+
+                try
+                {
+                    eventTagTable.AddNewRecord(eventTag);
+                }
+                catch (Exception ex)
+                {
+                    // Ignore errors regarding unique key constraints
+                    // which can occur as a result of a race condition
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
+
+                    if (!isUniqueViolation)
+                        throw;
+
+                    return eventTagTable.QueryRecordWhere("Name = {0}", name);
+                }
+
+                eventTag.ID = eventTagTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+            }
+
+            return eventTag;
+        }
     }
 }
