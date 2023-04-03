@@ -264,4 +264,9 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/DetailedMeter")]
     public class DetailedMeterController : XDAEndController<SystemCenter.Model.DetailedMeter> { }
 
+
+    [RoutePrefix("api/CustomerMeter")]
+    public class CustomerMeterController : XDAEndController<SystemCenter.Model.CustomerMeter> { }
+
+
 }
