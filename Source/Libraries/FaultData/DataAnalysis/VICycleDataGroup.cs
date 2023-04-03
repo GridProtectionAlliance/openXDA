@@ -95,6 +95,8 @@ namespace FaultData.DataAnalysis
         }
 
 
+        public double VBase => m_asset.VoltageKV; 
+        
         #endregion
 
         #region [ Constructors ]
