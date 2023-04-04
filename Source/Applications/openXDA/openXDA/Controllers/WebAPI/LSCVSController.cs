@@ -35,7 +35,6 @@ using openXDA.Model;
 
 namespace openXDA.Controllers.WebAPI
 {
-
     [RoutePrefix("api/LSCVSAccount")]
     public class LSCVSAccountController : ModelController<SystemCenter.Model.LSCVSAccount> { }
 
@@ -43,7 +42,6 @@ namespace openXDA.Controllers.WebAPI
     public class LSCVSController : ApiController
     {
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(LSCVSController));
         private static readonly DateTime s_epoch = new DateTime(1970, 1, 1);
 
         private double FBase
@@ -61,14 +59,11 @@ namespace openXDA.Controllers.WebAPI
             return Ok("Hello!");
         }
 
-
-
         [HttpGet, Route("WaveformData/I/{eventId}")]
         public IHttpActionResult GetCurrentData(int eventId)
         {
             try
             {
-
                 List<SEBrowser.Model.D3Series> list = new List<SEBrowser.Model.D3Series>();
 
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -77,7 +72,6 @@ namespace openXDA.Controllers.WebAPI
                     Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
                     meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
 
-
                     VIDataGroup dataGroup = GetDataGroup(meter, eventId);
                     VICycleDataGroup cycleData = Transform.ToVICycleDataGroup(dataGroup, FBase, true);
 
@@ -85,50 +79,54 @@ namespace openXDA.Controllers.WebAPI
                     double SBase = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemMVABase'") ?? 100.0;
 
                     if (cycleData.IA != null)
+                    {
                         list.Add(new SEBrowser.Model.D3Series()
                         {
                             ChartLabel = "A RMS",
                             Color = "Ia",
                             LegendGroup = "RMS",
                             DataPoints = cycleData.IA.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
+                                dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                                dataPoint.Value
+                            }).ToList(),
                             Unit = "A",
-                            BaseValue = (Sbase / (Math.Sqrt(3) * Vbase * 1000));
+                            BaseValue = (SBase / (Math.Sqrt(3) * Vbase * 1000))
                         });
-
+                    }
                  
                     if (cycleData.IB != null)
+                    {
                         list.Add(new SEBrowser.Model.D3Series()
                         {
                             ChartLabel = "B RMS",
                             Color = "Ib",
-                            LegendGroup="RMS",
+                            LegendGroup = "RMS",
                             DataPoints = cycleData.IB.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
+                                dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                                dataPoint.Value
+                            }).ToList(),
                             Unit = "A",
-                            BaseValue = (Sbase / (Math.Sqrt(3) * Vbase * 1000));
+                            BaseValue = (SBase / (Math.Sqrt(3) * Vbase * 1000))
                         });
+                    }
 
                     if (cycleData.IC != null)
+                    {
                         list.Add(new SEBrowser.Model.D3Series()
                         {
                             ChartLabel = "C RMS",
                             Color = "Ic",
                             LegendGroup = "RMS",
                             DataPoints = cycleData.IC.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
+                                dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                                dataPoint.Value
+                            }).ToList(),
                             Unit = "A",
-                            BaseValue = (Sbase / (Math.Sqrt(3) * Vbase * 1000));
+                            BaseValue = (SBase / (Math.Sqrt(3) * Vbase * 1000))
                         });
-
-
+                    }
                 }
+
                 return Ok(list);
             }
             catch (Exception ex)
@@ -142,7 +140,6 @@ namespace openXDA.Controllers.WebAPI
         {
             try
             {
-
                 List<SEBrowser.Model.D3Series> list = new List<SEBrowser.Model.D3Series>();
 
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -154,96 +151,101 @@ namespace openXDA.Controllers.WebAPI
                     VIDataGroup dataGroup = GetDataGroup(meter, eventId);
                     VICycleDataGroup cycleData = Transform.ToVICycleDataGroup(dataGroup, FBase, true);
 
-                   
                     if (cycleData.VA != null)
+                    {
                         list.Add(new SEBrowser.Model.D3Series()
                         {
                             ChartLabel = "AN RMS",
                             Color = "Va",
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VA.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
+                                dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                                dataPoint.Value
+                            }).ToList(),
                             Unit = "kV",
-                            BaseValue = cycleData.Vbase /Math.Sqrt3
+                            BaseValue = cycleData.VBase / Math.Sqrt(3)
                         });
+                    }
 
-                    
                     if (cycleData.VB != null)
+                    {
                         list.Add(new SEBrowser.Model.D3Series()
                         {
                             ChartLabel = "BN RMS",
                             Color = "Vb",
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VB.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
+                                dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                                dataPoint.Value
+                            }).ToList(),
                             Unit = "kV",
-                            BaseValue = cycleData.Vbase /Math.Sqrt3
+                            BaseValue = cycleData.VBase / Math.Sqrt(3)
                         });
+                    }
 
                     if (cycleData.VC != null)
+                    {
                         list.Add(new SEBrowser.Model.D3Series()
                         {
                             ChartLabel = "CN RMS",
                             Color = "Vc",
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VC.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
+                                dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                                dataPoint.Value
+                            }).ToList(),
                             Unit = "kV",
-                            BaseValue = cycleData.Vbase /Math.Sqrt3
+                            BaseValue = cycleData.VBase / Math.Sqrt(3)
                         });
-
-                  
+                    }
 
                     if (cycleData.VAB != null)
+                    {
                         list.Add(new SEBrowser.Model.D3Series()
                         {
                             ChartLabel = "AB RMS",
                             Color = "Vab",
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VAB.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
+                                dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                                dataPoint.Value
+                            }).ToList(),
                             Unit = "kV",
-                            BaseValue = cycleData.Vbase
+                            BaseValue = cycleData.VBase
                         });
+                    }
 
-                    
                     if (cycleData.VBC != null)
+                    {
                         list.Add(new SEBrowser.Model.D3Series()
                         {
                             ChartLabel = "BC RMS",
                             Color = "Vbc",
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VBC.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
+                                dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                                dataPoint.Value
+                            }).ToList(),
                             Unit = "kV",
-                            BaseValue = cycleData.Vbase
+                            BaseValue = cycleData.VBase
                         });
-
-                   
+                    }
 
                     if (cycleData.VCA != null)
+                    {
                         list.Add(new SEBrowser.Model.D3Series()
                         {
                             ChartLabel = "CA RMS",
                             Color = "Vca",
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VCA.RMS.DataPoints.Select(dataPoint => new double[] {
-                            dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                            dataPoint.Value
-                        }).ToList(),
+                                dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
+                                dataPoint.Value
+                            }).ToList(),
                             Unit = "kV",
-                            BaseValue = cycleData.Vbase
+                            BaseValue = cycleData.VBase
                         });
+                    }
 
                 }
                 return Ok(list);
@@ -254,17 +256,12 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
-
         private VIDataGroup GetDataGroup(Meter meter, int eventID)
         {
             List<byte[]> data = ChannelData.DataFromEvent(eventID, () => new AdoDataConnection("systemSettings"));
-
-
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(meter, data);
             return new VIDataGroup(dataGroup);
         }
-
     }
-
 }
