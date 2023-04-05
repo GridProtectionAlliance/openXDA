@@ -263,9 +263,10 @@ namespace openXDA.Adapters
             }
         }
 
-        private class PhasorResult {
-            public double Magnitude;
-            public double Angle;
+        private class PhasorResult
+        {
+            public double Magnitude { get; set; }
+            public double Angle { get; set; }
         }
 
         public void ExportHarmonicsToCSV(Stream returnStream, NameValueCollection requestParameters)

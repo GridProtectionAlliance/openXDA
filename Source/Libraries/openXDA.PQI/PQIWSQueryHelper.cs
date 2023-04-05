@@ -202,10 +202,11 @@ namespace openXDA.PQI
 
         private async Task<List<Tuple<TestCurve,List<TestCurvePoint>>>> GetAllCurvesAsync(AdoDataConnection connection, int eventID, CancellationToken cancellationToken = default)
         {
-            async Task<int> GetFacilityID(DataRow facilityDisturbance)
+            int GetFacilityID(DataRow facilityDisturbance)
             {
                 return facilityDisturbance.ConvertField<int>("PQIFacilityID");
             }
+
             async Task<List<FacilityAudit>> GetFacilityAudits(int facilityID)
             {
                 return await PQIWSClient.GetFacilityAudits(facilityID, cancellationToken);
@@ -233,11 +234,11 @@ namespace openXDA.PQI
 
             using (DataTable table = connection.RetrieveData(FacilityDisturbanceQueryFormat, eventID))
             {
-                var tasks = table
+                int[] facilityIDs = table
                     .AsEnumerable()
-                    .Select(GetFacilityID);
+                    .Select(GetFacilityID)
+                    .ToArray();
 
-                int[] facilityIDs = await Task.WhenAll(tasks);
                 List<FacilityAudit>[] facilityAudits = await Task.WhenAll(facilityIDs.Distinct().Select(GetFacilityAudits));
                 List<PQIEquipment>[] auditedEquipment = await Task.WhenAll(Flatten(facilityAudits).Select(GetAuditedEquipment));
                 List<AuditCurve>[] auditCurves = await Task.WhenAll(Flatten(auditedEquipment).Select(GetAuditCurves));

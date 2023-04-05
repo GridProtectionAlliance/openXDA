@@ -330,7 +330,7 @@ namespace openXDA.Model
     public class MeterDetail : Meter
     {
         [Searchable]
-        public string Location { get; set; }
+        public new string Location { get; set; }
 
         public string TimeZoneLabel
         {

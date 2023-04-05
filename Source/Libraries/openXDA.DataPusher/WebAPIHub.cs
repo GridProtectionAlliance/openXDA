@@ -316,7 +316,7 @@ namespace openXDA.DataPusher
                         return response.IsSuccessStatusCode;
                     }
                 }
-                catch (Exception ex) //Exception here is a fail state, must be caught reported back so that testers know the failpoint is downstream
+                catch //Exception here is a fail state, must be caught reported back so that testers know the failpoint is downstream
                 {
                     return false;
                 }
