@@ -287,7 +287,7 @@ namespace PQDS
         /// Writes the content to a .csv file.
         /// </summary>
         /// <param name="stream"> The <see cref="StreamWriter"/> to write the data to. </param>
-        /// <param name="progress"> <see cref="IProgress"/> Progress Token</param>
+        /// <param name="progress"> <see cref="IProgress{T}"/> Progress Token</param>
         public void WriteToStream(StreamWriter stream, IProgress<double> progress)
         {
             int n_data = this.Data.Select((item) => item.Length).Max();
@@ -312,7 +312,7 @@ namespace PQDS
         /// Writes the content to a .csv file.
         /// </summary>
         /// <param name="file"> file name </param>
-        /// <param name="progress"> <see cref="IProgress"/> Progress Token</param>
+        /// <param name="progress"> <see cref="IProgress{T}"/> Progress Token</param>
         public void WriteToFile(string file, IProgress<double> progress)
         {
             // Open the file and write in each line
@@ -359,7 +359,7 @@ namespace PQDS
         /// Reads the content from a PQDS File.
         /// </summary>
         /// <param name="filename"> file name</param>
-        /// <param name="progress"> <see cref="IProgress"/> Progress Token </param>
+        /// <param name="progress"> <see cref="IProgress{T}"/> Progress Token </param>
         public void ReadFromFile(string filename, IProgress<double> progress)
         {
             List<string> lines = new List<string>();

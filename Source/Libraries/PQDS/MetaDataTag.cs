@@ -35,10 +35,30 @@ namespace PQDS
     /// </summary>
     public enum PQDSMetaDataType
     {
+        /// <summary>
+        /// An integer representing a single value selected
+        /// from among a custom, finite set of possibilities
+        /// </summary>
         Enumeration = 0,
+
+        /// <summary>
+        /// A number
+        /// </summary>
         Numeric = 1,
+
+        /// <summary>
+        /// Text consisting only of alphabetical characters and digits
+        /// </summary>
         AlphaNumeric = 2,
+
+        /// <summary>
+        /// Freeform text
+        /// </summary>
         Text = 3,
+
+        /// <summary>
+        /// A Boolean value (true/false)
+        /// </summary>
         Binary = 4
 
     }
@@ -50,9 +70,24 @@ namespace PQDS
     {
         #region[Properties]
 
+        /// <summary>
+        /// The key that identifies the metadata tag.
+        /// </summary>
         protected string m_key;
+
+        /// <summary>
+        /// The unit of measurement.
+        /// </summary>
         protected string m_unit;
+
+        /// <summary>
+        /// The data type the parser expects to encounter for the value of the metdata.
+        /// </summary>
         protected PQDSMetaDataType m_expectedDataType;
+
+        /// <summary>
+        /// Additional notes about the metadata field.
+        /// </summary>
         protected string m_note;
 
         #endregion[Properties]
