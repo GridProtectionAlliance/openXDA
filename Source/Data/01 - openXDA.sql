@@ -3181,17 +3181,6 @@ CREATE NONCLUSTERED INDEX IX_FaultCauseMetrics_EventID
 ON FaultCauseMetrics(EventID ASC)
 GO
 
-CREATE TABLE FaultPath
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    SummaryID INT NOT NULL REFERENCES FaultSummary(ID),
-    SegmentID INT NOT NULL REFERENCES Asset(ID),
-    SegmentDistance FLOAT NOT NULL,
-    IsMain BIT NOT NULL,
-    PathNumber INT NOT NULL
-)
-GO
-
 CREATE TABLE NearestStructure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
