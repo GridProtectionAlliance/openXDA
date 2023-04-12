@@ -67,6 +67,7 @@
 //*********************************************************************************************************************
 
 using System.Collections.Generic;
+using System.Linq;
 using GSF;
 
 namespace FaultAlgorithms
@@ -143,6 +144,195 @@ namespace FaultAlgorithms
     /// </summary>
     public class FaultLocationDataSet
     {
+        #region [ Nested Types ]
+
+        /// <summary>
+        /// Represents a segment of the line associated with this fault.
+        /// </summary>
+        public class LineSegment
+        {
+            public int ID;
+            public double Length;
+            public double X0;
+            public double R0;
+            public double X1;
+            public double R1;
+
+            /// <summary>
+            /// Gets the zero sequence impedance.
+            /// </summary>
+            public ComplexNumber Z0
+            {
+                get
+                {
+                    return new ComplexNumber(R0, X0);
+                }
+            }
+
+            /// <summary>
+            /// Gets the positive sequence impedance.
+            /// </summary>
+            public ComplexNumber Z1
+            {
+                get
+                {
+                    return new ComplexNumber(R1, X1);
+                }
+            }
+
+            /// <summary>
+            /// Gets the loop impedance <c>[(Z0 + 2*Z1) / 3]</c>.
+            /// </summary>
+            public ComplexNumber Zs
+            {
+                get
+                {
+                    return (new ComplexNumber(R0, X0) + 2.0D * new ComplexNumber(R1, X1)) / 3.0D;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Represents a path of line segments where the fault may have occurred.
+        /// </summary>
+        public class LinePath
+        {
+            #region [ Members ]
+            private List<LineSegment> m_segmentPath;
+            private ComplexNumber m_positiveImpedance;
+            private ComplexNumber m_zeroImpedance;
+            private double m_lineDistance;
+            private int m_pathNumber;
+            private bool m_traverseForward;
+            #endregion
+
+            #region [ Properties ]
+            /// <summary>
+            /// Gets or sets the path of the LinePath, made up of individual segments.
+            /// </summary>
+            public List<LineSegment> Path
+            {
+                get
+                {
+                    return m_segmentPath;
+                }
+                set
+                {
+                    m_segmentPath = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the positive sequence impedance.
+            /// </summary>
+            public ComplexNumber Z1
+            {
+                get
+                {
+                    return m_positiveImpedance;
+                }
+                set
+                {
+                    m_positiveImpedance = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the zero sequence impedance.
+            /// </summary>
+            public ComplexNumber Z0
+            {
+                get
+                {
+                    return m_zeroImpedance;
+                }
+                set
+                {
+                    m_zeroImpedance = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets the loop impedance <c>[(Z0 + 2*Z1) / 3]</c>.
+            /// </summary>
+            public ComplexNumber Zs
+            {
+                get
+                {
+                    return (m_zeroImpedance + 2.0D * m_positiveImpedance) / 3.0D;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the total distance across the line.
+            /// </summary>
+            public double LineDistance
+            {
+                get
+                {
+                    return m_lineDistance;
+                }
+                set
+                {
+                    m_lineDistance = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the variable that tracks which impedences belong to which path along the line (order of longest to shortest).
+            /// </summary>
+            public int PathNumber
+            {
+                get
+                {
+                    return m_pathNumber;
+                }
+                set
+                {
+                    m_pathNumber = value;
+                }
+            }
+
+            /// <summary>
+            /// Tells algorithms which direction to traverse the Path variable.
+            /// </summary>
+            public bool TraverseForward
+            {
+                get
+                {
+                    return m_traverseForward;
+                }
+                set
+                {
+                    m_traverseForward = value;
+                }
+            }
+            #endregion
+
+            #region [ Methods ]
+            /// <summary>
+            /// Recalculates members based on path member. Output indicates success.
+            /// </summary>
+            public bool CalculateValues()
+            {
+                double R0sum = m_segmentPath.Select(seg => seg.R0).Sum();
+                double X0sum = m_segmentPath.Select(seg => seg.X0).Sum();
+                double R1sum = m_segmentPath.Select(seg => seg.R1).Sum();
+                double X1sum = m_segmentPath.Select(seg => seg.X1).Sum();
+
+                if (R0sum == 0.0D && X0sum == 0.0D && R1sum == 0.0D && X1sum == 0.0D)
+                    return false;
+
+                m_zeroImpedance = new ComplexNumber(R0sum, X0sum);
+                m_positiveImpedance = new ComplexNumber(R1sum, X1sum);
+                m_lineDistance = m_segmentPath.Select(seg => seg.Length).Sum();
+                return true;
+            }
+            #endregion
+        }
+
+        #endregion
+
         #region [ Members ]
 
         // Fields
@@ -152,8 +342,6 @@ namespace FaultAlgorithms
         private CycleData m_prefaultCycle;
 
         private double m_frequency;
-        private ComplexNumber m_positiveImpedance;
-        private ComplexNumber m_zeroImpedance;
         private ComplexNumber m_localSourceImpedance;
         private ComplexNumber m_remoteSourceImpedance;
 
@@ -161,11 +349,12 @@ namespace FaultAlgorithms
         private FaultType m_faultType;
         private IList<int> m_faultedCycles;
         private int m_faultCalculationCycle;
-        private double m_lineDistance;
         private double m_faultDistance;
         private Dictionary<string, double[]> m_faultDistances;
 
         private Dictionary<string, object> m_values;
+
+        private List<LinePath> m_possiblePaths;
 
         #endregion
 
@@ -252,47 +441,6 @@ namespace FaultAlgorithms
         }
 
         /// <summary>
-        /// Gets or sets the positive sequence impedance.
-        /// </summary>
-        public ComplexNumber PositiveImpedance
-        {
-            get
-            {
-                return m_positiveImpedance;
-            }
-            set
-            {
-                m_positiveImpedance = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the zero sequence impedance.
-        /// </summary>
-        public ComplexNumber ZeroImpedance
-        {
-            get
-            {
-                return m_zeroImpedance;
-            }
-            set
-            {
-                m_zeroImpedance = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the loop impedance <c>[(Z0 + 2*Z1) / 3]</c>.
-        /// </summary>
-        public ComplexNumber LoopImpedance
-        {
-            get
-            {
-                return (m_zeroImpedance + 2.0D * m_positiveImpedance) / 3.0D;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the impedance of the local voltage source.
         /// </summary>
         public ComplexNumber LocalSourceImpedance
@@ -319,47 +467,6 @@ namespace FaultAlgorithms
             set
             {
                 m_remoteSourceImpedance = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the positive sequence impedance.
-        /// </summary>
-        public ComplexNumber Z1
-        {
-            get
-            {
-                return m_positiveImpedance;
-            }
-            set
-            {
-                m_positiveImpedance = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the zero sequence impedance.
-        /// </summary>
-        public ComplexNumber Z0
-        {
-            get
-            {
-                return m_zeroImpedance;
-            }
-            set
-            {
-                m_zeroImpedance = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the loop impedance <c>[(Z0 + 2*Z1) / 3]</c>.
-        /// </summary>
-        public ComplexNumber Zs
-        {
-            get
-            {
-                return LoopImpedance;
             }
         }
 
@@ -466,21 +573,6 @@ namespace FaultAlgorithms
         }
 
         /// <summary>
-        /// Gets or sets the total distance across the line.
-        /// </summary>
-        public double LineDistance
-        {
-            get
-            {
-                return m_lineDistance;
-            }
-            set
-            {
-                m_lineDistance = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the collection of fault distances,
         /// one distance per fault location algorithm.
         /// </summary>
@@ -509,6 +601,21 @@ namespace FaultAlgorithms
             set
             {
                 m_faultDistance = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the possible paths which the fault may have been on.
+        /// </summary>
+        public List<LinePath> FaultPaths
+        {
+            get
+            {
+                return m_possiblePaths;
+            }
+            set
+            {
+                m_possiblePaths = value;
             }
         }
 

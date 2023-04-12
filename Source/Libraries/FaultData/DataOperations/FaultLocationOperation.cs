@@ -78,7 +78,6 @@ namespace FaultData.DataOperations
 
                     TableOperations<openXDA.Model.FaultGroup> faultGroupTable = new TableOperations<openXDA.Model.FaultGroup>(connection);
                     TableOperations<FaultSegment> faultSegmentTable = new TableOperations<FaultSegment>(connection);
-                    TableOperations<FaultPath> faultLineSegmentTable = new TableOperations<FaultPath>(connection);
                     TableOperations<FaultSummary> faultSummaryTable = new TableOperations<FaultSummary>(connection);
                     TableOperations<FaultCauseMetrics> faultCauseMetricsTable = new TableOperations<FaultCauseMetrics>(connection);
 
@@ -120,24 +119,6 @@ namespace FaultData.DataOperations
                         foreach (FaultSummary faultSummary in CreateFaultSummaries(evt.ID, faultIndex + 1, fault))
                         {
                             faultSummaryTable.AddNewRecord(faultSummary);
-                        }
-
-                        // Create the fault path rows for this fault
-                        for (int index = 0; index < fault.Paths.Count; index++)
-                        {
-                            List<FaultSummary> summaries = faultSummaryTable.QueryRecordsWhere("Algorithm={0} AND EventID={1} AND FaultNumber={2}", fault.Summaries[index].DistanceAlgorithm, evt.ID, faultIndex + 1).ToList();
-
-                            if (summaries.Count != 1)
-                            {
-                                Log.Error($"{(summaries.Count == 0 ? "No Summary" : "More than One Summary")} Found for Pathes Associated with the Algorithm {fault.Summaries[index].DistanceAlgorithm}, Event ID {evt.ID}, and Fault Index{faultIndex + 1}");
-                                continue;
-                            }
-
-                            foreach (FaultPath faultPath in CreateFaultPathes(summaries[0].ID, index, fault))
-                            {
-                                faultLineSegmentTable.AddNewRecord(faultPath);
-                            }
-
                         }
 
 
@@ -234,6 +215,9 @@ namespace FaultData.DataOperations
                         FaultNumber = faultNumber,
                         CalculationCycle = fault.CalculationCycle,
                         Distance = ToDbFloat(summary.Distance),
+                        PathNumber = summary.PathNumber,
+                        LineSegmentID = summary.LineSegmentID,
+                        LineSegmentDistance = ToDbFloat(summary.LineSegmentDistance),
                         CurrentMagnitude = ToDbFloat(fault.CurrentMagnitude),
                         CurrentLag = ToDbFloat(fault.CurrentLag),
                         PrefaultCurrent = ToDbFloat(fault.PrefaultCurrent),
@@ -246,22 +230,6 @@ namespace FaultData.DataOperations
                         IsSelectedAlgorithm = summary.IsSelectedAlgorithm,
                         IsValid = summary.IsValid,
                         IsSuppressed = fault.IsSuppressed
-                    };
-                }
-            }
-
-            private IEnumerable<FaultPath> CreateFaultPathes(int summaryID, int pathIndex, Fault fault)
-            {
-                foreach (Fault.Path path in fault.Paths[pathIndex])
-                {
-                    // Create the fault summary record to be written to the database
-                    yield return new FaultPath()
-                    {
-                        SummaryID = summaryID,
-                        SegmentID = path.FaultSegment.ID,
-                        SegmentDistance = ToDbFloat(path.SegmentDistance),
-                        IsMain = path.IsMain,
-                        PathNumber = path.PathNumber
                     };
                 }
             }

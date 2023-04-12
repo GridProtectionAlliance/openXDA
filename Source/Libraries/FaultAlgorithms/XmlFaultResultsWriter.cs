@@ -135,7 +135,7 @@ namespace FaultAlgorithms
                 results.Add(
                     new XElement("line",
                         new XElement("name", lineDefinition.Name),
-                        new XElement("length", faultDataSet.LineDistance),
+                        new XElement("length", faultDataSet.FaultPaths[0].LineDistance),
                         new XElement("faultType", faultDataSet.FaultType.ToString()),
                         new XElement("faultDistance", faultDataSet.FaultDistance),
                         new XElement("cyclesOfData", faultDataSet.Cycles.Count),

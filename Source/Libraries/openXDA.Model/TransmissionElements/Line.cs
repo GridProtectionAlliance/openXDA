@@ -71,7 +71,7 @@ namespace openXDA.Model
         {
             get
             {
-                return m_path ?? (m_path = QueryPath().OrderByDescending(item => item.Length).ToList());
+                return m_path ?? (m_path = QueryPath().ToList());
             }
             set
             {
@@ -200,7 +200,7 @@ namespace openXDA.Model
                 R1 = item.Value.Select(seg => seg.R1).Sum(),
                 Line = this,
                 Segments = item.Value
-            }).ToList();
+            }).OrderByDescending(item => item.Length).ToList();
         }
 
         private List<List<LineSegment>> FollowPath (LineSegment start, LineSegment prev=null)

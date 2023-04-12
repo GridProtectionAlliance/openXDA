@@ -90,9 +90,10 @@ namespace FaultAlgorithms
     /// Function signature for fault location algorithms.
     /// </summary>
     /// <param name="faultDataSet">Full collection of voltage, current, and cycle data.</param>
+    /// <param name="pathIndex">The index of the path variable, stored in faultDataSet..</param>
     /// <param name="parameters">Custom parameters for algorithm.</param>
     /// <returns>Result of distance calculations for each cycle.</returns>
-    public delegate double[] FaultLocationAlgorithm(FaultLocationDataSet faultDataSet, string parameters);
+    public delegate double[] FaultLocationAlgorithm(FaultLocationDataSet faultDataSet, int pathIndex = 0, string parameters = null);
 
     /// <summary>
     /// Attribute used to annotate fault trigger algorithms.

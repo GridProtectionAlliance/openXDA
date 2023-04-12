@@ -62,6 +62,7 @@ namespace FaultData.DataResources
 
             // Fields
             public FaultLocationDataSet FaultLocationDataSet;
+            public AdoDataConnection Connection;
             public Meter Meter;
             public Line Line;
 
@@ -73,13 +74,6 @@ namespace FaultData.DataResources
             {
                 if (Line.Segments != null)
                 {
-                    if (Line.Path[0].R0 == 0.0D && Line.Path[0].X0 == 0.0D &&
-                        Line.Path[0].R1 == 0.0D && Line.Path[0].X1 == 0.0D)
-                        return false;
-
-                    FaultLocationDataSet.Z0 = new ComplexNumber(Line.Path[0].R0, Line.Path[0].X0);
-                    FaultLocationDataSet.Z1 = new ComplexNumber(Line.Path[0].R1, Line.Path[0].X1);
-
                     SourceImpedance localImpedance = Line.AssetLocations
                         .Where(link => link.Location == Meter.Location)
                         .Where(link => link.SourceImpedance != null)
@@ -98,7 +92,30 @@ namespace FaultData.DataResources
                     if (remoteImpedances.Count == 1)
                         FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
 
-                    return true;
+                    string testQuery = "ID={0} AND LocationID in (Select LocationID from AssetLocation where AssetID={1})";
+                    TableOperations<Meter> meterTable = new TableOperations<Meter>(Connection);
+
+                    FaultLocationDataSet.FaultPaths = Line.Path
+                        .Select((path, index) => new FaultLocationDataSet.LinePath()
+                        {
+                            PathNumber = index,
+                            // TODO: This has an implicit assumption of forward traversing. This might be undesirable
+                            TraverseForward =
+                                path.Segments.Count() == 1 ||
+                                !meterTable.QueryRecordsWhere(testQuery, Meter.ID, path.Segments.Last().ID).Any(),
+                            Path = path.Segments.Select(segment => new FaultLocationDataSet.LineSegment()
+                            {
+                                ID = segment.ID,
+                                Length = segment.Length,
+                                R0 = segment.R0,
+                                X0 = segment.R0,
+                                R1 = segment.R1,
+                                X1 = segment.R1
+                            }).ToList()
+                        })
+                        .Where(path => path.CalculateValues()).ToList();
+
+                    return FaultLocationDataSet.FaultPaths.Count() > 0;
                 }
 
                 return false;
@@ -135,10 +152,11 @@ namespace FaultData.DataResources
                     // of a fault because these cycles include non-faulted data
                     int endSample = fault.EndSample - (SamplesPerCycle - 1);
 
+                    // Find which paths are valid for 
+
                     // Initialize a fault curve for each algorithm
                     fault.Curves.AddRange(FaultLocationAlgorithms
-                        .Select(algorithm => fault.CreateCurve(algorithm.Method.Name))
-                        .ToList());
+                        .SelectMany(algorithm => FaultLocationDataSet.FaultPaths.Select((faultPath, index) => fault.CreateCurve(algorithm.Method.Name, index))));
 
                     foreach (Fault.Segment segment in fault.Segments)
                     {
@@ -172,10 +190,18 @@ namespace FaultData.DataResources
                             else if (segment.FaultType == FaultType.CN && subGroup.IC == null)
                                 CopyToFaultLocationDataSet(subGroup.IR, cycleData => cycleData.CN.I);
 
+
                             // Attempt to execute each fault location algorithm
-                            for (int i = 0; i < FaultLocationAlgorithms.Count; i++)
+                            for (int i = 0; i < fault.Curves.Count; i++)
                             {
-                                if (TryExecute(FaultLocationAlgorithms[i], FaultLocationDataSet, out faultDistances))
+                                // Get Arugements for Algorithm
+                                int pathIndex = fault.Curves[i].PathIndex;
+
+                                if (TryExecute(
+                                    FaultLocationAlgorithms.Find(algorithm => algorithm.Method.Name == fault.Curves[i].Algorithm), 
+                                    FaultLocationDataSet, 
+                                    pathIndex, 
+                                    out faultDistances))
                                 {
                                     // Create a data point for each of the fault distances
                                     faultDataPoints = subGroup.VA.RMS.DataPoints
@@ -220,11 +246,11 @@ namespace FaultData.DataResources
                 }
             }
 
-            private bool TryExecute(FaultLocationAlgorithm faultLocationAlgorithm, FaultLocationDataSet faultLocationDataSet, out double[] distances)
+            private bool TryExecute(FaultLocationAlgorithm faultLocationAlgorithm, FaultLocationDataSet faultLocationDataSet, int pathIndex, out double[] distances)
             {
                 try
                 {
-                    distances = faultLocationAlgorithm(faultLocationDataSet, null);
+                    distances = faultLocationAlgorithm(faultLocationDataSet, pathIndex);
                 }
                 catch
                 {
@@ -280,160 +306,158 @@ namespace FaultData.DataResources
             {
                 TableOperations<openXDA.Model.FaultLocationAlgorithm> faultLocationAlgorithmTable = new TableOperations<openXDA.Model.FaultLocationAlgorithm>(connection);
                 faultLocationAlgorithms = GetFaultLocationAlgorithms(faultLocationAlgorithmTable);
-            }
 
-            SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
-            AskSCADAIfBreakerOpened = scadaDataResource.DidBreakerOpen;
+                SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
+                AskSCADAIfBreakerOpened = scadaDataResource.DidBreakerOpen;
 
-            Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
+                Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
 
-            for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
-            {
-                DataGroup dataGroup = cycleDataResource.DataGroups[i];
-                VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
-                VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
-
-                // Defined channel checks
-                Log.Debug("Checking defined channels...");
-
-                if (viDataGroup.DefinedNeutralVoltages != 3)
+                for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
                 {
-                    Log.Debug($"Not enough neutral voltage channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
-                    continue;
-                }
+                    DataGroup dataGroup = cycleDataResource.DataGroups[i];
+                    VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
+                    VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
 
-                if (viDataGroup.DefinedCurrents < 3 && viDataGroup.IR == null)
-                {
-                    Log.Debug($"Not enough current channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
-                    continue;
-                }
+                    // Defined channel checks
+                    Log.Debug("Checking defined channels...");
 
-                //Make Sure it is actually a Line
-                Log.Debug("Checking whether Asset is a Line...");
-                if (dataGroup.Asset.AssetTypeID != (int) AssetType.Line)
-                {
-                    Log.Debug($"Asset: {dataGroup.Asset.AssetKey} is not a Line.");
-                    continue;
-                }
-
-                // Engineering reasonableness checks
-                Log.Debug("Checking for engineering reasonableness...");
-
-                try
-                {
-                    stopwatch.Restart();
-
-                    if (!IsReasonable(dataGroup, viCycleDataGroup))
-                        continue;
-                }
-                finally
-                {
-                    Log.Debug(stopwatch.Elapsed);
-                }
-
-                Log.Debug("Checking whether impedances are defined...");
-
-                // Create the fault location data set and begin populating
-                // the properties necessary for calculating fault location
-
-                if (!((AssetType)dataGroup.Asset.AssetTypeID == AssetType.Line || (AssetType)dataGroup.Asset.AssetTypeID == AssetType.Transformer))
-                {
-                    Log.Debug("Not a Line; skipping fault analysis.");
-                    continue;
-                }
-
-                Line line = Line.DetailedLine(dataGroup.Asset);
-
-                FaultLocationDataSet faultLocationDataSet = new FaultLocationDataSet();
-                faultLocationDataSet.LineDistance = line.Path[0].Length;
-                faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
-
-                // Extract impedances from the database
-                // and into the fault location data set
-                ImpedanceExtractor impedanceExtractor = new ImpedanceExtractor();
-                impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
-                impedanceExtractor.Meter = meterDataSet.Meter;
-                impedanceExtractor.Line = line;
-
-                if (!impedanceExtractor.TryExtractImpedances())
-                {
-                    Log.Debug("No impedances defined; skipping fault analysis.");
-                    continue;
-                }
-
-                // Break into faults and segments
-                Func<List<Fault>> detectFaultsByCurrent = () => DetectFaultsByCurrent(viDataGroup, viCycleDataGroup);
-                Func<List<Fault>> detectFaultsByVoltage = () => DetectSinglePhaseFaultsByVoltage(viCycleDataGroup, viDataGroup.IR);
-                Func<List<Fault>> detectFaults = (viDataGroup.DefinedCurrents >= 3) ? detectFaultsByCurrent : detectFaultsByVoltage;
-
-                Action<List<Fault>> classifyFaultsByCurrent = faultList => ClassifyFaultsByCurrent(faultList, dataGroup, viCycleDataGroup);
-                Action<List<Fault>> classifyFaultsByVoltage = faultList => ClassifyFaultsByVoltage(faultList, dataGroup, viCycleDataGroup);
-                Action<List<Fault>> classifyFaults = (viDataGroup.DefinedCurrents >= 3) ? classifyFaultsByCurrent : classifyFaultsByVoltage;
-
-                List<Fault> faults;
-
-                Log.Debug("Classifying data into faults and segments...");
-
-                try
-                {
-                    stopwatch.Restart();
-
-                    faults = detectFaults();
-
-                    if (faults.Count > 0)
-                        classifyFaults(faults);
-                }
-                finally
-                {
-                    Log.Debug(stopwatch.Elapsed);
-                }
-
-                // Check the fault detection logic and the default fault detection logic
-                bool? faultDetectionLogicResult = CheckFaultDetectionLogic(meterDataSet, dataGroup);
-                bool defaultFaultDetectionLogicResult = CheckDefaultFaultDetectionLogic(faults);
-
-                // If the fault detection logic detects a fault and the default
-                // logic does not agree, treat the whole waveform as a fault
-                if (faultDetectionLogicResult == true && !defaultFaultDetectionLogicResult)
-                {
-                    faults.Add(new Fault()
+                    if (viDataGroup.DefinedNeutralVoltages != 3)
                     {
-                        StartSample = 0,
-                        EndSample = dataGroup[0].DataPoints.Count - 1
-                    });
+                        Log.Debug($"Not enough neutral voltage channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
+                        continue;
+                    }
 
-                    classifyFaults(faults);
-                }
+                    if (viDataGroup.DefinedCurrents < 3 && viDataGroup.IR == null)
+                    {
+                        Log.Debug($"Not enough current channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
+                        continue;
+                    }
 
-                // Generate fault curves for fault analysis
-                Log.Debug("Generating fault curves...");
-                stopwatch.Restart();
+                    //Make Sure it is actually a Line
+                    Log.Debug("Checking whether Asset is a Line...");
+                    if (dataGroup.Asset.AssetTypeID != (int)AssetType.Line)
+                    {
+                        Log.Debug($"Asset: {dataGroup.Asset.AssetKey} is not a Line.");
+                        continue;
+                    }
 
-                FaultCurveGenerator faultCurveGenerator = new FaultCurveGenerator();
-                faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, DataAnalysisSettings.SystemFrequency);
-                faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
-                faultCurveGenerator.Faults = faults;
-                faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
-                faultCurveGenerator.FaultLocationAlgorithms = faultLocationAlgorithms;
-                faultCurveGenerator.GenerateFaultCurves();
+                    // Engineering reasonableness checks
+                    Log.Debug("Checking for engineering reasonableness...");
 
-                Log.Debug(stopwatch.Elapsed);
+                    try
+                    {
+                        stopwatch.Restart();
 
-                // Gather additional info about each fault
-                // based on the results of the above analysis
-                LightningDataResource lightningDataResource = meterDataSet.GetResource<LightningDataResource>();
+                        if (!IsReasonable(dataGroup, viCycleDataGroup))
+                            continue;
+                    }
+                    finally
+                    {
+                        Log.Debug(stopwatch.Elapsed);
+                    }
 
-                if (!lightningDataResource.LightningStrikeLookup.TryGetValue(dataGroup, out List<ILightningStrike> lightningStrikes))
-                    lightningStrikes = new List<ILightningStrike>();
+                    Log.Debug("Checking whether impedances are defined...");
 
-                using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
-                {
+                    // Create the fault location data set and begin populating
+                    // the properties necessary for calculating fault location
+
+                    if (!((AssetType)dataGroup.Asset.AssetTypeID == AssetType.Line || (AssetType)dataGroup.Asset.AssetTypeID == AssetType.Transformer))
+                    {
+                        Log.Debug("Not a Line; skipping fault analysis.");
+                        continue;
+                    }
+
+                    Line line = Line.DetailedLine(dataGroup.Asset);
+
+                    FaultLocationDataSet faultLocationDataSet = new FaultLocationDataSet();
+                    faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
+
+                    // Extract impedances from the database
+                    // and into the fault location data set
+                    ImpedanceExtractor impedanceExtractor = new ImpedanceExtractor();
+                    impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
+                    impedanceExtractor.Meter = meterDataSet.Meter;
+                    impedanceExtractor.Line = line;
+                    impedanceExtractor.Connection = connection;
+
+                    if (!impedanceExtractor.TryExtractImpedances())
+                    {
+                        Log.Debug("No impedances defined; skipping fault analysis.");
+                        continue;
+                    }
+
+                    // Break into faults and segments
+                    Func<List<Fault>> detectFaultsByCurrent = () => DetectFaultsByCurrent(viDataGroup, viCycleDataGroup);
+                    Func<List<Fault>> detectFaultsByVoltage = () => DetectSinglePhaseFaultsByVoltage(viCycleDataGroup, viDataGroup.IR);
+                    Func<List<Fault>> detectFaults = (viDataGroup.DefinedCurrents >= 3) ? detectFaultsByCurrent : detectFaultsByVoltage;
+
+                    Action<List<Fault>> classifyFaultsByCurrent = faultList => ClassifyFaultsByCurrent(faultList, dataGroup, viCycleDataGroup);
+                    Action<List<Fault>> classifyFaultsByVoltage = faultList => ClassifyFaultsByVoltage(faultList, dataGroup, viCycleDataGroup);
+                    Action<List<Fault>> classifyFaults = (viDataGroup.DefinedCurrents >= 3) ? classifyFaultsByCurrent : classifyFaultsByVoltage;
+
+                    List<Fault> faults;
+
+                    Log.Debug("Classifying data into faults and segments...");
+
+                    try
+                    {
+                        stopwatch.Restart();
+
+                        faults = detectFaults();
+
+                        if (faults.Count > 0)
+                            classifyFaults(faults);
+                    }
+                    finally
+                    {
+                        Log.Debug(stopwatch.Elapsed);
+                    }
+
+                    // Check the fault detection logic and the default fault detection logic
+                    bool? faultDetectionLogicResult = CheckFaultDetectionLogic(meterDataSet, dataGroup);
+                    bool defaultFaultDetectionLogicResult = CheckDefaultFaultDetectionLogic(faults);
+
+                    // If the fault detection logic detects a fault and the default
+                    // logic does not agree, treat the whole waveform as a fault
+                    if (faultDetectionLogicResult == true && !defaultFaultDetectionLogicResult)
+                    {
+                        faults.Add(new Fault()
+                        {
+                            StartSample = 0,
+                            EndSample = dataGroup[0].DataPoints.Count - 1
+                        });
+
+                        classifyFaults(faults);
+                    }
+
+                    // Generate fault curves for fault analysis
+                    Log.Debug("Generating fault curves...");
+                    stopwatch.Restart();
+
+                    FaultCurveGenerator faultCurveGenerator = new FaultCurveGenerator();
+                    faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, DataAnalysisSettings.SystemFrequency);
+                    faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
+                    faultCurveGenerator.Faults = faults;
+                    faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
+                    faultCurveGenerator.FaultLocationAlgorithms = faultLocationAlgorithms;
+                    faultCurveGenerator.GenerateFaultCurves();
+
+                    Log.Debug(stopwatch.Elapsed);
+
+                    // Gather additional info about each fault
+                    // based on the results of the above analysis
+                    LightningDataResource lightningDataResource = meterDataSet.GetResource<LightningDataResource>();
+
+                    if (!lightningDataResource.LightningStrikeLookup.TryGetValue(dataGroup, out List<ILightningStrike> lightningStrikes))
+                        lightningStrikes = new List<ILightningStrike>();
+
                     foreach (Fault fault in faults)
-                        PopulateFaultInfo(fault, meterDataSet.Meter, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes, connection);
+                        PopulateFaultInfo(fault, faultLocationDataSet, meterDataSet.Meter, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes, connection);
+
+                    // Create a fault group and add it to the lookup table
+                    bool faultValidationLogicResult = CheckFaultValidationLogic(faults);
+                    FaultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
                 }
-                // Create a fault group and add it to the lookup table
-                bool faultValidationLogicResult = CheckFaultValidationLogic(faults);
-                FaultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
             }
         }
 
@@ -965,7 +989,7 @@ namespace FaultData.DataResources
             return GetCycle(viCycleDataGroup, 0);
         }
 
-        private void PopulateFaultInfo(Fault fault, Meter meter, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes, AdoDataConnection connection)
+        private void PopulateFaultInfo(Fault fault, FaultLocationDataSet faultLocationDataSet, Meter meter, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes, AdoDataConnection connection)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle, connection);
@@ -1023,80 +1047,35 @@ namespace FaultData.DataResources
 
             if (calculationCycle >= 0)
             {
-                TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
-                string testQuery = "ID={0} AND LocationID in (Select LocationID from AssetLocation where AssetID={1})";
                 for (int i = 0; i < fault.Curves.Count; i++)
                 {
                     Fault.Summary summary = new Fault.Summary();
                     summary.DistanceAlgorithmIndex = i;
                     summary.DistanceAlgorithm = fault.Curves[i].Algorithm;
                     summary.Distance = fault.Curves[i][calculationCycle].Value;
-                    Line line = Line.DetailedLine(dataGroup.Asset);
-                    List<Fault.Path> faultPaths = new List<Fault.Path>();
-                    for (int index = 0; index < line.Path.Count; index++)
+                    Line line = Line.DetailedLine(dataGroup.Asset);// todo: remove?
+                    // Add details to summary having to do with fault path information
+                    FaultLocationDataSet.LinePath faultPath = faultLocationDataSet.FaultPaths[fault.Curves[i].PathIndex];
+                    IEnumerable<FaultLocationDataSet.LineSegment> segmentList = faultPath.Path;
+                    if (!faultPath.TraverseForward) segmentList = segmentList.Reverse();
+                    // Default value in case the walk along doesn't find a segment
+                    summary.LineSegmentID = -1;
+
+                    // Walk along path
+                    double distanceRemaining = summary.Distance;
+                    foreach (FaultLocationDataSet.LineSegment segment in segmentList)
                     {
-                        // We can break early if this condition is found because any segments after are shorter
-                        if (summary.Distance > line.Path[index].Length) break;
-                        Fault.Path forwardPath = new Fault.Path();
-                        forwardPath.TransmissionPath = line.Path[index];
-                        forwardPath.PathNumber = index;
-                        forwardPath.FaultDistance = summary.Distance;
-                        forwardPath.IsMain = false;
-                        // Skip if path doesn't exist
-                        bool useForward = true;
-                        bool useBackward = false;
-                        if (forwardPath.TransmissionPath.Segments.Count == 0) continue;
-
-                        // If we have exactly one segment then a backwards path won't be neccessary
-                        if (forwardPath.TransmissionPath.Segments.Count != 1)
+                        if (distanceRemaining < segment.Length)
                         {
-                            bool forwardlyChiral= meterTable.QueryRecordsWhere(testQuery, meter.ID, forwardPath.TransmissionPath.Segments[0].ID).Any();
-                            bool backwardlyChiral = meterTable.QueryRecordsWhere(testQuery, meter.ID, forwardPath.TransmissionPath.Segments[forwardPath.TransmissionPath.Segments.Count - 1].ID).Any();
-                            useForward = forwardlyChiral || !backwardlyChiral;
-                            useBackward = !forwardlyChiral || backwardlyChiral;
+                            summary.LineSegmentID = segment.ID;
+                            break;
                         }
-
-                        if (useForward)
-                        {
-                            forwardPath.IsMain = 0 == index;
-                            double distanceRemaining = forwardPath.FaultDistance;
-                            foreach (LineSegment segment in forwardPath.TransmissionPath.Segments)
-                            {
-                                if (distanceRemaining < segment.Length)
-                                {
-                                    forwardPath.SegmentDistance = distanceRemaining;
-                                    forwardPath.FaultSegment = segment;
-                                    break;
-                                }
-                                distanceRemaining -= segment.Length;
-                            }
-                            faultPaths.Add(forwardPath);
-                        }
-                        if (useBackward)
-                        {
-                            Fault.Path backwardPath = forwardPath.ShallowCopy();
-                            backwardPath.IsMain = (0 == index) && !useForward;
-                            double distanceRemaining = backwardPath.FaultDistance;
-                            for (int pathIndex = backwardPath.TransmissionPath.Segments.Count - 1; pathIndex >= 0; pathIndex--)
-                            {
-                                LineSegment segment = backwardPath.TransmissionPath.Segments[pathIndex];
-                                if (distanceRemaining < segment.Length)
-                                {
-                                    backwardPath.SegmentDistance = distanceRemaining;
-                                    backwardPath.FaultSegment = segment;
-                                    break;
-                                }
-                                distanceRemaining -= segment.Length;
-                            }
-                            // Considering if forwardPath and backwardPath have the same result
-                            if (!useForward || forwardPath.FaultSegment.ID != backwardPath.FaultSegment.ID)
-                                faultPaths.Add(backwardPath);
-                        }
+                        distanceRemaining -= segment.Length;
                     }
+                    summary.PathNumber = faultPath.PathNumber;
+                    summary.LineSegmentDistance = distanceRemaining;
 
-                    summary.IsValid = IsValid(summary.Distance, line);
-
-                    fault.Paths.Add(faultPaths);
+                    summary.IsValid = IsValid(line, summary.Distance, summary.PathNumber);
                     fault.Summaries.Add(summary);
                 }
 
@@ -1125,16 +1104,16 @@ namespace FaultData.DataResources
             }
         }
 
-        private bool IsValid(double faultDistance, Line detailedLine)
+        private bool IsValid(Line detailedLine, double faultDistance, int pathNumber)
         {
             double maxFaultDistanceMultiplier = FaultLocationSettings.MaxFaultDistanceMultiplier;
             double minFaultDistanceMultiplier = FaultLocationSettings.MinFaultDistanceMultiplier;
 
             double maxDistance = detailedLine.MaxFaultDistance
-                ?? maxFaultDistanceMultiplier * detailedLine.Path[0].Length;
+                ?? maxFaultDistanceMultiplier * detailedLine.Path[pathNumber].Length;
 
             double minDistance = detailedLine.MinFaultDistance
-                ?? minFaultDistanceMultiplier * detailedLine.Path[0].Length;
+                ?? minFaultDistanceMultiplier * detailedLine.Path[pathNumber].Length;
 
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }

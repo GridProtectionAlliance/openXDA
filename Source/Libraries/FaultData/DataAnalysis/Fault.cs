@@ -41,8 +41,11 @@ namespace FaultData.DataAnalysis
 
             // Fields
             private int m_distanceAlgorithmIndex;
+            private int m_linePathNumber;
+            private int m_lineSegmentID;
             private string m_distanceAlgorithm;
             private double m_distance;
+            private double m_lineSegmentDistance;
 
             private bool m_isSelectedAlgorithm;
             private bool m_isValid;
@@ -60,6 +63,30 @@ namespace FaultData.DataAnalysis
                 set
                 {
                     m_distanceAlgorithmIndex = value;
+                }
+            }
+
+            public int PathNumber
+            {
+                get
+                {
+                    return m_linePathNumber;
+                }
+                set
+                {
+                    m_linePathNumber = value;
+                }
+            }
+
+            public int LineSegmentID
+            {
+                get
+                {
+                    return m_lineSegmentID;
+                }
+                set
+                {
+                    m_lineSegmentID = value;
                 }
             }
 
@@ -84,6 +111,18 @@ namespace FaultData.DataAnalysis
                 set
                 {
                     m_distance = value;
+                }
+            }
+
+            public double LineSegmentDistance
+            {
+                get
+                {
+                    return m_lineSegmentDistance;
+                }
+                set
+                {
+                    m_lineSegmentDistance = value;
                 }
             }
 
@@ -204,6 +243,7 @@ namespace FaultData.DataAnalysis
             // Fields
             private int m_startIndex;
             private string m_algorithm;
+            private int m_pathIndex;
             private DataSeries m_series;
 
             #endregion
@@ -240,6 +280,18 @@ namespace FaultData.DataAnalysis
                 set
                 {
                     m_algorithm = value;
+                }
+            }
+
+            public int PathIndex
+            {
+                get
+                {
+                    return m_pathIndex;
+                }
+                set
+                {
+                    m_pathIndex = value;
                 }
             }
 
@@ -314,20 +366,6 @@ namespace FaultData.DataAnalysis
             #endregion
         }
 
-        public class Path
-        {
-            public TransmissionPath TransmissionPath { get; set; }
-            public LineSegment FaultSegment { get; set; }
-            public double FaultDistance { get; set; }
-            public double SegmentDistance { get; set; }
-            public bool IsMain { get; set; }
-            public int PathNumber { get; set; }
-            public Path ShallowCopy()
-            {
-                return (Path) MemberwiseClone();
-            }
-        }
-
         #endregion
 
         #region [ Constructors ]
@@ -337,7 +375,6 @@ namespace FaultData.DataAnalysis
             Summaries = new List<Summary>();
             Segments = new List<Segment>();
             Curves = new List<Curve>();
-            Paths = new List<List<Path>>();
         }
 
         #endregion
@@ -373,18 +410,18 @@ namespace FaultData.DataAnalysis
         public List<Summary> Summaries { get; }
         public List<Segment> Segments { get; }
         public List<Curve> Curves { get; }
-        public List<List<Path>> Paths { get; }
 
         #endregion
 
         #region [ Methods ]
 
-        public Curve CreateCurve(string algorithm)
+        public Curve CreateCurve(string algorithm, int pathIndex = 0)
         {
             return new Curve()
             {
                 Algorithm = algorithm,
-                StartIndex = StartSample
+                StartIndex = StartSample,
+                PathIndex = pathIndex
             };
         }
 
