@@ -156,7 +156,7 @@ namespace FaultData.DataResources
 
                     // Initialize a fault curve for each algorithm
                     fault.Curves.AddRange(FaultLocationAlgorithms
-                        .SelectMany(algorithm => FaultLocationDataSet.FaultPaths.Select((faultPath, index) => fault.CreateCurve(algorithm.Method.Name, index))));
+                        .SelectMany(algorithm => FaultLocationDataSet.FaultPaths.Select((faultPath) => fault.CreateCurve(algorithm.Method.Name, faultPath.PathNumber))));
 
                     foreach (Fault.Segment segment in fault.Segments)
                     {
@@ -191,16 +191,13 @@ namespace FaultData.DataResources
                                 CopyToFaultLocationDataSet(subGroup.IR, cycleData => cycleData.CN.I);
 
 
-                            // Attempt to execute each fault location algorithm
+                            // Attempt to execute each fault location algorithm and path
                             for (int i = 0; i < fault.Curves.Count; i++)
                             {
-                                // Get Arugements for Algorithm
-                                int pathIndex = fault.Curves[i].PathIndex;
-
                                 if (TryExecute(
                                     FaultLocationAlgorithms.Find(algorithm => algorithm.Method.Name == fault.Curves[i].Algorithm), 
-                                    FaultLocationDataSet, 
-                                    pathIndex, 
+                                    FaultLocationDataSet,
+                                    fault.Curves[i].PathNumber, 
                                     out faultDistances))
                                 {
                                     // Create a data point for each of the fault distances
@@ -1055,7 +1052,7 @@ namespace FaultData.DataResources
                     summary.Distance = fault.Curves[i][calculationCycle].Value;
                     Line line = Line.DetailedLine(dataGroup.Asset);// todo: remove?
                     // Add details to summary having to do with fault path information
-                    FaultLocationDataSet.LinePath faultPath = faultLocationDataSet.FaultPaths[fault.Curves[i].PathIndex];
+                    FaultLocationDataSet.LinePath faultPath = faultLocationDataSet.FaultPaths.Find(path => path.PathNumber == fault.Curves[i].PathNumber);
                     IEnumerable<FaultLocationDataSet.LineSegment> segmentList = faultPath.Path;
                     if (!faultPath.TraverseForward) segmentList = segmentList.Reverse();
                     // Default value in case the walk along doesn't find a segment

@@ -65,13 +65,14 @@ namespace FaultAlgorithms
         /// Simple algorithm to calculate the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
         /// </summary>
         /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
-        /// <param name="pathIndex">The path to be used to find the distance in the distance algorithm of the fault. Defaults to the longest path.</param>
+        /// <param name="pathNumber">The path to be used to find the distance in the distance algorithm of the fault.</param>
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        public static double[] Simple(FaultLocationDataSet faultDataSet, int pathIndex = 0, string parameters = null)
+        public static double[] Simple(FaultLocationDataSet faultDataSet, int pathNumber, string parameters = null)
         {
-            ComplexNumber nominalImpedance = GetNominalImpedance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType);
+            FaultLocationDataSet.LinePath path = GetLinePath(faultDataSet, pathNumber);
+            ComplexNumber nominalImpedance = GetNominalImpedance(path, faultDataSet.FaultType);
 
             return faultDataSet.Cycles
                 .Select(cycleData => new
@@ -81,7 +82,7 @@ namespace FaultAlgorithms
                     Z = nominalImpedance
                 })
                 .Select(cycle => (cycle.V.Magnitude / cycle.I.Magnitude) / cycle.Z.Magnitude)
-                .Select(m => GetDistance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType, nominalImpedance, m))
+                .Select(m => GetDistance(path, faultDataSet.FaultType, nominalImpedance, m))
                 .ToArray();
         }
 
@@ -89,13 +90,14 @@ namespace FaultAlgorithms
         /// Reactance algorithm to calculate the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
         /// </summary>
         /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
-        /// <param name="pathIndex">The path to be used to find the distance in the distance algorithm of the fault. Defaults to the longest path.</param>
+        /// <param name="pathNumber">TThe path to be used to find the distance in the distance algorithm of the fault.</param>
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        public static double[] Reactance(FaultLocationDataSet faultDataSet, int pathIndex = 0, string parameters = null)
+        public static double[] Reactance(FaultLocationDataSet faultDataSet, int pathNumber, string parameters = null)
         {
-            ComplexNumber nominalImpedance = GetNominalImpedance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType);
+            FaultLocationDataSet.LinePath path = GetLinePath(faultDataSet, pathNumber);
+            ComplexNumber nominalImpedance = GetNominalImpedance(path, faultDataSet.FaultType);
 
             return faultDataSet.Cycles
                 .Select(cycleData => new
@@ -105,7 +107,7 @@ namespace FaultAlgorithms
                     Z = nominalImpedance
                 })
                 .Select(cycle => (cycle.V / cycle.I).Imaginary / cycle.Z.Imaginary)
-                .Select(m => GetDistance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType, nominalImpedance, m))
+                .Select(m => GetDistance(path, faultDataSet.FaultType, nominalImpedance, m))
                 .ToArray();
         }
 
@@ -113,13 +115,14 @@ namespace FaultAlgorithms
         /// Takagi algorithm for calculating the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
         /// </summary>
         /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
-        /// <param name="pathIndex">The path to be used to find the distance in the distance algorithm of the fault. Defaults to the longest path.</param>
+        /// <param name="pathNumber">TThe path to be used to find the distance in the distance algorithm of the fault.</param>
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        public static double[] Takagi(FaultLocationDataSet faultDataSet, int pathIndex = 0, string parameters = null)
+        public static double[] Takagi(FaultLocationDataSet faultDataSet, int pathNumber, string parameters = null)
         {
-            ComplexNumber z = GetNominalImpedance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType);
+            FaultLocationDataSet.LinePath path = GetLinePath(faultDataSet, pathNumber);
+            ComplexNumber z = GetNominalImpedance(path, faultDataSet.FaultType);
 
             ComplexNumber[] voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, faultDataSet.FaultType)).ToArray();
             ComplexNumber[] currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, faultDataSet.FaultType)).ToArray();
@@ -130,7 +133,7 @@ namespace FaultAlgorithms
                 ComplexNumber iSupConjugate = (i - iPre).Conjugate;
                 return (v * iSupConjugate).Imaginary / (z * i * iSupConjugate).Imaginary;
             })
-            .Select(m => GetDistance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType, z, m))
+            .Select(m => GetDistance(path, faultDataSet.FaultType, z, m))
             .ToArray();
         }
 
@@ -139,13 +142,14 @@ namespace FaultAlgorithms
         /// calculating the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
         /// </summary>
         /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
-        /// <param name="pathIndex">The path to be used to find the distance in the distance algorithm of the fault. Defaults to the longest path.</param>
+        /// <param name="pathNumber">TThe path to be used to find the distance in the distance algorithm of the fault.</param>
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        public static double[] ModifiedTakagi(FaultLocationDataSet faultDataSet, int pathIndex = 0, string parameters = null)
+        public static double[] ModifiedTakagi(FaultLocationDataSet faultDataSet, int pathNumber, string parameters = null)
         {
-            ComplexNumber z = GetNominalImpedance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType);
+            FaultLocationDataSet.LinePath path = GetLinePath(faultDataSet, pathNumber);
+            ComplexNumber z = GetNominalImpedance(path, faultDataSet.FaultType);
 
             ComplexNumber[] voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, faultDataSet.FaultType)).ToArray();
             ComplexNumber[] currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, faultDataSet.FaultType)).ToArray();
@@ -166,7 +170,7 @@ namespace FaultAlgorithms
 
                 return (v * zero.Conjugate * ejt).Imaginary / (z * i * zero.Conjugate * ejt).Imaginary;
             })
-            .Select(m => GetDistance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType, z, m))
+            .Select(m => GetDistance(path, faultDataSet.FaultType, z, m))
             .ToArray();
         }
 
@@ -174,13 +178,14 @@ namespace FaultAlgorithms
         /// Novosel et al. algorithm for calculating the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
         /// </summary>
         /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
-        /// <param name="pathIndex">The path to be used to find the distance in the distance algorithm of the fault. Defaults to the longest path.</param>
+        /// <param name="pathNumber">TThe path to be used to find the distance in the distance algorithm of the fault.</param>
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        public static double[] Novosel(FaultLocationDataSet faultDataSet, int pathIndex = 0, string parameters = null)
+        public static double[] Novosel(FaultLocationDataSet faultDataSet, int pathNumber, string parameters = null)
         {
-            ComplexNumber z = GetNominalImpedance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType);
+            FaultLocationDataSet.LinePath path = GetLinePath(faultDataSet, pathNumber);
+            ComplexNumber z = GetNominalImpedance(path, faultDataSet.FaultType);
 
             ComplexNumber[] voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, faultDataSet.FaultType)).ToArray();
             ComplexNumber[] currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, faultDataSet.FaultType)).ToArray();
@@ -215,7 +220,7 @@ namespace FaultAlgorithms
 
                 return m2;
             })
-            .Select(m => GetDistance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType, z, m))
+            .Select(m => GetDistance(path, faultDataSet.FaultType, z, m))
             .ToArray();
         }
 
@@ -223,11 +228,11 @@ namespace FaultAlgorithms
         /// Eriksson algorithm for calculating the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
         /// </summary>
         /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
-        /// <param name="pathIndex">The path to be used to find the distance in the distance algorithm of the fault. Defaults to the longest path.</param>
+        /// <param name="pathNumber">TThe path to be used to find the distance in the distance algorithm of the fault.</param>
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        public static double[] Eriksson(FaultLocationDataSet faultDataSet, int pathIndex = 0, string parameters = null)
+        public static double[] Eriksson(FaultLocationDataSet faultDataSet, int pathNumber, string parameters = null)
         {
             ComplexNumber sourceImpedance = faultDataSet.ZSrc;
             ComplexNumber remoteImpedance = faultDataSet.ZRem;
@@ -235,7 +240,8 @@ namespace FaultAlgorithms
             if (IsNaN(sourceImpedance) || IsNaN(remoteImpedance))
                 return null;
 
-            ComplexNumber z = GetNominalImpedance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType);
+            FaultLocationDataSet.LinePath path = GetLinePath(faultDataSet, pathNumber);
+            ComplexNumber z = GetNominalImpedance(path, faultDataSet.FaultType);
 
             ComplexNumber[] voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, faultDataSet.FaultType)).ToArray();
             ComplexNumber[] currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, faultDataSet.FaultType)).ToArray();
@@ -261,7 +267,7 @@ namespace FaultAlgorithms
 
                 return m2;
             })
-            .Select(m => GetDistance(faultDataSet.FaultPaths[pathIndex], faultDataSet.FaultType, z, m))
+            .Select(m => GetDistance(path, faultDataSet.FaultType, z, m))
             .ToArray();
         }
 
@@ -412,6 +418,15 @@ namespace FaultAlgorithms
             return sequenceComponents[2];
         }
 
+        // Get the fault path associated with a particular path number
+        private static FaultLocationDataSet.LinePath GetLinePath(FaultLocationDataSet dataSet, int pathNumber)
+        {
+            int pathIndex = dataSet.FaultPaths.FindIndex(path => path.PathNumber == pathNumber);
+            if (pathIndex < 0)
+                throw new ArgumentOutOfRangeException("pathNumber", string.Format("No match found in data set for path number: {0}", pathNumber));
+            return dataSet.FaultPaths[pathIndex];
+        }
+
         // Get the nominal impedance value to use in fault calculations, based on the fault type.
         private static ComplexNumber GetNominalImpedance(FaultLocationDataSet.LinePath faultPath, FaultType type)
         {
@@ -465,10 +480,6 @@ namespace FaultAlgorithms
         // Converts the impedance ratio to actual fault distances.
         private static double GetDistance(FaultLocationDataSet.LinePath faultPath, FaultType type, ComplexNumber nominalLineImpedance, double m)
         {
-            // Means we will traverse the entire path
-            if (m > 1)
-                return faultPath.LineDistance * m;
-
             double remainder = m;
             double totalDistance = 0;
             IEnumerable<FaultLocationDataSet.LineSegment> segmentList = faultPath.Path;
@@ -477,14 +488,14 @@ namespace FaultAlgorithms
             // Walk along path
             foreach(FaultLocationDataSet.LineSegment segment in segmentList)
             {
-                double segmentMagnitude = GetNominalImpedance(segment, type).Magnitude;
-                if (segmentMagnitude > remainder)
-                    return totalDistance + segment.Length * remainder / segmentMagnitude;
-                remainder -= segmentMagnitude / nominalLineImpedance.Magnitude;
+                double segmentReactanceRatio = GetNominalImpedance(segment, type).Imaginary / nominalLineImpedance.Imaginary;
+                if (segmentReactanceRatio > remainder)
+                    return totalDistance + segment.Length * remainder / segmentReactanceRatio;
+                remainder -= segmentReactanceRatio;
                 totalDistance += segment.Length;
             }
 
-            // Should be unreachable but just in case
+            // Means we traverse more than the entire line
             return totalDistance;
         }
 

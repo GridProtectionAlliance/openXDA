@@ -243,7 +243,7 @@ namespace FaultData.DataAnalysis
             // Fields
             private int m_startIndex;
             private string m_algorithm;
-            private int m_pathIndex;
+            private int m_pathNumber;
             private DataSeries m_series;
 
             #endregion
@@ -283,15 +283,15 @@ namespace FaultData.DataAnalysis
                 }
             }
 
-            public int PathIndex
+            public int PathNumber
             {
                 get
                 {
-                    return m_pathIndex;
+                    return m_pathNumber;
                 }
                 set
                 {
-                    m_pathIndex = value;
+                    m_pathNumber = value;
                 }
             }
 
@@ -415,13 +415,13 @@ namespace FaultData.DataAnalysis
 
         #region [ Methods ]
 
-        public Curve CreateCurve(string algorithm, int pathIndex = 0)
+        public Curve CreateCurve(string algorithm, int pathNumber = 0)
         {
             return new Curve()
             {
                 Algorithm = algorithm,
                 StartIndex = StartSample,
-                PathIndex = pathIndex
+                PathNumber = pathNumber
             };
         }
 

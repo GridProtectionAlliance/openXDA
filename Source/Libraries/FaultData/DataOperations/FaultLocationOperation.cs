@@ -268,6 +268,7 @@ namespace FaultData.DataOperations
                 return new FaultCurve()
                 {
                     EventID = eventID,
+                    PathNumber = FaultGroup.Faults[0].Curves[curveIndex].PathNumber,
                     Algorithm = FaultGroup.Faults[0].Curves[curveIndex].Algorithm,
                     Data = Serialize(series),
                     AngleData = new byte[0]

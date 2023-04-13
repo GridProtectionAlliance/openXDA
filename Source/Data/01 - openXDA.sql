@@ -3089,6 +3089,7 @@ CREATE TABLE FaultCurve
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL,
+    PathNumber INT NOT NULL,
     Algorithm VARCHAR(80) NOT NULL,
     Data VARBINARY(MAX) NOT NULL,
 	AngleData VARBINARY(MAX) NOT NULL
@@ -3138,7 +3139,7 @@ CREATE TABLE FaultSummary
     CalculationCycle INT NOT NULL,
     Distance FLOAT NOT NULL,
     PathNumber INT NOT NULL,
-    LineSegmentID INT NOT NULL REFERENCES Asset(ID),
+    LineSegmentID INT NOT NULL REFERENCES LineSegment(ID),
     LineSegmentDistance FLOAT NOT NULL,
     CurrentMagnitude FLOAT NOT NULL,
     CurrentLag FLOAT NOT NULL,
