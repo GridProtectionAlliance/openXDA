@@ -148,8 +148,6 @@ namespace FaultData.DataResources
                     // of a fault because these cycles include non-faulted data
                     int endSample = fault.EndSample - (SamplesPerCycle - 1);
 
-                    // Find which paths are valid for 
-
                     // Initialize a fault curve for each algorithm
                     fault.Curves.AddRange(FaultLocationAlgorithms
                         .SelectMany(algorithm => FaultLocationDataSet.FaultPaths.Select((faultPath) => fault.CreateCurve(algorithm.Method.Name, faultPath.PathNumber))));
@@ -188,13 +186,12 @@ namespace FaultData.DataResources
 
 
                             // Attempt to execute each fault location algorithm and path
-                            for (int i = 0; i < fault.Curves.Count; i++)
+                            foreach (Fault.Curve curve in fault.Curves)
                             {
-                                if (TryExecute(
-                                    FaultLocationAlgorithms.Find(algorithm => algorithm.Method.Name == fault.Curves[i].Algorithm), 
-                                    FaultLocationDataSet,
-                                    fault.Curves[i].PathNumber, 
-                                    out faultDistances))
+                                FaultLocationAlgorithm faultLocationAlgorithm = FaultLocationAlgorithms
+                                    .First(algorithm => algorithm.Method.Name == curve.Algorithm);
+
+                                if (TryExecute(faultLocationAlgorithm, FaultLocationDataSet, curve.PathNumber, out faultDistances))
                                 {
                                     // Create a data point for each of the fault distances
                                     faultDataPoints = subGroup.VA.RMS.DataPoints
@@ -211,7 +208,7 @@ namespace FaultData.DataResources
                                 }
 
                                 // Add the data points to the current fault curve
-                                fault.Curves[i].Series.DataPoints.AddRange(faultDataPoints);
+                                curve.Series.DataPoints.AddRange(faultDataPoints);
                             }
                         }
                     }
