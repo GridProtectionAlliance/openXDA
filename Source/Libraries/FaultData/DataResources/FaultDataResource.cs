@@ -62,7 +62,6 @@ namespace FaultData.DataResources
 
             // Fields
             public FaultLocationDataSet FaultLocationDataSet;
-            public AdoDataConnection Connection;
             public Meter Meter;
             public Line Line;
 
@@ -92,17 +91,14 @@ namespace FaultData.DataResources
                     if (remoteImpedances.Count == 1)
                         FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
 
-                    string testQuery = "ID={0} AND LocationID in (Select LocationID from AssetLocation where AssetID={1})";
-                    TableOperations<Meter> meterTable = new TableOperations<Meter>(Connection);
-
                     FaultLocationDataSet.FaultPaths = Line.Path
                         .Select((path, index) => new FaultLocationDataSet.LinePath()
                         {
                             PathNumber = index,
                             // TODO: This has an implicit assumption of forward traversing. This might be undesirable
                             TraverseForward =
-                                path.Segments.Count() == 1 ||
-                                !meterTable.QueryRecordsWhere(testQuery, Meter.ID, path.Segments.Last().ID).Any(),
+                                path.Segments.Count == 1 ||
+                                !path.Segments.Last().AssetLocations.Any(assetLocation => assetLocation.LocationID == Meter.LocationID),
                             Path = path.Segments.Select(segment => new FaultLocationDataSet.LineSegment()
                             {
                                 ID = segment.ID,
@@ -303,158 +299,160 @@ namespace FaultData.DataResources
             {
                 TableOperations<openXDA.Model.FaultLocationAlgorithm> faultLocationAlgorithmTable = new TableOperations<openXDA.Model.FaultLocationAlgorithm>(connection);
                 faultLocationAlgorithms = GetFaultLocationAlgorithms(faultLocationAlgorithmTable);
+            }
 
-                SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
-                AskSCADAIfBreakerOpened = scadaDataResource.DidBreakerOpen;
+            SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
+            AskSCADAIfBreakerOpened = scadaDataResource.DidBreakerOpen;
 
-                Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
+            Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
 
-                for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
+            for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
+            {
+                DataGroup dataGroup = cycleDataResource.DataGroups[i];
+                VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
+                VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
+
+                // Defined channel checks
+                Log.Debug("Checking defined channels...");
+
+                if (viDataGroup.DefinedNeutralVoltages != 3)
                 {
-                    DataGroup dataGroup = cycleDataResource.DataGroups[i];
-                    VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
-                    VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
+                    Log.Debug($"Not enough neutral voltage channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
+                    continue;
+                }
 
-                    // Defined channel checks
-                    Log.Debug("Checking defined channels...");
+                if (viDataGroup.DefinedCurrents < 3 && viDataGroup.IR == null)
+                {
+                    Log.Debug($"Not enough current channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
+                    continue;
+                }
 
-                    if (viDataGroup.DefinedNeutralVoltages != 3)
-                    {
-                        Log.Debug($"Not enough neutral voltage channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
-                        continue;
-                    }
+                //Make Sure it is actually a Line
+                Log.Debug("Checking whether Asset is a Line...");
+                if (dataGroup.Asset.AssetTypeID != (int)AssetType.Line)
+                {
+                    Log.Debug($"Asset: {dataGroup.Asset.AssetKey} is not a Line.");
+                    continue;
+                }
 
-                    if (viDataGroup.DefinedCurrents < 3 && viDataGroup.IR == null)
-                    {
-                        Log.Debug($"Not enough current channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
-                        continue;
-                    }
+                // Engineering reasonableness checks
+                Log.Debug("Checking for engineering reasonableness...");
 
-                    //Make Sure it is actually a Line
-                    Log.Debug("Checking whether Asset is a Line...");
-                    if (dataGroup.Asset.AssetTypeID != (int)AssetType.Line)
-                    {
-                        Log.Debug($"Asset: {dataGroup.Asset.AssetKey} is not a Line.");
-                        continue;
-                    }
-
-                    // Engineering reasonableness checks
-                    Log.Debug("Checking for engineering reasonableness...");
-
-                    try
-                    {
-                        stopwatch.Restart();
-
-                        if (!IsReasonable(dataGroup, viCycleDataGroup))
-                            continue;
-                    }
-                    finally
-                    {
-                        Log.Debug(stopwatch.Elapsed);
-                    }
-
-                    Log.Debug("Checking whether impedances are defined...");
-
-                    // Create the fault location data set and begin populating
-                    // the properties necessary for calculating fault location
-
-                    if (!((AssetType)dataGroup.Asset.AssetTypeID == AssetType.Line || (AssetType)dataGroup.Asset.AssetTypeID == AssetType.Transformer))
-                    {
-                        Log.Debug("Not a Line; skipping fault analysis.");
-                        continue;
-                    }
-
-                    Line line = Line.DetailedLine(dataGroup.Asset);
-
-                    FaultLocationDataSet faultLocationDataSet = new FaultLocationDataSet();
-                    faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
-
-                    // Extract impedances from the database
-                    // and into the fault location data set
-                    ImpedanceExtractor impedanceExtractor = new ImpedanceExtractor();
-                    impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
-                    impedanceExtractor.Meter = meterDataSet.Meter;
-                    impedanceExtractor.Line = line;
-                    impedanceExtractor.Connection = connection;
-
-                    if (!impedanceExtractor.TryExtractImpedances())
-                    {
-                        Log.Debug("No impedances defined; skipping fault analysis.");
-                        continue;
-                    }
-
-                    // Break into faults and segments
-                    Func<List<Fault>> detectFaultsByCurrent = () => DetectFaultsByCurrent(viDataGroup, viCycleDataGroup);
-                    Func<List<Fault>> detectFaultsByVoltage = () => DetectSinglePhaseFaultsByVoltage(viCycleDataGroup, viDataGroup.IR);
-                    Func<List<Fault>> detectFaults = (viDataGroup.DefinedCurrents >= 3) ? detectFaultsByCurrent : detectFaultsByVoltage;
-
-                    Action<List<Fault>> classifyFaultsByCurrent = faultList => ClassifyFaultsByCurrent(faultList, dataGroup, viCycleDataGroup);
-                    Action<List<Fault>> classifyFaultsByVoltage = faultList => ClassifyFaultsByVoltage(faultList, dataGroup, viCycleDataGroup);
-                    Action<List<Fault>> classifyFaults = (viDataGroup.DefinedCurrents >= 3) ? classifyFaultsByCurrent : classifyFaultsByVoltage;
-
-                    List<Fault> faults;
-
-                    Log.Debug("Classifying data into faults and segments...");
-
-                    try
-                    {
-                        stopwatch.Restart();
-
-                        faults = detectFaults();
-
-                        if (faults.Count > 0)
-                            classifyFaults(faults);
-                    }
-                    finally
-                    {
-                        Log.Debug(stopwatch.Elapsed);
-                    }
-
-                    // Check the fault detection logic and the default fault detection logic
-                    bool? faultDetectionLogicResult = CheckFaultDetectionLogic(meterDataSet, dataGroup);
-                    bool defaultFaultDetectionLogicResult = CheckDefaultFaultDetectionLogic(faults);
-
-                    // If the fault detection logic detects a fault and the default
-                    // logic does not agree, treat the whole waveform as a fault
-                    if (faultDetectionLogicResult == true && !defaultFaultDetectionLogicResult)
-                    {
-                        faults.Add(new Fault()
-                        {
-                            StartSample = 0,
-                            EndSample = dataGroup[0].DataPoints.Count - 1
-                        });
-
-                        classifyFaults(faults);
-                    }
-
-                    // Generate fault curves for fault analysis
-                    Log.Debug("Generating fault curves...");
+                try
+                {
                     stopwatch.Restart();
 
-                    FaultCurveGenerator faultCurveGenerator = new FaultCurveGenerator();
-                    faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, DataAnalysisSettings.SystemFrequency);
-                    faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
-                    faultCurveGenerator.Faults = faults;
-                    faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
-                    faultCurveGenerator.FaultLocationAlgorithms = faultLocationAlgorithms;
-                    faultCurveGenerator.GenerateFaultCurves();
-
+                    if (!IsReasonable(dataGroup, viCycleDataGroup))
+                        continue;
+                }
+                finally
+                {
                     Log.Debug(stopwatch.Elapsed);
+                }
 
-                    // Gather additional info about each fault
-                    // based on the results of the above analysis
-                    LightningDataResource lightningDataResource = meterDataSet.GetResource<LightningDataResource>();
+                Log.Debug("Checking whether impedances are defined...");
 
-                    if (!lightningDataResource.LightningStrikeLookup.TryGetValue(dataGroup, out List<ILightningStrike> lightningStrikes))
-                        lightningStrikes = new List<ILightningStrike>();
+                // Create the fault location data set and begin populating
+                // the properties necessary for calculating fault location
 
+                if (!((AssetType)dataGroup.Asset.AssetTypeID == AssetType.Line || (AssetType)dataGroup.Asset.AssetTypeID == AssetType.Transformer))
+                {
+                    Log.Debug("Not a Line; skipping fault analysis.");
+                    continue;
+                }
+
+                Line line = Line.DetailedLine(dataGroup.Asset);
+
+                FaultLocationDataSet faultLocationDataSet = new FaultLocationDataSet();
+                faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
+
+                // Extract impedances from the database
+                // and into the fault location data set
+                ImpedanceExtractor impedanceExtractor = new ImpedanceExtractor();
+                impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
+                impedanceExtractor.Meter = meterDataSet.Meter;
+                impedanceExtractor.Line = line;
+
+                if (!impedanceExtractor.TryExtractImpedances())
+                {
+                    Log.Debug("No impedances defined; skipping fault analysis.");
+                    continue;
+                }
+
+                // Break into faults and segments
+                Func<List<Fault>> detectFaultsByCurrent = () => DetectFaultsByCurrent(viDataGroup, viCycleDataGroup);
+                Func<List<Fault>> detectFaultsByVoltage = () => DetectSinglePhaseFaultsByVoltage(viCycleDataGroup, viDataGroup.IR);
+                Func<List<Fault>> detectFaults = (viDataGroup.DefinedCurrents >= 3) ? detectFaultsByCurrent : detectFaultsByVoltage;
+
+                Action<List<Fault>> classifyFaultsByCurrent = faultList => ClassifyFaultsByCurrent(faultList, dataGroup, viCycleDataGroup);
+                Action<List<Fault>> classifyFaultsByVoltage = faultList => ClassifyFaultsByVoltage(faultList, dataGroup, viCycleDataGroup);
+                Action<List<Fault>> classifyFaults = (viDataGroup.DefinedCurrents >= 3) ? classifyFaultsByCurrent : classifyFaultsByVoltage;
+
+                List<Fault> faults;
+
+                Log.Debug("Classifying data into faults and segments...");
+
+                try
+                {
+                    stopwatch.Restart();
+
+                    faults = detectFaults();
+
+                    if (faults.Count > 0)
+                        classifyFaults(faults);
+                }
+                finally
+                {
+                    Log.Debug(stopwatch.Elapsed);
+                }
+
+                // Check the fault detection logic and the default fault detection logic
+                bool? faultDetectionLogicResult = CheckFaultDetectionLogic(meterDataSet, dataGroup);
+                bool defaultFaultDetectionLogicResult = CheckDefaultFaultDetectionLogic(faults);
+
+                // If the fault detection logic detects a fault and the default
+                // logic does not agree, treat the whole waveform as a fault
+                if (faultDetectionLogicResult == true && !defaultFaultDetectionLogicResult)
+                {
+                    faults.Add(new Fault()
+                    {
+                        StartSample = 0,
+                        EndSample = dataGroup[0].DataPoints.Count - 1
+                    });
+
+                    classifyFaults(faults);
+                }
+
+                // Generate fault curves for fault analysis
+                Log.Debug("Generating fault curves...");
+                stopwatch.Restart();
+
+                FaultCurveGenerator faultCurveGenerator = new FaultCurveGenerator();
+                faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, DataAnalysisSettings.SystemFrequency);
+                faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
+                faultCurveGenerator.Faults = faults;
+                faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
+                faultCurveGenerator.FaultLocationAlgorithms = faultLocationAlgorithms;
+                faultCurveGenerator.GenerateFaultCurves();
+
+                Log.Debug(stopwatch.Elapsed);
+
+                // Gather additional info about each fault
+                // based on the results of the above analysis
+                LightningDataResource lightningDataResource = meterDataSet.GetResource<LightningDataResource>();
+
+                if (!lightningDataResource.LightningStrikeLookup.TryGetValue(dataGroup, out List<ILightningStrike> lightningStrikes))
+                    lightningStrikes = new List<ILightningStrike>();
+
+                using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+                {
                     foreach (Fault fault in faults)
                         PopulateFaultInfo(fault, faultLocationDataSet, meterDataSet.Meter, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes, connection);
-
-                    // Create a fault group and add it to the lookup table
-                    bool faultValidationLogicResult = CheckFaultValidationLogic(faults);
-                    FaultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
                 }
+
+                // Create a fault group and add it to the lookup table
+                bool faultValidationLogicResult = CheckFaultValidationLogic(faults);
+                FaultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
             }
         }
 
