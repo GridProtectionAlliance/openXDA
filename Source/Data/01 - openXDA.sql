@@ -4828,20 +4828,20 @@ CREATE VIEW ActiveSubscription AS
 GO
 
 CREATE VIEW ActiveScheduledSubscription AS
-	SELECT 
-		UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailID,
-		UserAccountScheduledEmailType.UserAccountID AS UserAccountID,
-		AssetGroup.Name AS AssetGroup,
-		ScheduledEmailType.Name AS EmailName,
-		EmailCategory.Name AS Category,
-		ScheduledEmailType.ID AS ScheduledEmailTypeID,
+    SELECT 
+        UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailID,
+        UserAccountScheduledEmailType.UserAccountID AS UserAccountID,
+        AssetGroup.Name AS AssetGroup,
+        ScheduledEmailType.Name AS EmailName,
+        EmailCategory.Name AS Category,
+        ScheduledEmailType.ID AS ScheduledEmailTypeID,
         UserAccount.Name AS UserName,
-		UserAccount.Email AS Email
-	FROM UserAccountScheduledEmailType LEFT JOIN
-		AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID LEFT JOIN
-		ScheduledEmailType ON UserAccountScheduledEmailType.ScheduledEmailTypeID = ScheduledEmailType.ID LEFT JOIN
-		EmailCategory ON EmailCategory.ID = ScheduledEmailType.EmailCategoryID LEFT JOIN
-		UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID
+        UserAccount.Email AS Email
+    FROM UserAccountScheduledEmailType LEFT JOIN
+        AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID LEFT JOIN
+        ScheduledEmailType ON UserAccountScheduledEmailType.ScheduledEmailTypeID = ScheduledEmailType.ID LEFT JOIN
+        EmailCategory ON EmailCategory.ID = ScheduledEmailType.EmailCategoryID LEFT JOIN
+        UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID
 GO
 
 CREATE VIEW CBReportEventTable AS

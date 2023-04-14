@@ -23,22 +23,21 @@
 
 using System;
 using GSF.Data.Model;
-using GSF.Identity;
 
 namespace openXDA.Model
 {
-	[AllowSearch]
-	public class ActiveScheduledSubscription
-	{
-		public int UserAccountScheduledEmailID { get; set; }
+    [AllowSearch]
+    public class ActiveScheduledSubscription
+    {
+        public int UserAccountScheduledEmailID { get; set; }
 
-		[ParentKey(typeof(ConfirmableUserAccount))]
-		public Guid UserAccountID { get; set; }
-		public string AssetGroup { get; set; }
-		public string EmailName { get; set; }
-		public string Category { get; set; }
-		public int ScheduledEmailTypeID { get; set; }
-		public string Email { get; set; }
-		public string UserName { get; set; }
-	}
+        [ParentKey(typeof(ConfirmableUserAccount))]
+        public Guid UserAccountID { get; set; }
+        public string AssetGroup { get; set; }
+        public string EmailName { get; set; }
+        public string Category { get; set; }
+        public int ScheduledEmailTypeID { get; set; }
+        public string Email { get; set; }
+        public string UserName { get; set; }
+    }
 }
