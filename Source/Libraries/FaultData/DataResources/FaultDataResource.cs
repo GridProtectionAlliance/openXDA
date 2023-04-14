@@ -1039,17 +1039,23 @@ namespace FaultData.DataResources
 
             if (calculationCycle >= 0)
             {
-                for (int i = 0; i < fault.Curves.Count; i++)
+                Line line = Line.DetailedLine(dataGroup.Asset);
+
+                foreach (Fault.Curve curve in fault.Curves)
                 {
                     Fault.Summary summary = new Fault.Summary();
-                    summary.DistanceAlgorithmIndex = i;
-                    summary.DistanceAlgorithm = fault.Curves[i].Algorithm;
-                    summary.Distance = fault.Curves[i][calculationCycle].Value;
-                    Line line = Line.DetailedLine(dataGroup.Asset);// todo: remove?
+                    summary.DistanceAlgorithm = curve.Algorithm;
+                    summary.Distance = curve[calculationCycle].Value;
+
                     // Add details to summary having to do with fault path information
-                    FaultLocationDataSet.LinePath faultPath = faultLocationDataSet.FaultPaths.Find(path => path.PathNumber == fault.Curves[i].PathNumber);
+                    FaultLocationDataSet.LinePath faultPath = faultLocationDataSet.FaultPaths
+                        .First(path => path.PathNumber == curve.PathNumber);
+
                     IEnumerable<FaultLocationDataSet.LineSegment> segmentList = faultPath.Path;
-                    if (!faultPath.TraverseForward) segmentList = segmentList.Reverse();
+
+                    if (!faultPath.TraverseForward)
+                        segmentList = segmentList.Reverse();
+
                     // Default value in case the walk along doesn't find a segment
                     summary.LineSegmentID = -1;
 

@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultAlgorithms;
-using openXDA.Model;
 
 namespace FaultData.DataAnalysis
 {
@@ -40,7 +39,6 @@ namespace FaultData.DataAnalysis
             #region [ Members ]
 
             // Fields
-            private int m_distanceAlgorithmIndex;
             private int m_linePathNumber;
             private int m_lineSegmentID;
             private string m_distanceAlgorithm;
@@ -53,18 +51,6 @@ namespace FaultData.DataAnalysis
             #endregion
 
             #region [ Properties ]
-
-            public int DistanceAlgorithmIndex
-            {
-                get
-                {
-                    return m_distanceAlgorithmIndex;
-                }
-                set
-                {
-                    m_distanceAlgorithmIndex = value;
-                }
-            }
 
             public int PathNumber
             {
