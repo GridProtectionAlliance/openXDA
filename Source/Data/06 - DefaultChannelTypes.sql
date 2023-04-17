@@ -829,7 +829,7 @@ INSERT INTO CBBankHealth (ID, Description) VALUES
 	(-1,'Unavailable')
 GO
 
-/* Other nad Test are al;ways allowed since those need to be used */
+/* Other and Test event types are always allowed since those apply to all asset types in general */
 INSERT INTO EventTypeAssetType (EventTypeID,AssetTypeID) VALUES
 	((SELECT ID FROM EventType WHERE Name = 'Fault'),(SELECT ID FROM AssetType WHERE Name = 'Transformer')),
 	((SELECT ID FROM EventType WHERE Name = 'Fault'),(SELECT ID FROM AssetType WHERE Name = 'Line')),

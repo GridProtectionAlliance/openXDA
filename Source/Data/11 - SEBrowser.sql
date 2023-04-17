@@ -191,6 +191,7 @@ CREATE TABLE [SEBrowser.WidgetCategory] (
     Name varchar(50) NOT NULL,
     OrderBy INT NOT NULL
 )
+GO
 
 INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Waveform Analysis', 1)
 GO
@@ -209,6 +210,7 @@ CREATE TABLE [SEBrowser.Widget] (
     Setting varchar(max) NOT NULL Default(''),
     Enabled BIT NOT NULL
 )
+GO
 
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchOpenSEE', 1)
 GO
@@ -260,6 +262,7 @@ CREATE TABLE [SEBrowser.WidgetWidgetCategory] (
     CategoryID INT NOT NULL REFERENCES [SEBrowser.WidgetCategory](ID),
     CONSTRAINT UC_WidgetWidgetCategory UNIQUE(WidgetID, CategoryID)
 )
+GO
 
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (1, 1)
 GO

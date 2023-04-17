@@ -3140,7 +3140,7 @@ CREATE TABLE FaultSummary
     CalculationCycle INT NOT NULL,
     Distance FLOAT NOT NULL,
     PathNumber INT NOT NULL,
-    LineSegmentID INT NOT NULL REFERENCES LineSegment(ID),
+    LineSegmentID INT NOT NULL REFERENCES Asset(ID),
     LineSegmentDistance FLOAT NOT NULL,
     CurrentMagnitude FLOAT NOT NULL,
     CurrentLag FLOAT NOT NULL,
