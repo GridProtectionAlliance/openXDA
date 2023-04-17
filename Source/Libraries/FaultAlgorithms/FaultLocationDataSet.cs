@@ -151,45 +151,50 @@ namespace FaultAlgorithms
         /// </summary>
         public class LineSegment
         {
+            /// <summary>
+            /// Unique identifier for the segment.
+            /// </summary>
             public int ID;
+
+            /// <summary>
+            /// Length of the segment.
+            /// </summary>
             public double Length;
-            public double X0;
+
+            /// <summary>
+            /// Zero-sequence resistance.
+            /// </summary>
             public double R0;
-            public double X1;
+
+            /// <summary>
+            /// Zero-sequence reactance.
+            /// </summary>
+            public double X0;
+
+            /// <summary>
+            /// Positive-sequence resistance.
+            /// </summary>
             public double R1;
+
+            /// <summary>
+            /// Positive-sequence reactance.
+            /// </summary>
+            public double X1;
 
             /// <summary>
             /// Gets the zero sequence impedance.
             /// </summary>
-            public ComplexNumber Z0
-            {
-                get
-                {
-                    return new ComplexNumber(R0, X0);
-                }
-            }
+            public ComplexNumber Z0 => new ComplexNumber(R0, X0);
 
             /// <summary>
             /// Gets the positive sequence impedance.
             /// </summary>
-            public ComplexNumber Z1
-            {
-                get
-                {
-                    return new ComplexNumber(R1, X1);
-                }
-            }
+            public ComplexNumber Z1 => new ComplexNumber(R1, X1);
 
             /// <summary>
             /// Gets the loop impedance <c>[(Z0 + 2*Z1) / 3]</c>.
             /// </summary>
-            public ComplexNumber Zs
-            {
-                get
-                {
-                    return (new ComplexNumber(R0, X0) + 2.0D * new ComplexNumber(R1, X1)) / 3.0D;
-                }
-            }
+            public ComplexNumber Zs => (Z0 + 2.0D * Z1) / 3.0D;
         }
 
         /// <summary>
