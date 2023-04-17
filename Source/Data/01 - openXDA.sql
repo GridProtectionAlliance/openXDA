@@ -2079,6 +2079,24 @@ CREATE TABLE TriggeredEmailDataSource
 )
 GO
 
+CREATE VIEW SubscribeScheduledEmails
+AS
+SELECT
+    UserAccountScheduledEmailType.ID,
+    UserAccountScheduledEmailType.Approved,
+    ScheduledEmailType.ID as ScheduledEmailID,
+    UserAccount.FirstName as FirstName,
+    UserAccount.LastName as LastName,
+    UserAccount.Email as Email,
+    AssetGroup.Name as AssetGroup
+FROM
+    UserAccountScheduledEmailType JOIN
+    ScheduledEmailType ON ScheduledEmailType.ID = UserAccountScheduledEmailType.ScheduledEmailTypeID JOIN
+    UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID JOIN
+    AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID
+GO
+
+
 CREATE TABLE TriggeredEmailDataSourceEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
