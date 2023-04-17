@@ -217,15 +217,25 @@ namespace openXDA
                 {
                     fileInfo = new FileInfo(filePath);
 
-                    dataFile = new DataFile();
-                    dataFile.FilePath = filePath;
-                    dataFile.FilePathHash = filePath.GetHashCode();
-                    dataFile.FileSize = fileInfo.Length;
-                    dataFile.CreationTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.CreationTimeUtc, xdaTimeZone);
-                    dataFile.LastWriteTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.LastWriteTimeUtc, xdaTimeZone);
-                    dataFile.LastAccessTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.LastAccessTimeUtc, xdaTimeZone);
+                    if (!fileInfo.Exists)
+                        continue;
 
-                    dataFiles.Add(dataFile);
+                    try
+                    {
+                        dataFile = new DataFile();
+                        dataFile.FilePath = filePath;
+                        dataFile.FilePathHash = filePath.GetHashCode();
+                        dataFile.FileSize = fileInfo.Length;
+                        dataFile.CreationTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.CreationTimeUtc, xdaTimeZone);
+                        dataFile.LastWriteTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.LastWriteTimeUtc, xdaTimeZone);
+                        dataFile.LastAccessTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.LastAccessTimeUtc, xdaTimeZone);
+
+                        dataFiles.Add(dataFile);
+                    }
+                    catch (FileNotFoundException ex)
+                    {
+                        Log.Debug($"Suppressing FileNotFoundException for {filePath}", ex);
+                    }
                 }
 
                 return dataFiles;
