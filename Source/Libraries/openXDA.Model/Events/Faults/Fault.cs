@@ -42,6 +42,12 @@ namespace openXDA.Model
 
         public double Distance { get; set; }
 
+        public int PathNumber { get; set; }
+
+        public int LineSegmentID { get; set; }
+
+        public double LineSegmentDistance { get; set; }
+
         public double CurrentMagnitude { get; set; }
 
         public double CurrentLag { get; set; }

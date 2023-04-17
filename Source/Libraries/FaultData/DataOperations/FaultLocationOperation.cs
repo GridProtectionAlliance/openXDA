@@ -121,6 +121,7 @@ namespace FaultData.DataOperations
                             faultSummaryTable.AddNewRecord(faultSummary);
                         }
 
+
                         // Generate fault cause metrics for this fault
                         FaultCauseMetrics faultCauseMetrics = CreateFaultCauseMetrics(evt.ID, faultIndex + 1, fault);
                         faultCauseMetricsTable.AddNewRecord(faultCauseMetrics);
@@ -214,6 +215,9 @@ namespace FaultData.DataOperations
                         FaultNumber = faultNumber,
                         CalculationCycle = fault.CalculationCycle,
                         Distance = ToDbFloat(summary.Distance),
+                        PathNumber = summary.PathNumber,
+                        LineSegmentID = summary.LineSegmentID,
+                        LineSegmentDistance = ToDbFloat(summary.LineSegmentDistance),
                         CurrentMagnitude = ToDbFloat(fault.CurrentMagnitude),
                         CurrentLag = ToDbFloat(fault.CurrentLag),
                         PrefaultCurrent = ToDbFloat(fault.PrefaultCurrent),
@@ -264,6 +268,7 @@ namespace FaultData.DataOperations
                 return new FaultCurve()
                 {
                     EventID = eventID,
+                    PathNumber = FaultGroup.Faults[0].Curves[curveIndex].PathNumber,
                     Algorithm = FaultGroup.Faults[0].Curves[curveIndex].Algorithm,
                     Data = Serialize(series),
                     AngleData = new byte[0]

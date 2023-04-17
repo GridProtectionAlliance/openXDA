@@ -73,13 +73,6 @@ namespace FaultData.DataResources
             {
                 if (Line.Segments != null)
                 {
-                    if (Line.Path[0].R0 == 0.0D && Line.Path[0].X0 == 0.0D &&
-                        Line.Path[0].R1 == 0.0D && Line.Path[0].X1 == 0.0D)
-                        return false;
-
-                    FaultLocationDataSet.Z0 = new ComplexNumber(Line.Path[0].R0, Line.Path[0].X0);
-                    FaultLocationDataSet.Z1 = new ComplexNumber(Line.Path[0].R1, Line.Path[0].X1);
-
                     SourceImpedance localImpedance = Line.AssetLocations
                         .Where(link => link.Location == Meter.Location)
                         .Where(link => link.SourceImpedance != null)
@@ -98,7 +91,27 @@ namespace FaultData.DataResources
                     if (remoteImpedances.Count == 1)
                         FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
 
-                    return true;
+                    FaultLocationDataSet.FaultPaths = Line.Path
+                        .Select((path, index) => new FaultLocationDataSet.LinePath()
+                        {
+                            PathNumber = index,
+                            // TODO: This has an implicit assumption of forward traversing. This might be undesirable
+                            TraverseForward =
+                                path.Segments.Count == 1 ||
+                                !path.Segments.Last().AssetLocations.Any(assetLocation => assetLocation.LocationID == Meter.LocationID),
+                            Path = path.Segments.Select(segment => new FaultLocationDataSet.LineSegment()
+                            {
+                                ID = segment.ID,
+                                Length = segment.Length,
+                                R0 = segment.R0,
+                                X0 = segment.R0,
+                                R1 = segment.R1,
+                                X1 = segment.R1
+                            }).ToList()
+                        })
+                        .Where(path => path.CalculateValues()).ToList();
+
+                    return FaultLocationDataSet.FaultPaths.Count() > 0;
                 }
 
                 return false;
@@ -137,8 +150,7 @@ namespace FaultData.DataResources
 
                     // Initialize a fault curve for each algorithm
                     fault.Curves.AddRange(FaultLocationAlgorithms
-                        .Select(algorithm => fault.CreateCurve(algorithm.Method.Name))
-                        .ToList());
+                        .SelectMany(algorithm => FaultLocationDataSet.FaultPaths.Select((faultPath) => fault.CreateCurve(algorithm.Method.Name, faultPath.PathNumber))));
 
                     foreach (Fault.Segment segment in fault.Segments)
                     {
@@ -172,10 +184,14 @@ namespace FaultData.DataResources
                             else if (segment.FaultType == FaultType.CN && subGroup.IC == null)
                                 CopyToFaultLocationDataSet(subGroup.IR, cycleData => cycleData.CN.I);
 
-                            // Attempt to execute each fault location algorithm
-                            for (int i = 0; i < FaultLocationAlgorithms.Count; i++)
+
+                            // Attempt to execute each fault location algorithm and path
+                            foreach (Fault.Curve curve in fault.Curves)
                             {
-                                if (TryExecute(FaultLocationAlgorithms[i], FaultLocationDataSet, out faultDistances))
+                                FaultLocationAlgorithm faultLocationAlgorithm = FaultLocationAlgorithms
+                                    .First(algorithm => algorithm.Method.Name == curve.Algorithm);
+
+                                if (TryExecute(faultLocationAlgorithm, FaultLocationDataSet, curve.PathNumber, out faultDistances))
                                 {
                                     // Create a data point for each of the fault distances
                                     faultDataPoints = subGroup.VA.RMS.DataPoints
@@ -192,7 +208,7 @@ namespace FaultData.DataResources
                                 }
 
                                 // Add the data points to the current fault curve
-                                fault.Curves[i].Series.DataPoints.AddRange(faultDataPoints);
+                                curve.Series.DataPoints.AddRange(faultDataPoints);
                             }
                         }
                     }
@@ -220,11 +236,11 @@ namespace FaultData.DataResources
                 }
             }
 
-            private bool TryExecute(FaultLocationAlgorithm faultLocationAlgorithm, FaultLocationDataSet faultLocationDataSet, out double[] distances)
+            private bool TryExecute(FaultLocationAlgorithm faultLocationAlgorithm, FaultLocationDataSet faultLocationDataSet, int pathIndex, out double[] distances)
             {
                 try
                 {
-                    distances = faultLocationAlgorithm(faultLocationDataSet, null);
+                    distances = faultLocationAlgorithm(faultLocationDataSet, pathIndex);
                 }
                 catch
                 {
@@ -310,7 +326,7 @@ namespace FaultData.DataResources
 
                 //Make Sure it is actually a Line
                 Log.Debug("Checking whether Asset is a Line...");
-                if (dataGroup.Asset.AssetTypeID != (int) AssetType.Line)
+                if (dataGroup.Asset.AssetTypeID != (int)AssetType.Line)
                 {
                     Log.Debug($"Asset: {dataGroup.Asset.AssetKey} is not a Line.");
                     continue;
@@ -345,7 +361,6 @@ namespace FaultData.DataResources
                 Line line = Line.DetailedLine(dataGroup.Asset);
 
                 FaultLocationDataSet faultLocationDataSet = new FaultLocationDataSet();
-                faultLocationDataSet.LineDistance = line.Path[0].Length;
                 faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
 
                 // Extract impedances from the database
@@ -429,8 +444,9 @@ namespace FaultData.DataResources
                 using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
                 {
                     foreach (Fault fault in faults)
-                        PopulateFaultInfo(fault, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes, connection);
+                        PopulateFaultInfo(fault, faultLocationDataSet, meterDataSet.Meter, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes, connection);
                 }
+
                 // Create a fault group and add it to the lookup table
                 bool faultValidationLogicResult = CheckFaultValidationLogic(faults);
                 FaultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
@@ -965,7 +981,7 @@ namespace FaultData.DataResources
             return GetCycle(viCycleDataGroup, 0);
         }
 
-        private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes, AdoDataConnection connection)
+        private void PopulateFaultInfo(Fault fault, FaultLocationDataSet faultLocationDataSet, Meter meter, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes, AdoDataConnection connection)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, DataAnalysisSettings.SystemFrequency);
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle, connection);
@@ -1023,14 +1039,41 @@ namespace FaultData.DataResources
 
             if (calculationCycle >= 0)
             {
-                for (int i = 0; i < fault.Curves.Count; i++)
+                Line line = Line.DetailedLine(dataGroup.Asset);
+
+                foreach (Fault.Curve curve in fault.Curves)
                 {
                     Fault.Summary summary = new Fault.Summary();
-                    summary.DistanceAlgorithmIndex = i;
-                    summary.DistanceAlgorithm = fault.Curves[i].Algorithm;
-                    summary.Distance = fault.Curves[i][calculationCycle].Value;
-                    summary.IsValid = IsValid(summary.Distance, dataGroup);
+                    summary.DistanceAlgorithm = curve.Algorithm;
+                    summary.Distance = curve[calculationCycle].Value;
 
+                    // Add details to summary having to do with fault path information
+                    FaultLocationDataSet.LinePath faultPath = faultLocationDataSet.FaultPaths
+                        .First(path => path.PathNumber == curve.PathNumber);
+
+                    IEnumerable<FaultLocationDataSet.LineSegment> segmentList = faultPath.Path;
+
+                    if (!faultPath.TraverseForward)
+                        segmentList = segmentList.Reverse();
+
+                    // Default value in case the walk along doesn't find a segment
+                    summary.LineSegmentID = -1;
+
+                    // Walk along path
+                    double distanceRemaining = summary.Distance;
+                    foreach (FaultLocationDataSet.LineSegment segment in segmentList)
+                    {
+                        if (distanceRemaining < segment.Length)
+                        {
+                            summary.LineSegmentID = segment.ID;
+                            break;
+                        }
+                        distanceRemaining -= segment.Length;
+                    }
+                    summary.PathNumber = faultPath.PathNumber;
+                    summary.LineSegmentDistance = distanceRemaining;
+
+                    summary.IsValid = IsValid(line, summary.Distance, summary.PathNumber);
                     fault.Summaries.Add(summary);
                 }
 
@@ -1059,17 +1102,16 @@ namespace FaultData.DataResources
             }
         }
 
-        private bool IsValid(double faultDistance, DataGroup dataGroup)
+        private bool IsValid(Line detailedLine, double faultDistance, int pathNumber)
         {
-            Line line = Line.DetailedLine(dataGroup.Asset);
             double maxFaultDistanceMultiplier = FaultLocationSettings.MaxFaultDistanceMultiplier;
             double minFaultDistanceMultiplier = FaultLocationSettings.MinFaultDistanceMultiplier;
 
-            double maxDistance = line.MaxFaultDistance
-                ?? maxFaultDistanceMultiplier * line.Path[0].Length;
+            double maxDistance = detailedLine.MaxFaultDistance
+                ?? maxFaultDistanceMultiplier * detailedLine.Path[pathNumber].Length;
 
-            double minDistance = line.MinFaultDistance
-                ?? minFaultDistanceMultiplier * line.Path[0].Length;
+            double minDistance = detailedLine.MinFaultDistance
+                ?? minFaultDistanceMultiplier * detailedLine.Path[pathNumber].Length;
 
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }

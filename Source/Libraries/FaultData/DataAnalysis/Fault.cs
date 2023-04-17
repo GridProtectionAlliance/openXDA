@@ -39,9 +39,11 @@ namespace FaultData.DataAnalysis
             #region [ Members ]
 
             // Fields
-            private int m_distanceAlgorithmIndex;
+            private int m_linePathNumber;
+            private int m_lineSegmentID;
             private string m_distanceAlgorithm;
             private double m_distance;
+            private double m_lineSegmentDistance;
 
             private bool m_isSelectedAlgorithm;
             private bool m_isValid;
@@ -50,15 +52,27 @@ namespace FaultData.DataAnalysis
 
             #region [ Properties ]
 
-            public int DistanceAlgorithmIndex
+            public int PathNumber
             {
                 get
                 {
-                    return m_distanceAlgorithmIndex;
+                    return m_linePathNumber;
                 }
                 set
                 {
-                    m_distanceAlgorithmIndex = value;
+                    m_linePathNumber = value;
+                }
+            }
+
+            public int LineSegmentID
+            {
+                get
+                {
+                    return m_lineSegmentID;
+                }
+                set
+                {
+                    m_lineSegmentID = value;
                 }
             }
 
@@ -83,6 +97,18 @@ namespace FaultData.DataAnalysis
                 set
                 {
                     m_distance = value;
+                }
+            }
+
+            public double LineSegmentDistance
+            {
+                get
+                {
+                    return m_lineSegmentDistance;
+                }
+                set
+                {
+                    m_lineSegmentDistance = value;
                 }
             }
 
@@ -203,6 +229,7 @@ namespace FaultData.DataAnalysis
             // Fields
             private int m_startIndex;
             private string m_algorithm;
+            private int m_pathNumber;
             private DataSeries m_series;
 
             #endregion
@@ -239,6 +266,18 @@ namespace FaultData.DataAnalysis
                 set
                 {
                     m_algorithm = value;
+                }
+            }
+
+            public int PathNumber
+            {
+                get
+                {
+                    return m_pathNumber;
+                }
+                set
+                {
+                    m_pathNumber = value;
                 }
             }
 
@@ -362,12 +401,13 @@ namespace FaultData.DataAnalysis
 
         #region [ Methods ]
 
-        public Curve CreateCurve(string algorithm)
+        public Curve CreateCurve(string algorithm, int pathNumber = 0)
         {
             return new Curve()
             {
                 Algorithm = algorithm,
-                StartIndex = StartSample
+                StartIndex = StartSample,
+                PathNumber = pathNumber
             };
         }
 

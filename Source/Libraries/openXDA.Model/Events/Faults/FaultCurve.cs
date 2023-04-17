@@ -38,6 +38,8 @@ namespace openXDA.Model
 
         public int EventID { get; set; }
 
+        public int PathNumber { get; set; }
+
         [StringLength(200)]
         public string Algorithm { get; set; }
 
