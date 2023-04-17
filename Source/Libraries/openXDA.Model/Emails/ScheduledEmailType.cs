@@ -29,7 +29,7 @@ namespace openXDA.Model
     [DeleteRoles("Administrator")]
     [PatchRoles("Administrator")]
     [PostRoles("Administrator")]
-    [TableName("EmailType")]
+    [TableName("ScheduledEmailType")]
     [UseEscapedName]
     public class ScheduledEmailType : EmailTypeBase
     {
