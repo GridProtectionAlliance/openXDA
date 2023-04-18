@@ -1056,22 +1056,19 @@ namespace FaultData.DataResources
                     if (!faultPath.TraverseForward)
                         segmentList = segmentList.Reverse();
 
-                    // Default value in case the walk along doesn't find a segment
-                    summary.LineSegmentID = -1;
-
                     // Walk along path
                     double distanceRemaining = summary.Distance;
                     foreach (FaultLocationDataSet.LineSegment segment in segmentList)
                     {
+                        // Assigning these values in advance ensures that the last segment gets assigned
+                        // in the event that the fault distance goes beyond the end of the line
+                        summary.LineSegmentID = segment.ID;
+                        summary.LineSegmentDistance = distanceRemaining;
                         if (distanceRemaining < segment.Length)
-                        {
-                            summary.LineSegmentID = segment.ID;
                             break;
-                        }
                         distanceRemaining -= segment.Length;
                     }
                     summary.PathNumber = faultPath.PathNumber;
-                    summary.LineSegmentDistance = distanceRemaining;
 
                     summary.IsValid = IsValid(line, summary.Distance, summary.PathNumber);
                     fault.Summaries.Add(summary);

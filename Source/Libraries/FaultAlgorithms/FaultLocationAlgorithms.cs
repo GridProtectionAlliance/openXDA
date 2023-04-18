@@ -480,6 +480,9 @@ namespace FaultAlgorithms
         // Converts the impedance ratio to actual fault distances.
         private static double GetDistance(FaultLocationDataSet.LinePath faultPath, FaultType type, ComplexNumber nominalLineImpedance, double m)
         {
+            if (m > 1)
+                return faultPath.LineDistance * m;
+
             double remainder = m;
             double totalDistance = 0;
             IEnumerable<FaultLocationDataSet.LineSegment> segmentList = faultPath.Path;
@@ -489,14 +492,14 @@ namespace FaultAlgorithms
             foreach(FaultLocationDataSet.LineSegment segment in segmentList)
             {
                 double segmentReactanceRatio = GetNominalImpedance(segment, type).Imaginary / nominalLineImpedance.Imaginary;
-                if (segmentReactanceRatio > remainder)
+                if (segmentReactanceRatio >= remainder)
                     return totalDistance + segment.Length * remainder / segmentReactanceRatio;
                 remainder -= segmentReactanceRatio;
                 totalDistance += segment.Length;
             }
 
             // Means we traverse more than the entire line
-            return totalDistance;
+            return faultPath.LineDistance * m;
         }
 
         // Gets the minimum distance between the value n and the set of values m.
