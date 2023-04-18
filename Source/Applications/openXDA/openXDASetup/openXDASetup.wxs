@@ -528,6 +528,7 @@
       <ComponentRef Id="Microsoft.Owin.Hosting" />
       <ComponentRef Id="Microsoft.Owin.Security" />
       <ComponentRef Id="Newtonsoft.Json" />
+      <ComponentRef Id="NUglify" />
       <ComponentRef Id="Owin" />
       <ComponentRef Id="RazorEngine" />
       <ComponentRef Id="System.Web.Razor" />
@@ -915,6 +916,9 @@
       </Component>
       <Component Id="Newtonsoft.Json">
         <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Newtonsoft.Json.dll" />
+      </Component>
+      <Component Id="NUglify">
+        <File Id="NUglify.dll" Name="NUglify.dll" Source="$(var.SolutionDir)\Dependencies\GSF\NUglify.dll" />
       </Component>
       <Component Id="JsonSubTypes">
         <File Id="JsonSubTypes.dll" Name="JsonSubTypes.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\JsonSubTypes.1.8.0\lib\net47\JsonSubTypes.dll" />
