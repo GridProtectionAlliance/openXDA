@@ -104,9 +104,9 @@ namespace FaultData.DataResources
                                 ID = segment.ID,
                                 Length = segment.Length,
                                 R0 = segment.R0,
-                                X0 = segment.R0,
+                                X0 = segment.X0,
                                 R1 = segment.R1,
-                                X1 = segment.R1
+                                X1 = segment.X1
                             }).ToList()
                         })
                         .Where(path => path.CalculateValues()).ToList();
