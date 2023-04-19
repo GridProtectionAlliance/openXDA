@@ -163,13 +163,14 @@ namespace FaultData.DataWriters.Emails
         private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, List<DataSourceResponse> dataSourceResponses)
         {
             List<Attachment> attachments = new List<Attachment>();
+            List<DataSourceResponse> responses = dataSourceResponses ?? new List<DataSourceResponse>();
 
             try
             {
-                LoadDataSources(email, evt, dataSourceResponses);
+                LoadDataSources(email, evt, responses);
 
                 Settings settings = new Settings(Configure);
-                XElement templateData = new XElement("data", dataSourceResponses?.Select(r => r.Data));
+                XElement templateData = new XElement("data", responses.Select(r => r.Data));
                 XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
                 ApplyFTTTransform(attachments, htmlDocument);
@@ -214,31 +215,28 @@ namespace FaultData.DataWriters.Emails
                 /* Load All DataSources */
                 TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
                 TableOperations<TriggeredEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<TriggeredEmailDataSourceEmailType>(connection);
+                IEnumerable<TriggeredEmailDataSourceEmailType> dataSourceMappings = dataSourceEmailTypeTable.QueryRecordsWhere("EmailTypeID = {0}", email.ID);
 
-                IEnumerable<DataSourceResponse> responseEnumerable = dataSourceEmailTypeTable
-                    .QueryRecordsWhere("EmailTypeID = {0}", email.ID)
-                    .Select((cm) => new Tuple<TriggeredEmailDataSourceEmailType, TriggeredEmailDataSource>(cm, dataSourceTable.QueryRecordWhere("ID = {0}", cm.TriggeredEmailDataSourceID)))
-                    .Select((m) =>
-                    {
-                        DataSourceWrapper wrapper = CreateDataSource(m.Item2, m.Item1);
+                foreach (TriggeredEmailDataSourceEmailType dataSourceMapping in dataSourceMappings)
+                {
+                    TriggeredEmailDataSource dataSource = dataSourceTable.QueryRecordWhere("ID = {0}", dataSourceMapping.TriggeredEmailDataSourceID);
+                    DataSourceWrapper wrapper = CreateDataSource(dataSource, dataSourceMapping);
 
-                        Exception ex = null;
-                        XElement data = wrapper?.TryProcess(evt, out ex);
-                        if (wrapper is null)
-                            ex = new Exception("Failed to create data source");
+                    Exception ex = null;
+                    XElement data = wrapper?.TryProcess(evt, out ex);
+                    if (wrapper is null)
+                        ex = new Exception("Failed to create data source");
 
-                        DataSourceResponse response = new DataSourceResponse();
-                        response.Model = m.Item2;
-                        response.Created = !(wrapper is null);
-                        response.Success = !(data is null);
-                        response.Data = data;
-                        response.Exception = ex;
-                        return response;
-                    }).ToList();
+                    DataSourceResponse response = new DataSourceResponse();
+                    response.Model = dataSource;
+                    response.Created = !(wrapper is null);
+                    response.Success = !(data is null);
+                    response.Data = data;
+                    response.Exception = ex;
+                    responses.Add(response);
+                }
 
-                responses.AddRange(responseEnumerable);
-                
-                if (responses.Any(wrapper => !wrapper.Created))
+                if (responses.Any(response => !response.Created))
                     Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
             }
         }
