@@ -5325,6 +5325,16 @@ FROM
     TriggeredEmailDataSource ON TriggeredEmailDataSourceEmailType.TriggeredEmailDataSourceID = TriggeredEmailDataSource.ID
 GO
 
+CREATE VIEW ScheduledEmailDataSourceEmailTypeView 
+AS
+SELECT 
+    ScheduledEmailDataSourceEmailType.*,
+    ScheduledEmailDatasource.Name AS ScheduledEmailDataSourceName
+FROM
+    ScheduledEmailDataSourceEmailType LEFT JOIN 
+    ScheduledEmailDatasource ON ScheduledEmailDataSourceEmailType.ScheduledEmailDataSourceID = ScheduledEmailDatasource.ID
+GO
+
 -- CREATE VIEW DisturbanceView
 -- AS
 -- SELECT
