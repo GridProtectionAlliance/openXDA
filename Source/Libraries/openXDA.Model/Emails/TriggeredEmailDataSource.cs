@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class TriggeredEmailDataSource
+    public class EmailDataSource
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
@@ -38,4 +38,6 @@ namespace openXDA.Model
 
         public string ConfigUI { get; set; }
     }
+
+    public class TriggeredEmailDataSource: EmailDataSource { }
 }

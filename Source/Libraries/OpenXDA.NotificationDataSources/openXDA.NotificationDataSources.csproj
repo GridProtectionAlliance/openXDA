@@ -138,6 +138,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AzureDataSource.cs" />
     <Compile Include="PQIDataSource.cs" />
     <Compile Include="HIDSDataSource.cs" />
     <Compile Include="SQLDataSource.cs" />

@@ -149,6 +149,45 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
+        [Route("testReport/{reportID:int}/{userID}/{previous}/{current}/{next}"), HttpGet]
+        public IHttpActionResult SendTestReport(int reportID, string userID, string previous, string current, string next)
+        {
+            Settings settings = new Settings(GetConfigurator());
+            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+
+                ScheduledEmailType report = new TableOperations<ScheduledEmailType>(connection).QueryRecordWhere("ID = {0}", reportID);
+                if (report is null)
+                    return BadRequest($"Scheduled Email type with ID {reportID} does not exists");
+
+                ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
+                if (account is null)
+                    return BadRequest($"User with ID {userID} does not exists");
+
+                TestEmailResponse response = new TestEmailResponse();
+
+                try
+                {
+                    if (!DateTime.TryParse(current, out DateTime xdaNow))
+                        xdaNow = DateTime.UtcNow;
+                    if (!DateTime.TryParse(previous, out DateTime xdaPrev))
+                        xdaPrev = DateTime.UtcNow.AddYears(-1);
+                    if (!DateTime.TryParse(next, out DateTime xdaNext))
+                        xdaNext = DateTime.UtcNow.AddYears(1);
+                    
+                    emailService.SendScheduledEmail(report, new List<string>() { account.Email }, response.DataSourceResponses, xdaNow, xdaPrev, xdaNext);
+                    return Ok(response);
+                }
+                catch (Exception ex)
+                {
+                    response.Exception = ex;
+                    return UnprocessibleEntity(response);
+                }
+            }
+        }
+
         [Route("testData/{emailID:int}/{eventID:int}"), HttpGet]
         public IHttpActionResult TestDataSource(int emailID, int eventID)
         {
@@ -160,6 +199,28 @@ namespace openXDA.Controllers.WebAPI
                 EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
                 List<DataSourceResponse> dataSourceResponses = new List<DataSourceResponse>();
                 emailService.LoadDataSources(email, evt, dataSourceResponses);
+                return Ok(dataSourceResponses);
+            }
+        }
+
+        [Route("testReportData/{reportID:int}/{previous}/{current}/{next}"), HttpGet]
+        public IHttpActionResult TestReportDataSource(int reportID, string previous, string current, string next)
+        {
+            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                ScheduledEmailType report = new TableOperations<ScheduledEmailType>(connection).QueryRecordWhere("ID = {0}", reportID);
+                List<DataSourceResponse> dataSourceResponses = new List<DataSourceResponse>();
+
+                if (!DateTime.TryParse(current, out DateTime xdaNow))
+                    xdaNow = DateTime.UtcNow;
+                if (!DateTime.TryParse(previous, out DateTime xdaPrev))
+                    xdaPrev = DateTime.UtcNow.AddYears(-1);
+                if (!DateTime.TryParse(next, out DateTime xdaNext))
+                    xdaNext = DateTime.UtcNow.AddYears(1);
+
+                emailService.LoadDataSources(report,xdaNow,xdaPrev,xdaNext, dataSourceResponses);
                 return Ok(dataSourceResponses);
             }
         }
