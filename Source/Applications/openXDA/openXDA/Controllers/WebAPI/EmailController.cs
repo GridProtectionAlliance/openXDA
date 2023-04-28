@@ -149,8 +149,8 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
-        [Route("testReport/{reportID:int}/{userID}/{previous}/{current}/{next}"), HttpGet]
-        public IHttpActionResult SendTestReport(int reportID, string userID, string previous, string current, string next)
+        [Route("testReport/{reportID:int}/{userID}/{current}/"), HttpGet]
+        public IHttpActionResult SendTestReport(int reportID, string userID, string current)
         {
             Settings settings = new Settings(GetConfigurator());
             EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
@@ -172,12 +172,9 @@ namespace openXDA.Controllers.WebAPI
                 {
                     if (!DateTime.TryParse(current, out DateTime xdaNow))
                         xdaNow = DateTime.UtcNow;
-                    if (!DateTime.TryParse(previous, out DateTime xdaPrev))
-                        xdaPrev = DateTime.UtcNow.AddYears(-1);
-                    if (!DateTime.TryParse(next, out DateTime xdaNext))
-                        xdaNext = DateTime.UtcNow.AddYears(1);
+                 
                     
-                    emailService.SendScheduledEmail(report, new List<string>() { account.Email }, response.DataSourceResponses, xdaNow, xdaPrev, xdaNext);
+                    emailService.SendScheduledEmail(report, new List<string>() { account.Email }, response.DataSourceResponses, xdaNow);
                     return Ok(response);
                 }
                 catch (Exception ex)
@@ -203,8 +200,8 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
-        [Route("testReportData/{reportID:int}/{previous}/{current}/{next}"), HttpGet]
-        public IHttpActionResult TestReportDataSource(int reportID, string previous, string current, string next)
+        [Route("testReportData/{reportID:int}/{current}"), HttpGet]
+        public IHttpActionResult TestReportDataSource(int reportID, string current)
         {
             EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
 
@@ -215,12 +212,8 @@ namespace openXDA.Controllers.WebAPI
 
                 if (!DateTime.TryParse(current, out DateTime xdaNow))
                     xdaNow = DateTime.UtcNow;
-                if (!DateTime.TryParse(previous, out DateTime xdaPrev))
-                    xdaPrev = DateTime.UtcNow.AddYears(-1);
-                if (!DateTime.TryParse(next, out DateTime xdaNext))
-                    xdaNext = DateTime.UtcNow.AddYears(1);
 
-                emailService.LoadDataSources(report,xdaNow,xdaPrev,xdaNext, dataSourceResponses);
+                emailService.LoadDataSources(report,xdaNow, dataSourceResponses);
                 return Ok(dataSourceResponses);
             }
         }

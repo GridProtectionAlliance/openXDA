@@ -144,18 +144,16 @@ namespace openXDA.Nodes.Types.Email
                 return;
 
             DateTime currentScheduled = e.Argument.LastDueAt;
-            DateTime previousScheduled = e.Argument.PreviousTimeDue(currentScheduled);
-            DateTime nextScheduled = e.Argument.NextTimeDue(currentScheduled);
 
             // TODO: Think about tracking statistics on outstanding scheduled email tasks
             _ = Task.Run(() =>
             {
-                try { ProcessScheduledEmail(id, currentScheduled, previousScheduled, nextScheduled); }
+                try { ProcessScheduledEmail(id, currentScheduled); }
                 catch (Exception ex) { LogException(ex); }
             });
         }
 
-        private void ProcessScheduledEmail(int scheduledEmailID, DateTime now, DateTime prevScheduled, DateTime nextScheduled)
+        private void ProcessScheduledEmail(int scheduledEmailID, DateTime now)
         {
             Action<object> configurator = GetConfigurator();
             Settings settings = new Settings(configurator);
@@ -171,17 +169,15 @@ namespace openXDA.Nodes.Types.Email
                 // Convert Times used to what ever the time zone is
                 TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
                 DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
-                DateTime xdaPrev = timeZoneConverter.ToXDATimeZone(prevScheduled);
-                DateTime xdaNext = timeZoneConverter.ToXDATimeZone(nextScheduled);
 
-                bool triggersEmail = connection.ExecuteScalar<bool>(scheduledEmailType.TriggerEmailSQL, xdaNow, xdaPrev, xdaNext);
+                bool triggersEmail = connection.ExecuteScalar<bool>(scheduledEmailType.TriggerEmailSQL, xdaNow);
 
                 if (!triggersEmail)
                     return;
 
                 EmailService emailService = new EmailService(CreateDbConnection, configurator);
 
-                emailService.SendScheduledEmail(scheduledEmailType, xdaNow, xdaPrev, xdaNext);
+                emailService.SendScheduledEmail(scheduledEmailType, xdaNow);
             }
         }
 
