@@ -21,9 +21,8 @@
 //
 //******************************************************************************************************
 
-using GSF.Data.Model;
-
 namespace openXDA.Model
 {
+  
     public class ScheduledEmailDataSource: EmailDataSource { }
 }

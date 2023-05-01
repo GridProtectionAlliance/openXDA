@@ -22,9 +22,12 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System.Runtime.Serialization;
 
 namespace openXDA.Model
 {
+    [KnownType(typeof(ScheduledEmailDataSource))]
+    [KnownType(typeof(TriggeredEmailDataSource))]
     public class EmailDataSource
     {
         [PrimaryKey(true)]
