@@ -30,6 +30,6 @@ namespace openXDA.Model
     public interface IScheduledDataSource
     {
         void Configure(Action<object> configurator);
-        XElement Process(DateTime timeOccurred, DateTime prevTimeOccurred, DateTime nextTimeOccurred);
+        XElement Process(DateTime timeOccurred);
     }
 }

@@ -21,21 +21,7 @@
 //
 //******************************************************************************************************
 
-using GSF.Data.Model;
-
 namespace openXDA.Model
 {
-    public class ScheduledEmailDataSource
-    {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-        
-        public string Name { get; set; }
-
-        public string AssemblyName { get; set; }
-
-        public string TypeName { get; set; }
-
-        public string ConfigUI { get; set; }
-    }
+    public class ScheduledEmailDataSource: EmailDataSource { }
 }

@@ -97,7 +97,7 @@ namespace openXDA.NotificationDataSources
         public void Configure(Action<object> configurator) =>
             Settings = new DataSourceSettings(configurator);
 
-        public XElement Process(DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
+        public XElement Process(DateTime xdaNow)
         {
             XElement xml = QueryXDA(xdaNow);
             XDocument doc = new XDocument(xml);

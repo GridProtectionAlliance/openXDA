@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  TriggeredEmailDataSource.cs - Gbtc
+//  SubscribeScheduledEmails.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,31 +16,37 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/5/2021 - Samuel Robinson
+//  04/17/2023 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Runtime.Serialization;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [KnownType(typeof(ScheduledEmailDataSource))]
-    [KnownType(typeof(TriggeredEmailDataSource))]
-    public class EmailDataSource
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("SubscribeScheduledEmails")]
+    [UseEscapedName]
+    public class SubscribeScheduledEmails
     {
-        [PrimaryKey(true)]
+        [PrimaryKey()]
         public int ID { get; set; }
 
-        public string Name { get; set; }
+        public bool Approved { get; set; }
 
-        public string AssemblyName { get; set; }
+        [ParentKey(typeof(ScheduledEmailType))]
+        public int ScheduledEmailID { get; set; }
 
-        public string TypeName { get; set; }
+        public string FirstName { get; set; }
 
-        public string ConfigUI { get; set; }
+        public string LastName { get; set; }
+
+        public string Email { get; set; }
+
+        public string AssetGroup { get; set; }
     }
-
-    public class TriggeredEmailDataSource: EmailDataSource { }
 }

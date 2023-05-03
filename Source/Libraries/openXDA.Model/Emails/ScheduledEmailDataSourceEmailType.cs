@@ -34,4 +34,15 @@ namespace openXDA.Model
 
         public int ScheduledEmailDataSourceID { get; set; }
     }
+
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("ScheduledEmailDataSourceEmailTypeView")]
+    [UseEscapedName]
+    public class ScheduledEmailDataSourceEmailTypeView : ScheduledEmailDataSourceEmailType
+    {
+        public string ScheduledEmailDataSourceName { get; set; }
+    }
 }

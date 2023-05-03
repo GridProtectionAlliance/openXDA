@@ -95,11 +95,11 @@ namespace openXDA.NotificationDataSources
             }
         }
 
-        XElement IScheduledDataSource.Process(DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
+        XElement IScheduledDataSource.Process(DateTime xdaNow)
         {
             using (AdoDataConnection connection = CreateDBConnection())
             {
-                string xml = connection.ExecuteScalar<string>(Settings.SQL, xdaNow, xdaPrev, xdaNext);
+                string xml = connection.ExecuteScalar<string>(Settings.SQL, xdaNow);
                 return XElement.Parse(xml);
             }
         }

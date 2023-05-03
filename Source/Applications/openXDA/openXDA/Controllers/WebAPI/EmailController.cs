@@ -149,6 +149,41 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
+        [Route("testReport/{reportID:int}/{userID}/{current}"), HttpGet]
+        public IHttpActionResult SendTestReport(int reportID, string userID, string current)
+        {
+            Action<object> configurator = GetConfigurator();
+            Settings settings = new Settings(configurator);
+            EmailService emailService = new EmailService(CreateDbConnection, configurator);
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                ScheduledEmailType report = new TableOperations<ScheduledEmailType>(connection).QueryRecordWhere("ID = {0}", reportID);
+                if (report is null)
+                    return BadRequest($"Scheduled Email type with ID {reportID} does not exists");
+
+                ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
+                if (account is null)
+                    return BadRequest($"User with ID {userID} does not exists");
+
+                TestEmailResponse response = new TestEmailResponse();
+
+                try
+                {
+                    if (!DateTime.TryParse(current, out DateTime xdaNow))
+                        xdaNow = DateTime.UtcNow;
+                    
+                    emailService.SendScheduledEmail(report, new List<string>() { account.Email }, response.DataSourceResponses, xdaNow);
+                    return Ok(response);
+                }
+                catch (Exception ex)
+                {
+                    response.Exception = ex;
+                    return UnprocessibleEntity(response);
+                }
+            }
+        }
+
         [Route("testData/{emailID:int}/{eventID:int}"), HttpGet]
         public IHttpActionResult TestDataSource(int emailID, int eventID)
         {
@@ -160,6 +195,24 @@ namespace openXDA.Controllers.WebAPI
                 EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
                 List<DataSourceResponse> dataSourceResponses = new List<DataSourceResponse>();
                 emailService.LoadDataSources(email, evt, dataSourceResponses);
+                return Ok(dataSourceResponses);
+            }
+        }
+
+        [Route("testReportData/{reportID:int}/{current}"), HttpGet]
+        public IHttpActionResult TestReportDataSource(int reportID, string current)
+        {
+            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                ScheduledEmailType report = new TableOperations<ScheduledEmailType>(connection).QueryRecordWhere("ID = {0}", reportID);
+                List<DataSourceResponse> dataSourceResponses = new List<DataSourceResponse>();
+
+                if (!DateTime.TryParse(current, out DateTime xdaNow))
+                    xdaNow = DateTime.UtcNow;
+
+                emailService.LoadDataSources(report,xdaNow, dataSourceResponses);
                 return Ok(dataSourceResponses);
             }
         }

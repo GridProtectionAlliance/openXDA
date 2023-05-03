@@ -39,6 +39,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.Xml;
 using log4net;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 using openXDA.Configuration;
 using openXDA.Model;
 
@@ -77,31 +78,41 @@ namespace FaultData.DataWriters.Emails
                 if (DataSourceTriggered is null)
                 {
                     exception = new NullReferenceException("DataSource was not created.");
+                    Log.Debug($"Email data source {Name} was not created", exception);
                     return null;
                 }
-
-                void HandleException(Exception ex) =>
-                    Log.Error($"Email data source {Name} failed to process", ex);
 
                 XElement element = null;
                 exception = null;
                 try { element = DataSourceTriggered.Process(evt); }
-                catch (Exception ex) { HandleException(ex); exception = ex; }
+                catch (Exception ex) { exception = ex; }
+
+                if (!(exception is null))
+                    Log.Error($"Email data source {Name} failed to process", exception);
+
                 return element;
             }
-            public XElement TryProcess(Event evt) => TryProcess(evt, out Exception exception);
 
-            public XElement TryProcess(DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
+            public XElement TryProcess(Event evt) => TryProcess(evt, out _);
+            public XElement TryProcess(DateTime xdaNow) => TryProcess(xdaNow, out _);
+
+            public XElement TryProcess(DateTime xdaNow, out Exception exception)
             {
                 if (DataSourceScheduled is null)
+                {
+                    exception = new NullReferenceException("DataSource was not created.");
+                    Log.Debug($"Email data source {Name} was not created", exception);
                     return null;
-
-                void HandleException(Exception ex) =>
-                    Log.Error($"Email data source {Name} failed to process", ex);
+                }
 
                 XElement element = null;
-                try { element = DataSourceScheduled.Process(xdaNow, xdaPrev, xdaNext); }
-                catch (Exception ex) { HandleException(ex); }
+                exception = null;
+                try { element = DataSourceScheduled.Process(xdaNow); }
+                catch (Exception ex) { exception = ex; }
+
+                if (!(exception is null))
+                    Log.Error($"Email data source {Name} failed to process", exception);
+
                 return element;
             }
         }
@@ -113,7 +124,7 @@ namespace FaultData.DataWriters.Emails
             public XElement Data { get; set; }
             public Exception Exception { get; set; } = null;
 
-            public TriggeredEmailDataSource Model { get; set; }
+            public EmailDataSource Model { get; set; }
         }
         #endregion
 
@@ -184,22 +195,40 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public void SendScheduledEmail(ScheduledEmailType email, DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
+        public bool SendScheduledEmail(ScheduledEmailType email, DateTime xdaNow)
+        {
+            List<string> recipients = GetRecipients(email);
+
+            if (recipients.Count == 0 && string.IsNullOrEmpty(email.FilePath))
+                return false;
+
+            SendScheduledEmail(email, recipients, true, xdaNow);
+
+            return true;
+        }
+
+        public void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, List<DataSourceResponse> dataSourceResponses, DateTime xdaNow) =>
+            SendScheduledEmail(email, recipients, false, dataSourceResponses, xdaNow);
+
+        public void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, DateTime xdaNow) =>
+            SendScheduledEmail(email, recipients, saveToFile, null, xdaNow);
+
+        private void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, List<DataSourceResponse> dataSourceResponses, DateTime xdaNow)
         {
             List<Attachment> attachments = new List<Attachment>();
+            List<DataSourceResponse> responses = dataSourceResponses ?? new List<DataSourceResponse>();
 
             try
             {
-                string savePath = string.IsNullOrEmpty(email.FilePath) ? null : email.FilePath;
-                List<string> recipients = GetRecipients(email);
-                XElement templateData = GetData(email, xdaNow, xdaPrev, xdaNext);
-                if (templateData == null)
-                    return;
+                LoadDataSources(email, xdaNow, responses);
+
                 Settings settings = new Settings(Configure);
+                XElement templateData = new XElement("data", responses.Select(r => r.Data));
                 XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
+                    
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
                 ApplyFTTTransform(attachments, htmlDocument);
-                SendEmail(recipients, htmlDocument, attachments, email, settings, savePath);
+                SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
                 LoadSentEmail(email, xdaNow, recipients, htmlDocument);
             }
             finally
@@ -241,32 +270,36 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public XElement GetData(ScheduledEmailType email, DateTime xdaNow, DateTime xdaPrev, DateTime xdaNext)
+        public void LoadDataSources(ScheduledEmailType email, DateTime now, List<DataSourceResponse> responses)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
+                /* Load All DataSources */
                 TableOperations<ScheduledEmailDataSource> dataSourceTable = new TableOperations<ScheduledEmailDataSource>(connection);
                 TableOperations<ScheduledEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<ScheduledEmailDataSourceEmailType>(connection);
+                IEnumerable<ScheduledEmailDataSourceEmailType> dataSourceMappings = dataSourceEmailTypeTable.QueryRecordsWhere("ScheduledEmailTypeID = {0}", email.ID);
 
-                List<DataSourceWrapper> dataSources = dataSourceEmailTypeTable
-                    .QueryRecordsWhere("ScheduledEmailTypeID = {0}", email.ID)
-                    .Select((cm) => new Tuple<ScheduledEmailDataSourceEmailType, ScheduledEmailDataSource>(cm, dataSourceTable.QueryRecordWhere("ID = {0}", cm.ScheduledEmailDataSourceID)))
-                    .Select((m) => CreateDataSource(m.Item2, m.Item1))
-                    .ToList();
-
-                if (dataSources.Any(wrapper => wrapper.DataSourceScheduled is null))
+                foreach (ScheduledEmailDataSourceEmailType dataSourceMapping in dataSourceMappings)
                 {
-                    Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
-                    return null;
+                    ScheduledEmailDataSource dataSource = dataSourceTable.QueryRecordWhere("ID = {0}", dataSourceMapping.ScheduledEmailDataSourceID);
+                    DataSourceWrapper wrapper = CreateDataSource(dataSource, dataSourceMapping);
+
+                    Exception ex = null;
+                    XElement data = wrapper?.TryProcess(now);
+                    if (wrapper is null)
+                        ex = new Exception("Failed to create data source");
+
+                    DataSourceResponse response = new DataSourceResponse();
+                    response.Model = dataSource;
+                    response.Created = !(wrapper is null);
+                    response.Success = !(data is null);
+                    response.Data = data;
+                    response.Exception = ex;
+                    responses.Add(response);
                 }
 
-                if (dataSources.Count == 0)
-                    return null;
-
-                IEnumerable<XElement> scheduleData = dataSources
-                    .Select(dataSource => dataSource.TryProcess(xdaNow, xdaPrev, xdaNext));
-
-                return new XElement("data", scheduleData);
+                if (responses.Any(response => !response.Created))
+                    Log.Error("Failed to create one or more data sources for scheduled email; check debug logs for details");
             }
         }
 

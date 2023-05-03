@@ -25,9 +25,14 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [PostRoles("Administrator")]
+    [TableName("ScheduledEmailType")]
+    [UseEscapedName]
     public class ScheduledEmailType : EmailTypeBase
     {
-
         public bool SMS { get; set; }
 
         public string TriggerEmailSQL { get; set; }
