@@ -2096,7 +2096,6 @@ FROM
     AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID
 GO
 
-
 CREATE TABLE TriggeredEmailDataSourceEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

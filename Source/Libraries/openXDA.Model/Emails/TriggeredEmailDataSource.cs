@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-using GSF.Data.Model;
 using System.Runtime.Serialization;
+using GSF.Data.Model;
 
 namespace openXDA.Model
 {

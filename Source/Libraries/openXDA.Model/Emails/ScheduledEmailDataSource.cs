@@ -23,6 +23,5 @@
 
 namespace openXDA.Model
 {
-  
     public class ScheduledEmailDataSource: EmailDataSource { }
 }

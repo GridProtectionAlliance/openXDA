@@ -149,15 +149,15 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
-        [Route("testReport/{reportID:int}/{userID}/{current}/"), HttpGet]
+        [Route("testReport/{reportID:int}/{userID}/{current}"), HttpGet]
         public IHttpActionResult SendTestReport(int reportID, string userID, string current)
         {
-            Settings settings = new Settings(GetConfigurator());
-            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+            Action<object> configurator = GetConfigurator();
+            Settings settings = new Settings(configurator);
+            EmailService emailService = new EmailService(CreateDbConnection, configurator);
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
-
                 ScheduledEmailType report = new TableOperations<ScheduledEmailType>(connection).QueryRecordWhere("ID = {0}", reportID);
                 if (report is null)
                     return BadRequest($"Scheduled Email type with ID {reportID} does not exists");
@@ -172,7 +172,6 @@ namespace openXDA.Controllers.WebAPI
                 {
                     if (!DateTime.TryParse(current, out DateTime xdaNow))
                         xdaNow = DateTime.UtcNow;
-                 
                     
                     emailService.SendScheduledEmail(report, new List<string>() { account.Email }, response.DataSourceResponses, xdaNow);
                     return Ok(response);

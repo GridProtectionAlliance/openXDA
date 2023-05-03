@@ -28,19 +28,14 @@ using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using GSF.Security;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Xml;
-using HIDS;
-using openXDA.HIDS;
-using openXDA.HIDS.APIExtensions;
-using openXDA.Model;
-using Microsoft.Graph;
-using User = Microsoft.Graph.User;
-using SystemCenter.Model;
+using GSF.Security;
 using log4net;
+using Microsoft.Graph;
+using openXDA.Model;
+using SystemCenter.Model;
+using User = Microsoft.Graph.User;
 
 namespace openXDA.NotificationDataSources
 {
@@ -48,8 +43,42 @@ namespace openXDA.NotificationDataSources
     {
         #region [ Members ]
 
+        // Nested Types
+        private class DataSourceSettings
+        {
+            public DataSourceSettings(Action<object> configure) =>
+                configure(this);
+
+            [Setting]
+            [DefaultValue("JobTitle")]
+            public string AzureFieldName { get; set; }
+
+            [Setting]
+            [DefaultValue("Position")]
+            public string XDAFieldName { get; set; }
+        }
+
+        private class Update
+        {
+            public ConfirmableUserAccount User { get; set; }
+            public AdditionalUserFieldValue Updated { get; set; } = null;
+            public AdditionalUserFieldValue Previous { get; set; } = null;
+        }
+
+        // Fields
         private AzureADSettings m_azureADSettings;
         private GraphServiceClient m_graphClient;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public AzureDataSource(Func<AdoDataConnection> connectionFactory) =>
+            ConnectionFactory = connectionFactory;
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets Azure AD settings.
@@ -77,41 +106,6 @@ namespace openXDA.NotificationDataSources
             }
         }
 
-
-        // Nested Types
-        private class DataSourceSettings
-        {
-            public DataSourceSettings(Action<object> configure) =>
-                configure(this);
-
-           
-            [Setting]
-            [DefaultValue("JobTitle")]
-            public string AzureFieldName { get; set; }
-
-            [Setting]
-            [DefaultValue("Position")]
-            public string XDAFieldName { get; set; }
-            
-        }
-
-        private class Update
-        {
-            public openXDA.Model.ConfirmableUserAccount User { get; set; }
-            public AdditionalUserFieldValue Updated { get; set; } = null;
-            public AdditionalUserFieldValue Previous { get; set; } = null;
-        }
-        #endregion
-
-        #region [ Constructors ]
-
-        public AzureDataSource(Func<AdoDataConnection> connectionFactory) =>
-            ConnectionFactory = connectionFactory;
-
-        #endregion
-
-        #region [ Properties ]
-
         private Func<AdoDataConnection> ConnectionFactory { get; }
         private DataSourceSettings Settings { get; set; }
 
@@ -130,8 +124,8 @@ namespace openXDA.NotificationDataSources
             // get all Users
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                TableOperations<openXDA.Model.ConfirmableUserAccount> userTable = new TableOperations<openXDA.Model.ConfirmableUserAccount>(connection);
-                IEnumerable<openXDA.Model.ConfirmableUserAccount> users = userTable.QueryRecords().Where(u => IsValidAzureADUserName(u.Name).Result);
+                TableOperations<ConfirmableUserAccount> userTable = new TableOperations<openXDA.Model.ConfirmableUserAccount>(connection);
+                IEnumerable<ConfirmableUserAccount> users = userTable.QueryRecords().Where(u => IsValidAzureADUserName(u.Name).Result);
 
                 if (users.Count() == 0)
                     return result;
@@ -152,7 +146,7 @@ namespace openXDA.NotificationDataSources
                 }
 
                 IEnumerable<Update> updates =
-                    users.Select(u => GetUpdate(u,connection,addlFld))
+                    users.Select(u => GetUpdate(u, connection, addlFld))
                     .Where(item => !(item.Updated is null) && (item.Previous is null || item.Previous.Value != (item.Updated.Value)));
 
                 TableOperations<AdditionalUserFieldValue> addlFieldValTbl = new TableOperations<AdditionalUserFieldValue>(connection);
@@ -169,8 +163,8 @@ namespace openXDA.NotificationDataSources
                 }));
 
                 return result;
-                }
             }
+        }
 
         /// <summary>
         /// Gets flag that determines if specified user name can be found on Azure AD.
@@ -208,7 +202,7 @@ namespace openXDA.NotificationDataSources
             }
         }
 
-        private Update GetUpdate(openXDA.Model.ConfirmableUserAccount user, AdoDataConnection connection, AdditionalUserField field)
+        private Update GetUpdate(ConfirmableUserAccount user, AdoDataConnection connection, AdditionalUserField field)
         {
             Update update = new Update() { User = user };
             TableOperations<AdditionalUserFieldValue> addlFieldTbl = new TableOperations<AdditionalUserFieldValue>(connection);
@@ -216,13 +210,16 @@ namespace openXDA.NotificationDataSources
             update.Previous = addlFld;
             User adUser = LoadAzureUser(user.Name);
             if (addlFld is null)
+            {
                 update.Updated = new AdditionalUserFieldValue()
                 {
                     AdditionalUserFieldID = field.ID,
                     UserAccountID = user.ID,
                     Value = ""
                 };
+            }
             else
+            {
                 update.Updated = new AdditionalUserFieldValue()
                 {
                     ID = addlFld.ID,
@@ -230,6 +227,7 @@ namespace openXDA.NotificationDataSources
                     UserAccountID = addlFld.UserAccountID,
                     Value = addlFld.Value
                 };
+            }
 
             string adValue = "";
             if (!(user.GetType().GetProperty(Settings.AzureFieldName) is null))
@@ -243,8 +241,6 @@ namespace openXDA.NotificationDataSources
                 update.Updated.Value = adValue;
 
             return update;
-
-
         }
 
         private User LoadAzureUser(string username)
@@ -254,16 +250,15 @@ namespace openXDA.NotificationDataSources
             return username.Contains("#EXT#") ?
                 graphClient.Users.Request().Filter($"userPrincipalName eq '{username}'").GetAsync().Result.FirstOrDefault() :
                 graphClient.Users[username].Request().GetAsync().Result;
-
         }
+
         #endregion
 
-            #region [ Static ]
+        #region [ Static ]
 
-            // Static Fields
+        // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(AzureDataSource));
 
         #endregion
-
     }
 }

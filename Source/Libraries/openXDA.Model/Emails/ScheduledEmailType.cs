@@ -33,7 +33,6 @@ namespace openXDA.Model
     [UseEscapedName]
     public class ScheduledEmailType : EmailTypeBase
     {
-
         public bool SMS { get; set; }
 
         public string TriggerEmailSQL { get; set; }
