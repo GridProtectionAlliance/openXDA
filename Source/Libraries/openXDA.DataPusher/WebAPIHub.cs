@@ -285,9 +285,9 @@ namespace openXDA.DataPusher
             SimpleCertificateChecker simpleCertificateChecker = new SimpleCertificateChecker();
 
             CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-            systemSettings.Add("CertFile", "", "This is a certfile.");
-            systemSettings.Add("ValidPolicyErrors", "None", "Password for PQMarkWeb API access.");
-            systemSettings.Add("ValidChainFlags", "NoError", "Password for PQMarkWeb API access.");
+            systemSettings.Add("CertFile", "", "Certificate for WebAPIHub used by PQMark/DataPusher.");
+            systemSettings.Add("ValidPolicyErrors", "None", "Expected policy errors during remote server certificate validation for PQMark/DataPusher (self-signed: RemoteCertificateNameMismatch, RemoteCertificateChainErrors).");
+            systemSettings.Add("ValidChainFlags", "NoError", "Expected chain flags set during remote server certificate validation for PQMark/DataPusher (self-signed: UntrustedRoot).");
 
             try
             {
