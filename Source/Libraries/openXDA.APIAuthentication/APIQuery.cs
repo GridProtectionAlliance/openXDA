@@ -154,7 +154,18 @@ namespace openXDA.APIAuthentication
         /// <param name="path">Path to the API endpoint locating the resource to be requested.</param>
         /// <param name="cancellationToken">Token used to cancel the request before it has completed.</param>
         /// <returns>The HTTP response returned by the host that handled the request.</returns>
-        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, CancellationToken cancellationToken = default)
+        public Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, CancellationToken cancellationToken = default) =>
+            SendWebRequestAsync(configure, path, HttpCompletionOption.ResponseContentRead, cancellationToken);
+
+        /// <summary>
+        /// Sends a web request to the host using the credentials for API authentication.
+        /// </summary>
+        /// <param name="configure">Action that configures the HTTP request.</param>
+        /// <param name="path">Path to the API endpoint locating the resource to be requested.</param>
+        /// <param name="httpCompletionOption">When the operation should complete (as soon as a response is available or after reading the whole response content).</param>
+        /// <param name="cancellationToken">Token used to cancel the request before it has completed.</param>
+        /// <returns>The HTTP response returned by the host that handled the request.</returns>
+        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, HttpCompletionOption httpCompletionOption, CancellationToken cancellationToken = default)
         {
             int initialHostIndex = Interlocked.CompareExchange(ref m_hostIndex, 0, 0);
 
@@ -168,7 +179,7 @@ namespace openXDA.APIAuthentication
 
                 try
                 {
-                    HttpResponseMessage response = await SendWebRequestToAsync(host, configure, path, cancellationToken).ConfigureAwait(false);
+                    HttpResponseMessage response = await SendWebRequestToAsync(host, configure, path, httpCompletionOption, cancellationToken).ConfigureAwait(false);
                     UpdateHostIndex(hostIndex);
                     return response;
                 }
@@ -188,7 +199,7 @@ namespace openXDA.APIAuthentication
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         }
 
-        private async Task<HttpResponseMessage> SendWebRequestToAsync(Host host, Action<HttpRequestMessage> configure, string path, CancellationToken cancellationToken)
+        private async Task<HttpResponseMessage> SendWebRequestToAsync(Host host, Action<HttpRequestMessage> configure, string path, HttpCompletionOption httpCompletionOption, CancellationToken cancellationToken)
         {
             using (HttpRequestMessage request = BuildRequest(host, path, configure))
             {
@@ -200,7 +211,7 @@ namespace openXDA.APIAuthentication
                     request.Headers.Add("X-GSF-Verify", host.AntiForgeryToken);
                 }
 
-                return await CallAPIAsync(request, cancellationToken).ConfigureAwait(false);
+                return await CallAPIAsync(request, httpCompletionOption, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -214,18 +225,18 @@ namespace openXDA.APIAuthentication
             }
 
             using (HttpRequestMessage tokenRequest = BuildRequest(host, "api/rvht", ConfigureTokenRequest))
-            using (HttpResponseMessage tokenResponse = await CallAPIAsync(tokenRequest, cancellationToken).ConfigureAwait(false))
+            using (HttpResponseMessage tokenResponse = await CallAPIAsync(tokenRequest, HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false))
             {
                 tokenResponse.EnsureSuccessStatusCode();
                 return await tokenResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
         }
 
-        private async Task<HttpResponseMessage> CallAPIAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        private async Task<HttpResponseMessage> CallAPIAsync(HttpRequestMessage request, HttpCompletionOption httpCompletionOption, CancellationToken cancellationToken)
         {
             try
             {
-                return await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                return await HttpClient.SendAsync(request, httpCompletionOption, cancellationToken).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
             {
