@@ -1400,7 +1400,8 @@ CREATE TABLE AssetLocation
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     LocationID INT NOT NULL REFERENCES Location(ID),
-    AssetID INT NOT NULL REFERENCES Asset(ID)
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+    CONSTRAINT UC_AssetLocation UNIQUE(AssetID, LocationID)
 )
 GO
 
@@ -2065,8 +2066,7 @@ CREATE TABLE UserAccountScheduledEmailType
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
     ScheduledEmailTypeID INT NOT NULL REFERENCES ScheduledEmailType(ID),
-    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
-    Approved BIT NOT NULL DEFAULT 0
+    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID)
 )
 GO
 
