@@ -481,8 +481,8 @@ namespace FaultData.DataOperations
 
             faultLocationDataSet = new FaultLocationDataSet();
             faultLocationDataSet.FaultType = local.FaultType;
-            faultLocationDataSet.FaultPaths[0].LineDistance = lineLength;
-            faultLocationDataSet.FaultPaths[0].Z1 = nominalImpedance;
+            faultLocationDataSet.LineDistance = lineLength;
+            faultLocationDataSet.Z1 = nominalImpedance;
             local.CycleDataGroup.PushDataTo(faultLocationDataSet.Cycles);
 
             remoteCycle = GetCycleAt(remote.CycleDataGroup, remote.Fault.CalculationCycle - remote.StartSample);
