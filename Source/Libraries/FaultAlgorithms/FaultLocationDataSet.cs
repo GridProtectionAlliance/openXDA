@@ -376,6 +376,9 @@ namespace FaultAlgorithms
             m_frequency = 60.0D;
 
             m_values = new Dictionary<string, object>();
+
+            m_possiblePaths = new List<LinePath>();
+            m_possiblePaths.Add(new LinePath());
         }
 
         #endregion
@@ -502,6 +505,62 @@ namespace FaultAlgorithms
             set
             {
                 m_remoteSourceImpedance = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the positive sequence impedance of the longest path.
+        /// </summary>
+        public ComplexNumber Z1
+        {
+            get
+            {
+                return m_possiblePaths[0].Z1;
+            }
+            set
+            {
+                m_possiblePaths[0].Z1 = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the zero sequence impedance of the longest path.
+        /// </summary>
+        public ComplexNumber Z0
+        {
+            get
+            {
+                return m_possiblePaths[0].Z0;
+            }
+            set
+            {
+                m_possiblePaths[0].Z0 = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the loop impedance <c>[(Z0 + 2*Z1) / 3]</c> of the longest path.
+        /// </summary>
+        public ComplexNumber Zs
+        {
+            get
+            {
+                return m_possiblePaths[0].Zs;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the total distance across the line of the longest path.
+        /// </summary>
+        public double LineDistance
+        {
+            get
+            {
+                return m_possiblePaths[0].LineDistance;
+            }
+            set
+            {
+                m_possiblePaths[0].LineDistance = value;
             }
         }
 

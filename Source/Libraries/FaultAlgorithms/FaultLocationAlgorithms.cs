@@ -283,7 +283,7 @@ namespace FaultAlgorithms
             FaultType faultType = localFaultDataSet.FaultType;
             ComplexNumber vfs = GetDoubleEndedFaultVoltage(remoteFaultCycle, faultType);
             ComplexNumber ifs = GetDoubleEndedFaultCurrent(remoteFaultCycle, faultType);
-            ComplexNumber z = localFaultDataSet.FaultPaths[0].Z1;
+            ComplexNumber z = localFaultDataSet.Z1;
 
             return localFaultDataSet.Cycles
                 .Select(cycleData => new
@@ -292,7 +292,7 @@ namespace FaultAlgorithms
                     Ins = GetDoubleEndedFaultCurrent(cycleData, faultType)
                 })
                 .Select(cycle => (cycle.Vns - vfs + z * ifs) / (z * (cycle.Ins + ifs)))
-                .Select(m => m * localFaultDataSet.FaultPaths[0].LineDistance)
+                .Select(m => m * localFaultDataSet.LineDistance)
                 .ToArray();
         }
 
