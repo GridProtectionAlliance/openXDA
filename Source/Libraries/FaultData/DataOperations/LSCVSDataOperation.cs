@@ -89,23 +89,39 @@ namespace FaultData.DataOperations
 
                 List<LSCVSEvent> lscvsEventList = new List<LSCVSEvent> ();
 
+                int rejectionBadData = 0;
+                int rejectionThreshold = 0;
+                int rejectionNoCustomer = 0;
+
                 foreach (Event evt in fileGroupEvents)
                 {
                     EventStat evtSt = eventStatTable.QueryRecordWhere($"EventID = {evt.ID}");
 
                     if (evtSt.InitialMW is null || evtSt.FinalMW is null ||
-                            (!(Abs((double)((evtSt.InitialMW - evtSt.FinalMW) / evtSt.InitialMW)) > LSCVSSettings.ReportingThreshold))) continue;
+                            (!(Abs((double)((evtSt.InitialMW - evtSt.FinalMW) / evtSt.InitialMW)) > LSCVSSettings.ReportingThreshold)))
+                    {
+                        rejectionThreshold++;
+                        continue;
+                    }
 
                     IEnumerable<Customer> lscvsCustomers = customerTable.QueryRecordsWhere("LSCVS = 1 AND (" +
                         "(ID in (Select CustomerID from CustomerAsset where AssetID = {0})) OR " +
                         "(ID in (Select CustomerID from CustomerMeter where MeterID = {1})))", evt.AssetID, evt.MeterID);
 
-                    if (!lscvsCustomers.Any()) continue;
+                    if (!lscvsCustomers.Any())
+                    {
+                        rejectionNoCustomer++;
+                        continue;
+                    }
 
                     IEnumerable<DbDisturbance> worstDisturbances = disturbanceTable.QueryRecordsWhere("ID in " +
                         $"(Select wd.WorstDisturbanceID from EventWorstDisturbance wd where wd.EventID = {evt.ID})");
 
-                    if (evtSt.VAMin is null || evtSt.VBMin is null || evtSt.VCMin is null) continue;
+                    if (evtSt.VAMin is null || evtSt.VBMin is null || evtSt.VCMin is null)
+                    {
+                        rejectionBadData++;
+                        continue;
+                    }
 
                     List<double> lineToNeutralVoltages = new List<double>
                     {
@@ -151,10 +167,16 @@ namespace FaultData.DataOperations
                     }
                 }
 
-                Log.Info($"Sending {lscvsEventList.Count} lscvs events found for meter {meterDataSet.Meter.Name}");
+                if (rejectionBadData + rejectionNoCustomer + rejectionThreshold > 0)
+                {
+                    Log.Info($"{rejectionBadData + rejectionNoCustomer + rejectionThreshold} lscvs events not sent:");
+                    Log.Info($@"    {rejectionThreshold} due to not meeting MW ratio; {rejectionNoCustomer} due to not having customers assigned to relavent meters; {rejectionBadData} due to not having all line-neutral phase data.");
+                }
 
                 if (lscvsEventList.Count != 0)
                 {
+                    Log.Info($"Sending {lscvsEventList.Count} lscvs events found for meter {meterDataSet.Meter.Name}");
+                    
                     APIQuery query = new APIQuery(LSCVSSettings.APIKey, LSCVSSettings.APIToken, LSCVSSettings.URL.Split(';'));
 
                     string jsonData = JsonConvert.SerializeObject(lscvsEventList);
