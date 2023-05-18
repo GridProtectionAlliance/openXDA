@@ -61,12 +61,15 @@ namespace openXDA.Model
         {
             get
             {
-                return m_parent ?? (m_parent = QueryParent());
+                if (m_parent is null)
+                    m_parent = LazyContext.GetAsset(ParentID);
+
+                if (m_parent is null)
+                    m_parent = QueryParent();
+
+                return m_parent;
             }
-            set
-            {
-                m_parent = value;
-            }
+            set => m_parent = value;
         }
 
         [JsonIgnore]
@@ -75,26 +78,23 @@ namespace openXDA.Model
         {
             get
             {
-                return m_child ?? (m_child = QueryChild());
+                if (m_child is null)
+                    m_child = LazyContext.GetAsset(ChildID);
+
+                if (m_child is null)
+                    m_child = QueryChild();
+
+                return m_child;
             }
-            set
-            {
-                m_child = value;
-            }
+            set => m_child = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public Func<AdoDataConnection> ConnectionFactory
         {
-            get
-            {
-                return LazyContext.ConnectionFactory;
-            }
-            set
-            {
-                LazyContext.ConnectionFactory = value;
-            }
+            get => LazyContext.ConnectionFactory;
+            set => LazyContext.ConnectionFactory = value;
         }
 
         [JsonIgnore]

@@ -153,12 +153,15 @@ namespace openXDA.Model
         {
             get
             {
-                return m_seriesType ?? (m_seriesType = QuerySeriesType());
+                if (m_seriesType is null)
+                    m_seriesType = LazyContext.GetSeriesType(SeriesTypeID);
+
+                if (m_seriesType is null)
+                    m_seriesType = QuerySeriesType();
+
+                return m_seriesType;
             }
-            set
-            {
-                m_seriesType = value;
-            }
+            set => m_seriesType = value;
         }
 
         [JsonIgnore]
@@ -167,26 +170,23 @@ namespace openXDA.Model
         {
             get
             {
-                return m_channel ?? (m_channel = QueryChannel());
+                if (m_channel is null)
+                    m_channel = LazyContext.GetChannel(ChannelID);
+
+                if (m_channel is null)
+                    m_channel = QueryChannel();
+
+                return m_channel;
             }
-            set
-            {
-                m_channel = value;
-            }
+            set => m_channel = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public Func<AdoDataConnection> ConnectionFactory
         {
-            get
-            {
-                return LazyContext.ConnectionFactory;
-            }
-            set
-            {
-                LazyContext.ConnectionFactory = value;
-            }
+            get => LazyContext.ConnectionFactory;
+            set => LazyContext.ConnectionFactory = value;
         }
 
         [JsonIgnore]
