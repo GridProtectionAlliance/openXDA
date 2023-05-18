@@ -55,26 +55,23 @@ namespace openXDA.Model
         {
             get
             {
-                return m_assetLocation ?? (m_assetLocation = QueryAssetLocation());
+                if (m_assetLocation is null)
+                    m_assetLocation = LazyContext.GetAssetLocation(AssetLocationID);
+
+                if (m_assetLocation is null)
+                    m_assetLocation = QueryAssetLocation();
+
+                return m_assetLocation;
             }
-            set
-            {
-                m_assetLocation = value;
-            }
+            set => m_assetLocation = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public Func<AdoDataConnection> ConnectionFactory
         {
-            get
-            {
-                return LazyContext.ConnectionFactory;
-            }
-            set
-            {
-                LazyContext.ConnectionFactory = value;
-            }
+            get => LazyContext.ConnectionFactory;
+            set => LazyContext.ConnectionFactory = value;
         }
 
         [JsonIgnore]

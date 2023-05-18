@@ -35,7 +35,7 @@ namespace openXDA.Model
         #region [ Members ]
 
         // Fields
-        private Location m_Location;
+        private Location m_location;
         private Asset m_asset;
         private SourceImpedance m_sourceImpedance;
 
@@ -56,12 +56,15 @@ namespace openXDA.Model
         {
             get
             {
-                return m_Location ?? (m_Location = QueryLocation());
+                if (m_location is null)
+                    m_location = LazyContext.GetLocation(LocationID);
+
+                if (m_location is null)
+                    m_location = QueryLocation();
+
+                return m_location;
             }
-            set
-            {
-                m_Location = value;
-            }
+            set => m_location = value;
         }
 
         [JsonIgnore]
@@ -70,40 +73,31 @@ namespace openXDA.Model
         {
             get
             {
-                return m_asset ?? (m_asset ?? QueryAsset());
+                if (m_asset is null)
+                    m_asset = LazyContext.GetAsset(AssetID);
+
+                if (m_asset is null)
+                    m_asset = QueryAsset();
+
+                return m_asset;
             }
-            set
-            {
-                m_asset = value;
-            }
+            set => m_asset = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public SourceImpedance SourceImpedance
         {
-            get
-            {
-                return m_sourceImpedance ?? (m_sourceImpedance ?? QuerySourceImpedance());
-            }
-            set
-            {
-                m_sourceImpedance = value;
-            }
+            get => m_sourceImpedance ?? (m_sourceImpedance ?? QuerySourceImpedance());
+            set => m_sourceImpedance = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public Func<AdoDataConnection> ConnectionFactory
         {
-            get
-            {
-                return LazyContext.ConnectionFactory;
-            }
-            set
-            {
-                LazyContext.ConnectionFactory = value;
-            }
+            get => LazyContext.ConnectionFactory;
+            set => LazyContext.ConnectionFactory = value;
         }
 
         [JsonIgnore]

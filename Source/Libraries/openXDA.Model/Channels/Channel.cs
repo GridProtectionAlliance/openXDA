@@ -207,12 +207,15 @@ namespace openXDA.Model
         {
             get
             {
-                return m_measurementType ?? (m_measurementType = QueryMeasurementType());
+                if (m_measurementType is null)
+                    m_measurementType = LazyContext.GetMeasurementType(MeasurementTypeID);
+
+                if (m_measurementType is null)
+                    m_measurementType = QueryMeasurementType();
+
+                return m_measurementType;
             }
-            set
-            {
-                m_measurementType = value;
-            }
+            set => m_measurementType = value;
         }
 
         [JsonIgnore]
@@ -221,12 +224,15 @@ namespace openXDA.Model
         {
             get
             {
-                return m_measurementCharacteristic ?? (m_measurementCharacteristic = QueryMeasurementCharacteristic());
+                if (m_measurementCharacteristic is null)
+                    m_measurementCharacteristic = LazyContext.GetMeasurementCharacteristic(MeasurementCharacteristicID);
+
+                if (m_measurementCharacteristic is null)
+                    m_measurementCharacteristic = QueryMeasurementCharacteristic();
+
+                return m_measurementCharacteristic;
             }
-            set
-            {
-                m_measurementCharacteristic = value;
-            }
+            set => m_measurementCharacteristic = value;
         }
 
         [JsonIgnore]
@@ -235,12 +241,15 @@ namespace openXDA.Model
         {
             get
             {
-                return m_phase ?? (m_phase = QueryPhase());
+                if (m_phase is null)
+                    m_phase = LazyContext.GetPhase(PhaseID);
+
+                if (m_phase is null)
+                    m_phase = QueryPhase();
+
+                return m_phase;
             }
-            set
-            {
-                m_phase = value;
-            }
+            set => m_phase = value;
         }
 
         [JsonIgnore]
@@ -249,12 +258,15 @@ namespace openXDA.Model
         {
             get
             {
-                return m_meter ?? (m_meter = QueryMeter());
+                if (m_meter is null)
+                    m_meter = LazyContext.GetMeter(MeterID);
+
+                if (m_meter is null)
+                    m_meter = QueryMeter();
+
+                return m_meter;
             }
-            set
-            {
-                m_meter = value;
-            }
+            set => m_meter = value;
         }
 
         [JsonIgnore]
@@ -263,40 +275,31 @@ namespace openXDA.Model
         {
             get
             {
-                return m_asset ?? (m_asset = QueryAsset());
+                if (m_asset is null)
+                    m_asset = LazyContext.GetAsset(AssetID);
+
+                if (m_asset is null)
+                    m_asset = QueryAsset();
+
+                return m_asset;
             }
-            set
-            {
-                m_asset = value;
-            }
+            set => m_asset = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public List<Series> Series
         {
-            get
-            {
-                return m_series ?? (m_series = QuerySeries());
-            }
-            set
-            {
-                m_series = value;
-            }
+            get => m_series ?? (m_series = QuerySeries());
+            set => m_series = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public Func<AdoDataConnection> ConnectionFactory
         {
-            get
-            {
-                return LazyContext.ConnectionFactory;
-            }
-            set
-            {
-                LazyContext.ConnectionFactory = value;
-            }
+            get => LazyContext.ConnectionFactory;
+            set => LazyContext.ConnectionFactory = value;
         }
 
         [JsonIgnore]

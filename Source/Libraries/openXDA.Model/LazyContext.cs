@@ -86,6 +86,11 @@ namespace openXDA.Model
 
         #region [ Methods ]
 
+        public Location GetLocation(int locationID) =>
+            m_locations.TryGetValue(locationID, out Location location)
+                ? location
+                : null;
+
         public Location GetLocation(Location location)
         {
             Location cachedLocation;
@@ -102,6 +107,11 @@ namespace openXDA.Model
             m_locations.Add(location.ID, location);
             return location;
         }
+
+        public Meter GetMeter(int meterID) =>
+            m_meters.TryGetValue(meterID, out Meter meter)
+                ? meter
+                : null;
 
         public Meter GetMeter(Meter meter)
         {
@@ -120,6 +130,11 @@ namespace openXDA.Model
             return meter;
         }
 
+        public Asset GetAsset(int assetID) =>
+            m_assets.TryGetValue(assetID, out Asset asset)
+                ? asset
+                : null;
+
         public Asset GetAsset(Asset asset)
         {
             Asset cachedAsset;
@@ -136,6 +151,11 @@ namespace openXDA.Model
             m_assets.Add(asset.ID, asset);
             return asset;
         }
+
+        public AssetLocation GetAssetLocation(int assetLocationID) =>
+            m_assetLocations.TryGetValue(assetLocationID, out AssetLocation assetLocation)
+                ? assetLocation
+                : null;
 
         public AssetLocation GetAssetLocation(AssetLocation assetLocation)
         {
@@ -154,6 +174,11 @@ namespace openXDA.Model
             return assetLocation;
         }
 
+        public SourceImpedance GetSourceImpedance(int sourceImpedanceID) =>
+            m_sourceImpedances.TryGetValue(sourceImpedanceID, out SourceImpedance sourceImpedance)
+                ? sourceImpedance
+                : null;
+
         public SourceImpedance GetSourceImpedance(SourceImpedance sourceImpedance)
         {
             SourceImpedance cachedSourceImpedance;
@@ -170,6 +195,11 @@ namespace openXDA.Model
             m_sourceImpedances.Add(sourceImpedance.ID, sourceImpedance);
             return sourceImpedance;
         }
+
+        public MeterAsset GetMeterAsset(int meterAssetID) =>
+            m_meterAssets.TryGetValue(meterAssetID, out MeterAsset meterAsset)
+                ? meterAsset
+                : null;
 
         public MeterAsset GetMeterAsset(MeterAsset meterAsset)
         {
@@ -188,6 +218,11 @@ namespace openXDA.Model
             return meterAsset;
         }
 
+        public Channel GetChannel(int channelID) =>
+            m_channels.TryGetValue(channelID, out Channel channel)
+                ? channel
+                : null;
+
         public Channel GetChannel(Channel channel)
         {
             Channel cachedChannelLine;
@@ -204,6 +239,11 @@ namespace openXDA.Model
             m_channels.Add(channel.ID, channel);
             return channel;
         }
+
+        public Series GetSeries(int seriesID) =>
+            m_series.TryGetValue(seriesID, out Series series)
+                ? series
+                : null;
 
         public Series GetSeries(Series series)
         {
@@ -222,6 +262,11 @@ namespace openXDA.Model
             return series;
         }
 
+        public MeasurementType GetMeasurementType(int measurementTypeID) =>
+            m_measurementTypes.TryGetValue(measurementTypeID, out MeasurementType measurementType)
+                ? measurementType
+                : null;
+
         public MeasurementType GetMeasurementType(MeasurementType measurementType)
         {
             MeasurementType cachedMeasurementTypeLine;
@@ -238,6 +283,11 @@ namespace openXDA.Model
             m_measurementTypes.Add(measurementType.ID, measurementType);
             return measurementType;
         }
+
+        public MeasurementCharacteristic GetMeasurementCharacteristic(int measurementCharacteristicID) =>
+            m_measurementCharacteristics.TryGetValue(measurementCharacteristicID, out MeasurementCharacteristic measurementCharacteristic)
+                ? measurementCharacteristic
+                : null;
 
         public MeasurementCharacteristic GetMeasurementCharacteristic(MeasurementCharacteristic measurementCharacteristic)
         {
@@ -256,6 +306,11 @@ namespace openXDA.Model
             return measurementCharacteristic;
         }
 
+        public Phase GetPhase(int phaseID) =>
+            m_phases.TryGetValue(phaseID, out Phase phase)
+                ? phase
+                : null;
+
         public Phase GetPhase(Phase phase)
         {
             Phase cachedPhaseLine;
@@ -272,6 +327,11 @@ namespace openXDA.Model
             m_phases.Add(phase.ID, phase);
             return phase;
         }
+
+        public SeriesType GetSeriesType(int seriesTypeID) =>
+            m_seriesTypes.TryGetValue(seriesTypeID, out SeriesType seriesType)
+                ? seriesType
+                : null;
 
         public SeriesType GetSeriesType(SeriesType seriesType)
         {
@@ -290,6 +350,11 @@ namespace openXDA.Model
             return seriesType;
         }
 
+        public AssetConnection GetAssetConnection(int connectionID) =>
+            m_assetConnections.TryGetValue(connectionID, out AssetConnection connection)
+                ? connection
+                : null;
+
         public AssetConnection GetAssetConnection(AssetConnection connection)
         {
             AssetConnection cachedConnection;
@@ -306,6 +371,11 @@ namespace openXDA.Model
             m_assetConnections.Add(connection.ID, connection);
             return connection;
         }
+
+        public LineSegmentConnections GetLineSegmentConnection(int connectionID) =>
+            m_segmentConnections.TryGetValue(connectionID, out LineSegmentConnections connection)
+                ? connection
+                : null;
 
         public LineSegmentConnections GetLineSegmentConnection(LineSegmentConnections connection)
         {
@@ -324,6 +394,11 @@ namespace openXDA.Model
             return connection;
         }
 
+        public Line GetLine(int lineID) =>
+            m_lines.TryGetValue(lineID, out Line line)
+                ? line
+                : null;
+
         public Line GetLine(Line line)
         {
             Line cachedLine;
@@ -340,6 +415,11 @@ namespace openXDA.Model
             m_lines.Add(line.ID, line);
             return line;
         }
+
+        public CapBankRelay GetRelay(int relayID) =>
+            m_relays.TryGetValue(relayID, out CapBankRelay relay)
+                ? relay
+                : null;
 
         public CapBankRelay GetRelay(CapBankRelay relay)
         {
@@ -358,24 +438,27 @@ namespace openXDA.Model
             return relay;
         }
 
+        public LineSegment GetLineSegment(int lineSegmentID) =>
+            m_lineSegments.TryGetValue(lineSegmentID, out LineSegment lineSegment)
+                ? lineSegment
+                : null;
 
-        public LineSegment GetLineSegment(LineSegment line)
+        public LineSegment GetLineSegment(LineSegment lineSegment)
         {
             LineSegment cachedLine;
 
-            if ((object)line == null)
+            if ((object)lineSegment == null)
                 return null;
 
-            if (line.ID == 0)
-                return line;
+            if (lineSegment.ID == 0)
+                return lineSegment;
 
-            if (m_lineSegments.TryGetValue(line.ID, out cachedLine))
+            if (m_lineSegments.TryGetValue(lineSegment.ID, out cachedLine))
                 return cachedLine;
 
-            m_lineSegments.Add(line.ID, line);
-            return line;
+            m_lineSegments.Add(lineSegment.ID, lineSegment);
+            return lineSegment;
         }
-
 
         #endregion
     }

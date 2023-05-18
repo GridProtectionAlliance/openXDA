@@ -97,40 +97,31 @@ namespace openXDA.Model
         {
             get
             {
-                return m_location ?? (m_location = QueryLocation());
+                if (m_location is null)
+                    m_location = LazyContext.GetLocation(LocationID);
+
+                if (m_location is null)
+                    m_location = QueryLocation();
+
+                return m_location;
             }
-            set
-            {
-                m_location = value;
-            }
+            set => m_location = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public List<MeterAsset> MeterAssets
         {
-            get
-            {
-                return m_meterAssets ?? (m_meterAssets = QueryMeterAssets());
-            }
-            set
-            {
-                m_meterAssets = value;
-            }
+            get => m_meterAssets ?? (m_meterAssets = QueryMeterAssets());
+            set => m_meterAssets = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public List<Channel> Channels
         {
-            get
-            {
-                return m_channels ?? (m_channels = QueryChannels());
-            }
-            set
-            {
-                m_channels = value;
-            }
+            get => m_channels ?? (m_channels = QueryChannels());
+            set => m_channels = value;
         }
 
         public List<Series> Series
@@ -171,14 +162,8 @@ namespace openXDA.Model
         [NonRecordField]
         public Func<AdoDataConnection> ConnectionFactory
         {
-            get
-            {
-                return LazyContext.ConnectionFactory;
-            }
-            set
-            {
-                LazyContext.ConnectionFactory = value;
-            }
+            get => LazyContext.ConnectionFactory;
+            set => LazyContext.ConnectionFactory = value;
         }
 
         [JsonIgnore]

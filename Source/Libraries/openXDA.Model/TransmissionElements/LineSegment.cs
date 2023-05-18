@@ -65,28 +65,16 @@ namespace openXDA.Model
         [NonRecordField]
         public Line Line
         {
-            get
-            {
-                return m_line ?? (m_line = QueryLine());
-            }
-            set
-            {
-                m_line = value;
-            }
+            get => m_line ?? (m_line = QueryLine());
+            set => m_line = value;
         }
 
         [JsonIgnore]
         [NonRecordField]
         public List<LineSegmentConnections> connectedSegments
         {
-            get
-            {
-                return m_connectedSegements ?? (m_connectedSegements = QueryConnectedSegements());
-            }
-            set
-            {
-                m_connectedSegements = value;
-            }
+            get => m_connectedSegements ?? (m_connectedSegements = QueryConnectedSegements());
+            set => m_connectedSegements = value;
         }
 
         #endregion
@@ -111,11 +99,10 @@ namespace openXDA.Model
             return DetailedLineSegment(asset,asset.ConnectionFactory.Invoke());
         }
 
-        public Line GetLine( AdoDataConnection connection)
+        public Line GetLine(AdoDataConnection connection)
         {
             if ((object)connection == null)
                 return null;
-
 
             int id = -1;
 
@@ -145,27 +132,22 @@ namespace openXDA.Model
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                line = LazyContext.GetLine(GetLine(connection));
+                line = GetLine(connection);
             }
 
             if ((object)line != null)
-            {
                 line.LazyContext = LazyContext;
-                
-            }
 
-            return line;
+            return LazyContext.GetLine(line);
         }
 
         public IEnumerable<LineSegmentConnections> GetConnectedSegments(AdoDataConnection connection)
         {
-
             if ((object)connection == null)
                 return null;
 
             TableOperations<LineSegmentConnections> connectionTable = new TableOperations<LineSegmentConnections>(connection);
             return connectionTable.QueryRecordsWhere("ParentSegment = {0} OR ChildSegment = {1}", ID, ID);
-
         }
 
         private List<LineSegmentConnections> QueryConnectedSegements()
