@@ -737,6 +737,10 @@ INSERT INTO ScheduledEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VAL
 GO
 
 INSERT INTO ScheduledEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VALUES
+('AZURE','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.AzureDataSource','azure')
+GO
+
+INSERT INTO ScheduledEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VALUES
 ('HIDS','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.HIDSDataSource','hids')
 GO
 

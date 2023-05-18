@@ -30,6 +30,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [ParentKey(typeof(ScheduledEmailType))]
         public int ScheduledEmailTypeID { get; set; }
 
         public int ScheduledEmailDataSourceID { get; set; }
