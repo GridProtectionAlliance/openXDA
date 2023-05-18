@@ -763,7 +763,12 @@ namespace FaultData.DataOperations
 
                 foreach (Channel channel in meterDataSet.Meter.Channels)
                 {
-                    channel.Enabled = parsedChannelLookup.Contains(new ChannelKey(channel));
+                    bool enabled = parsedChannelLookup.Contains(new ChannelKey(channel));
+
+                    if (enabled == channel.Enabled)
+                        continue;
+
+                    channel.Enabled = enabled;
                     channelTable.UpdateRecord(channel);
                 }
             }
