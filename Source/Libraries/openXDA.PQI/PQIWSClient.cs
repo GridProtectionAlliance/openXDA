@@ -61,6 +61,42 @@ namespace openXDA.PQI
                 return await response.Content.ReadAsAsync<List<Facility>>();
         }
 
+        public async Task<List<Address>> GetAllAddresses(CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, "Address");
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<List<Address>>();
+        }
+
+        public async Task<List<Company>> GetAllCompanues(CancellationToken cancellationToken = default)
+        {
+            string url = BuildURL(BaseURL, "Company");
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{url}");
+                request.Method = HttpMethod.Get;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider());
+
+                MediaTypeWithQualityHeaderValue acceptHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptHeader);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+                return await response.Content.ReadAsAsync<List<Company>>();
+        }
+
         public async Task<FacilityInfo> GetFacilityInfoAsync(int facilityID, CancellationToken cancellationToken = default)
         {
             string url = BuildURL(BaseURL, BasePath, "GetFacilityInfo");

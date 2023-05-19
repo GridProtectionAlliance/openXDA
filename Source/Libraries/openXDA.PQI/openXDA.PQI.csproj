@@ -51,6 +51,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Company.cs" />
+    <Compile Include="Address.cs" />
     <Compile Include="PQIModel.cs" />
     <Compile Include="TestCurvePoint.cs" />
     <Compile Include="TestCurve.cs" />
