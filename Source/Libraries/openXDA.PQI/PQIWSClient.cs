@@ -79,7 +79,7 @@ namespace openXDA.PQI
                 return await response.Content.ReadAsAsync<List<Address>>();
         }
 
-        public async Task<List<Company>> GetAllCompanues(CancellationToken cancellationToken = default)
+        public async Task<List<Company>> GetAllCompanies(CancellationToken cancellationToken = default)
         {
             string url = BuildURL(BaseURL, "Company");
 
