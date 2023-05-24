@@ -42,11 +42,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GSF", "GSF", "{F5BD3958-FFB
 		Dependencies\GSF\GSF.Web.xml = Dependencies\GSF\GSF.Web.xml
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WiX", "WiX", "{598B0FE9-B4EA-4797-982D-BF243F3C5BEC}"
-	ProjectSection(SolutionItems) = preProject
-		Dependencies\WiX\WixUIExtension.dll = Dependencies\WiX\WixUIExtension.dll
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{B554F6A4-C3DF-4D8B-B3EF-7819B44BCE09}"
 	ProjectSection(SolutionItems) = preProject
 		Data\01 - openXDA.sql = Data\01 - openXDA.sql
@@ -156,6 +151,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GTC", "GTC", "{7AB69436-AAD5-4D16-9235-4F20837B923B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaultTraceToolInterop", "Tools\FaultTraceToolInterop\FaultTraceToolInterop.csproj", "{77AF7E7C-6D8A-436E-ACF4-F1B6B808525F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WiX", "WiX", "{598B0FE9-B4EA-4797-982D-BF243F3C5BEC}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\WiX\WixUIExtension.dll = Dependencies\WiX\WixUIExtension.dll
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
