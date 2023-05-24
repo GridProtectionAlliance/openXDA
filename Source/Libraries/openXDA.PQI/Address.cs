@@ -21,8 +21,6 @@
 //
 //******************************************************************************************************
 
-using System.IO;
-
 namespace openXDA.PQI
 {
     /// <summary>
@@ -36,7 +34,7 @@ namespace openXDA.PQI
         public string Path { get; set; }
 
         /// <summary>
-        ///  Path to query the company at this address
+        /// Path to query the company at this address
         /// </summary>
         public string Company { get; set; }
        
@@ -50,9 +48,9 @@ namespace openXDA.PQI
         /// </summary>
         public string AddressLine1 { get; set; }
         
-         /// <summary>
-         /// Second line of the address (building number, etc.)
-         /// </summary>
+        /// <summary>
+        /// Second line of the address (building number, etc.)
+        /// </summary>
         public string AddressLine2 { get; set; }
         
         /// <summary>

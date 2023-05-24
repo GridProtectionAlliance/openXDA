@@ -21,11 +21,6 @@
 //
 //******************************************************************************************************
 
-using System.Diagnostics.Contracts;
-using System;
-using System.IO;
-using System.Xml.Linq;
-
 namespace openXDA.PQI
 {
     /// <summary>
@@ -54,7 +49,7 @@ namespace openXDA.PQI
         public string Name { get; set; }
 
         /// <summary>
-        /// Name of the company
+        /// Industry the company is in
         /// </summary>
         public string Industry { get; set; }
     }
