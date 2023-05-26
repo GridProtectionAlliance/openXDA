@@ -48,6 +48,9 @@ namespace openXDA.PQI
         /// </summary>
         public string Path { get; set; }
 
-
+        /// <summary>
+        /// Path to query the address of the facility
+        /// </summary>
+        public string Address { get; set; }
     }
 }
