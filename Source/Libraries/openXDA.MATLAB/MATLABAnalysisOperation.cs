@@ -47,20 +47,16 @@ namespace openXDA.MATLAB
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                TableOperations<AnalyticModel> matlabAnalyticTable = new TableOperations<AnalyticModel>(connection);
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 TableOperations<EventTag> eventTagTable = new TableOperations<EventTag>(connection);
                 TableOperations<EventEventTag> eventEventTagTable = new TableOperations<EventEventTag>(connection);
-
-                List<AnalyticModel> analyticModelList = matlabAnalyticTable
-                    .QueryRecords("LoadOrder")
-                    .ToList();
 
                 for (int i = 0; i < dataGroups.Count; i++)
                 {
                     DataGroup dataGroup = dataGroups[i];
                     VIDataGroup viDataGroup = viDataGroups[i];
                     Event evt = eventTable.GetEvent(meterDataSet.FileGroup, dataGroup);
+                    List<AnalyticModel> analyticModelList = QueryAnalytics(connection, evt.ID);
                     List<MATLABAnalyticTag> allTags = new List<MATLABAnalyticTag>();
 
                     foreach (AnalyticModel analyticModel in analyticModelList)
@@ -88,6 +84,33 @@ namespace openXDA.MATLAB
                         eventEventTagTable.AddNewRecord(eventEventTag);
                     }
                 }
+            }
+        }
+
+        private List<AnalyticModel> QueryAnalytics(AdoDataConnection connection, int eventID)
+        {
+            const string MATLABAnalyticQueryFormat =
+                "SELECT DISTINCT MATLABAnalytic.* " +
+                "FROM " +
+                "    Event JOIN " +
+                "    Asset ON Event.AssetID = Asset.ID CROSS JOIN " +
+                "    MATLABAnalytic LEFT OUTER JOIN " +
+                "    MATLABAnalyticAssetType ON MATLABAnalyticAssetType.MATLABAnalyticID = MATLABAnalytic.ID LEFT OUTER JOIN " +
+                "    MATLABAnalyticEventType ON MATLABAnalyticEventType.MATLABAnalyticID = MATLABAnalytic.ID " +
+                "WHERE " +
+                "    Event.ID = {0} AND " +
+                "    (MATLABAnalyticAssetType.AssetTypeID IS NULL OR MATLABAnalyticAssetType.AssetTypeID = Asset.AssetTypeID) AND " +
+                "    (MATLABAnalyticEventType.EventTypeID IS NULL OR MATLABAnalyticEventType.EventTypeID = Event.EventTypeID) " +
+                "ORDER BY MATLABAnalytic.LoadOrder";
+
+            TableOperations<AnalyticModel> matlabAnalyticTable = new TableOperations<AnalyticModel>(connection);
+
+            using (DataTable table = connection.RetrieveData(MATLABAnalyticQueryFormat, eventID))
+            {
+                return table
+                    .AsEnumerable()
+                    .Select(matlabAnalyticTable.LoadRecord)
+                    .ToList();
             }
         }
 

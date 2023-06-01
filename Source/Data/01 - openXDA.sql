@@ -1769,16 +1769,6 @@ CREATE TABLE EDNAPoint(
 )
 GO
 
-CREATE TABLE MATLABAnalytic
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    AssemblyName VARCHAR(MAX) NOT NULL,
-    MethodName VARCHAR(MAX) NOT NULL,
-    SettingSQL VARCHAR(MAX) NOT NULL DEFAULT '',
-    LoadOrder INT NOT NULL DEFAULT 0
-)
-GO
-
 
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.dat', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
 GO
@@ -2560,6 +2550,32 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_SnapshotHarmonics_EventID
 ON SnapshotHarmonics(EventID ASC)
+GO
+
+CREATE TABLE MATLABAnalytic
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssemblyName VARCHAR(MAX) NOT NULL,
+    MethodName VARCHAR(MAX) NOT NULL,
+    SettingSQL VARCHAR(MAX) NOT NULL DEFAULT '',
+    LoadOrder INT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE TABLE MATLABAnalyticAssetType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MATLABAnalyticID INT NOT NULL REFERENCES MATLABAnalytic(ID),
+    AssetTypeID INT NOT NULL REFERENCES AssetType(ID)
+)
+GO
+
+CREATE TABLE MATLABAnalyticEventType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MATLABAnalyticID INT NOT NULL REFERENCES MATLABAnalytic(ID),
+    EventTypeID INT NOT NULL REFERENCES EventType(ID)
+)
 GO
 
 CREATE TABLE EventTag
