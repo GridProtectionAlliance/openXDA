@@ -59,7 +59,6 @@
     <Compile Include="MATLABAnalysisFunctionFactory.cs" />
     <Compile Include="MATLABAnalysisOperation.cs" />
     <Compile Include="MATLABAnalytic.cs" />
-    <Compile Include="MATLABAnalyticSetup.cs" />
     <Compile Include="MATLABAnalyticTag.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

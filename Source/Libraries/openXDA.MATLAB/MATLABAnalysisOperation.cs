@@ -23,53 +23,38 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
 using System.Data;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataOperations;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using GSF;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
 using openXDA.Model;
+using AnalyticModel = openXDA.Model.MATLABAnalytic;
 
 namespace openXDA.MATLAB
 {
     public class MATLABAnalysisOperation : DataOperationBase<MeterDataSet>
     {
-        public class Settings
-        {
-            [Setting]
-            [DefaultValue("")]
-            public string Analytics { get; set; }
-        }
-
-        [Category]
-        [SettingName("MATLAB")]
-        public Settings MATLABSettings { get; }
-            = new Settings();
-
         public override void Execute(MeterDataSet meterDataSet)
         {
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             List<DataGroup> dataGroups = cycleDataResource.DataGroups;
             List<VIDataGroup> viDataGroups = cycleDataResource.VIDataGroups;
 
-            List<MATLABAnalyticSetup> analyticSetupList = MATLABSettings.Analytics
-                .ParseKeyValuePairs()
-                .Select(kvp => MATLABAnalyticSetup.Parse(kvp.Value))
-                .ToList();
-
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
+                TableOperations<AnalyticModel> matlabAnalyticTable = new TableOperations<AnalyticModel>(connection);
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 TableOperations<EventTag> eventTagTable = new TableOperations<EventTag>(connection);
                 TableOperations<EventEventTag> eventEventTagTable = new TableOperations<EventEventTag>(connection);
+
+                List<AnalyticModel> analyticModelList = matlabAnalyticTable
+                    .QueryRecords("LoadOrder")
+                    .ToList();
 
                 for (int i = 0; i < dataGroups.Count; i++)
                 {
@@ -78,12 +63,12 @@ namespace openXDA.MATLAB
                     Event evt = eventTable.GetEvent(meterDataSet.FileGroup, dataGroup);
                     List<MATLABAnalyticTag> allTags = new List<MATLABAnalyticTag>();
 
-                    foreach (MATLABAnalyticSetup setup in analyticSetupList)
+                    foreach (AnalyticModel analyticModel in analyticModelList)
                     {
                         try
                         {
-                            MATLABAnalytic analytic = ToAnalytic(setup);
-                            List<MATLABAnalyticSettingField> settingFields = QuerySettingFields(connection, setup.SettingSQL, evt.ID);
+                            MATLABAnalytic analytic = ToAnalytic(analyticModel);
+                            List<MATLABAnalyticSettingField> settingFields = QuerySettingFields(connection, analyticModel.SettingSQL, evt.ID);
                             List<MATLABAnalyticTag> analyticTags = analytic.Execute(viDataGroup, settingFields);
                             allTags.AddRange(analyticTags);
                         }
@@ -106,16 +91,19 @@ namespace openXDA.MATLAB
             }
         }
 
-        private MATLABAnalytic ToAnalytic(MATLABAnalyticSetup setup)
+        private MATLABAnalytic ToAnalytic(AnalyticModel model)
         {
-            string assemblyName = setup.AssemblyName;
-            string methodName = setup.MethodName;
+            string assemblyName = model.AssemblyName;
+            string methodName = model.MethodName;
             MATLABAnalysisFunctionInvokerFactory invokerFactory = AnalysisFunctionFactory.GetAnalysisFunctionInvokerFactory(assemblyName, methodName);
             return new MATLABAnalytic(invokerFactory);
         }
 
         private List<MATLABAnalyticSettingField> QuerySettingFields(AdoDataConnection connection, string sql, int eventID)
         {
+            if (string.IsNullOrEmpty(sql))
+                return new List<MATLABAnalyticSettingField>(0);
+
             MATLABAnalyticSettingField ToSettingField(DataColumn column, DataRow row)
             {
                 string name = column.ColumnName;

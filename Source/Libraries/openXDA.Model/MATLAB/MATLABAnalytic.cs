@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MATLABAnalyticSetup.cs - Gbtc
+//  MATLABAnalytic.cs - Gbtc
 //
 //  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,34 +16,29 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/31/2023 - Stephen C. Wills
+//  05/31/2023 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System.ComponentModel;
-using System.Configuration;
-using GSF.Configuration;
+using GSF.Data.Model;
 
-namespace openXDA.MATLAB
+namespace openXDA.Model
 {
-    public class MATLABAnalyticSetup
+    public class MATLABAnalytic
     {
-        [Setting]
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
         public string AssemblyName { get; set; }
 
-        [Setting]
         public string MethodName { get; set; }
 
-        [Setting]
+        [DefaultValue("")]
         public string SettingSQL { get; set; }
 
-        public static MATLABAnalyticSetup Parse(string connectionString)
-        {
-            ConnectionStringParser<SettingAttribute, CategoryAttribute> connectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
-            MATLABAnalyticSetup settings = new MATLABAnalyticSetup();
-            connectionStringParser.ParseConnectionString(connectionString, settings);
-            return settings;
-        }
+        [DefaultValue(0)]
+        public int LoadOrder { get; set; }
     }
 }

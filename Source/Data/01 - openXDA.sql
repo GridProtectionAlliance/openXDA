@@ -1769,6 +1769,16 @@ CREATE TABLE EDNAPoint(
 )
 GO
 
+CREATE TABLE MATLABAnalytic
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssemblyName VARCHAR(MAX) NOT NULL,
+    MethodName VARCHAR(MAX) NOT NULL,
+    SettingSQL VARCHAR(MAX) NOT NULL DEFAULT '',
+    LoadOrder INT NOT NULL DEFAULT 0
+)
+GO
+
 
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.dat', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
 GO
