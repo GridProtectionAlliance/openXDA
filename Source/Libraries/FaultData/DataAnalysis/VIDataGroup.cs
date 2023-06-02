@@ -146,7 +146,8 @@ namespace FaultData.DataAnalysis
                         m_irIndex = item.Index;
                 }
 
-                m_vIndices.Add(set);
+                if (set.DefinedLineVoltages + set.DefinedNeutralVoltages > 0)
+                    m_vIndices.Add(set);
             }
 
             if (m_vIndices.Count() == 0)
@@ -340,7 +341,7 @@ namespace FaultData.DataAnalysis
                 // If all line voltages are already present or there are not
                 // at least 2 lines we will not perform line to line calculations
                 if (m_vIndices[i].DefinedLineVoltages == 3 || m_vIndices[i].DefinedNeutralVoltages < 2)
-                    return;
+                    continue;
 
                 // Get the meter associated with the channels in this data group
                 DataSeries VA = null;
