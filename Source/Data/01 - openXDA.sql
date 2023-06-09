@@ -4004,22 +4004,21 @@ CREATE TABLE NoteType(
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
 	Name varchar(max) not null,
 	ReferenceTableName varchar(max) not null,
+    Label varchar(200)
 )
 GO
 
-INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Meter', 'Meter')
+INSERT INTO NoteType (Name, ReferenceTableName, Label) VALUES ('Meter', 'Meter', 'Meter')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Event', 'Event')
+INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('Event', 'Event', 'Event')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Asset', 'Asset')
+INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('Asset', 'Asset', 'Asset')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Location', 'Location')
+INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('Location', 'Location', 'Substation')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Customer', 'Customer')
+INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('Customer', 'Customer', 'Customer')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('User', 'UserAccount')
-GO
-INSERT INTO NoteType (Name, ReferenceTableName) VALUES ('Company', 'Company')
+INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('User', 'UserAccount', 'User')
 GO
 
 CREATE TABLE [NoteApplication](
