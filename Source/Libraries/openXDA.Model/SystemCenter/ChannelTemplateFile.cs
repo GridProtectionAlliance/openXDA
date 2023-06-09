@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ChanneltemplateFile.cs - Gbtc
+//  ChannelTemplateFile.cs - Gbtc
 //
 //  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,18 +16,17 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/09/2023 - C. lackner
+//  06/09/2023 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
-using System.ComponentModel.DataAnnotations;
 
 namespace SystemCenter.Model
 {
     /// <summary>
-    /// Customer Model. Distinct and joined to PQViewSiteID to reduce number of duplicate Customers coming from PQView
+    /// Specifies default templates for the New Meter Wizard in SystemCenter.
     /// </summary>
     [AllowSearch]
     [PatchRoles("Administrator, Transmission SME")]

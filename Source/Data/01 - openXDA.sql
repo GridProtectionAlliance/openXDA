@@ -2168,6 +2168,7 @@ CREATE TABLE ChannelTemplateFile
     FileBlob VARBINARY(MAX) NOT NULL,
     FileName VARCHAR(MAX) NOT NULL
 )
+GO
 
 CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
 ON FileBlob(DataFileID ASC)
@@ -4008,25 +4009,26 @@ CREATE NONCLUSTERED INDEX IX_FaultNote_UserAccountID
 ON FaultNote(UserAccountID ASC)
 GO
 
-CREATE TABLE NoteType(
-	ID int not null IDENTITY(1,1) PRIMARY KEY,
-	Name varchar(max) not null,
-	ReferenceTableName varchar(max) not null,
-    Label varchar(200)
+CREATE TABLE NoteType
+(
+    ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    Name VARCHAR(MAX) NOT NULL,
+    ReferenceTableName VARCHAR(MAX) NOT NULL,
+    Label VARCHAR(200)
 )
 GO
 
-INSERT INTO NoteType (Name, ReferenceTableName, Label) VALUES ('Meter', 'Meter', 'Meter')
+INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Meter', 'Meter', 'Meter')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('Event', 'Event', 'Event')
+INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Event', 'Event', 'Event')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('Asset', 'Asset', 'Asset')
+INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Asset', 'Asset', 'Asset')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('Location', 'Location', 'Substation')
+INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Location', 'Location', 'Substation')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('Customer', 'Customer', 'Customer')
+INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Customer', 'Customer', 'Customer')
 GO
-INSERT INTO NoteType (Name, ReferenceTableName, Label)) VALUES ('User', 'UserAccount', 'User')
+INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('User', 'UserAccount', 'User')
 GO
 
 CREATE TABLE [NoteApplication](
