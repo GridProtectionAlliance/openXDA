@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  NoteType.cs - Gbtc
+//  ChannelTemplateFile.cs - Gbtc
 //
-//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,25 +16,31 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/21/2021 - Billy Ernest
+//  06/09/2023 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
 
-namespace openXDA.Model
+namespace SystemCenter.Model
 {
-    [TableName("NoteType"), UseEscapedName]
-    public class NoteType
+    /// <summary>
+    /// Specifies default templates for the New Meter Wizard in SystemCenter.
+    /// </summary>
+    [AllowSearch]
+    [PatchRoles("Administrator, Transmission SME")]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    public class ChannelTemplateFile
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        
         public string Name { get; set; }
 
-        [Searchable]
-        public string ReferenceTableName { get; set; }
-        
-        public string Label { get; set; }
+        public byte FileBlob { get; set; }
+
+        public string FileName { get; set; }
     }
 }

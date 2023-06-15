@@ -88,9 +88,16 @@ IF NOT "%donotpush%" == "" GOTO Finish
 :PushChanges
 ECHO.
 ECHO Pushing changes to remote repository...
-"%git%" push
+FOR /F "tokens=* USEBACKQ" %%F IN (`"%git%" describe --tags --abbrev^=0`) DO SET version=%%F
+SET remotebranch=master
+IF "%pushtoversionbranch%" == "true" SET remotebranch=ud-%version%
+"%git%" push origin HEAD:%remotebranch%
+
+:AfterPushChanges
 CD /D %pwd%
+IF EXIST "%afterpushscript%" CALL "%afterpushscript%" openXDA %remotebranch%
 
 :Finish
+CD /D %pwd%
 ECHO.
 ECHO Update complete
