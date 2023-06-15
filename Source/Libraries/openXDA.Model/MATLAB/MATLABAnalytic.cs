@@ -1,12 +1,12 @@
 ﻿//******************************************************************************************************
-//  EventTag.cs - Gbtc
+//  MATLABAnalytic.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,25 +16,29 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  02/10/2023 - C. Lackner
+//  05/31/2023 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [SettingsCategory("systemSettings")]
-    public class EventEventTag
+    public class MATLABAnalytic
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int EventID { get; set; }
+        public string AssemblyName { get; set; }
 
-        public int EventTagID { get; set; }
+        public string MethodName { get; set; }
 
-        public string TagData { get; set; }
+        [DefaultValue("")]
+        public string SettingSQL { get; set; }
+
+        [DefaultValue(0)]
+        public int LoadOrder { get; set; }
     }
 }
