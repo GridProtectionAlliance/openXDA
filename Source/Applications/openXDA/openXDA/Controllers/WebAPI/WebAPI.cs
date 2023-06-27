@@ -34,6 +34,7 @@ using GSF.Data.Model;
 using GSF.IO;
 using GSF.Web.Model;
 using openXDA.Adapters;
+using openXDA.APIAuthentication;
 using openXDA.Model;
 using openXDA.Nodes;
 using SystemCenter.Model;
@@ -267,6 +268,11 @@ namespace openXDA.Controllers.WebAPI
 
     [RoutePrefix("api/CustomerMeter")]
     public class CustomerMeterController : XDAEndController<SystemCenter.Model.CustomerMeter> { }
+
+    [RoutePrefix("api/Console")]
+    public class ConsoleController : APIConsoleController {
+        protected new IAPIConsoleHost Host => ServiceConnection.Default;
+    }
 
 
 }

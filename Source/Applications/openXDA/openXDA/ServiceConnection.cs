@@ -29,10 +29,11 @@ using GSF.ServiceProcess;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using Microsoft.AspNet.SignalR.Infrastructure;
+using openXDA.APIAuthentication;
 
 namespace openXDA
 {
-    public class ServiceConnection
+    public class ServiceConnection: IAPIConsoleHost
     {
         #region [ Members ]
 
@@ -47,6 +48,8 @@ namespace openXDA
         {
             m_clients = clients;
             ServiceHost.Helper.UpdatedStatus += ServiceHelper_UpdatedStatus;
+            ServiceHost.Helper.UpdatedStatus += UpdatedStatusHandler;
+            ServiceHost.Helper.SendingClientResponse += SendingClientResponseHandler;
         }
 
         #endregion
@@ -54,6 +57,16 @@ namespace openXDA
         #region [ Properties ]
 
         public ServiceHost Host => ServiceHost;
+
+        /// <summary>
+        /// Raised when there is a new status message reported to service.
+        /// </summary>
+        public event EventHandler<EventArgs<Guid, string, UpdateType>> UpdatedStatus;
+
+        /// <summary>
+        /// Raise when a response is being sent to one or more clients.
+        /// </summary>
+        public event EventHandler<EventArgs<Guid, ServiceResponse, bool>> SendingClientResponse;
 
         #endregion
 
@@ -70,14 +83,16 @@ namespace openXDA
             if (Guid.TryParse(connectionID, out Guid clientID))
                 SendRequest(clientID, principal, command);
         }
-
+        
         public void Disconnect(string connectionID)
         {
             if (Guid.TryParse(connectionID, out Guid clientID))
                 ServiceHost.Helper.DisconnectClient(clientID);
         }
 
-        private void SendRequest(Guid clientID, IPrincipal principal, string userInput)
+        public void DisconnectClient(Guid connectionID) => Disconnect(connectionID.ToString());
+
+        public void SendRequest(Guid clientID, IPrincipal principal, string userInput)
         {
             ClientRequest request = ClientRequest.Parse(userInput);
 
@@ -126,6 +141,17 @@ namespace openXDA
             BroadcastMessage(e.Argument1, e.Argument2, color);
         }
 
+        private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e)
+        {
+            if ((object)UpdatedStatus != null)
+                UpdatedStatus(sender, new EventArgs<Guid, string, UpdateType>(e.Argument1, e.Argument2, e.Argument3));
+        }
+        private void SendingClientResponseHandler(object sender, EventArgs<Guid, ServiceResponse, bool> e)
+        {
+            if ((object)SendingClientResponse != null)
+                SendingClientResponse(sender, new EventArgs<Guid, ServiceResponse, bool>(e.Argument1, e.Argument2, e.Argument3));
+        }
+      
         private void BroadcastMessage(Guid clientID, string message, string color)
         {
             dynamic client = m_clients.Client(clientID.ToString());
