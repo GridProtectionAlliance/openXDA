@@ -33,7 +33,7 @@ using openXDA.APIAuthentication;
 
 namespace openXDA
 {
-    public class ServiceConnection: IAPIConsoleHost
+    public class ServiceConnection : IAPIConsoleHost
     {
         #region [ Members ]
 
@@ -83,7 +83,7 @@ namespace openXDA
             if (Guid.TryParse(connectionID, out Guid clientID))
                 SendRequest(clientID, principal, command);
         }
-        
+
         public void Disconnect(string connectionID)
         {
             if (Guid.TryParse(connectionID, out Guid clientID))
@@ -143,12 +143,13 @@ namespace openXDA
 
         private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e)
         {
-            if ((object)UpdatedStatus != null)
+            if (!(UpdatedStatus is null))
                 UpdatedStatus(sender, new EventArgs<Guid, string, UpdateType>(e.Argument1, e.Argument2, e.Argument3));
         }
+
         private void SendingClientResponseHandler(object sender, EventArgs<Guid, ServiceResponse, bool> e)
         {
-            if ((object)SendingClientResponse != null)
+            if (!(SendingClientResponse is null))
                 SendingClientResponse(sender, new EventArgs<Guid, ServiceResponse, bool>(e.Argument1, e.Argument2, e.Argument3));
         }
       

@@ -22,12 +22,11 @@
 //******************************************************************************************************
 
 using System;
-using GSF;
 using System.Collections.Generic;
 using System.Security.Principal;
-using GSF.Data.Model;
-using GSF.ServiceProcess;
 using System.Web.Http;
+using GSF;
+using GSF.ServiceProcess;
 
 namespace openXDA.APIAuthentication
 {
@@ -37,6 +36,7 @@ namespace openXDA.APIAuthentication
     public abstract class  APIConsoleController : ApiController
     {
         #region [ Members ]
+
         internal class ConsoleState
         {
             public Guid SessionID { get; }
@@ -142,14 +142,21 @@ namespace openXDA.APIAuthentication
                 m_host.SendingClientResponse -= m_serviceHost_SendingClientResponse;
                 m_host.DisconnectClient(SessionID);
             }
-
         }
+
         /// <summary>
         /// Represents a Console Message and the corresponding <see cref="UpdateType"/>
         /// </summary>
         public class ConsoleMessage
         {
+            /// <summary>
+            /// Gets or sets the text of the message.
+            /// </summary>
             public string Message { get; set; }
+
+            /// <summary>
+            /// Gets or sets the type of the message.
+            /// </summary>
             public UpdateType Type { get; set; }
         }
 
@@ -159,6 +166,7 @@ namespace openXDA.APIAuthentication
         /// The <see cref="IAPIConsoleHost"/> that the console is attached to
         /// </summary>
         protected virtual IAPIConsoleHost Host { get; }
+
         #endregion
 
         #region [ HTTP Methods ]
@@ -167,7 +175,6 @@ namespace openXDA.APIAuthentication
         /// Connects a new Client to the console
         /// </summary>
         /// <returns>The Session ID of the new connection</returns>
-
         [Route("Connect"), HttpGet]
         public IHttpActionResult Connect()
         {
@@ -183,8 +190,10 @@ namespace openXDA.APIAuthentication
         public IHttpActionResult Retrieve(string session)
         {
             foreach (ConsoleState connection in s_activeConnections.Values)
+            {
                 if (connection.CheckExpiration())
                     s_activeConnections.Remove(connection.SessionID);
+            }
 
             if (!Guid.TryParse(session, out Guid sessionID))
                 return BadRequest("Invalid Session ID");
@@ -200,8 +209,10 @@ namespace openXDA.APIAuthentication
         public IHttpActionResult Send(string session, [FromBody] string command)
         {
             foreach (ConsoleState connection in s_activeConnections.Values)
+            {
                 if (connection.CheckExpiration())
                     s_activeConnections.Remove(connection.SessionID);
+            }
 
             if (!Guid.TryParse(session, out Guid sessionID))
                 return BadRequest("Invalid Session ID");

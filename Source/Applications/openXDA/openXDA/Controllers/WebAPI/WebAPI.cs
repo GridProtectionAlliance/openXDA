@@ -273,6 +273,4 @@ namespace openXDA.Controllers.WebAPI
     public class ConsoleController : APIConsoleController {
         protected new IAPIConsoleHost Host => ServiceConnection.Default;
     }
-
-
 }
