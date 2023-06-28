@@ -42,6 +42,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependencies\GSF\GSF.Security.dll</HintPath>
     </Reference>
+    <Reference Include="GSF.ServiceProcess, Version=2.4.140.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\GSF\GSF.ServiceProcess.dll</HintPath>
+    </Reference>
     <Reference Include="GSF.Web, Version=2.4.29.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependencies\GSF\GSF.Web.dll</HintPath>
@@ -67,6 +71,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="APIConsoleController.cs" />
+    <Compile Include="IAPIConsoleHost.cs" />
     <Compile Include="RequestVerificationHeaderTokenController.cs" />
     <Compile Include="APIQuery.cs" />
     <Compile Include="APIAuthenticationMiddleware.cs" />
