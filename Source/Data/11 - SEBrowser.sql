@@ -228,7 +228,9 @@ INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVALightning', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVAStructureInfo', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchHistory', 1)
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('AssetHistoryTable', 1)
+GO
+INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('AssetHistoryStats', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchCorrelatedSags', 1)
 GO
