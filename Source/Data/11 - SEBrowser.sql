@@ -284,7 +284,7 @@ INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (8, 2)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (9, 2)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (10, 3)
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (10, 2)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (11, 3)
 GO
@@ -296,17 +296,57 @@ INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (14, 3)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (15, 3)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (16, 4)
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (16, 3)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (17, 4)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (18, 4)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (19, 4)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (1, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (2, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (3, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (4, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (5, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (6, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (7, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (8, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (9, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (10, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (11, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (12, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (13, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (14, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (15, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (16, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (17, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (18, 5)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (19, 5)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (20, 5)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (21, 5)
+GO
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (22, 5)
 GO
 
 CREATE VIEW [SEBrowser.WidgetView] AS
