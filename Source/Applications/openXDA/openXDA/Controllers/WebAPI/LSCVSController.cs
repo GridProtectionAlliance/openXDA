@@ -160,7 +160,7 @@ namespace openXDA.Controllers.WebAPI
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VA.RMS.DataPoints.Select(dataPoint => new double[] {
                                 dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                                dataPoint.Value
+                                dataPoint.Value / 1000
                             }).ToList(),
                             Unit = "kV",
                             BaseValue = cycleData.VBase / Math.Sqrt(3)
@@ -176,7 +176,7 @@ namespace openXDA.Controllers.WebAPI
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VB.RMS.DataPoints.Select(dataPoint => new double[] {
                                 dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                                dataPoint.Value
+                                dataPoint.Value / 1000
                             }).ToList(),
                             Unit = "kV",
                             BaseValue = cycleData.VBase / Math.Sqrt(3)
@@ -192,7 +192,7 @@ namespace openXDA.Controllers.WebAPI
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VC.RMS.DataPoints.Select(dataPoint => new double[] {
                                 dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                                dataPoint.Value
+                                dataPoint.Value / 1000
                             }).ToList(),
                             Unit = "kV",
                             BaseValue = cycleData.VBase / Math.Sqrt(3)
@@ -208,7 +208,7 @@ namespace openXDA.Controllers.WebAPI
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VAB.RMS.DataPoints.Select(dataPoint => new double[] {
                                 dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                                dataPoint.Value
+                                dataPoint.Value / 1000
                             }).ToList(),
                             Unit = "kV",
                             BaseValue = cycleData.VBase
@@ -224,7 +224,7 @@ namespace openXDA.Controllers.WebAPI
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VBC.RMS.DataPoints.Select(dataPoint => new double[] {
                                 dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                                dataPoint.Value
+                                dataPoint.Value / 1000
                             }).ToList(),
                             Unit = "kV",
                             BaseValue = cycleData.VBase
@@ -240,7 +240,7 @@ namespace openXDA.Controllers.WebAPI
                             LegendGroup = "RMS",
                             DataPoints = cycleData.VCA.RMS.DataPoints.Select(dataPoint => new double[] {
                                 dataPoint.Time.Subtract(s_epoch).TotalMilliseconds,
-                                dataPoint.Value
+                                dataPoint.Value / 1000
                             }).ToList(),
                             Unit = "kV",
                             BaseValue = cycleData.VBase
