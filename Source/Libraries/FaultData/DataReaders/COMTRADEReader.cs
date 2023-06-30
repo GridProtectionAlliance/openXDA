@@ -193,9 +193,6 @@ namespace FaultData.DataReaders
                 .Replace('\r', '\n')
                 .Split(new string[] { "\n\n" }, StringSplitOptions.None);
 
-            if (sections.Length < 1 || !sections[0].Contains("SEL"))
-                return;
-
             if (sections.Length < 2)
                 return;
 
