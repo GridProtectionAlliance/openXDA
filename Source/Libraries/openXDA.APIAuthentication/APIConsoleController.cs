@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Web.Http;
@@ -160,7 +161,7 @@ namespace openXDA.APIAuthentication
             public UpdateType Type { get; set; }
         }
 
-        private static Dictionary<Guid, ConsoleState> s_activeConnections = new Dictionary<Guid, ConsoleState>();
+        private static ConcurrentDictionary<Guid, ConsoleState> s_activeConnections = new ConcurrentDictionary<Guid, ConsoleState>();
 
         /// <summary>
         /// The <see cref="IAPIConsoleHost"/> that the console is attached to
@@ -179,7 +180,7 @@ namespace openXDA.APIAuthentication
         public IHttpActionResult Connect()
         {
             ConsoleState connection = new ConsoleState(User, Host);
-            s_activeConnections.Add(connection.SessionID, connection);
+            s_activeConnections.TryAdd(connection.SessionID, connection);
             return Ok(connection.SessionID);
         }
 
@@ -192,7 +193,7 @@ namespace openXDA.APIAuthentication
             foreach (ConsoleState connection in s_activeConnections.Values)
             {
                 if (connection.CheckExpiration())
-                    s_activeConnections.Remove(connection.SessionID);
+                    s_activeConnections.TryRemove(connection.SessionID, out ConsoleState state);
             }
 
             if (!Guid.TryParse(session, out Guid sessionID))
@@ -211,7 +212,7 @@ namespace openXDA.APIAuthentication
             foreach (ConsoleState connection in s_activeConnections.Values)
             {
                 if (connection.CheckExpiration())
-                    s_activeConnections.Remove(connection.SessionID);
+                    s_activeConnections.TryRemove(connection.SessionID, out ConsoleState state);
             }
 
             if (!Guid.TryParse(session, out Guid sessionID))
