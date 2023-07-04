@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  07/01/2022 - C. Lackner
 //       Generated original version of source code.
+//  01/04/2023 - C. Lackner
+//       Added Impersonation Logic.
 //
 //******************************************************************************************************
 
@@ -36,7 +38,7 @@ namespace openXDA.APIAuthentication
     /// <summary>
     /// Middleware to authenticate users of the API via <see cref="APIAccessKey"/>.
     /// </summary>
-    public class APIAuthenticationMiddleware : OwinMiddleware
+    public partial class APIAuthenticationMiddleware : OwinMiddleware
     {
         #region [ Members ]
 
@@ -67,14 +69,28 @@ namespace openXDA.APIAuthentication
                 byte[] credentialData = Convert.FromBase64String(Credentials);
                 string decode = Encoding.UTF8.GetString(credentialData);
                 int index = decode.IndexOf(':');
+                int impersonationIndex = decode.LastIndexOf(':');
+
+                if (index == impersonationIndex)
+                {
+                    ImpersonationToken = null;
+                    impersonationIndex = decode.Length - 1;
+                }
+                else
+                {
+                    ImpersonationToken = decode.Substring(impersonationIndex + 1);
+                }
+
                 APIKey = decode.Substring(0, index);
-                APIToken = decode.Substring(index + 1);
+                APIToken = decode.Substring(index + 1,impersonationIndex - index - 1);
+
             }
 
             public string Type { get; }
             public string Credentials { get; }
             public string APIKey { get; }
             public string APIToken { get; }
+            public string ImpersonationToken { get; }
         }
 
         private class HostSecurityProvider : SecurityProviderBase
@@ -134,10 +150,26 @@ namespace openXDA.APIAuthentication
             IOwinRequest request = context.Request;
             AuthorizationHeader authorization = new AuthorizationHeader(request.Headers);
 
-            if (IsAuthorized(authorization))
+            if (IsAuthorized(authorization) && !UseImpersonation(authorization))
             {
                 string apiKey = authorization.APIKey;
                 ISecurityProvider provider = new HostSecurityProvider(apiKey);
+                SecurityIdentity identity = new SecurityIdentity(provider);
+                SecurityPrincipal principal = new SecurityPrincipal(identity);
+                context.Request.User = principal;
+            }
+
+            else if (IsAuthorized(authorization) && UseImpersonation(authorization))
+            {
+                string impersonatedUser = authorization.ImpersonationToken;
+                string apiKey = authorization.APIKey;
+
+                ISecurityProvider provider = new ImpersonationSecurityProvider(impersonatedUser);
+
+                // if Impersonation fails we fall back to API Authentication
+                if (!provider.IsUserAuthenticated)
+                    provider = new HostSecurityProvider(apiKey);
+
                 SecurityIdentity identity = new SecurityIdentity(provider);
                 SecurityPrincipal principal = new SecurityPrincipal(identity);
                 context.Request.User = principal;
@@ -171,6 +203,25 @@ namespace openXDA.APIAuthentication
                     "WHERE RegistrationKey = {0} AND (Expires IS NULL OR Expires > GETUTCDATE())";
 
                 return connection.ExecuteScalar<string>(QueryFormat, new object[] { registrationKey });
+            }
+        }
+
+        private bool UseImpersonation(AuthorizationHeader header)
+        {
+            string registrationKey = header.APIKey;
+
+            if (registrationKey is null || header.ImpersonationToken is null)
+                return false;
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                const string QueryFormat =
+                    "SELECT AllowImpersonation " +
+                    "FROM APIAccessKey " +
+                    "WHERE RegistrationKey = {0} AND (Expires IS NULL OR Expires > GETUTCDATE())" +
+                    "UNION SELECT 0 ORDER BY AllowImpersonation DESC";
+
+                return connection.ExecuteScalar<bool>(QueryFormat, new object[] { registrationKey });
             }
         }
 
