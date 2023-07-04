@@ -51,5 +51,11 @@ namespace openXDA.APIAuthentication
         /// The date and time at which the access key is no longer valid.
         /// </summary>
         public DateTime Expires { get; set; }
+
+        /// <summary>
+        /// A Flag indicating if this key is allowed to impersonate regular users.
+        /// see <see cref="APIAuthenticationMiddleware"/> for how to impersonate a user in a request.
+        /// </summary>
+        public bool AllowImpersonation { get; set; }
     }
 }
