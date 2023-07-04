@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Security.Principal;
 using System.Web.Http;
 using GSF;
@@ -179,9 +180,20 @@ namespace openXDA.APIAuthentication
         [Route("Connect"), HttpGet]
         public IHttpActionResult Connect()
         {
-            ConsoleState connection = new ConsoleState(User, Host);
-            s_activeConnections.TryAdd(connection.SessionID, connection);
-            return Ok(connection.SessionID);
+            try
+            {
+                ConsoleState connection = new ConsoleState(User, Host);
+                s_activeConnections.TryAdd(connection.SessionID, connection);
+                return Ok(connection.SessionID);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
         }
 
         /// <summary>
@@ -219,8 +231,19 @@ namespace openXDA.APIAuthentication
                 return BadRequest("Invalid Session ID");
             if (!s_activeConnections.ContainsKey(sessionID))
                 return BadRequest("Session not found");
-            s_activeConnections[sessionID].SendCommand(command, User);
-            return Ok(1);
+            try
+            {
+                s_activeConnections[sessionID].SendCommand(command, User);
+                return Ok(1);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
         }
 
         #endregion
