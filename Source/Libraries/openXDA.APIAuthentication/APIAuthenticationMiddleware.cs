@@ -83,7 +83,6 @@ namespace openXDA.APIAuthentication
 
                 APIKey = decode.Substring(0, index);
                 APIToken = decode.Substring(index + 1,impersonationIndex - index - 1);
-
             }
 
             public string Type { get; }
