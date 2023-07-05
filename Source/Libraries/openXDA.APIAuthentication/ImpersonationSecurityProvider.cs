@@ -50,7 +50,6 @@ namespace openXDA.APIAuthentication
               : base(username, true, false, false)
             {
                 UserData = new UserData(username);
-                IsUserAuthenticated = Authenticate();
             }
 
             #endregion
@@ -65,10 +64,6 @@ namespace openXDA.APIAuthentication
 
             public override bool Authenticate() 
             {
-                bool refresh = RefreshData();
-                if (!refresh)
-                    return false;
-
                 bool isAuthenticated = false;
                 if (!UserData.IsDefined)
                 {
@@ -94,11 +89,12 @@ namespace openXDA.APIAuthentication
                 {
                     isAuthenticated = true;
                 }
+                IsUserAuthenticated = isAuthenticated;
 
                 try
                 {
                     // Log user authentication result
-                    LogAuthenticationAttempt(isAuthenticated);
+                    LogAuthenticationAttempt(IsUserAuthenticated);
                 }
                 catch (Exception ex)
                 {
@@ -107,7 +103,7 @@ namespace openXDA.APIAuthentication
                     LastException = ex;
                     Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "Authenticate", "Failed to log authentication attempt to database.", "Database or AccessLog table may be read-only or inaccessible.", ex);
                 }
-                return isAuthenticated;
+                return IsUserAuthenticated;
             }
 
             private string getUserAuthFailureReason(string settingName, string defaultValue)

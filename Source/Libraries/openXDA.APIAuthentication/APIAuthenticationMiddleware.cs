@@ -174,13 +174,19 @@ namespace openXDA.APIAuthentication
             else if (IsAuthorized(authorization) && UseImpersonation(authorization))
             {
                 string impersonatedUser = authorization.ImpersonationToken;
-                string apiKey = authorization.APIKey;
-
                 ISecurityProvider provider = new ImpersonationSecurityProvider(impersonatedUser);
 
-                // if Impersonation fails we fall back to API Authentication
-                if (!provider.IsUserAuthenticated)
-                    provider = new HostSecurityProvider(apiKey);
+                if(!provider.RefreshData())
+                {
+                    await Next.Invoke(context);
+                    return;
+                }
+
+                if (!provider.Authenticate())
+                {
+                    await Next.Invoke(context);
+                    return;
+                }
 
                 SecurityIdentity identity = new SecurityIdentity(provider);
                 SecurityPrincipal principal = new SecurityPrincipal(identity);
