@@ -124,6 +124,7 @@ namespace openXDA.APIAuthentication
 
                 return string.Format(settingValue, UserData.LoginID);
             }
+
             #endregion
 
             #region [ Static ]
