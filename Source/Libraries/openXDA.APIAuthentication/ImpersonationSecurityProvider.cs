@@ -45,6 +45,7 @@ namespace openXDA.APIAuthentication
             #endregion
 
             #region [ Constructor ]
+
             public ImpersonationSecurityProvider(string username)
               : base(username, true, false, false)
             {
