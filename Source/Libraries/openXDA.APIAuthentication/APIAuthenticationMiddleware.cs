@@ -216,8 +216,7 @@ namespace openXDA.APIAuthentication
                 const string QueryFormat =
                     "SELECT AllowImpersonation " +
                     "FROM APIAccessKey " +
-                    "WHERE RegistrationKey = {0} AND (Expires IS NULL OR Expires > GETUTCDATE())" +
-                    "UNION SELECT 0 ORDER BY AllowImpersonation DESC";
+                    "WHERE RegistrationKey = {0} AND (Expires IS NULL OR Expires > GETUTCDATE())";
 
                 return connection.ExecuteScalar<bool>(QueryFormat, new object[] { registrationKey });
             }
