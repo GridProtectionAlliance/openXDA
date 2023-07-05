@@ -157,7 +157,6 @@ namespace openXDA.APIAuthentication
                 SecurityPrincipal principal = new SecurityPrincipal(identity);
                 context.Request.User = principal;
             }
-
             else if (IsAuthorized(authorization) && UseImpersonation(authorization))
             {
                 string impersonatedUser = authorization.ImpersonationToken;
