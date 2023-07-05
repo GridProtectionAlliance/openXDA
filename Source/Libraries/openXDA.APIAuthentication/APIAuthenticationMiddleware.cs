@@ -49,8 +49,6 @@ namespace openXDA.APIAuthentication
 
             public AuthorizationHeader(IHeaderDictionary headers)
             {
-                Valid = false;
-
                 IEnumerable<string> values = headers.GetValues(HeaderKey)
                     ?? Enumerable.Empty<string>();
 
@@ -157,13 +155,13 @@ namespace openXDA.APIAuthentication
             IOwinRequest request = context.Request;
             AuthorizationHeader authorization = new AuthorizationHeader(request.Headers);
 
-            if (!authorization.Valid)
+            if (!authorization.Valid || !IsAuthorized(authorization))
             {
                 await Next.Invoke(context);
                 return;
             }
 
-            if (IsAuthorized(authorization) && !UseImpersonation(authorization))
+            if (!UseImpersonation(authorization))
             {
                 string apiKey = authorization.APIKey;
                 ISecurityProvider provider = new HostSecurityProvider(apiKey);
@@ -171,7 +169,7 @@ namespace openXDA.APIAuthentication
                 SecurityPrincipal principal = new SecurityPrincipal(identity);
                 context.Request.User = principal;
             }
-            else if (IsAuthorized(authorization) && UseImpersonation(authorization))
+            else
             {
                 string impersonatedUser = authorization.ImpersonationToken;
                 ISecurityProvider provider = new ImpersonationSecurityProvider(impersonatedUser);
