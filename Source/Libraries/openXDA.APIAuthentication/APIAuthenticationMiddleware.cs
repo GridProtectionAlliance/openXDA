@@ -150,48 +150,42 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <param name="context">The context in which the request is made.</param>
         /// <returns>The task that indicates when the request has been processed.</returns>
-        public async override Task Invoke(IOwinContext context)
+        public async override Task Invoke(IOwinContext context) 
+        { 
+            Authorize(context.Request);
+            await Next.Invoke(context); 
+        }
+        
+        private void Authorize(IOwinRequest request)
         {
-            IOwinRequest request = context.Request;
             AuthorizationHeader authorization = new AuthorizationHeader(request.Headers);
 
             if (!authorization.Valid || !IsAuthorized(authorization))
-            {
-                await Next.Invoke(context);
                 return;
-            }
-
+            
             if (!UseImpersonation(authorization))
             {
                 string apiKey = authorization.APIKey;
                 ISecurityProvider provider = new HostSecurityProvider(apiKey);
                 SecurityIdentity identity = new SecurityIdentity(provider);
                 SecurityPrincipal principal = new SecurityPrincipal(identity);
-                context.Request.User = principal;
+                request.User = principal;
             }
             else
             {
                 string impersonatedUser = authorization.ImpersonationToken;
                 ISecurityProvider provider = new ImpersonationSecurityProvider(impersonatedUser);
 
-                if(!provider.RefreshData())
-                {
-                    await Next.Invoke(context);
+                if (!provider.RefreshData())
                     return;
-                }
-
+                
                 if (!provider.Authenticate())
-                {
-                    await Next.Invoke(context);
                     return;
-                }
 
                 SecurityIdentity identity = new SecurityIdentity(provider);
                 SecurityPrincipal principal = new SecurityPrincipal(identity);
-                context.Request.User = principal;
+                request.User = principal;
             }
-
-            await Next.Invoke(context);
         }
 
         private bool IsAuthorized(AuthorizationHeader authorization)
