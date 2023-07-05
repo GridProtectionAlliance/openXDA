@@ -262,11 +262,12 @@ namespace openXDA.APIAuthentication
                 request.RequestUri = new Uri(fullurl);
                 configure(request);
 
-                const string type = "XDA-API";
+                string type = "XDA-API";
                 string decode = $"{APIKey}:{APIToken}";
 
                 if (!(user is null))
                 {
+                    type= "XDA-API-IMP";
                     decode = $"{decode}:{user.Identity.Name}";
                 }
 

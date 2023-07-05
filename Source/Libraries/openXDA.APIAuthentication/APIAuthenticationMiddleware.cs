@@ -49,6 +49,8 @@ namespace openXDA.APIAuthentication
 
             public AuthorizationHeader(IHeaderDictionary headers)
             {
+                Valid = false;
+
                 IEnumerable<string> values = headers.GetValues(HeaderKey)
                     ?? Enumerable.Empty<string>();
 
@@ -60,7 +62,7 @@ namespace openXDA.APIAuthentication
                 Type = headerValues.FirstOrDefault();
                 Credentials = headerValues.Skip(1).FirstOrDefault();
 
-                if (!AuthorizationType.Equals(Type, StringComparison.Ordinal))
+                if (!AuthorizationType.Equals(Type, StringComparison.Ordinal) && !ImpersonationType.Equals(Type, StringComparison.Ordinal))
                     return;
 
                 if (Credentials is null)
@@ -69,20 +71,24 @@ namespace openXDA.APIAuthentication
                 byte[] credentialData = Convert.FromBase64String(Credentials);
                 string decode = Encoding.UTF8.GetString(credentialData);
                 int index = decode.IndexOf(':');
-                int impersonationIndex = decode.LastIndexOf(':');
 
-                if (index == impersonationIndex)
+                APIKey = decode.Substring(0, index);
+
+                if (AuthorizationType.Equals(Type, StringComparison.Ordinal))
                 {
+                    APIToken = decode.Substring(index + 1);
                     ImpersonationToken = null;
-                    impersonationIndex = decode.Length - 1;
                 }
                 else
-                {
+                { 
+                    int impersonationIndex = decode.LastIndexOf(':');
+                    if (index == impersonationIndex)
+                        return;
+                    APIToken = decode.Substring(index + 1, impersonationIndex - index - 1);
                     ImpersonationToken = decode.Substring(impersonationIndex + 1);
                 }
 
-                APIKey = decode.Substring(0, index);
-                APIToken = decode.Substring(index + 1,impersonationIndex - index - 1);
+                Valid = true;
             }
 
             public string Type { get; }
@@ -90,6 +96,7 @@ namespace openXDA.APIAuthentication
             public string APIKey { get; }
             public string APIToken { get; }
             public string ImpersonationToken { get; }
+            public bool Valid { get; }
         }
 
         private class HostSecurityProvider : SecurityProviderBase
@@ -113,6 +120,7 @@ namespace openXDA.APIAuthentication
 
         // Constants
         private const string AuthorizationType = "XDA-API";
+        private const string ImpersonationType = "XDA-API-IMP";
 
         #endregion
 
@@ -148,6 +156,12 @@ namespace openXDA.APIAuthentication
         {
             IOwinRequest request = context.Request;
             AuthorizationHeader authorization = new AuthorizationHeader(request.Headers);
+
+            if (!authorization.Valid)
+            {
+                await Next.Invoke(context);
+                return;
+            }
 
             if (IsAuthorized(authorization) && !UseImpersonation(authorization))
             {
