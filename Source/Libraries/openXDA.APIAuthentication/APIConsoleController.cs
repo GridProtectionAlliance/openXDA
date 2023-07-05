@@ -188,12 +188,9 @@ namespace openXDA.APIAuthentication
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized();
+                return StatusCode(System.Net.HttpStatusCode.Forbidden);
             }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
+          
         }
 
         /// <summary>
@@ -238,11 +235,7 @@ namespace openXDA.APIAuthentication
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized();
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
+                return StatusCode(System.Net.HttpStatusCode.Forbidden);
             }
         }
 
