@@ -130,7 +130,9 @@ namespace openXDA.APIAuthentication
             #endregion
 
             #region [ Static ]
+
             private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(ImpersonationSecurityProvider), MessageClass.Component);
+
             #endregion
         }
     }
