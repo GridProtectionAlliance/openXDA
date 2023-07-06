@@ -689,21 +689,20 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void WriteEmailToFile(string path, MailMessage mail)
+        private void WriteEmailToFile(string datafolder, MailMessage mail)
         {
-            if (string.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(datafolder))
                 return;
 
-            string datafolder = Path.GetDirectoryName(path);
             Directory.CreateDirectory(datafolder);
             string dstFile = Path.Combine(datafolder, mail.Subject);
 
             if (File.Exists(dstFile))
                 File.Delete(dstFile);
-            using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(dstFile)))
+            using (StreamWriter fileWriter = File.CreateText(dstFile))
                 fileWriter.Write(mail.Body);
-                
         }
+
         public void SendAdminEmail(string subject, string message, List<string> replyToRecipients)
         {
             Settings settings = new Settings(Configure);
