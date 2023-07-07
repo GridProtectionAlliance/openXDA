@@ -36,14 +36,7 @@ namespace openXDA.APIAuthentication
     {
         private class ImpersonationSecurityProvider : AdoSecurityProvider
         {
-            #region [ Members ]
-            private const string DefaultMessageUserNotDefined = "User \"{0}\" is not defined.";
-            private const string DefaultMessageUserIsDisabled = "User \"{0}\" is disabled.";
-            private const string DefaultMessageUserIsLockedOut = "User \"{0}\" is not locked out.";
-            private const string DefaultMessageUserPasswordExpired = "User \"{0}\" has an expired password or password has not been set.";
-            private const string DefaultMessageUserHasNoRoles = "User \"{0}\" has not been assigned any roles and therefore has no rights. Contact your administrator.";
-            #endregion
-
+            
             #region [ Constructor ]
 
             public ImpersonationSecurityProvider(string username)
