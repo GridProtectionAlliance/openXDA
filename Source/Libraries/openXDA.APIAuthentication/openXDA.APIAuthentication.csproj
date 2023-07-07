@@ -58,6 +58,7 @@
       <HintPath>..\..\Dependencies\NuGet\Owin.1.0\lib\net40\Owin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web.Http, Version=5.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -71,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ImpersonationSecurityProvider.cs" />
     <Compile Include="APIConsoleController.cs" />
     <Compile Include="IAPIConsoleHost.cs" />
     <Compile Include="RequestVerificationHeaderTokenController.cs" />

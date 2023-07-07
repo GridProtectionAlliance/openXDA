@@ -28,6 +28,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -152,10 +153,11 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <param name="configure">Action that configures the HTTP request.</param>
         /// <param name="path">Path to the API endpoint locating the resource to be requested.</param>
+        /// <param name="user"><see cref="IPrincipal"/> being impersonated if the APIToken supports impersonation. set to NULL for using APIAuthentication only</param>
         /// <param name="cancellationToken">Token used to cancel the request before it has completed.</param>
         /// <returns>The HTTP response returned by the host that handled the request.</returns>
-        public Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, CancellationToken cancellationToken = default) =>
-            SendWebRequestAsync(configure, path, HttpCompletionOption.ResponseContentRead, cancellationToken);
+        public Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, IPrincipal user = null, CancellationToken cancellationToken = default) =>
+            SendWebRequestAsync(configure, path, HttpCompletionOption.ResponseContentRead, user, cancellationToken);
 
         /// <summary>
         /// Sends a web request to the host using the credentials for API authentication.
@@ -163,9 +165,10 @@ namespace openXDA.APIAuthentication
         /// <param name="configure">Action that configures the HTTP request.</param>
         /// <param name="path">Path to the API endpoint locating the resource to be requested.</param>
         /// <param name="httpCompletionOption">When the operation should complete (as soon as a response is available or after reading the whole response content).</param>
+        /// <param name="user"><see cref="IPrincipal"/> being impersonated if the APIToken supports impersonation. set to NULL for using APIAuthentication only</param>
         /// <param name="cancellationToken">Token used to cancel the request before it has completed.</param>
         /// <returns>The HTTP response returned by the host that handled the request.</returns>
-        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, HttpCompletionOption httpCompletionOption, CancellationToken cancellationToken = default)
+        public async Task<HttpResponseMessage> SendWebRequestAsync(Action<HttpRequestMessage> configure, string path, HttpCompletionOption httpCompletionOption, IPrincipal user = null, CancellationToken cancellationToken = default)
         {
             int initialHostIndex = Interlocked.CompareExchange(ref m_hostIndex, 0, 0);
 
@@ -179,7 +182,7 @@ namespace openXDA.APIAuthentication
 
                 try
                 {
-                    HttpResponseMessage response = await SendWebRequestToAsync(host, configure, path, httpCompletionOption, cancellationToken).ConfigureAwait(false);
+                    HttpResponseMessage response = await SendWebRequestToAsync(host, configure, path, httpCompletionOption, user, cancellationToken).ConfigureAwait(false);
                     UpdateHostIndex(hostIndex);
                     return response;
                 }
@@ -199,9 +202,9 @@ namespace openXDA.APIAuthentication
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         }
 
-        private async Task<HttpResponseMessage> SendWebRequestToAsync(Host host, Action<HttpRequestMessage> configure, string path, HttpCompletionOption httpCompletionOption, CancellationToken cancellationToken)
+        private async Task<HttpResponseMessage> SendWebRequestToAsync(Host host, Action<HttpRequestMessage> configure, string path, HttpCompletionOption httpCompletionOption,IPrincipal user, CancellationToken cancellationToken)
         {
-            using (HttpRequestMessage request = BuildRequest(host, path, configure))
+            using (HttpRequestMessage request = BuildRequest(host, path, configure, user))
             {
                 if (request.Method != HttpMethod.Get)
                 {
@@ -224,7 +227,7 @@ namespace openXDA.APIAuthentication
                 tokenRequest.Method = HttpMethod.Get;
             }
 
-            using (HttpRequestMessage tokenRequest = BuildRequest(host, "api/rvht", ConfigureTokenRequest))
+            using (HttpRequestMessage tokenRequest = BuildRequest(host, "api/rvht", ConfigureTokenRequest, null))
             using (HttpResponseMessage tokenResponse = await CallAPIAsync(tokenRequest, HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false))
             {
                 tokenResponse.EnsureSuccessStatusCode();
@@ -247,7 +250,7 @@ namespace openXDA.APIAuthentication
             }
         }
 
-        private HttpRequestMessage BuildRequest(Host host, string path, Action<HttpRequestMessage> configure)
+        private HttpRequestMessage BuildRequest(Host host, string path, Action<HttpRequestMessage> configure, IPrincipal user)
         {
             HttpRequestMessage request = new HttpRequestMessage();
 
@@ -259,8 +262,15 @@ namespace openXDA.APIAuthentication
                 request.RequestUri = new Uri(fullurl);
                 configure(request);
 
-                const string type = "XDA-API";
+                string type = "XDA-API";
                 string decode = $"{APIKey}:{APIToken}";
+
+                if (!(user is null))
+                {
+                    type= "XDA-API-IMP";
+                    decode = $"{decode}:{user.Identity.Name}";
+                }
+
                 Encoding utf8 = new UTF8Encoding(false);
                 byte[] credentialData = utf8.GetBytes(decode);
                 string credentials = Convert.ToBase64String(credentialData);

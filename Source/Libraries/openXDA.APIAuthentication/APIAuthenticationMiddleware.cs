@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  07/01/2022 - C. Lackner
 //       Generated original version of source code.
+//  01/04/2023 - C. Lackner
+//       Added Impersonation Logic.
 //
 //******************************************************************************************************
 
@@ -36,7 +38,7 @@ namespace openXDA.APIAuthentication
     /// <summary>
     /// Middleware to authenticate users of the API via <see cref="APIAccessKey"/>.
     /// </summary>
-    public class APIAuthenticationMiddleware : OwinMiddleware
+    public partial class APIAuthenticationMiddleware : OwinMiddleware
     {
         #region [ Members ]
 
@@ -58,7 +60,7 @@ namespace openXDA.APIAuthentication
                 Type = headerValues.FirstOrDefault();
                 Credentials = headerValues.Skip(1).FirstOrDefault();
 
-                if (!AuthorizationType.Equals(Type, StringComparison.Ordinal))
+                if (!AuthorizationType.Equals(Type, StringComparison.Ordinal) && !ImpersonationType.Equals(Type, StringComparison.Ordinal))
                     return;
 
                 if (Credentials is null)
@@ -67,14 +69,32 @@ namespace openXDA.APIAuthentication
                 byte[] credentialData = Convert.FromBase64String(Credentials);
                 string decode = Encoding.UTF8.GetString(credentialData);
                 int index = decode.IndexOf(':');
+
                 APIKey = decode.Substring(0, index);
-                APIToken = decode.Substring(index + 1);
+
+                if (AuthorizationType.Equals(Type, StringComparison.Ordinal))
+                {
+                    APIToken = decode.Substring(index + 1);
+                    ImpersonationToken = null;
+                }
+                else
+                { 
+                    int impersonationIndex = decode.LastIndexOf(':');
+                    if (index == impersonationIndex)
+                        return;
+                    APIToken = decode.Substring(index + 1, impersonationIndex - index - 1);
+                    ImpersonationToken = decode.Substring(impersonationIndex + 1);
+                }
+
+                Valid = true;
             }
 
             public string Type { get; }
             public string Credentials { get; }
             public string APIKey { get; }
             public string APIToken { get; }
+            public string ImpersonationToken { get; }
+            public bool Valid { get; }
         }
 
         private class HostSecurityProvider : SecurityProviderBase
@@ -98,6 +118,7 @@ namespace openXDA.APIAuthentication
 
         // Constants
         private const string AuthorizationType = "XDA-API";
+        private const string ImpersonationType = "XDA-API-IMP";
 
         #endregion
 
@@ -129,21 +150,42 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <param name="context">The context in which the request is made.</param>
         /// <returns>The task that indicates when the request has been processed.</returns>
-        public async override Task Invoke(IOwinContext context)
+        public async override Task Invoke(IOwinContext context) 
+        { 
+            Authorize(context.Request);
+            await Next.Invoke(context); 
+        }
+        
+        private void Authorize(IOwinRequest request)
         {
-            IOwinRequest request = context.Request;
             AuthorizationHeader authorization = new AuthorizationHeader(request.Headers);
 
-            if (IsAuthorized(authorization))
+            if (!authorization.Valid || !IsAuthorized(authorization))
+                return;
+            
+            if (!UseImpersonation(authorization))
             {
                 string apiKey = authorization.APIKey;
                 ISecurityProvider provider = new HostSecurityProvider(apiKey);
                 SecurityIdentity identity = new SecurityIdentity(provider);
                 SecurityPrincipal principal = new SecurityPrincipal(identity);
-                context.Request.User = principal;
+                request.User = principal;
             }
+            else
+            {
+                string impersonatedUser = authorization.ImpersonationToken;
+                ISecurityProvider provider = new ImpersonationSecurityProvider(impersonatedUser);
 
-            await Next.Invoke(context);
+                if (!provider.RefreshData())
+                    return;
+                
+                if (!provider.Authenticate())
+                    return;
+
+                SecurityIdentity identity = new SecurityIdentity(provider);
+                SecurityPrincipal principal = new SecurityPrincipal(identity);
+                request.User = principal;
+            }
         }
 
         private bool IsAuthorized(AuthorizationHeader authorization)
@@ -171,6 +213,24 @@ namespace openXDA.APIAuthentication
                     "WHERE RegistrationKey = {0} AND (Expires IS NULL OR Expires > GETUTCDATE())";
 
                 return connection.ExecuteScalar<string>(QueryFormat, new object[] { registrationKey });
+            }
+        }
+
+        private bool UseImpersonation(AuthorizationHeader header)
+        {
+            string registrationKey = header.APIKey;
+
+            if (registrationKey is null || header.ImpersonationToken is null)
+                return false;
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                const string QueryFormat =
+                    "SELECT AllowImpersonation " +
+                    "FROM APIAccessKey " +
+                    "WHERE RegistrationKey = {0} AND (Expires IS NULL OR Expires > GETUTCDATE())";
+
+                return connection.ExecuteScalar<bool>(QueryFormat, new object[] { registrationKey });
             }
         }
 

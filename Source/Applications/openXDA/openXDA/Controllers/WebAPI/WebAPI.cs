@@ -271,6 +271,6 @@ namespace openXDA.Controllers.WebAPI
 
     [RoutePrefix("api/Console")]
     public class ConsoleController : APIConsoleController {
-        protected new IAPIConsoleHost Host => ServiceConnection.Default;
+        protected override IAPIConsoleHost Host => ServiceConnection.Default;
     }
 }
