@@ -87,7 +87,7 @@ namespace SystemCenter.Model
     }
     public class DetailedLocationController<T> : ModelController<T> where T : DetailedLocation, new()
     {
-        protected override DataTable GetSearchResults(PostData postData)
+        protected override DataTable GetSearchResults(PostData postData, int? page)
         {
             List<Search> searches = postData.Searches.ToList();
             searches = searches.Select((s) =>
@@ -114,7 +114,7 @@ namespace SystemCenter.Model
             }).ToList();
             postData.Searches = searches;
 
-            return base.GetSearchResults(postData);
+            return base.GetSearchResults(postData, page);
         }
         
         private string Transform(Search search)
