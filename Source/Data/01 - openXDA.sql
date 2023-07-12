@@ -1488,7 +1488,7 @@ CREATE TABLE ChannelGroupType
     MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
 	DisplayName VARCHAR(20) NOT NULL,
-    UnitID INT NULL
+    Unit VARCHAR(200) NOT NULL
 )
 GO
 

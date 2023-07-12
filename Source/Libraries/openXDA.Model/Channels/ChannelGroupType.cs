@@ -44,9 +44,7 @@ namespace openXDA.Model
         [StringLength(20)]
         [DefaultSortOrder]
         public string DisplayName { get; set; }
-
-        public int UnitID { get; set; }
-
+        public string Unit { get; set; }
     }
 
     [CustomView(@"
@@ -55,14 +53,12 @@ namespace openXDA.Model
 	        ChannelGroup.Name as ChannelGroup,
 	        MeasurementType.Name as MeasurementType,
 	        MeasurementCharacteristic.Name as MeasurementCharacteristic,
-	        ChannelGroupType.DisplayName,
-	        ValueList.Value as Unit
+	        ChannelGroupType.DisplayName
         FROM
 	        ChannelGroupType JOIN 
 	        ChannelGroup ON ChannelGroupType.ChannelGroupID = ChannelGroup.ID JOIN 
 	        MeasurementType ON ChannelGroupType.MeasurementTypeID = MeasurementType.ID JOIN
-	        MeasurementCharacteristic ON ChannelGroupType.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
-	        ValueList ON ChannelGroupType.UnitID = ValueList.ID
+	        MeasurementCharacteristic ON ChannelGroupType.MeasurementCharacteristicID = MeasurementCharacteristic.ID
     ")]
     [SettingsCategory("systemSettings")]
     public class ChannelGroupDetails : ChannelGroupType
@@ -71,6 +67,5 @@ namespace openXDA.Model
         public string MeasurementType { get; set; }
         public string MeasurementCharacteristic { get; set; }
         public string Unit { get; set; }
-
     }
 }
