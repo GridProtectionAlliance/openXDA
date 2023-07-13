@@ -66,6 +66,5 @@ namespace openXDA.Model
         public string ChannelGroup { get; set; }
         public string MeasurementType { get; set; }
         public string MeasurementCharacteristic { get; set; }
-        public string Unit { get; set; }
     }
 }
