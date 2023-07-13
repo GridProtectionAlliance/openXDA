@@ -30,6 +30,10 @@ using GSF.Data.Model;
 namespace openXDA.Model
 {
     [SettingsCategory("systemSettings")]
+    [AllowSearch]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class ChannelGroup
     {
         [PrimaryKey(true)]
