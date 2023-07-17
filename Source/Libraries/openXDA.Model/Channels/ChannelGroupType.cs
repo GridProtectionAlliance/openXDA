@@ -64,11 +64,6 @@ namespace openXDA.Model
 	        MeasurementType ON ChannelGroupType.MeasurementTypeID = MeasurementType.ID JOIN
 	        MeasurementCharacteristic ON ChannelGroupType.MeasurementCharacteristicID = MeasurementCharacteristic.ID
     ")]
-    [SettingsCategory("systemSettings")]
-    [AllowSearch]
-    [PostRoles("Administrator, Transmission SME")]
-    [PatchRoles("Administrator, Transmission SME")]
-    [DeleteRoles("Administrator, Transmission SME")]
     public class ChannelGroupDetails : ChannelGroupType
     {
         public string ChannelGroup { get; set; }
