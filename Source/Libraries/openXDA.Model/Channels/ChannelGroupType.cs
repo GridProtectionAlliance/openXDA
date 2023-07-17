@@ -32,6 +32,10 @@ using System.Threading.Tasks;
 namespace openXDA.Model
 {
     [SettingsCategory("systemSettings")]
+    [AllowSearch]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class ChannelGroupType
     {
         [PrimaryKey(true)]
@@ -61,6 +65,10 @@ namespace openXDA.Model
 	        MeasurementCharacteristic ON ChannelGroupType.MeasurementCharacteristicID = MeasurementCharacteristic.ID
     ")]
     [SettingsCategory("systemSettings")]
+    [AllowSearch]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class ChannelGroupDetails : ChannelGroupType
     {
         public string ChannelGroup { get; set; }
