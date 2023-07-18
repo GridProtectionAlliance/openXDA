@@ -56,8 +56,7 @@ namespace openXDA.Model
 	        ChannelGroupType.*,
 	        ChannelGroup.Name as ChannelGroup,
 	        MeasurementType.Name as MeasurementType,
-	        MeasurementCharacteristic.Name as MeasurementCharacteristic,
-	        ChannelGroupType.DisplayName
+	        MeasurementCharacteristic.Name as MeasurementCharacteristic
         FROM
 	        ChannelGroupType JOIN 
 	        ChannelGroup ON ChannelGroupType.ChannelGroupID = ChannelGroup.ID JOIN 
