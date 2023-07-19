@@ -79,13 +79,16 @@ namespace openXDA.MATLAB
 
                 try
                 {
+                    int tagCount = arrays[0].Dimensions[1];
+                    List<MATLABAnalyticTag> tags = new List<MATLABAnalyticTag>(tagCount);
+
+                    if (tagCount == 0)
+                        return tags;
+
                     MWStructArray tagsArray = arrays[0] as MWStructArray;
 
                     if (tagsArray is null)
-                        throw new InvalidOperationException();
-
-                    int tagCount = tagsArray.Dimensions[1];
-                    List<MATLABAnalyticTag> tags = new List<MATLABAnalyticTag>(tagCount);
+                        throw new InvalidOperationException($"Invalid type for tags array: {arrays[0].ArrayType}");
 
                     // Struct arrays use a zero-based index for some reason
                     for (int i = 0; i < tagCount; i++)
