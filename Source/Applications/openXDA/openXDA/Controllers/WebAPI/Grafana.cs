@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -67,44 +68,8 @@ namespace openXDA.Controllers.WebAPI
                     meters[id] = data;
                 }
 
-                DataTable additionalFieldTable = connection.RetrieveData(@"
-                    select 
-                        *
-                    from 
-                        [TVAOpenXDA].[dbo].[AdditionalField]
-                    where
-                        ParentTable = 'Meter'
-                ");
-
-                foreach (DataRow row in additionalFieldTable.Rows)
-                {
-                    string fieldName = row["FieldName"].ToString();
-                    string id = row["ID"].ToString();
-
-                    DataTable additionalFieldValueTable = connection.RetrieveData($@"
-                        select 
-                            *
-                        from 
-                            [TVAOpenXDA].[dbo].[AdditionalFieldValue]
-                        where
-                            AdditionalFieldID = {id}
-                    ");
-
-                    foreach (DataRow afvRow in additionalFieldValueTable.Rows)
-                    {
-                        string parentTableID = afvRow["ParentTableID"].ToString();
-                        string value = afvRow["Value"].ToString();
-
-                        if (meters.ContainsKey(parentTableID))
-                        {
-                            meters[parentTableID][fieldName] = value;
-                        }
-                    }
-                }
-
                 return Ok(meters);
             }
         }
     }
 }
-
