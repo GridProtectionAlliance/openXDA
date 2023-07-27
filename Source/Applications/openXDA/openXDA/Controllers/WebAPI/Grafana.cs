@@ -43,66 +43,58 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/GrafanaData")]
     public class GrafanaDataController : ApiController
     {
+        [HttpGet, Route("Subscribe")]
+        public IHttpActionResult Subscribe()
+        {
+            return Ok();
+        }
+
+
+        //Returns all main data from meters
         [HttpGet, Route("AllMeters")]
         public IHttpActionResult GetAllMeters()
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
+                DataTable AFKeys = connection.RetrieveData(@"
+                    SELECT DISTINCT FieldName AS [Key] 
+                    FROM AdditionalField
+                    WHERE ParentTable = 'Meter'
+                ");
+
+                string fieldNames = "";
+                DataRowCollection AFRows = AFKeys.Rows;
+
+                for (int i = 0; i < AFRows.Count; i++)
+                {
+                    fieldNames += $"[{AFRows[i]["Key"]}]";
+
+                    // If it is not the last column, append a comma.
+                    if (i != AFRows.Count - 1)
+                    {
+                        fieldNames += ", ";
+                    }
+                }
+
                 DataTable dt = connection.RetrieveData(@"
-                    select 
-                        *
+                    Select * from (select 
+                        MeterDetail.*, AF.Value, AF.FieldName
                     from 
-                        [TVAOpenXDA].[dbo].[MeterDetail]
+                        [TVAOpenXDA].[dbo].[MeterDetail] left join (SELECT
+                            AdditionalFieldValue.ID,
+                            AdditionalField.FieldName,
+                            AdditionalFieldValue.Value,
+                            AdditionalFieldValue.ParentTableID, 
+                            AdditionalField.ParentTable
+                        FROM
+                            AdditionalField JOIN
+                            AdditionalFieldValue ON AdditionalField.ID = AdditionalFieldValue.AdditionalFieldID) as AF
+	                    on AF.ParentTableID = MeterDetail.ID
+                    ) as FullTbl
+                    pivot(max(FullTbl.Value) for FullTbl.FieldName IN (" + fieldNames + @")) as Tbl
                 ");
 
-                Dictionary<string, Dictionary<string, string>> meters = new Dictionary<string, Dictionary<string, string>>();
-                foreach (DataRow row in dt.Rows)
-                {
-                    Dictionary<string, string> data = new Dictionary<string, string>();
-                    foreach (DataColumn column in dt.Columns)
-                    {
-                        data[column.ColumnName] = row[column.ColumnName].ToString();
-                    }
-                    string id = data["ID"];
-                    meters[id] = data;
-                }
-
-                DataTable additionalFieldTable = connection.RetrieveData(@"
-                    select 
-                        *
-                    from 
-                        [TVAOpenXDA].[dbo].[AdditionalField]
-                    where
-                        ParentTable = 'Meter'
-                ");
-
-                foreach (DataRow row in additionalFieldTable.Rows)
-                {
-                    string fieldName = row["FieldName"].ToString();
-                    string id = row["ID"].ToString();
-
-                    DataTable additionalFieldValueTable = connection.RetrieveData($@"
-                        select 
-                            *
-                        from 
-                            [TVAOpenXDA].[dbo].[AdditionalFieldValue]
-                        where
-                            AdditionalFieldID = {id}
-                    ");
-
-                    foreach (DataRow afvRow in additionalFieldValueTable.Rows)
-                    {
-                        string parentTableID = afvRow["ParentTableID"].ToString();
-                        string value = afvRow["Value"].ToString();
-
-                        if (meters.ContainsKey(parentTableID))
-                        {
-                            meters[parentTableID][fieldName] = value;
-                        }
-                    }
-                }
-
-                return Ok(meters);
+                return Ok(dt);
             }
         }
     }
