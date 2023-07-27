@@ -51,7 +51,7 @@ namespace openXDA.Controllers.WebAPI
 
 
         //Returns all main data from meters
-        [HttpGet, Route("AllMeters")]
+        [HttpGet, Route("Meters")]
         public IHttpActionResult GetAllMeters()
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
