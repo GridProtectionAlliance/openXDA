@@ -116,11 +116,11 @@ CREATE TABLE [AdditionalField] (
 	ParentTable varchar(100) NOT NULL,
 	FieldName varchar(100) NOT NULL,
 	Type varchar(max) NULL DEFAULT ('string'),
-	ExternalDB varchar(max) NULL,
-	ExternalDBTable varchar(max) NULL,
-	ExternalDBTableKey varchar(max) NULL,
+	ExternalDBTableID INT NULL FOREIGN KEY REFERENCES [extDBTables](ID),
 	IsSecure bit NULL DEFAULT(0),
     Searchable bit NULL DEFAULT(0),
+    IsInfo bit NOT NULL DEFAULT(0),
+    IsKey bit NOT NULL DEFAULT(0),
 	Constraint UC_AdditonaField UNIQUE(ParentTable, FieldName)
 )
 GO
@@ -150,18 +150,27 @@ CREATE TABLE [ExternalOpenXDAField] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTable varchar(100) NOT NULL,
 	FieldName varchar(100) NOT NULL,
-	ExternalDB varchar(max) NULL,
-	ExternalDBTable varchar(max) NULL,
-	ExternalDBTableKey varchar(max) NULL,
+    ExtDBID INT NOT NULL FOREIGN KEY References [ExternalDatabases](ID),
 	Constraint UC_ExternalOpenXDAField UNIQUE(ParentTable, FieldName)
 )
 GO
 
+CREATE Table [ExternalDatabases] (
+    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name varchar(200) NOT NULL,
+    Schedule varchar(50) NULL DEFAULT(NULL),
+    ConnectionString Varchar(MAX) NOT NULL,
+    DataProviderString VARCHAR(MAX) NULL,
+    Encrypt bit NOT NULL DEFAULT(0),
+    Constraint UC_ExternalDatabase UNIQUE(Name)
+)
+
 CREATE Table [extDBTables] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	TableName varchar(200) NOT NULL,
-    ExternalDB varchar(200) NOT NULL,
-	Query varchar(max) NULL,
+    ExtDBID INT NOT NULL FOREIGN KEY References [ExternalDatabases](ID),
+	Query varchar(max) NOT NULL,
+    Constraint UC_ExternalDatabaseTable UNIQUE(TableName, ExtDBID)
 )
 GO
 

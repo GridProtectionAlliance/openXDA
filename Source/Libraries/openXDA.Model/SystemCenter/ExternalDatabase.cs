@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  ExternalOpenXDAField.cs - Gbtc
+//  extDatabases.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/13/2020 - Christoph Lackner
+//  07/28/2023 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -26,18 +26,23 @@ using GSF.Data.Model;
 namespace SystemCenter.Model
 {
     /// <summary>
-    /// Model that contains data obtained from external Databases and should be saved directly in the Model (e.g. VoltageKV, AssetKey...) 
+    /// Model used to grab Database (e.g. FAWG or Maximo)
     /// </summary>
-    [UseEscapedName, TableName("ExternalOpenXDAField")]
-    public class ExternalOpenXDAField
+    [UseEscapedName,TableName("ExternalDatabases")]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [GetRoles("Administrator, Transmission SME")]
+    [AllowSearch]
+    public class ExternalDatabases
+
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public string ParentTable { get; set; }
-        public string FieldName { get; set; }
-        [ParentKey(typeof(ExternalDatabases))]
-        public int ExtDBID { get; set; }
+        public string Name { get; set; }
+        public string Schedule { get; set; }
+        public string ConnectionString { get; set; }
+        public string DataProviderString { get; set; }
+        public bool Encrypt { get; set; }
     }
-
 
 }

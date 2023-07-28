@@ -37,11 +37,11 @@ namespace SystemCenter.Model
         public string ParentTable { get; set; }
         public string FieldName { get; set; }
         public string Type { get; set; }
-        public string ExternalDB { get; set; }
-        public string ExternalDBTable { get; set; }
-        public string ExternalDBTableKey { get; set; }
+        [ParentKey(typeof(ExternalDatabases))]
+        public int? ExternalDBTableID { get; set; }
         public bool IsSecure { get; set; }
+        public bool IsInfo { get; set; }
+        public bool IsKey { get; set; }
         public bool Searchable { get; set; }
-
     }
 }
