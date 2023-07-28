@@ -75,6 +75,10 @@ namespace FaultData.DataAnalysis
 
             //preinitialize size of SeriesInfo
             int ncycleData = dataSeries.DataPoints.Count - samplesPerCycle + 1;
+
+            if (ncycleData <= 0)
+                return null;
+
             rmsSeries.DataPoints.Capacity = ncycleData;
             phaseSeries.DataPoints.Capacity = ncycleData;
             peakSeries.DataPoints.Capacity = ncycleData;
