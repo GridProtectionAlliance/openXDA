@@ -94,12 +94,12 @@ namespace SystemCenter.Model
         /// <param name="parentTable">Name of Parent Table</param>
         /// <param name="fieldName">Name of field</param>
         /// <param name="fieldType">Name of field type (integer, string, etc) or name of value list category, defaults to string</param>
-        /// <param name="externalDB">Name of external database to retrieve this data, defaults to null</param>
-        /// <param name="externalDBTable">Name of external database table to retrieve this data, defaults to null</param>
-        /// <param name="externalDBTableKey">Key from external database table used to reference this data, defaults to null</param>
+        /// <param name="externalDBTable">External database table to retrieve this data, defaults to null</param>
         /// <param name="isSecure">Labels field as secure or not, defaults to false</param>
+        /// <param name="isInfo"> Makes Field appear on info Tab, defaults to false</param>
+        /// <param name="isKey"> Makes UI show a Search Modal from the <see cref="extDBTables"/>, defaults to false</param>
         /// <returns></returns>
-        public static AdditionalField GetField(this TableOperations<AdditionalField> tableOperations, string parentTable, string fieldName, string fieldType = "string", string externalDB = null, string externalDBTable = null, string externalDBTableKey = null ,bool isSecure = false)
+        public static AdditionalField GetField(this TableOperations<AdditionalField> tableOperations, string parentTable, string fieldName, string fieldType = "string", extDBTables externalDBTable = null, bool isSecure = false, bool isKey = false, bool isInfo = false)
         {
             AdditionalField record = tableOperations.QueryRecordWhere("ParentTable = {0} AND FieldName = {1}", parentTable, fieldName);
             if (record != null) return record;
@@ -108,9 +108,9 @@ namespace SystemCenter.Model
             record.ParentTable = parentTable;
             record.FieldName = fieldName;
             record.Type = fieldType;
-            record.ExternalDB = externalDB;
-            record.ExternalDBTable = externalDBTable;
-            record.ExternalDBTableKey = externalDBTableKey;
+            record.ExternalDBTableID = externalDBTable?.ID;
+            record.IsInfo = isInfo;
+            record.IsKey = isKey;
             record.IsSecure = isSecure;
 
             tableOperations.AddNewRecord(record);
