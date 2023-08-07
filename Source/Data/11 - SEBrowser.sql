@@ -124,9 +124,10 @@ INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance
 GO
 INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'OpenSEEInstance', N'http://localhost/OpenSEE', 0, N'Administrator')
 GO
+INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'Timezone', N'UTC', 0, N'Administrator')
+GO
 INSERT [dbo].[SEBrowser.Setting]([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'eventPreviewPane.widgetSetting', N'OpenSEEInstance', N'http://localhost/OpenSEE', 0, N'Administrator')
 GO
-
 
 Insert into ValueListGroup (Name, Description) VALUES('CustomReports', 'Custom Reports to list on the SEBrowser nav bar')
 GO
