@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -89,6 +88,7 @@ namespace FaultData.DataWriters
         public Chart GenerateChart(string title, List<string> keys, List<string> names, DateTime startTime, DateTime endTime)
         {
             List<DataSeries> dataSeriesList;
+            int dataEndIndex;
 
             Chart chart;
             ChartArea area;
@@ -106,8 +106,13 @@ namespace FaultData.DataWriters
 
             // Snap startTime and endTime
             // to the data's time boundaries
+            dataEndIndex = dataSeriesList
+                .Where(dataSeries => !(dataSeries is null))
+                .Select(dataSeries => dataSeries.DataPoints.Count - 1)
+                .FirstOrDefault();
+
             dataStart = ToDateTime(0);
-            dataEnd = ToDateTime(dataSeriesList[0].DataPoints.Count - 1);
+            dataEnd = ToDateTime(dataEndIndex);
 
             if (startTime < dataStart)
                 startTime = dataStart;
@@ -168,7 +173,7 @@ namespace FaultData.DataWriters
             DateTime dateTime;
 
             dateTime = m_seriesLookup
-                .Where(kvp => kvp.Value.IsValueCreated)
+                .Where(kvp => kvp.Value.IsValueCreated && !(kvp.Value.Value is null))
                 .Select(kvp => kvp.Value.Value[index].Time)
                 .FirstOrDefault();
 
