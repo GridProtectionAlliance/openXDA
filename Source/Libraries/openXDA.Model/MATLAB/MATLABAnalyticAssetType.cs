@@ -39,7 +39,6 @@ namespace openXDA.Model
         [ParentKey(typeof(MATLABAnalytic))]
         public int MATLABAnalyticID { get; set; }
 
-        [ParentKey(typeof(AssetTypes))]
         public int AssetTypeID { get; set; }
     }
 }
