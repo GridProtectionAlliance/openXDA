@@ -24,11 +24,11 @@
 import * as React from 'react';
 import { SPCTools, openXDA } from '../global';
 import { DateRangePicker } from '@gpa-gemstone/react-forms';
-import MultiSelectTable from '../CommonComponents/MultiSelectTable';
 import { useSelector, useDispatch } from 'react-redux';
 import _ from 'lodash';
 import { SelectStatisticsrange, updateStatisticsRange, updateStatisticsFilter, updateStatisticChannels, SelectStatisticsFilter } from './DynamicWizzardSlice';
 import { SelectAffectedChannelSortField, SelectAffectedChannelAscending, SortAffectedChanels, SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
+import { SelectTable } from '@gpa-gemstone/react-table';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -45,9 +45,7 @@ const SelectStatisticsData = (props: IProps) => {
 
     const dateRange = useSelector(SelectStatisticsrange)
     const dataFilter = useSelector(SelectStatisticsFilter)
-    
-    const [selectAll, setSelectAll] = React.useState<boolean>(false);
-   
+       
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
@@ -58,7 +56,7 @@ const SelectStatisticsData = (props: IProps) => {
             </div>
             <div className="row" style={{ margin: 0 }}>
                 <div className="col-6">
-                    <DateRangePicker<SPCTools.IDateRange> Label={''} Record={dateRange} FromField={'start'} ToField={'end'} Setter={(r) => dispatch(updateStatisticsRange(r))} />
+                    <DateRangePicker<SPCTools.IDateRange> Label={''} Record={dateRange} FromField={'start'} ToField={'end'} Setter={(r) => dispatch(updateStatisticsRange(r))} Valid={() => true} />
                 </div>
             </div>
             <div className="row" style={{ margin: 0 }}>
@@ -67,12 +65,6 @@ const SelectStatisticsData = (props: IProps) => {
                 </div>
             </div>
             <div className="row" style={{ margin: 0}}>
-                <div className="col-4">
-                    <div className="form-check">
-                        <input type="checkbox" className="form-check-input" onChange={() => setSelectAll(!selectAll)} checked={selectAll} />
-                        <label className="form-check-label">Select All Channels</label>
-                    </div>
-                </div>
                 {/*
                  This is removed for speeding up Development due to EPRI Deadline
                  <div className="col-4">
@@ -85,7 +77,7 @@ const SelectStatisticsData = (props: IProps) => {
             <div className="row" style={{ margin: 0 }}>
                 <div className="col-8">
                     {/*showChannels ? <ChannelTable selectAll={selectAll} /> : <MeterTable selectAll={selectAll} />*/}
-                    <ChannelTable selectAll={selectAll} />
+                    <ChannelTable />
                 </div>
                 <div className="col-4">
                     <DataFilter filter={dataFilter} setter={(r) => dispatch(updateStatisticsFilter(r))} />
@@ -228,7 +220,7 @@ const MeterTable = (props: { selectAll: boolean }) => {
 }
 */
 
-const ChannelTable = (props: { selectAll: boolean }) => {
+const ChannelTable = () => {
     const dispatch = useDispatch();
     const channelList = useSelector(SelectAffectedChannels);
     const sort = useSelector(SelectAffectedChannelSortField);
@@ -236,7 +228,7 @@ const ChannelTable = (props: { selectAll: boolean }) => {
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <MultiSelectTable<openXDA.IChannel>
+            <SelectTable<openXDA.IChannel>
                 cols={[
                     { key: 'MeterName', label: 'Meter', field: 'MeterName', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                     { key: 'AssetKey', label: 'Asset', field: 'AssetKey', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
@@ -247,15 +239,11 @@ const ChannelTable = (props: { selectAll: boolean }) => {
                 data={channelList}
                 sortKey={sort}
                 ascending={asc}
-                onSort={(d) => dispatch(SortAffectedChanels({ Ascending: d.ascending, SortField: d.colField }))}
-                onClick={(d) => { }}
                 theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                 tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 400, width: '100%' }}
                 rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                selected={(item) => false}
-                primaryKey={'ID'}
-                updateSelection={(selected) => { dispatch(updateStatisticChannels(selected));}}
-                selectAll={props.selectAll}
+                KeyField={'ID'}
+                onSelection={(selected) => { dispatch(updateStatisticChannels(selected));}}
             />
         </div>
     )

@@ -24,9 +24,8 @@
 import * as React from 'react';
 import { SearchBar } from '@gpa-gemstone/react-interactive'
 import { SPCTools, openXDA, Filter } from '../global';
-import Table from '@gpa-gemstone/react-table';
+import Table, { SelectTable } from '@gpa-gemstone/react-table';
 import { Input, Select } from '@gpa-gemstone/react-forms';
-import MultiSelectTable from '../CommonComponents/MultiSelectTable';
 import {  updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID, SelectWizardType } from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 import { SelectMeasurmentTypes } from '../store/MeasurmentTypeSlice';
@@ -220,7 +219,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                             SetFilter={setFilters}
                         >
                         </SearchBar> 
-                        <MultiSelectTable<openXDA.IMeter>
+                        <SelectTable<openXDA.IMeter>
                             cols={[
                                 { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                 { key: 'Location', label: 'Substation', field: 'Location', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
@@ -231,23 +230,11 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                             data={meterList}
                             sortKey={sort}
                             ascending={asc}
-                            onSort={(d) => {
-                                if (d.colKey == sort) {
-                                    setAsc(!asc);
-                                }
-                                else {
-                                    setAsc(asc);
-                                    setSort(d.colField);
-                                }
-                            }}
-                            onClick={(d) => { }}
+                            onSelection={(selected) => { setSelectedMeterList(selected) }}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 500, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            selected={(item) => false}
-                            primaryKey={'ID'}
-                            updateSelection={(selected) => { setSelectedMeterList(selected) }}
-                            selectAll={false}
+                            KeyField={'ID'}
                         />
                     </div>
 
