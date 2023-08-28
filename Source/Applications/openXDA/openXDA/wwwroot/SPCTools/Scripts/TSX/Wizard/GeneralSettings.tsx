@@ -22,11 +22,9 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import FilterWindow from '../CommonComponents/Filter';
-import { SPCTools, openXDA, Redux, Filter } from '../global';
+import { SearchBar } from '@gpa-gemstone/react-interactive'
+import { SPCTools, openXDA, Filter } from '../global';
 import Table from '@gpa-gemstone/react-table';
-import { cloneDeep, clone } from 'lodash';
 import { Input, Select } from '@gpa-gemstone/react-forms';
 import MultiSelectTable from '../CommonComponents/MultiSelectTable';
 import {  updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID, SelectWizardType } from './DynamicWizzardSlice'
@@ -201,16 +199,6 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
     }
 
 
-
-    let searchCollumns = [
-        { label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-        { label: 'Substation', key: 'Location' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-        { label: 'Make', key: 'Make' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-        { label: 'Model', key: 'Model' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-        { label: 'AssetKey', key: 'AssetKey' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-    ]
-
-
     return (
         <div className="modal" id='AddMeter'>
             <div className="modal-dialog" style={{ maxWidth: window.innerWidth - 200 }}>
@@ -220,7 +208,18 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                         <button type="button" className="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div className="modal-body">
-                        <FilterWindow<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType }} Direction={'right'} SetFilter={setFilters} />
+                        <SearchBar<openXDA.IMeter>
+                            CollumnList={[
+                                { label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'Substation', key: 'Location' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'Make', key: 'Make' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'Model', key: 'Model' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'AssetKey', key: 'AssetKey' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                            ]}
+                            Direction={'left'}
+                            SetFilter={setFilters}
+                        >
+                        </SearchBar> 
                         <MultiSelectTable<openXDA.IMeter>
                             cols={[
                                 { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
@@ -325,12 +324,6 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
         return handle;
     }
 
-    let searchCollumns = [
-        { label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType },
-        { label: 'Num of Meters', key: 'Meters' as keyof openXDA.IAssetGroup, type: 'integer' as Filter.FieldType },
-    ]
-
-
     return (
         <div className="modal" id='AddAssetGroup'>
             <div className="modal-dialog" style={{ maxWidth: window.innerWidth - 200 }}>
@@ -340,7 +333,15 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                         <button type="button" className="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div className="modal-body">
-                        <FilterWindow<openXDA.IAssetGroup> Id='FilterAssetGroup' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType }} SetFilter={setFilters} Direction={'right'} />
+                        <SearchBar<openXDA.IAssetGroup>
+                            CollumnList={[
+                                { label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'Num of Meters', key: 'Meters' as keyof openXDA.IAssetGroup, type: 'integer' as Filter.FieldType, isPivotField: false },
+                            ]}
+                            SetFilter={setFilters}
+                            Direction={'left'}
+                        >
+                        </SearchBar>
                         <Table<openXDA.IAssetGroup>
                             cols={[
                                 { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
