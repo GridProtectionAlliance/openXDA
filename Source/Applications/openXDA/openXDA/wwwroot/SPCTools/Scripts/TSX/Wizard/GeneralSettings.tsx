@@ -25,8 +25,8 @@ import * as React from 'react';
 import { SearchBar } from '@gpa-gemstone/react-interactive'
 import { SPCTools, openXDA, Filter } from '../global';
 import Table, { SelectTable } from '@gpa-gemstone/react-table';
-import { Input, Select } from '@gpa-gemstone/react-forms';
-import {  updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID, SelectWizardType } from './DynamicWizzardSlice'
+import { Input, Select, ArrayCheckBoxes } from '@gpa-gemstone/react-forms';
+import { updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID, SelectWizardType } from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 import { SelectMeasurmentTypes } from '../store/MeasurmentTypeSlice';
 import { SelectAlarmTypes } from '../store/AlarmTypeSlice';
@@ -106,15 +106,15 @@ const GeneralSettings = (props: IProps) => {
                     <span className="float-right"> Number of Channels Selected: {(affectedChannelState != 'idle' ? <div className="spinner-border spinner-border-sm" role="status"></div> : affectedChannelCount)}</span>
                 </div>
             </div>
-            <div className="row" style={{ margin: 0, height: 'calc(100% - 218px)'}}>
-                <div className="col" style={{height: '100%'}}>
-                    <div className="row" style={{margin: 0, width: '100%'}}>
+            <div className="row" style={{ margin: 0, height: 'calc(100% - 218px)' }}>
+                <div className="col" style={{ height: '100%' }}>
+                    <div className="row" style={{ margin: 0, width: '100%' }}>
                         <h3> Selected Meters </h3>
                     </div>
                     <div className="row" style={{ margin: 0, width: '100%', height: 'calc(100% - 137px)' }}>
                         <div className="col">
                             <Table<openXDA.IMeter>
-                                tableStyle={{height: '100%'}}
+                                tableStyle={{ height: '100%' }}
                                 cols={[
                                     { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
                                     { key: 'Location', label: 'Substation', field: 'Location', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
@@ -304,7 +304,7 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
             async: true
         });
 
-        handle.done((data ) => {
+        handle.done((data) => {
             setSelectedMeterList(JSON.parse(data) as Array<openXDA.IMeter>)
         });
 
@@ -373,6 +373,11 @@ const MeasurmentTypeSelect = (props: {}) => {
     const measurementTypes = useSelector(SelectMeasurmentTypes);
     const measurementTypeID = useSelector(selectMeasurmentTypeID);
 
+    const selectOptions = measurementTypes.map((measure) => ({
+        Value: measure.ID.toString(),
+        Label: measure.DisplayName
+    }));
+
     React.useEffect(() => {
         dispatch(FetchAvailablePhases());
         dispatch(FetchAvailableVoltages());
@@ -384,20 +389,17 @@ const MeasurmentTypeSelect = (props: {}) => {
             dispatch(updateMeasurmentTypeID(measurementTypes[0].ID));
     }, [])
 
-    return <div className="form-group">
-        <label>Measurment</label>
-        <select
-            className="form-control"
-            onChange={(evt) => dispatch(updateMeasurmentTypeID(parseInt(evt.target.value)))} 
-            value={measurementTypeID}
-        >
-        {measurementTypes.map((a, i) => (
-            <option key={i} value={a.ID}>
-                {a.DisplayName}
-            </option>
-        ))}
-        </select>
-    </div>
+    return (
+        <>
+            <Select
+                Record={{ obj: measurementTypeID }}
+                Field={"obj"}
+                Options={selectOptions}
+                Setter={(evt) => dispatch(updateMeasurmentTypeID(evt.obj))}
+                Label={'Measurement'}
+            ></Select>
+        </>
+    )
 }
 
 const PhaseSelect = (props: {}) => {
@@ -474,20 +476,22 @@ const RepeatabilityTypeSelect = (props: {}) => {
         dispatch(FetchAvailableVoltages());
     }, [alarmDayGroupID]);
 
-    return <div className="form-group">
-        <label>Alarm Cycle</label>
-        <select
-            className="form-control"
-            onChange={(evt) => dispatch(updateAlarmDayGroupID(parseInt(evt.target.value)))}
-            value={alarmDayGroupID}
-        >
-            {AlarmDayGroups.map((a, i) => (
-                <option key={i} value={a.ID}>
-                    {a.Description}
-                </option>
-            ))}
-        </select>
-    </div>
+    const selectOptions = AlarmDayGroups.map((alarm) => ({
+        Value: alarm.ID.toString(),
+        Label: alarm.Description.toString()
+    }));
+
+    return (
+        <>
+            <Select
+                Record={{ obj: alarmDayGroupID }}
+                Field={"obj"}
+                Options={selectOptions}
+                Setter={(evt) => dispatch(updateAlarmDayGroupID(evt.obj))}
+                Label={'Alarm Cycle'}
+            ></Select>
+        </>
+    )
 }
 
 
@@ -507,25 +511,26 @@ const IntervallDataSelect = (props: {}) => {
             dispatch(updateSeriesTypeID(seriesTypes[0].ID));
     }, [])
 
-    return (
-    <fieldset className="border" style={{ padding: '10px' }}>
-            <legend className="w-auto">Interval Data Type:</legend>
-            {loading != 'idle' ? <div className="spinner-border" role="status"></div> :
-                <div className="form-group">
-                    {seriesTypes.map((cb, i) => (
-                        <div key={i} className="form-check form-check-inline">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                checked={seriesTypeID == cb.ID}
-                                onChange={(evt) => dispatch(updateSeriesTypeID(cb.ID))}
-                            />
-                            <label className="form-check-label">{cb.Name}</label>
-                        </div>
-                    ))}
-                </div>}
-    </fieldset>)
+    const handleSelectionChange = (selectedRecord: { seriesTypeID: number }) => {
+        dispatch(updateSeriesTypeID(selectedRecord.seriesTypeID));
+    }
 
+    const selectOptions = seriesTypes.map(s => ({
+        Value: s.ID.toString(),
+        Label: s.Name.toString()
+    }))
+
+    return (
+        <>
+            <Select<{ seriesTypeID: number }>
+                Record={{ seriesTypeID }}
+                Field="seriesTypeID"
+                Setter={handleSelectionChange}
+                Options={selectOptions}
+                Label="Interval Data Type"
+                            />
+        </>
+    )
 }
 
 export default GeneralSettings

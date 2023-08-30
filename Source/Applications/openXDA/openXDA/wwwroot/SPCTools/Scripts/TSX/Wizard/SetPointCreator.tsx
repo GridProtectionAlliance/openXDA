@@ -33,6 +33,7 @@ import { DynamicTimeRange } from './DynamicTimeRange';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
 import { SelectAlarmDayByID } from '../store/AlarmDaySlice';
 import { SelectSetPointParseStatus, SelectSetPointParseResult } from '../store/SetPointParseSlice';
+import { Select, TextArea } from '@gpa-gemstone/react-forms';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -323,13 +324,24 @@ const SeveritySelect = (props: {}) => {
     const dispatch = useDispatch();
     const severities = useSelector(SelectSeverities)
 
+    function handleSetSeverity(updatedGroup: SPCTools.IAlarmGroup) {
+        dispatch(updateAlarmGroup(updatedGroup));
+    }
+
+    const severityOptions = severities.map(severity => ({
+        Value: severity.ID.toString(),
+        Label: severity.Name
+    }));
+
     return (
-        <div className="form-group">
-            <label>Alarm Severity</label>
-            <select className="form-control" onChange={(evt) => dispatch(updateAlarmGroup({ ...alarmGroup, SeverityID: (parseInt(evt.target.value)) }))} value={alarmGroup.SeverityID}>
-                {severities.map((a, i) => ( <option key={i} value={a.ID}> {a.Name} </option>))}
-            </select>
-        </div>);
+        <Select<SPCTools.IAlarmGroup>
+            Record={alarmGroup}
+            Field='SeverityID'
+            Options={severityOptions}
+            Setter={handleSetSeverity}
+            Label="Alarm Severity"
+        />
+    );
 }
 
 
