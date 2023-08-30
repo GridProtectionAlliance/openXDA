@@ -130,7 +130,7 @@ const GeneralSettings = (props: IProps) => {
                                 tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 300, width: '100%' }}
                                 rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                 selected={(item) => false}
-                                />
+                            />
                         </div>
                     </div>
                     <div className="row" style={{ margin: 0, width: '100%' }}>
@@ -159,7 +159,7 @@ const GeneralSettings = (props: IProps) => {
             </div>
             <AddMeterPopUp setter={(meter) => dispatch(addMeter(meter))} />
             <AddAssetgroupPopUp setter={(meter) => dispatch(addMeter(meter))} />
-        </div>      
+        </div>
     );
 }
 
@@ -218,7 +218,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                             Direction={'left'}
                             SetFilter={setFilters}
                         >
-                        </SearchBar> 
+                        </SearchBar>
                         <SelectTable<openXDA.IMeter>
                             cols={[
                                 { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
@@ -247,7 +247,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
             </div>
 
         </div>
-        );
+    );
 }
 
 const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void }) => {
@@ -257,8 +257,8 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
     const [asc, setAsc] = React.useState<boolean>(false);
     const [selectedAssetGroupID, setSelectedAssetGroupID] = React.useState<number>(-1);
     const [selectedMeterList, setSelectedMeterList] = React.useState<Array<openXDA.IMeter>>([]);
- 
-    
+
+
     React.useEffect(() => {
         let handle = getList();
 
@@ -333,7 +333,7 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                             cols={[
                                 { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                 { key: 'Meters', label: 'Num. of Meters', field: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                
+
                             ]}
                             tableClass="table table-hover"
                             data={assetGroupList}
@@ -408,30 +408,40 @@ const PhaseSelect = (props: {}) => {
     const availablePhases = useSelector(SelectAvailablePhases);
     const selectedPhases = useSelector(SelectSelectedPhases);
 
+    const checkboxesData = availablePhases.map((phase) => ({
+        ID: phase.ID.toString(),
+        Label: `${phase.Name}`
+    }));
+
+    const selectedPhaseIDs = availablePhases
+        .filter((phase, index) => selectedPhases[index])
+        .map(phase => phase.ID.toString());
+
+    const onCheckboxChange = (updatedRecord: { selected: string[] }) => {
+
+        const selectedIndices = updatedRecord.selected.map(id =>
+            availablePhases.findIndex(phase => phase.ID.toString() === id)
+        );
+
+        dispatch(selectPhase(selectedIndices));
+    };
+
     React.useEffect(() => { dispatch(FetchAffectedChannels()); }, [selectedPhases])
 
     return (
-    <fieldset className="border" style={{ padding: '10px' }}>
-        <legend className="w-auto">Phases:</legend>
+        <fieldset className="border" style={{ padding: '10px' }}>
+            <legend className="w-auto">Phases:</legend>
             {loading != 'idle' ? <div className="spinner-border" role="status"></div> :
-                <div className="form-group">
-                    {availablePhases.map((cb, i) => (
-                        <div key={i} className="form-check form-check-inline">
-                            <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={selectedPhases[i]}
-                                onChange={(evt) => dispatch(selectPhase(cb))}
-                            />
-                            <label className="form-check-label">{cb.Name}</label>
-                        </div>
-                    ))}
-                </div>
+                <ArrayCheckBoxes
+                    Record={{ selected: selectedPhaseIDs }}
+                    Field="selected"
+                    Setter={onCheckboxChange}
+                    Checkboxes={checkboxesData}
+                    Label={''}
+                />
             }
-    </fieldset>
+        </fieldset>
     )
-
-
 }
 
 const VoltageSelect = (props: {}) => {
@@ -440,30 +450,36 @@ const VoltageSelect = (props: {}) => {
     const availableVoltages = useSelector(SelectAvailableVoltages);
     const selectedVoltages = useSelector(SelectSelectedVoltages);
 
-    React.useEffect(() => { dispatch(FetchAffectedChannels()); }, [selectedVoltages])
+    const checkboxesData = availableVoltages.map((voltage) => ({
+        ID: voltage.toString(),
+        Label: `${voltage} kV`
+    }));
 
+    // Determine the IDs of the selected voltages.
+    const selectedVoltageIDs = availableVoltages.filter((voltage, index) => selectedVoltages[index])
+        .map(voltage => voltage.toString());
+
+    const onCheckboxChange = (updatedRecord: { selected: string[] }) => {
+        // Map the IDs back to their integer values.
+        const selectedIndices = updatedRecord.selected.map(voltageStr => availableVoltages.indexOf(parseFloat(voltageStr)));
+        dispatch(selectVoltage(selectedIndices));
+    };
+
+    React.useEffect(() => { dispatch(FetchAffectedChannels()); }, [selectedVoltages])
     return (
         <fieldset className="border" style={{ padding: '10px' }}>
             <legend className="w-auto">Base Voltages:</legend>
             {loading != 'idle' ? <div className="spinner-border" role="status"></div> :
-                <div className="form-group">
-                    {availableVoltages.map((cb, i) => (
-                        <div key={i} className="form-check form-check-inline">
-                            <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={selectedVoltages[i]}
-                                onChange={(evt) => dispatch(selectVoltage(cb))}
-                            />
-                            <label className="form-check-label">{cb} kV</label>
-                        </div>
-                    ))}
-                </div>
+                <ArrayCheckBoxes
+                    Record={{ selected: selectedVoltageIDs }}
+                    Field="selected"
+                    Setter={onCheckboxChange}
+                    Checkboxes={checkboxesData}
+                    Label={''}
+                />
             }
         </fieldset>
     )
-
-
 }
 
 const RepeatabilityTypeSelect = (props: {}) => {
@@ -528,7 +544,7 @@ const IntervallDataSelect = (props: {}) => {
                 Setter={handleSelectionChange}
                 Options={selectOptions}
                 Label="Interval Data Type"
-                            />
+            />
         </>
     )
 }
