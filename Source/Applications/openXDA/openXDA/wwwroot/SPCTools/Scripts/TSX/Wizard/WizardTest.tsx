@@ -213,7 +213,7 @@ const WizardTest = (props: IProps) => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            <DateRangePicker<SPCTools.IDateRange> Label={''} Record={timeRange} FromField={'start'} ToField={'end'} Setter={(r) => { setLoading('changed'); setTimeRange(r); }} Disabled={loading == 'loading'} />
+                            <DateRangePicker<SPCTools.IDateRange> Label={''} Record={timeRange} FromField={'start'} ToField={'end'} Setter={(r) => { setLoading('changed'); setTimeRange(r); }} Disabled={loading == 'loading'} Valid={ () => true} />
                         </div>
                     </div>
                     <div className="row" style={{ margin: 0 }}>
