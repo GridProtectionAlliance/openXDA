@@ -22,12 +22,11 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import _ from 'lodash';
 import { DynamicWizzard } from '../global';
 import { useSelector, useDispatch } from 'react-redux';
 import { SelectAlarmValues, updateAlarmValues, SelectThresholdValues, SelectAllowSlice } from './DynamicWizzardSlice';
-
+import { Input } from '@gpa-gemstone/react-forms'
 
 export const DynamicTimeRange = (props: { alarmDayID: number, setter: ((selectedStartHour: number) => void) }) => {
     const dispatch = useDispatch();
@@ -134,20 +133,22 @@ export const DynamicTimeRange = (props: { alarmDayID: number, setter: ((selected
             <div className="col" style={{ background: (index == selected ? 'yellow' : '') }}>
                 {edit && index == selected ?
                     <div className="input-group input-group-sm">
-                        <input type="number" className={"form-control form-control-sm" + (TstartInValid ? ' is-invalid' : '')}
-                            value={editTstart} onChange={(evt) => setEditTstart(parseInt(evt.target.value))} />
-                        <input type="number" className={"form-control form-control-sm" + (TendInValid ? ' is-invalid' : '')}
-                            value={editTend} onChange={(evt) => setEditTend(parseInt(evt.target.value))} />
-                        <div className="input-group-append">
-                            <span className="input-group-text">
-                                <i style={{
-                                    marginRight: '10px',
-                                    color: (TstartInValid || TendInValid ? '#bbbbbb' : '#28A745')
-                                }}
-                                    className="fa fa-check" onClick={() => { if (!TstartInValid && !TendInValid) setEdit(false); }}>
-                                </i>
-                            </span>
-                        </div>
+                        <Input
+                            Record={{ Tstart: editTstart }}
+                            Field="Tstart"
+                            Setter={(record) => setEditTstart(record.Tstart)}
+                            Valid={() => !TstartInValid}  
+                            Type="number"
+                            Size="small"
+                        />
+                        <Input
+                            Record={{ Tend: editTend }}
+                            Field="Tend"
+                            Setter={(record) => setEditTend(record.Tend)}
+                            Valid={() => !TendInValid}
+                            Type="number"
+                            Size="small"
+                        />
                     </div>
                     :
                     <p>
