@@ -33,6 +33,7 @@ import { DynamicTimeRange } from './DynamicTimeRange';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
 import { SelectAlarmDayByID } from '../store/AlarmDaySlice';
 import { SelectSetPointParseStatus, SelectSetPointParseResult } from '../store/SetPointParseSlice';
+import { TrashCan, Plus } from '@gpa-gemstone/gpa-symbols';
 import { Select, TextArea } from '@gpa-gemstone/react-forms';
 
 declare var homePath: string;
@@ -225,19 +226,18 @@ const SetPointEditor = (props: { alarmDayID: number, startHour: number, label?: 
     : props.label)
 
     return (
-        
             <div className="col">
-            <div className="form-group">
-                <label>SetPoint {lbl}
-                </label>
-                    <textarea
-                        rows={2}
-                        className={'form-control'}
-                        onChange={(evt) => setText(evt.target.value as string)}
-                        value={text}
+            <TextArea
+                Rows={2}
+                Record={{ text: text }}
+                Field="text"
+                Setter={(record) => setText(record.text)}
+                Valid={() => true}
+                Label={`SetPoint ${lbl}`}
                     />
                 </div>
-            </div>)
+
+    )
 }
 
 const SetPointMessage = (props: {}) => {
@@ -314,9 +314,10 @@ const FactorRow = (props: { Factor: SPCTools.IFactor, index: number }) => {
                     </div>
                 </div>
                 <div className="col-2">
-                    <i onClick={() => {dispatch(removeFactor(props.index));}} className="fa fa-trash-o"></i>
+                <a title='Remove' className="btn" onClick={() => { dispatch(removeFactor(props.index)); }}>{TrashCan}</a>
                 </div>
-            </div>)
+                </div>
+    )
 }
 
 const SeveritySelect = (props: {}) => {
