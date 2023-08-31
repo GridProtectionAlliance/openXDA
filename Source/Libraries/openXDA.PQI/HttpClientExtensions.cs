@@ -35,7 +35,7 @@ namespace openXDA.PQI
             using (HttpRequestMessage request = new HttpRequestMessage())
             {
                 configure(request);
-                return await client.SendAsync(request, cancellationToken);
+                return await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
             }
         }
     }
