@@ -306,8 +306,10 @@ namespace openXDA.PQI
 
                 if (combinedPath.Length == 0)
                     combinedPath = path;
+                else if (path.StartsWith(Separator) && combinedPath.EndsWith(Separator))
+                    combinedPath += path.TrimStart(Separator.ToCharArray());
                 else if (path.StartsWith(Separator))
-                    combinedPath = path;
+                    combinedPath += path;
                 else if (combinedPath.EndsWith(Separator))
                     combinedPath += path;
                 else
