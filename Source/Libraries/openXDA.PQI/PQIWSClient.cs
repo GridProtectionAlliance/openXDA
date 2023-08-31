@@ -57,8 +57,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<Facility>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<Facility>>().ConfigureAwait(false);
         }
 
         public async Task<List<Address>> GetAllAddresses(CancellationToken cancellationToken = default)
@@ -75,8 +75,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<Address>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<Address>>().ConfigureAwait(false);
         }
 
         public async Task<List<Company>> GetAllCompanies(CancellationToken cancellationToken = default)
@@ -93,8 +93,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<Company>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<Company>>().ConfigureAwait(false);
         }
 
         public async Task<FacilityInfo> GetFacilityInfoAsync(int facilityID, CancellationToken cancellationToken = default)
@@ -112,8 +112,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<FacilityInfo>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<FacilityInfo>().ConfigureAwait(false);
         }
 
         public async Task<bool> IsImpactedAsync(int facilityID, double magnitude, double duration, CancellationToken cancellationToken = default)
@@ -135,8 +135,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<bool>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<bool>().ConfigureAwait(false);
         }
 
         public async Task<List<Equipment>> GetImpactedEquipmentAsync(int facilityID, double magnitude, double duration, CancellationToken cancellationToken = default)
@@ -158,8 +158,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<Equipment>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<Equipment>>().ConfigureAwait(false);
         }
 
         public async Task<List<FacilityAudit>> GetFacilityAudits(int facilityID, CancellationToken cancellationToken = default)
@@ -177,8 +177,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<FacilityAudit>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<FacilityAudit>>().ConfigureAwait(false);
         }
 
         public async Task<List<PQIEquipment>> GetAuditedEquipment(int facilityAuditID, CancellationToken cancellationToken = default)
@@ -196,8 +196,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<PQIEquipment>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<PQIEquipment>>().ConfigureAwait(false);
         }
 
         public async Task<List<PQIEquipment>> GetAuditedEquipment(FacilityAudit facilityAudit, CancellationToken cancellationToken = default)
@@ -214,8 +214,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<PQIEquipment>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<PQIEquipment>>().ConfigureAwait(false);
         }
 
         public async Task<List<AuditCurve>> GetAuditCurve(PQIEquipment equipment, CancellationToken cancellationToken = default)
@@ -232,8 +232,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<AuditCurve>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<AuditCurve>>().ConfigureAwait(false);
         }
 
         public async Task<List<AuditCurve>> GetAuditCurve(int equipmentID, CancellationToken cancellationToken = default)
@@ -251,8 +251,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<AuditCurve>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<AuditCurve>>().ConfigureAwait(false);
         }
 
         public async Task<TestCurve> GetTestCurve(AuditCurve auditCurve, CancellationToken cancellationToken = default)
@@ -269,8 +269,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<TestCurve>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<TestCurve>().ConfigureAwait(false);
         }
 
         public async Task<List<TestCurvePoint>> GetTestCurvePoints(TestCurve testCurve, CancellationToken cancellationToken = default)
@@ -287,8 +287,8 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
-                return await response.Content.ReadAsAsync<List<TestCurvePoint>>();
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
+                return await response.Content.ReadAsAsync<List<TestCurvePoint>>().ConfigureAwait(false);
         }
 
         private static string BuildURL(params string[] parts)
@@ -306,8 +306,10 @@ namespace openXDA.PQI
 
                 if (combinedPath.Length == 0)
                     combinedPath = path;
+                else if (path.StartsWith(Separator) && combinedPath.EndsWith(Separator))
+                    combinedPath += path.Substring(Separator.Length);
                 else if (path.StartsWith(Separator))
-                    combinedPath = path;
+                    combinedPath += path;
                 else if (combinedPath.EndsWith(Separator))
                     combinedPath += path;
                 else
