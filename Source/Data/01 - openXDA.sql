@@ -2168,8 +2168,8 @@ CREATE TABLE ChannelTemplateFile
     Name VARCHAR(200) NOT NULL,
     FileBlob VARBINARY(MAX) NOT NULL,
     FileName VARCHAR(MAX) NOT NULL,
-    ShowTrend Bit NOT NULL DEFAULT(1),
-    ShowEvents Bit NOT NULL DEFAULT(1),
+    ShowTrend BIT NOT NULL DEFAULT(1),
+    ShowEvents BIT NOT NULL DEFAULT(1),
     SortOrder INT NOT NULL DEFAULT(0)
 )
 GO
