@@ -42,6 +42,7 @@ namespace SystemCenter.Model
         public byte FileBlob { get; set; }
 
         public string FileName { get; set; }
+
         public bool ShowTrend { get; set; }
 
         public bool ShowEvents { get; set; }
