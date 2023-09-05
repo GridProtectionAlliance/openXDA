@@ -21,9 +21,9 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Reflection;
+using System.Linq;
 using System.Web.Http.Controllers;
+using System.Web.Http.Routing;
 using openXDA.Adapters;
 
 namespace openXDA.WebHosting
@@ -32,17 +32,36 @@ namespace openXDA.WebHosting
     {
         public override HttpActionDescriptor SelectAction(HttpControllerContext controllerContext)
         {
-            HttpControllerDescriptor controllerDescriptor = controllerContext.ControllerDescriptor;
-            Type controllerType = controllerDescriptor.ControllerType;
-            Type nodeControllerType = typeof(NodeController);
+            IHttpRouteData routeData = controllerContext.RouteData;
 
-            if (controllerType == nodeControllerType)
+            bool isNodeRequest =
+                routeData.Values.ContainsKey("node") ||
+                routeData.Values.ContainsKey(nameof(NodeIDSelector)) ||
+                routeData.Values.ContainsKey(nameof(NodeTypeSelector));
+
+            if (!isNodeRequest)
+                return base.SelectAction(controllerContext);
+
+            ILookup<string, HttpActionDescriptor> actionMapping = GetActionMapping(controllerContext.ControllerDescriptor);
+
+            if (routeData.Values.TryGetValue("action", out object action))
             {
-                MethodInfo methodInfo = nodeControllerType.GetMethod("HandleRequestAsync");
-                return new ReflectedHttpActionDescriptor(controllerDescriptor, methodInfo);
+                string actionName = action.ToString();
+                if (actionMapping[actionName].Any())
+                    return base.SelectAction(controllerContext);
             }
 
-            return base.SelectAction(controllerContext);
+            HttpActionDescriptor descriptor = null;
+
+            foreach (HttpActionDescriptor handleRequestDescriptor in actionMapping["HandleRequestAsync"])
+            {
+                if (!(descriptor is null))
+                    return base.SelectAction(controllerContext);
+
+                descriptor = handleRequestDescriptor;
+            }
+
+            return descriptor ?? base.SelectAction(controllerContext);
         }
     }
 }

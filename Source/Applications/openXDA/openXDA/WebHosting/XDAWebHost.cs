@@ -459,11 +459,11 @@ namespace openXDA.WebHosting
             httpConfig.MapHttpAttributeRoutes(new CustomDirectRouteProvider());
 
             // Override controller selection
-            XDAControllerSelector controllerSelector = new XDAControllerSelector(httpConfig, NodeHost.GetNode);
+            XDAControllerSelector controllerSelector = new XDAControllerSelector(httpConfig, NodeHost);
             httpConfig.Services.Replace(typeof(IHttpControllerSelector), controllerSelector);
 
             // Override controller activation
-            XDAControllerActivator controllerActivator = new XDAControllerActivator(ConnectionFactory, NodeHost);
+            XDAControllerActivator controllerActivator = new XDAControllerActivator(NodeHost);
             httpConfig.Services.Replace(typeof(IHttpControllerActivator), controllerActivator);
 
             // Override action selection

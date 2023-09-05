@@ -28,6 +28,7 @@ using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Dispatcher;
 using System.Web.Http.Routing;
+using openXDA.Adapters;
 using openXDA.Nodes;
 
 namespace openXDA.WebHosting
@@ -67,11 +68,11 @@ namespace openXDA.WebHosting
 
         #region [ Constructors ]
 
-        public XDAControllerSelector(HttpConfiguration configuration, Func<int, INode> nodeLookup)
+        public XDAControllerSelector(HttpConfiguration configuration, Host nodeHost)
             : base(configuration)
         {
             Configuration = configuration;
-            NodeLookup = nodeLookup;
+            NodeHost = nodeHost;
             NodeControllerDescriptorLookup = new ConcurrentDictionary<int, NodeControllerDescriptor>();
         }
 
@@ -80,7 +81,7 @@ namespace openXDA.WebHosting
         #region [ Properties ]
 
         private HttpConfiguration Configuration { get; }
-        private Func<int, INode> NodeLookup { get; }
+        private Host NodeHost { get; }
         private ConcurrentDictionary<int, NodeControllerDescriptor> NodeControllerDescriptorLookup { get; }
 
         #endregion
@@ -122,13 +123,24 @@ namespace openXDA.WebHosting
         {
             IHttpRouteData routeData = request.GetRouteData();
 
-            if (!routeData.Values.TryGetValue("node", out object value))
-                return null;
+            if (routeData.Values.TryGetValue("node", out object value))
+            {
+                return int.TryParse($"{value}", out int nodeID)
+                    ? NodeHost.GetNode(nodeID) : null;
+            }
 
-            if (!int.TryParse($"{value}", out int nodeID))
-                return null;
+            if (routeData.Values.TryGetValue(nameof(NodeIDSelector), out object selector))
+            {
+                if (!(selector is NodeIDSelector nodeIDSelector))
+                    throw new InvalidOperationException();
 
-            return NodeLookup(nodeID);
+                int nodeID;
+                try { nodeID = nodeIDSelector(NodeHost, request); }
+                catch (HttpResponseException) { return null; }
+                return NodeHost.GetNode(nodeID);
+            }
+
+            return null;
         }
 
         #endregion

@@ -153,10 +153,12 @@ namespace openXDA.Adapters
 
             config.Routes.MapHttpRoute(
                 name: "Nodes",
-                routeTemplate: "Node/{node}/{action}",
+                routeTemplate: "Node/{node}/{action}/{*actionData}",
                 defaults: new
                 {
-                    controller = "Node"
+                    controller = "Node",
+                    action = UrlParameter.Optional,
+                    actionData = UrlParameter.Optional
                 }
             );
         }
