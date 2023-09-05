@@ -304,6 +304,7 @@ CREATE TABLE Node
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     NodeTypeID INT NOT NULL REFERENCES NodeType(ID),
     HostRegistrationID INT NULL REFERENCES HostRegistration(ID),
+    AssignedHostRegistrationID INT NULL REFERENCES HostRegistration(ID),
     Name VARCHAR(50) NOT NULL,
     MinimumHostCount INT NOT NULL DEFAULT 1
 )

@@ -31,6 +31,7 @@ namespace openXDA.Model
         public int ID { get; set; }
         public int NodeTypeID { get; set; }
         public int? HostRegistrationID { get; set; }
+        public int? AssignedHostRegistrationID { get; set; }
         public string Name { get; set; }
         public int MinimumHostCount { get; set; }
     }

@@ -68,6 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Balancer.cs" />
     <Compile Include="ICLIRegistry.cs" />
     <Compile Include="Types\Analysis\AnalysisNode.cs" />
     <Compile Include="Types\Analysis\AnalysisTask.cs" />
