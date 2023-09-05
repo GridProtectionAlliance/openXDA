@@ -21,7 +21,17 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Web.Http;
+using System.Web.Mvc;
+using GSF.Data;
+using openXDA.Nodes;
+using openXDA.Nodes.Types.Grafana;
 
 namespace openXDA.Adapters
 {
@@ -161,6 +171,50 @@ namespace openXDA.Adapters
                     actionData = UrlParameter.Optional
                 }
             );
+
+            config.Routes.MapHttpRoute(
+                name: "Grafana",
+                routeTemplate: "grafana/{action}/{*actionData}",
+                defaults: new
+                {
+                    controller = "Node",
+                    action = UrlParameter.Optional,
+                    actionData = UrlParameter.Optional,
+                    nodeIDSelector = new NodeIDSelector(SelectGrafanaNode)
+                }
+            );
+        }
+
+        private static int SelectGrafanaNode(Host host, HttpRequestMessage request)
+        {
+            const string QueryFormat =
+                "SELECT Node.ID " +
+                "FROM " +
+                "    Node JOIN " +
+                "    NodeType ON Node.NodeTypeID = NodeType.ID " +
+                "WHERE NodeType.TypeName = {0}";
+
+            Type grafanaNodeType = typeof(GrafanaHostingNode);
+
+            using (AdoDataConnection connection = host.CreateDbConnection())
+            using (DataTable result = connection.RetrieveData(QueryFormat, grafanaNodeType.FullName))
+            {
+                IEnumerable<int> nodeIDs = result
+                    .AsEnumerable()
+                    .Select(row => row.ConvertField<int>("ID"));
+
+                int? nodeID = null;
+
+                foreach (int id in nodeIDs)
+                {
+                    if (!(nodeID is null))
+                        throw new HttpResponseException(HttpStatusCode.BadRequest);
+
+                    nodeID = id;
+                }
+
+                return nodeID ?? throw new HttpResponseException(HttpStatusCode.NotFound);
+            }
         }
     }
 }

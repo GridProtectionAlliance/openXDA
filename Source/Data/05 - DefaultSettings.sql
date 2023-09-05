@@ -100,6 +100,30 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.MinimumChartSamplesPerCycle', '-1', '-1')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.AdminUser', 'admin', 'admin')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.AuthProxyHeaderName', 'X-WEBAUTH-USER', 'X-WEBAUTH-USER')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.BasePath', 'Grafana', 'Grafana')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.HostedURL', 'http://localhost:8185', 'http://localhost:8185')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.InitializationTimeout', '30', '30')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.LastDashboardCookieName', 'x-last-dashboard', 'x-last-dashboard')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.OrganizationID', '1', '1')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.ServerPath', 'Grafana\bin\grafana-server.exe', 'Grafana\bin\grafana-server.exe')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.ConfirmSubject', 'OpenXDA Confirm Email', 'OpenXDA Confirm Email')
 GO
 

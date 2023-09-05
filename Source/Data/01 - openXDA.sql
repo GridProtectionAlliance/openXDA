@@ -299,6 +299,9 @@ GO
 INSERT INTO NodeType VALUES('DatabaseMaintenance', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.DatabaseMaintenance.DatabaseMaintenanceNode')
 GO
 
+INSERT INTO NodeType VALUES('Grafana', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Grafana.GrafanaHostingNode')
+GO
+
 CREATE TABLE Node
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -310,31 +313,31 @@ CREATE TABLE Node
 )
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.FileProcessing.FileProcessorNode'), NULL, 'File Processor', 1)
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.FileProcessing.FileProcessorNode'), NULL, NULL, 'File Processor', 1)
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.FilePruning.FilePrunerNode'), NULL, 'File Pruner', 1)
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.FilePruning.FilePrunerNode'), NULL, NULL, 'File Pruner', 1)
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Email.EventEmailNode'), NULL, 'Emailer', 1)
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Email.EventEmailNode'), NULL, NULL, 'Emailer', 1)
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Email.ScheduledEmailNode'), NULL, 'Scheduled Emailer', 1)
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Email.ScheduledEmailNode'), NULL, NULL, 'Scheduled Emailer', 1)
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, 'Analyzer', 1)
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, NULL, 'Analyzer', 1)
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, 'Analyzer', 2)
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, NULL, 'Analyzer', 2)
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, 'Analyzer', 4)
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Analysis.AnalysisNode'), NULL, NULL, 'Analyzer', 4)
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode'), NULL, 'SSO Provider', 1)
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.Authentication.AuthenticationProviderNode'), NULL, NULL, 'SSO Provider', 1)
 GO
 
-INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.DataPusher.DataPusherNode'), NULL, 'Data Pusher', 1)
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.DataPusher.DataPusherNode'), NULL, NULL, 'Data Pusher', 1)
 GO
 
 CREATE TABLE NodeSetting

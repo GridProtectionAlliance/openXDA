@@ -156,9 +156,12 @@ namespace openXDA.Nodes
         }
 
         public string BuildURL(Type nodeType, string action) =>
-            BuildURL(nodeType, action, null);
+            BuildURL(nodeType, action, null, null);
 
-        public string BuildURL(Type nodeType, string action, NameValueCollection queryParameters)
+        public string BuildURL(Type nodeType, string action, NameValueCollection queryParameters) =>
+            BuildURL(nodeType, action, null, queryParameters);
+
+        public string BuildURL(Type nodeType, string action, string actionData, NameValueCollection queryParameters)
         {
             string url;
 
@@ -185,7 +188,13 @@ namespace openXDA.Nodes
                     throw new InvalidOperationException($"Node type for \"{nodeTypeName}\" does not exist.");
 
                 string cleanHostURL = hostURL.Trim().TrimEnd('/');
-                url = $"{cleanHostURL}/Node/{node}/{action}";
+
+                if (string.IsNullOrEmpty(action))
+                    url = $"{cleanHostURL}/Node/{node}";
+                else if (string.IsNullOrEmpty(actionData))
+                    url = $"{cleanHostURL}/Node/{node}/{action}";
+                else
+                    url = $"{cleanHostURL}/Node/{node}/{action}/{actionData}";
             }
 
             if (!(queryParameters is null) && queryParameters.Count > 0)
@@ -207,9 +216,12 @@ namespace openXDA.Nodes
         }
 
         public string BuildURL(int nodeID, string action) =>
-            BuildURL(nodeID, action, null);
+            BuildURL(nodeID, action, null, null);
 
-        public string BuildURL(int nodeID, string action, NameValueCollection queryParameters)
+        public string BuildURL(int nodeID, string action, NameValueCollection queryParameters) =>
+            BuildURL(nodeID, action, null, queryParameters);
+
+        public string BuildURL(int nodeID, string action, string actionData, NameValueCollection queryParameters)
         {
             const string NodeQueryFormat =
                 "SELECT ActiveHost.URL " +
@@ -228,7 +240,13 @@ namespace openXDA.Nodes
                     throw new InvalidOperationException($"Node {nodeID} is not active.");
 
                 string cleanHostURL = hostURL.Trim().TrimEnd('/');
-                url = $"{cleanHostURL}/Node/{nodeID}/{action}";
+
+                if (string.IsNullOrEmpty(action))
+                    url = $"{cleanHostURL}/Node/{nodeID}";
+                else if (string.IsNullOrEmpty(actionData))
+                    url = $"{cleanHostURL}/Node/{nodeID}/{action}";
+                else
+                    url = $"{cleanHostURL}/Node/{nodeID}/{action}/{actionData}";
             }
 
             if (!(queryParameters is null) && queryParameters.Count > 0)
