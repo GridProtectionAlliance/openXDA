@@ -27,7 +27,6 @@ import Table from '@gpa-gemstone/react-table';
 import { DateRangePicker } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
-import TrendingCard, { ITrendSeries } from '../CommonComponents/Graph';
 import { selectAlarmGroup, selectSeriesTypeID, SelectAlarmFactors, SelectStatisticsFilter, SelectStatisticsChannels, SelectStatisticsrange, SelectAllAlarmValues } from './DynamicWizzardSlice';
 import { SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSeverities } from '../store/SeveritySlice';

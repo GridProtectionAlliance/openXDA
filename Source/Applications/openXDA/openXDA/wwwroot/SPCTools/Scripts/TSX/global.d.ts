@@ -113,6 +113,7 @@ export namespace SPCTools {
     export interface Iplot { ChannelID: number, Title: string, Threshhold: number }
 
     export interface IDateRange { start: string, end: string }
+    export interface ITrendSeries { data: Array<[number, number]>, color: string, label: string, lineStyle: ('-' | ':'), includeLegend: boolean, opacity?: number}
 
     // Assume Upper or Lower Setpoint everywhere not both - would need to make some adjustments in Controller and DataStructures for 2 setpoints/Alarm
     export interface ITokenizerRequest {

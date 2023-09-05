@@ -22,11 +22,9 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { SPCTools, StaticWizzard, openXDA, Redux, DynamicWizzard } from '../global';
+import { SPCTools, openXDA, DynamicWizzard } from '../global';
 import { useSelector, useDispatch } from 'react-redux';
-import { cloneDeep } from 'lodash';
 import _ from 'lodash';
-import TrendingCard, { ITrendSeries } from '../CommonComponents/Graph';
 import { SelectSeverities } from '../store/SeveritySlice';
 import { selectAlarmGroup, updateFactor, removeFactor, SelectAlarmFactors, SelectStatisticsChannels, addFactor, SelectSetPointAlarmDays, SelectStatisticsrange, SelectActiveFormula, UpdateFormula, SelectActiveAlarmValue, SelectAllowSlice, updateAlarmGroup, SelectWizardType } from './DynamicWizzardSlice';
 import { DynamicTimeRange } from './DynamicTimeRange';
@@ -144,10 +142,11 @@ const SetPointCreator = (props: IProps) => {
                     <div className="row" style={{ margin: 0, }}>
                         {plot.map((item, index) => <AlarmTrendingCard ChannelID={item.ChannelID} key={index} Remove={() => RemovePlot(item.ChannelID)} Tstart={statisticsTime.start} Tend={statisticsTime.end} />)}
                     </div>
+
                     <div className="row" style={{ margin: 0, }}>
                         <div className="col dropdown" style={{ padding: 0 }}>
                             <div style={{ width: '100%', margin: 'auto', marginTop: '4px', height: '3em', textAlign: 'center', background: '#bbbbbb', borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px', }} data-toggle="dropdown">
-                                <i className="fa fa-plus fa-2x"></i>
+                                <a title='Toggle Graph Selection' className="btn">{Plus}</a>
                             </div>
                             <div className="dropdown-menu">
                                 <a className={"dropdown-item" + (plot.findIndex(p => p.ChannelID == -1) > -1 ? ' active' : '')} onClick={() => {
@@ -173,14 +172,14 @@ const SetPointCreator = (props: IProps) => {
                                                     >{ch.Name}</a>
                                                 </li>)}
                                         </ul>
-                                    </div>)}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-           
-            
+
         </div>      
     );
 }
@@ -226,7 +225,7 @@ const SetPointEditor = (props: { alarmDayID: number, startHour: number, label?: 
     : props.label)
 
     return (
-            <div className="col">
+        <div className="col">
             <TextArea
                 Rows={2}
                 Record={{ text: text }}
@@ -234,8 +233,8 @@ const SetPointEditor = (props: { alarmDayID: number, startHour: number, label?: 
                 Setter={(record) => setText(record.text)}
                 Valid={() => true}
                 Label={`SetPoint ${lbl}`}
-                    />
-                </div>
+            />
+        </div>
 
     )
 }
@@ -313,10 +312,10 @@ const FactorRow = (props: { Factor: SPCTools.IFactor, index: number }) => {
                         </select>
                     </div>
                 </div>
-                <div className="col-2">
+            <div className="col-2">
                 <a title='Remove' className="btn" onClick={() => { dispatch(removeFactor(props.index)); }}>{TrashCan}</a>
                 </div>
-                </div>
+        </div>
     )
 }
 

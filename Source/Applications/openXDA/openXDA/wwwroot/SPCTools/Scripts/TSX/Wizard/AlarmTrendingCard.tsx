@@ -21,17 +21,18 @@
 //
 //******************************************************************************************************
 
-import TrendingCard, { ITrendSeries } from "../CommonComponents/Graph";
+import  { SPCTools } from "../global";
 import * as React from 'react';
 import { useSelector } from "react-redux";
 import { openXDA } from "../global";
 import { SelectAffectedChannelByID } from "../store/WizardAffectedChannelSlice";
-import { SelectStatisticsFilter, SelectThresholdValues, selectAlarmGroup, SelectAlarmFactors, SelectAllowSlice, SelectStatisticsChannels } from "./DynamicWizzardSlice";
+import { SelectStatisticsFilter, SelectThresholdValues, selectAlarmGroup, SelectAlarmFactors, SelectStatisticsChannels } from "./DynamicWizzardSlice";
 import _ from "lodash";
 import moment from "moment";
 import { SelectSeverities } from "../store/SeveritySlice";
 import { SelectAlarmDays } from "../store/AlarmDaySlice";
-
+import { Line, Plot } from '@gpa-gemstone/react-graph'
+import { TrashCan } from '@gpa-gemstone/gpa-symbols';
 
 interface IProps { ChannelID: number, Remove?: () => void, Tstart: string, Tend: string }
 
@@ -44,8 +45,8 @@ export const AlarmTrendingCard = (props: IProps) => {
     }, [props.ChannelID])
 
     const allChannels = useSelector(SelectStatisticsChannels)
-    const [data, setData] = React.useState<Array<ITrendSeries>>([]);
-    const [threshhold, setThreshold] = React.useState<Array<ITrendSeries>>([]);
+    const [data, setData] = React.useState<Array<SPCTools.ITrendSeries>>([]);
+    const [threshhold, setThreshold] = React.useState<Array<SPCTools.ITrendSeries>>([]);
     const alarmValueResults = useSelector(SelectThresholdValues);
 
     const channel = useSelector(memChannelSelector)
@@ -56,6 +57,14 @@ export const AlarmTrendingCard = (props: IProps) => {
     const alarmGroup = useSelector(selectAlarmGroup)
     const alarmFactors = useSelector(SelectAlarmFactors)
     const alarmDays = useSelector(SelectAlarmDays)
+    const divref = React.useRef(null);
+    let filteredThreshold: SPCTools.ITrendSeries[] = [];
+
+    if (threshhold.length > 0) {
+        filteredThreshold = threshhold.filter(series => !series.data.some(point => isNaN(point[0]) || isNaN(point[1])));
+    }
+    const [Width, SetWidth] = React.useState<number>(0);
+    React.useLayoutEffect(() => { SetWidth(divref?.current?.offsetWidth-25 ?? 0) });
 
     React.useEffect(() => {
         setData([]);
@@ -180,6 +189,7 @@ export const AlarmTrendingCard = (props: IProps) => {
             opacity: 1,
             data: fullResult
         }, ...alarmFactors.map(factorItem => {
+
             return {
                 lineStyle: ':',
                 color: severities.find(item => item.ID == factorItem.SeverityID).Color,
@@ -187,20 +197,31 @@ export const AlarmTrendingCard = (props: IProps) => {
                 label: '',
                 opacity: 1,
                 data: fullResult.map(pt => [pt[0], pt[1] * factorItem.Factor])
-            } as ITrendSeries
+            } as SPCTools.ITrendSeries
         })]);
+
     }
 
+    /* Generates a section of an alarm for 1 Day returning an array of points (t,y) with y corresponding to the Alarm. */
+    /* Tday is the start of day. the result should cover t=Tday to t=Tday+864000000 which is the start of the next day */
     function CreateDailyThreshold(Tday, alarmDayId): number[][] {
+
+        /* alarmValues are the sections of the alarm that apply on this day. */
         let alarmValues = alarmValueResults.filter(item => (item.AlarmDayID == alarmDayId) || (alarmDayId == undefined && item.AlarmDayID == undefined));
+
+        /* If no alarm applies on this day we return NaN */
         if (alarmValues.length == 0)
             return [[Tday, NaN], [Tday + 86400000, NaN]]
 
+        /* sort by earliest section */
         _.sortBy(alarmValues, item => item.StartHour);
         let channelIndex = alarmValues[0].Value.findIndex(item => item.ChannelID == props.ChannelID);
-        if (channelIndex == -1  && !alarmValues[0].IsScalar)
+
+        /* An Alarm can be a scalar (same for any channel, e.g. 500) or an array (e.g. Vbase) where each Channel has a differnt Value. If it is not a scalar and no channel is specifed we can't compute an actual Value */
+        if (channelIndex == -1 && !alarmValues[0].IsScalar)
             return [[Tday, NaN], [Tday + 86400000, NaN]];
 
+        /* If no channel is specified and it is a scalar we can use any channel (since it is the same value for all of them */
         if (channelIndex == -1 && alarmValues[0].IsScalar)
             channelIndex = 0;
 
@@ -208,12 +229,13 @@ export const AlarmTrendingCard = (props: IProps) => {
         let result = [];
         let i = 0;
         for (i = 0; i < (alarmValues.length - 1); i = i + 1) {
+            /* for each little section we compute the actual number based on the channel to be used */
             let lim = alarmValues[i].Value[channelIndex];
 
+            /* an add 2 points at the beginning and beinning of the next section (end of this one) */
             result.push([Tstart + alarmValues[i].StartHour * 3600000, (lim == undefined ? NaN : lim.Value)]);
             result.push([Tstart + alarmValues[i + 1].StartHour * 3600000, (lim == undefined ? NaN : lim.Value)]);
         }
-
         let lim = alarmValues[alarmValues.length - 1].Value[channelIndex];
         result.push([Tstart + alarmValues[alarmValues.length - 1].StartHour * 3600000, (lim == undefined ? NaN : lim.Value)]);
         result.push([Tstart + 24 * 3600000, (lim == undefined ? NaN : lim.Value)]);
@@ -232,42 +254,52 @@ export const AlarmTrendingCard = (props: IProps) => {
             async: true
         });
 
-        handle.done((data) => setData((old) => [...old, {
-            color: '#3333ff',
-            includeLegend: false,
-            label: "",
-            lineStyle: '-',
-            data: data,
-            opacity: (props.ChannelID == -1 ? 0.5 : 1.0)
-        }]));
+        handle.done((data) => {
+            setData((old) => [...old, {
+                color: '#3333ff',
+                includeLegend: false,
+                label: "",
+                lineStyle: '-',
+                data: data,
+                opacity: (props.ChannelID == -1 ? 0.5 : 1.0)
+            }]);
+        });
           
         return handle;
     }
 
-    let Tstart = (data.length > 0? (data[0].data.length > 0? data[0].data[0][0] : 0) : 0);
-    let Tend = (data.length > 0 ? (data[0].data.length > 0? data[0].data[data[0].data.length - 1][0] : 1500) : 1500);
+    let Tstart: number = (data.length > 0? (data[0].data.length > 0? data[0].data[0][0] : 0) : 0);
+    let Tend: number = (data.length > 0 ? (data[0].data.length > 0? data[0].data[data[0].data.length - 1][0] : 1500) : 1500);
+
 
     return (
         <>
             <div className="row" style={{ margin: 0, width: '100%', textAlign: 'center', background: '#bbbbbb',}}>
                 <div className="col-12">
                     <h5 className='float-left'> {(channel != undefined ? channel.MeterName + "-" + channel.Name : "Overview")}</h5>
-                    <p className='float-right'> {props.Remove != undefined? <i className="fa fa-trash-o" onClick={() => props.Remove()}></i> : null} </p>
+                    <p className='float-right'> {props.Remove != undefined ? <a title='Remove Graph' className="btn" onClick={() => props.Remove()}>{TrashCan}</a> : null} </p>
                 </div>
             </div>
-            <div className="row" style={{ margin: 0, width: '100%', textAlign: 'center', background: '#bbbbbb', }}>
-                <div className="col-12">
+            <div className="row" style={{ margin: 0, width: '100%', textAlign: 'center', background: '#bbbbbb' }}>
+                <div className="col-12" ref={divref}>
                     {loading ?
                         <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
                             <div className="spinner-border" role="status"></div>
-                        </div> :
-                        <TrendingCard keyString={'Graph-' + props.ChannelID} allowZoom={true} height={125} xLabel={"Time"} Tstart={Tstart} Tend={Tend} data={[...data, ...threshhold]} />
+                        </div> : 
+                        <Plot height={250} width={Width} defaultTdomain={[Tstart, Tend]} Tlabel={'Time'} zoom={true} showMouse={false} useMetricFactors={false}>
+                            {(data.length > 0 && data[0].data.length > 0) ? data.map((series, i) => <Line key={i} data={series.data} color={series.color} lineStyle={series.lineStyle} />)
+                            : <></>
+                            }
+
+                            {(filteredThreshold.length > 0 && filteredThreshold[0].data.length > 0) ? filteredThreshold.map((series, i) => <Line key={i} data={series.data} color={series.color} lineStyle={series.lineStyle} />)
+                            : <></>
+                            }
+
+                        </Plot>
                     }
                 </div>
             </div>
         </>
     );
     
-    
-
 }
