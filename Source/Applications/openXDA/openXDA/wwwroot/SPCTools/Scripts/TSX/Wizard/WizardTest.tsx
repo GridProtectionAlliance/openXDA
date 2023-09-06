@@ -27,11 +27,11 @@ import Table from '@gpa-gemstone/react-table';
 import { DateRangePicker } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
-import TrendingCard, { ITrendSeries } from '../CommonComponents/Graph';
 import { selectAlarmGroup, selectSeriesTypeID, SelectAlarmFactors, SelectStatisticsFilter, SelectStatisticsChannels, SelectStatisticsrange, SelectAllAlarmValues } from './DynamicWizzardSlice';
 import { SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSeverities } from '../store/SeveritySlice';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
+import { LoadingIcon } from '@gpa-gemstone/react-interactive';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -213,7 +213,7 @@ const WizardTest = (props: IProps) => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            <DateRangePicker<SPCTools.IDateRange> Label={''} Record={timeRange} FromField={'start'} ToField={'end'} Setter={(r) => { setLoading('changed'); setTimeRange(r); }} Disabled={loading == 'loading'} />
+                            <DateRangePicker<SPCTools.IDateRange> Label={''} Record={timeRange} FromField={'start'} ToField={'end'} Setter={(r) => { setLoading('changed'); setTimeRange(r); }} Disabled={loading == 'loading'} Valid={ () => true} />
                         </div>
                     </div>
                     <div className="row" style={{ margin: 0 }}>
@@ -231,9 +231,7 @@ const WizardTest = (props: IProps) => {
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             {loading == 'loading' ?
-                                <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
-                                    <div className="spinner-border" role="status"></div>
-                                </div> :
+                                <LoadingIcon Show={true} Size={40} />:
                                 <Table<IChannelList>
                                     tableStyle={{ height: '100%' }}
                                     cols={[
@@ -274,9 +272,7 @@ const WizardTest = (props: IProps) => {
                     <div className="row">
                         <div className="col">
                             {loading == 'loading' ? 
-                                <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
-                                    <div className="spinner-border" role="status"></div>
-                                </div> :
+                                <LoadingIcon Show={true} Size={40} /> :
                                 <Table<IResultTable>
                                     tableStyle={{ maxHeight: '300px' }}
                                     cols={[
@@ -308,9 +304,7 @@ const WizardTest = (props: IProps) => {
                     <div className="row">
                         <div className="col">
                             {loading == 'loading' ?
-                                <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
-                                    <div className="spinner-border" role="status"></div>
-                                </div> :
+                                <LoadingIcon Show={true} Size={40} /> :
                                 <Table<IResultTable>
                                     tableStyle={{ maxHeight: '300px' }}
                                     cols={[

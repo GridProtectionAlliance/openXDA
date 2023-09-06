@@ -53,11 +53,17 @@ export const WizardVoltageOptionSlice = createSlice({
         
     } as Redux.OptionState<number>,
     reducers: {
-        selectVoltage: (state, action: PayloadAction<number>) => {
-            let index = state.Data.findIndex(v => v == action.payload);
-            state.Selected[index] = !state.Selected[index]
+        selectVoltage: (state, action: PayloadAction<number[]>) => {
+            // Reset all selected voltages
+            state.Selected = state.Data.map(v => false);
+
+            // Update the states based on the provided list of indices
+            action.payload.forEach(index => {
+                if (index >= 0 && index < state.Selected.length) {
+                    state.Selected[index] = true;
+                }
+            });
         }
-        
     },
     extraReducers: (builder) => {
 

@@ -22,17 +22,18 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { SPCTools, StaticWizzard, openXDA, Redux, DynamicWizzard } from '../global';
+import { SPCTools, openXDA, DynamicWizzard } from '../global';
 import { useSelector, useDispatch } from 'react-redux';
-import { cloneDeep } from 'lodash';
 import _ from 'lodash';
-import TrendingCard, { ITrendSeries } from '../CommonComponents/Graph';
 import { SelectSeverities } from '../store/SeveritySlice';
 import { selectAlarmGroup, updateFactor, removeFactor, SelectAlarmFactors, SelectStatisticsChannels, addFactor, SelectSetPointAlarmDays, SelectStatisticsrange, SelectActiveFormula, UpdateFormula, SelectActiveAlarmValue, SelectAllowSlice, updateAlarmGroup, SelectWizardType } from './DynamicWizzardSlice';
 import { DynamicTimeRange } from './DynamicTimeRange';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
 import { SelectAlarmDayByID } from '../store/AlarmDaySlice';
 import { SelectSetPointParseStatus, SelectSetPointParseResult } from '../store/SetPointParseSlice';
+import { TrashCan, Plus } from '@gpa-gemstone/gpa-symbols';
+import { Select, TextArea } from '@gpa-gemstone/react-forms';
+import { LoadingIcon } from '@gpa-gemstone/react-interactive';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -142,10 +143,11 @@ const SetPointCreator = (props: IProps) => {
                     <div className="row" style={{ margin: 0, }}>
                         {plot.map((item, index) => <AlarmTrendingCard ChannelID={item.ChannelID} key={index} Remove={() => RemovePlot(item.ChannelID)} Tstart={statisticsTime.start} Tend={statisticsTime.end} />)}
                     </div>
+
                     <div className="row" style={{ margin: 0, }}>
                         <div className="col dropdown" style={{ padding: 0 }}>
                             <div style={{ width: '100%', margin: 'auto', marginTop: '4px', height: '3em', textAlign: 'center', background: '#bbbbbb', borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px', }} data-toggle="dropdown">
-                                <i className="fa fa-plus fa-2x"></i>
+                                <a title='Toggle Graph Selection' className="btn">{Plus}</a>
                             </div>
                             <div className="dropdown-menu">
                                 <a className={"dropdown-item" + (plot.findIndex(p => p.ChannelID == -1) > -1 ? ' active' : '')} onClick={() => {
@@ -171,14 +173,14 @@ const SetPointCreator = (props: IProps) => {
                                                     >{ch.Name}</a>
                                                 </li>)}
                                         </ul>
-                                    </div>)}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-           
-            
+
         </div>      
     );
 }
@@ -224,19 +226,18 @@ const SetPointEditor = (props: { alarmDayID: number, startHour: number, label?: 
     : props.label)
 
     return (
-        
-            <div className="col">
-            <div className="form-group">
-                <label>SetPoint {lbl}
-                </label>
-                    <textarea
-                        rows={2}
-                        className={'form-control'}
-                        onChange={(evt) => setText(evt.target.value as string)}
-                        value={text}
-                    />
-                </div>
-            </div>)
+        <div className="col">
+            <TextArea
+                Rows={2}
+                Record={{ text: text }}
+                Field="text"
+                Setter={(record) => setText(record.text)}
+                Valid={() => true}
+                Label={`SetPoint ${lbl}`}
+            />
+        </div>
+
+    )
 }
 
 const SetPointMessage = (props: {}) => {
@@ -253,9 +254,9 @@ const SetPointMessage = (props: {}) => {
     if (response == undefined)
         text = "An error occured."
     else if (response.Valid && !response.IsScalar && !allowSlice)
-        text = "A single threshold is required for all channels because some channels are not selected as historic data source.";
+        text = "A single Threshold is required for all Channels as not all Channels are selected as Historic Data Sources.";
     else if (response.Valid && !response.IsScalar && allowSlice)
-        text = "A sepperate Threshhold will be computed for each Channel. if that is not intended an aggregation function such as MIN or MAX needs to be used."
+        text = "A separate threshold will be computed for each Channel. If that is not intended, an aggregation function such as MIN or MAX must be used."
     else
         text = response.Message;
     
@@ -266,7 +267,7 @@ const SetPointMessage = (props: {}) => {
                     <div className={"alert alert-" + (isInfo ? 'info' : isSuccess ? 'success' : 'danger')} role="alert">
                         <div className="row" style={{ margin: 0 }}>
                             <div className="col">
-                                {loading ? <div className="spinner-border float-left" role="status" style={{ margin: 'auto' }}></div> : null}
+                                {loading ? <LoadingIcon Show={true} Size={40} /> : null}
                                 <div className="float-left"> <h4 className="alert-heading">{(loading ? 'Evaluating Expression...' : title)}</h4> </div>
                                 <button type="button" className="btn btn-light float-right" onClick={() => ($('#FunctionHelp') as any).modal('show')}>
                                     <i style={{ color: '#007BFF' }} className="fa fa-2x fa-question-circle"></i>
@@ -312,10 +313,11 @@ const FactorRow = (props: { Factor: SPCTools.IFactor, index: number }) => {
                         </select>
                     </div>
                 </div>
-                <div className="col-2">
-                    <i onClick={() => {dispatch(removeFactor(props.index));}} className="fa fa-trash-o"></i>
+            <div className="col-2">
+                <a title='Remove' className="btn" onClick={() => { dispatch(removeFactor(props.index)); }}>{TrashCan}</a>
                 </div>
-            </div>)
+        </div>
+    )
 }
 
 const SeveritySelect = (props: {}) => {
@@ -323,13 +325,24 @@ const SeveritySelect = (props: {}) => {
     const dispatch = useDispatch();
     const severities = useSelector(SelectSeverities)
 
+    function handleSetSeverity(updatedGroup: SPCTools.IAlarmGroup) {
+        dispatch(updateAlarmGroup(updatedGroup));
+    }
+
+    const severityOptions = severities.map(severity => ({
+        Value: severity.ID.toString(),
+        Label: severity.Name
+    }));
+
     return (
-        <div className="form-group">
-            <label>Alarm Severity</label>
-            <select className="form-control" onChange={(evt) => dispatch(updateAlarmGroup({ ...alarmGroup, SeverityID: (parseInt(evt.target.value)) }))} value={alarmGroup.SeverityID}>
-                {severities.map((a, i) => ( <option key={i} value={a.ID}> {a.Name} </option>))}
-            </select>
-        </div>);
+        <Select<SPCTools.IAlarmGroup>
+            Record={alarmGroup}
+            Field='SeverityID'
+            Options={severityOptions}
+            Setter={handleSetSeverity}
+            Label="Alarm Severity"
+        />
+    );
 }
 
 
