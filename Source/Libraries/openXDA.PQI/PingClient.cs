@@ -79,12 +79,12 @@ namespace openXDA.PQI
                 request.Headers.Accept.Add(acceptHeader);
             }
 
-            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken))
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest, cancellationToken).ConfigureAwait(false))
             {
                 response.EnsureSuccessStatusCode();
 
                 Stopwatch stopwatch = Stopwatch.StartNew();
-                JObject content = await response.Content.ReadAsAsync<JObject>(cancellationToken);
+                JObject content = await response.Content.ReadAsAsync<JObject>(cancellationToken).ConfigureAwait(false);
                 int expiration = content["expires_in"].Value<int>();
                 AccessToken = content["access_token"].Value<string>();
                 IsExpiredFunc = () => stopwatch.Elapsed.TotalSeconds > expiration;

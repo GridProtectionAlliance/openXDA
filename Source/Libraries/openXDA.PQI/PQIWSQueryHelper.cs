@@ -143,14 +143,14 @@ namespace openXDA.PQI
                 int facilityID = facilityDisturbance.ConvertField<int>("PQIFacilityID");
                 double magnitude = facilityDisturbance.ConvertField<double>("PerUnitMagnitude");
                 double duration = facilityDisturbance.ConvertField<double>("DurationSeconds");
-                return await PQIWSClient.IsImpactedAsync(facilityID, magnitude, duration, cancellationToken);
+                return await PQIWSClient.IsImpactedAsync(facilityID, magnitude, duration, cancellationToken).ConfigureAwait(false);
             }
 
             async Task<bool> AnyImpactedAsync(IEnumerable<Task<bool>> isImpactedTasks)
             {
                 foreach (Task<bool> task in isImpactedTasks)
                 {
-                    if (await task)
+                    if (await task.ConfigureAwait(false))
                         return true;
                 }
 
@@ -164,14 +164,14 @@ namespace openXDA.PQI
                     .AsEnumerable()
                     .Select(IsImpactedAsync);
 
-                return await AnyImpactedAsync(tasks);
+                return await AnyImpactedAsync(tasks).ConfigureAwait(false);
             }
         }
 
         public async Task<List<Equipment>> GetAllImpactedEquipmentAsync(int eventID, CancellationToken cancellationToken = default)
         {
             using (AdoDataConnection connection = ConnectionFactory())
-                return await GetAllImpactedEquipmentAsync(connection, eventID, cancellationToken);
+                return await GetAllImpactedEquipmentAsync(connection, eventID, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<List<Equipment>> GetAllImpactedEquipmentAsync(IEnumerable<int> eventIDs, CancellationToken cancellationToken = default)
@@ -182,7 +182,7 @@ namespace openXDA.PQI
                     GetAllImpactedEquipmentAsync(connection, eventID, cancellationToken);
 
                 var tasks = eventIDs.Select(_GetAllImpactedEquipmentAsync);
-                List<Equipment>[] equipmentLists = await Task.WhenAll(tasks);
+                List<Equipment>[] equipmentLists = await Task.WhenAll(tasks).ConfigureAwait(false);
                 return Flatten(equipmentLists);
             }
         }
@@ -195,7 +195,7 @@ namespace openXDA.PQI
                     GetAllCurvesAsync(connection, eventID, cancellationToken);
 
                 var tasks = eventIDs.Select(_GetAllTestCurvesAsync);
-                List<Tuple<TestCurve, List<TestCurvePoint>>>[] curveList = await Task.WhenAll(tasks);
+                List<Tuple<TestCurve, List<TestCurvePoint>>>[] curveList = await Task.WhenAll(tasks).ConfigureAwait(false);
                 return curveList.SelectMany(list => list).ToList();
             }
         }
@@ -209,27 +209,27 @@ namespace openXDA.PQI
 
             async Task<List<FacilityAudit>> GetFacilityAudits(int facilityID)
             {
-                return await PQIWSClient.GetFacilityAudits(facilityID, cancellationToken);
+                return await PQIWSClient.GetFacilityAudits(facilityID, cancellationToken).ConfigureAwait(false);
             }
 
             async Task<List<PQIEquipment>> GetAuditedEquipment(FacilityAudit facilityAudit)
             {
-                return await PQIWSClient.GetAuditedEquipment(facilityAudit, cancellationToken);
+                return await PQIWSClient.GetAuditedEquipment(facilityAudit, cancellationToken).ConfigureAwait(false);
             }
 
             async Task<List<AuditCurve>> GetAuditCurves(PQIEquipment equipment)
             {
-                return await PQIWSClient.GetAuditCurve(equipment, cancellationToken);
+                return await PQIWSClient.GetAuditCurve(equipment, cancellationToken).ConfigureAwait(false);
             }
 
             async Task<TestCurve> GetTestCurve(AuditCurve auditCurve)
             {
-                return await PQIWSClient.GetTestCurve(auditCurve, cancellationToken);
+                return await PQIWSClient.GetTestCurve(auditCurve, cancellationToken).ConfigureAwait(false);
             }
 
             async Task<Tuple<TestCurve,List<TestCurvePoint>>> GetTestCurvePoints(TestCurve testCurve)
             {
-                return new Tuple<TestCurve, List<TestCurvePoint>>(testCurve, (await PQIWSClient.GetTestCurvePoints(testCurve, cancellationToken)));                
+                return new Tuple<TestCurve, List<TestCurvePoint>>(testCurve, (await PQIWSClient.GetTestCurvePoints(testCurve, cancellationToken).ConfigureAwait(false)));                
             }
 
             using (DataTable table = connection.RetrieveData(FacilityDisturbanceQueryFormat, eventID))
@@ -239,12 +239,12 @@ namespace openXDA.PQI
                     .Select(GetFacilityID)
                     .ToArray();
 
-                List<FacilityAudit>[] facilityAudits = await Task.WhenAll(facilityIDs.Distinct().Select(GetFacilityAudits));
-                List<PQIEquipment>[] auditedEquipment = await Task.WhenAll(Flatten(facilityAudits).Select(GetAuditedEquipment));
-                List<AuditCurve>[] auditCurves = await Task.WhenAll(Flatten(auditedEquipment).Select(GetAuditCurves));
-                TestCurve[] testCurves = await Task.WhenAll(Flatten(auditCurves).Select(GetTestCurve));
+                List<FacilityAudit>[] facilityAudits = await Task.WhenAll(facilityIDs.Distinct().Select(GetFacilityAudits)).ConfigureAwait(false);
+                List<PQIEquipment>[] auditedEquipment = await Task.WhenAll(Flatten(facilityAudits).Select(GetAuditedEquipment)).ConfigureAwait(false);
+                List<AuditCurve>[] auditCurves = await Task.WhenAll(Flatten(auditedEquipment).Select(GetAuditCurves)).ConfigureAwait(false);
+                TestCurve[] testCurves = await Task.WhenAll(Flatten(auditCurves).Select(GetTestCurve)).ConfigureAwait(false);
 
-                return (await Task.WhenAll(testCurves.Distinct().Select(GetTestCurvePoints))).ToList();
+                return (await Task.WhenAll(testCurves.Distinct().Select(GetTestCurvePoints)).ConfigureAwait(false)).ToList();
             }
         }
         private async Task<List<Equipment>> GetAllImpactedEquipmentAsync(AdoDataConnection connection, int eventID, CancellationToken cancellationToken)
@@ -254,7 +254,7 @@ namespace openXDA.PQI
                 int facilityID = facilityDisturbance.ConvertField<int>("PQIFacilityID");
                 double magnitude = facilityDisturbance.ConvertField<double>("PerUnitMagnitude");
                 double duration = facilityDisturbance.ConvertField<double>("DurationSeconds");
-                return await PQIWSClient.GetImpactedEquipmentAsync(facilityID, magnitude, duration, cancellationToken);
+                return await PQIWSClient.GetImpactedEquipmentAsync(facilityID, magnitude, duration, cancellationToken).ConfigureAwait(false);
             }
 
             using (DataTable table = connection.RetrieveData(FacilityDisturbanceQueryFormat, eventID))
@@ -263,7 +263,7 @@ namespace openXDA.PQI
                     .AsEnumerable()
                     .Select(GetImpactedEquipmentAsync);
 
-                List<Equipment>[] equipmentLists = await Task.WhenAll(tasks);
+                List<Equipment>[] equipmentLists = await Task.WhenAll(tasks).ConfigureAwait(false);
                 return Flatten(equipmentLists);
             }
         }

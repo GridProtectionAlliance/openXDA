@@ -24,10 +24,10 @@
 import * as React from 'react';
 import GeneralSettings from './GeneralSettings';
 
-import {selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror} from './DynamicWizzardSlice'
+import { selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror } from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 
-import { ToolTip } from '@gpa-gemstone/react-interactive';
+import { ToolTip, ProgressBar, ServerErrorIcon, LoadingIcon } from '@gpa-gemstone/react-interactive';
 import { Requirements } from '../CommonComponents/Requirments';
 import SelectStatisticsData from './SelectStatisticsData';
 import SetPointCreator from './SetPointCreator';
@@ -50,48 +50,48 @@ const WizardHome = (props: IProps) => {
 
     const [hover, setHover] = React.useState<boolean>(false);
 
+
+    // Define Step Numbers
+    const generalStep: string = 'general';
+    const selectStep: string = 'selectData';
+    const setpointStep: string = 'setpoint';
+    const testStep: string = 'test';
+
     function Continue() {
-        
+
         if (!errors.some(item => (item.complete == 'required'))) {
 
             if (tab == 'test') {
                 dispatch(SaveWizard());
                 return;
             }
-            
+
             dispatch(next());
         }
-    
+
     }
 
     React.useEffect(() => { if (tab == 'done') props.complete(); }, [tab])
-
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <div className="row" style={{ margin: 0 }}>
-                <nav style={{ width: '100%' }}>
-                    <ol className="breadcrumb">
-                        <li className={"breadcrumb-item" + (tab == 'general' ? " active" : '')}>General settings</li>
-                        <li className={"breadcrumb-item" + (tab == 'selectData' ? " active" : '')}>Select Historical Data</li>
-                        <li className={"breadcrumb-item" + (tab == 'setpoint' ? " active" : '')}>Create Setpoints</li>
-                        <li className={"breadcrumb-item" + (tab == 'test' ? " active" : '')}>Test Alarm</li>
-                    </ol>
-                </nav>
+            <div className="row" style={{ height: '40px', marginTop: '25px', marginRight: '25px', marginLeft: '25px', marginBottom: '25px' }}>
+                <ProgressBar width={'100%'} height={20}
+                    steps={[
+                        { id: generalStep, long: 'General Settings', short: 'General' },
+                        { id: selectStep, long: 'Select Historical Data', short: 'Select Data' },
+                        { id: setpointStep, long: 'Create Setpoints', short: 'Setpoint' },
+                        { id: testStep, long: 'Test Alarm', short: 'Test' },
+                    ]}
+                    activeStep={tab}
+                />
             </div>
-            <div className="row" style={{ marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: '15px', height: "calc(100% - 132px)", overflowY: 'scroll' }}>
-                {status == 'loading' ?
-                    <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
-                        <div className="spinner-border" role="status"></div>
-                    </div> : null}
+            <div style={{ display: 'flex', flexDirection: 'column', height: "calc(100% - 200px)" }}>
+                {status == 'loading' ? <div style={{ height: '40px', width: '40px', margin: 'auto' }}>
+                    <LoadingIcon Show={true} Size={40} />
+                </div> : null}
                 {status == 'error' || status == 'unitiated' ?
-                    <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
-                        <div className="alert alert-danger" role="alert">
-                            <h4 className="alert-heading">An Error Occured</h4>
-                            <hr/>
-                            <p>{status == 'error'? wizardError: 'Wizard Failed to start.'}</p>
-                            
-                        </div>
-                    </div>: null}
+                    <ServerErrorIcon Show={true} Size={50} Label={'Wizard Failed to start.'} />
+                    : null}
                 {status == 'idle' ?
                     <>
                         {tab == 'general' ? <GeneralSettings /> : null}
@@ -100,30 +100,30 @@ const WizardHome = (props: IProps) => {
                         {tab == 'test' ? <WizardTest /> : null}
                     </> : null
                 }
-                
+
             </div>
             <div className="row" style={{ margin: 0 }}>
-                <div className="col" style={{width: '100%'}}>
-                    <div className="btn-group mr-2 float-right" role="group">
-                        <button type="button" className={"btn btn-success" + (errors.some(item => (item.complete == 'required')) ? ' disabled' : '')}
-                            onClick={() => Continue()} data-tooltip='registerTip' onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-                            {status != 'idle' ? <span className="spinner-border spinner-border-sm"></span> : (tab == "test" ? "Save" : "Continue")}
-                        </button> 
-                    </div>
-                    <div className="btn-group mr-2 float-right" role="group">
+                <div className="col" style={{ width: '100%' }}>
+                    <div className="btn-group mr-2 " role="group">
                         <button type="button" className="btn btn-danger" disabled={tab == 'general'} onClick={() => dispatch(back())}>
-                            {status != 'idle' ? <span className="spinner-border spinner-border-sm"></span> : "Back"}
+                            {status != 'idle' ? <LoadingIcon Show={true} Size={40} /> : "Back"}
                         </button>
                     </div>
                 </div>
+                <div className="btn-group mr-2 " role="group">
+                    <button type="button" className={"btn btn-success" + (errors.some(item => (item.complete == 'required')) ? ' disabled' : '')}
+                        onClick={() => Continue()} data-tooltip='registerTip' onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+                        {status != 'idle' ? <LoadingIcon Show={true} Size={40} /> : (tab == "test" ? "Save" : "Continue")}
+                    </button>
+                </div>
             </div>
             {tab != 'test' ?
-                <ToolTip Show={hover && errors.length > 0} Position={'top'} Theme={'dark'} Target={"registerTip"}>
+                <ToolTip Show={hover && errors.length > 0} Position={'left'} Theme={'dark'} Target={"registerTip"}>
                     {errors.map((item, index) => <Requirements {...item} key={index} />)}
                 </ToolTip>
                 : null}
             {tab == 'setpoint' ? <FunctionHelp /> : null}
-        </div>      
+        </div>
     );
 }
 

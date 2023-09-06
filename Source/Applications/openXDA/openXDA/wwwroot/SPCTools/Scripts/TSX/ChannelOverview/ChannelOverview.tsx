@@ -22,12 +22,12 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import FilterObject from '../CommonComponents/Filter';
-import { SPCTools, Filter } from '../global';
+import { SPCTools } from '../global';
 import Table from '@gpa-gemstone/react-table';
 import { useSelector, useDispatch } from 'react-redux';
 import { SortChannelOverviews, FilterChannelOverviews, SelectChannelOverviews, SelectChannelOverviewsFilters,SelectChannelOverviewsStatus, SelectChannelOverviewsSortField, SelectChannelOverviewsAscending, FetchChannelOverviews } from '../store/ChannelOverviewSlice';
 import { ChangeStatusChannelAlarmGroups, SortChannelAlarmGroups, SelectChannelAlarmGroups, SelectChannelAlarmGroupsStatus, SelectChannelAlarmGroupsSortField, SelectChannelAlarmGroupsAscending, FetchChannelAlarmGroups } from '../store/ChannelAlarmGroupSlice';
+import { SearchBar } from '@gpa-gemstone/react-interactive'
 
 
 const ChannelOverview: React.FunctionComponent = (props: {}) => {
@@ -60,17 +60,21 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
         dispatch(ChangeStatusChannelAlarmGroups());
     }, [channelID]);
 
-    let searchColumns = [
-        { label: 'Meter', key: 'Meter', type: 'string' },
-        { label: 'Channel', key: 'Channel', type: 'string'},
-        { label: 'Type', key: 'Type', type: 'string' },
-        { label: 'Phase', key: 'Phase', type: 'string'},
-        { label: 'Asset', key: 'Asset', type: 'string'},
-    ] as Filter.IField<SPCTools.IChannelOverview>[];
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <FilterObject<SPCTools.IChannelOverview> Id='Filter' CollumnList={searchColumns} SetFilter={(filter) => dispatch(FilterChannelOverviews(filter))} Direction='left'/>
+            <SearchBar<SPCTools.IChannelOverview>
+                CollumnList={[
+                    { label: 'Meter', key: 'Meter', type: 'string', isPivotField: false },
+                    { label: 'Channel', key: 'Channel', type: 'string', isPivotField: false },
+                    { label: 'Type', key: 'Type', type: 'string', isPivotField: false },
+                    { label: 'Phase', key: 'Phase', type: 'string', isPivotField: false },
+                    { label: 'Asset', key: 'Asset', type: 'string', isPivotField: false },
+                ]}
+                SetFilter={(filter) => dispatch(FilterChannelOverviews(filter))}
+                Direction='left'
+            >
+            </SearchBar>
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                     <div className="col" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>

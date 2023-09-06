@@ -28,6 +28,10 @@ using GSF.Data.Model;
 namespace openXDA.Model
 {
     [SettingsCategory("systemSettings")]
+    [AllowSearch]
+    [PostRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [DeleteRoles("Administrator")]
     public class EventTag
     {
         [PrimaryKey(true)]

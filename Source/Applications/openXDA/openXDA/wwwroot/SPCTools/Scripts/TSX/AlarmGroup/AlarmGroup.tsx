@@ -22,14 +22,13 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import FilterObject from '../CommonComponents/Filter';
-import { SPCTools, Filter } from '../global';
+import { SPCTools } from '../global';
 import Table from '@gpa-gemstone/react-table';
 import { useSelector, useDispatch } from 'react-redux';
 import { SortAlarmGroups, FilterAlarmGroups, SelectAlarmGroups, SelectAlarmGroupsFilters, SelectAlarmGroupsStatus, SelectAlarmGroupsSortField, SelectAlarmGroupsAscending, FetchAlarmGroupViews } from '../store/AlarmGroupViewSlice';
 import moment from 'moment';
 import { LoadWizard } from '../Wizard/DynamicWizzardSlice';
+import { SearchBar } from '@gpa-gemstone/react-interactive'
 
 interface IDetailRow {Content: string, Value: string}
 
@@ -71,16 +70,19 @@ const AlarmGroupHome = (props: {loadAlarm: () => void}) => {
         return (d >= 1 ? (d.toFixed(0) + "d ") : "") + (h >= 1 ? (h.toFixed(0) + "h ") : "") + (m >= 1 ? (m.toFixed(0) + "m") : "");
     }
 
-    let searchColumns = [
-        { label: 'Name', key: 'Name', type: 'string' },
-        { label: 'Number of Meters', key: 'Meters', type: 'integer' },
-        { label: 'Number of Channels', key: 'Channels', type: 'integer' },
-        { label: 'Severity', key: 'AlarmSeverity', type: 'string' },
-
-    ] as Filter.IField<SPCTools.IAlarmGroupView>[]
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <FilterObject<SPCTools.IAlarmGroupView> Id='Filter' CollumnList={searchColumns} SetFilter={(filter) => dispatch(FilterAlarmGroups(filter))} Direction='left'/>
+            <SearchBar<SPCTools.IAlarmGroupView>
+                CollumnList={[
+                    { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
+                    { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: true },
+                    { label: 'Number of Channels', key: 'Channels', type: 'integer', isPivotField: true },
+                    { label: 'Severity', key: 'AlarmSeverity', type: 'string', isPivotField: true }
+                ]}
+                SetFilter={(filter) => dispatch(FilterAlarmGroups(filter))}
+                Direction='left'
+            >
+            </SearchBar>
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                         <div className="col-8">

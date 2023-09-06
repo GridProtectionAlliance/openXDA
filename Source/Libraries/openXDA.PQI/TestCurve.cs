@@ -76,7 +76,7 @@ namespace openXDA.PQI
         /// <summary>
         /// Date
         /// </summary>
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
 
         /// <summary>
         /// Additional notes about the curve
@@ -86,11 +86,11 @@ namespace openXDA.PQI
         /// <summary>
         /// Frequency (Hz) of the voltage
         /// </summary>
-        public double Frequency { get; set; }
+        public double? Frequency { get; set; }
 
         /// <summary>
         /// Voltage level (in volts) during normal conditions
         /// </summary>
-        public double NominalVoltage { get; set; }
+        public double? NominalVoltage { get; set; }
     }
 }

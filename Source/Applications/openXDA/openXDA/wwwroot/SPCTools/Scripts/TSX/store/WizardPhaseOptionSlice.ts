@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { SPCTools, Redux, openXDA } from '../global';
+import {  Redux, openXDA } from '../global';
 import _ from 'lodash';
 import { selectSelectedMeter, selectMeasurmentTypeID, selectSeriesTypeID } from '../Wizard/DynamicWizzardSlice';
 import { SelectSeriesTypes } from './SeriesTypeSlice';
@@ -52,11 +52,17 @@ export const WizardPhaseOptionSlice = createSlice({
         
     } as Redux.OptionState<openXDA.IPhase>,
     reducers: {
-        selectPhase: (state, action: PayloadAction<openXDA.IPhase>) => {
-            let index = state.Data.findIndex(ph => ph.ID == action.payload.ID);
-            state.Selected[index] = !state.Selected[index]
+        selectPhase: (state, action: PayloadAction<number[]>) => {
+            // Reset all selected voltages
+            state.Selected = state.Data.map(v => false);
+
+            // Update the states based on the provided list of indices
+            action.payload.forEach(index => {
+                if (index >= 0 && index < state.Selected.length) {
+                    state.Selected[index] = true;
+                }
+            });
         }
-        
     },
     extraReducers: (builder) => {
 

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MATLABAnalytic.cs - Gbtc
+//  MATLABAnalyticAssetType.cs - Gbtc
 //
 //  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/31/2023 - Stephen C. Wills
+//  08/04/2023 - Parker Dinsdale
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -31,19 +31,14 @@ namespace openXDA.Model
     [PostRoles("Administrator")]
     [PatchRoles("Administrator")]
     [DeleteRoles("Administrator")]
-    public class MATLABAnalytic
+    public class MATLABAnalyticAssetType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public string AssemblyName { get; set; }
+        [ParentKey(typeof(MATLABAnalytic))]
+        public int MATLABAnalyticID { get; set; }
 
-        public string MethodName { get; set; }
-
-        [DefaultValue("")]
-        public string SettingSQL { get; set; }
-
-        [DefaultValue(0)]
-        public int LoadOrder { get; set; }
+        public int AssetTypeID { get; set; }
     }
 }
