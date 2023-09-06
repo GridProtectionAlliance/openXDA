@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { SearchBar } from '@gpa-gemstone/react-interactive'
+import { SearchBar, LoadingIcon } from '@gpa-gemstone/react-interactive'
 import { SPCTools, openXDA, Filter } from '../global';
 import Table, { SelectTable } from '@gpa-gemstone/react-table';
 import { Input, Select, ArrayCheckBoxes } from '@gpa-gemstone/react-forms';
@@ -103,7 +103,7 @@ const GeneralSettings = (props: IProps) => {
                     <h2>Select channels to which the alarm setpoint will be applied:</h2>
                 </div>
                 <div className="col">
-                    <span className="float-right"> Number of Channels Selected: {(affectedChannelState != 'idle' ? <div className="spinner-border spinner-border-sm" role="status"></div> : affectedChannelCount)}</span>
+                    <span className="float-right"> Number of Channels Selected: {(affectedChannelState != 'idle' ? <LoadingIcon Show={true} Size={40} /> : affectedChannelCount)}</span>
                 </div>
             </div>
             <div className="row" style={{ margin: 0, height: 'calc(100% - 218px)' }}>
@@ -133,17 +133,11 @@ const GeneralSettings = (props: IProps) => {
                             />
                         </div>
                     </div>
-                    <div className="row" style={{ margin: 0, width: '100%' }}>
-                        <div className="col">
-                            <div className="btn-group mr-2" role="group" style={{ padding: '5px' }}>
-                                <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddAssetGroup'}> Add Asset Group</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="row" style={{ margin: 0, width: '100%' }}>
-                        <div className="col">
-                            <div className="btn-group mr-2" role="group" style={{ padding: '5px' }}>
-                                <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddMeter'}> Add Meter</button>
+                    <div style={{ width: '50%', display: 'inline-block', margin: 0 }}>
+                        <div className="col" style={{ padding: 0 }}>
+                            <div className="btn-group mr-2" role="group">
+                            <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddAssetGroup'}>Add Asset Group</button>
+                            <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddMeter'} style={{ marginLeft: '10px' }}>Add Meter</button>
                             </div>
                         </div>
                     </div>

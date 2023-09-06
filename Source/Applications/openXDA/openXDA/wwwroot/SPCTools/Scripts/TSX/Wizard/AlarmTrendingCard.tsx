@@ -33,6 +33,7 @@ import { SelectSeverities } from "../store/SeveritySlice";
 import { SelectAlarmDays } from "../store/AlarmDaySlice";
 import { Line, Plot } from '@gpa-gemstone/react-graph'
 import { TrashCan } from '@gpa-gemstone/gpa-symbols';
+import { LoadingIcon } from '@gpa-gemstone/react-interactive';
 
 interface IProps { ChannelID: number, Remove?: () => void, Tstart: string, Tend: string }
 
@@ -63,6 +64,7 @@ export const AlarmTrendingCard = (props: IProps) => {
     if (threshhold.length > 0) {
         filteredThreshold = threshhold.filter(series => !series.data.some(point => isNaN(point[0]) || isNaN(point[1])));
     }
+
     const [Width, SetWidth] = React.useState<number>(0);
     React.useLayoutEffect(() => { SetWidth(divref?.current?.offsetWidth-25 ?? 0) });
 
@@ -283,9 +285,7 @@ export const AlarmTrendingCard = (props: IProps) => {
             <div className="row" style={{ margin: 0, width: '100%', textAlign: 'center', background: '#bbbbbb' }}>
                 <div className="col-12" ref={divref}>
                     {loading ?
-                        <div className="text-center" style={{ width: '100%', margin: 'auto' }}>
-                            <div className="spinner-border" role="status"></div>
-                        </div> : 
+                        <LoadingIcon Show={true} Size={40} /> : 
                         <Plot height={250} width={Width} defaultTdomain={[Tstart, Tend]} Tlabel={'Time'} zoom={true} showMouse={false} useMetricFactors={false}>
                             {(data.length > 0 && data[0].data.length > 0) ? data.map((series, i) => <Line key={i} data={series.data} color={series.color} lineStyle={series.lineStyle} />)
                             : <></>

@@ -33,6 +33,7 @@ import { SelectAlarmDayByID } from '../store/AlarmDaySlice';
 import { SelectSetPointParseStatus, SelectSetPointParseResult } from '../store/SetPointParseSlice';
 import { TrashCan, Plus } from '@gpa-gemstone/gpa-symbols';
 import { Select, TextArea } from '@gpa-gemstone/react-forms';
+import { LoadingIcon } from '@gpa-gemstone/react-interactive';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -266,7 +267,7 @@ const SetPointMessage = (props: {}) => {
                     <div className={"alert alert-" + (isInfo ? 'info' : isSuccess ? 'success' : 'danger')} role="alert">
                         <div className="row" style={{ margin: 0 }}>
                             <div className="col">
-                                {loading ? <div className="spinner-border float-left" role="status" style={{ margin: 'auto' }}></div> : null}
+                                {loading ? <LoadingIcon Show={true} Size={40} /> : null}
                                 <div className="float-left"> <h4 className="alert-heading">{(loading ? 'Evaluating Expression...' : title)}</h4> </div>
                                 <button type="button" className="btn btn-light float-right" onClick={() => ($('#FunctionHelp') as any).modal('show')}>
                                     <i style={{ color: '#007BFF' }} className="fa fa-2x fa-question-circle"></i>
