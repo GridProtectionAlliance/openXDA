@@ -27,7 +27,7 @@ import GeneralSettings from './GeneralSettings';
 import {selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror} from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 
-import { ToolTip } from '@gpa-gemstone/react-interactive';
+import { ToolTip, ProgressBar, ServerErrorIcon, LoadingIcon } from '@gpa-gemstone/react-interactive';
 import { Requirements } from '../CommonComponents/Requirments';
 import SelectStatisticsData from './SelectStatisticsData';
 import SetPointCreator from './SetPointCreator';
@@ -50,6 +50,13 @@ const WizardHome = (props: IProps) => {
 
     const [hover, setHover] = React.useState<boolean>(false);
 
+
+    // Define Step Numbers
+    const generalStep: string = 'general';
+    const selectStep: string = 'selectData';
+    const setpointStep: string = 'setpoint';
+    const testStep: string = 'test';
+
     function Continue() {
         
         if (!errors.some(item => (item.complete == 'required'))) {
@@ -68,15 +75,16 @@ const WizardHome = (props: IProps) => {
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <div className="row" style={{ margin: 0 }}>
-                <nav style={{ width: '100%' }}>
-                    <ol className="breadcrumb">
-                        <li className={"breadcrumb-item" + (tab == 'general' ? " active" : '')}>General settings</li>
-                        <li className={"breadcrumb-item" + (tab == 'selectData' ? " active" : '')}>Select Historical Data</li>
-                        <li className={"breadcrumb-item" + (tab == 'setpoint' ? " active" : '')}>Create Setpoints</li>
-                        <li className={"breadcrumb-item" + (tab == 'test' ? " active" : '')}>Test Alarm</li>
-                    </ol>
-                </nav>
+            <div className="row" style={{ height: '40px', marginTop: '25px', marginRight: '25px', marginLeft: '25px', marginBottom: '25px' }}>
+                <ProgressBar width={'100%'} height={20}
+                    steps={[
+                        { id: generalStep, long: 'General Settings', short: 'General' },
+                        { id: selectStep, long: 'Select Historical Data', short: 'Select Data' },
+                        { id: setpointStep, long: 'Create Setpoints', short: 'Setpoint' },
+                        { id: testStep, long: 'Test Alarm', short: 'Test' },
+                    ]}
+                    activeStep={tab}
+                />
             </div>
             <div className="row" style={{ marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: '15px', height: "calc(100% - 132px)", overflowY: 'scroll' }}>
                 {status == 'loading' ?
