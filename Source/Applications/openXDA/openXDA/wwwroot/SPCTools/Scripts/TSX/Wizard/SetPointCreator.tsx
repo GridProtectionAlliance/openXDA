@@ -254,7 +254,7 @@ const SetPointMessage = (props: {}) => {
     if (response == undefined)
         text = "An error occured."
     else if (response.Valid && !response.IsScalar && !allowSlice)
-        text = "A single threshold is required for all channels because some channels are not selected as historic data source.";
+        text = "A single Threshold is required for all Channels as not all Channels are selected as Historic Data Sources.";
     else if (response.Valid && !response.IsScalar && allowSlice)
         text = "A separate threshold will be computed for each Channel. If that is not intended, an aggregation function such as MIN or MAX must be used."
     else
