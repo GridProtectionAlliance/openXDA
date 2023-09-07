@@ -40,16 +40,16 @@ const NavBar = (props: IProps ) => {
 
             <div className="navbar-collapse collapse">
                 <ul className="navbar-nav mr-auto">
-                    <li className={'nav-item' + (props.page == 'Home' ? ' active' : '')} > <a className='nav-link' onClick={() => props.pageSetter('Home')}>Home</a></li>
+                    <li className={'nav-item' + (props.page == 'Home' ? ' active' : '')} > <a style={{ cursor: 'pointer' }} className='nav-link' onClick={() => props.pageSetter('Home')}>Home</a></li>
                     <li className={"nav-item dropdown" + (props.page == 'Dynamic' || props.page == 'Static' ? ' active' : '')}>
-                        <a className="nav-link dropdown-toggle" data-toggle="dropdown" >New Alarm Group <span className="caret"></span> </a>
+                        <a className="nav-link dropdown-toggle" style={{ cursor: 'pointer' }} data-toggle="dropdown" >New Alarm Group <span className="caret"></span> </a>
                         <div className="dropdown-menu">
-                            <a className="dropdown-item" onClick={() => props.pageSetter('Static')}>New Static Alarm Group</a>
-                            <a className="dropdown-item" onClick={() => props.pageSetter('Dynamic')}>New Dynamic Alarm Group</a>
+                            <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => props.pageSetter('Static')}>New Static Alarm Group</a>
+                            <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => props.pageSetter('Dynamic')}>New Dynamic Alarm Group</a>
                         </div>
                     </li>
-                    <li className={'nav-item' + (props.page == 'Meter' ? ' active' : '')}> <a className='nav-link' onClick={() => props.pageSetter('Meter')}>Meter Overview</a></li>
-                    <li className={'nav-item' + (props.page == 'Channel' ? ' active' : '')}> <a className='nav-link' onClick={() => props.pageSetter('Channel')}>Channel Overview</a></li>
+                    <li className={'nav-item' + (props.page == 'Meter' ? ' active' : '')}> <a className='nav-link' style={{cursor: 'pointer'}} onClick={() => props.pageSetter('Meter')}>Meter Overview</a></li>
+                    <li className={'nav-item' + (props.page == 'Channel' ? ' active' : '')}> <a className='nav-link' style={{ cursor: 'pointer' }} onClick={() => props.pageSetter('Channel')}>Channel Overview</a></li>
                        
                 </ul>
                 <p className="nav navbar-text navbar-right">

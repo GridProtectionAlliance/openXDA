@@ -22,14 +22,11 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import FilterWindow from '../CommonComponents/Filter';
-import { SPCTools, openXDA, Redux, Filter } from '../global';
-import Table from '@gpa-gemstone/react-table';
-import { cloneDeep, clone } from 'lodash';
-import { Input, Select } from '@gpa-gemstone/react-forms';
-import MultiSelectTable from '../CommonComponents/MultiSelectTable';
-import {  updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID, SelectWizardType } from './DynamicWizzardSlice'
+import { SearchBar, LoadingIcon } from '@gpa-gemstone/react-interactive'
+import { SPCTools, openXDA, Filter } from '../global';
+import Table, { SelectTable } from '@gpa-gemstone/react-table';
+import { Input, Select, ArrayCheckBoxes } from '@gpa-gemstone/react-forms';
+import { updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID, SelectWizardType } from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 import { SelectMeasurmentTypes } from '../store/MeasurmentTypeSlice';
 import { SelectAlarmTypes } from '../store/AlarmTypeSlice';
@@ -106,18 +103,18 @@ const GeneralSettings = (props: IProps) => {
                     <h2>Select channels to which the alarm setpoint will be applied:</h2>
                 </div>
                 <div className="col">
-                    <span className="float-right"> Number of Channels Selected: {(affectedChannelState != 'idle' ? <div className="spinner-border spinner-border-sm" role="status"></div> : affectedChannelCount)}</span>
+                    <span className="float-right"> Number of Channels Selected: {(affectedChannelState != 'idle' ? <LoadingIcon Show={true} Size={40} /> : affectedChannelCount)}</span>
                 </div>
             </div>
-            <div className="row" style={{ margin: 0, height: 'calc(100% - 218px)'}}>
-                <div className="col" style={{height: '100%'}}>
-                    <div className="row" style={{margin: 0, width: '100%'}}>
+            <div className="row" style={{ margin: 0, height: 'calc(100% - 218px)' }}>
+                <div className="col" style={{ height: '100%' }}>
+                    <div className="row" style={{ margin: 0, width: '100%' }}>
                         <h3> Selected Meters </h3>
                     </div>
                     <div className="row" style={{ margin: 0, width: '100%', height: 'calc(100% - 137px)' }}>
                         <div className="col">
                             <Table<openXDA.IMeter>
-                                tableStyle={{height: '100%'}}
+                                tableStyle={{ height: '100%' }}
                                 cols={[
                                     { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
                                     { key: 'Location', label: 'Substation', field: 'Location', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
@@ -133,20 +130,14 @@ const GeneralSettings = (props: IProps) => {
                                 tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 300, width: '100%' }}
                                 rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                 selected={(item) => false}
-                                />
+                            />
                         </div>
                     </div>
-                    <div className="row" style={{ margin: 0, width: '100%' }}>
-                        <div className="col">
-                            <div className="btn-group mr-2" role="group" style={{ padding: '5px' }}>
-                                <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddAssetGroup'}> Add Asset Group</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="row" style={{ margin: 0, width: '100%' }}>
-                        <div className="col">
-                            <div className="btn-group mr-2" role="group" style={{ padding: '5px' }}>
-                                <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddMeter'}> Add Meter</button>
+                    <div style={{ width: '50%', display: 'inline-block', margin: 0 }}>
+                        <div className="col" style={{ padding: 0 }}>
+                            <div className="btn-group mr-2" role="group">
+                            <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddAssetGroup'}>Add Asset Group</button>
+                            <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddMeter'} style={{ marginLeft: '10px' }}>Add Meter</button>
                             </div>
                         </div>
                     </div>
@@ -162,7 +153,7 @@ const GeneralSettings = (props: IProps) => {
             </div>
             <AddMeterPopUp setter={(meter) => dispatch(addMeter(meter))} />
             <AddAssetgroupPopUp setter={(meter) => dispatch(addMeter(meter))} />
-        </div>      
+        </div>
     );
 }
 
@@ -201,16 +192,6 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
     }
 
 
-
-    let searchCollumns = [
-        { label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-        { label: 'Substation', key: 'Location' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-        { label: 'Make', key: 'Make' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-        { label: 'Model', key: 'Model' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-        { label: 'AssetKey', key: 'AssetKey' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType },
-    ]
-
-
     return (
         <div className="modal" id='AddMeter'>
             <div className="modal-dialog" style={{ maxWidth: window.innerWidth - 200 }}>
@@ -220,8 +201,19 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                         <button type="button" className="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div className="modal-body">
-                        <FilterWindow<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType }} Direction={'right'} SetFilter={setFilters} />
-                        <MultiSelectTable<openXDA.IMeter>
+                        <SearchBar<openXDA.IMeter>
+                            CollumnList={[
+                                { label: 'Name', key: 'Name' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'Substation', key: 'Location' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'Make', key: 'Make' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'Model', key: 'Model' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'AssetKey', key: 'AssetKey' as keyof openXDA.IMeter, type: 'string' as Filter.FieldType, isPivotField: false },
+                            ]}
+                            Direction={'left'}
+                            SetFilter={setFilters}
+                        >
+                        </SearchBar>
+                        <SelectTable<openXDA.IMeter>
                             cols={[
                                 { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                 { key: 'Location', label: 'Substation', field: 'Location', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
@@ -232,23 +224,11 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                             data={meterList}
                             sortKey={sort}
                             ascending={asc}
-                            onSort={(d) => {
-                                if (d.colKey == sort) {
-                                    setAsc(!asc);
-                                }
-                                else {
-                                    setAsc(asc);
-                                    setSort(d.colField);
-                                }
-                            }}
-                            onClick={(d) => { }}
+                            onSelection={(selected) => { setSelectedMeterList(selected) }}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 500, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            selected={(item) => false}
-                            primaryKey={'ID'}
-                            updateSelection={(selected) => { setSelectedMeterList(selected) }}
-                            selectAll={false}
+                            KeyField={'ID'}
                         />
                     </div>
 
@@ -261,7 +241,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
             </div>
 
         </div>
-        );
+    );
 }
 
 const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void }) => {
@@ -271,8 +251,8 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
     const [asc, setAsc] = React.useState<boolean>(false);
     const [selectedAssetGroupID, setSelectedAssetGroupID] = React.useState<number>(-1);
     const [selectedMeterList, setSelectedMeterList] = React.useState<Array<openXDA.IMeter>>([]);
- 
-    
+
+
     React.useEffect(() => {
         let handle = getList();
 
@@ -318,18 +298,12 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
             async: true
         });
 
-        handle.done((data ) => {
+        handle.done((data) => {
             setSelectedMeterList(JSON.parse(data) as Array<openXDA.IMeter>)
         });
 
         return handle;
     }
-
-    let searchCollumns = [
-        { label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType },
-        { label: 'Num of Meters', key: 'Meters' as keyof openXDA.IAssetGroup, type: 'integer' as Filter.FieldType },
-    ]
-
 
     return (
         <div className="modal" id='AddAssetGroup'>
@@ -340,12 +314,20 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                         <button type="button" className="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div className="modal-body">
-                        <FilterWindow<openXDA.IAssetGroup> Id='FilterAssetGroup' CollumnList={searchCollumns} defaultCollumn={{ label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType }} SetFilter={setFilters} Direction={'right'} />
+                        <SearchBar<openXDA.IAssetGroup>
+                            CollumnList={[
+                                { label: 'Name', key: 'Name' as keyof openXDA.IAssetGroup, type: 'string' as Filter.FieldType, isPivotField: false },
+                                { label: 'Num of Meters', key: 'Meters' as keyof openXDA.IAssetGroup, type: 'integer' as Filter.FieldType, isPivotField: false },
+                            ]}
+                            SetFilter={setFilters}
+                            Direction={'left'}
+                        >
+                        </SearchBar>
                         <Table<openXDA.IAssetGroup>
                             cols={[
                                 { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                 { key: 'Meters', label: 'Num. of Meters', field: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                
+
                             ]}
                             tableClass="table table-hover"
                             data={assetGroupList}
@@ -385,6 +367,11 @@ const MeasurmentTypeSelect = (props: {}) => {
     const measurementTypes = useSelector(SelectMeasurmentTypes);
     const measurementTypeID = useSelector(selectMeasurmentTypeID);
 
+    const selectOptions = measurementTypes.map((measure) => ({
+        Value: measure.ID.toString(),
+        Label: measure.DisplayName
+    }));
+
     React.useEffect(() => {
         dispatch(FetchAvailablePhases());
         dispatch(FetchAvailableVoltages());
@@ -396,20 +383,17 @@ const MeasurmentTypeSelect = (props: {}) => {
             dispatch(updateMeasurmentTypeID(measurementTypes[0].ID));
     }, [])
 
-    return <div className="form-group">
-        <label>Measurment</label>
-        <select
-            className="form-control"
-            onChange={(evt) => dispatch(updateMeasurmentTypeID(parseInt(evt.target.value)))} 
-            value={measurementTypeID}
-        >
-        {measurementTypes.map((a, i) => (
-            <option key={i} value={a.ID}>
-                {a.DisplayName}
-            </option>
-        ))}
-        </select>
-    </div>
+    return (
+        <>
+            <Select
+                Record={{ obj: measurementTypeID }}
+                Field={"obj"}
+                Options={selectOptions}
+                Setter={(evt) => dispatch(updateMeasurmentTypeID(evt.obj))}
+                Label={'Measurement'}
+            ></Select>
+        </>
+    )
 }
 
 const PhaseSelect = (props: {}) => {
@@ -418,30 +402,40 @@ const PhaseSelect = (props: {}) => {
     const availablePhases = useSelector(SelectAvailablePhases);
     const selectedPhases = useSelector(SelectSelectedPhases);
 
+    const checkboxesData = availablePhases.map((phase) => ({
+        ID: phase.ID.toString(),
+        Label: `${phase.Name}`
+    }));
+
+    const selectedPhaseIDs = availablePhases
+        .filter((phase, index) => selectedPhases[index])
+        .map(phase => phase.ID.toString());
+
+    const onCheckboxChange = (updatedRecord: { selected: string[] }) => {
+
+        const selectedIndices = updatedRecord.selected.map(id =>
+            availablePhases.findIndex(phase => phase.ID.toString() === id)
+        );
+
+        dispatch(selectPhase(selectedIndices));
+    };
+
     React.useEffect(() => { dispatch(FetchAffectedChannels()); }, [selectedPhases])
 
     return (
-    <fieldset className="border" style={{ padding: '10px' }}>
-        <legend className="w-auto">Phases:</legend>
+        <fieldset className="border" style={{ padding: '10px' }}>
+            <legend className="w-auto">Phases:</legend>
             {loading != 'idle' ? <div className="spinner-border" role="status"></div> :
-                <div className="form-group">
-                    {availablePhases.map((cb, i) => (
-                        <div key={i} className="form-check form-check-inline">
-                            <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={selectedPhases[i]}
-                                onChange={(evt) => dispatch(selectPhase(cb))}
-                            />
-                            <label className="form-check-label">{cb.Name}</label>
-                        </div>
-                    ))}
-                </div>
+                <ArrayCheckBoxes
+                    Record={{ selected: selectedPhaseIDs }}
+                    Field="selected"
+                    Setter={onCheckboxChange}
+                    Checkboxes={checkboxesData}
+                    Label={''}
+                />
             }
-    </fieldset>
+        </fieldset>
     )
-
-
 }
 
 const VoltageSelect = (props: {}) => {
@@ -450,30 +444,36 @@ const VoltageSelect = (props: {}) => {
     const availableVoltages = useSelector(SelectAvailableVoltages);
     const selectedVoltages = useSelector(SelectSelectedVoltages);
 
-    React.useEffect(() => { dispatch(FetchAffectedChannels()); }, [selectedVoltages])
+    const checkboxesData = availableVoltages.map((voltage) => ({
+        ID: voltage.toString(),
+        Label: `${voltage} kV`
+    }));
 
+    // Determine the IDs of the selected voltages.
+    const selectedVoltageIDs = availableVoltages.filter((voltage, index) => selectedVoltages[index])
+        .map(voltage => voltage.toString());
+
+    const onCheckboxChange = (updatedRecord: { selected: string[] }) => {
+        // Map the IDs back to their integer values.
+        const selectedIndices = updatedRecord.selected.map(voltageStr => availableVoltages.indexOf(parseFloat(voltageStr)));
+        dispatch(selectVoltage(selectedIndices));
+    };
+
+    React.useEffect(() => { dispatch(FetchAffectedChannels()); }, [selectedVoltages])
     return (
         <fieldset className="border" style={{ padding: '10px' }}>
             <legend className="w-auto">Base Voltages:</legend>
             {loading != 'idle' ? <div className="spinner-border" role="status"></div> :
-                <div className="form-group">
-                    {availableVoltages.map((cb, i) => (
-                        <div key={i} className="form-check form-check-inline">
-                            <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={selectedVoltages[i]}
-                                onChange={(evt) => dispatch(selectVoltage(cb))}
-                            />
-                            <label className="form-check-label">{cb} kV</label>
-                        </div>
-                    ))}
-                </div>
+                <ArrayCheckBoxes
+                    Record={{ selected: selectedVoltageIDs }}
+                    Field="selected"
+                    Setter={onCheckboxChange}
+                    Checkboxes={checkboxesData}
+                    Label={''}
+                />
             }
         </fieldset>
     )
-
-
 }
 
 const RepeatabilityTypeSelect = (props: {}) => {
@@ -486,20 +486,22 @@ const RepeatabilityTypeSelect = (props: {}) => {
         dispatch(FetchAvailableVoltages());
     }, [alarmDayGroupID]);
 
-    return <div className="form-group">
-        <label>Alarm Cycle</label>
-        <select
-            className="form-control"
-            onChange={(evt) => dispatch(updateAlarmDayGroupID(parseInt(evt.target.value)))}
-            value={alarmDayGroupID}
-        >
-            {AlarmDayGroups.map((a, i) => (
-                <option key={i} value={a.ID}>
-                    {a.Description}
-                </option>
-            ))}
-        </select>
-    </div>
+    const selectOptions = AlarmDayGroups.map((alarm) => ({
+        Value: alarm.ID.toString(),
+        Label: alarm.Description.toString()
+    }));
+
+    return (
+        <>
+            <Select
+                Record={{ obj: alarmDayGroupID }}
+                Field={"obj"}
+                Options={selectOptions}
+                Setter={(evt) => dispatch(updateAlarmDayGroupID(evt.obj))}
+                Label={'Alarm Cycle'}
+            ></Select>
+        </>
+    )
 }
 
 
@@ -519,25 +521,26 @@ const IntervallDataSelect = (props: {}) => {
             dispatch(updateSeriesTypeID(seriesTypes[0].ID));
     }, [])
 
-    return (
-    <fieldset className="border" style={{ padding: '10px' }}>
-            <legend className="w-auto">Interval Data Type:</legend>
-            {loading != 'idle' ? <div className="spinner-border" role="status"></div> :
-                <div className="form-group">
-                    {seriesTypes.map((cb, i) => (
-                        <div key={i} className="form-check form-check-inline">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                checked={seriesTypeID == cb.ID}
-                                onChange={(evt) => dispatch(updateSeriesTypeID(cb.ID))}
-                            />
-                            <label className="form-check-label">{cb.Name}</label>
-                        </div>
-                    ))}
-                </div>}
-    </fieldset>)
+    const handleSelectionChange = (selectedRecord: { seriesTypeID: number }) => {
+        dispatch(updateSeriesTypeID(selectedRecord.seriesTypeID));
+    }
 
+    const selectOptions = seriesTypes.map(s => ({
+        Value: s.ID.toString(),
+        Label: s.Name.toString()
+    }))
+
+    return (
+        <>
+            <Select<{ seriesTypeID: number }>
+                Record={{ seriesTypeID }}
+                Field="seriesTypeID"
+                Setter={handleSelectionChange}
+                Options={selectOptions}
+                Label="Interval Data Type"
+            />
+        </>
+    )
 }
 
 export default GeneralSettings

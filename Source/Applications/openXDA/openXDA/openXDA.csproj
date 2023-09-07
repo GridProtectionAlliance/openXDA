@@ -4514,10 +4514,6 @@
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\FunctionHelp.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\DynamicTimeRange.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Requirments.tsx" />
-    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Graph.tsx" />
-    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\RadioBox.tsx" />
-    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\MultiSelectTable.tsx" />
-    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\CommonComponents\Filter.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\SelectStatisticsData.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\SetPointCreator.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\EPRINote.tsx" />

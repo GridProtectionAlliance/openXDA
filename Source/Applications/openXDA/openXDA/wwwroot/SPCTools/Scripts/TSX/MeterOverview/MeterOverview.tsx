@@ -22,12 +22,12 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import FilterObject from '../CommonComponents/Filter';
-import { SPCTools, openXDA, Filter } from '../global';
+import { SPCTools, openXDA } from '../global';
 import Table from '@gpa-gemstone/react-table';
 import { useSelector, useDispatch } from 'react-redux';
 import { SortMeters, FilterMeters, SelectMeters, SelectMetersFilters, SelectMetersStatus, SelectMetersSortField, SelectMetersAscending, FetchMeters } from '../store/MeterSlice';
 import { ChangeStatusMeterAlarmGroups, SortMeterAlarmGroups, SelectMeterAlarmGroups, SelectMeterAlarmGroupsStatus, SelectMeterAlarmGroupsSortField, SelectMeterAlarmGroupsAscending, FetchMeterAlarmGroups } from '../store/MeterAlarmGroupSlice';
+import { SearchBar } from '@gpa-gemstone/react-interactive'
 
 
 const MeterOverview: React.FunctionComponent = (props: {}) => {
@@ -60,15 +60,18 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
         dispatch(ChangeStatusMeterAlarmGroups());
     }, [MeterID]);
 
-    let searchCollumns = [
-        { label: 'Meter', key: 'Name', type: 'string'},
-        { label: 'Make', key: 'Make', type: 'string' },
-        { label: 'Model', key: 'Make', type: 'string' },
-    ] as Filter.IField<openXDA.IMeter>[];
-
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <FilterObject<openXDA.IMeter> Id='Filter' CollumnList={searchCollumns} SetFilter={(filter) => dispatch(FilterMeters(filter))} Direction='left' />
+            <SearchBar<openXDA.IMeter>
+                CollumnList={[
+                    { label: 'Meter', key: 'Name', type: 'string', isPivotField: false },
+                    { label: 'Make', key: 'Make', type: 'string', isPivotField: false },
+                    { label: 'Model', key: 'Make', type: 'string', isPivotField: false },
+                ]}
+                SetFilter={(filter) => dispatch(FilterMeters(filter))}
+                Direction='left'
+            >
+            </SearchBar>
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                     <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>

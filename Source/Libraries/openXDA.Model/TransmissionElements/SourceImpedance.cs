@@ -28,6 +28,11 @@ using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
+    [TableName("SourceImpedance")]
+    [AllowSearch, SettingsCategory("systemSettings")]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     public class SourceImpedance
     {
         #region [ Members ]
