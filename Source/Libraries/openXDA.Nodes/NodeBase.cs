@@ -23,8 +23,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Net.Http;
-using System.Threading.Tasks;
 using System.Web.Http.Controllers;
 using GSF.Configuration;
 using GSF.Data;
@@ -110,13 +108,6 @@ namespace openXDA.Nodes
             Settings settings = new Settings(configurator);
             DbTimeout = settings.SystemSettings.DbTimeout;
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Properties
-        protected static HttpClient HttpClient { get; }
 
         #endregion
     }

@@ -31,11 +31,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Results;
+using System.Web.Http.Routing;
 using GSF.Data;
 using openXDA.Nodes;
 
 namespace openXDA.Adapters
 {
+    public delegate int NodeIDSelector(Host host, HttpRequestMessage request);
+    public delegate string NodeTypeSelector(Host host, HttpRequestMessage request);
+
     public class NodeController : ApiController
     {
         private Host Host { get; }
@@ -44,19 +48,43 @@ namespace openXDA.Adapters
             Host = host;
 
         [HttpGet, HttpPost, HttpPut, HttpDelete, HttpPatch]
-        public Task<HttpResponseMessage> HandleRequestAsync(string node, string action, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> HandleRequestAsync(string node, string action, string actionData, CancellationToken cancellationToken)
         {
             if (int.TryParse(node, out int nodeID))
-                return ForwardAsync(nodeID, action, cancellationToken);
+                return await ForwardAsync(nodeID, action, actionData, cancellationToken);
 
-            return ForwardAsync(node, action, cancellationToken);
+            if (!(node is null))
+                return await ForwardAsync(node, action, actionData, cancellationToken);
+
+            IHttpRouteData routeData = Request.GetRouteData();
+
+            if (routeData.Values.TryGetValue(nameof(NodeIDSelector), out object selector))
+            {
+                if (!(selector is NodeIDSelector nodeIDSelector))
+                    throw new InvalidOperationException("Invalid node ID selector detected in route data.");
+
+                nodeID = nodeIDSelector(Host, Request);
+                return await ForwardAsync(nodeID, action, actionData, cancellationToken);
+            }
+
+            if (routeData.Values.TryGetValue(nameof(NodeTypeSelector), out selector))
+            {
+                if (!(selector is NodeTypeSelector nodeTypeSelector))
+                    throw new InvalidOperationException("Invalid node type selector detected in route data.");
+
+                string nodeType = nodeTypeSelector(Host, Request);
+                return await ForwardAsync(nodeType, action, actionData, cancellationToken);
+            }
+
+            IHttpActionResult result = NotFound();
+            return await result.ExecuteAsync(cancellationToken);
         }
 
-        private async Task<HttpResponseMessage> ForwardAsync(string nodeType, string action, CancellationToken cancellationToken)
+        private async Task<HttpResponseMessage> ForwardAsync(string nodeType, string action, string actionData, CancellationToken cancellationToken)
         {
             async Task<string> MessageNodeAsync(int nodeID)
             {
-                using (HttpResponseMessage messageResponse = await ForwardAsync(nodeID, action, cancellationToken))
+                using (HttpResponseMessage messageResponse = await ForwardAsync(nodeID, action, actionData, cancellationToken))
                 {
                     if (!messageResponse.IsSuccessStatusCode)
                         return $"[Node {nodeID}] ERROR: {messageResponse.StatusCode} {messageResponse.ReasonPhrase}";
@@ -92,7 +120,7 @@ namespace openXDA.Adapters
             return response;
         }
 
-        private async Task<HttpResponseMessage> ForwardAsync(int nodeID, string action, CancellationToken cancellationToken)
+        private async Task<HttpResponseMessage> ForwardAsync(int nodeID, string action, string actionData, CancellationToken cancellationToken)
         {
             INode node = Host.GetNode(nodeID);
 
@@ -104,7 +132,7 @@ namespace openXDA.Adapters
                     request.Version = Request.Version;
 
                     NameValueCollection queryParameters = Request.RequestUri.ParseQueryString();
-                    string url = Host.BuildURL(nodeID, action, queryParameters);
+                    string url = Host.BuildURL(nodeID, action, actionData, queryParameters);
                     request.RequestUri = new Uri(url);
                     request.Headers.Host = request.RequestUri.Authority;
 

@@ -185,7 +185,7 @@ namespace openXDA.APIAuthentication
                 s_activeConnections.TryAdd(connection.SessionID, connection);
                 return Ok(connection.SessionID);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 return StatusCode(System.Net.HttpStatusCode.Forbidden);
             }
@@ -232,7 +232,7 @@ namespace openXDA.APIAuthentication
                 s_activeConnections[sessionID].SendCommand(command, User);
                 return Ok(1);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 return StatusCode(System.Net.HttpStatusCode.Forbidden);
             }

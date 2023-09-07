@@ -156,9 +156,12 @@ namespace openXDA.Nodes
         }
 
         public string BuildURL(Type nodeType, string action) =>
-            BuildURL(nodeType, action, null);
+            BuildURL(nodeType, action, null, null);
 
-        public string BuildURL(Type nodeType, string action, NameValueCollection queryParameters)
+        public string BuildURL(Type nodeType, string action, NameValueCollection queryParameters) =>
+            BuildURL(nodeType, action, null, queryParameters);
+
+        public string BuildURL(Type nodeType, string action, string actionData, NameValueCollection queryParameters)
         {
             string url;
 
@@ -185,7 +188,13 @@ namespace openXDA.Nodes
                     throw new InvalidOperationException($"Node type for \"{nodeTypeName}\" does not exist.");
 
                 string cleanHostURL = hostURL.Trim().TrimEnd('/');
-                url = $"{cleanHostURL}/Node/{node}/{action}";
+
+                if (string.IsNullOrEmpty(action))
+                    url = $"{cleanHostURL}/Node/{node}";
+                else if (string.IsNullOrEmpty(actionData))
+                    url = $"{cleanHostURL}/Node/{node}/{action}";
+                else
+                    url = $"{cleanHostURL}/Node/{node}/{action}/{actionData}";
             }
 
             if (!(queryParameters is null) && queryParameters.Count > 0)
@@ -207,9 +216,12 @@ namespace openXDA.Nodes
         }
 
         public string BuildURL(int nodeID, string action) =>
-            BuildURL(nodeID, action, null);
+            BuildURL(nodeID, action, null, null);
 
-        public string BuildURL(int nodeID, string action, NameValueCollection queryParameters)
+        public string BuildURL(int nodeID, string action, NameValueCollection queryParameters) =>
+            BuildURL(nodeID, action, null, queryParameters);
+
+        public string BuildURL(int nodeID, string action, string actionData, NameValueCollection queryParameters)
         {
             const string NodeQueryFormat =
                 "SELECT ActiveHost.URL " +
@@ -228,7 +240,13 @@ namespace openXDA.Nodes
                     throw new InvalidOperationException($"Node {nodeID} is not active.");
 
                 string cleanHostURL = hostURL.Trim().TrimEnd('/');
-                url = $"{cleanHostURL}/Node/{nodeID}/{action}";
+
+                if (string.IsNullOrEmpty(action))
+                    url = $"{cleanHostURL}/Node/{nodeID}";
+                else if (string.IsNullOrEmpty(actionData))
+                    url = $"{cleanHostURL}/Node/{nodeID}/{action}";
+                else
+                    url = $"{cleanHostURL}/Node/{nodeID}/{action}/{actionData}";
             }
 
             if (!(queryParameters is null) && queryParameters.Count > 0)
@@ -491,146 +509,14 @@ namespace openXDA.Nodes
             RecordRestriction restriction = new RecordRestriction("MinimumHostCount <= {0}", hostCount);
 
             return nodeTable
-                .QueryRecords("MinimumHostCount ASC, ID ASC", restriction)
+                .QueryRecords("ID ASC", restriction)
                 .ToList();
         }
 
         private List<Node> GetEquilibrium(List<HostRegistration> activeHosts, List<Node> activeNodes)
         {
-            List<Node> localNodes = new List<Node>();
-
-            int hostLoadFactor = activeNodes.Count / activeHosts.Count;
-            int hostOverflow = activeNodes.Count % activeHosts.Count;
-
-            var nodeTypeAssignments = activeNodes
-                .GroupBy(node => node.NodeTypeID)
-                .ToDictionary(grouping => grouping.Key, grouping =>
-                {
-                    int nodeTypeID = grouping.Key;
-                    int nodeCount = grouping.Count();
-                    int loadFactor = nodeCount / activeHosts.Count;
-                    int overflow = nodeCount % activeHosts.Count;
-
-                    return new
-                    {
-                        NodeTypeID = nodeTypeID,
-                        LoadFactor = loadFactor,
-                        HasOverflow = new Func<bool>(() => overflow > 0),
-                        AssignOverflow = new Action(() => overflow--)
-                    };
-                });
-
-            var hostAssignments = activeHosts
-                .Select(host =>
-                {
-                    HashSet<int> fullSlotTypes = new HashSet<int>();
-
-                    Dictionary<int, int> typedSlots = nodeTypeAssignments.Values
-                        .ToDictionary(assignment => assignment.NodeTypeID, assignment => assignment.LoadFactor);
-
-                    int freeSlots = hostLoadFactor - typedSlots.Values.Sum();
-                    int overflowSlots = 1;
-                    int totalAssigned = 0;
-
-                    int GetTotalAssigned() => totalAssigned;
-                    bool CanAssign(int nodeType) => !fullSlotTypes.Contains(nodeType);
-                    bool HasTypedSlot(int nodeType) => typedSlots[nodeType] > 0;
-                    bool HasFreeSlot() => freeSlots > 0;
-                    bool HasOverflowSlot() => overflowSlots > 0;
-
-                    void AssignTyped(Node node)
-                    {
-                        if (host.ID == ID)
-                            localNodes.Add(node);
-
-                        int nodeTypeID = node.NodeTypeID;
-                        typedSlots[nodeTypeID]--;
-                        totalAssigned++;
-                    }
-
-                    void AssignFree(Node node)
-                    {
-                        if (host.ID == ID)
-                            localNodes.Add(node);
-
-                        int nodeTypeID = node.NodeTypeID;
-                        fullSlotTypes.Add(nodeTypeID);
-                        freeSlots--;
-                        totalAssigned++;
-                    }
-
-                    void AssignOverflow(Node node)
-                    {
-                        if (host.ID == ID)
-                            localNodes.Add(node);
-
-                        int nodeTypeID = node.NodeTypeID;
-                        fullSlotTypes.Add(nodeTypeID);
-                        overflowSlots--;
-                        totalAssigned++;
-                    }
-
-                    return new
-                    {
-                        HostID = host.ID,
-                        GetTotalAssigned = new Func<int>(GetTotalAssigned),
-                        CanAssignNodeType = new Func<int, bool>(CanAssign),
-                        HasTypedSlot = new Func<int, bool>(HasTypedSlot),
-                        HasFreeSlot = new Func<bool>(HasFreeSlot),
-                        HasOverflowSlot = new Func<bool>(HasOverflowSlot),
-                        AssignTyped = new Action<Node>(AssignTyped),
-                        AssignFree = new Action<Node>(AssignFree),
-                        AssignOverflow = new Action<Node>(AssignOverflow)
-                    };
-                })
-                .ToList();
-
-            foreach (Node node in activeNodes)
-            {
-                var prioritizedHostAssignments = hostAssignments
-                    .OrderBy(hostAssignment => hostAssignment.HostID == node.HostRegistrationID ? 0 : 1)
-                    .ThenBy(hostAssignment => hostAssignment.GetTotalAssigned())
-                    .ThenBy(hostAssignment => hostAssignment.HostID);
-
-                foreach (var hostAssignment in prioritizedHostAssignments)
-                {
-                    int nodeTypeID = node.NodeTypeID;
-
-                    if (!hostAssignment.CanAssignNodeType(nodeTypeID))
-                        continue;
-
-                    if (hostAssignment.HasTypedSlot(nodeTypeID))
-                    {
-                        hostAssignment.AssignTyped(node);
-                        break;
-                    }
-
-                    var nodeTypeAssignment = nodeTypeAssignments[nodeTypeID];
-
-                    if (!nodeTypeAssignment.HasOverflow())
-                        continue;
-
-                    if (hostAssignment.HasFreeSlot())
-                    {
-                        nodeTypeAssignment.AssignOverflow();
-                        hostAssignment.AssignFree(node);
-                        break;
-                    }
-
-                    if (hostOverflow <= 0)
-                        continue;
-
-                    if (!hostAssignment.HasOverflowSlot())
-                        continue;
-
-                    hostOverflow--;
-                    nodeTypeAssignment.AssignOverflow();
-                    hostAssignment.AssignOverflow(node);
-                    break;
-                }
-            }
-
-            return localNodes;
+            Balancer balancer = new Balancer(activeHosts, activeNodes);
+            return balancer.GetEquilibrium(ID);
         }
 
         private List<Node> UpdateNodeConfiguration(AdoDataConnection connection, List<Node> equilibrium)

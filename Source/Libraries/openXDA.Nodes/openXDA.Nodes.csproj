@@ -60,6 +60,9 @@
     <Reference Include="System.Web.Http">
       <HintPath>..\..\Dependencies\GSF\System.Web.Http.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Http.Cors">
+      <HintPath>..\..\Dependencies\GSF\System.Web.Http.Cors.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -68,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Balancer.cs" />
     <Compile Include="ICLIRegistry.cs" />
     <Compile Include="Types\Analysis\AnalysisNode.cs" />
     <Compile Include="Types\Analysis\AnalysisTask.cs" />
@@ -92,6 +96,9 @@
     <Compile Include="Types\FilePruning\FilePrunerNode.cs" />
     <Compile Include="INode.cs" />
     <Compile Include="NodeBase.cs" />
+    <Compile Include="Types\Grafana\GrafanaAuthProxyController.cs" />
+    <Compile Include="Types\Grafana\GrafanaHostingNode.cs" />
+    <Compile Include="Types\Grafana\GrafanaQueryHelper.cs" />
     <Compile Include="Types\SSAMS\SSAMSNode.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -118,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Types\Grafana\custom.ini" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

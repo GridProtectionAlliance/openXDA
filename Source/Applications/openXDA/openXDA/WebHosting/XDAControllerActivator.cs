@@ -26,10 +26,12 @@ using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Net.Http;
 using System.Reflection;
+using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Dispatcher;
 using System.Web.Http.Routing;
 using GSF.Data;
+using openXDA.Adapters;
 using openXDA.Nodes;
 
 namespace openXDA.WebHosting
@@ -38,10 +40,9 @@ namespace openXDA.WebHosting
     {
         #region [ Constructors ]
 
-        public XDAControllerActivator(Func<AdoDataConnection> connectionFactory, Host nodeHost)
+        public XDAControllerActivator(Host nodeHost)
         {
             FactoryLookup = new ConcurrentDictionary<Type, Func<IHttpController>>();
-            ConnectionFactory = connectionFactory;
             NodeHost = nodeHost;
         }
 
@@ -50,7 +51,7 @@ namespace openXDA.WebHosting
         #region [ Properties ]
 
         private ConcurrentDictionary<Type, Func<IHttpController>> FactoryLookup { get; }
-        private Func<AdoDataConnection> ConnectionFactory { get; }
+        private Func<AdoDataConnection> ConnectionFactory => NodeHost.CreateDbConnection;
         private Host NodeHost { get; }
 
         #endregion
@@ -75,15 +76,27 @@ namespace openXDA.WebHosting
 
         private IHttpController LookUpNodeController(HttpRequestMessage request)
         {
+            INode node = null;
             IHttpRouteData routeData = request.GetRouteData();
 
-            if (!routeData.Values.TryGetValue("node", out object value))
-                return null;
+            if (routeData.Values.TryGetValue("node", out object value))
+            {
+                if (!int.TryParse($"{value}", out int nodeID))
+                    return null;
 
-            if (!int.TryParse($"{value}", out int nodeID))
-                return null;
+                node = NodeHost.GetNode(nodeID);
+            }
+            else if (routeData.Values.TryGetValue(nameof(NodeIDSelector), out object selector))
+            {
+                if (!(selector is NodeIDSelector nodeIDSelector))
+                    throw new InvalidOperationException();
 
-            INode node = NodeHost.GetNode(nodeID);
+                int nodeID;
+                try { nodeID = nodeIDSelector(NodeHost, request); }
+                catch (HttpResponseException) { return null; }
+                node = NodeHost.GetNode(nodeID);
+            }
+
             return node?.CreateWebController();
         }
 

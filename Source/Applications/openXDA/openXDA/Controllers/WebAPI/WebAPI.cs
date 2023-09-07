@@ -42,7 +42,7 @@ using SystemCenter.Model;
 namespace openXDA.Controllers.WebAPI
 {
     [RoutePrefix("api/Meter")]
-    public class MeterController : ModelController<Meter> {
+    public class MeterController : ModelController<SystemCenter.Model.DetailedMeter> {
         [HttpGet, Route("Sapphire")]
         public IHttpActionResult GetSapphireMeters()
         {
