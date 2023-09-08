@@ -998,7 +998,7 @@ namespace FaultData.DataResources
             fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
 
             fault.IsSuppressed =
-                (double.IsNaN(postfaultPeak) && viDataGroup.DefinedCurrents > 1) ||
+                (double.IsNaN(postfaultPeak) && viDataGroup.DefinedPhaseCurrents > 1) ||
                 (!double.IsNaN(postfaultPeak) && postfaultPeak > BreakerSettings.OpenBreakerThreshold) ||
                 !AskSCADAIfBreakerOpened(dataGroup.Asset, fault.ClearingTime);
 

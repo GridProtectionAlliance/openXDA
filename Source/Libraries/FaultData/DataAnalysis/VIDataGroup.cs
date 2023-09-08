@@ -225,12 +225,18 @@ namespace FaultData.DataAnalysis
         public int DefinedCurrents =>
             CurrentIndexes.Count(index => index >= 0);
 
+        public int DefinedPhaseCurrents =>
+            PhaseCurrentIndexes.Count(index => index >= 0);
+
         public bool AllVIChannelsDefined =>
             m_vIndices[0].AllVoltagesDefined &&
             CurrentIndexes.All(index => index >= 0);
 
         private int[] CurrentIndexes =>
             new int[] { m_iaIndex, m_ibIndex, m_icIndex, m_irIndex };
+
+        private int[] PhaseCurrentIndexes =>
+            new int[] { m_iaIndex, m_ibIndex, m_icIndex };
 
         public Asset Asset => m_dataGroup.Asset;
 
