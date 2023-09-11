@@ -5809,24 +5809,31 @@ CREATE FUNCTION RecursiveMeterSearch(@assetGroupID int)
 RETURNS TABLE
 AS
 RETURN
-    WITH AssetGroupHeirarchy AS
+    WITH AssetGroupHierarchy AS
     (
-        SELECT ParentAssetGroupID, ChildAssetGroupID
+        SELECT
+            AssetGroupAssetGroup.ParentAssetGroupID,
+            AssetGroupAssetGroup.ChildAssetGroupID,
+            1 Depth
         FROM AssetGroupAssetGroup
-        WHERE ParentAssetGroupID = @assetGroupID  -- anchor member
+        WHERE AssetGroupAssetGroup.ParentAssetGroupID = @assetGroupID
         UNION ALL
-        SELECT b.ParentAssetGroupID, a.ChildAssetGroupID -- recursive member
+        SELECT
+            AssetGroupHierarchy.ParentAssetGroupID,
+            AssetGroupAssetGroup.ChildAssetGroupID,
+            AssetGroupHierarchy.Depth + 1 Depth
         FROM
-            AssetGroupAssetGroup AS a JOIN
-            AssetGroupHeirarchy AS b ON b.ChildAssetGroupID = a.ParentAssetGroupID
+            AssetGroupHierarchy JOIN
+            AssetGroupAssetGroup ON AssetGroupHierarchy.ChildAssetGroupID = AssetGroupAssetGroup.ParentAssetGroupID
+        WHERE AssetGroupHierarchy.Depth < 10
     )
     SELECT DISTINCT MeterID AS ID
     FROM
         MeterAssetGroup LEFT JOIN
-        AssetGroupHeirarchy ON MeterAssetGroup.AssetGroupID = AssetGroupHeirarchy.ChildAssetGroupID
+        AssetGroupHierarchy ON MeterAssetGroup.AssetGroupID = AssetGroupHierarchy.ChildAssetGroupID
     WHERE
         MeterAssetGroup.AssetGroupID = @assetGroupID OR
-        MeterAssetGroup.AssetGroupID IN (SELECT ChildAssetGroupID FROM AssetGroupHeirarchy)
+        MeterAssetGroup.AssetGroupID IN (SELECT ChildAssetGroupID FROM AssetGroupHierarchy)
 GO
 
 
