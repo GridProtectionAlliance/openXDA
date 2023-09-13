@@ -48,7 +48,7 @@ namespace FaultData.DataResources
         public override void Initialize(MeterDataSet meterDataSet)
         {
             EventClassification classification = EventClassification.Swell;
-            VoltageDisturbanceAnalyzer voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsSwell, IsMoreSevere, classification, meterDataSet.CreateDbConnection);
+            VoltageDisturbanceAnalyzer voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsSwell, IsMoreSevere, classification);
             voltageDisturbanceAnalyzer.Initialize(meterDataSet);
 
             Swells = voltageDisturbanceAnalyzer.Disturbances;

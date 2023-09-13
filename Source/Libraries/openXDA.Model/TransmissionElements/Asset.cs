@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -427,6 +426,28 @@ namespace openXDA.Model
             if (paths.Count > 0)
                 return (paths.Min() + 1);
             return -1;
+        }
+
+        public T QueryAs<T>(AdoDataConnection connection = null) where T : Asset, new()
+        {
+            if (this is T typedAsset)
+                return typedAsset;
+
+            if (connection is null && ConnectionFactory is null)
+                throw new ArgumentNullException(nameof(connection));
+
+            Lazy<AdoDataConnection> lazyConnection = new Lazy<AdoDataConnection>(ConnectionFactory);
+
+            try
+            {
+                TableOperations<T> table = new TableOperations<T>(connection ?? lazyConnection.Value);
+                return table.QueryRecordWhere("ID = {0}", ID);
+            }
+            finally
+            {
+                if (lazyConnection.IsValueCreated)
+                    lazyConnection.Value.Dispose();
+            }
         }
 
         #endregion

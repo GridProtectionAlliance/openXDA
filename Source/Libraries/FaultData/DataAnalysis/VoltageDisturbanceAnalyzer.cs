@@ -33,8 +33,6 @@ using GSF.PQDIF.Logical;
 using openXDA.Configuration;
 using openXDA.Model;
 using Phase = GSF.PQDIF.Logical.Phase;
-using GSF.Data;
-using GSF.Data.Model;
 
 namespace FaultData.DataAnalysis
 {
@@ -49,23 +47,21 @@ namespace FaultData.DataAnalysis
 
         private Dictionary<DataGroup, List<Disturbance>> m_disturbances;
 
-        private Func<AdoDataConnection> ConnectionFactory { get; }
         #endregion
 
         #region [ Constructors ]
 
-        public VoltageDisturbanceAnalyzer(Func<DataPoint, bool> isDisturbed, Func<double, double, bool> isMoreSevere, EventClassification eventType, Func<AdoDataConnection> connectionFactory)
+        public VoltageDisturbanceAnalyzer(Func<DataPoint, bool> isDisturbed, Func<double, double, bool> isMoreSevere, EventClassification eventType)
         {
-            if ((object)isDisturbed == null)
+            if (isDisturbed is null)
                 throw new ArgumentNullException(nameof(isDisturbed));
 
-            if ((object)isMoreSevere == null)
+            if (isMoreSevere is null)
                 throw new ArgumentNullException(nameof(isMoreSevere));
 
             m_isDisturbed = isDisturbed;
             m_isMoreSevere = isMoreSevere;
             m_eventType = eventType;
-            ConnectionFactory = connectionFactory;
         }
 
         #endregion
@@ -311,7 +307,7 @@ namespace FaultData.DataAnalysis
 
         private DataSeries ToPerUnit(DataSeries rms)
         {
-            double nominalValue = rms?.SeriesInfo.Channel.PerUnitValue ?? GetLineVoltage(rms);
+            double nominalValue = rms?.SeriesInfo.Channel.PerUnitValue ?? GetAssetVoltage(rms);
 
             if (nominalValue == 0.0D)
                 return null;
@@ -319,32 +315,34 @@ namespace FaultData.DataAnalysis
             return rms?.Multiply(1.0D / nominalValue);
         }
 
-        private double GetLineVoltage(DataSeries rms)
+        private double GetAssetVoltage(DataSeries rms)
         {
-            //special case for Transformers..
-            double lineVoltage = rms?.SeriesInfo.Channel.Asset.VoltageKV ?? 0.0D;
+            if (rms is null)
+                return 0.0D;
 
-            if (rms?.SeriesInfo.Channel.Asset.AssetTypeID == (int)AssetType.Transformer && rms?.SeriesInfo.Channel.ConnectionPriority == 2)
+            Channel channel = rms.SeriesInfo.Channel;
+
+            double assetVoltage = channel.Asset.AssetTypeID == (int)AssetType.Transformer
+                ? GetTransformerVoltage(channel)
+                : channel.Asset.VoltageKV;
+
+            if (new string[] { "AN", "BN", "CN" }.Contains(channel.Phase.Name))
+                assetVoltage /= Math.Sqrt(3.0D);
+
+            return assetVoltage * 1000.0D;
+        }
+
+        private double GetTransformerVoltage(Channel channel)
+        {
+            int connectionPriority = channel.ConnectionPriority;
+            Transformer transformer = channel.Asset.QueryAs<Transformer>();
+
+            switch (connectionPriority)
             {
-                using (AdoDataConnection connection = ConnectionFactory?.Invoke())
-                {
-                    Transformer xfr = new TableOperations<Transformer>(connection).QueryRecordWhere("AssetID = {0}", rms?.SeriesInfo.Channel.Asset?.ID);
-                    lineVoltage = xfr?.SecondaryVoltageKV ?? 0.0D;
-                }
+                default: return transformer.PrimaryVoltageKV;
+                case 2: return transformer.SecondaryVoltageKV;
+                case 3: return transformer.TertiaryVoltageKV;
             }
-            if (rms?.SeriesInfo.Channel.Asset.AssetTypeID == (int)AssetType.Transformer && rms?.SeriesInfo.Channel.ConnectionPriority == 3)
-            {
-                using (AdoDataConnection connection = ConnectionFactory?.Invoke())
-                {
-                    Transformer xfr = new TableOperations<Transformer>(connection).QueryRecordWhere("AssetID = {0}", rms?.SeriesInfo.Channel.Asset?.ID);
-                    lineVoltage = xfr?.TertiaryVoltageKV ?? 0.0D;
-                }
-            }
-
-            if (new string[] { "AN", "BN", "CN" }.Contains(rms?.SeriesInfo.Channel.Phase.Name))
-                lineVoltage /= Math.Sqrt(3.0D);
-
-            return lineVoltage * 1000.0D;
         }
 
         private List<Range<int>> DetectDisturbanceRanges(DataSeries rms)
@@ -445,7 +443,7 @@ namespace FaultData.DataAnalysis
 
         private Disturbance ToDisturbance(DataSeries rms, Range<int> range, Phase phase)
         {
-            double nominalValue = rms.SeriesInfo.Channel.PerUnitValue ?? GetLineVoltage(rms);
+            double nominalValue = rms.SeriesInfo.Channel.PerUnitValue ?? GetAssetVoltage(rms);
             Disturbance disturbance = new Disturbance();
 
             disturbance.EventType = m_eventType;
@@ -458,24 +456,6 @@ namespace FaultData.DataAnalysis
             disturbance.PerUnitMagnitude = disturbance.Magnitude / nominalValue;
 
             return disturbance;
-        }
-
-        private Range<int> ToRange(DataGroup dataGroup, ReportedDisturbance disturbance)
-        {
-            if (dataGroup.Samples == 0)
-                return null;
-
-            DateTime startTime = disturbance.Time;
-            DateTime endTime = startTime + disturbance.Duration;
-
-            TimeSpan eventSpan = dataGroup.EndTime - dataGroup.StartTime;
-            TimeSpan startSpan = startTime - dataGroup.StartTime;
-            TimeSpan endSpan = endTime - dataGroup.EndTime;
-
-            int startIndex = (int)(startSpan.TotalSeconds / eventSpan.TotalSeconds * dataGroup.Samples);
-            int endIndex = (int)(endSpan.TotalSeconds / eventSpan.TotalSeconds * dataGroup.Samples);
-
-            return new Range<int>(startIndex, endIndex);
         }
 
         private Range<int> ToRange(Disturbance disturbance)

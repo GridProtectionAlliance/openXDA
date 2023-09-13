@@ -54,7 +54,7 @@ namespace FaultData.DataResources
         public override void Initialize(MeterDataSet meterDataSet)
         {
             EventClassification classification = EventClassification.Sag;
-            VoltageDisturbanceAnalyzer voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsSag, IsMoreSevere, classification, meterDataSet.CreateDbConnection);
+            VoltageDisturbanceAnalyzer voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsSag, IsMoreSevere, classification);
             voltageDisturbanceAnalyzer.Initialize(meterDataSet);
 
             Sags = voltageDisturbanceAnalyzer.Disturbances;
