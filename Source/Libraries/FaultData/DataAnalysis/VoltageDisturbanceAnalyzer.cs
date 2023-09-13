@@ -33,6 +33,8 @@ using GSF.PQDIF.Logical;
 using openXDA.Configuration;
 using openXDA.Model;
 using Phase = GSF.PQDIF.Logical.Phase;
+using GSF.Data;
+using GSF.Data.Model;
 
 namespace FaultData.DataAnalysis
 {
@@ -47,11 +49,12 @@ namespace FaultData.DataAnalysis
 
         private Dictionary<DataGroup, List<Disturbance>> m_disturbances;
 
+        private Func<AdoDataConnection> ConnectionFactory { get; }
         #endregion
 
         #region [ Constructors ]
 
-        public VoltageDisturbanceAnalyzer(Func<DataPoint, bool> isDisturbed, Func<double, double, bool> isMoreSevere, EventClassification eventType)
+        public VoltageDisturbanceAnalyzer(Func<DataPoint, bool> isDisturbed, Func<double, double, bool> isMoreSevere, EventClassification eventType, Func<AdoDataConnection> connectionFactory)
         {
             if ((object)isDisturbed == null)
                 throw new ArgumentNullException(nameof(isDisturbed));
@@ -62,6 +65,7 @@ namespace FaultData.DataAnalysis
             m_isDisturbed = isDisturbed;
             m_isMoreSevere = isMoreSevere;
             m_eventType = eventType;
+            ConnectionFactory = connectionFactory;
         }
 
         #endregion
@@ -319,6 +323,23 @@ namespace FaultData.DataAnalysis
         {
             //special case for Transformers..
             double lineVoltage = rms?.SeriesInfo.Channel.Asset.VoltageKV ?? 0.0D;
+
+            if (rms?.SeriesInfo.Channel.Asset.AssetTypeID == (int)AssetType.Transformer && rms?.SeriesInfo.Channel.ConnectionPriority == 2)
+            {
+                using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+                {
+                    Transformer xfr = new TableOperations<Transformer>(connection).QueryRecordWhere("AssetID = {0}", rms?.SeriesInfo.Channel.Asset?.ID);
+                    lineVoltage = xfr?.SecondaryVoltageKV ?? 0.0D;
+                }
+            }
+            if (rms?.SeriesInfo.Channel.Asset.AssetTypeID == (int)AssetType.Transformer && rms?.SeriesInfo.Channel.ConnectionPriority == 3)
+            {
+                using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+                {
+                    Transformer xfr = new TableOperations<Transformer>(connection).QueryRecordWhere("AssetID = {0}", rms?.SeriesInfo.Channel.Asset?.ID);
+                    lineVoltage = xfr?.TertiaryVoltageKV ?? 0.0D;
+                }
+            }
 
             if (new string[] { "AN", "BN", "CN" }.Contains(rms?.SeriesInfo.Channel.Phase.Name))
                 lineVoltage /= Math.Sqrt(3.0D);
