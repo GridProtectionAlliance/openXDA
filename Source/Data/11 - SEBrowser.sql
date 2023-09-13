@@ -208,53 +208,54 @@ CREATE TABLE [SEBrowser.Widget] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name varchar(50) NOT NULL DEFAULT(1),
     Setting varchar(max) NOT NULL Default(''),
+    Type varchar(max) NOT NULL Default('EventSearchOpenSEE'),
     Enabled BIT NOT NULL
 )
 GO
 
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchOpenSEE', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchOpenSEE','EventSearchOpenSEE', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchFaultSegments', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchFaultSegments', 'EventSearchFaultSegments', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchAssetVoltageDisturbances', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchAssetVoltageDisturbances','EventSearchAssetVoltageDisturbances', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVAESRIMap', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVAESRIMap','TVAESRIMap', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVAFaultInfo', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVAFaultInfo','TVAFaultInfo', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('LineParameters', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('LineParameters','LineParameters', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVALightning', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVALightning', 'TVALightning', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVAStructureInfo', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVAStructureInfo', 'TVAStructureInfo', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('AssetHistoryTable', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('AssetHistoryTable', 'AssetHistoryTable', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('AssetHistoryStats', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('AssetHistoryStats','AssetHistoryStats', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchCorrelatedSags', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchCorrelatedSags', 'EventSearchCorrelatedSags', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVASIDA', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVASIDA','TVASIDA', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVASOE', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVASOE', 'TVASOE' 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVASLC', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVASLC','TVASLC', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('TVAPQWeb', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVAPQWeb','TVAPQWeb', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('HECCOIR', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('HECCOIR','HECCOIR', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('pqi', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('pqi','pqi', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchFileInfo', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchFileInfo','EventSearchFileInfo,' 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchNoteWindow', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchNoteWindow','EventSearchNoteWindow', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchRelayPerformance', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchRelayPerformance','EventSearchRelayPerformance', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchBreakerPerformance', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchBreakerPerformance','EventSearchBreakerPerformance', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Enabled) VALUES ('EventSearchCapBankAnalyticOverview', 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchCapBankAnalyticOverview','EventSearchCapBankAnalyticOverview', 1)
 GO
 
 
