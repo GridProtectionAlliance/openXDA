@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  WebAPI.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright ï¿½ 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -80,7 +80,7 @@ namespace openXDA.Controllers.WebAPI
                     Select * from (select 
                         MeterDetail.*, AF.Value, AF.FieldName
                     from 
-                        [TVAOpenXDA].[dbo].[MeterDetail] left join (SELECT
+                        MeterDetail left join (SELECT
                             AdditionalFieldValue.ID,
                             AdditionalField.FieldName,
                             AdditionalFieldValue.Value,
