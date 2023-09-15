@@ -147,7 +147,8 @@ CREATE TABLE ConfigFileChanges(
 	Changes INT NOT NULL,
 	Html VARCHAR(MAX) NOT NULL,
     Text VARCHAR(MAX) NOT NULL,
-	Constraint UC_ConfigFileChanges UNIQUE(MeterID, [FileName], LastWriteTime)
+	Constraint UC_ConfigFileChanges UNIQUE(MeterID, [FileName], LastWriteTime),
+	ValidChange BIT NOT NULL
 )
 GO
 
