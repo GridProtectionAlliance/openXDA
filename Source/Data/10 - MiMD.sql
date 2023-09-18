@@ -162,6 +162,16 @@ CREATE TABLE [MiMD.ConfigFileRules](
 );
 GO
 
+CREATE TABLE [MiMD.ColorConfig] (
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Color VARCHAR(255) NOT NULL,
+    Threshold INT NOT NULL,
+);
+
+INSERT INTO [MiMD.ColorConfig] (Color, Threshold) VALUES ('#FF0000', 1);
+INSERT INTO [MiMD.ColorConfig] (Color, Threshold) VALUES ('#FFA500', 7);  
+INSERT INTO [MiMD.ColorConfig] (Color, Threshold) VALUES ('#FFFF00', 30);
+
 CREATE TABLE AppStatusFileChanges(
 	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	MeterID INT NOT NULL,
