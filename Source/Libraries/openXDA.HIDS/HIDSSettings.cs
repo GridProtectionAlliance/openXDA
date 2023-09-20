@@ -43,6 +43,10 @@ namespace openXDA.HIDS
         public string PointBucket { get; set; }
 
         [Setting]
+        [DefaultValue("histogram_bucket")]
+        public string HistogramBucket { get; set; }
+
+        [Setting]
         [DefaultValue("gpa")]
         public string OrganizationID { get; set; }
     }

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Collections;
 using GSF.IO;
@@ -112,7 +113,16 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         #endregion
 
+        #region [ Constructors ]
+
+        public FileProcessorIndex(string fileGroupingPattern) =>
+            FileGroupingRegex = new Regex(fileGroupingPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        #endregion
+
         #region [ Properties ]
+
+        private Regex FileGroupingRegex { get; }
 
         private HashSet<string> DirectoryIndex { get; }
             = new HashSet<string>();
@@ -134,7 +144,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             var groupings = FilePath
                 .EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly, HandleException)
-                .GroupBy(path => Path.ChangeExtension(path, ".*"));
+                .GroupBy(GetFileGroupKey);
 
             foreach (var grouping in groupings)
             {
@@ -149,7 +159,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             string directory = Path.GetDirectoryName(filePath);
             Scan(directory);
 
-            string key = Path.ChangeExtension(filePath, ".*");
+            string key = GetFileGroupKey(filePath);
             FileGroupEntry fileGroupEntry = FileGroupIndex.GetOrAdd(key, _ => new FileGroupEntry());
             fileGroupEntry.Add(filePath);
             fileGroupEntry.Prune();
@@ -157,6 +167,16 @@ namespace openXDA.Nodes.Types.FileProcessing
             FileInfo[] GetFileGroup() => fileGroupEntry.FileGroup;
             FileGroupInfo fileGroupInfo = new FileGroupInfo(key, GetFileGroup);
             return fileGroupInfo;
+        }
+
+        private string GetFileGroupKey(string filePath)
+        {
+            Match match = FileGroupingRegex.Match(filePath);
+
+            if (!match.Success)
+                return null;
+
+            return match.Groups["FileGroupKey"]?.Value;
         }
 
         #endregion

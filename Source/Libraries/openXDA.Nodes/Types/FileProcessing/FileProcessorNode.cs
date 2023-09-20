@@ -37,7 +37,6 @@ using System.Web.Http.Controllers;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
-using GSF.Data.Model;
 using GSF.IO;
 using GSF.Threading;
 using log4net;
@@ -123,6 +122,8 @@ namespace openXDA.Nodes.Types.FileProcessing
         }
 
         // Fields
+        private FileProcessorIndex m_fileProcessorIndex;
+
         private int m_scannedFileCount;
         private int m_processedFileCount;
         private int m_skippedFileCount;
@@ -136,7 +137,8 @@ namespace openXDA.Nodes.Types.FileProcessing
             : base(host, definition, type)
         {
             FileProcessor = new FileProcessor();
-            FileProcessorIndex = new FileProcessorIndex();
+            FileProcessor.Processing += FileProcessor_Processing;
+            FileProcessor.Error += FileProcessor_Error;
 
             Action pollingFunction = GetPollingFunction();
             void LogException(Exception ex) => Log.Error(ex.Message, ex);
@@ -153,8 +155,6 @@ namespace openXDA.Nodes.Types.FileProcessing
         #region [ Properties ]
 
         private FileProcessor FileProcessor { get; }
-        private FileProcessorIndex FileProcessorIndex { get; }
-
         private ConcurrentQueue<WorkItem> WorkQueue { get; }
         private ISynchronizedOperation PollOperation { get; }
         private TaskSynchronizedOperation NotifyOperation { get; }
@@ -162,6 +162,12 @@ namespace openXDA.Nodes.Types.FileProcessing
         private string Filter { get; set; }
         private int ProcessingThreadCount { get; set; }
         private IEnumerable<FileShare> FileShares { get; set; }
+
+        private FileProcessorIndex FileProcessorIndex
+        {
+            get => Interlocked.CompareExchange(ref m_fileProcessorIndex, null, null);
+            set => Interlocked.Exchange(ref m_fileProcessorIndex, value);
+        }
 
         private int ScannedFileCount =>
             Interlocked.CompareExchange(ref m_scannedFileCount, 0, 0);
@@ -189,8 +195,16 @@ namespace openXDA.Nodes.Types.FileProcessing
             if (IsDisposed)
                 return;
 
-            try { FileProcessor.Dispose(); }
-            finally { IsDisposed = true; }
+            try
+            {
+                FileProcessor.Processing -= FileProcessor_Processing;
+                FileProcessor.Error -= FileProcessor_Error;
+                FileProcessor.Dispose();
+            }
+            finally
+            {
+                IsDisposed = true;
+            }
         }
 
         protected override void OnReconfigure(Action<object> configurator) =>
@@ -408,13 +422,13 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         private void ConfigureFileProcessor(Settings settings)
         {
+            FileProcessorIndex = new FileProcessorIndex(settings.FileProcessorSettings.FileGroupingPattern);
+
             FileProcessor.FolderExclusion = settings.FileEnumeratorSettings.FolderExclusion;
             FileProcessor.InternalBufferSize = settings.FileWatcherSettings.BufferSize;
             FileProcessor.EnumerationStrategy = settings.FileEnumeratorSettings.Strategy;
             FileProcessor.MaxThreadCount = settings.FileWatcherSettings.InternalThreadCount;
             FileProcessor.TrackChanges = true;
-            FileProcessor.Processing += FileProcessor_Processing;
-            FileProcessor.Error += FileProcessor_Error;
 
             IReadOnlyCollection<string> watchDirectories = settings.FileWatcherSettings.WatchDirectoryList;
 

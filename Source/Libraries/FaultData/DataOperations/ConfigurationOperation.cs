@@ -754,6 +754,9 @@ namespace FaultData.DataOperations
                     }
                 }
 
+                if (parsedMeter.Channels is null)
+                    return;
+
                 IEnumerable<ChannelKey> parsedChannelKeys = parsedMeter.Channels
                     .Concat(allDataSeries.Select(dataSeries => dataSeries.SeriesInfo.Channel))
                     .Where(channel => (object)channel.Asset != null)

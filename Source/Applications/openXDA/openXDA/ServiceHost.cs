@@ -77,6 +77,7 @@ using System.Net.Http;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
+using FaultData;
 using GSF;
 using GSF.Configuration;
 using GSF.Console;

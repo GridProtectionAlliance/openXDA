@@ -31,6 +31,7 @@ using System.Text;
 using System.Threading;
 using System.Web.Http;
 using System.Web.Http.Controllers;
+using FaultData;
 using FaultData.DataOperations;
 using FaultData.DataWriters.Emails;
 using GSF.Configuration;

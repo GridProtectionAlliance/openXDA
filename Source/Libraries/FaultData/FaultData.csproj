@@ -135,6 +135,7 @@
     <Compile Include="DataOperations\TVA\RealTimeLightningDataOperation.cs" />
     <Compile Include="DataOperations\TVA\RealTimeLightningDataProvider.cs" />
     <Compile Include="DataOperations\TVA\StructureQueryOperation.cs" />
+    <Compile Include="DataReaders\CyclicHistogramReader.cs" />
     <Compile Include="DataReaders\DataReaderFactory.cs" />
     <Compile Include="DataReaders\NullDataReader.cs" />
     <Compile Include="DataReaders\SELLDPReader.cs" />
@@ -162,6 +163,7 @@
     <Compile Include="DataResources\SnapshotDataResource.cs" />
     <Compile Include="DataResources\TransientDataResource.cs" />
     <Compile Include="DataSets\AnalysisDataSet.cs" />
+    <Compile Include="DataSets\CyclicHistogramDataSet.cs" />
     <Compile Include="DataSets\GTC\BreakerRestrikeDataSet.cs" />
     <Compile Include="DataSets\IDataSet.cs" />
     <Compile Include="DataResources\TrendingDataSummaryResource.cs" />
@@ -180,6 +182,7 @@
     <Compile Include="DataWriters\GTC\FTTRecord.cs" />
     <Compile Include="DataWriters\LightningGenerator.cs" />
     <Compile Include="DataWriters\PQIGenerator.cs" />
+    <Compile Include="TimeZoneConverter.cs" />
     <None Include="DataWriters\XMLWriter.cs" />
     <Compile Include="DataSets\MeterDataSet.cs" />
     <Compile Include="DataWriters\StructureLocationGenerator.cs" />
