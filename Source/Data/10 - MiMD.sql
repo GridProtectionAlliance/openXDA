@@ -331,6 +331,7 @@ CREATE TABLE [MiMD.ComplianceFieldValue] (
 	ActionId INT NOT NULL  FOREIGN KEY REFERENCES [MiMD.ComplianceAction](ID),
 	FieldId INT NOT NULL  FOREIGN KEY REFERENCES [MiMD.ComplianceField](ID),
 	Value VARCHAR(MAX) NOT NULL,
+	PreVal VARCHAR(MAX) NOT NULL DEFAULT '0'
 )
 GO
 
@@ -364,7 +365,8 @@ SELECT
 	[MiMD.ComplianceAction].RecordId AS RecordID,
 	MAX([MiMD.ComplianceField].Name) AS FieldName,
     MAX([MiMD.ComplianceField].Category) AS FieldCategory,
-    MAX([MiMD.ComplianceField].Label) AS FieldLabel
+    MAX([MiMD.ComplianceField].Label) AS FieldLabel,
+	MAX([MiMD.ComplianceFieldValue].PreVal) AS PreVal
 	FROM [MiMD.ComplianceFieldValue] Left JOIN
 		[MiMD.ComplianceAction] ON [MiMD.ComplianceFieldValue].ActionId = [MiMD.ComplianceAction].ID LEFT JOIN
 		[MiMD.ComplianceField] ON [MiMD.ComplianceField].ID = [MiMD.ComplianceFieldValue].FieldId LEFT JOIN
