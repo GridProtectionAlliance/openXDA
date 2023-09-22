@@ -147,9 +147,30 @@ CREATE TABLE ConfigFileChanges(
 	Changes INT NOT NULL,
 	Html VARCHAR(MAX) NOT NULL,
     Text VARCHAR(MAX) NOT NULL,
-	Constraint UC_ConfigFileChanges UNIQUE(MeterID, [FileName], LastWriteTime)
+	Constraint UC_ConfigFileChanges UNIQUE(MeterID, [FileName], LastWriteTime),
+	ValidChange BIT NOT NULL Default 1
 )
 GO
+
+CREATE TABLE [MiMD.ConfigFileRules](
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Pattern VARCHAR(500) NOT NULL,
+	Field VARCHAR(255) NOT NULL,
+	[Value] VARCHAR(255) NOT NULL,
+	Comparison VARCHAR(50) NOT NULL,
+	FieldType VARCHAR(50) NOT NULL
+);
+GO
+
+CREATE TABLE [MiMD.ColorConfig] (
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Color VARCHAR(255) NOT NULL,
+    Threshold INT NOT NULL,
+);
+
+INSERT INTO [MiMD.ColorConfig] (Color, Threshold) VALUES ('#FF0000', 1);
+INSERT INTO [MiMD.ColorConfig] (Color, Threshold) VALUES ('#FFA500', 7);  
+INSERT INTO [MiMD.ColorConfig] (Color, Threshold) VALUES ('#FFFF00', 30);
 
 CREATE TABLE AppStatusFileChanges(
 	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -258,7 +279,7 @@ GO
 
 CREATE TABLE [MiMD.ComplianceState] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
-  Description VARCHAR(MAX) NOT NULL,
+	Description VARCHAR(MAX) NOT NULL,
 	Color VARCHAR(10) NOT NULL,
 	TextColor VARCHAR(10) NOT NULL,
 	Priority INT NOT NULL
@@ -269,13 +290,14 @@ GO
 CREATE TABLE [MiMD.ComplianceField] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
 	BaseConfigId INT  NOT NULL FOREIGN KEY REFERENCES [MiMD.BaseConfig](ID),
-  Name VARCHAR(MAX) NOT NULL,
-  Label VARCHAR(MAX) NULL,
-  Category VARCHAR(MAX) NULL,
+	Name VARCHAR(MAX) NOT NULL,
+	Label VARCHAR(MAX) NULL,
+	Category VARCHAR(MAX) NULL,
 	Value VARCHAR(MAX) NOT NULL,
 	Comparison VARCHAR(2) NOT NULL,
 	FieldType VARCHAR(10) NOT NULL DEFAULT('string'),
-  Description VARCHAR(MAX) NULL
+	Description VARCHAR(MAX) NULL,
+	PreVal VARCHAR(MAX) NOT NULL DEFAULT('0')
 )
 GO
 
@@ -298,8 +320,8 @@ CREATE TABLE [MiMD.ComplianceAction] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
 	RecordId INT NOT NULL  FOREIGN KEY REFERENCES [MiMD.ComplianceRecord](ID),
 	Note VARCHAR(MAX) NOT NULL,
-  UserAccount VARCHAR(MAX) NULL DEFAULT 'MiMD',
-  Timestamp DATETIME NOT NULL DEFAULT GETUTCDATE(),
+	UserAccount VARCHAR(MAX) NULL DEFAULT 'MiMD',
+	Timestamp DATETIME NOT NULL DEFAULT GETUTCDATE(),
 	StateId INT FOREIGN KEY REFERENCES [MiMD.ComplianceState](ID)
 )
 GO
@@ -309,6 +331,7 @@ CREATE TABLE [MiMD.ComplianceFieldValue] (
 	ActionId INT NOT NULL  FOREIGN KEY REFERENCES [MiMD.ComplianceAction](ID),
 	FieldId INT NOT NULL  FOREIGN KEY REFERENCES [MiMD.ComplianceField](ID),
 	Value VARCHAR(MAX) NOT NULL,
+	PreVal VARCHAR(MAX) NOT NULL DEFAULT '0'
 )
 GO
 
@@ -342,7 +365,8 @@ SELECT
 	[MiMD.ComplianceAction].RecordId AS RecordID,
 	MAX([MiMD.ComplianceField].Name) AS FieldName,
     MAX([MiMD.ComplianceField].Category) AS FieldCategory,
-    MAX([MiMD.ComplianceField].Label) AS FieldLabel
+    MAX([MiMD.ComplianceField].Label) AS FieldLabel,
+	MAX([MiMD.ComplianceFieldValue].PreVal) AS PreVal
 	FROM [MiMD.ComplianceFieldValue] Left JOIN
 		[MiMD.ComplianceAction] ON [MiMD.ComplianceFieldValue].ActionId = [MiMD.ComplianceAction].ID LEFT JOIN
 		[MiMD.ComplianceField] ON [MiMD.ComplianceField].ID = [MiMD.ComplianceFieldValue].FieldId LEFT JOIN
