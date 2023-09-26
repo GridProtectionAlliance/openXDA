@@ -167,10 +167,14 @@ CREATE TABLE [MiMD.ColorConfig] (
     Color VARCHAR(255) NOT NULL,
     Threshold INT NOT NULL,
 );
+GO
 
 INSERT INTO [MiMD.ColorConfig] (Color, Threshold) VALUES ('#FF0000', 1);
+GO
 INSERT INTO [MiMD.ColorConfig] (Color, Threshold) VALUES ('#FFA500', 7);  
+GO
 INSERT INTO [MiMD.ColorConfig] (Color, Threshold) VALUES ('#FFFF00', 30);
+GO
 
 CREATE TABLE AppStatusFileChanges(
 	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
