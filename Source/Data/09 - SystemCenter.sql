@@ -300,3 +300,5 @@ INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.APITok
 GO
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.ClientID', 'LocalXDAClient', 'LocalXDAClient')
 GO
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('FAWG.Enabled', 'False', 'False')
+GO
