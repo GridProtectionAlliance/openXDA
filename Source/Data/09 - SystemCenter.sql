@@ -237,7 +237,10 @@ CREATE TABLE [LocationDrawing] (
     LocationID INT not null FOREIGN KEY REFERENCES Location(ID),
     Name VARCHAR(200) NOT NUll,
     Link VARCHAR(max) NOT NUll,
-    Description VARCHAR(max) NULL
+    Description VARCHAR(max) NULL,
+    Number VARCHAR(200) NULL,
+    Category VARCHAR(max) NULL,
+    CONSTRAINT UC_SystemCenter_LocationDrawing_Number UNIQUE (Number)
 )
 GO
 

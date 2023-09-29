@@ -43,5 +43,7 @@ namespace SystemCenter.Model
         [Required]
         public string Link { get; set; }
         public string Description { get; set; }
+        public string Number { get; set; }
+        public string Category { get; set; }
     }
 }
