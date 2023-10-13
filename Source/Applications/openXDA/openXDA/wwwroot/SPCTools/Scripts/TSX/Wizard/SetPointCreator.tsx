@@ -223,8 +223,6 @@ const SetPointEditor = (props: { alarmDayID: number, startHour: number, label?: 
         (alarmValue != undefined ? (alarmValue.EndHour != undefined ? ((alarmValue.EndHour > 9 ? '' : '0') + alarmValue.EndHour) : 24) : '') +  ')')
         : props.label)
 
-    console.log('text:', text)
-
     return (
         <div className="col">
             <TextArea
