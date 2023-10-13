@@ -138,13 +138,10 @@ const SetPointCreator = (props: IProps) => {
                     </div>
                 </div>
             </div>
-            <div className="row" style={{ margin: 0 }}>
+            <div className="row" style={{ margin: 0, minHeight: '20vh', maxHeight: '50vh', overflowY: 'auto' }}>
                 <div className="col">
                     <div className="row" style={{ margin: 0, }}>
                         {plot.map((item, index) => <AlarmTrendingCard ChannelID={item.ChannelID} key={index} Remove={() => RemovePlot(item.ChannelID)} Tstart={statisticsTime.start} Tend={statisticsTime.end} />)}
-                    </div>
-
-                    <div className="row" style={{ margin: 0, }}>
                         <div className="col dropdown" style={{ padding: 0 }}>
                             <div style={{ width: '100%', margin: 'auto', marginTop: '4px', height: '3em', textAlign: 'center', background: '#bbbbbb', borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px', }} data-toggle="dropdown">
                                 <a title='Toggle Graph Selection' className="btn">{Plus}</a>
@@ -180,6 +177,7 @@ const SetPointCreator = (props: IProps) => {
                     </div>
                 </div>
             </div>
+
 
         </div>      
     );
@@ -223,7 +221,9 @@ const SetPointEditor = (props: { alarmDayID: number, startHour: number, label?: 
     const lbl = (props.label == undefined ? ('(' + (alarmDay == undefined ? '' : (alarmDay.Name + ' ')) + 
         (props.startHour < 10 ? '0' : '') + props.startHour + ' - ' +
         (alarmValue != undefined ? (alarmValue.EndHour != undefined ? ((alarmValue.EndHour > 9 ? '' : '0') + alarmValue.EndHour) : 24) : '') +  ')')
-    : props.label)
+        : props.label)
+
+    console.log('text:', text)
 
     return (
         <div className="col">
