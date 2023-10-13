@@ -27,7 +27,7 @@ using System.Linq;
 
 namespace SPCTools
 {
-    public class Matrix : IArithmeticOperands
+    public class Matrix : IExpressionOperands
     {
         public List<List<double[]>> Values { get; private set; }
 
@@ -41,7 +41,7 @@ namespace SPCTools
             Values = matrix.Values;
         }
 
-        public static IArithmeticOperands operator -(IArithmeticOperands obj, Matrix matrix)
+        public static IExpressionOperands operator -(IExpressionOperands obj, Matrix matrix)
         {
             if (obj is Scalar)
             {
@@ -79,7 +79,7 @@ namespace SPCTools
             return new Matrix(result as Matrix);
         }
 
-        public static IArithmeticOperands operator +(IArithmeticOperands obj, Matrix matrix)
+        public static IExpressionOperands operator +(IExpressionOperands obj, Matrix matrix)
         {
             if (obj is Scalar)
             {
@@ -117,7 +117,7 @@ namespace SPCTools
             return new Matrix(result as Matrix);
         }
 
-        public static IArithmeticOperands operator *(IArithmeticOperands obj, Matrix matrix)
+        public static IExpressionOperands operator *(IExpressionOperands obj, Matrix matrix)
         {
             if (obj is Scalar)
             {
@@ -155,7 +155,7 @@ namespace SPCTools
             return new Matrix(result as Matrix);
         }
 
-        public static IArithmeticOperands operator /(IArithmeticOperands obj, Matrix matrix)
+        public static IExpressionOperands operator /(IExpressionOperands obj, Matrix matrix)
         {
             if (obj is Scalar)
             {

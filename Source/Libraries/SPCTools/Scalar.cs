@@ -28,7 +28,7 @@ using System.Linq;
 
 namespace SPCTools
 {
-    public class Scalar : IArithmeticOperands
+    public class Scalar : IExpressionOperands
     {
         public double Value { get; private set; }
 
@@ -43,7 +43,7 @@ namespace SPCTools
         }
 
         // Overload the + operator
-        public static IArithmeticOperands operator +(IArithmeticOperands obj, Scalar scalar)
+        public static IExpressionOperands operator +(IExpressionOperands obj, Scalar scalar)
         {
             if (obj is Scalar)
             {
@@ -77,7 +77,7 @@ namespace SPCTools
         }
 
         // Overload the - operator for Scalar cover both cases here since order of operations matter in subtraction
-        public static IArithmeticOperands operator -(IArithmeticOperands obj, Scalar scalar)
+        public static IExpressionOperands operator -(IExpressionOperands obj, Scalar scalar)
         {
             if (obj is Scalar)
             {
@@ -112,7 +112,7 @@ namespace SPCTools
 
 
         // Overload the * operator for Slice
-        public static IArithmeticOperands operator *(IArithmeticOperands obj, Scalar scalar)
+        public static IExpressionOperands operator *(IExpressionOperands obj, Scalar scalar)
         {
             if (obj is Scalar)
             {
@@ -146,7 +146,7 @@ namespace SPCTools
         }
 
         // Overload the / operator for Scalar
-        public static IArithmeticOperands operator /(IArithmeticOperands obj, Scalar scalar)
+        public static IExpressionOperands operator /(IExpressionOperands obj, Scalar scalar)
         {
             if (scalar.Value == 0)
                 throw new DivideByZeroException("Can not divide by zero");

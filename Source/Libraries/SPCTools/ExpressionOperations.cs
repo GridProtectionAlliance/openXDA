@@ -31,6 +31,20 @@ using System.Text.RegularExpressions;
 
 namespace SPCTools
 {
+    public interface IExpressionOperands { }
+
+    /// <summary>
+    /// Filter for Data when applying Setpoints
+    /// </summary>
+    public class DataFilter
+    {
+        public bool FilterZero { get; set; }
+        public bool FilterUpper { get; set; }
+        public double UpperLimit { get; set; }
+        public bool FilterLower { get; set; }
+        public double LowerLimit { get; set; }
+    }
+
     public class ExpressionOperations
     {
         private List<int> m_channels;
@@ -50,7 +64,7 @@ namespace SPCTools
             m_timeFilter = timeFilter;
         }
 
-        public static IArithmeticOperands abs(IArithmeticOperands operand)
+        public static IExpressionOperands abs(IExpressionOperands operand)
         {
             if (operand is Scalar)
             {
@@ -70,7 +84,7 @@ namespace SPCTools
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
 
-        public static IArithmeticOperands min(IArithmeticOperands operand)
+        public static IExpressionOperands min(IExpressionOperands operand)
         {
             if (operand is Scalar)
             {
@@ -91,12 +105,12 @@ namespace SPCTools
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
 
-        public static IArithmeticOperands min(double num)
+        public static IExpressionOperands min(double num)
         {
             return new Scalar(num);
         }
 
-        public static IArithmeticOperands max(IArithmeticOperands operand)
+        public static IExpressionOperands max(IExpressionOperands operand)
         {
             if (operand is Scalar)
             {
@@ -117,12 +131,12 @@ namespace SPCTools
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
 
-        public static IArithmeticOperands max(double num)
+        public static IExpressionOperands max(double num)
         {
             return new Scalar(num);
         }
 
-        public static IArithmeticOperands mean(IArithmeticOperands operand)
+        public static IExpressionOperands mean(IExpressionOperands operand)
         {
             if (operand is Scalar)
             {
@@ -144,12 +158,12 @@ namespace SPCTools
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
 
-        public static IArithmeticOperands mean(double num)
+        public static IExpressionOperands mean(double num)
         {
             return new Scalar(num);
         }
 
-        public static IArithmeticOperands stdev(IArithmeticOperands operand)
+        public static IExpressionOperands stdev(IExpressionOperands operand)
         {
             if (operand is Scalar)
             {
@@ -175,12 +189,12 @@ namespace SPCTools
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
 
-        public static IArithmeticOperands stdev(double num)
+        public static IExpressionOperands stdev(double num)
         {
             return new Scalar(0);
         }
 
-        public static IArithmeticOperands channelmin(IArithmeticOperands operand)
+        public static IExpressionOperands channelmin(IExpressionOperands operand)
         {
             if (operand is Scalar)
             {
@@ -202,12 +216,12 @@ namespace SPCTools
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
 
-        public static IArithmeticOperands channelmin(double operand)
+        public static IExpressionOperands channelmin(double operand)
         {
             return new Scalar(operand);
         }
 
-        public static IArithmeticOperands channelmax(IArithmeticOperands operand)
+        public static IExpressionOperands channelmax(IExpressionOperands operand)
         {
             if (operand is Scalar)
             {
@@ -229,12 +243,12 @@ namespace SPCTools
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
 
-        public static IArithmeticOperands channelmax(double operand)
+        public static IExpressionOperands channelmax(double operand)
         {
             return new Scalar(operand);
         }
 
-        public static IArithmeticOperands channelmean(IArithmeticOperands operand)
+        public static IExpressionOperands channelmean(IExpressionOperands operand)
         {
             if (operand is Scalar)
             {
@@ -256,12 +270,12 @@ namespace SPCTools
 
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
-        public static IArithmeticOperands channelmean(double operand)
+        public static IExpressionOperands channelmean(double operand)
         {
             return new Scalar(operand);
         }
 
-        public static IArithmeticOperands channelstdev(IArithmeticOperands operand)
+        public static IExpressionOperands channelstdev(IExpressionOperands operand)
         {
             if (operand is Scalar)
             {
@@ -286,7 +300,7 @@ namespace SPCTools
 
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
-        public static IArithmeticOperands channelstdev(double operand)
+        public static IExpressionOperands channelstdev(double operand)
         {
             return new Scalar(0);
         }
@@ -376,17 +390,17 @@ namespace SPCTools
             }
         }
 
-        private IArithmeticOperands Xmin()
+        private IExpressionOperands Xmin()
         {
             return new Matrix(m_channels.Select(ch => m_data[ch].Select(pt => new double[] { pt.Timestamp.Subtract(m_epoch).TotalMilliseconds, ApplyDataFilter(pt.Minimum) }).ToList()).ToList());
         }
 
-        private IArithmeticOperands Xavg()
+        private IExpressionOperands Xavg()
         {
             return new Matrix(m_channels.Select(ch => m_data[ch].Select(pt => new double[] { pt.Timestamp.Subtract(m_epoch).TotalMilliseconds, ApplyDataFilter(pt.Average) }).ToList()).ToList());
         }
 
-        private IArithmeticOperands Xmax()
+        private IExpressionOperands Xmax()
         {
             return new Matrix(m_channels.Select(ch => m_data[ch].Select(pt => new double[] { pt.Timestamp.Subtract(m_epoch).TotalMilliseconds, ApplyDataFilter(pt.Maximum) }).ToList()).ToList());
         }

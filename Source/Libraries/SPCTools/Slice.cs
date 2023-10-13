@@ -28,7 +28,7 @@ using System.Linq;
 
 namespace SPCTools
 {
-    public class Slice : IArithmeticOperands
+    public class Slice : IExpressionOperands
     {
         public List<double> Values { get; private set; }
 
@@ -48,7 +48,7 @@ namespace SPCTools
         }
 
         // Overload the + operator for Slice
-        public static IArithmeticOperands operator +(IArithmeticOperands obj, Slice slice)
+        public static IExpressionOperands operator +(IExpressionOperands obj, Slice slice)
         {
             if (obj is Scalar)
             {
@@ -87,7 +87,7 @@ namespace SPCTools
         }
 
         // Overload the * operator for Slice
-        public static IArithmeticOperands operator *(IArithmeticOperands obj, Slice slice)
+        public static IExpressionOperands operator *(IExpressionOperands obj, Slice slice)
         {
             if (obj is Scalar)
             {
@@ -126,7 +126,7 @@ namespace SPCTools
         }
 
         // Overload the - operator for Slice
-        public static IArithmeticOperands operator -(IArithmeticOperands obj, Slice slice)
+        public static IExpressionOperands operator -(IExpressionOperands obj, Slice slice)
         {
             if (obj is Scalar)
             {
@@ -167,7 +167,7 @@ namespace SPCTools
         }
 
         // Overload the / operator for Slice
-        public static IArithmeticOperands operator /(IArithmeticOperands obj, Slice slice)
+        public static IExpressionOperands operator /(IExpressionOperands obj, Slice slice)
         {
             if (slice.Values.Any(value => value == 0))
             {
