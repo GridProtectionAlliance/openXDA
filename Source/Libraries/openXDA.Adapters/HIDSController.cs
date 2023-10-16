@@ -65,6 +65,28 @@ namespace openXDA.Adapters
 
     public class HIDSController : ApiController
     {
+        public class HistogramMetadata
+        {
+            public int ChannelID { get; set; }
+            public int FundamentalFrequency { get; set; }
+            public int SamplingRate { get; set; }
+            public DateTime StartTime { get; set; }
+            public DateTime EndTime { get; set; }
+            public int TotalCapturedCycles { get; set; }
+            public double CyclesMax { get; set; }
+            public double CyclesMin { get; set; }
+            public double ResidualMax { get; set; }
+            public double ResidualMin { get; set; }
+            public double FrequencyMax { get; set; }
+            public double FrequencyMin { get; set; }
+            public double RMSMax { get; set; }
+            public double RMSMin { get; set; }
+            public int CyclicHistogramBins { get; set; }
+            public int ResidualHistogramBins { get; set; }
+            public int FrequencyHistogramBins { get; set; }
+            public int RMSHistogramBins { get; set; }
+        }
+
         private class Settings
         {
             [Category]
@@ -82,20 +104,6 @@ namespace openXDA.Adapters
         [ValidateRequestVerificationToken]
         public async Task<HttpResponseMessage> QueryPoints([FromBody] JObject query, CancellationToken cancellationToken)
         {
-            string ReadDate(JObject obj, string key)
-            {
-                JToken token = obj[key];
-
-                if (token is null)
-                    return null;
-
-                if (token.Type != JTokenType.Date)
-                    return token.Value<string>();
-
-                DateTime dt = token.Value<DateTime>();
-                return API.FormatTimestamp(dt);
-            }
-
             void BuildQuery(IQueryBuilder builder)
             {
                 if (query["Channels"] is JArray channels)
@@ -152,6 +160,104 @@ namespace openXDA.Adapters
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             response.Content = content;
             return response;
+        }
+
+        [HttpPost]
+        [ValidateRequestVerificationToken]
+        public async Task<List<HistogramMetadata>> QueryHistogramMetadata([FromBody] JObject query, CancellationToken cancellationToken)
+        {
+            using (API hids = await CreateHIDSConnectionAsync())
+            {
+                HistogramMetadata ToHistogramMetadata(Histogram.Metadata metadata) => new HistogramMetadata()
+                {
+                    ChannelID = hids.ToChannelID(metadata.Tag),
+                    FundamentalFrequency = metadata.FundamentalFrequency,
+                    SamplingRate = metadata.SamplingRate,
+                    StartTime = metadata.StartTime,
+                    EndTime = metadata.EndTime,
+                    TotalCapturedCycles = metadata.TotalCapturedCycles,
+                    CyclesMax = metadata.CyclesMax,
+                    CyclesMin = metadata.CyclesMin,
+                    ResidualMax = metadata.ResidualMax,
+                    ResidualMin = metadata.ResidualMin,
+                    FrequencyMax = metadata.FrequencyMax,
+                    FrequencyMin = metadata.FrequencyMin,
+                    RMSMax = metadata.RMSMax,
+                    RMSMin = metadata.RMSMin,
+                    CyclicHistogramBins = metadata.CyclicHistogramBins,
+                    ResidualHistogramBins = metadata.ResidualHistogramBins,
+                    FrequencyHistogramBins = metadata.FrequencyHistogramBins,
+                    RMSHistogramBins = metadata.RMSHistogramBins
+                };
+
+                IEnumerable<string> tags = Enumerable.Empty<string>();
+                string startTime = ReadDate(query, "StartTime");
+                string stopTime = ReadDate(query, "StopTime");
+
+                if (query["Channels"] is JArray channels)
+                {
+                    tags = channels
+                        .ToObject<List<int>>()
+                        .Select(hids.ToTag);
+                }
+
+                return await hids
+                    .ReadHistogramMetadataAsync(tags, startTime, stopTime, cancellationToken)
+                    .Select(ToHistogramMetadata)
+                    .ToListAsync();
+            }
+        }
+
+        [HttpPost]
+        [ValidateRequestVerificationToken]
+        public async Task<List<Histogram.Point>> QueryCyclicHistogramData([FromBody] JObject query, CancellationToken cancellationToken)
+        {
+            using (API hids = await CreateHIDSConnectionAsync())
+            {
+                int channelID = query.Value<int>("Channel");
+                string tag = hids.ToTag(channelID);
+                DateTime timestamp = query.Value<DateTime>("Timestamp");
+                return await hids.ReadCyclicHistogramAsync(tag, timestamp, cancellationToken);
+            }
+        }
+
+        [HttpPost]
+        [ValidateRequestVerificationToken]
+        public async Task<List<Histogram.Point>> QueryResidualHistogramData([FromBody] JObject query, CancellationToken cancellationToken)
+        {
+            using (API hids = await CreateHIDSConnectionAsync())
+            {
+                int channelID = query.Value<int>("Channel");
+                string tag = hids.ToTag(channelID);
+                DateTime timestamp = query.Value<DateTime>("Timestamp");
+                return await hids.ReadResidualHistogramAsync(tag, timestamp, cancellationToken);
+            }
+        }
+
+        [HttpPost]
+        [ValidateRequestVerificationToken]
+        public async Task<List<Histogram.Point>> QueryFrequencyHistogramData([FromBody] JObject query, CancellationToken cancellationToken)
+        {
+            using (API hids = await CreateHIDSConnectionAsync())
+            {
+                int channelID = query.Value<int>("Channel");
+                string tag = hids.ToTag(channelID);
+                DateTime timestamp = query.Value<DateTime>("Timestamp");
+                return await hids.ReadFrequencyHistogramAsync(tag, timestamp, cancellationToken);
+            }
+        }
+
+        [HttpPost]
+        [ValidateRequestVerificationToken]
+        public async Task<List<Histogram.Point>> QueryRMSHistogramData([FromBody] JObject query, CancellationToken cancellationToken)
+        {
+            using (API hids = await CreateHIDSConnectionAsync())
+            {
+                int channelID = query.Value<int>("Channel");
+                string tag = hids.ToTag(channelID);
+                DateTime timestamp = query.Value<DateTime>("Timestamp");
+                return await hids.ReadRMSHistogramAsync(tag, timestamp, cancellationToken);
+            }
         }
 
         [HttpPost]
@@ -279,6 +385,20 @@ namespace openXDA.Adapters
 	                    ChannelGroupType.ID IN (" + string.Join(",", post.Types) + @")
                 ");
             }
+        }
+
+        private static string ReadDate(JObject obj, string key)
+        {
+            JToken token = obj[key];
+
+            if (token is null)
+                return null;
+
+            if (token.Type != JTokenType.Date)
+                return token.Value<string>();
+
+            DateTime dt = token.Value<DateTime>();
+            return API.FormatTimestamp(dt);
         }
     }
 }

@@ -40,6 +40,9 @@ namespace openXDA.HIDS.APIExtensions
             if (!string.IsNullOrEmpty(settings.PointBucket))
                 hids.PointBucket = settings.PointBucket;
 
+            if (!string.IsNullOrEmpty(settings.HistogramBucket))
+                hids.HistogramBucket = settings.HistogramBucket;
+
             if (!string.IsNullOrEmpty(settings.OrganizationID))
                 hids.OrganizationID = settings.OrganizationID;
 

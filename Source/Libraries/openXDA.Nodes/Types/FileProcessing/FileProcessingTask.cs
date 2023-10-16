@@ -27,6 +27,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using FaultData;
 using FaultData.DataReaders;
 using GSF.Collections;
 using GSF.Configuration;
@@ -224,16 +225,9 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             try
             {
-                string directory = Path.GetDirectoryName(FilePath);
-                DirectoryInfo directoryInfo = new DirectoryInfo(directory);
-
-                string fileName = Path.GetFileName(FilePath);
-                string searchPattern = Path.ChangeExtension(fileName, ".*");
-                FileInfo[] fileList = directoryInfo.GetFiles(searchPattern);
-
                 FileGroup fileGroup = new FileGroup();
                 fileGroup.MeterID = meterID;
-                fileGroup.DataFiles = fileList.Select(ToDataFile).ToList();
+                fileGroup.DataFiles = FileList.Select(ToDataFile).ToList();
                 return fileGroup;
             }
             catch (IOException)

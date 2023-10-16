@@ -36,8 +36,15 @@ namespace openXDA.Configuration
         /// order to identify the meter that the file came from.
         /// </summary>
         [Setting]
-        [DefaultValue(@"(?<AssetKey>[^\\]+)\\[^\\]+$")]
+        [DefaultValue(/*lang=regex*/ @"(?<AssetKey>[^\\]+)\\[^\\]+$")]
         public string FilePattern { get; set; }
+
+        /// <summary>
+        /// Gets or sets the pattern that identifies the part of the file path that
+        /// </summary>
+        [Setting]
+        [DefaultValue(/*lang=regex*/ @"^(?<FileGroupKey>.*)\.[^\.]*$")]
+        public string FileGroupingPattern { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum number of hours prior to the current system time

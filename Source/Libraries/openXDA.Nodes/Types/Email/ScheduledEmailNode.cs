@@ -30,6 +30,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
+using FaultData;
 using FaultData.DataWriters.Emails;
 using GSF.Configuration;
 using GSF.Data;

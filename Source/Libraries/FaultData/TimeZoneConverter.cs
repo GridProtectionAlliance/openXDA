@@ -26,7 +26,7 @@ using System.ComponentModel;
 using GSF.Configuration;
 using openXDA.Configuration;
 
-namespace openXDA.Nodes
+namespace FaultData
 {
     public class TimeZoneConverter
     {

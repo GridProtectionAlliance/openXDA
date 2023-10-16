@@ -92,7 +92,6 @@
     <Compile Include="Types\FileProcessing\FileSkippedException.cs" />
     <Compile Include="Host.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TimeZoneConverter.cs" />
     <Compile Include="Types\FilePruning\FilePrunerNode.cs" />
     <Compile Include="INode.cs" />
     <Compile Include="NodeBase.cs" />
@@ -117,10 +116,6 @@
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OpenXDA.NotificationDataSources\openXDA.NotificationDataSources.csproj">
-      <Project>{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}</Project>
-      <Name>openXDA.NotificationDataSources</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

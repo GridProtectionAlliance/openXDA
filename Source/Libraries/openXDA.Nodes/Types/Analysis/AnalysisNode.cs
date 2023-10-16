@@ -47,7 +47,6 @@ using GSF.Threading;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
-using SystemCenter.Model;
 using IDataReader = FaultData.DataReaders.IDataReader;
 
 namespace openXDA.Nodes.Types.Analysis

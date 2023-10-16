@@ -242,6 +242,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileProcessor.FilePattern', '(?<AssetKey>[^\\]+)\\[^\\]+$', '(?<AssetKey>[^\\]+)\\[^\\]+$')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileProcessor.FileGroupingPattern', '^(?<FileGroupKey>.*)\.[^\.]*$', '^(?<FileGroupKey>.*)\.[^\.]*$')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileProcessor.MaxFileCreationTimeOffset', '0.0', '0.0')
 GO
 
@@ -261,6 +264,9 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.InternalThrea
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.WatchDirectories', 'Watch', 'Watch')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.HistogramBucket', 'histogram_bucket', 'histogram_bucket')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('HIDS.Host', '', '')
