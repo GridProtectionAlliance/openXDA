@@ -35,8 +35,8 @@ namespace SystemCenter.Model
         public int ID { get; set; }
         public string ParentTable { get; set; }
         public string FieldName { get; set; }
-        [ParentKey(typeof(ExternalDatabases))]
-        public int ExtDBID { get; set; }
+        [ParentKey(typeof(extDBTables))]
+        public int ExternalDBTableID { get; set; }
     }
 
 
