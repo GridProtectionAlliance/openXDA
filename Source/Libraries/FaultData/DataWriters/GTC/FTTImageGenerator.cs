@@ -49,6 +49,7 @@ namespace FaultData.DataWriters.GTC
             URL = options.URL;
             QueryStringFormat = options.QueryStringFormat;
             QueryTimeout = options.QueryTimeout;
+            IgnoreCertificateErrors = options.IgnoreCertificateErrors;
 
             ImageWidth = options.ImageWidth;
             ImageHeight = options.ImageHeight;
@@ -62,6 +63,7 @@ namespace FaultData.DataWriters.GTC
         private string URL { get; }
         private string QueryStringFormat { get; }
         private TimeSpan QueryTimeout { get; }
+        public bool IgnoreCertificateErrors { get; }
 
         private int ImageWidth { get; }
         private int ImageHeight { get; }
@@ -133,6 +135,7 @@ namespace FaultData.DataWriters.GTC
                 string[] fttArguments =
                 {
                     Escape(url).QuoteWrap(),
+                    IgnoreCertificateErrors.ToString(CultureInfo.InvariantCulture),
                     ImageWidth.ToString(CultureInfo.InvariantCulture),
                     ImageHeight.ToString(CultureInfo.InvariantCulture),
                     QueryTimeout.TotalSeconds.ToString(CultureInfo.InvariantCulture),
@@ -233,6 +236,7 @@ namespace FaultData.DataWriters.GTC
 
             string url = (string)fttElement.Attribute("url");
             string queryStringFormat = (string)fttElement.Attribute("queryStringFormat");
+            string ignoreCertificateErrors = (string)fttElement.Attribute("ignoreCertificateErrors");
             string fttWidth = (string)fttElement.Attribute("width");
             string fttHeight = (string)fttElement.Attribute("height");
 
@@ -247,6 +251,7 @@ namespace FaultData.DataWriters.GTC
             options.QueryTimeout = queryTimeout;
             options.URL = url;
             options.QueryStringFormat = queryStringFormat;
+            options.IgnoreCertificateErrors = ignoreCertificateErrors.ParseBoolean();
             options.ImageWidth = imageWidth;
             options.ImageHeight = imageHeight;
 

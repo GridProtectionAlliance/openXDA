@@ -31,6 +31,7 @@ namespace FaultData.DataWriters.GTC
         public string URL { get; set; }
         public string QueryStringFormat { get; set; }
         public TimeSpan QueryTimeout { get; set; }
+        public bool IgnoreCertificateErrors { get; set; }
 
         public int ImageWidth { get; set; }
         public int ImageHeight { get; set; }

@@ -97,29 +97,26 @@ namespace FaultTraceToolInterop
 
             try
             {
-                if (args.Length < 6)
-                {
+                if (args.Length < 7)
                     throw new Exception("Invalid number of arguments");
-                }
+
                 builder = new UriBuilder(args[1]);
 
-                if (!Int32.TryParse(args[2], out Int32 width))
-                {
+                if (!bool.TryParse(args[2], out bool ignoreCertificateErrors))
+                    ignoreCertificateErrors = false;
+
+                if (!int.TryParse(args[3], out int width))
                     throw new Exception("Invalid Width Parameter");
-                }
-                if (!Int32.TryParse(args[3], out Int32 height))
-                {
+
+                if (!int.TryParse(args[4], out int height))
                     throw new Exception("Invalid Height Parameter");
-                }
-                if (Int32.TryParse(args[4], out Int32 toSecs))
-                {
+
+                if (int.TryParse(args[5], out int toSecs))
                     timeout = new TimeSpan(0, 0, toSecs);
-                }
                 else
-                {
                     throw new Exception("Invalid Timeout Parameter");
-                }
-                filename = args[5];
+
+                filename = args[6];
 
                 long now = DateTime.UtcNow.Ticks;
                 string nocache = $"nocache={now:X}";
@@ -130,7 +127,8 @@ namespace FaultTraceToolInterop
                 builder.Query = string.Join("&", queryParts);
                 var settings = new CefSettings()
                 {
-                    CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "FTTAPI", "Cache")
+                    CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "FTTAPI", "Cache"),
+                    IgnoreCertificateErrors = ignoreCertificateErrors
                 };
 
                 Cef.Initialize(settings, performDependencyCheck: true, browserProcessHandler: null);
