@@ -300,5 +300,12 @@ INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.APITok
 GO
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.ClientID', 'LocalXDAClient', 'LocalXDAClient')
 GO
+
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('FAWG.Enabled', 'False', 'False')
+GO
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('MiMD.Url', 'http://localhost:8989', '')
+GO
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('MiMD.APIKey', '', '')
+GO
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('MiMD.APIToken', '', '')
 GO
