@@ -265,6 +265,218 @@ CREATE VIEW [MiMD.MaxAlarmChanges] AS
 	WHERE Alarms > 0
 GO
 
+CREATE TABLE [MiMD.DiagnosticFileRules](
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	FilePattern VARCHAR(255) NOT NULL DEFAULT '',
+	Field VARCHAR(255) NOT NULL DEFAULT '',
+	RegexPattern VARCHAR(500) NOT NULL DEFAULT '',
+	[Text] VARCHAR(MAX) NOT NULL DEFAULT '',
+	Severity INT NOT NULL,
+	ReverseRule BIT NOT NULL,
+	SQLQuery VARCHAR(500) NOT NULL DEFAULT '',
+);
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', 'dfr', 'online', 'MiMD Parsing Alarm: DFR not set to ONLINE.', '0', '0', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', 'time_mark_source', '\b(?:irig-b|pc)\b', 'MiMD Parsing Alarm: TIME_MARK_SOURCE not set to IRIG-B or PC.', '0', '0', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', '', '\b(?:alarmon|anfail)\b', 'MiMD Parsing Alarm: ALARMON or ANFAIL field present.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', 'pc_time', '^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/([0-9]{4})-(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])\s*$', 'MiMD Parsing Alarm: Incorrect date format for PC_Time.', '0', '0', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', '', 'chassis_not_comm', 'MiMD Parsing Alarm: CHASSIS_NOT_COMM field present.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', 'data_drive', '^(\d+)gb\/(\d+)gb\s*$', 'MiMD Parsing Alarm: Incorrect format for Data_Drive.', '0', '0', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', 'timemark', '^(\d{2}:\d{2}:\d{2})(?:,(\1))*(,)?\s*$', 'MiMD Parsing Warning: TimeMark values not equal.', '0', '0', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', 'timemark', '', 'MiMD Parsing Alarm: Time_Mark_Source Set to PC and Clock set to UNSYNC(unknown) in consecutive files.', '0', '0', 
+'with cte as 
+(
+    select top 14 * 
+    from appstatusfilechanges 
+    where meterid = {MeterID}
+    order by LastWriteTime desc
+)
+select 
+case 
+    when (select count(*) from cte where text like ''%timeMark values not equal%'') = 14 then 1
+    else 0
+end
+');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', '', '', '', '0', '0', 
+'DECLARE @ConditionFlag INT = {variables["time_mark_source"] = "pc" };
+
+IF @ConditionFlag = 1
+BEGIN
+    WITH cte AS 
+    (
+        SELECT TOP 1 * FROM AppStatusFileChanges 
+        WHERE meterid = {MeterID} 
+        ORDER BY LastWriteTime DESC
+    )
+    SELECT 
+    CASE 
+        WHEN (SELECT COUNT(*) FROM cte WHERE Text LIKE ''%TIME_MARK_SOURCE=PC%'' AND Text LIKE ''%Clock=UNSYNC(unknown)%'') > 0 THEN 1
+        ELSE 0
+    END
+END
+ELSE
+BEGIN
+    SELECT 0
+END
+'
+);
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', 'clock', 'sync\(lock\)\s*', 'MiMD Parsing Alarm: Clock not set to SYNC(lock).', '0', '0', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', 'time_mark_time', '^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/(19|20)\d\d-(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]\.\d{6}\s*$',
+'MiMD Parsing Alarm: Incorrect date format for Time_Mark_Time.', '0', '0', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', '', '','MiMD Parsing Alarm: Time_Mark_Time and PC_Time difference greater than 2 seconds.', '0', '0', 
+'DECLARE @ConditionFlag INT;
+
+SET @ConditionFlag = CASE 
+    WHEN DATEDIFF(second, 
+                  CONVERT(DATETIME2, REPLACE({variables["pc_time"]}, ''-'', '' ''), 101), 
+                  CONVERT(DATETIME2, REPLACE({variables["time_mark_time"]}, ''-'', '' ''), 101)) > 2 
+    THEN 1 
+    ELSE 0 
+END;
+
+SELECT @ConditionFlag;
+');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppStatus', '', '','MiMD Parsing Alarm: DFR time set in the future.', '0', '0', 
+'DECLARE @ConditionFlag INT = {LastWriteTime > ConvertTimeFromUtc(UtcNow, FindSystemTimeZoneById("Central Standard Time")) };
+
+SELECT @ConditionFlag;');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', '','', '0', '0', 
+'DECLARE @ConditionFlag INT = {Time > ConvertTimeFromUtc(UtcNow, FindSystemTimeZoneById("Central Standard Time")) };
+
+SELECT @ConditionFlag;');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'unsync<invalid\(no signal\)>','MiMD Parsing Alarm: unsync<invalid(no signal)> text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', '\[alarmon\]','MiMD Parsing Alarm: [alarmon] text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'sync loss','MiMD Parsing Alarm: sync loss text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'chassis comm\. error','MiMD Parsing Alarm: chassis comm. error text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'disk full','MiMD Parsing Alarm: disk full text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'master comm\. error','MiMD Parsing Alarm: master comm. error text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'dsp board temperature','MiMD Parsing Alarm: dsp board temperature text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'analog fail','MiMD Parsing Alarm: analog fail text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'pc health','MiMD Parsing Alarm: pc health text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'offline','MiMD Parsing Alarm: offline text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('AppTrace', '', 'time in future','MiMD Parsing Alarm: time in future field text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('EmaxEventHis', '', 'offline\. system offline','MiMD Parsing Alarm: offline. system offline text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('EmaxEventHis', '', 'buffer full','MiMD Parsing Alarm: buffer full text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('EmaxEventHis', '', 'error','MiMD Parsing Alarm: error text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('EmaxEventHis', '', '^(?=.*\balarm\b)(?=.*\btime sync failed\b).*$','MMiMD Parsing Alarm: ALARM and Time Sync Failed text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('EmaxEventHis', '', 'alarm','MiMD Parsing Alarm: Alarm text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('EmaxEventHis', '', '^^(?=.*\balarm\b)(?=.*\btime sync failed\b)(?=.*\bsystem started\b).*$','MiMD Parsing Alarm: Alarm, Time Sync Failed, and System Started text found in file.', '0', '1', '');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('EmaxEventHis', '', '','', '0', '0', 
+'DECLARE @ConditionFlag INT = {Time > ConvertTimeFromUtc(UtcNow, FindSystemTimeZoneById("Central Standard Time")) };
+
+SELECT @ConditionFlag;');
+GO
+
+INSERT INTO [Preston_XDA].[dbo].[MiMD.DiagnosticFileRules] ([FilePattern], [Field], [RegexPattern], [Text], [Severity], [ReverseRule], [SQLQuery])
+VALUES ('EmaxEventHis', '', '','MiMD Parsing Alarm: Time - SystemStartedTime is greater than 60 seconds', '0', '0',
+'DECLARE @ConditionFlag INT;
+
+SET @ConditionFlag = CASE 
+    WHEN {variables["systemstarted"] = "true"} = 1
+         AND DATEDIFF(second, CAST({variables["systemstartedtime"]} AS datetime), {Time}) > 60 
+    THEN 1 
+    ELSE 0 
+END;
+
+SELECT @ConditionFlag;
+');
+GO
+
 CREATE TABLE [MiMD.ComplianceMeter] (
 	ID int not null IDENTITY(1,1) PRIMARY KEY,
 	MeterID INT NOT NULL,
