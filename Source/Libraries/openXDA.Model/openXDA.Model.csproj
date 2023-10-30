@@ -156,8 +156,6 @@
     <Compile Include="LSCVS\LSCVSSummary.cs" />
     <Compile Include="LSCVS\LSCVSEvent.cs" />
     <Compile Include="MATLAB\MATLABAnalytic.cs" />
-    <Compile Include="MATLAB\MATLABAnalyticAssetType.cs" />
-    <Compile Include="MATLAB\MATLABAnalyticEventType.cs" />
     <Compile Include="Meters\MeterAlarmGroup.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="Meters\MeterConfiguration.cs" />
@@ -177,6 +175,7 @@
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
     <Compile Include="SystemCenter\ChannelTemplateFile.cs" />
+    <Compile Include="SystemCenter\ExternalDatabase.cs" />
     <Compile Include="TransmissionElements\StandardMagDurCurve.cs" />
     <Compile Include="StepChangeWebReports\StepChangeMeasurement.cs" />
     <Compile Include="StepChangeWebReports\StepChangeStat.cs" />
