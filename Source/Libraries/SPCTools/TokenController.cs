@@ -38,9 +38,32 @@ using openXDA.Nodes;
 
 namespace SPCTools
 {
+
+    public class ParseResponse
+    {
+        public bool Valid { get; set; }
+        public string Message { get; set; }
+        public bool IsScalar { get; set; }
+        public List<double> Value { get; set; }
+
+        public ParseResponse(DataResponse response)
+        {
+            Valid = response.Valid;
+            Message = response.Message;
+            Value = response.Value;
+            IsScalar = response.IsScalar;
+        }
+        public ParseResponse() { }
+    }
+
+
     [RoutePrefix("api/SPCTools/Token")]
     public class TokenController : ApiController
     {
+        /// <summary>
+        /// Describes common arithmetic operands being Scalar, Slice, or Matrix. 
+        /// </summary>
+
         #region [internal Classes]
 
         public class TokenParseRequest
@@ -50,14 +73,6 @@ namespace SPCTools
             public DateTime StatisticsStart { get; set; }
             public DateTime StatisticsEnd { get; set; }
             public List<int> StatisticsChannelID { get; set; }
-        }
-
-        public class TokenParseResponse
-        {
-            public bool Valid { get; set; }
-            public string Message { get; set; }
-            public bool IsScalar { get; set; }
-            public List<double> Value { get; set; }
         }
 
         #endregion
@@ -70,6 +85,7 @@ namespace SPCTools
 
         private static MemoryCache s_memoryCache;
         private static readonly double s_cacheExipry = 5;
+
 
         private Host Host { get; }
 
@@ -100,26 +116,10 @@ namespace SPCTools
             try
             {
                 Dictionary<int, List<Point>> data = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
-                Token root = new Token(request.TokeValue.Formula, data, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(request.TokeValue));
+                ExpressionOperations root = new ExpressionOperations(request.TokeValue.Formula, data, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(request.TokeValue));
 
-                TokenParseResponse result = new TokenParseResponse()
-                {
-                    IsScalar = root.isScalar,
-                    Valid = root.Valid,
-                    Message = root.Error,
-                    Value = new List<double>()
-                };
-
-                // If it is not a scalar or a slice it is an error
-                if (!root.isScalar && !root.isSlice && result.Valid)
-                {
-                    result.Valid = false;
-                    result.Message = "The Expression needs to result in a static threshhold.";
-                }
-
-                if (result.Valid)
-                    result.Value = root.ComputeSlice();
-
+                DataResponse resultant = root.Evaluate();
+                ParseResponse result = new ParseResponse(resultant);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -128,10 +128,6 @@ namespace SPCTools
             }
 
         }
-
-
-
-
         #endregion
 
         #region [ HelperFunction ]
@@ -146,7 +142,7 @@ namespace SPCTools
             List<string> dataToGet = new List<string>();
             channelID.ForEach(item =>
             {
-               
+
                 if (s_memoryCache.Contains(cachTarget + item.ToString("x8")))
                     result.Add(item, (List<Point>)s_memoryCache.Get(cachTarget + item.ToString("x8")));
                 else
@@ -173,7 +169,7 @@ namespace SPCTools
 
             dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data.Where(pt => pt.Tag == item).ToList(), new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });
 
-            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag== item.ToString("x8")).ToList());
+            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
         }
 
         private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)

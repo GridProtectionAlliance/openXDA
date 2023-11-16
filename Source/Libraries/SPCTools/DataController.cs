@@ -40,6 +40,11 @@ using openXDA.Nodes;
 
 namespace SPCTools
 {
+    public class DataResponse : ParseResponse
+    {
+        public Func<DateTime, bool> TimeFilter;
+        public bool Applies(DateTime time) => TimeFilter(time);
+    }
 
     [RoutePrefix("api/SPCTools/Data")]
     public class DataController : ApiController
@@ -164,7 +169,7 @@ namespace SPCTools
             {
                 //Grab Data For Setpoint Computation
                 Dictionary<int, List<Point>> statisticsData = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
-                List<Token> tokenList = request.TokenValues.Select(value => new Token(value.Formula, statisticsData, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(value))).ToList();
+                List<DataResponse> tokenList = request.TokenValues.Select(value => new ExpressionOperations(value.Formula, statisticsData, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate()).ToList();
 
                 Dictionary<int, List<Point>> testData;
                 if (request.Start == request.StatisticsStart && request.End == request.StatisticsEnd && request.ChannelID.Count == request.StatisticsChannelID.Count)
@@ -173,14 +178,14 @@ namespace SPCTools
                     testData = LoadChannel(request.ChannelID, request.Start, request.End);
 
                 bool isDynamic = !(tokenList.Count == 1);
-                bool isScalar = tokenList.All(item => item.isScalar);
+                bool isScalar = tokenList.All(item => item.IsScalar);
 
                 Func<Point, double> seriesTypeFilter = GetSeriesTypeFilter(seriesTypeID);
 
                 List<ChannelTestResponse> result = request.ChannelID.Select((id, index) =>
                 {
                     int statIndex = request.StatisticsChannelID.FindIndex(item => item == id);
-                    ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = (isDynamic ? double.NaN : (isScalar ? tokenList[0].Scalar : tokenList[0].Slice[statIndex])) };
+                    ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = (isDynamic ? double.NaN : (isScalar ? tokenList[0].Value.FirstOrDefault() : tokenList[0].Value[statIndex])) };
 
                     return TestChannel(index, testData[id], tokenList, request.AlarmFactors, request.AlarmTypeID, test, seriesTypeFilter);
 
@@ -236,7 +241,7 @@ namespace SPCTools
             return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
         }
 
-        private ChannelTestResponse TestChannel(int channelIndex, List<Point> data, List<Token> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData)
+        private ChannelTestResponse TestChannel(int channelIndex, List<Point> data, List<DataResponse> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData)
         {
             bool upper = true;
             using (AdoDataConnection connection = Host.CreateDbConnection())
@@ -260,7 +265,7 @@ namespace SPCTools
                 if (tokeIndex == -1)
                     threshholds[i] = double.NaN;
                 else
-                    threshholds[i] = (tokenList[tokeIndex].isScalar ? tokenList[tokeIndex].Scalar : tokenList[tokeIndex].Slice[channelIndex]);
+                    threshholds[i] = (tokenList[tokeIndex].IsScalar ? tokenList[tokeIndex].Value.FirstOrDefault() : tokenList[tokeIndex].Value[channelIndex]);
             }
 
             //Find number of alarms

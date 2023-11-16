@@ -173,7 +173,7 @@ namespace SPCTools
 
                     request.AlarmValues.ForEach(value =>
                     {
-                        Token token = new Token(value.Formula, data, request.StatisticChannelsID, request.StatisticsFilter, GetTimeFilter(value));
+                        ParseResponse token = new ExpressionOperations(value.Formula, data, request.StatisticChannelsID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate();
 
                         updateAlarmID.ForEach(alarmID =>
                         {
@@ -189,7 +189,7 @@ namespace SPCTools
                                 AlarmDayID = value.AlarmDayID,
                                 AlarmID = alarmID.Item1,
                                 Formula = value.Formula,
-                                Value = (token.isScalar ? token.Scalar : token.Slice[request.StatisticChannelsID.FindIndex(item => item == alarmID.Item2)])
+                                Value = (token.IsScalar ? token.Value.FirstOrDefault() : token.Value[request.StatisticChannelsID.FindIndex(item => item == alarmID.Item2)])
                             };
 
                             alarmValueTbl.AddNewRecord(alarmValue);
