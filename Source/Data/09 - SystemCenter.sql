@@ -154,6 +154,23 @@ CREATE TABLE [AdditionalFieldValue] (
 )
 GO
 
+CREATE TRIGGER [dbo].[UO_AdditonaFieldValue] 
+ON [dbo].[AdditionalFieldValue]
+AFTER UPDATE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	UPDATE original SET UpdatedOn = SYSDATETIME()
+		FROM dbo.[AdditionalFieldValue] as original INNER JOIN deleted ON 
+		original.ID = deleted.ID AND 
+		(
+			original.Value <> deleted.Value OR
+			(original.Value IS NULL AND deleted.Value IS NOT NULL) OR
+			(original.Value IS NOT NULL AND deleted.Value IS NULL)
+		);
+END
+GO
+
 CREATE VIEW AdditionalFieldSearch AS 
 	SELECT 
 		AdditionalFieldValue.ParentTableID,
