@@ -111,16 +111,35 @@ CREATE TABLE AdditionalUserFieldValue(
 )
 GO
 
+CREATE Table [ExternalDatabases] (
+    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name varchar(200) NOT NULL,
+    Schedule varchar(50) NULL DEFAULT(NULL),
+    ConnectionString Varchar(MAX) NOT NULL,
+    DataProviderString VARCHAR(MAX) NULL,
+    Encrypt bit NOT NULL DEFAULT(0),
+    Constraint UC_ExternalDatabase UNIQUE(Name)
+)
+
+CREATE Table [extDBTables] (
+	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	TableName varchar(200) NOT NULL,
+    ExtDBID INT NOT NULL FOREIGN KEY References [ExternalDatabases](ID),
+	Query varchar(max) NOT NULL,
+    Constraint UC_ExternalDatabaseTable UNIQUE(TableName, ExtDBID)
+)
+GO
+
 CREATE TABLE [AdditionalField] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTable varchar(100) NOT NULL,
 	FieldName varchar(100) NOT NULL,
 	Type varchar(max) NULL DEFAULT ('string'),
-	ExternalDB varchar(max) NULL,
-	ExternalDBTable varchar(max) NULL,
-	ExternalDBTableKey varchar(max) NULL,
+	ExternalDBTableID INT NULL FOREIGN KEY REFERENCES [extDBTables](ID),
 	IsSecure bit NULL DEFAULT(0),
     Searchable bit NULL DEFAULT(0),
+    IsInfo bit NOT NULL DEFAULT(0),
+    IsKey bit NOT NULL DEFAULT(0),
 	Constraint UC_AdditonaField UNIQUE(ParentTable, FieldName)
 )
 GO
@@ -133,6 +152,23 @@ CREATE TABLE [AdditionalFieldValue] (
     UpdatedOn DATE NULL DEFAULT (SYSDATETIME()),
 	Constraint UC_AdditonaFieldValue UNIQUE(ParentTableID, AdditionalFieldID)
 )
+GO
+
+CREATE TRIGGER [dbo].[UO_AdditonaFieldValue] 
+ON [dbo].[AdditionalFieldValue]
+AFTER UPDATE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	UPDATE original SET UpdatedOn = SYSDATETIME()
+		FROM dbo.[AdditionalFieldValue] as original INNER JOIN deleted ON 
+		original.ID = deleted.ID AND 
+		(
+			original.Value <> deleted.Value OR
+			(original.Value IS NULL AND deleted.Value IS NOT NULL) OR
+			(original.Value IS NOT NULL AND deleted.Value IS NULL)
+		);
+END
 GO
 
 CREATE VIEW AdditionalFieldSearch AS 
@@ -150,18 +186,8 @@ CREATE TABLE [ExternalOpenXDAField] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	ParentTable varchar(100) NOT NULL,
 	FieldName varchar(100) NOT NULL,
-	ExternalDB varchar(max) NULL,
-	ExternalDBTable varchar(max) NULL,
-	ExternalDBTableKey varchar(max) NULL,
+    ExternalDBTableID INT NOT NULL FOREIGN KEY References [extDBTables](ID),
 	Constraint UC_ExternalOpenXDAField UNIQUE(ParentTable, FieldName)
-)
-GO
-
-CREATE Table [extDBTables] (
-	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	TableName varchar(200) NOT NULL,
-    ExternalDB varchar(200) NOT NULL,
-	Query varchar(max) NULL,
 )
 GO
 
@@ -290,4 +316,13 @@ GO
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.APIToken', '', '')
 GO
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.ClientID', 'LocalXDAClient', 'LocalXDAClient')
+GO
+
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('FAWG.Enabled', 'False', 'False')
+GO
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('MiMD.Url', 'http://localhost:8989', '')
+GO
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('MiMD.APIKey', '', '')
+GO
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('MiMD.APIToken', '', '')
 GO

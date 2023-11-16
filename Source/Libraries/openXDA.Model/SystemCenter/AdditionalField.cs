@@ -37,11 +37,34 @@ namespace SystemCenter.Model
         public string ParentTable { get; set; }
         public string FieldName { get; set; }
         public string Type { get; set; }
-        public string ExternalDB { get; set; }
-        public string ExternalDBTable { get; set; }
-        public string ExternalDBTableKey { get; set; }
+        [ParentKey(typeof(extDBTables))]
+        public int? ExternalDBTableID { get; set; }
         public bool IsSecure { get; set; }
+        public bool IsInfo { get; set; }
+        public bool IsKey { get; set; }
         public bool Searchable { get; set; }
+    }
 
+    [TableName("AdditionalField"),
+    CustomView(@"
+        Select
+	        AdditionalField.ID,
+	        AdditionalField.ParentTable,
+	        AdditionalField.FieldName,
+	        AdditionalField.Type,
+	        AdditionalField.IsSecure,
+	        AdditionalField.Searchable,
+	        AdditionalField.IsInfo,
+	        AdditionalField.IsKey,
+            AdditionalField.ExternalDBTableID,
+	        ExternalDatabases.Name as ExternalDB
+        From
+	        AdditionalField LEFT JOIN
+	        extDBTables ON AdditionalField.ExternalDBTableID = extDBTables.ID LEFT JOIN
+	        ExternalDatabases ON extDBTables.ExtDBID = ExternalDatabases.ID
+    "), AllowSearch]
+    public class AdditionalFieldView : AdditionalField
+    {
+        public string ExternalDB { get; set; }
     }
 }
