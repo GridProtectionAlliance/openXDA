@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 using GSF.Data.Model;
+using System;
 
 namespace SystemCenter.Model
 {
@@ -37,5 +38,7 @@ namespace SystemCenter.Model
         public int ParentTableID { get; set; }
         public int AdditionalFieldID { get; set; }
         public string Value { get; set; }
+        // Note: this is updated by sql when Value changes
+        public DateTime UpdatedOn { get; set; }
     }
 }
