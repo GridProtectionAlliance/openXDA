@@ -29,7 +29,7 @@ using GSF.Data.Model;
 namespace openXDA.Model
 {
     [AllowSearch]
-    [GetRoles("Administrator")]
+    [GetRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator")]
     public class RemoteXDAInstance
     {

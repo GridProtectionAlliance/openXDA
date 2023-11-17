@@ -69,6 +69,7 @@ namespace SystemCenter.Model
 	    AdditionalField JOIN
 	    AdditionalFieldValue ON AdditionalField.ID = AdditionalFieldValue.AdditionalFieldID)
     ", "ParentTableID", "Value", "FieldName")]
+    [PostRoles("Administrator, Transmission SME")]
     public class DetailedLocation
     {
         [PrimaryKey(true)]

@@ -32,9 +32,9 @@ using System.Threading.Tasks;
 namespace SystemCenter.Model
 {
     [AllowSearch]
-    [DeleteRoles("Administrator")]
-    [PatchRoles("Administrator")]
-    [PostRoles("Administrator")]
+    [PostRoles("Administrator, Transmission SME")]
+    [PatchRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
     [TableName("LSCVSAccount")]
     [UseEscapedName]
     public class LSCVSAccount
