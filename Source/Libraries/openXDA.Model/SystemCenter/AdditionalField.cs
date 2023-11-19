@@ -57,7 +57,7 @@ namespace SystemCenter.Model
 	        AdditionalField.IsInfo,
 	        AdditionalField.IsKey,
             AdditionalField.ExternalDBTableID,
-	        ExternalDatabases.Name as ExternalDB
+	        CONCAT(ExternalDatabases.Name, ' (', extDBTables.TableName, ')') as ExternalDB
         From
 	        AdditionalField LEFT JOIN
 	        extDBTables ON AdditionalField.ExternalDBTableID = extDBTables.ID LEFT JOIN
