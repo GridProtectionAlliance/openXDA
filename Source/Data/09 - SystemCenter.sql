@@ -140,7 +140,7 @@ CREATE TABLE [AdditionalField] (
     Searchable bit NULL DEFAULT(0),
     IsInfo bit NOT NULL DEFAULT(0),
     IsKey bit NOT NULL DEFAULT(0),
-	Constraint UC_AdditonaField UNIQUE(ParentTable, FieldName)
+	Constraint UC_AdditonaField UNIQUE(ParentTable, FieldName, ExternalDBTableID)
 )
 GO
 
