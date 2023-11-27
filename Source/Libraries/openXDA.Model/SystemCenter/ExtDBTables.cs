@@ -63,6 +63,6 @@ namespace SystemCenter.Model
         [NonRecordField]
         public string ExternalDB { get; set; }
         [NonRecordField]
-        public int MappedFields { get; set; }
+        public int? MappedFields { get; set; }
     }
 }

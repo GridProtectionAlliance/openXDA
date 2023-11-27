@@ -70,8 +70,8 @@ namespace SystemCenter.Model
         public bool Encrypt { get; set; }
         public DateTime? LastRun { get; set; }
         [NonRecordField]
-        public int MappedTables { get; set; }
+        public int? MappedTables { get; set; }
         [NonRecordField]
-        public int MappedFields { get; set; }
+        public int? MappedFields { get; set; }
     }
 }
