@@ -66,5 +66,6 @@ namespace SystemCenter.Model
     public class AdditionalFieldView : AdditionalField
     {
         public string ExternalDB { get; set; }
+        public string ExternalTable { get; set; }
     }
 }

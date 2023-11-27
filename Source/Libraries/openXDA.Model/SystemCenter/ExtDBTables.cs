@@ -33,6 +33,25 @@ namespace SystemCenter.Model
     [PatchRoles("Administrator, Transmission SME")]
     [GetRoles("Administrator, Transmission SME")]
     [AllowSearch]
+    [CustomView(@"
+    SELECT DISTINCT
+	    extDBTables.ID,
+	    extDBTables.TableName,
+	    extDBTables.ExtDBID,
+	    extDBTables.Query,
+		ExternalDatabases.Name as ExternalDB,
+        COUNT(DISTINCT AdditionalField.ID) as MappedFields
+    FROM
+	    extDBTables LEFT JOIN
+	    ExternalDatabases ON ExternalDatabases.ID = extDBTables.ExtDBID LEFT JOIN
+	    AdditionalField ON extDBTables.ID = AdditionalField.ExternalDBTableID
+	GROUP BY
+	    extDBTables.ID,
+	    extDBTables.TableName,
+	    extDBTables.ExtDBID,
+	    extDBTables.Query,
+		ExternalDatabases.Name
+    ")]
     public class extDBTables
     {
         [PrimaryKey(true)]
@@ -41,6 +60,9 @@ namespace SystemCenter.Model
         [ParentKey(typeof(ExternalDatabases))]
         public int ExtDBID { get; set; }
         public string Query { get; set; }
+        [NonRecordField]
+        public string ExternalDB { get; set; }
+        [NonRecordField]
+        public int MappedFields { get; set; }
     }
-
 }

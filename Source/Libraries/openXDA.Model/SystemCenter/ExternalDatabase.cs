@@ -34,6 +34,30 @@ namespace SystemCenter.Model
     [PatchRoles("Administrator, Transmission SME")]
     [GetRoles("Administrator, Transmission SME")]
     [AllowSearch]
+    [CustomView(@"
+    SELECT DISTINCT
+	    ExternalDatabases.ID,
+	    ExternalDatabases.Name,
+	    ExternalDatabases.Schedule,
+	    ExternalDatabases.ConnectionString,
+	    ExternalDatabases.DataProviderString,
+	    ExternalDatabases.Encrypt,
+        ExternalDatabases.LastRun,
+        COUNT(DISTINCT extDBTables.ID) as MappedTables,
+        COUNT(DISTINCT AdditionalField.ID) as MappedFields
+    FROM
+	    ExternalDatabases LEFT JOIN
+	    extDBTables ON ExternalDatabases.ID = extDBTables.ExtDBID LEFT JOIN
+	    AdditionalField ON extDBTables.ID = AdditionalField.ExternalDBTableID
+	GROUP BY
+	    ExternalDatabases.ID,
+	    ExternalDatabases.Name,
+	    ExternalDatabases.Schedule,
+	    ExternalDatabases.ConnectionString,
+	    ExternalDatabases.DataProviderString,
+	    ExternalDatabases.Encrypt,
+        ExternalDatabases.LastRun
+    ")]
     public class ExternalDatabases
 
     {
@@ -45,6 +69,9 @@ namespace SystemCenter.Model
         public string DataProviderString { get; set; }
         public bool Encrypt { get; set; }
         public DateTime? LastRun { get; set; }
+        [NonRecordField]
+        public int MappedTables { get; set; }
+        [NonRecordField]
+        public int MappedFields { get; set; }
     }
-
 }
