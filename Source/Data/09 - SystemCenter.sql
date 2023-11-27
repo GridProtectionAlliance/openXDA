@@ -118,6 +118,7 @@ CREATE Table [ExternalDatabases] (
     ConnectionString Varchar(MAX) NOT NULL,
     DataProviderString VARCHAR(MAX) NULL,
     Encrypt bit NOT NULL DEFAULT(0),
+    LastRun DATETIME2 NULL DEFAULT(NULL),
     Constraint UC_ExternalDatabase UNIQUE(Name)
 )
 

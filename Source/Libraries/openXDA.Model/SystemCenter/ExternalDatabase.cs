@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System;
 
 namespace SystemCenter.Model
 {
@@ -43,6 +44,7 @@ namespace SystemCenter.Model
         public string ConnectionString { get; set; }
         public string DataProviderString { get; set; }
         public bool Encrypt { get; set; }
+        public DateTime? LastRun { get; set; }
     }
 
 }
