@@ -42,7 +42,7 @@ namespace SystemCenter.Model
 	    ExternalDatabases.ConnectionString,
 	    ExternalDatabases.DataProviderString,
 	    ExternalDatabases.Encrypt,
-        ExternalDatabases.LastRun,
+        ExternalDatabases.LastDataPull,
         COUNT(DISTINCT extDBTables.ID) as MappedTables,
         COUNT(DISTINCT AdditionalField.ID) as MappedFields
     FROM
@@ -56,7 +56,7 @@ namespace SystemCenter.Model
 	    ExternalDatabases.ConnectionString,
 	    ExternalDatabases.DataProviderString,
 	    ExternalDatabases.Encrypt,
-        ExternalDatabases.LastRun
+        ExternalDatabases.LastDataPull
     ")]
     public class ExternalDatabases
 
@@ -68,7 +68,7 @@ namespace SystemCenter.Model
         public string ConnectionString { get; set; }
         public string DataProviderString { get; set; }
         public bool Encrypt { get; set; }
-        public DateTime? LastRun { get; set; }
+        public DateTime? LastDataPull { get; set; }
         [NonRecordField]
         public int? MappedTables { get; set; }
         [NonRecordField]
