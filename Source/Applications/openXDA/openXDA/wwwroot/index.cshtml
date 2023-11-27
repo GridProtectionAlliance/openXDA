@@ -119,22 +119,30 @@
                             @categoryRow["Name"].ToString()
                         </div>
                         <div class="panel-body">
-                            <div class="row">
-                                @{
-                                    DataTable appTbl = connection.RetrieveData("SELECT * FROM PQApplications WHERE CategoryID = {0} ORDER BY SortOrder", categoryRow.ConvertField("ID", typeof(int)));
-                                    foreach (DataRow appRow in appTbl.Rows)
-                                    {
-                                        <div class="col-xs-6 col-md-4 col-lg-2">
-                                            <a href="@appRow["Url"].ToString()" class="thumbnail">
-                                                <img src="@appRow["Image"].ToString()" alt="@appRow["Name"].ToString()">
-                                                <div class="caption">
-                                                    <h3>@appRow["Name"].ToString()</h3>
-                                                </div>
-                                            </a>
+                        @{
+                            DataTable appTbl = connection.RetrieveData("SELECT * FROM PQApplications WHERE CategoryID = {0} ORDER BY SortOrder", categoryRow.ConvertField("ID", typeof(int)));
+                            int i = 0;
+                            
+                            while (i < appTbl.Rows.Count)
+                            {
+                                <div class="row">
+                                int j = i;
+                                while (j < (i+6) && i < appTbl.Rows.Count)
+                                {
+                                    DataRow appRow = appTbl.Rows[i];
+                                    <div class="col-xs-6 col-md-4 col-lg-2">
+                                    <a href="@appRow["Url"].ToString()" class="thumbnail">
+                                        <img src="@appRow["Image"].ToString()" alt="@appRow["Name"].ToString()">
+                                        <div class="caption">
+                                            <h3>@appRow["Name"].ToString()</h3>
                                         </div>
-                                    }
+                                    </a>
+                                </div>
+                                i++;
                                 }
-                            </div>
+                                </div>
+                            }    
+                        }  
                         </div>
                     </div>
                 }
