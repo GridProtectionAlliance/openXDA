@@ -78,9 +78,12 @@ namespace openXDA.Controllers.WebAPI
 
                 DataTable dt = connection.RetrieveData(@"
                     Select * from (select 
-                        MeterDetail.*, AF.Value, AF.FieldName
+                        MeterDetail.*, AF.Value, AF.FieldName,
+                        OpenMICDailyStatistic.LasSuccesfullConnection as MeterAssetKey,
+                        DATEDIFF(Hour, OpenMICDailyStatistic.LastSuccessfulConnection,SYSUTCDATETIME()) as LastSuccessfulConnection
                     from 
-                        MeterDetail left join (SELECT
+                        MeterDetail left join 
+                        OpenMICDailyStatistic ON OpenMICDailyStatistic.Meter = MeterDetail.Name LEFT JOIN (SELECT
                             AdditionalFieldValue.ID,
                             AdditionalField.FieldName,
                             AdditionalFieldValue.Value,
