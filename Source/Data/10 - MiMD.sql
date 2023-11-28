@@ -158,7 +158,8 @@ CREATE TABLE [MiMD.ConfigFileRules](
 	Field VARCHAR(255) NOT NULL,
 	[Value] VARCHAR(255) NOT NULL,
 	Comparison VARCHAR(50) NOT NULL,
-	FieldType VARCHAR(50) NOT NULL
+	FieldType VARCHAR(50) NOT NULL,
+	AdditionalFieldID INT NULL REFERENCES AdditionalField(ID)
 );
 GO
 
@@ -274,6 +275,7 @@ CREATE TABLE [MiMD.DiagnosticFileRules](
 	Severity INT NOT NULL DEFAULT 0,
 	ReverseRule BIT NOT NULL DEFAULT 0,
 	SQLQuery VARCHAR(500) NOT NULL DEFAULT '',
+	AdditionalFieldID INT NULL REFERENCES AdditionalField(ID)
 );
 GO
 
