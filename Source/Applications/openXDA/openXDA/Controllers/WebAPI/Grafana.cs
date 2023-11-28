@@ -20,10 +20,14 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Web.Http;
 using GSF.Data;
-
+using GSF.Data.Model;
+using Microsoft.AspNet.SignalR.Infrastructure;
+using openXDA.Model;
 
 namespace openXDA.Controllers.WebAPI
 {
@@ -85,6 +89,109 @@ namespace openXDA.Controllers.WebAPI
                 ");
 
                 return Ok(dt);
+            }
+        }
+
+        // Returns trending Signals associated with a set of meters
+        [HttpGet, Route("TrendingData")]
+        public IHttpActionResult GetTrendingSignals(string meterList)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return Ok(1);
+            }
+        }
+
+        /// <summary>
+        /// Returns all posible Variables to be used in Grafana
+        /// </summary>
+        /// <returns> Additional Fields and Columns in MeterDetails </returns>
+        [HttpGet, Route("GetVariables")]
+        public IHttpActionResult GetVariables()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                DataTable AFKeys = connection.RetrieveData(@"
+                    SELECT DISTINCT FieldName AS [Key] 
+                    FROM AdditionalField
+                    WHERE ParentTable = 'Meter'
+                ");
+
+                DataTable meterDetails = connection.RetrieveData("SELECT Top 1 * FROM MeterDetail");
+
+                IEnumerable<string> fields = AFKeys.AsEnumerable().Select(row => row.Field<string>("Key")).Concat(
+                    meterDetails.Columns.Cast<DataColumn>().Select(x => x.ColumnName)).Concat(new List<string>() { "Customer", "AssetGroup", "CustomerKey" });
+                return Ok(fields);
+            }
+        }
+
+        /// <summary>
+        /// Returns all posible Variables to be used in Grafana
+        /// </summary>
+        /// <returns> Additional Fields and Columns in MeterDetails </returns>
+        [HttpGet, Route("GetVariableValues/{Variable}")]
+        public IHttpActionResult GetVariableValues(string Variable)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                if (string.IsNullOrEmpty(Variable))
+                    return Ok(new List<string>());
+                if (Variable == "Customer")
+                    return Ok(new TableOperations<Customer>(connection).QueryRecords().Select(c => c.Name));
+                if (Variable == "CustomerKey")
+                    return Ok(new TableOperations<Customer>(connection).QueryRecords().Select(c => c.CustomerKey));
+                if (Variable == "AssetGroup")
+                    return Ok(new TableOperations<AssetGroup>(connection).QueryRecords().Select(g => g.Name));
+
+                return Ok(MeterTable().AsEnumerable().Select(row => row.Field<string>(Variable)).Distinct().Select(x => !(x is null)));
+            }
+        }
+
+        private DataTable MeterTable()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                DataTable AFKeys = connection.RetrieveData(@"
+                    SELECT DISTINCT FieldName AS [Key] 
+                    FROM AdditionalField
+                    WHERE ParentTable = 'Meter'
+                ");
+
+                string fieldNames = "";
+                DataRowCollection AFRows = AFKeys.Rows;
+
+                for (int i = 0; i < AFRows.Count; i++)
+                {
+                    fieldNames += $"[{AFRows[i]["Key"]}]";
+
+                    // If it is not the last column, append a comma.
+                    if (i != AFRows.Count - 1)
+                    {
+                        fieldNames += ", ";
+                    }
+                }
+
+                DataTable dt = connection.RetrieveData(@"
+                    Select * from (select 
+                        MeterDetail.*, AF.Value, AF.FieldName,
+                        DATEDIFF(Hour, OpenMICDailyStatistic.LastSuccessfulConnection,SYSUTCDATETIME()) as LastSuccessfulConnection
+                    from 
+                        MeterDetail left join 
+                        OpenMICDailyStatistic ON OpenMICDailyStatistic.Meter = MeterDetail.Name LEFT JOIN (SELECT
+                            AdditionalFieldValue.ID,
+                            AdditionalField.FieldName,
+                            AdditionalFieldValue.Value,
+                            AdditionalFieldValue.ParentTableID, 
+                            AdditionalField.ParentTable
+                        FROM
+                            AdditionalField JOIN
+                            AdditionalFieldValue ON AdditionalField.ID = AdditionalFieldValue.AdditionalFieldID) as AF
+	                    on AF.ParentTableID = MeterDetail.ID
+                    ) as FullTbl
+                    pivot(max(FullTbl.Value) for FullTbl.FieldName IN (" + fieldNames + @")) as Tbl
+                ");
+
+                return dt;
             }
         }
     }
