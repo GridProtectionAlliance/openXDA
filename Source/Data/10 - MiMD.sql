@@ -275,7 +275,7 @@ CREATE TABLE [MiMD.DiagnosticFileRules](
 	Severity INT NOT NULL DEFAULT 0,
 	ReverseRule BIT NOT NULL DEFAULT 0,
 	SQLQuery VARCHAR(500) NOT NULL DEFAULT '',
-	AdditionalFieldID INT
+	AdditionalFieldID INT NULL REFERENCES AdditionalField(ID)
 );
 GO
 
