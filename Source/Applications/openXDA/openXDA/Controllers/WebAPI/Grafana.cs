@@ -143,7 +143,7 @@ namespace openXDA.Controllers.WebAPI
                 if (Variable == "AssetGroup")
                     return Ok(new TableOperations<AssetGroup>(connection).QueryRecords().Select(g => g.Name));
 
-                return Ok(MeterTable().AsEnumerable().Select(row => row.Field<string>(Variable)).Distinct().Select(x => !(x is null)));
+                return Ok(MeterTable().AsEnumerable().Select(row => row.Field<string>(Variable)).Distinct().Where(x => !(x is null)));
             }
         }
 
