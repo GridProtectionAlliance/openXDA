@@ -22,6 +22,7 @@
 //******************************************************************************************************
 using GSF.Data.Model;
 using System;
+using System.ComponentModel;
 
 namespace SystemCenter.Model
 {
@@ -39,7 +40,17 @@ namespace SystemCenter.Model
         public int AdditionalFieldID { get; set; }
         public string Value { get; set; }
         // Note: this is updated by sql when Value changes
-        [ViewOnlyField]
-        public DateTime UpdatedOn { get; set; }
+        [NonSerialized]
+        private DateTime? m_updatedOn = null;
+        public DateTime? UpdatedOn
+        {
+            get
+            {
+                return m_updatedOn.HasValue
+                    ? m_updatedOn.Value
+                    : DateTime.Now;
+            }
+            set { m_updatedOn = value; }
+        }
     }
 }
