@@ -29,11 +29,22 @@ namespace SystemCenter.Model
     /// <summary>
     /// Model used to grab Database (e.g. FAWG or Maximo)
     /// </summary>
-    [UseEscapedName,TableName("ExternalDatabases")]
+    [UseEscapedName, TableName("ExternalDatabases")]
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [GetRoles("Administrator, Transmission SME")]
     [AllowSearch]
+    public class ExternalDatabases
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public string Schedule { get; set; }
+        public string ConnectionString { get; set; }
+        public string DataProviderString { get; set; }
+        public bool Encrypt { get; set; }
+        public DateTime? LastDataPull { get; set; }
+    }
     [CustomView(@"
     SELECT DISTINCT
 	    ExternalDatabases.ID,
@@ -58,20 +69,12 @@ namespace SystemCenter.Model
 	    ExternalDatabases.Encrypt,
         ExternalDatabases.LastDataPull
     ")]
-    public class ExternalDatabases
+    public class DetailedExternalDatabases : ExternalDatabases
 
     {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-        public string Name { get; set; }
-        public string Schedule { get; set; }
-        public string ConnectionString { get; set; }
-        public string DataProviderString { get; set; }
-        public bool Encrypt { get; set; }
-        public DateTime? LastDataPull { get; set; }
-        [NonRecordField]
+        [ViewOnlyField]
         public int? MappedTables { get; set; }
-        [NonRecordField]
+        [ViewOnlyField]
         public int? MappedFields { get; set; }
     }
 }

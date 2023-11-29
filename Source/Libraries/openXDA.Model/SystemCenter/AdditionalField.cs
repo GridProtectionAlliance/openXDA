@@ -65,7 +65,9 @@ namespace SystemCenter.Model
     "), AllowSearch]
     public class AdditionalFieldView : AdditionalField
     {
+        [ViewOnlyField]
         public string ExternalDB { get; set; }
+        [ViewOnlyField]
         public string ExternalTable { get; set; }
     }
 }

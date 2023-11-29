@@ -39,6 +39,7 @@ namespace SystemCenter.Model
         public int AdditionalFieldID { get; set; }
         public string Value { get; set; }
         // Note: this is updated by sql when Value changes
+        [ViewOnlyField]
         public DateTime UpdatedOn { get; set; }
     }
 }
