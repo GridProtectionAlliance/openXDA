@@ -42,53 +42,17 @@ namespace openXDA.Controllers.WebAPI
 
 
         //Returns all main data from meters
-        [HttpGet, Route("Meters")]
-        public IHttpActionResult GetAllMeters()
+        [HttpPost, Route("Meters")]
+        public IHttpActionResult GetAllMeters([FromBody] string query)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                DataTable AFKeys = connection.RetrieveData(@"
-                    SELECT DISTINCT FieldName AS [Key] 
-                    FROM AdditionalField
-                    WHERE ParentTable = 'Meter'
-                ");
+                DataTable meters = MeterTable();
+              
+                if (string.IsNullOrEmpty(query))
+                    return Ok(meters);
 
-                string fieldNames = "";
-                DataRowCollection AFRows = AFKeys.Rows;
-
-                for (int i = 0; i < AFRows.Count; i++)
-                {
-                    fieldNames += $"[{AFRows[i]["Key"]}]";
-
-                    // If it is not the last column, append a comma.
-                    if (i != AFRows.Count - 1)
-                    {
-                        fieldNames += ", ";
-                    }
-                }
-
-                DataTable dt = connection.RetrieveData(@"
-                    Select * from (select 
-                        MeterDetail.*, AF.Value, AF.FieldName,
-                        OpenMICDailyStatistic.LasSuccesfullConnection as MeterAssetKey,
-                        DATEDIFF(Hour, OpenMICDailyStatistic.LastSuccessfulConnection,SYSUTCDATETIME()) as LastSuccessfulConnection
-                    from 
-                        MeterDetail left join 
-                        OpenMICDailyStatistic ON OpenMICDailyStatistic.Meter = MeterDetail.Name LEFT JOIN (SELECT
-                            AdditionalFieldValue.ID,
-                            AdditionalField.FieldName,
-                            AdditionalFieldValue.Value,
-                            AdditionalFieldValue.ParentTableID, 
-                            AdditionalField.ParentTable
-                        FROM
-                            AdditionalField JOIN
-                            AdditionalFieldValue ON AdditionalField.ID = AdditionalFieldValue.AdditionalFieldID) as AF
-	                    on AF.ParentTableID = MeterDetail.ID
-                    ) as FullTbl
-                    pivot(max(FullTbl.Value) for FullTbl.FieldName IN (" + fieldNames + @")) as Tbl
-                ");
-
-                return Ok(dt);
+                return Ok(meters.Select(query));
             }
         }
 
