@@ -63,9 +63,7 @@ namespace SystemCenter.Model
     ")]
     public class DetailedExtDBTables : extDBTables
     {
-        [ViewOnlyField]
         public string ExternalDB { get; set; }
-        [ViewOnlyField]
         public int? MappedFields { get; set; }
     }
 }

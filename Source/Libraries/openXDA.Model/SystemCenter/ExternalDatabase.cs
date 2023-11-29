@@ -72,9 +72,7 @@ namespace SystemCenter.Model
     public class DetailedExternalDatabases : ExternalDatabases
 
     {
-        [ViewOnlyField]
         public int? MappedTables { get; set; }
-        [ViewOnlyField]
         public int? MappedFields { get; set; }
     }
 }
