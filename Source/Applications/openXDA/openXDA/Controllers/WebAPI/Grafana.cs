@@ -57,12 +57,29 @@ namespace openXDA.Controllers.WebAPI
         }
 
         // Returns trending Signals associated with a set of meters
-        [HttpGet, Route("TrendingData")]
-        public IHttpActionResult GetTrendingSignals(string meterList)
+        [HttpPost, Route("TrendingDataID")]
+        public IHttpActionResult GetTrendingID([FromBody] string query)
         {
+
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
-                return Ok(1);
+                DataTable channelTbl = connection.RetrieveData(@"SELECT CHANNEL.ID, 
+                    MeterID, 
+                    AssetID, 
+                    CHANNEL.Name,
+                    Phase.Name AS Phase, 
+                    MeasurementType.Name AS MeasurementType,
+                    MeasurementCharacteristic.Name AS MeasurementCharacteristic
+                FROM CHANNEL LEFT JOIN 
+					Phase ON Channel.PhaseID = Phase.ID LEFT JOIN
+					MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID LEFT JOIN
+					MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID
+						WHERE Trend = 1");
+
+                if (string.IsNullOrEmpty(query))
+                    return Ok(channelTbl);
+                
+                return Ok(channelTbl.Select(query));
             }
         }
 
