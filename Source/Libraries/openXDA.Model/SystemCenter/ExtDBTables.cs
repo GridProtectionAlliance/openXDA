@@ -59,7 +59,7 @@ namespace SystemCenter.Model
 	    extDBTables.TableName,
 	    extDBTables.ExtDBID,
 	    extDBTables.Query,
-		ExternalDatabases.Name as ExternalDB
+		ExternalDatabases.Name
     ")]
     public class DetailedExtDBTables : extDBTables
     {
