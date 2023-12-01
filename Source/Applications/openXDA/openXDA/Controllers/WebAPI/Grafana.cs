@@ -27,6 +27,7 @@ using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
 using Microsoft.AspNet.SignalR.Infrastructure;
+using Newtonsoft.Json.Linq;
 using openXDA.Model;
 
 namespace openXDA.Controllers.WebAPI
@@ -43,24 +44,29 @@ namespace openXDA.Controllers.WebAPI
 
         //Returns all main data from meters
         [HttpPost, Route("Meters")]
-        public IHttpActionResult GetAllMeters([FromBody] string query)
+        public IHttpActionResult GetAllMeters([FromBody] JObject query)
         {
+            string filter = "";
+            if (query.ContainsKey("query"))
+                filter = query["query"].ToString();
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
                 DataTable meters = MeterTable();
               
-                if (string.IsNullOrEmpty(query))
+                if (string.IsNullOrEmpty(filter))
                     return Ok(meters);
 
-                return Ok(meters.Select(query));
+                return Ok(meters.Select(filter).CopyToDataTable());
             }
         }
 
         // Returns trending Signals associated with a set of meters
         [HttpPost, Route("TrendingDataID")]
-        public IHttpActionResult GetTrendingID([FromBody] string query)
+        public IHttpActionResult GetTrendingID([FromBody] JObject query)
         {
-
+            string filter = "";
+            if (query.ContainsKey("query"))
+                filter = query["query"].ToString();
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
                 DataTable channelTbl = connection.RetrieveData(@"SELECT CHANNEL.ID, 
@@ -76,10 +82,10 @@ namespace openXDA.Controllers.WebAPI
 					MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID
 						WHERE Trend = 1");
 
-                if (string.IsNullOrEmpty(query))
+                if (string.IsNullOrEmpty(filter))
                     return Ok(channelTbl);
                 
-                return Ok(channelTbl.Select(query));
+                return Ok(channelTbl.Select(filter).CopyToDataTable());
             }
         }
 
