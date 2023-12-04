@@ -22,19 +22,19 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System;
 
 namespace SystemCenter.Model
 {
     /// <summary>
     /// Model used to grab Database (e.g. FAWG or Maximo)
     /// </summary>
-    [UseEscapedName,TableName("ExternalDatabases")]
+    [UseEscapedName, TableName("ExternalDatabases")]
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [GetRoles("Administrator, Transmission SME")]
     [AllowSearch]
     public class ExternalDatabases
-
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
@@ -43,6 +43,36 @@ namespace SystemCenter.Model
         public string ConnectionString { get; set; }
         public string DataProviderString { get; set; }
         public bool Encrypt { get; set; }
+        public DateTime? LastDataUpdate { get; set; }
     }
+    [CustomView(@"
+    SELECT DISTINCT
+	    ExternalDatabases.ID,
+	    ExternalDatabases.Name,
+	    ExternalDatabases.Schedule,
+	    ExternalDatabases.ConnectionString,
+	    ExternalDatabases.DataProviderString,
+	    ExternalDatabases.Encrypt,
+        ExternalDatabases.LastDataUpdate,
+        COUNT(DISTINCT extDBTables.ID) as MappedTables,
+        COUNT(DISTINCT AdditionalField.ID) as MappedFields
+    FROM
+	    ExternalDatabases LEFT JOIN
+	    extDBTables ON ExternalDatabases.ID = extDBTables.ExtDBID LEFT JOIN
+	    AdditionalField ON extDBTables.ID = AdditionalField.ExternalDBTableID
+	GROUP BY
+	    ExternalDatabases.ID,
+	    ExternalDatabases.Name,
+	    ExternalDatabases.Schedule,
+	    ExternalDatabases.ConnectionString,
+	    ExternalDatabases.DataProviderString,
+	    ExternalDatabases.Encrypt,
+        ExternalDatabases.LastDataUpdate
+    ")]
+    public class DetailedExternalDatabases : ExternalDatabases
 
+    {
+        public int? MappedTables { get; set; }
+        public int? MappedFields { get; set; }
+    }
 }

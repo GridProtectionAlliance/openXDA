@@ -28,7 +28,7 @@ namespace SystemCenter.Model
     /// <summary>
     /// Model used to grab tables form an external Database (e.g. FAWG or Maximo)
     /// </summary>
-    [UseEscapedName,TableName("extDBTables")]
+    [UseEscapedName, TableName("extDBTables")]
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [GetRoles("Administrator, Transmission SME")]
@@ -42,5 +42,28 @@ namespace SystemCenter.Model
         public int ExtDBID { get; set; }
         public string Query { get; set; }
     }
-
+    [CustomView(@"
+    SELECT DISTINCT
+	    extDBTables.ID,
+	    extDBTables.TableName,
+	    extDBTables.ExtDBID,
+	    extDBTables.Query,
+		ExternalDatabases.Name as ExternalDB,
+        COUNT(DISTINCT AdditionalField.ID) as MappedFields
+    FROM
+	    extDBTables LEFT JOIN
+	    ExternalDatabases ON ExternalDatabases.ID = extDBTables.ExtDBID LEFT JOIN
+	    AdditionalField ON extDBTables.ID = AdditionalField.ExternalDBTableID
+	GROUP BY
+	    extDBTables.ID,
+	    extDBTables.TableName,
+	    extDBTables.ExtDBID,
+	    extDBTables.Query,
+		ExternalDatabases.Name
+    ")]
+    public class DetailedExtDBTables : extDBTables
+    {
+        public string ExternalDB { get; set; }
+        public int? MappedFields { get; set; }
+    }
 }

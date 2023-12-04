@@ -57,7 +57,8 @@ namespace SystemCenter.Model
 	        AdditionalField.IsInfo,
 	        AdditionalField.IsKey,
             AdditionalField.ExternalDBTableID,
-	        ExternalDatabases.Name as ExternalDB
+	        ExternalDatabases.Name as ExternalDB,
+	        extDBTables.TableName as ExternalTable
         From
 	        AdditionalField LEFT JOIN
 	        extDBTables ON AdditionalField.ExternalDBTableID = extDBTables.ID LEFT JOIN
@@ -66,5 +67,6 @@ namespace SystemCenter.Model
     public class AdditionalFieldView : AdditionalField
     {
         public string ExternalDB { get; set; }
+        public string ExternalTable { get; set; }
     }
 }
