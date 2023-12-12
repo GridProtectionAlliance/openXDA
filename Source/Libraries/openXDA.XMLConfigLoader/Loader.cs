@@ -205,6 +205,15 @@ namespace openXDA.XMLConfig
                             case "Bus":
                                 LoadBus(assetNode);
                                 break;
+                            case "Generation":
+                                LoadGen(assetNode);
+                                break;
+                            case "StationAux":
+                                LoadAux(assetNode);
+                                break;
+                            case "StationBattery":
+                                LoadBattery(assetNode);
+                                break;
                             case "Breaker":
                                 LoadBreaker(assetNode);
                                 break;
@@ -380,6 +389,108 @@ namespace openXDA.XMLConfig
                 new TableOperations<Bus>(connection).AddNewOrUpdateRecord(record);
             }
             Log.Info($"Loaded Bus {bus.AssetKey}");
+
+        }
+
+        private void LoadGen(XmlNode assetNode)
+        {
+            Generation gen = new Generation()
+            {
+                AssetKey = assetNode.Attributes["AssetKey"].Value,
+                AssetName = assetNode.Attributes["AssetName"].Value,
+                VoltageKV = float.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0"),
+                Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1",
+                Description = assetNode.Attributes["Description"]?.Value
+            };
+
+            // Query from database 
+            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString, DataProvider))
+            {
+                int assetTypeID = connection.ExecuteScalar<int>("SELECT ID FROM AssetType WHERE Name = 'Generation'");
+                gen.AssetTypeID = assetTypeID;
+
+                Generation record = new TableOperations<Generation>(connection).QueryRecordWhere("AssetKey = {0}", gen.AssetKey);
+
+                if (record == null) record = gen;
+                else
+                {
+                    record.AssetName = gen.AssetName;
+                    record.VoltageKV = gen.VoltageKV;
+                    record.Spare = gen.Spare;
+                    record.Description = gen.Description;
+                }
+
+                new TableOperations<Generation>(connection).AddNewOrUpdateRecord(record);
+            }
+            Log.Info($"Loaded Generation {gen.AssetKey}");
+
+        }
+
+        private void LoadAux(XmlNode assetNode)
+        {
+            StationAux aux = new StationAux()
+            {
+                AssetKey = assetNode.Attributes["AssetKey"].Value,
+                AssetName = assetNode.Attributes["AssetName"].Value,
+                VoltageKV = float.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0"),
+                Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1",
+                Description = assetNode.Attributes["Description"]?.Value
+            };
+
+            // Query from database 
+            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString, DataProvider))
+            {
+                int assetTypeID = connection.ExecuteScalar<int>("SELECT ID FROM AssetType WHERE Name = 'StationAux'");
+                aux.AssetTypeID = assetTypeID;
+
+                StationAux record = new TableOperations<StationAux>(connection).QueryRecordWhere("AssetKey = {0}", aux.AssetKey);
+
+                if (record == null) record = aux;
+                else
+                {
+                    record.AssetName = aux.AssetName;
+                    record.VoltageKV = aux.VoltageKV;
+                    record.Spare = aux.Spare;
+                    record.Description = aux.Description;
+                }
+
+                new TableOperations<StationAux>(connection).AddNewOrUpdateRecord(record);
+            }
+            Log.Info($"Loaded Auxilary {aux.AssetKey}");
+
+        }
+
+        private void LoadBattery(XmlNode assetNode)
+        {
+            StationBattery battery = new StationBattery()
+            {
+                AssetKey = assetNode.Attributes["AssetKey"].Value,
+                AssetName = assetNode.Attributes["AssetName"].Value,
+                VoltageKV = float.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0"),
+                Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1",
+                Description = assetNode.Attributes["Description"]?.Value
+            };
+
+            // Query from database 
+            using (AdoDataConnection connection = new AdoDataConnection(ConnectionString, DataProvider))
+            {
+                int assetTypeID = connection.ExecuteScalar<int>("SELECT ID FROM AssetType WHERE Name = 'StationBattery'");
+                battery.AssetTypeID = assetTypeID;
+
+                StationBattery record = new TableOperations<StationBattery>(connection).QueryRecordWhere("AssetKey = {0}", battery.AssetKey);
+
+                if (record == null) record = battery;
+                else
+                {
+                    record.AssetName = battery.AssetName;
+                    record.VoltageKV = battery.VoltageKV;
+                    record.Spare = battery.Spare;
+                    record.Description = battery.Description;
+                }
+
+                new TableOperations<StationBattery>(connection).AddNewOrUpdateRecord(record);
+            }
+            Log.Info($"Loaded Battery {battery.AssetKey}");
 
         }
 

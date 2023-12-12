@@ -537,6 +537,27 @@ CREATE TABLE BusAttributes
 )
 GO
 
+CREATE TABLE GenerationAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+)
+GO
+
+CREATE TABLE StationAuxAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+)
+GO
+
+CREATE TABLE StationBatteryAttributes
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssetID INT NOT NULL REFERENCES Asset(ID),
+)
+GO
+
 CREATE TABLE BreakerAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -802,7 +823,178 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
 END
 GO
 
+-- END Bus Model Triggers 
+-- Generation Model
+CREATE VIEW Generation AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN GenerationAttributes ON Asset.ID = GenerationAttributes.AssetID
+GO
 
+CREATE TRIGGER TR_INSERT_Generation ON GENERATION
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'Generation') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO GenerationAttributes (AssetID)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Generation ON GENERATION
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV) OR UPDATE(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+END
+GO
+
+-- END Generation Model Triggers 
+-- Station Auxilary Model
+CREATE VIEW StationAux AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN StationAuxAttributes ON Asset.ID = StationAuxAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_Aux ON STATIONAUX
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'StationAux') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO StationAuxAttributes (AssetID)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Aux ON STATIONAUX
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV) OR UPDATE(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+END
+GO
+
+-- END Station Auxilary Model Triggers 
+-- Station Battery Model
+CREATE VIEW StationBattery AS
+	SELECT 
+		AssetID AS ID,
+		AssetKey,
+		VoltageKV,
+		Description,
+		AssetName,
+		AssetTypeID,
+		Spare
+	FROM Asset JOIN StationBatteryAttributes ON Asset.ID = StationBatterAttributes.AssetID
+GO
+
+CREATE TRIGGER TR_INSERT_Battery ON STATIONBATTERY
+INSTEAD OF INSERT AS 
+BEGIN
+	INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
+		SELECT 
+			AssetKey AS AssetKey,
+			(SELECT ID FROM AssetType WHERE Name = 'StationBattery') AS AssetTypeID,
+			Description AS Description,
+			AssetName AS AssetName,
+			VoltageKV AS VoltageKV,
+			Spare AS Spare
+	FROM INSERTED
+
+	INSERT INTO StationBatteryAttributes (AssetID)
+		SELECT 
+			(SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID
+	FROM INSERTED
+
+END
+GO
+
+CREATE TRIGGER TR_UPDATE_Battery ON STATIONBATTERY
+INSTEAD OF UPDATE AS
+BEGIN
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (VoltageKV) OR UPDATE(Spare))
+	BEGIN
+		UPDATE Asset
+		SET
+			Asset.AssetKey = INSERTED.AssetKey,
+			Asset.Description = INSERTED.Description,
+			Asset.AssetName = INSERTED.AssetName,
+			Asset.VoltageKV = INSERTED.VoltageKV,
+			Asset.Spare = INSERTED.Spare
+		FROM
+			ASSET 
+		INNER JOIN
+			INSERTED
+		ON 
+			INSERTED.ID = ASSET.ID;
+	END
+END
+GO
+
+-- END Station Bettery Model Triggers
 -- Breaker Model 
 CREATE VIEW Breaker AS
 	SELECT 

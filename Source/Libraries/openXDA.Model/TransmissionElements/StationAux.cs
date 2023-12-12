@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  AssetTypes.cs - Gbtc
+//  StationAux.cs - Gbtc
 //
-//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,65 +16,52 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  12/24/2019 - C. Lackner
-//       Generated original version of source code.
+//  12/13/2019 - Christoph Lackner
+//      Generated original version of source code.
 //
 //******************************************************************************************************
 
-
-using GSF.Data;
-using GSF.Data.Model;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using GSF.Data;
+using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    public enum AssetType
-    {
-        Line = 1,
-        Bus = 2,
-        Breaker = 3,
-        CapacitorBank = 4,
-        LineSegement = 5,
-        Transformer = 6,
-        CapBankRelay = 7,
-        DER = 8,
-        StationAux = 9,
-        StationBattery = 10,
-        Generation = 11
-    }
-
-    [TableName("AssetType")]
-    [PostRoles("Administrator, Transmission SME")]
-    [DeleteRoles("Administrator, Transmission SME")]
-    [PatchRoles("Administrator, Transmission SME")]
-    public class AssetTypes
+    [MetadataType(typeof(Asset))]
+    public class StationAux : Asset
     {
         #region [ Members ]
 
-      
         #endregion
 
         #region [ Properties ]
 
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-
-        [StringLength(50)]
-        [Searchable]
-        [DefaultSortOrder]
-        public string Name { get; set; }
-
-        [StringLength(250)]
-        [Searchable]
-        public string Description { get; set; }
-      
         #endregion
 
+        #region [ Methods ]
+
+        public static StationAux DetailedAux(Asset asset, AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<StationAux> auxTable = new TableOperations<StationAux>(connection);
+            StationAux aux = auxTable.QueryRecordWhere("ID = {0}", asset.ID);
+
+            if (aux != null)
+                aux.LazyContext = asset.LazyContext;
+
+            return aux;
+        }
+
+        public static StationAux DetailedAux(Asset asset)
+        {
+            return DetailedAux(asset, asset.ConnectionFactory.Invoke());
+        }
+        #endregion
     }
 }

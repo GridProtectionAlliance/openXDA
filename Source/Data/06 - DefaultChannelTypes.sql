@@ -622,6 +622,12 @@ INSERT INTO AssetType (ID, Name, Description) VALUES (7,'CapacitorBankRelay','Re
 GO
 INSERT INTO AssetType (ID, Name, Description) VALUES (8,'DER','DER governed by IEEE Standard 1547-2018')
 GO
+INSERT INTO AssetType (ID, Name, Description) VALUES (9,'StationAux','Station Auxilary')
+GO
+INSERT INTO AssetType (ID, Name, Description) VALUES (10,'StationBattery','Station Battery')
+GO
+INSERT INTO AssetType (ID, Name, Description) VALUES (11,'Generation','Generation')
+GO
 
 -- Default Asset Connections
 INSERT INTO AssetRelationshipType ( Name, Description, BiDirectional, JumpConnection, PassThrough)
