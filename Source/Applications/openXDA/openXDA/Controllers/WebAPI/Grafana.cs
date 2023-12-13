@@ -26,7 +26,6 @@ using System.Linq;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
-using Microsoft.AspNet.SignalR.Infrastructure;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
 
@@ -88,8 +87,11 @@ namespace openXDA.Controllers.WebAPI
 
                 if (string.IsNullOrEmpty(filter))
                     return Ok(channelTbl);
-                
-                return Ok(channelTbl.Select(filter).CopyToDataTable());
+
+                DataRow[] results = channelTbl.Select(filter);
+                if (results.Count() > 0)
+                    return Ok(channelTbl.Select(filter).CopyToDataTable());
+                return Ok(new DataTable());
             }
         }
 
