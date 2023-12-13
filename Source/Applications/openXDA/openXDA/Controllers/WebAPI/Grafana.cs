@@ -56,7 +56,11 @@ namespace openXDA.Controllers.WebAPI
                 if (string.IsNullOrEmpty(filter))
                     return Ok(meters);
 
-                return Ok(meters.Select(filter).CopyToDataTable());
+                DataRow[] results = meters.Select(filter);
+                if (results.Count() == 0)
+                    return Ok(new DataTable());
+
+                return Ok(results.CopyToDataTable());
             }
         }
 
@@ -164,7 +168,9 @@ namespace openXDA.Controllers.WebAPI
                         DATEDIFF(Hour, OpenMICDailyStatistic.LastSuccessfulConnection,SYSUTCDATETIME()) as LastSuccessfulConnection
                     from 
                         MeterDetail left join 
-                        OpenMICDailyStatistic ON OpenMICDailyStatistic.Meter = MeterDetail.Name LEFT JOIN (SELECT
+                        OpenMICDailyStatistic ON OpenMICDailyStatistic.Meter = MeterDetail.Name
+                            AND (OpenMICDailyStatistic.Date = (Select Max(Date) FROM OpenMICDailyStatistic OS WHERE OS.Meter = MeterDetail.Name))
+                        LEFT JOIN (SELECT
                             AdditionalFieldValue.ID,
                             AdditionalField.FieldName,
                             AdditionalFieldValue.Value,
