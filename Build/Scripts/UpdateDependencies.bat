@@ -26,7 +26,7 @@
 SETLOCAL
 
 SET pwd=%CD%
-IF "%git%" == "" SET git=%PROGRAMFILES(X86)%\Git\cmd\git.exe
+IF "%git%" == "" SET git=%PROGRAMFILES%\Git\cmd\git.exe
 IF "%replace%" == "" SET replace=\\GPAWEB\NightlyBuilds\Tools\ReplaceInFiles\ReplaceInFiles.exe
 
 SET defaulttarget=%LOCALAPPDATA%\Temp\openXDA
