@@ -262,7 +262,7 @@ namespace openXDA.Controllers.WebAPI
         /// </summary>
         /// <param name="query"> query to get the meters associated with the </param>
         /// <returns></returns>
-        [HttpGet, Route("GetRTData")]
+        [HttpPost, Route("GetRTData")]
         public IHttpActionResult GetRealTimeData([FromBody] JObject query)
         {
            string filter = "";
