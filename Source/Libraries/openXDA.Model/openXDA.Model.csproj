@@ -178,6 +178,7 @@
     <Compile Include="PQMarkRestrictedAttribute.cs" />
     <Compile Include="SystemCenter\ChannelTemplateFile.cs" />
     <Compile Include="SystemCenter\ExternalDatabase.cs" />
+    <Compile Include="TransmissionElements\Generation.cs" />
     <Compile Include="TransmissionElements\StandardMagDurCurve.cs" />
     <Compile Include="StepChangeWebReports\StepChangeMeasurement.cs" />
     <Compile Include="StepChangeWebReports\StepChangeStat.cs" />
@@ -242,6 +243,8 @@
     <Compile Include="Alarms\DataQualityRangeLimit.cs" />
     <Compile Include="TransmissionElements\BreakerOperationType.cs" />
     <Compile Include="TransmissionElements\Breaker.cs" />
+    <Compile Include="TransmissionElements\StationAux.cs" />
+    <Compile Include="TransmissionElements\StationBattery.cs" />
     <Compile Include="TransmissionElements\Transformer.cs" />
     <Compile Include="TransmissionElements\LineSegment.cs" />
     <Compile Include="TransmissionElements\Structure.cs" />
