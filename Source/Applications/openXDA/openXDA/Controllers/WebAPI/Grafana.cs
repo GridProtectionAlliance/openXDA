@@ -34,13 +34,37 @@ using GSF.ServiceProcess;
 using Newtonsoft.Json.Linq;
 using openXDA.APIAuthentication;
 using openXDA.Model;
+using HIDS;
+using openXDA.HIDS.APIExtensions;
+using openXDA.Nodes;
+using System.Threading.Tasks;
+using GSF.Configuration;
+using openXDA.HIDS;
+using System.ComponentModel;
+using ConfigurationLoader = openXDA.Nodes.ConfigurationLoader;
+using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace openXDA.Controllers.WebAPI
 {
     [RoutePrefix("api/GrafanaData")]
     public class GrafanaDataController : ApiController
     {
+
         #region [ Members ]
+
+        private class Settings
+        {
+            [Category]
+            [SettingName(HIDSSettings.CategoryName)]
+            public HIDSSettings HIDSSettings { get; }
+                = new HIDSSettings();
+        }
+
+        private Host Host { get; }
+
+        public GrafanaDataController(Host host) =>
+            Host = host;
 
         internal class RTSubscription
         {
@@ -135,6 +159,13 @@ namespace openXDA.Controllers.WebAPI
             public Point[] Data { get; set; }
             
         }
+
+        private class TrendingData
+        {
+            public List<JObject> Points { get; set; }
+            public string ChannelID { get; set; }
+        }
+
 
         public class Point
         {
@@ -291,6 +322,69 @@ namespace openXDA.Controllers.WebAPI
             return  Ok(openMicKeys.Select(key => { s_activeConnections.TryGetValue(key, out RTSubscription sub); return sub.GetData(); }));
         }
 
+        /// <summary>
+        /// Returns Trending Data as a List. 
+        /// Note that we can not use the HIDS aendpoitn in Grafana since it does not accept streams
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        [HttpPost, Route("GetTrendingData")]
+        public IHttpActionResult GetTrendingData([FromBody] JObject query)
+        {
+            Dictionary<string, TrendingData> results = new Dictionary<string, TrendingData>();
+
+            void BuildQuery(IQueryBuilder builder)
+            {
+                if (query["Channels"] is JArray channels)
+                {
+                    IEnumerable<string> tags = channels
+                        .ToObject<List<int>>()
+                        .Select(channelID => APIExtensions.ToTag(null, channelID));
+
+                    builder.FilterTags(tags);
+                }
+
+                string startTime = ReadDate(query, "StartTime");
+                string stopTime = ReadDate(query, "EndTime");
+
+                if (!string.IsNullOrEmpty(stopTime))
+                    builder.Range(startTime, stopTime);
+                else
+                    builder.Range(startTime);
+            }
+
+            if (!query.ContainsKey("StartTime"))
+            {
+                throw new ArgumentException("Missing query parameter: StartTime");
+            }
+            Stream pointStream = PointStream.QueryPoints(CreateHIDSConnectionAsync, BuildQuery);
+            using (TextReader reader = new StreamReader(pointStream))
+            {
+                while (true)
+                {
+                    string line = reader.ReadLine();
+
+                    if (line == null)
+                        break;
+
+                    if (line == string.Empty)
+                        continue;
+
+                    JObject point = JObject.Parse(line);
+                     
+                    if (results.ContainsKey(point["Tag"].ToString()))
+                        results[point["Tag"].ToString()].Points.Add(point);
+                    else
+                        results.Add(point["Tag"].ToString(), new TrendingData() {
+                            ChannelID= point["Tag"].ToString(),
+                            Points = new List<JObject>() { point }
+                        });                
+                }
+            }
+
+            return Ok(results.Values.ToArray());
+        }
         #endregion
 
         private DataTable MeterTable()
@@ -342,5 +436,31 @@ namespace openXDA.Controllers.WebAPI
                 return dt;
             }
         }
+
+        private string ReadDate(JObject obj, string key)
+        {
+            JToken token = obj[key];
+
+            if (token is null)
+                return null;
+
+            if (token.Type != JTokenType.Date)
+                return token.Value<string>();
+
+            DateTime dt = token.Value<DateTime>();
+            return API.FormatTimestamp(dt);
+        }
+
+        private async Task<API> CreateHIDSConnectionAsync()
+        {
+            ConfigurationLoader configurationLoader = new ConfigurationLoader(Host.ID, Host.CreateDbConnection);
+            Settings settings = new Settings();
+            configurationLoader.Configure(settings);
+
+            API hids = new API();
+            await hids.ConfigureAsync(settings.HIDSSettings);
+            return hids;
+        }
+
     }
 }
