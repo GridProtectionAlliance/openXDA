@@ -23,14 +23,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Web.Http;
 using FaultData.DataAnalysis;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web.Model;
 using log4net;
+using openXDA.Configuration;
 using openXDA.Model;
 
 namespace openXDA.Controllers.WebAPI
@@ -52,11 +55,25 @@ namespace openXDA.Controllers.WebAPI
                     return double.Parse(connection.ExecuteScalar<string>("SELECT TOP 1 Value FROM Setting WHERE Name = 'DataAnalysis.SystemFrequency' UNION (SELECT '60.0' AS Value)"));
             }
         }
+        private string XDATimeZone
+        {
+            get
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                    return connection.ExecuteScalar<string>("SELECT TOP 1 Value FROM Setting WHERE Name = 'System.XDATimeZone' UNION (SELECT 'UTC' AS Value)");
+            }
+        }
 
         [HttpGet, Route("")]
         public IHttpActionResult Get()
         {
             return Ok("Hello!");
+        }
+
+        [HttpGet, Route("TimeZone")]
+        public IHttpActionResult GetTimeZone()
+        {
+            return Ok(XDATimeZone);
         }
 
         [HttpGet, Route("WaveformData/I/{eventId}")]
