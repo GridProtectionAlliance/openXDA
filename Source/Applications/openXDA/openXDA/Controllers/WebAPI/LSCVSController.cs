@@ -23,17 +23,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Web.Http;
 using FaultData.DataAnalysis;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web.Model;
 using log4net;
-using openXDA.Configuration;
 using openXDA.Model;
 
 namespace openXDA.Controllers.WebAPI
