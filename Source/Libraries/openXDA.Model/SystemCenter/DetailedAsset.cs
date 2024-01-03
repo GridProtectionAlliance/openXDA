@@ -54,7 +54,7 @@ namespace SystemCenter.Model
         Asset.VoltageKV,
         AssetType.Name
     "), AllowSearch]
-    [AdditionalFieldSearch("ParentTable = 'Line' OR  ParentTable = 'Transformer' OR  ParentTable = 'Breaker'  OR  ParentTable = 'CapBank'  OR  ParentTable = 'Bus'", @"
+    [AdditionalFieldSearch("ParentTable = 'Line' OR  ParentTable = 'Transformer' OR  ParentTable = 'Breaker'  OR  ParentTable = 'CapBank'  OR  ParentTable = 'Bus' OR  ParentTable = 'Generation' OR  ParentTable = 'StationAux' OR  ParentTable = 'StationBattery'", @"
     (SELECT
 	    AdditionalFieldValue.ID,
 	    AdditionalField.FieldName,

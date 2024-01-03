@@ -125,6 +125,33 @@ namespace FaultData.Configuration
                         assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
                         assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
                         break;
+                    case ((int)AssetType.Generation):
+                        assetElement = new XElement("generation");
+                        Generation gen = Generation.DetailedGen(asset, asset.ConnectionFactory?.Invoke());
+                        assetElement.Add(new XElement(nameof(gen.VoltageKV), gen.VoltageKV));
+                        assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
+                        assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
+                        assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
+                        assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
+                        break;
+                    case ((int)AssetType.StationAux):
+                        assetElement = new XElement("stationAux");
+                        StationAux aux = StationAux.DetailedAux(asset, asset.ConnectionFactory?.Invoke());
+                        assetElement.Add(new XElement(nameof(aux.VoltageKV), aux.VoltageKV));
+                        assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
+                        assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
+                        assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
+                        assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
+                        break;
+                    case ((int)AssetType.StationBattery):
+                        assetElement = new XElement("stationBattery");
+                        StationBattery battery = StationBattery.DetailedBattery(asset, asset.ConnectionFactory?.Invoke());
+                        assetElement.Add(new XElement(nameof(battery.VoltageKV), battery.VoltageKV));
+                        assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
+                        assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
+                        assetElement.Add(new XElement(nameof(asset.Description), asset.Description));
+                        assetElement.Add(new XElement(nameof(asset.AssetName), asset.AssetName));
+                        break;
                     case ((int)AssetType.CapacitorBank):
                         assetElement = new XElement("capacitorBank");
                         CapBank capBank = CapBank.DetailedCapBank(asset, asset.ConnectionFactory?.Invoke());
@@ -376,6 +403,66 @@ namespace FaultData.Configuration
                 bus.AssetName = (string)busElement.Element(nameof(bus.AssetName));
 
                 assets.Add(bus.ID, bus);
+            }
+
+            foreach (XElement genElement in rootElement.Elements("generation"))
+            {
+
+                Generation gen = new Generation()
+                {
+                    AssetLocations = new List<AssetLocation>(),
+                    MeterAssets = new List<MeterAsset>(),
+                    DirectChannels = new List<Channel>(),
+                    Connections = new List<AssetConnection>(),
+                    AssetTypeID = (int)AssetType.Generation
+                };
+                gen.VoltageKV = Convert.ToDouble((string)genElement.Element(nameof(gen.VoltageKV)));
+                gen.ID = Convert.ToInt32((string)genElement.Element(nameof(gen.ID)));
+                gen.AssetKey = (string)genElement.Element(nameof(gen.AssetKey));
+                gen.Description = (string)genElement.Element(nameof(gen.Description));
+                gen.AssetName = (string)genElement.Element(nameof(gen.AssetName));
+
+                assets.Add(gen.ID, gen);
+            }
+
+            foreach (XElement auxElement in rootElement.Elements("stationAux"))
+            {
+
+                StationAux aux = new StationAux()
+                {
+                    AssetLocations = new List<AssetLocation>(),
+                    MeterAssets = new List<MeterAsset>(),
+                    DirectChannels = new List<Channel>(),
+                    Connections = new List<AssetConnection>(),
+                    AssetTypeID = (int)AssetType.StationAux
+                };
+                aux.VoltageKV = Convert.ToDouble((string)auxElement.Element(nameof(aux.VoltageKV)));
+                aux.ID = Convert.ToInt32((string)auxElement.Element(nameof(aux.ID)));
+                aux.AssetKey = (string)auxElement.Element(nameof(aux.AssetKey));
+                aux.Description = (string)auxElement.Element(nameof(aux.Description));
+                aux.AssetName = (string)auxElement.Element(nameof(aux.AssetName));
+
+                assets.Add(aux.ID, aux);
+            }
+
+            foreach (XElement batteryElement in rootElement.Elements("stationBattery"))
+            {
+
+                StationBattery battery = new StationBattery()
+                {
+                    AssetLocations = new List<AssetLocation>(),
+                    MeterAssets = new List<MeterAsset>(),
+                    DirectChannels = new List<Channel>(),
+                    Connections = new List<AssetConnection>(),
+                    AssetTypeID = (int)AssetType.StationBattery
+                };
+                battery.VoltageKV = Convert.ToDouble((string)batteryElement.Element(nameof(battery.VoltageKV)));
+                battery.ID = Convert.ToInt32((string)batteryElement.Element(nameof(battery.ID)));
+                battery.AssetKey = (string)batteryElement.Element(nameof(battery.AssetKey));
+                battery.Description = (string)batteryElement.Element(nameof(battery.Description));
+                battery.AssetName = (string)batteryElement.Element(nameof(battery.AssetName));
+
+                assets.Add(battery.ID, battery);
             }
 
             foreach (XElement capacitorBankElement in rootElement.Elements("capacitorBank"))

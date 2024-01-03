@@ -2765,6 +2765,15 @@ namespace openXDA.Hubs
                         case ((int)AssetType.Bus):
                             connection.ExecuteNonQuery("INSERT INTO BusAttributes (AssetID) VALUES ({0})", record.ID);
                             break;
+                        case ((int)AssetType.Generation):
+                            connection.ExecuteNonQuery("INSERT INTO GenerationAttributes (AssetID) VALUES ({0})", record.ID);
+                            break;
+                        case ((int)AssetType.StationAux):
+                            connection.ExecuteNonQuery("INSERT INTO StationAuxAttributes (AssetID) VALUES ({0})", record.ID);
+                            break;
+                        case ((int)AssetType.StationBattery):
+                            connection.ExecuteNonQuery("INSERT INTO StationBatteryAttributes (AssetID) VALUES ({0})", record.ID);
+                            break;
                         case ((int)AssetType.CapacitorBank):
                             connection.ExecuteNonQuery("INSERT INTO CapacitorBankAttributes (AssetID) VALUES ({0})", record.ID);
                             break;
@@ -3175,6 +3184,204 @@ namespace openXDA.Hubs
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Bus), RecordOperation.DeleteRecord)]
         public void DeleteBus(int id)
+        {
+            CascadeDelete("Asset", $"ID = {id}");
+        }
+
+        #endregion
+
+        #region [Generation Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Generation), RecordOperation.QueryRecordCount)]
+        public int QueryGenCount(string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Generation>(connection).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Generation), RecordOperation.QueryRecords)]
+        public IEnumerable<Generation> QueryGen(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Generation>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Generation), RecordOperation.CreateNewRecord)]
+        public Generation NewGen()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<Generation>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Generation), RecordOperation.AddNewRecord)]
+        public void AddNewGen(Generation record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<Generation>(connection).AddNewRecord(record);
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+                }
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Generation), RecordOperation.UpdateRecord)]
+        public void UpdateGen(Generation record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<Generation>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Generation), RecordOperation.DeleteRecord)]
+        public void DeleteGen(int id)
+        {
+            CascadeDelete("Asset", $"ID = {id}");
+        }
+
+        #endregion
+
+        #region [Station Auxilary Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationAux), RecordOperation.QueryRecordCount)]
+        public int QueryAuxCount(string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<StationAux>(connection).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationAux), RecordOperation.QueryRecords)]
+        public IEnumerable<StationAux> QueryAux(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<StationAux>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationAux), RecordOperation.CreateNewRecord)]
+        public StationAux NewAux()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<StationAux>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationAux), RecordOperation.AddNewRecord)]
+        public void AddNewAux(StationAux record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<StationAux>(connection).AddNewRecord(record);
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+                }
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(StationAux), RecordOperation.UpdateRecord)]
+        public void UpdateAux(StationAux record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<StationAux>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationAux), RecordOperation.DeleteRecord)]
+        public void DeleteAux(int id)
+        {
+            CascadeDelete("Asset", $"ID = {id}");
+        }
+
+        #endregion
+
+        #region [Station Battery Overview]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationBattery), RecordOperation.QueryRecordCount)]
+        public int QueryBatteryCount(string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<StationBattery>(connection).QueryRecordCount(filterString);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationBattery), RecordOperation.QueryRecords)]
+        public IEnumerable<StationBattery> QueryBattery(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<StationBattery>(connection).QueryRecords(sortField, ascending, page, pageSize, filterString).ToList();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationBattery), RecordOperation.CreateNewRecord)]
+        public StationBattery NewBattery()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                return new TableOperations<StationBattery>(connection).NewRecord();
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationBattery), RecordOperation.AddNewRecord)]
+        public void AddNewBattery(StationBattery record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                int added = new TableOperations<StationBattery>(connection).AddNewRecord(record);
+                if (added != 0)
+                {
+                    int index = connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Asset')") ?? 0;
+                    record.ID = index;
+                }
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(StationBattery), RecordOperation.UpdateRecord)]
+        public void UpdateBattery(StationBattery record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                new TableOperations<StationBattery>(connection).UpdateRecord(record);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StationBattery), RecordOperation.DeleteRecord)]
+        public void DeleteBattery(int id)
         {
             CascadeDelete("Asset", $"ID = {id}");
         }

@@ -370,7 +370,21 @@ namespace DeviceDefinitionsMigrator
                                 lookupTables.AssetLookup[asset.AssetKey] = LoadBusAttributes(asset, lineElement, lookupTables, connection);
                                 asset = lookupTables.AssetLookup[asset.AssetKey];
                                 break;
-
+                            case "generation":
+                                asset.AssetTypeID = (int)AssetType.Generation;
+                                lookupTables.AssetLookup[asset.AssetKey] = LoadGenAttributes(asset, lineElement, lookupTables, connection);
+                                asset = lookupTables.AssetLookup[asset.AssetKey];
+                                break;
+                            case "stationAux":
+                                asset.AssetTypeID = (int)AssetType.StationAux;
+                                lookupTables.AssetLookup[asset.AssetKey] = LoadAuxAttributes(asset, lineElement, lookupTables, connection);
+                                asset = lookupTables.AssetLookup[asset.AssetKey];
+                                break;
+                            case "stationBattery":
+                                asset.AssetTypeID = (int)AssetType.StationBattery;
+                                lookupTables.AssetLookup[asset.AssetKey] = LoadBatteryAttributes(asset, lineElement, lookupTables, connection);
+                                asset = lookupTables.AssetLookup[asset.AssetKey];
+                                break;
                             case "transformer":
                                 asset.AssetTypeID = (int)AssetType.Transformer;
                                 lookupTables.AssetLookup[asset.AssetKey] = LoadXfrAttributes(asset, lineElement, lookupTables, connection);
@@ -710,6 +724,63 @@ namespace DeviceDefinitionsMigrator
                 bus.ID = connection.ExecuteScalar<int>("SELECT ID FROM Bus WHERE AssetKey = {0}", bus.AssetKey);
 
             return bus;
+        }
+
+        private static Asset LoadGenAttributes(Asset asset, XElement lineElement, LookupTables lookupTables, AdoDataConnection connection)
+        {
+            Generation gen = Generation.DetailedGen(asset, connection) ?? new Generation()
+            {
+                AssetKey = asset.AssetKey,
+                AssetName = asset.AssetName,
+                AssetTypeID = (int)AssetType.Generation,
+                VoltageKV = asset.VoltageKV
+            };
+
+            TableOperations<Generation> genTable = new TableOperations<Generation>(connection);
+            genTable.AddNewOrUpdateRecord(gen);
+
+            if (gen.ID == 0)
+                gen.ID = connection.ExecuteScalar<int>("SELECT ID FROM Generation WHERE AssetKey = {0}", gen.AssetKey);
+
+            return gen;
+        }
+
+        private static Asset LoadAuxAttributes(Asset asset, XElement lineElement, LookupTables lookupTables, AdoDataConnection connection)
+        {
+            StationAux aux = StationAux.DetailedAux(asset, connection) ?? new StationAux()
+            {
+                AssetKey = asset.AssetKey,
+                AssetName = asset.AssetName,
+                AssetTypeID = (int)AssetType.StationAux,
+                VoltageKV = asset.VoltageKV
+            };
+
+            TableOperations<StationAux> auxTable = new TableOperations<StationAux>(connection);
+            auxTable.AddNewOrUpdateRecord(aux);
+
+            if (aux.ID == 0)
+                aux.ID = connection.ExecuteScalar<int>("SELECT ID FROM StationAux WHERE AssetKey = {0}", aux.AssetKey);
+
+            return aux;
+        }
+
+        private static Asset LoadBatteryAttributes(Asset asset, XElement lineElement, LookupTables lookupTables, AdoDataConnection connection)
+        {
+            StationBattery battery = StationBattery.DetailedBattery(asset, connection) ?? new StationBattery()
+            {
+                AssetKey = asset.AssetKey,
+                AssetName = asset.AssetName,
+                AssetTypeID = (int)AssetType.StationBattery,
+                VoltageKV = asset.VoltageKV
+            };
+
+            TableOperations<StationBattery> batteryTable = new TableOperations<StationBattery>(connection);
+            batteryTable.AddNewOrUpdateRecord(battery);
+
+            if (battery.ID == 0)
+                battery.ID = connection.ExecuteScalar<int>("SELECT ID FROM StationBattery WHERE AssetKey = {0}", battery.AssetKey);
+
+            return battery;
         }
 
         private static Asset LoadXfrAttributes(Asset asset, XElement lineElement, LookupTables lookupTables, AdoDataConnection connection)
