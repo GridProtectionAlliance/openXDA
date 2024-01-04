@@ -27,8 +27,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using FaultData;
@@ -345,6 +347,27 @@ namespace openXDA.Nodes.Types.Email
             message.AppendLine();
             message.AppendLine($"Reply to this message to send a message to all event email subscribers.");
             emailService.SendAdminEmail(subject, message.ToString(), replyTo);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        public static async Task<string> RestoreEventEmailsAsync(Host host, CancellationToken cancellationToken = default)
+        {
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                Type nodeType = typeof(EventEmailNode);
+                string action = nameof(EventEmailWebController.RestoreEventEmails);
+                string url = host.BuildURL(nodeType, action);
+                request.RequestUri = new Uri(url);
+                request.Method = HttpMethod.Post;
+            }
+
+            HttpResponseMessage response = await host.SendWebRequestAsync(ConfigureRequest, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync();
         }
 
         #endregion

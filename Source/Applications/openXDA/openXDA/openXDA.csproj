@@ -388,6 +388,7 @@
     <Compile Include="WebHosting\HostAuthenticationMiddleware.cs" />
     <Compile Include="WebHosting\UseWhenExtensions.cs" />
     <Compile Include="WebHosting\XDAActionSelector.cs" />
+    <Compile Include="WebHosting\XDARazorEngine.cs" />
     <Compile Include="WebHosting\XDAWebHost.cs" />
     <Compile Include="WebHosting\XDAControllerActivator.cs" />
     <Compile Include="WebHosting\XDAControllerSelector.cs" />

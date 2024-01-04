@@ -21,38 +21,47 @@
 //
 //*******************************************************************************************************@
 
-@using System.Net.Http
 @using GSF.Security
 @using GSF.Web.Model
-@using GSF.Web.Security
-@using openXDA
 @using openXDA.Model
+@using openXDA.Nodes
+@using openXDA.Nodes.Types.Email
 
 @inherits ExtendedTemplateBase<AppModel>
-@{
-    string message = "Access denied.";
 
-    DataContext dataContext = ViewBag.DataContext;
+@{
     Layout = "Layout.cshtml";
     ViewBag.Title = "Restore Event Emails";
 
     SecurityPrincipal principal = ViewBag.SecurityPrincipal;
+    string message = "Access denied.";
+    string detail = "";
 
     if (principal.IsInRole("Administrator"))
     {
-        HttpRequestMessage request = ViewBag.Request;
-        ReadonlyAuthenticationOptions authenticationOptions = ViewBag.AuthenticationOptions;
-        string sessionToken = authenticationOptions.SessionToken;
-        Guid sessionID = SessionHandler.GetSessionIDFromCookie(request, sessionToken);
+        Host nodeHost = ViewBag.NodeHost;
 
-        if (sessionID == Guid.Empty)
+        try
         {
-            sessionID = Guid.NewGuid();
-        }
+            message = "Restoring event emails...";
 
-        ServiceConnection.Default.SendCommand(sessionID.ToString(), principal, "RestoreEventEmails");
-        message = "Event emails have been restored.";
+            detail = EventEmailNode
+                .RestoreEventEmailsAsync(nodeHost)
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (Exception ex)
+        {
+            message = "Failed to restore event emails";
+            detail = ex.ToString();
+        }
     }
 }
-<br/>
+
+<br />
 <p>@message</p>
+
+@if (!string.IsNullOrEmpty(detail))
+{
+    <pre>@detail</pre>
+}
