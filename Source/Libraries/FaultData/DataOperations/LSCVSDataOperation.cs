@@ -86,6 +86,7 @@ namespace FaultData.DataOperations
                 TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
 
                 IEnumerable<Event> fileGroupEvents = eventTable.QueryRecordsWhere("FileGroupID={0}", meterDataSet.FileGroup.ID);
+                IEnumerable<EventType> allowedEventTypes = new TableOperations<EventType>(connection).QueryRecordsWhere("Name={0} AND Category={1}", "Sag", "PQ");
 
                 List<LSCVSEvent> lscvsEventList = new List<LSCVSEvent> ();
 
@@ -135,6 +136,9 @@ namespace FaultData.DataOperations
 
                     foreach (DbDisturbance worstDisturbance in worstDisturbances)
                     {
+                        // Skip non-sag events
+                        if (!allowedEventTypes.Any(type => type.ID == worstDisturbance.EventTypeID)) continue;
+
                         foreach (Customer customer in lscvsCustomers)
                         {
                             LSCVSEvent reportData = new LSCVSEvent()
