@@ -238,6 +238,77 @@ namespace openXDA.Controllers.Config
             }
         }
 
+        [Route("ReprocessFilesByID"), HttpPost]
+        public async Task<int> ReprocessFile([FromBody]JObject dataFileIDs)
+        {
+            List<int> fileIDs = JObject.Parse<List<int>>(dataFileIDs);
+
+            using (AdoDataConnection connection = NodeHost.CreateDbConnection())
+            {
+                foreach (int fileGroupID in fileIDs) 
+                {
+                    int? meterID = connection.ExecuteScalar<int?>("SELECT MeterID FROM FileGroup WHERE ID = {0}", fileGroupID);
+
+                    if (meterID is null)
+                    {
+                        string[] files = new TableOperations<DataFile>(connection)
+                            .QueryRecordsWhere("FileGroupID = {0}", fileGroupID)
+                            .Select(dataFile => dataFile.FilePath)
+                            .ToArray();
+
+                        const string NodeQueryFormat =
+                            "SELECT Node.ID " +
+                            "FROM Node LEFT JOIN NodeType ON Node.NodeTypeID = NodeType.ID " +
+                            "WHERE TypeName = {0}";
+
+                        Type fileProcessorType = typeof(FileProcessorNode);
+                        string typeName = fileProcessorType.FullName;
+
+                        using (DataTable nodeResult = connection.RetrieveData(NodeQueryFormat, typeName))
+                        {
+                            Func<AdoDataConnection> connectionFactory = NodeHost.CreateDbConnection;
+
+                            string meterKey = nodeResult
+                                .AsEnumerable()
+                                .Select(row => row.ConvertField<int>("ID"))
+                                .Select(id => new ConfigurationLoader(0, id, connectionFactory))
+                                .Select(configurator => new Settings(configurator.Configure))
+                                .Select(settings => new { settings.FileWatcherSettings.WatchDirectoryList, settings.FileProcessorSettings.FilePattern })
+                                .SelectMany(record => record.WatchDirectoryList, (record, Directory) => new { Directory, record.FilePattern })
+                                .Select(record => new { Directory = FilePath.GetAbsolutePath(record.Directory), record.FilePattern })
+                                .SelectMany(record => files, (record, File) => new { File, record.Directory, record.FilePattern })
+                                .Where(record => record.File.StartsWith(record.Directory, StringComparison.OrdinalIgnoreCase))
+                                .Select(record => Regex.Match(record.File, record.FilePattern))
+                                .Where(match => match.Success)
+                                .Select(match => match.Groups["AssetKey"]?.Value)
+                                .Where(assetKey => assetKey != null)
+                                .FirstOrDefault();
+
+                            if (!(meterKey is null))
+                                meterID = connection.ExecuteScalar<int?>("SELECT ID FROM Meter WHERE AssetKey = {0}", meterKey);
+                        }
+                    }
+
+                    if (meterID is null)
+                        continue
+
+                    CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
+                    CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
+
+                    TableOperations<AnalysisTask> analysisTaskTable = new TableOperations<AnalysisTask>(connection);
+                    AnalysisTask analysisTask = new AnalysisTask();
+                    analysisTask.FileGroupID = fileGroupID;
+                    analysisTask.MeterID = meterID.GetValueOrDefault();
+                    analysisTask.Priority = 3;
+                    analysisTaskTable.AddNewRecord(analysisTask);
+
+                    Type analysisNodeType = typeof(AnalysisNode);
+                    await NotifyNodes(analysisNodeType, "PollTaskQueue");
+                }
+                return 1;
+            }
+        }
+
         [Route("ReprocessFiles"), HttpPost]
         public async Task ReprocessFiles([FromBody] List<int> meterIDs, [FromBody] DateTime startDate, [FromBody] DateTime endDate)
         {
