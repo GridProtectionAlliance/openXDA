@@ -37,6 +37,7 @@ using System.Web.Http.Controllers;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.IO;
 using GSF.Threading;
 using log4net;
@@ -101,6 +102,11 @@ namespace openXDA.Nodes.Types.FileProcessing
                 response.Content = new StringContent(status);
                 return response;
             }
+
+            [HttpPost]
+            public void ReProcess(int dataFileID) =>
+                Node.ReuploadFile(dataFileID);
+
         }
 
         private class WorkItem
@@ -618,6 +624,29 @@ namespace openXDA.Nodes.Types.FileProcessing
                 FileProcessor.EnumerateWatchDirectories();
         }
 
+        public void ReuploadFile(int id)
+        {
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+             
+                DataFile file = new TableOperations<DataFile>(connection).QueryRecordWhere("ID = {0}", id);
+                if (file is null)
+                    return;
+             
+                ReuploadFile(file.FilePath);
+            }
+        }
+
+        private void ReuploadFile(string filePath)
+        {
+             if (IsDisposed)
+                return;
+
+            FileGroupInfo fileGroupInfo = FileProcessorIndex.Index(filePath);
+            WorkItem workItem = new WorkItem(fileGroupInfo, filePath, AnalysisTask.FileEnumerationPriority);
+            WorkQueue.Enqueue(workItem);
+            PollOperation.RunOnceAsync();
+        }
         #endregion
 
         #region [ Static ]
