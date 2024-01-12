@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
@@ -30,7 +31,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Configuration;
@@ -38,6 +38,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.IO;
 using log4net;
+using Newtonsoft.Json.Linq;
 using openXDA.Configuration;
 using openXDA.Model;
 using openXDA.Nodes;
@@ -175,138 +176,42 @@ namespace openXDA.Controllers.Config
         [Route("ReprocessFile/{fileGroupID:int}"), HttpPost]
         public async Task<int> ReprocessFile(int fileGroupID)
         {
+
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
-                int? meterID = connection.ExecuteScalar<int?>("SELECT MeterID FROM FileGroup WHERE ID = {0}", fileGroupID);
 
-                if (meterID is null)
-                {
-                    string[] files = new TableOperations<DataFile>(connection)
-                        .QueryRecordsWhere("FileGroupID = {0}", fileGroupID)
-                        .Select(dataFile => dataFile.FilePath)
-                        .ToArray();
-
-                    const string NodeQueryFormat =
-                        "SELECT Node.ID " +
-                        "FROM Node LEFT JOIN NodeType ON Node.NodeTypeID = NodeType.ID " +
-                        "WHERE TypeName = {0}";
-
-                    Type fileProcessorType = typeof(FileProcessorNode);
-                    string typeName = fileProcessorType.FullName;
-
-                    using (DataTable nodeResult = connection.RetrieveData(NodeQueryFormat, typeName))
-                    {
-                        Func<AdoDataConnection> connectionFactory = NodeHost.CreateDbConnection;
-
-                        string meterKey = nodeResult
-                            .AsEnumerable()
-                            .Select(row => row.ConvertField<int>("ID"))
-                            .Select(id => new ConfigurationLoader(0, id, connectionFactory))
-                            .Select(configurator => new Settings(configurator.Configure))
-                            .Select(settings => new { settings.FileWatcherSettings.WatchDirectoryList, settings.FileProcessorSettings.FilePattern })
-                            .SelectMany(record => record.WatchDirectoryList, (record, Directory) => new { Directory, record.FilePattern })
-                            .Select(record => new { Directory = FilePath.GetAbsolutePath(record.Directory), record.FilePattern })
-                            .SelectMany(record => files, (record, File) => new { File, record.Directory, record.FilePattern })
-                            .Where(record => record.File.StartsWith(record.Directory, StringComparison.OrdinalIgnoreCase))
-                            .Select(record => Regex.Match(record.File, record.FilePattern))
-                            .Where(match => match.Success)
-                            .Select(match => match.Groups["AssetKey"]?.Value)
-                            .Where(assetKey => assetKey != null)
-                            .FirstOrDefault();
-
-                        if (!(meterKey is null))
-                            meterID = connection.ExecuteScalar<int?>("SELECT ID FROM Meter WHERE AssetKey = {0}", meterKey);
-                    }
-                }
-
-                if (meterID is null)
-                    return 0;
-
+                IEnumerable<DataFile> files = new TableOperations<DataFile>(connection)
+                    .QueryRecordsWhere("FileGroupID = {0}", fileGroupID);
+                    
                 CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
                 CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
 
-                TableOperations<AnalysisTask> analysisTaskTable = new TableOperations<AnalysisTask>(connection);
-                AnalysisTask analysisTask = new AnalysisTask();
-                analysisTask.FileGroupID = fileGroupID;
-                analysisTask.MeterID = meterID.GetValueOrDefault();
-                analysisTask.Priority = 3;
-                analysisTaskTable.AddNewRecord(analysisTask);
+                await Task.WhenAll(files.Select(file => ReprocessDataFile(file.ID)).ToArray());
 
-                Type analysisNodeType = typeof(AnalysisNode);
-                await NotifyNodes(analysisNodeType, "PollTaskQueue");
                 return 1;
             }
         }
 
         [Route("ReprocessFilesByID"), HttpPost]
-        public async Task<int> ReprocessFile([FromBody]JObject dataFileIDs)
+        public async Task<int> ReprocessFile([FromBody]JObject fileGroupIDs)
         {
-            List<int> fileIDs = JObject.Parse<List<int>>(dataFileIDs);
-
+            List<int> ids = fileGroupIDs.ToObject<List<int>>();
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
-                foreach (int fileGroupID in fileIDs) 
-                {
-                    int? meterID = connection.ExecuteScalar<int?>("SELECT MeterID FROM FileGroup WHERE ID = {0}", fileGroupID);
 
-                    if (meterID is null)
-                    {
-                        string[] files = new TableOperations<DataFile>(connection)
-                            .QueryRecordsWhere("FileGroupID = {0}", fileGroupID)
-                            .Select(dataFile => dataFile.FilePath)
-                            .ToArray();
+                IEnumerable<DataFile> files = ids.SelectMany((fileGroup) => new TableOperations<DataFile>(connection)
+                    .QueryRecordsWhere("FileGroupID = {0}", fileGroup));
 
-                        const string NodeQueryFormat =
-                            "SELECT Node.ID " +
-                            "FROM Node LEFT JOIN NodeType ON Node.NodeTypeID = NodeType.ID " +
-                            "WHERE TypeName = {0}";
+                ids.ForEach((fileGroup) => { 
+                    CascadeDelete(connection, "Event", $"FileGroupID = {fileGroup}");
+                    CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroup}");
+                });
 
-                        Type fileProcessorType = typeof(FileProcessorNode);
-                        string typeName = fileProcessorType.FullName;
+                await Task.WhenAll(files.Select(file => ReprocessDataFile(file.ID)).ToArray());
 
-                        using (DataTable nodeResult = connection.RetrieveData(NodeQueryFormat, typeName))
-                        {
-                            Func<AdoDataConnection> connectionFactory = NodeHost.CreateDbConnection;
-
-                            string meterKey = nodeResult
-                                .AsEnumerable()
-                                .Select(row => row.ConvertField<int>("ID"))
-                                .Select(id => new ConfigurationLoader(0, id, connectionFactory))
-                                .Select(configurator => new Settings(configurator.Configure))
-                                .Select(settings => new { settings.FileWatcherSettings.WatchDirectoryList, settings.FileProcessorSettings.FilePattern })
-                                .SelectMany(record => record.WatchDirectoryList, (record, Directory) => new { Directory, record.FilePattern })
-                                .Select(record => new { Directory = FilePath.GetAbsolutePath(record.Directory), record.FilePattern })
-                                .SelectMany(record => files, (record, File) => new { File, record.Directory, record.FilePattern })
-                                .Where(record => record.File.StartsWith(record.Directory, StringComparison.OrdinalIgnoreCase))
-                                .Select(record => Regex.Match(record.File, record.FilePattern))
-                                .Where(match => match.Success)
-                                .Select(match => match.Groups["AssetKey"]?.Value)
-                                .Where(assetKey => assetKey != null)
-                                .FirstOrDefault();
-
-                            if (!(meterKey is null))
-                                meterID = connection.ExecuteScalar<int?>("SELECT ID FROM Meter WHERE AssetKey = {0}", meterKey);
-                        }
-                    }
-
-                    if (meterID is null)
-                        continue
-
-                    CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
-                    CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
-
-                    TableOperations<AnalysisTask> analysisTaskTable = new TableOperations<AnalysisTask>(connection);
-                    AnalysisTask analysisTask = new AnalysisTask();
-                    analysisTask.FileGroupID = fileGroupID;
-                    analysisTask.MeterID = meterID.GetValueOrDefault();
-                    analysisTask.Priority = 3;
-                    analysisTaskTable.AddNewRecord(analysisTask);
-
-                    Type analysisNodeType = typeof(AnalysisNode);
-                    await NotifyNodes(analysisNodeType, "PollTaskQueue");
-                }
                 return 1;
             }
+
         }
 
         [Route("ReprocessFiles"), HttpPost]
@@ -414,8 +319,8 @@ namespace openXDA.Controllers.Config
                 byte[] data;
                 if (!(file.FileBlob is null))
                     data = file.FileBlob.Blob;
-                else if (File.Exists(file.FilePath))
-                    data = File.ReadAllBytes(file.FilePath);
+                else if (System.IO.File.Exists(file.FilePath))
+                    data = System.IO.File.ReadAllBytes(file.FilePath);
                 else
                     return await NotFound().ExecuteAsync(default);
 
@@ -453,7 +358,7 @@ namespace openXDA.Controllers.Config
             }
         }
 
-        private async Task NotifyNodes(Type nodeType, string action)
+        private async Task NotifyNodes(Type nodeType, string action, NameValueCollection queryParameters = null)
         {
             async Task NotifyAsync(string url)
             {
@@ -499,7 +404,12 @@ namespace openXDA.Controllers.Config
                     .Select(row =>
                     {
                         int nodeID = row.ConvertField<int>("NodeID");
-                        string url = NodeHost.BuildURL(nodeID, action);
+                        string url;
+                        if (queryParameters is null)
+                            url = NodeHost.BuildURL(nodeID, action);
+                        else
+                            url = NodeHost.BuildURL(nodeID, action, queryParameters);
+
                         return NotifyAsync(url);
                     })
                     .ToList();
@@ -508,6 +418,19 @@ namespace openXDA.Controllers.Config
             }
         }
 
+        /// <summary>
+        /// Reprocess a <see cref="DataFile"/>
+        /// </summary>
+        /// <param name="id"> The ID of the <see cref="DataFile"/> to be reprocessed. </param>
+        private async Task ReprocessDataFile(int id)
+        {
+            Type fileProcessorType = typeof(FileProcessorNode);
+
+            await NotifyNodes(fileProcessorType, "ReProcess", new NameValueCollection
+            {
+                { "dataFileID", id.ToString() }
+            });
+        }
         #endregion
 
         #region [ Static ]
