@@ -74,6 +74,9 @@ namespace openXDA.Nodes.Types.Email
             public EventEmailWebController(EventEmailNode node) =>
                 Node = node;
 
+            [HttpGet]
+            public bool IsTripped() => Node.Tripped;
+
             [HttpPost]
             public void TriggerForFileGroup(int fileGroupID, int processingVersion) =>
                 Node.Process(fileGroupID, processingVersion);
@@ -303,16 +306,9 @@ namespace openXDA.Nodes.Types.Email
             string subject = "openXDA email flooding detected";
             StringBuilder message = new StringBuilder();
             List<string> replyTo = new List<string>();
-            string xdaInstance = "http://localhost:8989";
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
-                TableOperations<DashSettings> dashSettingsTable = new TableOperations<DashSettings>(connection);
-                DashSettings xdaInstanceSetting = dashSettingsTable.QueryRecordWhere("Name = 'System.XDAInstance'");
-
-                if ((object)xdaInstanceSetting != null)
-                    xdaInstance = xdaInstanceSetting.Value.TrimEnd('/');
-
                 TableOperations<EmailType> emailTypeTable = new TableOperations<EmailType>(connection);
                 string emailTypeIDs = string.Join(",", m_emailTypes.Select(type => type.EmailTypeID));
                 int eventEmailCategoryID = connection.ExecuteScalar<int>("SELECT ID FROM EmailCategory WHERE Name = 'Event'");
@@ -343,7 +339,7 @@ namespace openXDA.Nodes.Types.Email
             message.AppendLine();
             message.AppendLine($"Event email notifications have been disabled until further notice.");
             message.AppendLine($"Visit the following page to restore event email notifications.");
-            message.AppendLine($"{xdaInstance}/RestoreEventEmail.cshtml");
+            message.AppendLine($"{eventEmailSettings.RestorationURL}");
             message.AppendLine();
             message.AppendLine($"Reply to this message to send a message to all event email subscribers.");
             emailService.SendAdminEmail(subject, message.ToString(), replyTo);
