@@ -86,7 +86,7 @@ namespace FaultData.DataOperations
                 TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
 
                 IEnumerable<Event> fileGroupEvents = eventTable.QueryRecordsWhere("FileGroupID={0}", meterDataSet.FileGroup.ID);
-                IEnumerable<EventType> allowedEventTypes = new TableOperations<EventType>(connection).QueryRecordsWhere("Name={0} AND Category={1}", "Sag", "PQ");
+                IEnumerable<EventType> allowedEventTypes = new TableOperations<EventType>(connection).QueryRecordsWhere("Name={0}", "Sag");
 
                 List<LSCVSEvent> lscvsEventList = new List<LSCVSEvent> ();
 
