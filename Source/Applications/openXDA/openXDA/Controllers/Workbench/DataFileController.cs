@@ -36,7 +36,6 @@ using System.Web.Http;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.IO;
 using log4net;
 using Newtonsoft.Json.Linq;
 using openXDA.Configuration;
@@ -45,7 +44,6 @@ using openXDA.Nodes;
 using openXDA.Nodes.Types.Analysis;
 using openXDA.Nodes.Types.FileProcessing;
 using openXDA.Nodes.Types.FilePruning;
-using ConfigurationLoader = openXDA.Nodes.ConfigurationLoader;
 
 namespace openXDA.Controllers.Config
 {
@@ -176,42 +174,42 @@ namespace openXDA.Controllers.Config
         [Route("ReprocessFile/{fileGroupID:int}"), HttpPost]
         public async Task<int> ReprocessFile(int fileGroupID)
         {
-
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
-
                 IEnumerable<DataFile> files = new TableOperations<DataFile>(connection)
                     .QueryRecordsWhere("FileGroupID = {0}", fileGroupID);
                     
                 CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
                 CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
 
-                await Task.WhenAll(files.Select(file => ReprocessDataFile(file.ID)).ToArray());
+                await Task.WhenAll(files.Select(file => ReprocessDataFile(file.ID)));
 
                 return 1;
             }
         }
 
         [Route("ReprocessFilesByID"), HttpPost]
-        public async Task<int> ReprocessFile([FromBody]JObject fileGroupIDs)
+        public async Task<int> ReprocessFiles([FromBody] JObject fileGroupIDs)
         {
-            List<int> ids = fileGroupIDs.ToObject<List<int>>();
+            List<int> fileGroupIDList = fileGroupIDs.ToObject<List<int>>();
+
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
+                TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
 
-                IEnumerable<DataFile> files = ids.SelectMany((fileGroup) => new TableOperations<DataFile>(connection)
+                IEnumerable<DataFile> files = fileGroupIDList.SelectMany(fileGroup => dataFileTable
                     .QueryRecordsWhere("FileGroupID = {0}", fileGroup));
 
-                ids.ForEach((fileGroup) => { 
-                    CascadeDelete(connection, "Event", $"FileGroupID = {fileGroup}");
-                    CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroup}");
-                });
+                foreach (int fileGroupID in fileGroupIDList)
+                {
+                    CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
+                    CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
+                }
 
-                await Task.WhenAll(files.Select(file => ReprocessDataFile(file.ID)).ToArray());
+                await Task.WhenAll(files.Select(file => ReprocessDataFile(file.ID)));
 
                 return 1;
             }
-
         }
 
         [Route("ReprocessFiles"), HttpPost]
@@ -319,8 +317,8 @@ namespace openXDA.Controllers.Config
                 byte[] data;
                 if (!(file.FileBlob is null))
                     data = file.FileBlob.Blob;
-                else if (System.IO.File.Exists(file.FilePath))
-                    data = System.IO.File.ReadAllBytes(file.FilePath);
+                else if (File.Exists(file.FilePath))
+                    data = File.ReadAllBytes(file.FilePath);
                 else
                     return await NotFound().ExecuteAsync(default);
 
@@ -404,12 +402,7 @@ namespace openXDA.Controllers.Config
                     .Select(row =>
                     {
                         int nodeID = row.ConvertField<int>("NodeID");
-                        string url;
-                        if (queryParameters is null)
-                            url = NodeHost.BuildURL(nodeID, action);
-                        else
-                            url = NodeHost.BuildURL(nodeID, action, queryParameters);
-
+                        string url = NodeHost.BuildURL(nodeID, action, queryParameters);
                         return NotifyAsync(url);
                     })
                     .ToList();
@@ -418,19 +411,16 @@ namespace openXDA.Controllers.Config
             }
         }
 
-        /// <summary>
-        /// Reprocess a <see cref="DataFile"/>
-        /// </summary>
-        /// <param name="id"> The ID of the <see cref="DataFile"/> to be reprocessed. </param>
         private async Task ReprocessDataFile(int id)
         {
             Type fileProcessorType = typeof(FileProcessorNode);
 
-            await NotifyNodes(fileProcessorType, "ReProcess", new NameValueCollection
+            await NotifyNodes(fileProcessorType, "Reprocess", new NameValueCollection
             {
                 { "dataFileID", id.ToString() }
             });
         }
+
         #endregion
 
         #region [ Static ]

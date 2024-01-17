@@ -104,9 +104,8 @@ namespace openXDA.Nodes.Types.FileProcessing
             }
 
             [HttpPost]
-            public void ReProcess(int dataFileID) =>
+            public void Reprocess(int dataFileID) =>
                 Node.ReuploadFile(dataFileID);
-
         }
 
         private class WorkItem
@@ -628,8 +627,9 @@ namespace openXDA.Nodes.Types.FileProcessing
         {
             using (AdoDataConnection connection = CreateDbConnection())
             {
-             
-                DataFile file = new TableOperations<DataFile>(connection).QueryRecordWhere("ID = {0}", id);
+                DataFile file = new TableOperations<DataFile>(connection)
+                    .QueryRecordWhere("ID = {0}", id);
+
                 if (file is null)
                     return;
              
@@ -643,10 +643,11 @@ namespace openXDA.Nodes.Types.FileProcessing
                 return;
 
             FileGroupInfo fileGroupInfo = FileProcessorIndex.Index(filePath);
-            WorkItem workItem = new WorkItem(fileGroupInfo, filePath, AnalysisTask.FileEnumerationPriority);
+            WorkItem workItem = new WorkItem(fileGroupInfo, filePath, AnalysisTask.RequeuePriority);
             WorkQueue.Enqueue(workItem);
             PollOperation.RunOnceAsync();
         }
+
         #endregion
 
         #region [ Static ]
