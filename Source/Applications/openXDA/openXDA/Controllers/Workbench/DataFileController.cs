@@ -176,14 +176,9 @@ namespace openXDA.Controllers.Config
         {
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
-                IEnumerable<DataFile> files = new TableOperations<DataFile>(connection)
-                    .QueryRecordsWhere("FileGroupID = {0}", fileGroupID);
-                    
                 CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
                 CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
-
-                await Task.WhenAll(files.Select(file => ReprocessDataFile(file.ID)));
-
+                await ReprocessFileGroup(fileGroupID);
                 return 1;
             }
         }
@@ -195,18 +190,16 @@ namespace openXDA.Controllers.Config
 
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
-                TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
-
-                IEnumerable<DataFile> files = fileGroupIDList.SelectMany(fileGroup => dataFileTable
-                    .QueryRecordsWhere("FileGroupID = {0}", fileGroup));
+                List<Task> reprocessTasks = new List<Task>();
 
                 foreach (int fileGroupID in fileGroupIDList)
                 {
                     CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
                     CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
+                    reprocessTasks.Add(ReprocessFileGroup(fileGroupID));
                 }
 
-                await Task.WhenAll(files.Select(file => ReprocessDataFile(file.ID)));
+                await Task.WhenAll(reprocessTasks);
 
                 return 1;
             }
@@ -411,13 +404,13 @@ namespace openXDA.Controllers.Config
             }
         }
 
-        private async Task ReprocessDataFile(int id)
+        private async Task ReprocessFileGroup(int id)
         {
             Type fileProcessorType = typeof(FileProcessorNode);
 
             await NotifyNodes(fileProcessorType, "Reprocess", new NameValueCollection
             {
-                { "dataFileID", id.ToString() }
+                { "fileGroupID", id.ToString() }
             });
         }
 

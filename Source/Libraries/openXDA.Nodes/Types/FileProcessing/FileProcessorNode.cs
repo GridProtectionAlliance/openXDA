@@ -104,8 +104,8 @@ namespace openXDA.Nodes.Types.FileProcessing
             }
 
             [HttpPost]
-            public void Reprocess(int dataFileID) =>
-                Node.ReuploadFile(dataFileID);
+            public void Reprocess(int fileGroupID) =>
+                Node.ReuploadAndProcess(fileGroupID);
         }
 
         private class WorkItem
@@ -623,29 +623,50 @@ namespace openXDA.Nodes.Types.FileProcessing
                 FileProcessor.EnumerateWatchDirectories();
         }
 
-        public void ReuploadFile(int id)
+        public void ReuploadAndProcess(int fileGroupID)
         {
-            using (AdoDataConnection connection = CreateDbConnection())
-            {
-                DataFile file = new TableOperations<DataFile>(connection)
-                    .QueryRecordWhere("ID = {0}", id);
-
-                if (file is null)
-                    return;
-             
-                ReuploadFile(file.FilePath);
-            }
-        }
-
-        private void ReuploadFile(string filePath)
-        {
-             if (IsDisposed)
+            if (IsDisposed)
                 return;
 
-            FileGroupInfo fileGroupInfo = FileProcessorIndex.Index(filePath);
-            WorkItem workItem = new WorkItem(fileGroupInfo, filePath, AnalysisTask.RequeuePriority);
-            WorkQueue.Enqueue(workItem);
-            PollOperation.RunOnceAsync();
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                void SkipToAnalysis()
+                {
+                    const string InsertQueryFormat =
+                        "INSERT INTO AnalysisTask(FileGroupID, MeterID, Priority) " +
+                        "SELECT ID, MeterID, {1} " +
+                        "FROM FileGroup " +
+                        "WHERE FileGroupID = {0}";
+
+                    connection.ExecuteNonQuery(InsertQueryFormat, fileGroupID, AnalysisTask.RequeuePriority);
+                    NotifyOperation.RunOnceAsync();
+                }
+
+                DataFile dataFile = new TableOperations<DataFile>(connection)
+                    .QueryRecordsWhere("FileGroupID = {0}", fileGroupID)
+                    .OrderBy(file => File.Exists(file.FilePath) ? 0 : 1)
+                    .ThenBy(file => MatchesFilter(file.FilePath) ? 0 : 1)
+                    .FirstOrDefault();
+
+                if (dataFile is null)
+                {
+                    SkipToAnalysis();
+                    return;
+                }
+
+                string filePath = dataFile.FilePath;
+                FileGroupInfo fileGroupInfo = FileProcessorIndex.Index(filePath);
+
+                if (!fileGroupInfo.FileGroup.Any())
+                {
+                    SkipToAnalysis();
+                    return;
+                }
+
+                WorkItem workItem = new WorkItem(fileGroupInfo, filePath, AnalysisTask.RequeuePriority);
+                WorkQueue.Enqueue(workItem);
+                PollOperation.RunOnceAsync();
+            }
         }
 
         #endregion

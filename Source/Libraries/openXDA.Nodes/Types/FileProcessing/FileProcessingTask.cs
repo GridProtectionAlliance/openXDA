@@ -96,10 +96,13 @@ namespace openXDA.Nodes.Types.FileProcessing
             {
                 FixLegacyFilePathHash(connection);
 
-                bool hasChanges = CheckForChanges(connection);
+                if (Priority != AnalysisTask.RequeuePriority)
+                {
+                    bool hasChanges = CheckForChanges(connection);
 
-                if (!hasChanges)
-                    return;
+                    if (!hasChanges)
+                        return;
+                }
 
                 string filePattern = Settings.FileProcessorSettings.FilePattern;
                 Meter meter = GetMeter(connection, FilePath, filePattern);
