@@ -112,7 +112,7 @@ namespace openXDA.WebHosting
 
             AppModel = InitializeAppModel();
             AuthenticationOptions = InitializeAuthenticationOptions();
-            WebServer = InitializeWebServer();
+            WebServer = InitializeWebServer(nodeHost);
 
             NodeHost = nodeHost;
             WebApp = Start();
@@ -302,7 +302,7 @@ namespace openXDA.WebHosting
             return webServerOptions;
         }
 
-        private RazorEngine<T> InitializeRazorEngine<T>() where T : LanguageConstraint, new()
+        private IRazorEngine InitializeRazorEngine<TLanguage>(Host nodeHost) where TLanguage : LanguageConstraint, new()
         {
             string templatePath = RetrieveConfigurationFileSetting(
                 name: "TemplatePath",
@@ -310,14 +310,14 @@ namespace openXDA.WebHosting
                 description: "Path for data context based razor field templates.");
 
             string absoluteTemplatePath = FilePath.GetAbsolutePath(templatePath);
-            return new RazorEngine<T>(absoluteTemplatePath);
+            return new XDARazorEngine<TLanguage>(nodeHost, absoluteTemplatePath);
         }
 
-        private WebServer InitializeWebServer()
+        private WebServer InitializeWebServer(Host nodeHost)
         {
             WebServerOptions webServerOptions = InitializeWebServerOptions();
-            IRazorEngine razorEngineCS = InitializeRazorEngine<CSharp>();
-            IRazorEngine razorEngineVB = InitializeRazorEngine<VisualBasic>();
+            IRazorEngine razorEngineCS = InitializeRazorEngine<CSharp>(nodeHost);
+            IRazorEngine razorEngineVB = InitializeRazorEngine<VisualBasic>(nodeHost);
             WebServer webServer = new WebServer(webServerOptions, razorEngineCS, razorEngineVB);
 
             // Attach to default web server events

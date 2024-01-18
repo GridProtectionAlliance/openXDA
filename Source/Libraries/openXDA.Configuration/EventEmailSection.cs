@@ -49,6 +49,10 @@ namespace openXDA.Configuration
             set => MaxEmailSpan = TimeSpan.FromSeconds(value);
         }
 
+        [Setting]
+        [DefaultValue("http://localhost:8989/RestoreEventEmail.cshtml")]
+        public string RestorationURL { get; set; }
+
         public TimeSpan MaxEmailSpan { get; set; }
     }
 }

@@ -197,6 +197,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.MaxEmailSpan', '0.0', '0.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.RestorationURL', 'http://localhost:8989/RestoreEventEmail.cshtml', 'http://localhost:8989/RestoreEventEmail.cshtml')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.MaxFaultDistanceMultiplier', '1.05', '1.05')
 GO
 
