@@ -30,8 +30,8 @@ using GSF.IO.Checksums;
 
 namespace openXDA.Model
 {
-    [TableName("DataFile"), Serializable]
-    public class DataFile
+    [TableName("DataFile")]
+    public class DataFileDb
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
@@ -50,6 +50,10 @@ namespace openXDA.Model
         public DateTime LastWriteTime { get; set; }
 
         public DateTime LastAccessTime { get; set; }
+    }
+    [Serializable]
+    public class DataFile : DataFileDb
+    {
 
         [NonRecordField]
         public FileBlob FileBlob { get; set; }
