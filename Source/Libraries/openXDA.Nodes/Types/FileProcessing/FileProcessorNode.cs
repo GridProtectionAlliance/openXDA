@@ -37,6 +37,7 @@ using System.Web.Http.Controllers;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.IO;
 using GSF.Threading;
 using log4net;
@@ -101,6 +102,10 @@ namespace openXDA.Nodes.Types.FileProcessing
                 response.Content = new StringContent(status);
                 return response;
             }
+
+            [HttpPost]
+            public void Reprocess(int fileGroupID) =>
+                Node.ReuploadAndProcess(fileGroupID);
         }
 
         private class WorkItem
@@ -616,6 +621,52 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             if (ex is InternalBufferOverflowException)
                 FileProcessor.EnumerateWatchDirectories();
+        }
+
+        public void ReuploadAndProcess(int fileGroupID)
+        {
+            if (IsDisposed)
+                return;
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                void SkipToAnalysis()
+                {
+                    const string InsertQueryFormat =
+                        "INSERT INTO AnalysisTask(FileGroupID, MeterID, Priority) " +
+                        "SELECT ID, MeterID, {1} " +
+                        "FROM FileGroup " +
+                        "WHERE FileGroupID = {0}";
+
+                    connection.ExecuteNonQuery(InsertQueryFormat, fileGroupID, AnalysisTask.RequeuePriority);
+                    NotifyOperation.RunOnceAsync();
+                }
+
+                DataFile dataFile = new TableOperations<DataFile>(connection)
+                    .QueryRecordsWhere("FileGroupID = {0}", fileGroupID)
+                    .OrderBy(file => File.Exists(file.FilePath) ? 0 : 1)
+                    .ThenBy(file => MatchesFilter(file.FilePath) ? 0 : 1)
+                    .FirstOrDefault();
+
+                if (dataFile is null)
+                {
+                    SkipToAnalysis();
+                    return;
+                }
+
+                string filePath = dataFile.FilePath;
+                FileGroupInfo fileGroupInfo = FileProcessorIndex.Index(filePath);
+
+                if (!fileGroupInfo.FileGroup.Any())
+                {
+                    SkipToAnalysis();
+                    return;
+                }
+
+                WorkItem workItem = new WorkItem(fileGroupInfo, filePath, AnalysisTask.RequeuePriority);
+                WorkQueue.Enqueue(workItem);
+                PollOperation.RunOnceAsync();
+            }
         }
 
         #endregion

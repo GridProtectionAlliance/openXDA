@@ -132,7 +132,7 @@
                                         {
                                         DataRow appRow = appTbl.Rows[i];
                                         <div class="col-xs-6 col-md-4 col-lg-2">
-                                            <a href="@appRow["Url"].ToString()" class="thumbnail">
+                                            <a href="@appRow["Url"].ToString()" target=”_blank” class="thumbnail">
                                                 <img src="@appRow["Image"].ToString()" alt="@appRow["Name"].ToString()">
                                                 <div class="caption">
                                                     <h3>@appRow["Name"].ToString()</h3>
