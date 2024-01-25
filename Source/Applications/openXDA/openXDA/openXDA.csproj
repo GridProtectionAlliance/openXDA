@@ -4541,7 +4541,6 @@
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\MeasurmentTypeSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmDaySlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmDayGroupSlice.ts" />
-    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\AlarmGroupViewSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\MeterAlarmGroupSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\ChannelAlarmGroupSlice.ts" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\store\MeterSlice.ts" />
