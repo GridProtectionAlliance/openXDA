@@ -83,24 +83,24 @@ namespace SystemCenter.Model
     {
         protected override DataTable GetSearchResults(PostData postData, int? page)
         {
-            List<Search> searches = postData.Searches.ToList();
+            List<SQLSearchFilter> searches = postData.Searches.ToList();
             searches = searches.Select((s) =>
             {
                 if (s.FieldName == "Meter")
-                    return new Search()
+                    return new SQLSearchFilter()
                     {
                         Type = "query",
                         Operator = ">",
-                        isPivotColumn = false,
+                        IsPivotColumn = false,
                         SearchText = "0",
                         FieldName = $"(SELECT Count(*) FROM Meter LEFT JOIN MeterAsset ON Meter.ID = MeterAsset.MeterID WHERE Meter.AssetKey {Transform(s)} AND MeterAsset.AssetID = FullTbl.ID)",
                     };
                 if (s.FieldName == "Location")
-                    return new Search()
+                    return new SQLSearchFilter()
                     {
                         Type = "query",
                         Operator = ">",
-                        isPivotColumn = false,
+                        IsPivotColumn = false,
                         SearchText = "0",
                         FieldName = $"(SELECT Count(*) FROM Location LEFT JOIN AssetLocation ON AssetLocation.LocationID = Location.ID WHERE Location.LocationKey {Transform(s)} AND AssetLocation.AssetID = FullTbl.ID)",
                     };
@@ -112,7 +112,7 @@ namespace SystemCenter.Model
             return base.GetSearchResults(postData, page);
         }
 
-        private string Transform(Search search)
+        private string Transform(SQLSearchFilter search)
         {
             if (search.SearchText == string.Empty) search.SearchText = "%";
             else search.SearchText = search.SearchText.Replace("*", "%");
