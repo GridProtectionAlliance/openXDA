@@ -310,6 +310,9 @@ GO
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('SystemCenter.Url', 'http://localhost:8987', '')
 GO
 
+INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('PQBrowser.Url', 'http://localhost:44368', '')
+GO
+
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.Url', 'http://localhost:8989', '')
 GO
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('XDA.APIKey', '', '')
