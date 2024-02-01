@@ -31,7 +31,7 @@ import { Paging } from '@gpa-gemstone/react-table';
 import { AlarmGroupViewSlice } from '../store/store'
 import { ReactTable } from '@gpa-gemstone/react-table';
 
-interface IDetailRow { Content: string, Value: string, key: number }
+interface IDetailRow { Content: string, Value: string}
 
 const AlarmGroupHome = (props: { loadAlarm: () => void }) => {
     const dispatch = useDispatch();
@@ -74,12 +74,12 @@ const AlarmGroupHome = (props: { loadAlarm: () => void }) => {
     React.useEffect(() => {
         if (selectedAlarmGroup != undefined)
             setDetailedData([
-                { Content: 'Last Alarm', Value: (selectedAlarmGroup.LastAlarmStart == undefined ? 'N/A' : moment(selectedAlarmGroup.LastAlarmStart).format("MM/DD/YYYY HH:mm")), key: 1 },
-                { Content: 'Status', Value: (selectedAlarmGroup.LastAlarmEnd == undefined && selectedAlarmGroup.LastAlarmStart != undefined ? 'In Alarm' : 'Not Active'), key: 2 },
-                { Content: 'Duration', Value: FormatDifference(), key: 3 },
-                { Content: 'Meter', Value: selectedAlarmGroup.LastMeter, key: 4 },
-                { Content: 'Channel', Value: selectedAlarmGroup.LastChannel, key: 5 },
-                { Content: 'Alarm Type', Value: selectedAlarmGroup.AlarmType, key: 6 },
+                { Content: 'Last Alarm', Value: (selectedAlarmGroup.LastAlarmStart == undefined ? 'N/A' : moment(selectedAlarmGroup.LastAlarmStart).format("MM/DD/YYYY HH:mm"))},
+                { Content: 'Status', Value: (selectedAlarmGroup.LastAlarmEnd == undefined && selectedAlarmGroup.LastAlarmStart != undefined ? 'In Alarm' : 'Not Active')},
+                { Content: 'Duration', Value: FormatDifference()},
+                { Content: 'Meter', Value: selectedAlarmGroup.LastMeter },
+                { Content: 'Channel', Value: selectedAlarmGroup.LastChannel},
+                { Content: 'Alarm Type', Value: selectedAlarmGroup.AlarmType},
             ])
         else
             setDetailedData([]);
@@ -172,27 +172,28 @@ const AlarmGroupHome = (props: { loadAlarm: () => void }) => {
                             Data={detailedData}
                             SortKey={'Content'}
                             Ascending={false}
-                            OnSort={() => false}
-                            OnClick={() => false}
+                            OnSort={() => { }}
                             TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             Selected={() => false}
-                            KeySelector={(item) => item.key}
+                            KeySelector={(item) => item.Content}
                         >
                             <ReactTable.Column<IDetailRow>
-                                Key={'\u200B'}
-                                AllowSort={true}
+                                Key={'Content'}
+                                AllowSort={false}
                                 Field={'Content'}
                                 RowStyle={{ width: 'auto' }}
                             >
+                                {'\u200B'}
                             </ReactTable.Column>
                             <ReactTable.Column<IDetailRow>
-                                Key={'\u00A0'}
-                                AllowSort={true}
+                                Key={'Value'}
+                                AllowSort={false}
                                 Field={'Value'}
                                 RowStyle={{ width: 'auto' }}
                             >
+                                {'\u200B'}
                             </ReactTable.Column>
                         </ReactTable.Table>
                         {selectedAlarmGroup != undefined ?
