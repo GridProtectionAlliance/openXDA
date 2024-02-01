@@ -3318,12 +3318,28 @@ CREATE TABLE FaultSegment
 )
 GO
 
+CREATE TABLE MeterDependentAssetDesignation
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeterAssetID INT NOT NULL REFERENCES MeterAsset(ID),
+    Designation VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterDependentAssetDesignation_MeterAssetID
+ON MeterDependentAssetDesignation(MeterAssetID ASC)
+GO
+
 CREATE TABLE FaultDetectionLogic
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterAssetID INT NOT NULL REFERENCES MeterAsset(ID),
     Expression VARCHAR(500) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultDetectionLogic_MeterAssetID
+ON FaultDetectionLogic(MeterAssetID ASC)
 GO
 
 CREATE TABLE FaultLocationAlgorithm

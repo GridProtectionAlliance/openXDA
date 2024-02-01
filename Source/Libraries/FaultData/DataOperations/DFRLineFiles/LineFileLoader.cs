@@ -170,7 +170,7 @@ namespace FaultData.DataOperations.DFRLineFiles
                 line = new Line()
                 {
                     AssetKey = lineID,
-                    AssetName = lineSection.LineName,
+                    AssetName = lineID,
                     VoltageKV = voltageKV
                 };
 
@@ -278,6 +278,25 @@ namespace FaultData.DataOperations.DFRLineFiles
 
                 meterAssetTable.AddNewRecord(meterAsset);
                 meterAsset.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM MeterAsset WHERE MeterID = {0} AND AssetID = {1}", meter.ID, line.ID);
+            }
+
+            TableOperations<MeterDependentAssetDesignation> meterDependentAssetDesignationTable = new TableOperations<MeterDependentAssetDesignation>(m_connection);
+            MeterDependentAssetDesignation meterDependentAssetDesignation = meterDependentAssetDesignationTable.QueryRecordWhere("MeterAssetID = {0}", meterAsset.ID);
+
+            if (meterDependentAssetDesignation is null)
+            {
+                meterDependentAssetDesignation = new MeterDependentAssetDesignation()
+                {
+                    MeterAssetID = meterAsset.ID,
+                    Designation = lineSection.LineName
+                };
+
+                meterDependentAssetDesignationTable.AddNewRecord(meterDependentAssetDesignation);
+            }
+            else if (meterDependentAssetDesignation.Designation != lineSection.LineName)
+            {
+                meterDependentAssetDesignation.Designation = lineSection.LineName;
+                meterDependentAssetDesignationTable.UpdateRecord(meterDependentAssetDesignation);
             }
 
             TableOperations<FaultDetectionLogic> faultDetectionLogicTable = new TableOperations<FaultDetectionLogic>(m_connection);
