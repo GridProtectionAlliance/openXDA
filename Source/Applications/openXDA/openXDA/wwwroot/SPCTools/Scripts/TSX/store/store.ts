@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 import { configureStore } from '@reduxjs/toolkit';
+import { GenericSlice } from '@gpa-gemstone/react-interactive'
 import ChannelOverviewReducer from './ChannelOverviewSlice';
 import ChannelAlarmGroupReducer from './ChannelAlarmGroupSlice';
 import AlarmDayReducer from './AlarmDaySlice';
@@ -34,10 +35,13 @@ import WizardVoltageOptionReducer from './WizardVoltageOptionSlice';
 import SeriesTypeReducer from './SeriesTypeSlice';
 import MeterReducer from './MeterSlice';
 import MeterAlarmGroupReducer from './MeterAlarmGroupSlice';
-import AlarmGroupViewReducer from './AlarmGroupViewSlice';
 import WizardAffectedChannelReducer from './WizardAffectedChannelSlice';
 import SeverityReducer from './SeveritySlice';
 import SetPointParseReducer from './SetPointParseSlice';
+import { SPCTools } from '../global';
+
+export const AlarmGroupViewSlice = new GenericSlice<SPCTools.IAlarmGroupView>("AlarmGroupView", `${apiHomePath}api/SPCTools/AlarmGroupView/SearchableList`, "Name", true);
+
 
 export default configureStore({
     reducer: {
@@ -53,7 +57,7 @@ export default configureStore({
         SeriesType: SeriesTypeReducer,
         Meter: MeterReducer,
         MeterAlarmGroup: MeterAlarmGroupReducer,
-        AlarmGroupView: AlarmGroupViewReducer,
+        AlarmGroupView: AlarmGroupViewSlice.Reducer,
         WizardAffectedChannel: WizardAffectedChannelReducer,
         Severity: SeverityReducer,
         SetPointParse: SetPointParseReducer,
