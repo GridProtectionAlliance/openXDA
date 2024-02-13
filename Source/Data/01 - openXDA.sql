@@ -948,7 +948,7 @@ CREATE VIEW StationBattery AS
 		AssetName,
 		AssetTypeID,
 		Spare
-	FROM Asset JOIN StationBatteryAttributes ON Asset.ID = StationBatterAttributes.AssetID
+	FROM Asset JOIN StationBatteryAttributes ON Asset.ID = StationBatteryAttributes.AssetID
 GO
 
 CREATE TRIGGER TR_INSERT_Battery ON STATIONBATTERY
