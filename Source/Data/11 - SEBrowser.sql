@@ -237,7 +237,7 @@ INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchCorrelatedSa
 GO
 INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVASIDA','TVASIDA', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVASOE', 'TVASOE' 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVASOE', 'TVASOE', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVASLC','TVASLC', 1)
 GO
@@ -247,7 +247,7 @@ INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('HECCOIR','HECCOIR', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('pqi','pqi', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchFileInfo','EventSearchFileInfo,' 1)
+INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchFileInfo','EventSearchFileInfo', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchNoteWindow','EventSearchNoteWindow', 1)
 GO
