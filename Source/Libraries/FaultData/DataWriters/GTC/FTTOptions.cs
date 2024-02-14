@@ -35,5 +35,6 @@ namespace FaultData.DataWriters.GTC
 
         public int ImageWidth { get; set; }
         public int ImageHeight { get; set; }
+        public string BrowserArguments { get; set; }
     }
 }

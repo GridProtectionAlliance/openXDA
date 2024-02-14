@@ -53,6 +53,7 @@ namespace FaultData.DataWriters.GTC
 
             ImageWidth = options.ImageWidth;
             ImageHeight = options.ImageHeight;
+            BrowserArguments = options.BrowserArguments;
         }
 
         #endregion
@@ -67,6 +68,7 @@ namespace FaultData.DataWriters.GTC
 
         private int ImageWidth { get; }
         private int ImageHeight { get; }
+        private string BrowserArguments { get; }
 
         #endregion
 
@@ -139,7 +141,8 @@ namespace FaultData.DataWriters.GTC
                     ImageWidth.ToString(CultureInfo.InvariantCulture),
                     ImageHeight.ToString(CultureInfo.InvariantCulture),
                     QueryTimeout.TotalSeconds.ToString(CultureInfo.InvariantCulture),
-                    Escape(filePath).QuoteWrap()
+                    Escape(filePath).QuoteWrap(),
+                    BrowserArguments
                 };
 
                 process.StartInfo.FileName = CLIPath;
@@ -239,6 +242,7 @@ namespace FaultData.DataWriters.GTC
             string ignoreCertificateErrors = (string)fttElement.Attribute("ignoreCertificateErrors");
             string fttWidth = (string)fttElement.Attribute("width");
             string fttHeight = (string)fttElement.Attribute("height");
+            string browserArguments = (string)fttElement.Attribute("browserArguments");
 
             if (!int.TryParse(fttWidth, out int imageWidth))
                 throw new FormatException($"FTT width '{fttWidth}' is not an integer.");
@@ -254,6 +258,7 @@ namespace FaultData.DataWriters.GTC
             options.IgnoreCertificateErrors = ignoreCertificateErrors.ParseBoolean();
             options.ImageWidth = imageWidth;
             options.ImageHeight = imageHeight;
+            options.BrowserArguments = browserArguments;
 
             List<FTTRecord> fttRecords = fttElement
                 .Elements("fttRecord")
