@@ -131,6 +131,9 @@ namespace FaultTraceToolInterop
                     IgnoreCertificateErrors = ignoreCertificateErrors
                 };
 
+                foreach (string browserArgument in args.Skip(7))
+                    settings.CefCommandLineArgs.Add(browserArgument);
+
                 Cef.Initialize(settings, performDependencyCheck: true, browserProcessHandler: null);
 
                 using (webView = new ChromiumWebBrowser(builder.ToString()))
