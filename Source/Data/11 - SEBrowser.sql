@@ -197,11 +197,7 @@ INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Waveform Analysis', 1
 GO
 INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Fault', 2)
 GO
-INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Correlating Events', 3)
-GO
-INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Configuration', 4)
-GO
-INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('All', 5)
+INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Configuration', 3)
 GO
 
 CREATE TABLE [SEBrowser.Widget] (
@@ -215,47 +211,13 @@ GO
 
 INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('OpenSEE','OpenSEE', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('EventSearchFaultSegments', 'EventSearchFaultSegments', 1)
-GO
 INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('VoltageDisturbances','VoltageDisturbances', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('ESRIMap','ESRIMap', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('FaultInfo','FaultInfo', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('LineParameters','LineParameters', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('Lightning', 'Lightning', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('StructureInfo', 'StructureInfo', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('AssetHistoryTable', 'AssetHistoryTable', 1)
 GO
 INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('AssetHistoryStats','AssetHistoryStats', 1)
 GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('CorrelatedSags', 'CorrelatedSags', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVASIDA','TVASIDA', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('SOE', 'SOE', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVASLC','TVASLC', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('TVAPQWeb','TVAPQWeb', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('InterruptionReport','InterruptionReport', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('pqi','pqi', 1)
-GO
 INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('FileInfo','FileInfo', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('Notes','Notes', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('RelayPerformance','RelayPerformance', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('BreakerPerformance','BreakerPerformance', 1)
-GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('CapBankAnalyticOverview','CapBankAnalyticOverview', 1)
 GO
 
 
@@ -271,83 +233,11 @@ INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (1, 1)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (2, 1)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (3, 1)
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (3, 2)
 GO
 INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (4, 2)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (5, 2)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (6, 2)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (7, 2)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (8, 2)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (9, 2)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (10, 2)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (11, 3)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (12, 3)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (13, 3)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (14, 3)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (15, 3)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (16, 3)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (17, 4)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (18, 4)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (19, 4)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (1, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (2, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (3, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (4, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (5, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (6, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (7, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (8, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (9, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (10, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (11, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (12, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (13, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (14, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (15, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (16, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (17, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (18, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (19, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (20, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (21, 5)
-GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (22, 5)
+INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (5, 3)
 GO
 
 CREATE VIEW [SEBrowser.WidgetView] AS
