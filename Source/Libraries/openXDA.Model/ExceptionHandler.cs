@@ -22,9 +22,7 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
 
 namespace openXDA.Model
 {
@@ -32,17 +30,17 @@ namespace openXDA.Model
     {
         public static bool IsUniqueViolation(Exception ex)
         {
-            if ((object)ex == null)
-                return false;
+            bool IsViolation(int num) => num == 2601 || num == 2627;
 
-            List<Exception> exceptions = new List<Exception>() { ex };
+            while (!(ex is null))
+            {
+                if (ex is SqlException sqlException && IsViolation(sqlException.Number))
+                    return true;
 
-            while ((object)exceptions.Last().InnerException != null)
-                exceptions.Add(ex.InnerException);
-            
-            return exceptions
-                .OfType<SqlException>()
-                .Any(sqlException => (sqlException.Number == 2601) || (sqlException.Number == 2627));
+                ex = ex.InnerException;
+            }
+
+            return false;
         }
     }
 }
