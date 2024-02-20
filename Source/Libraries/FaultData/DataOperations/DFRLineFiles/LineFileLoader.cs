@@ -179,11 +179,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     lineTable.AddNewRecord(line);
                     line.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM Line WHERE AssetKey = {0}", lineID);
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
@@ -245,11 +245,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     TableOperations<AssetConnection> assetConnectionTable = new TableOperations<AssetConnection>(m_connection);
                     assetConnectionTable.AddNewRecord(assetConnection);
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
@@ -337,11 +337,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     measurementTypeTable.AddNewRecord(measurementType);
                     measurementType.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM MeasurementType WHERE Name = {0}", channelInfo.MeasurementType);
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
@@ -366,11 +366,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     measurementCharacteristicTable.AddNewRecord(measurementCharacteristic);
                     measurementCharacteristic.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Instantaneous'");
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex); ;
 
                     if (!isUniqueViolation)
                         throw;
@@ -395,11 +395,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     phaseTable.AddNewRecord(phase);
                     phase.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = {0}", channelInfo.Phase);
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
@@ -424,11 +424,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     seriesTypeTable.AddNewRecord(seriesType);
                     seriesType.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM SeriesType WHERE Name = 'Values'");
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
@@ -511,11 +511,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     measurementTypeTable.AddNewRecord(measurementType);
                     measurementType.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM MeasurementType WHERE Name = 'Digital'");
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
@@ -540,11 +540,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     measurementCharacteristicTable.AddNewRecord(measurementCharacteristic);
                     measurementCharacteristic.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM MeasurementCharacteristic WHERE Name = {0}", digitalInfo.MeasurementCharacteristic);
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
@@ -569,11 +569,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     phaseTable.AddNewRecord(phase);
                     phase.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = 'None'");
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
@@ -598,11 +598,11 @@ namespace FaultData.DataOperations.DFRLineFiles
                     seriesTypeTable.AddNewRecord(seriesType);
                     seriesType.ID = m_connection.ExecuteScalar<int>("SELECT ID FROM SeriesType WHERE Name = 'Values'");
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;

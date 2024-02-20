@@ -202,11 +202,11 @@ namespace openXDA.Model
                 {
                     channelDataTable.AddNewRecord(channelData);
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
