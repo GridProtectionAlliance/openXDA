@@ -204,20 +204,19 @@ CREATE TABLE [SEBrowser.Widget] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name varchar(50) NOT NULL DEFAULT(1),
     Setting varchar(max) NOT NULL Default(''),
-    Type varchar(max) NOT NULL Default('OpenSEE'),
-    Enabled BIT NOT NULL
+    Type varchar(max) NOT NULL Default('OpenSEE')
 )
 GO
 
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('OpenSEE','OpenSEE', 1)
+INSERT [SEBrowser.Widget] (Name, Type) VALUES ('OpenSEE','OpenSEE')
 GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('VoltageDisturbances','VoltageDisturbances', 1)
+INSERT [SEBrowser.Widget] (Name, Type) VALUES ('VoltageDisturbances','VoltageDisturbances')
 GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('AssetHistoryTable', 'AssetHistoryTable', 1)
+INSERT [SEBrowser.Widget] (Name, Type) VALUES ('AssetHistoryTable', 'AssetHistoryTable')
 GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('AssetHistoryStats','AssetHistoryStats', 1)
+INSERT [SEBrowser.Widget] (Name, Type) VALUES ('AssetHistoryStats','AssetHistoryStats')
 GO
-INSERT [SEBrowser.Widget] (Name, Type, Enabled) VALUES ('FileInfo','FileInfo', 1)
+INSERT [SEBrowser.Widget] (Name, Type) VALUES ('FileInfo','FileInfo')
 GO
 
 

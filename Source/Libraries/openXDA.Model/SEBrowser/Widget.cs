@@ -53,8 +53,6 @@ namespace SEBrowser.Model
 
         public string Setting { get; set; }
 
-        public bool Enabled { get; set; }
-
         public string Type { get; set; }
 
         #endregion
