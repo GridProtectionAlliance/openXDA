@@ -3856,6 +3856,14 @@ CREATE TABLE AlarmGroup
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_AlarmGroup_AlarmTypeID
+ON AlarmGroup(AlarmTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmGroup_SeverityID
+ON AlarmGroup(SeverityID ASC)
+GO
+
 CREATE TABLE Alarm
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -3866,6 +3874,14 @@ CREATE TABLE Alarm
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Alarm_AlarmGroupID
+ON Alarm(AlarmGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Alarm_SeriesID
+ON Alarm(SeriesID ASC)
+GO
+
 CREATE TABLE AlarmFactor
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -3873,6 +3889,14 @@ CREATE TABLE AlarmFactor
     Factor FLOAT NOT NULL DEFAULT(1.0),
     SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmFactor_AlarmGroupID
+ON AlarmFactor(AlarmGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmFactor_SeverityID
+ON AlarmFactor(SeverityID ASC)
 GO
 
 CREATE TABLE AlarmDay
@@ -3894,6 +3918,13 @@ CREATE TABLE AlarmValue
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_AlarmValue_AlarmID
+ON AlarmValue(AlarmID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmValue_AlarmDayID
+ON AlarmValue(AlarmDayID ASC)
+GO
 
 CREATE TABLE AlarmLog
 (
@@ -3903,6 +3934,72 @@ CREATE TABLE AlarmLog
     StartTime DATETIME NOT NULL,
     EndTime DATETIME NULL,
 )
+GO
+
+CREATE TABLE LatestAlarmLog
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AlarmID INT NOT NULL UNIQUE REFERENCES Alarm(ID),
+    AlarmLogID INT NOT NULL REFERENCES AlarmLog(ID),
+    StartTime DATETIME NOT NULL,
+    EndTime DATETIME NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_LatestAlarmLog_AlarmLogID
+ON LatestAlarmLog(AlarmLogID ASC)
+GO
+
+CREATE TRIGGER AlarmLog_UpdateLatestAlarmLog
+    ON AlarmLog
+    AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Ignore logs with AlarmFactorID
+    SELECT *
+    INTO #alarmlog
+    FROM inserted
+    WHERE AlarmFactorID IS NULL
+
+    -- Update existing records in LatestAlarmLog
+    UPDATE LatestAlarmLog
+    SET
+        AlarmLogID = #alarmlog.ID,
+        StartTime = #alarmlog.StartTime,
+        EndTime = #alarmlog.EndTime
+    FROM
+        LatestAlarmLog JOIN
+        #alarmlog ON #alarmlog.AlarmID = LatestAlarmLog.AlarmID JOIN
+        AlarmLog ON LatestAlarmLog.AlarmLogID = AlarmLog.ID
+    WHERE #alarmlog.StartTime >= AlarmLog.StartTime
+
+    -- Determine which alarms have never had logs before now
+    SELECT DISTINCT #alarmlog.AlarmID
+    INTO #alarm
+    FROM
+        #alarmlog LEFT OUTER JOIN
+        LatestAlarmLog ON #alarmlog.AlarmID = LatestAlarmLog.AlarmID
+    WHERE LatestAlarmLog.ID IS NULL
+
+    -- Insert new records in LatestAlarmLog
+    -- for alarms that never had logs before now
+    INSERT INTO LatestAlarmLog(AlarmID, AlarmLogID, StartTime, EndTime)
+    SELECT
+        AlarmLog.AlarmID,
+        AlarmLog.ID AlarmLogID,
+        AlarmLog.StartTime,
+        AlarmLog.EndTime
+    FROM
+        #alarm CROSS APPLY
+        (
+            SELECT TOP 1 *
+            FROM #alarmlog
+            WHERE AlarmID = #alarm.AlarmID
+            ORDER BY StartTime DESC, ID DESC
+        ) AlarmLog
+END
 GO
 
 CREATE TABLE AlarmDayGroup (
@@ -3918,7 +4015,13 @@ CREATE TABLE AlarmDayGroupAlarmDay (
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_AlarmDayGroupAlarmDay_AlarmDayID
+ON AlarmDayGroupAlarmDay(AlarmDayID ASC)
+GO
 
+CREATE NONCLUSTERED INDEX IX_AlarmDayGroupAlarmDay_AlarmDayGroupID
+ON AlarmDayGroupAlarmDay(AlarmDayGroupID ASC)
+GO
 
 -- Views for UI --
 CREATE VIEW AlarmGroupView AS 
@@ -3949,22 +4052,20 @@ FROM
     ) CountStats OUTER APPLY
     (
         SELECT TOP 1
-            AlarmLog.StartTime,
-            AlarmLog.EndTime,
+            LatestAlarmLog.StartTime,
+            LatestAlarmLog.EndTime,
             Channel.Name ChannelName,
             Meter.Name MeterName
         FROM
-            AlarmLog JOIN
-            Alarm ON AlarmLog.AlarmID = Alarm.ID JOIN
+            Alarm JOIN
             Series ON Alarm.SeriesID = Series.ID JOIN
             Channel ON Series.ChannelID = Channel.ID JOIN
-            Meter ON Channel.MeterID = Meter.ID
-        WHERE
-            Alarm.AlarmGroupID = AlarmGroup.ID AND
-            AlarmLog.AlarmFactorID IS NULL
+            Meter ON Channel.MeterID = Meter.ID JOIN
+            LatestAlarmLog ON LatestAlarmLog.AlarmID = Alarm.ID
+        WHERE Alarm.AlarmGroupID = AlarmGroup.ID
         ORDER BY
-            AlarmLog.StartTime DESC,
-            AlarmLog.ID DESC
+            LatestAlarmLog.StartTime DESC,
+            LatestAlarmLog.AlarmLogID DESC
     ) LastAlarm
 GO
 
