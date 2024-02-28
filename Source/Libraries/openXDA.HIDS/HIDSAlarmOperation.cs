@@ -495,6 +495,7 @@ namespace openXDA.HIDS
             {
                 AlarmID = alarm.AlarmID,
                 AlarmFactorID = alarm.AlarmFactorID,
+                SeverityID = alarm.SeverityID,
                 StartTime = range.Start,
                 EndTime = range.End
             }).ToList();

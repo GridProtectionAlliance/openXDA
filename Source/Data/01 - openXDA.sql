@@ -3931,6 +3931,7 @@ CREATE TABLE AlarmLog
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AlarmID  INT NOT NULL REFERENCES Alarm(ID),
     AlarmFactorID  INT NULL REFERENCES AlarmFactor(ID),
+    SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID),
     StartTime DATETIME NOT NULL,
     EndTime DATETIME NULL,
 )
@@ -3941,13 +3942,22 @@ CREATE TABLE LatestAlarmLog
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AlarmID INT NOT NULL UNIQUE REFERENCES Alarm(ID),
     AlarmLogID INT NOT NULL REFERENCES AlarmLog(ID),
+    SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID),
     StartTime DATETIME NOT NULL,
     EndTime DATETIME NULL
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_LatestAlarmLog_AlarmID
+ON LatestAlarmLog(AlarmID ASC)
+GO
+
 CREATE NONCLUSTERED INDEX IX_LatestAlarmLog_AlarmLogID
 ON LatestAlarmLog(AlarmLogID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_LatestAlarmLog_SeverityID
+ON LatestAlarmLog(SeverityID ASC)
 GO
 
 CREATE TRIGGER AlarmLog_UpdateLatestAlarmLog
@@ -3957,45 +3967,41 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Ignore logs with AlarmFactorID
-    SELECT *
-    INTO #alarmlog
-    FROM inserted
-    WHERE AlarmFactorID IS NULL
-
     -- Update existing records in LatestAlarmLog
     UPDATE LatestAlarmLog
     SET
-        AlarmLogID = #alarmlog.ID,
-        StartTime = #alarmlog.StartTime,
-        EndTime = #alarmlog.EndTime
+        AlarmLogID = inserted.ID,
+        SeverityID = inserted.SeverityID,
+        StartTime = inserted.StartTime,
+        EndTime = inserted.EndTime
     FROM
         LatestAlarmLog JOIN
-        #alarmlog ON #alarmlog.AlarmID = LatestAlarmLog.AlarmID JOIN
+        inserted ON inserted.AlarmID = LatestAlarmLog.AlarmID JOIN
         AlarmLog ON LatestAlarmLog.AlarmLogID = AlarmLog.ID
-    WHERE #alarmlog.StartTime >= AlarmLog.StartTime
+    WHERE inserted.StartTime >= AlarmLog.StartTime
 
     -- Determine which alarms have never had logs before now
-    SELECT DISTINCT #alarmlog.AlarmID
+    SELECT DISTINCT inserted.AlarmID
     INTO #alarm
     FROM
-        #alarmlog LEFT OUTER JOIN
-        LatestAlarmLog ON #alarmlog.AlarmID = LatestAlarmLog.AlarmID
+        inserted LEFT OUTER JOIN
+        LatestAlarmLog ON inserted.AlarmID = LatestAlarmLog.AlarmID
     WHERE LatestAlarmLog.ID IS NULL
 
     -- Insert new records in LatestAlarmLog
     -- for alarms that never had logs before now
-    INSERT INTO LatestAlarmLog(AlarmID, AlarmLogID, StartTime, EndTime)
+    INSERT INTO LatestAlarmLog(AlarmID, AlarmLogID, SeverityID, StartTime, EndTime)
     SELECT
         AlarmLog.AlarmID,
         AlarmLog.ID AlarmLogID,
+        AlarmLog.SeverityID,
         AlarmLog.StartTime,
         AlarmLog.EndTime
     FROM
         #alarm CROSS APPLY
         (
             SELECT TOP 1 *
-            FROM #alarmlog
+            FROM inserted
             WHERE AlarmID = #alarm.AlarmID
             ORDER BY StartTime DESC, ID DESC
         ) AlarmLog
@@ -4135,15 +4141,27 @@ CREATE VIEW AlarmDayGroupView AS SELECT
 	ALarmDayGroupAlarmDay LEFT JOIN AlarmDayGroup ON ALarmDayGroupAlarmDay.AlarmDayGroupID = AlarmDayGroup.ID
 GO
 
-CREATE VIEW ActiveAlarmView AS SELECT 
-	Alarm.ID AS AlarmID,
-	Alarm.AlarmGroupID AS AlarmGroupID,
-	AlarmGroup.AlarmTypeID AS AlarmTypeID,
-	AlarmFactor.ID as AlarmFactorID,
-	Alarm.SeriesID AS SeriesID,
-	AlarmFactor.Factor AS Value
+CREATE VIEW ActiveAlarmView AS
+SELECT
+    Alarm.ID AS AlarmID,
+    Alarm.AlarmGroupID AS AlarmGroupID,
+    AlarmGroup.AlarmTypeID AS AlarmTypeID,
+    AlarmFactor.ID AS AlarmFactorID,
+    AlarmFactor.SeverityID,
+    Alarm.SeriesID AS SeriesID,
+    AlarmFactor.Factor AS Value
 FROM
-(SELECT ID, Factor, AlarmGroupID FROM Alarmfactor UNION SELECT NULL AS ID, 1.0 as Factor, AlarmGroup.ID AS AlarmGroupID FROM AlarmGroup) AlarmFactor LEFT JOIN
+    (
+        SELECT ID, Factor, AlarmGroupID, SeverityID
+        FROM AlarmFactor
+        UNION
+        SELECT
+            NULL AS ID,
+            1.0 AS Factor,
+            AlarmGroup.ID AS AlarmGroupID,
+            AlarmGroup.SeverityID
+        FROM AlarmGroup
+    ) AlarmFactor LEFT JOIN
     Alarm ON AlarmFactor.AlarmGroupID = alarm.AlarmGroupID LEFT JOIN
     AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID
 GO

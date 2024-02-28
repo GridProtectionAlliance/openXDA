@@ -37,6 +37,8 @@ namespace openXDA.Model
 
         public int? AlarmFactorID { get; set; }
 
+        public int SeverityID { get; set; }
+
         public DateTime StartTime { get; set; }
 
         public DateTime? EndTime { get; set; }
