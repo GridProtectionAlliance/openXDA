@@ -6519,6 +6519,7 @@ CREATE TABLE StandardMagDurCurve(
 	YLow float NOT NULL,
 	UpperCurve Geometry NULL,
 	LowerCurve Geometry NULL,
-	Area Geometry NULL
+	Area Geometry NULL,
+    Color varchar(255) NOT NULL,
 )
 GO
