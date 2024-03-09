@@ -568,8 +568,7 @@ namespace FaultData.DataOperations
 
             if (meter.MeterAssets.Count > 1)
             {
-                Log.Warn($"Add channels to meter {meterDataSet.Meter.Name} Asset {meter.MeterAssets.First().Asset.AssetKey}. There are too many lines associated with that meter.");
-                return;
+                Log.Warn($"Add channels to meter {meterDataSet.Meter.Name} Asset {meter.MeterAssets.First().Asset.AssetKey}. There are more than 2 assets associated with that meter.");
             }
 
             Asset asset = meter.MeterAssets
