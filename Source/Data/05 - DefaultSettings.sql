@@ -788,6 +788,30 @@ INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve,
 GO
 INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'NERC PRC-024-2', 4,0.001,1.3,0, NULL, NULL, NULL, '#d3d3d3')
 GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Transients', 0,0, 0,0, NULL, NULL, NULL, '#afd8f8')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Instantaneous Sag', 0,0, 0,0, NULL, NULL, NULL, '#f47d23')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Instantaneous Swell', 0,0, 0,0, NULL, NULL, NULL, '#008c48')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Mom. Interruption', 0,0, 0,0, NULL, NULL, NULL, '#ee2e2f')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Momentary Sag', 0,0, 0,0, NULL, NULL, NULL, '#737373')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Momentary Swell', 0,0, 0,0, NULL, NULL, NULL, '#662c91')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Temp. Interruption', 0,0, 0,0, NULL, NULL, NULL, '#bd9b33')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Temporary Sag', 0,0, 0,0, NULL, NULL, NULL, '#ff904f')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Temporary Swell', 0,0, 0,0, NULL, NULL, NULL, '#ff9999')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Sustained Int.', 0,0, 0,0, NULL, NULL, NULL, '#0029A3')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Undervoltage', 0,0, 0,0, NULL, NULL, NULL, '#cb4b4b')
+GO
+INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Overvoltage', 0,0, 0,0, NULL, NULL, NULL, '#4da74d')
+GO
 
 UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.01 0.5, 0.2 0.5, 0.2 0.7, 0.5 0.7,0.5 0.8,2 0.8,2 1.0,0.01 1.0, 0.01 0.5))' WHERE Name = 'IEEE 1668 Type I & II'
 GO
@@ -798,6 +822,30 @@ GO
 UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.0001667 5, 0.001 2, 0.003 1.4, 0.003 1.2,0.5 1.2,0.5 1.1, 100 1.1,100 0.9, 10 0.9, 10 0.8, 0.5 0.8, 0.5 0.7, 0.02 0.7, 0.02 0, 1000 0, 1000 5, 0.0001667 5))' WHERE Name = 'ITIC'
 GO
 UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.001 1.2, 0.2 1.2, 0.2 1.175, 0.5 1.175,0.5 1.15,1 1.15, 1 1.10,4 1.10, 4 0.9, 3 0.9, 3 0.75, 2 0.75, 2 0.65, 0.3 0.65, 0.3 0.45, 0.15 0.45, 0.15 0, 0.001 0, 0.001 1.2))' WHERE Name = 'NERC PRC-024-2'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.000001 0, 0.01 0, 0.01 5.0, 0.000001 5.0, 0.000001 0))' WHERE Name = 'IEEE 1159 Transients'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.01 0.1, 0.5 0.1, 0.5 0.9, 0.01 0.9, 0.01 0.1))' WHERE Name = 'IEEE 1159 Instantaneous Sag'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.01 1.1, 0.5 1.1, 0.5 1.8, 0.01 1.8, 0.01 1.1))' WHERE Name = 'IEEE 1159 Instantaneous Swell'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.01 0, 3.0 0, 3.0 0.01, 0.01 0.1, 0.01 0))' WHERE Name = 'IEEE 1159 Mom. Interruption'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.5 0.1, 3.0 0.1, 3 0.9, 0.5 0.9, 0.5 0.1))' WHERE Name = 'IEEE 1159 Momentary Sag'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.5 1.1, 3.0 1.1, 3.0 1.4, 0.5 1.4, 0.5 1.1))' WHERE Name = 'IEEE 1159 Momentary Swell'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((3.0 0, 60.0 0, 60.0 0.1, 3.0 0.1, 3.0 0))' WHERE Name = 'IEEE 1159 Temp. Interruption'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((3.0 0.1, 60.0 0.1, 60.0 0.9, 3.0 0.9, 3.0 0.1))' WHERE Name = 'IEEE 1159 Temporary Sag'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((3.0 1.1, 60.0 1.1, 60.0 1.2, 3.0 1.2, 3.0 1.1))' WHERE Name = 'IEEE 1159 Temporary Swell'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((60.0 0, 1000.0 0, 1000.0 0.1, 60.0 0.1, 60.0 0))' WHERE Name = 'IEEE 1159 Sustained Int.'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((60.0 0.8, 1000.0 0.8, 1000.0 0.9, 60.0 0.9, 60.0 0.8))' WHERE Name = 'IEEE 1159 Undervoltage'
+GO
+UPDATE StandardMagDurCurve SET Area = 'POLYGON((60.0 1.1, 1000.0 1.1, 1000.0 1.2, 60.0 1.2, 60.0 1.1))' WHERE Name = 'IEEE 1159 Overvoltage'
 GO
 
 INSERT INTO CellCarrier (Name,Transform) VALUES
