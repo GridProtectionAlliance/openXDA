@@ -568,7 +568,7 @@ namespace FaultData.DataOperations
 
             if (meter.MeterAssets.Count > 1)
             {
-                Log.Warn($"Add channels to meter {meterDataSet.Meter.Name} Asset {meter.MeterAssets.First().Asset.AssetKey}. There are more than 2 assets associated with that meter.");
+                Log.Warn($"There is more than one asset associated with meter {meter.Name}. Adding channels to arbitrarily selected asset {meter.MeterAssets.First().Asset.AssetKey}.");
             }
 
             Asset asset = meter.MeterAssets
