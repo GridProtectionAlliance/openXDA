@@ -72,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="XDAAPIHelper.cs" />
     <Compile Include="ImpersonationSecurityProvider.cs" />
     <Compile Include="APIConsoleController.cs" />
     <Compile Include="IAPIConsoleHost.cs" />
