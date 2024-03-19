@@ -6513,12 +6513,6 @@ GO
 CREATE TABLE StandardMagDurCurve(
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	Name varchar(200) NOT NULL,
-	XHigh float NOT NULL,
-	XLow float NOT NULL,
-	YHigh float NOT NULL,
-	YLow float NOT NULL,
-	UpperCurve Geometry NULL,
-	LowerCurve Geometry NULL,
 	Area Geometry NULL,
     Color varchar(255) NOT NULL,
 )

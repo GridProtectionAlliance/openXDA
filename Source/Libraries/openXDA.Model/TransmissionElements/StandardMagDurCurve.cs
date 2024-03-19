@@ -40,12 +40,6 @@ namespace openXDA.Model
         [PrimaryKey]
         public int ID { get; set; }
         public string Name { get; set; }
-        public double XHigh { get; set; }
-        public double XLow { get; set; }
-        public double YHigh { get; set; }
-        public double YLow { get; set; }
-        public string UpperCurve { get; set; }
-        public string LowerCurve { get; set; }
         public string Area { get; set; }
         public string Color { get; set; }
     }

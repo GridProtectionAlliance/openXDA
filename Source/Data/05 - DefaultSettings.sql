@@ -777,40 +777,40 @@ INSERT INTO ScheduledEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VAL
 ('HIDS','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.HIDSDataSource','hids')
 GO
 
--- Standard MAgDur Curves --
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'ITIC', 100, 0.000001,5,0, NULL, NULL, NULL, '#007a29')
+-- Standard MagDur Curves --
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'ITIC', NULL, '#007a29')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'SEMI F47',1, 0.05, 1,0, NULL, NULL, NULL, '#edc240')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'SEMI F47',1, 0.05, 1,0, NULL, '#edc240')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1668 Type I & II', 3,0.01, 1.2,0, NULL, NULL, NULL, '#a30000')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1668 Type I & II', 3,0.01, 1.2,0, NULL, '#a30000')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1668 Type III', 3,0.01, 1.2,0, NULL, NULL, NULL, '#185aa9')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1668 Type III', 3,0.01, 1.2,0, NULL, '#185aa9')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'NERC PRC-024-2', 4,0.001,1.3,0, NULL, NULL, NULL, '#d3d3d3')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'NERC PRC-024-2', 4,0.001,1.3,0, NULL, '#d3d3d3')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Transients', 0,0, 0,0, NULL, NULL, NULL, '#afd8f8')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Transients', 0,0, 0,0, NULL, '#afd8f8')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Instantaneous Sag', 0,0, 0,0, NULL, NULL, NULL, '#f47d23')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Instantaneous Sag', 0,0, 0,0, NULL, '#f47d23')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Instantaneous Swell', 0,0, 0,0, NULL, NULL, NULL, '#008c48')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Instantaneous Swell', 0,0, 0,0, NULL, '#008c48')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Mom. Interruption', 0,0, 0,0, NULL, NULL, NULL, '#ee2e2f')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Mom. Interruption', 0,0, 0,0, NULL, '#ee2e2f')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Momentary Sag', 0,0, 0,0, NULL, NULL, NULL, '#737373')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Momentary Sag', 0,0, 0,0, NULL, '#737373')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Momentary Swell', 0,0, 0,0, NULL, NULL, NULL, '#662c91')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Momentary Swell', 0,0, 0,0, NULL, '#662c91')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Temp. Interruption', 0,0, 0,0, NULL, NULL, NULL, '#bd9b33')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Temp. Interruption', 0,0, 0,0, NULL, '#bd9b33')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Temporary Sag', 0,0, 0,0, NULL, NULL, NULL, '#ff904f')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Temporary Sag', 0,0, 0,0, NULL,'#ff904f')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Temporary Swell', 0,0, 0,0, NULL, NULL, NULL, '#ff9999')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Temporary Swell', 0,0, 0,0, NULL, '#ff9999')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Sustained Int.', 0,0, 0,0, NULL, NULL, NULL, '#0029A3')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Sustained Int.', 0,0, 0,0, NULL, '#0029A3')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Undervoltage', 0,0, 0,0, NULL, NULL, NULL, '#cb4b4b')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Undervoltage', 0,0, 0,0, NULL, '#cb4b4b')
 GO
-INSERT StandardMagDurCurve (Name, XHigh,XLow,YHigh,YLow, LowerCurve, UpperCurve, Area, Color) VALUES (N'IEEE 1159 Overvoltage', 0,0, 0,0, NULL, NULL, NULL, '#4da74d')
+INSERT StandardMagDurCurve (Name, Area, Color) VALUES (N'IEEE 1159 Overvoltage', 0,0, 0,0, NULL, '#4da74d')
 GO
 
 UPDATE StandardMagDurCurve SET Area = 'POLYGON((0.01 0.5, 0.2 0.5, 0.2 0.7, 0.5 0.7,0.5 0.8,2 0.8,2 1.0,0.01 1.0, 0.01 0.5))' WHERE Name = 'IEEE 1668 Type I & II'
