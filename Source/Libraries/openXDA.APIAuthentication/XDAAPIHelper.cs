@@ -21,9 +21,13 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
+using System;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace openXDA.APIAuthentication
 {
@@ -71,16 +75,96 @@ namespace openXDA.APIAuthentication
         }
 
         /// <summary>
+        /// Makes a Get Request to OpenXDA to obtain a string
+        /// </summary>
+        /// <param name="requestURI">Path to specific API request</param>
+        /// <returns>string</returns>
+        public async Task<string> Get(string requestURI)
+        {
+            APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.Method = HttpMethod.Get;
+                request.Headers.Accept.Clear();
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            }
+
+            HttpResponseMessage responseMessage = await query.SendWebRequestAsync(ConfigureRequest, requestURI).ConfigureAwait(false);
+            if (!responseMessage.IsSuccessStatusCode)
+                throw new Exception(responseMessage.ReasonPhrase);
+            return await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Makes a Get Request to OpenXDA to obtain a stream
+        /// </summary>
+        /// <param name="requestURI">Path to specific API request</param>
+        /// <returns>stream</returns>
+        public async Task<Stream> GetStream(string requestURI)
+        {
+            APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.Method = HttpMethod.Get;
+                request.Headers.Accept.Clear();
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            }
+
+            HttpResponseMessage responseMessage = await query.SendWebRequestAsync(ConfigureRequest, requestURI).ConfigureAwait(false);
+            if (!responseMessage.IsSuccessStatusCode)
+                throw new Exception(responseMessage.ReasonPhrase);
+            return await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Makes a Get Request to OpenXDA to obtain an object
+        /// </summary>
+        /// <param name="requestURI">Path to specific API request</param>
+        /// <returns> a <see cref="{T}"/> object</returns>
+        public async Task<T> Get<T>(string requestURI)
+        {
+            string result = await Get(requestURI).ConfigureAwait(false);
+            T resultObject = JsonConvert.DeserializeObject<T>(result);
+            return resultObject;
+        }
+
+        /// <summary>
         /// Makes Post request on OpenXDA
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
         /// <param name="content"> The <see cref="HttpContent"/> of the request </param>
-        /// <returns> response as a <see cref="Stream"/></returns>
-        public async Task<Stream> Post(string requestURI, HttpContent content)
+        /// <returns> response as a <see cref="string"/></returns>
+        public async Task<string> Post(string requestURI, HttpContent content)
         {
-            HttpResponseMessage responseMessage = await GetResponseTask(requestURI, content).ConfigureAwait(false);
-            return await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.Method = HttpMethod.Post;
+                request.Content = content;
+            }
+
+            HttpResponseMessage responseMessage = await query.SendWebRequestAsync(ConfigureRequest, requestURI).ConfigureAwait(false);
+            return await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Makes Post request on OpenXDA
+        /// </summary>
+        /// <param name="endpoint">Path to specific API request</param>
+        /// <param name="content"> The <see cref="HttpContent"/> of the request </param>
+        /// <returns> response as a <see cref="IEnumerable{T}"/></returns>
+        public async Task<string> PostAll<T>(string endpoint, HttpContent content) => await Post(endpoint, content).ConfigureAwait(false);
+
+        /// <summary>
+        /// Makes a Get Request to OpenXDA to obtain a <see cref="List{T} of Objects"/> objects
+        /// </summary>
+        /// <param name="requestURI">Path to specific API request</param>
+        /// <returns> a <see cref="{T}"/> object</returns>
+        public async Task<List<T>> GetAll<T>(string endpoint) => await Get<List<T>>(endpoint).ConfigureAwait(false);
+
         #endregion
 
     }
