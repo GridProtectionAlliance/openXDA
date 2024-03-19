@@ -127,7 +127,7 @@ function getAvailableVoltages(meterIDs: number[], measurementTypeID: number, ser
         FieldName: "ID",
         SearchText: `(${sqlFilter})`,
         Operator: "IN",
-        Type: "integer"
+        Type: "query"
     }];
 
     return $.ajax({

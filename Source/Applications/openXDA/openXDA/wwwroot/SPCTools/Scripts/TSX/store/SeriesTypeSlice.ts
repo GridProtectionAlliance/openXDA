@@ -85,9 +85,9 @@ function GetSeriesType(): JQuery.jqXHR<string> {
     // not really an int but this avoids some of the replacment going on server side
     let filter = [{
         FieldName: "Name",
-        SearchText: "('Minimum','Maximum','Average')",
+        SearchText: "Minimum,Maximum,Average",
         Operator: "IN",
-        Type: "integer"
+        Type: "string"
     }];
 
     return $.ajax({

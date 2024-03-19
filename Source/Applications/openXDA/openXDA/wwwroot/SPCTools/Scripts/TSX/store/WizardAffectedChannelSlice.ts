@@ -105,7 +105,7 @@ function GetAffectedChannels(meterIDs: number[], measurementTypeID: number, seri
     let filter = [
         {
             FieldName: "MeterID",
-            SearchText: `(${(meterIDs.length > 0 ? meterIDs.join(',') : 0)})`,
+            SearchText: `${(meterIDs.length > 0 ? meterIDs.join(',') : 0)}`,
             Operator: "IN",
             Type: "integer"
         },
@@ -113,13 +113,13 @@ function GetAffectedChannels(meterIDs: number[], measurementTypeID: number, seri
             FieldName: "MeasurementType",
             SearchText: `${measurementTypeID}`,
             Operator: "=",
-            Type: "integer"
+            Type: "query"
         },
          {
             FieldName: "MeasurementCharacteristic",
             SearchText: `${measurementTypeID}`,
             Operator: "=",
-            Type: "integer"
+            Type: "query"
         },
         {
             FieldName: `SeriesID`,
@@ -129,7 +129,7 @@ function GetAffectedChannels(meterIDs: number[], measurementTypeID: number, seri
         },
         {
             FieldName: "PhaseID",
-            SearchText: `(${(phaseIDs.length > 0 ? phaseIDs.join(',') : 0)})`,
+            SearchText: `${(phaseIDs.length > 0 ? phaseIDs.join(',') : 0)}`,
             Operator: "IN",
             Type: "integer"
         },

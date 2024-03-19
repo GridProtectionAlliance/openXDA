@@ -84,9 +84,9 @@ function GetAlarmTypes(): JQuery.jqXHR<string> {
     // not really an int but this avoids some of the replacment going on server side
     let filter = [{
         FieldName: "Name",
-        SearchText: "('Upper Limit','Lower Limit')",
+        SearchText: "Upper Limit,Lower Limit",
         Operator: "IN",
-        Type: "integer"
+        Type: "string"
     }];
 
     return $.ajax({
