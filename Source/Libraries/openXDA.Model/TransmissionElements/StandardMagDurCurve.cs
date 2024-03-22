@@ -28,7 +28,7 @@ using GSF.Data.Model;
 namespace openXDA.Model
 {
     [CustomView(@"SELECT
-                    ID, Name, XHigh, XLow, YHigh, YLow, Color, NULL AS UpperCurve, NULL AS LowerCurve,
+                    ID, Name, Color,
                     REPLACE(REPLACE(RIGHT(Area.STAsText(), len(Area.STAsText()) - charindex('(', Area.STAsText())),')',''),'(','') AS Area
                     FROM StandardMagDurCurve")]
     [AllowSearch]
