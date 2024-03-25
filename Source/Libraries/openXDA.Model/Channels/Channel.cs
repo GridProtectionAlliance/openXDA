@@ -501,6 +501,50 @@ namespace openXDA.Model
         public int SeriesTypeID { get; set; }
 
         public string SeriesType { get; set; }
+        
+        [SQLSearchModifier]
+        public static string SearchModifier(SQLSearchFilter filter, List<object> param)
+        {
+           
+            string sql = "";
+
+            if(filter.FieldName == "VoltageKV")
+                sql = " (SELECT VoltageKV FROM Asset WHERE Asset.ID = FullTbl.AssetID) " + filter.Operator + " " + GenerateQueryParams();
+
+            if (filter.FieldName == "MeasurementCharacteristic")
+                sql = "MeasurementCharacteristicID = (SELECT ChannelGroupType.MeasurementCharacteristicID FROM ChannelGroupType WHERE ID " + filter.Operator + GenerateQueryParams() + " )";
+
+            if (filter.FieldName == "SeriesID")
+                sql = "(SELECT COUNT(Series.ID) FROM SERIES WHERE Series.ChannelID = FullTbl.ID AND Series.SeriesTypeID " + filter.Operator + GenerateQueryParams() + " ) > 0";
+
+            if (filter.FieldName == "MeasurementType")
+                sql = "MeasurementTypeID = (SELECT ChannelGroupType.MeasurementTypeID FROM ChannelGroupType WHERE ID " + filter.Operator + GenerateQueryParams() + " )";
+
+            if (sql != "")
+                return sql;
+
+            return filter.GenerateConditional(param); //base case
+
+            string GenerateQueryParams()
+            {
+                string queryParam;
+                if (string.Equals(filter.Operator, "IN", StringComparison.OrdinalIgnoreCase) || string.Equals(filter.Operator, "NOT IN", StringComparison.OrdinalIgnoreCase))
+                {
+                    IEnumerable<string> values = from t in filter.SearchText.Replace("(", "").Replace(")", "").Split(',')
+                                                 select "" + t + "";
+                    filter.SearchText = "(" + string.Join(",", values) + ")";
+                    queryParam = " " + filter.SearchText;
+                }
+                else
+                {
+                    queryParam = $" {{{param.Count}}}";
+                    param.Add(filter.SearchText);
+                }
+                return queryParam;
+            }
+
+        }
+        
     }
 
     public class ChannelInfo

@@ -126,7 +126,7 @@ function getAvailablePhases(meterIDs: number[], measurementTypeID: number, serie
         FieldName: "ID",
         SearchText: `(${sqlFilter})`,
         Operator: "IN",
-        Type: "integer"
+        Type: "query"
     }];
 
     return $.ajax({

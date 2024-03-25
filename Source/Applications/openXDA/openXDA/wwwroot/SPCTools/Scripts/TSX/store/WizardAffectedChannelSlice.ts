@@ -105,40 +105,40 @@ function GetAffectedChannels(meterIDs: number[], measurementTypeID: number, seri
     let filter = [
         {
             FieldName: "MeterID",
-            SearchText: `(${(meterIDs.length > 0 ? meterIDs.join(',') : 0)})`,
+            SearchText: `${(meterIDs.length > 0 ? meterIDs.join(',') : 0)}`,
             Operator: "IN",
             Type: "integer"
         },
         {
-            FieldName: "MeasurementTypeID",
-            SearchText: `(SELECT ChannelGroupType.MeasurementTypeID FROM ChannelGroupType WHERE ID = ${measurementTypeID})`,
+            FieldName: "MeasurementType",
+            SearchText: `${measurementTypeID}`,
+            Operator: "=",
+            Type: "integer"
+        },
+         {
+            FieldName: "MeasurementCharacteristic",
+            SearchText: `${measurementTypeID}`,
             Operator: "=",
             Type: "integer"
         },
         {
-            FieldName: "MeasurementCharacteristicID",
-            SearchText: `(SELECT ChannelGroupType.MeasurementCharacteristicID FROM ChannelGroupType WHERE ID = ${measurementTypeID})`,
-            Operator: "=",
-            Type: "integer"
-        },
-        {
-            FieldName: `(SELECT COUNT(Series.ID) FROM SERIES WHERE Series.ChannelID = FullTbl.ID AND Series.SeriesTypeID = ${seriesTypeID})`,
-            SearchText: "0",
+            FieldName: `SeriesID`,
+            SearchText: `${seriesTypeID}`,
             Operator: ">",
-            Type: "query"
+            Type: "integer"
         },
         {
             FieldName: "PhaseID",
-            SearchText: `(${(phaseIDs.length > 0 ? phaseIDs.join(',') : 0)})`,
+            SearchText: `${(phaseIDs.length > 0 ? phaseIDs.join(',') : 0)}`,
             Operator: "IN",
             Type: "integer"
         },
         {
-            FieldName: "(SELECT VoltageKV FROM Asset WHERE Asset.ID = FullTbl.AssetID)",
-            SearchText: `(${(voltages.length > 0 ? voltages.join(',') : 0)})`,
+            FieldName: "VoltageKV",
+            SearchText: `${(voltages.length > 0 ? voltages.join(',') : 0)}`,
             Operator: "IN",
-            Type: "query"
-        }
+            Type: "integer"
+        },
     ];
 
     return $.ajax({
