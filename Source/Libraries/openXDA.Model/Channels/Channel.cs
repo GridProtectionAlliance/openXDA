@@ -512,13 +512,13 @@ namespace openXDA.Model
                 sql = " (SELECT VoltageKV FROM Asset WHERE Asset.ID = FullTbl.AssetID) " + filter.Operator + " " + GenerateQueryParams();
 
             if (filter.FieldName == "MeasurementCharacteristic")
-                sql = "MeasurementCharacteristicID = (SELECT ChannelGroupType.MeasurementCharacteristicID FROM ChannelGroupType WHERE ID " + filter.Operator + " " + GenerateQueryParams() + " )";
+                sql = "MeasurementCharacteristicID = (SELECT ChannelGroupType.MeasurementCharacteristicID FROM ChannelGroupType WHERE ID " + filter.Operator + GenerateQueryParams() + " )";
 
             if (filter.FieldName == "SeriesID")
                 sql = "(SELECT COUNT(Series.ID) FROM SERIES WHERE Series.ChannelID = FullTbl.ID AND Series.SeriesTypeID " + filter.Operator + GenerateQueryParams() + " ) > 0";
 
             if (filter.FieldName == "MeasurementType")
-                sql = "MeasurementTypeID = (SELECT ChannelGroupType.MeasurementTypeID FROM ChannelGroupType WHERE ID " + filter.Operator + " " + GenerateQueryParams() + " )";
+                sql = "MeasurementTypeID = (SELECT ChannelGroupType.MeasurementTypeID FROM ChannelGroupType WHERE ID " + filter.Operator + GenerateQueryParams() + " )";
 
             if (sql != "")
                 return sql;
