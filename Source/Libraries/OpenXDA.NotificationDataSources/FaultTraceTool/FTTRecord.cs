@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  FTTOptions.cs - Gbtc
+//  FTTRecord.cs - Gbtc
 //
-//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,25 +16,29 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  02/11/2021 - Stephen C. Wills
+//  07/08/2022 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
+using System.Data;
+using GSF.Data;
+using GSF.Data.Model;
 
-namespace FaultData.DataWriters.GTC
+namespace openXDA.NotificationDataSources.FaultTraceTool
 {
-    public class FTTOptions
+    public class FTTRecord
     {
-        public string CLIPath { get; set; }
-        public string URL { get; set; }
-        public string QueryStringFormat { get; set; }
-        public TimeSpan QueryTimeout { get; set; }
-        public bool IgnoreCertificateErrors { get; set; }
+        public int FaultNumber { get; set; }
+        public string StationName { get; set; }
+        public string LineKey { get; set; }
+        public double Distance { get; set; }
 
-        public int ImageWidth { get; set; }
-        public int ImageHeight { get; set; }
-        public string BrowserArguments { get; set; }
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime EventTime { get; set; }
+
+        public double? EndLatitude { get; set; }
+        public double? EndLongitude { get; set; }
     }
 }

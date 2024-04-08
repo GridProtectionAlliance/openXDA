@@ -746,6 +746,10 @@ INSERT INTO TriggeredEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VAL
 ('PQI','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.PQIDataSource','pqi')
 GO
 
+INSERT INTO TriggeredEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VALUES
+('FTT','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.FaultTraceTool.FTTDataSource','ftt')
+GO
+
 -- Scheduled Email Datasource Types --
 INSERT INTO ScheduledEmailDatasource (Name, AssemblyName, TypeName,ConfigUI) VALUES
 ('SQL','openXDA.NotificationDataSources.dll','openXDA.NotificationDataSources.SQLDataSource','sql')
