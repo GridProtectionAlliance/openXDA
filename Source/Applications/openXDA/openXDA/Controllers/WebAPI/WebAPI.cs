@@ -228,10 +228,16 @@ namespace openXDA.Controllers.WebAPI
         }
     }
 
-    [RoutePrefix("api/TileList")]
-    public class TileListController : ApiController
+    [RoutePrefix("api")]
+    public class GeneralController : ApiController
     {
-        [HttpGet, Route("GetAll")]
+        [HttpGet, Route("TestAuth")]
+        public IHttpActionResult Alive()
+        {
+            return Ok(1);
+        }
+
+        [HttpGet, Route("TileList/GetAll")]
         public IHttpActionResult GetAllTiles()
         {
             string directoryPath = FilePath.GetAbsolutePath("wwwroot\\Images\\Tiles");
