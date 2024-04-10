@@ -61,14 +61,23 @@ namespace openXDA.APIAuthentication
         /// <param name="requestURI">Path to specific API request</param>
         /// <param name="content"> The <see cref="HttpContent"/> of the request </param>
         /// <returns> response as a <see cref="Stream"/></returns>
-        public Task<HttpResponseMessage> GetResponseTask(string requestURI, HttpContent content)
+        public Task<HttpResponseMessage> GetResponseTask(string requestURI, HttpContent content = null)
         {
             APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
 
             void ConfigureRequest(HttpRequestMessage request)
             {
-                request.Method = HttpMethod.Post;
-                request.Content = content;
+                if (content == null)
+                {
+                    request.Method = HttpMethod.Get;
+                    request.Headers.Accept.Clear();
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                }
+                else
+                {
+                    request.Method = HttpMethod.Post;
+                    request.Content = content;
+                }
             }
 
             return query.SendWebRequestAsync(ConfigureRequest, requestURI);
