@@ -217,190 +217,190 @@ GO
 INSERT INTO Phase(Name, Description) VALUES('LineToLineAverage', 'Average of line-to-line values')
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average RMS Voltage Phase A', 'Average RMS Voltage Phase A', (SELECT ID FROM Unit WHERE Name = 'Volts'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS'), (SELECT ID FROM Phase WHERE Name = 'AN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average RMS Voltage Phase A', 'Average RMS Voltage Phase A', 'Volts', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS'), (SELECT ID FROM Phase WHERE Name = 'AN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average RMS Voltage Phase B', 'Average RMS Voltage Phase B', (SELECT ID FROM Unit WHERE Name = 'Volts'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS'), (SELECT ID FROM Phase WHERE Name = 'BN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average RMS Voltage Phase B', 'Average RMS Voltage Phase B', 'Volts', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS'), (SELECT ID FROM Phase WHERE Name = 'BN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average RMS Voltage Phase C', 'Average RMS Voltage Phase C', (SELECT ID FROM Unit WHERE Name = 'Volts'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS'), (SELECT ID FROM Phase WHERE Name = 'CN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average RMS Voltage Phase C', 'Average RMS Voltage Phase C', 'Volts', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS'), (SELECT ID FROM Phase WHERE Name = 'CN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Voltage Unbalance(S2/S1)', 'Average Voltage Unbalance(S2/S1)', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S2S1'), (SELECT ID FROM Phase WHERE Name = 'None'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Voltage Unbalance(S2/S1)', 'Average Voltage Unbalance(S2/S1)', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S2S1'), (SELECT ID FROM Phase WHERE Name = 'None'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Voltage Unbalance(S0/S1)', 'Average Voltage Unbalance(S0/S1)', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S0S1'), (SELECT ID FROM Phase WHERE Name = 'None'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Voltage Unbalance(S0/S1)', 'Average Voltage Unbalance(S0/S1)', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S0S1'), (SELECT ID FROM Phase WHERE Name = 'None'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Pst Flicker Phase A', 'Pst Flicker Phase A', (SELECT ID FROM Unit WHERE Name = 'Per Unit'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST'), (SELECT ID FROM Phase WHERE Name = 'AN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Pst Flicker Phase A', 'Pst Flicker Phase A', 'Per Unit', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST'), (SELECT ID FROM Phase WHERE Name = 'AN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Pst Flicker Phase B', 'Pst Flicker Phase B', (SELECT ID FROM Unit WHERE Name = 'Per Unit'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST'), (SELECT ID FROM Phase WHERE Name = 'BN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Pst Flicker Phase B', 'Pst Flicker Phase B', 'Per Unit', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST'), (SELECT ID FROM Phase WHERE Name = 'BN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Pst Flicker Phase C', 'Pst Flicker Phase C', (SELECT ID FROM Unit WHERE Name = 'Per Unit'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST'), (SELECT ID FROM Phase WHERE Name = 'CN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Pst Flicker Phase C', 'Pst Flicker Phase C', 'Per Unit', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST'), (SELECT ID FROM Phase WHERE Name = 'CN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Vthd Phase A', 'Average Vthd Phase A', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'AN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Vthd Phase A', 'Average Vthd Phase A', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'AN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Vthd Phase B', 'Average Vthd Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'BN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Vthd Phase B', 'Average Vthd Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'BN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Vthd Phase C', 'Average Vthd Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'CN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Vthd Phase C', 'Average Vthd Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'CN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H3 Phase A', 'Average V H3 Phase A', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 3)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H3 Phase A', 'Average V H3 Phase A', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 3)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H3 Phase B', 'Average V H3 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 3)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H3 Phase B', 'Average V H3 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 3)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H3 Phase C', 'Average V H3 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 3)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H3 Phase C', 'Average V H3 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 3)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H5 Phase A', 'Average V H5 Phase A', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 5)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H5 Phase A', 'Average V H5 Phase A', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 5)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H5 Phase B', 'Average V H5 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 5)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H5 Phase B', 'Average V H5 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 5)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H5 Phase C', 'Average V H5 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 5)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H5 Phase C', 'Average V H5 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 5)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H7 Phase A', 'Average V H7 Phase A', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 7)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H7 Phase A', 'Average V H7 Phase A', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 7)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H7 Phase B', 'Average V H7 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 7)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H7 Phase B', 'Average V H7 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 7)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H7 Phase C', 'Average V H7 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 7)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H7 Phase C', 'Average V H7 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 7)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H11 Phase A', 'Average V H11 Phase A', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 11)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H11 Phase A', 'Average V H11 Phase A', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 11)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H11 Phase B', 'Average V H11 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 11)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H11 Phase B', 'Average V H11 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 11)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H11 Phase C', 'Average V H11 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 11)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H11 Phase C', 'Average V H11 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 11)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H13 Phase A', 'Average V H13 Phase A', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 13)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H13 Phase A', 'Average V H13 Phase A', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 13)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H13 Phase B', 'Average V H13 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 13)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H13 Phase B', 'Average V H13 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 13)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H13 Phase C', 'Average V H13 Phase C', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 13)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average V H13 Phase C', 'Average V H13 Phase C', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Voltage'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 13)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Current Unbalance(S2/S1)', 'Average Current Unbalance(S2/S1)', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S2S1'), (SELECT ID FROM Phase WHERE Name = 'None'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Current Unbalance(S2/S1)', 'Average Current Unbalance(S2/S1)', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S2S1'), (SELECT ID FROM Phase WHERE Name = 'None'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Current Unbalance(S0/S1)', 'Average Current Unbalance(S0/S1)', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S0S1'), (SELECT ID FROM Phase WHERE Name = 'None'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Current Unbalance(S0/S1)', 'Average Current Unbalance(S0/S1)', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S0S1'), (SELECT ID FROM Phase WHERE Name = 'None'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase A', 'Average Ithd Phase A', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'AN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase A', 'Average Ithd Phase A', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'AN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase B', 'Average Ithd Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'BN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase B', 'Average Ithd Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'BN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase C', 'Average Ithd Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'CN'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase C', 'Average Ithd Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'CN'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase N', 'Average Ithd Phase N', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'NG'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase N', 'Average Ithd Phase N', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'NG'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase RES', 'Average Ithd Phase RES', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'RES'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average Ithd Phase RES', 'Average Ithd Phase RES', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD'), (SELECT ID FROM Phase WHERE Name = 'RES'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase A', 'Average I H3 Phase A', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 3)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase A', 'Average I H3 Phase A', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 3)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase B', 'Average I H3 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 3)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase B', 'Average I H3 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 3)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase C', 'Average I H3 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 3)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase C', 'Average I H3 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 3)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase N', 'Average I H3 Phase N', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 3)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase N', 'Average I H3 Phase N', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 3)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase RES', 'Average I H3 Phase RES', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 3)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H3 Phase RES', 'Average I H3 Phase RES', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 3)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase A', 'Average I H5 Phase A', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 5)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase A', 'Average I H5 Phase A', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 5)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase B', 'Average I H5 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 5)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase B', 'Average I H5 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 5)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase C', 'Average I H5 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 5)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase C', 'Average I H5 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 5)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase N', 'Average I H5 Phase N', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 5)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase N', 'Average I H5 Phase N', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 5)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase RES', 'Average I H5 Phase RES', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 5)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H5 Phase RES', 'Average I H5 Phase RES', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 5)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase A', 'Average I H7 Phase A', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 7)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase A', 'Average I H7 Phase A', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 7)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase B', 'Average I H7 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 7)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase B', 'Average I H7 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 7)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase C', 'Average I H7 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 7)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase C', 'Average I H7 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 7)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase N', 'Average I H7 Phase N', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 7)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase N', 'Average I H7 Phase N', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 7)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase RES', 'Average I H7 Phase RES', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 7)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H7 Phase RES', 'Average I H7 Phase RES', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 7)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase A', 'Average I H11 Phase A', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 11)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase A', 'Average I H11 Phase A', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 11)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase B', 'Average I H11 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 11)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase B', 'Average I H11 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 11)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase C', 'Average I H11 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 11)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase C', 'Average I H11 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 11)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase N', 'Average I H11 Phase N', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 11)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase N', 'Average I H11 Phase N', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 11)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase RES', 'Average I H11 Phase RES', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 11)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H11 Phase RES', 'Average I H11 Phase RES', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 11)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase A', 'Average I H13 Phase A', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 13)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase A', 'Average I H13 Phase A', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'AN'), 13)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase B', 'Average I H13 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 13)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase B', 'Average I H13 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'BN'), 13)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase C', 'Average I H13 Phase C', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 13)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase C', 'Average I H13 Phase C', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'CN'), 13)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase N', 'Average I H13 Phase N', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 13)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase N', 'Average I H13 Phase N', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'NG'), 13)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase RES', 'Average I H13 Phase RES', (SELECT ID FROM Unit WHERE Name = 'Amps'), (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 13)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Average I H13 Phase RES', 'Average I H13 Phase RES', 'Amps', (SELECT ID FROM MeasurementType WHERE Name = 'Current'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'SpectraHGroup'), (SELECT ID FROM Phase WHERE Name = 'RES'), 13)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('P', 'P', (SELECT ID FROM Unit WHERE Name = 'KW'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'P'), (SELECT ID FROM Phase WHERE Name = 'LineToNeutralAverage'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('P', 'P', 'KW', (SELECT ID FROM MeasurementType WHERE Name = 'Power'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'P'), (SELECT ID FROM Phase WHERE Name = 'LineToNeutralAverage'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Q', 'Q', (SELECT ID FROM Unit WHERE Name = 'KVAR'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Q'), (SELECT ID FROM Phase WHERE Name = 'LineToNeutralAverage'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('Q', 'Q', 'KVAR', (SELECT ID FROM MeasurementType WHERE Name = 'Power'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Q'), (SELECT ID FROM Phase WHERE Name = 'LineToNeutralAverage'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('S', 'S', (SELECT ID FROM Unit WHERE Name = 'KVA'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S'), (SELECT ID FROM Phase WHERE Name = 'LineToNeutralAverage'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('S', 'S', 'KVA', (SELECT ID FROM MeasurementType WHERE Name = 'Power'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'S'), (SELECT ID FROM Phase WHERE Name = 'LineToNeutralAverage'), 0)
 GO
 
-INSERT INTO PQMeasurement(Name, Description, UnitID, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('PF', 'PF', (SELECT ID FROM Unit WHERE Name = 'Percent'), (SELECT ID FROM MeasurementType WHERE Name = 'Power'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PF'), (SELECT ID FROM Phase WHERE Name = 'LineToNeutralAverage'), 0)
+INSERT INTO PQMeasurement(Name, Description, Unit, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup) VALUES('PF', 'PF', 'Percent', (SELECT ID FROM MeasurementType WHERE Name = 'Power'), (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'PF'), (SELECT ID FROM Phase WHERE Name = 'LineToNeutralAverage'), 0)
 GO
 
 INSERT INTO StepChangeMeasurement (PQMeasurementID, Setting) VALUES ((SELECT ID FROM PQMeasurement WHERE Name = 'Average RMS Voltage Phase A'), 5)

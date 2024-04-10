@@ -71,7 +71,7 @@
 {
     @Raw(dataContext.AddInputField<PQMeasurement>("Name"))
     @Raw(dataContext.AddTextAreaField<PQMeasurement>("Description"))
-    @Raw(dataContext.AddSelectField<PQMeasurement, Unit>("UnitID", "ID", "Name"))
+    @Raw(dataContext.AddSelectField<PQMeasurement>("Unit", true, "Name"))
     @Raw(dataContext.AddSelectField<PQMeasurement, MeasurementType>("MeasurementTypeID", "ID", "Name"))
     @Raw(dataContext.AddSelectField<PQMeasurement, MeasurementCharacteristic>("MeasurementCharacteristicID", "ID", "Name"))
     @Raw(dataContext.AddSelectField<PQMeasurement, Phase>("PhaseID", "ID", "Name"))

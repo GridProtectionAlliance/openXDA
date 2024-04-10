@@ -32,7 +32,7 @@ namespace openXDA.Model
         public string Name { get; set; }
         [Searchable]
         public string Description { get; set; }
-        public int UnitID { get; set; }
+        public string Unit { get; set; }
         public int MeasurementTypeID { get; set; }
         public int MeasurementCharacteristicID { get; set; }
         public int PhaseID { get; set; }
