@@ -110,13 +110,7 @@ function GetAffectedChannels(meterIDs: number[], measurementTypeID: number, seri
             Type: "integer"
         },
         {
-            FieldName: "MeasurementType",
-            SearchText: `${measurementTypeID}`,
-            Operator: "=",
-            Type: "integer"
-        },
-         {
-            FieldName: "MeasurementCharacteristic",
+            FieldName: "ChannelGroupTypeID",
             SearchText: `${measurementTypeID}`,
             Operator: "=",
             Type: "integer"
@@ -124,7 +118,7 @@ function GetAffectedChannels(meterIDs: number[], measurementTypeID: number, seri
         {
             FieldName: `SeriesID`,
             SearchText: `${seriesTypeID}`,
-            Operator: ">",
+            Operator: "=",
             Type: "integer"
         },
         {

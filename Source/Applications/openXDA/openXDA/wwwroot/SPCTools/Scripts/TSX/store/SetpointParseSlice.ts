@@ -129,8 +129,9 @@ export const SelectSetPointParseResult = (state: Redux.StoreState) => state.SetP
 
 // #region [ Async Functions ]
 
-function GetParsedSetPoint(token: DynamicWizzard.IAlarmvalue, dataFilter: SPCTools.IDataFilter, start: string, end: string, channelIDs: number[]): JQuery.jqXHR<DynamicWizzard.ITokenParseResponse> {
+async function GetParsedSetPoint(token: DynamicWizzard.IAlarmvalue, dataFilter: SPCTools.IDataFilter, start: string, end: string, channelIDs: number[]): Promise<DynamicWizzard.ITokenParseResponse> {
 
+    let rvht: string = await $.get(`${apiHomePath}api/rvht`);
     let request = {
         TokeValue: token,
         StatisticsFilter: dataFilter,
@@ -138,10 +139,11 @@ function GetParsedSetPoint(token: DynamicWizzard.IAlarmvalue, dataFilter: SPCToo
         StatisticsEnd: end,
         StatisticsChannelID: channelIDs,
     }
-    return $.ajax({
+    return await $.ajax({
         type: "POST",
         url: `${apiHomePath}api/SPCTools/Token/Parse`,
         contentType: "application/json; charset=utf-8",
+        headers: { "X-GSF-Verify": rvht },
         dataType: 'json',
         data: JSON.stringify(request),
         cache: false,

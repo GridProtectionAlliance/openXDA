@@ -210,7 +210,6 @@ namespace openXDA.StepChangeWebReport
                 PQMeasurement pqMeasurement = dataContext.Table<PQMeasurement>().QueryRecordWhere("ID = {0}", measurement.PQMeasurementID);
                 Channel channel = dataContext.Table<Channel>().QueryRecordWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1} AND PhaseID = {2} AND HarmonicGroup = {3} AND MeterID = {4}", pqMeasurement.MeasurementTypeID, pqMeasurement.MeasurementCharacteristicID, pqMeasurement.PhaseID, pqMeasurement.HarmonicGroup, meter.ID);
                 StepChangeStat record = dataContext.Table<StepChangeStat>().QueryRecordWhere("MeterID = {0} AND Date = {1} AND StepChangeMeasurementID = {2}", meter.ID, startTime, measurement.ID);
-                Unit unit = dataContext.Table<Unit>().QueryRecordWhere("ID = {0}", pqMeasurement.UnitID);
 
                 if (record == null)
                 {
@@ -241,12 +240,18 @@ namespace openXDA.StepChangeWebReport
                                 // if value is outside 5 sigma, do not check for step change
                                 if (point.Value > average + std * 5 || point.Value < average - std * 5) continue;
 
-                                if (unit.Name == "Percent") {
+                                bool isPercent =
+                                    pqMeasurement.Unit.Trim() == "%" ||
+                                    pqMeasurement.Unit.Trim().Equals("Percent", StringComparison.OrdinalIgnoreCase);
+
+                                if (isPercent)
+                                {
                                     if (Math.Abs(point.Value - lastHourAvg) > measurement.Setting)
                                         record.Value++;
                                 }
-                                else {
-                                    if ((Math.Abs(point.Value - lastHourAvg) * 100/lastHourAvg) > measurement.Setting)
+                                else
+                                {
+                                    if ((Math.Abs(point.Value - lastHourAvg) * 100 / lastHourAvg) > measurement.Setting)
                                         record.Value++;
                                 }
                             }

@@ -3722,40 +3722,12 @@ CREATE NONCLUSTERED INDEX IX_ChannelDataQualitySummary_ChannelID_Date
 ON ChannelDataQualitySummary(ChannelID ASC, Date ASC)
 GO
 
-CREATE TABLE Unit
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(MAX) NOT NULL
-)
-GO
-
-INSERT INTO Unit (Name) VALUES ('Volts')
-GO
-
-INSERT INTO Unit (Name) VALUES ('Amps')
-GO
-
-INSERT INTO Unit (Name) VALUES ('KW')
-GO
-
-INSERT INTO Unit (Name) VALUES ('KVAR')
-GO
-
-INSERT INTO Unit (Name) VALUES ('KVA')
-GO
-
-INSERT INTO Unit (Name) VALUES ('Per Unit')
-GO
-
-INSERT INTO Unit (Name) VALUES ('Percent')
-GO
-
 CREATE TABLE PQMeasurement
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     Name VARCHAR(MAX) NOT NULL,
     Description VARCHAR(MAX) NULL,
-    UnitID INT NOT NULL REFERENCES Unit(ID),
+    Unit VARCHAR(200) NOT NULL,
     MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
