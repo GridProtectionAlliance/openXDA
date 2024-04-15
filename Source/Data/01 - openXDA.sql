@@ -1627,6 +1627,25 @@ CREATE TABLE Phase
 )
 GO
 
+CREATE TABLE PQMeasurement
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
+    Name VARCHAR(MAX) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    Unit VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_PQMeasurement_MeasurementTypeID
+ON PQMeasurement(MeasurementTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_PQMeasurement_MeasurementCharacteristicID
+ON PQMeasurement(MeasurementCharacteristicID ASC)
+GO
+
 CREATE TABLE Channel
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -3720,82 +3739,6 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_ChannelDataQualitySummary_ChannelID_Date
 ON ChannelDataQualitySummary(ChannelID ASC, Date ASC)
-GO
-
-CREATE TABLE PQMeasurement
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(MAX) NOT NULL,
-    Description VARCHAR(MAX) NULL,
-    Unit VARCHAR(200) NOT NULL,
-    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
-    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
-    PhaseID INT NOT NULL REFERENCES Phase(ID),
-    HarmonicGroup INT NOT NULL DEFAULT 0,
-    Enabled bit NOT NULL DEFAULT 1
-)
-GO
-
-CREATE TABLE PQTrendStat
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    MeterID INT NOT NULL REFERENCES Meter(ID),
-    PQMeasurementTypeID INT NOT NULL REFERENCES PQMeasurement(ID),
-    Date DATE NOT NULL,
-    Max FLOAT NULL,
-    CP99 FLOAT NULL,
-    CP95 FLOAT NULL,
-    Avg FLOAT NULL,
-    CP05 FLOAT NULL,
-    CP01 FLOAT NULL,
-    Min FLOAT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_PQTrendStat_Date
-ON PQTrendStat(Date ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_PQTrendStat_MeterID_Date
-ON PQTrendStat(MeterID ASC, Date ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_PQTrendStat_MeterID_PQMeasurementTypeID_Date
-ON PQTrendStat(Date DESC, MeterID ASC, PQMeasurementTypeID ASC)
-GO
-
-
-
-CREATE TABLE StepChangeMeasurement(
-    ID INT PRIMARY KEY IDENTITY(1,1),
-    PQMeasurementID INT FOREIGN KEY REFERENCES PQMeasurement(ID) NOT NULL,
-    Setting FLOAT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_StepChangeMeasurement_PQMeasurement
-ON StepChangeMeasurement(PQMeasurementID ASC)
-GO
-
-CREATE TABLE StepChangeStat(
-    ID INT PRIMARY KEY IDENTITY(1,1),
-    MeterID INT FOREIGN KEY REFERENCES Meter(ID) NOT NULL,
-    Date Date NOT NULL,
-    StepChangeMeasurementID INT FOREIGN KEY REFERENCES StepChangeMeasurement(ID) NOT NULL,
-    Value FLOAT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_StepChangeStat_Date
-ON StepChangeStat(Date ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_StepChangeStat_MeterID_Date
-ON StepChangeStat(MeterID ASC, Date ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_StepChangeStat_MeterID_StepChangeMeasurementID_Date
-ON StepChangeStat(MeterID ASC,StepChangeMeasurementID ASC, Date ASC)
 GO
 
 

@@ -181,16 +181,10 @@
     <Compile Include="SystemCenter\ExternalDatabase.cs" />
     <Compile Include="TransmissionElements\Generation.cs" />
     <Compile Include="TransmissionElements\StandardMagDurCurve.cs" />
-    <Compile Include="StepChangeWebReports\StepChangeMeasurement.cs" />
-    <Compile Include="StepChangeWebReports\StepChangeStat.cs" />
-    <Compile Include="PQTrendingWebReports\PQMeasurement.cs" />
-    <Compile Include="PQTrendingWebReports\PQTrendStat.cs" />
     <Compile Include="Reports\Report.cs" />
     <Compile Include="Security\ConfirmableUserAccount.cs" />
     <Compile Include="Settings\DataPusherSettings.cs" />
     <Compile Include="Settings\PQMarkAggregationSettings.cs" />
-    <Compile Include="Settings\StepChangeWebReportSettings.cs" />
-    <Compile Include="Settings\PQTrendingWebReportSettings.cs" />
     <Compile Include="Settings\PQReportsSettings.cs" />
     <Compile Include="SystemCenter\AdditionalField.cs" />
     <Compile Include="SystemCenter\AdditionalFieldValue.cs" />

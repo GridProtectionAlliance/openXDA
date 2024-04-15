@@ -53,11 +53,10 @@ export default class PeriodicDataDisplayService {
         });
     }
 
-    getMeasurementCharacteristics(fromStepChangeWebReport, meterID) {
+    getMeasurementCharacteristics(meterID) {
         return $.ajax({
             type: "GET",
-            url: `${window.location.origin}/api/PeriodicDataDisplay/GetMeasurementCharacteristics` +
-                `${(fromStepChangeWebReport ? `?MeterID=${meterID}` : ``)}`,
+            url: `${window.location.origin}/api/PeriodicDataDisplay/GetMeasurementCharacteristics`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,

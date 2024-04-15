@@ -125,23 +125,6 @@ namespace openXDA.Adapters
                     controller = "DataQualitySummary"
                 }
             );
-            config.Routes.MapHttpRoute(
-                name: "PQTrendingWebReport",
-                routeTemplate: "api/PQTrendingWebReport/{action}",
-                defaults: new
-                {
-                    controller = "PQTrendingWebReport"
-                }
-            );
-
-            config.Routes.MapHttpRoute(
-                name: "StepChangeWebReport",
-                routeTemplate: "api/StepChangeWebReport/{action}",
-                defaults: new
-                {
-                    controller = "StepChangeWebReport"
-                }
-            );
 
             config.Routes.MapHttpRoute(
                 name: "ReportAPI",
