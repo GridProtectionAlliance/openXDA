@@ -16,8 +16,6 @@ module.exports = env => {
             PeriodicDataDisplay: "./TSX/PeriodicDataDisplay.tsx",
             TrendingDataDisplay: "./TSX/TrendingDataDisplay.tsx",
             DataQualitySummary: "./TSX/DataQualitySummary.tsx",
-            PQTrendingWebReport: "./TSX/PQTrendingWebReport.tsx",
-            StepChangeWebReport: "./TSX/StepChangeWebReport.tsx",
             SpectralDataDisplay: "./TSX/SpectralDataDisplay.tsx",
         },
         output: {

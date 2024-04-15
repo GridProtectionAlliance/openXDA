@@ -166,8 +166,6 @@
     <Compile Include="NodeController.cs" />
     <Compile Include="OpenSEECSVDownload.ashx.cs" />
     <Compile Include="SpectralDataDisplayController.cs" />
-    <Compile Include="StepChangeWebReportController.cs" />
-    <Compile Include="PQTrendingWebReportController.cs" />
     <Compile Include="JSONApiController.cs" />
     <Compile Include="OpenSTEController.cs" />
     <Compile Include="OpenSEEController.cs" />

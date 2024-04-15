@@ -179,18 +179,8 @@ namespace openXDA.Adapters
         }
 
         [HttpGet]
-        public IHttpActionResult GetMeasurementCharacteristics(CancellationToken cancellationToken)
-        {
-            Dictionary<string, string> query = Request.QueryParameters();
-            if (query.ContainsKey("MeterID"))
-            {
-                int meterId = int.Parse(query["MeterID"]);
-                return Ok(GetMeasurementCharacteristicsForWebReport());
-            }
-            else
-                return Ok(GetAllMeasurementCharacteristics());
-
-        }
+        public IHttpActionResult GetMeasurementCharacteristics() =>
+            Ok(GetAllMeasurementCharacteristics());
 
         private DataTable GetAllMeasurementCharacteristics()
         {
@@ -208,40 +198,6 @@ namespace openXDA.Adapters
 	                            MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID JOIN
 	                            MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID
                             ORDER BY MeasurementCharacteristic, MeasurementType
-                        ";
-
-                    return connection.RetrieveData(query);
-            }
-        }
-
-        private DataTable GetMeasurementCharacteristicsForWebReport()
-        {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                    string query = @"
-                            SELECT DISTINCT 
-	                            MeasurementType.Name as MeasurementType,
-                                MeasurementType.ID as MeasurementTypeID,
-	                            MeasurementCharacteristic.Name as MeasurementCharacteristic,
-	                            MeasurementCharacteristic.ID as MeasurementCharacteristicID,
-                                HarmonicGroup
-                            FROM 
-	                            Channel JOIN
-	                            MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID JOIN
-	                            MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID
-                        WHERE 
-	                        Channel.ID IN (
-	                        SELECT 
-		                        Channel.ID
-	                        FROM 
-		                        StepChangeMeasurement JOIN
-		                        PQMeasurement ON StepChangeMeasurement.PQMeasurementID = PQMeasurement.ID LEFT JOIN
-		                        Channel ON 
-			                        PQMeasurement.MeasurementTypeID = Channel.MeasurementTypeID AND
-			                        PQMeasurement.MeasurementCharacteristicID = Channel.MeasurementCharacteristicID
-                         )
-                        ORDER BY MeasurementCharacteristic, MeasurementType
-
                         ";
 
                     return connection.RetrieveData(query);

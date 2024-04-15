@@ -489,18 +489,9 @@
       <Project>{2813a92f-8cb5-4ec3-976c-8690c90c6dd0}</Project>
       <Name>openXDA.NotificationDataSources</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\openXDA.PQTrendingWebReport\openXDA.PQTrendingWebReport.csproj">
-      <Project>{2635efe2-ef6f-4110-9229-8d91f02df143}</Project>
-      <Name>openXDA.PQTrendingWebReport</Name>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.Reports\openXDA.Reports.csproj">
       <Project>{656f97d9-4fb6-4f65-a9a6-1a1dde3af634}</Project>
       <Name>openXDA.Reports</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\openXDA.StepChangeWebReport\openXDA.StepChangeWebReport.csproj">
-      <Project>{1F3B639C-6C49-480D-A184-AED1C86AD97B}</Project>
-      <Name>openXDA.StepChangeWebReport</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.XMLConfigLoader\openXDA.XMLConfig.csproj">
       <Project>{280f475d-7d5c-4bb7-98be-db0f3cbe40bb}</Project>
@@ -1424,9 +1415,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\Scripts\plugins-all.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Scripts\PQTrendingWebReport.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\Scripts\PrimeUI\Font-Awesome\css\font-awesome.css">
@@ -4291,9 +4279,6 @@
     <None Include="wwwroot\Scripts\src-noconflict\worker-xquery.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="wwwroot\Scripts\StepChangeWebReport.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="wwwroot\Scripts\TrendingDataDisplay.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -4448,22 +4433,10 @@
     <None Include="wwwroot\WorkBench\PeriodicDataDisplay.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="wwwroot\WorkBench\PQTrendingWebReport.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\PQTrendingWebReportSettings.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="wwwroot\WorkBench\SiteSummary.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\WorkBench\SpectralDataDisplay.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\StepChangeWebReport.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\StepChangeWebReportSettings.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\WorkBench\TrendingDataDisplay.cshtml">
@@ -4472,7 +4445,32 @@
     <Content Include="wwwroot\Assets\CapacitorBankRelays.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="wwwroot\Scripts\TS\**\*;wwwroot\Scripts\TSX\**\*" />
+    <None Include="wwwroot\Scripts\TS\Services\DataQualitySummary.ts" />
+    <None Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay.ts" />
+    <None Include="wwwroot\Scripts\TS\Services\PQTrendingWebReport.ts" />
+    <None Include="wwwroot\Scripts\TS\Services\SpectralDataDisplay.ts" />
+    <None Include="wwwroot\Scripts\TS\Services\StepChangeWebReport.ts" />
+    <None Include="wwwroot\Scripts\TS\Services\TrendingDataDisplay.ts" />
+    <None Include="wwwroot\Scripts\TSX\BigTable.tsx" />
+    <None Include="wwwroot\Scripts\TSX\DataQualitySummary.tsx" />
+    <None Include="wwwroot\Scripts\TSX\DateTimeRangePicker.tsx" />
+    <None Include="wwwroot\Scripts\TSX\DistributionPlot.tsx" />
+    <None Include="wwwroot\Scripts\TSX\global.d.ts" />
+    <None Include="wwwroot\Scripts\TSX\Legend.tsx" />
+    <None Include="wwwroot\Scripts\TSX\LineChart.tsx" />
+    <None Include="wwwroot\Scripts\TSX\Measurement.tsx" />
+    <None Include="wwwroot\Scripts\TSX\MeasurementInput.tsx" />
+    <None Include="wwwroot\Scripts\TSX\MeterInput.tsx" />
+    <None Include="wwwroot\Scripts\TSX\PeriodicDataDisplay.tsx" />
+    <None Include="wwwroot\Scripts\TSX\PQTrendingWebReport.tsx" />
+    <None Include="wwwroot\Scripts\TSX\Report.tsx" />
+    <None Include="wwwroot\Scripts\TSX\Select.tsx" />
+    <None Include="wwwroot\Scripts\TSX\SpectralDataDisplay.tsx" />
+    <None Include="wwwroot\Scripts\TSX\StepChangeWebReport.tsx" />
+    <None Include="wwwroot\Scripts\TSX\SummaryStat.tsx" />
+    <None Include="wwwroot\Scripts\TSX\Table.tsx" />
+    <None Include="wwwroot\Scripts\TSX\TrendingChart.tsx" />
+    <None Include="wwwroot\Scripts\TSX\TrendingDataDisplay.tsx" />
     <None Include="AppDebug.config">
       <SubType>Designer</SubType>
     </None>

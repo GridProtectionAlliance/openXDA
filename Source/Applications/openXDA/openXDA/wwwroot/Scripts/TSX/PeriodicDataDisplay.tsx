@@ -44,7 +44,6 @@ const PeriodicDataDisplay = () => {
     const [endDate, setEndDate] = React.useState<string>((query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')));
     const [type, setType] = React.useState<XDATrendDataPointField>((query['type'] != undefined ? query['type'] : "Average"));
     const [detailedReport, setDetailedReport] = React.useState<boolean>(query['detailedReport'] != undefined ? query['detailedReport'] == "true" : false);
-    const [fromStepChangeWebReport, setFromStepChangeWebReport] = React.useState<boolean>(query['fromStepChangeWebReport'] != undefined ? query['fromStepChangeWebReport'] == "true" : false);
     const [width, setWidth] = React.useState<number>(window.innerWidth - 475);
     const [data, setData] = React.useState<PeriodicDataDisplay.MeasurementCharateristics[]>([]);
     const [measurementsReturned, setMeasurementsReturned] = React.useState<number>(0);
@@ -66,7 +65,7 @@ const PeriodicDataDisplay = () => {
     function getData() {
         $(loader).show();
 
-        periodicDataDisplayService.getMeasurementCharacteristics(fromStepChangeWebReport, meterID).done(data => {
+        periodicDataDisplayService.getMeasurementCharacteristics(meterID).done(data => {
             setData(data);
         });
     }
@@ -85,7 +84,7 @@ const PeriodicDataDisplay = () => {
     }
 
     function updateUrl() {
-        history['push']('PeriodicDataDisplay.cshtml?' + queryString.stringify({meterID, startDate, endDate, type, detailedReport, fromStepChangeWebReport}, { encode: false }))
+        history['push']('PeriodicDataDisplay.cshtml?' + queryString.stringify({meterID, startDate, endDate, type, detailedReport}, { encode: false }))
     }
 
     let height = window.innerHeight - 60;
