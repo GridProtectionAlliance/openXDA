@@ -155,6 +155,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureDataSource.cs" />
+    <Compile Include="FaultTraceTool\FTTDataSource.cs" />
+    <Compile Include="FaultTraceTool\FTTImageGenerator.cs" />
+    <Compile Include="FaultTraceTool\FTTOptions.cs" />
+    <Compile Include="FaultTraceTool\FTTRecord.cs" />
     <Compile Include="PQIDataSource.cs" />
     <Compile Include="HIDSDataSource.cs" />
     <Compile Include="SQLDataSource.cs" />

@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -30,14 +29,11 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using GSF;
-using GSF.Data;
-using GSF.IO;
 using log4net;
 using Random = GSF.Security.Cryptography.Random;
 
-namespace FaultData.DataWriters.GTC
+namespace openXDA.NotificationDataSources.FaultTraceTool
 {
     public class FTTImageGenerator
     {
@@ -46,8 +42,6 @@ namespace FaultData.DataWriters.GTC
         public FTTImageGenerator(FTTOptions options)
         {
             CLIPath = options.CLIPath;
-            URL = options.URL;
-            QueryStringFormat = options.QueryStringFormat;
             QueryTimeout = options.QueryTimeout;
             IgnoreCertificateErrors = options.IgnoreCertificateErrors;
 
@@ -61,9 +55,7 @@ namespace FaultData.DataWriters.GTC
         #region [ Properties ]
 
         private string CLIPath { get; }
-        private string URL { get; }
-        private string QueryStringFormat { get; }
-        private TimeSpan QueryTimeout { get; }
+        private double QueryTimeout { get; }
         public bool IgnoreCertificateErrors { get; }
 
         private int ImageWidth { get; }
@@ -74,22 +66,8 @@ namespace FaultData.DataWriters.GTC
 
         #region [ Methods ]
 
-        public Stream QueryToImageStream(params FTTRecord[] records) =>
-            QueryToImageStream(records.AsEnumerable());
-
-        public Stream QueryToImageStream(IEnumerable<FTTRecord> records)
-        {
-            UriBuilder builder = new UriBuilder(URL);
-
-            IEnumerable<string> queryParts = new[] { builder.Query.TrimStart('?') }
-                .Concat(records.Select(GetQueryString))
-                .Where(queryPart => !string.IsNullOrEmpty(queryPart));
-
-            builder.Query = string.Join("&", queryParts);
-
-            string url = builder.ToString();
-            return QueryToImageStreamAsync(url).GetAwaiter().GetResult();
-        }
+        public Stream QueryToImageStream(string url) =>
+            QueryToImageStreamAsync(url).GetAwaiter().GetResult();
 
         private async Task<Stream> QueryToImageStreamAsync(string url)
         {
@@ -140,7 +118,7 @@ namespace FaultData.DataWriters.GTC
                     IgnoreCertificateErrors.ToString(CultureInfo.InvariantCulture),
                     ImageWidth.ToString(CultureInfo.InvariantCulture),
                     ImageHeight.ToString(CultureInfo.InvariantCulture),
-                    QueryTimeout.TotalSeconds.ToString(CultureInfo.InvariantCulture),
+                    QueryTimeout.ToString(CultureInfo.InvariantCulture),
                     Escape(filePath).QuoteWrap(),
                     BrowserArguments
                 };
@@ -186,20 +164,6 @@ namespace FaultData.DataWriters.GTC
             }
         }
 
-        private string GetQueryString(FTTRecord record, int index)
-        {
-            var parameters = new
-            {
-                index,
-                station = record.StationName,
-                line = record.LineKey,
-                distance = record.Distance,
-                eventTime = record.EventTime
-            };
-
-            return QueryStringFormat.Interpolate(parameters);
-        }
-
         private string GenerateFilePath()
         {
             Environment.SpecialFolder programData = Environment.SpecialFolder.CommonApplicationData;
@@ -224,62 +188,6 @@ namespace FaultData.DataWriters.GTC
 
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(FTTImageGenerator));
-
-        // Static Methods
-        public static Stream ConvertToFTTImageStream(AdoDataConnection connection, XElement fttElement)
-        {
-            string cliPathSetting = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'FTTInterop.CLIPath'");
-            string queryTimeoutSetting = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'FTTInterop.QueryTimeout'");
-
-            string cliPath = FilePath.GetAbsolutePath(cliPathSetting);
-
-            TimeSpan queryTimeout = int.TryParse(queryTimeoutSetting, out int queryTimeoutSeconds)
-                ? TimeSpan.FromSeconds(queryTimeoutSeconds)
-                : TimeSpan.FromSeconds(60);
-
-            string url = (string)fttElement.Attribute("url");
-            string queryStringFormat = (string)fttElement.Attribute("queryStringFormat");
-            string ignoreCertificateErrors = (string)fttElement.Attribute("ignoreCertificateErrors");
-            string fttWidth = (string)fttElement.Attribute("width");
-            string fttHeight = (string)fttElement.Attribute("height");
-            string browserArguments = (string)fttElement.Attribute("browserArguments");
-
-            if (!int.TryParse(fttWidth, out int imageWidth))
-                throw new FormatException($"FTT width '{fttWidth}' is not an integer.");
-
-            if (!int.TryParse(fttHeight, out int imageHeight))
-                throw new FormatException($"FTT height '{fttHeight}' is not an integer.");
-
-            FTTOptions options = new FTTOptions();
-            options.CLIPath = cliPath;
-            options.QueryTimeout = queryTimeout;
-            options.URL = url;
-            options.QueryStringFormat = queryStringFormat;
-            options.IgnoreCertificateErrors = ignoreCertificateErrors.ParseBoolean();
-            options.ImageWidth = imageWidth;
-            options.ImageHeight = imageHeight;
-            options.BrowserArguments = browserArguments;
-
-            List<FTTRecord> fttRecords = fttElement
-                .Elements("fttRecord")
-                .Select(FTTRecord.ToRecord)
-                .ToList();
-
-            foreach (FTTRecord record in fttRecords)
-                Validate(record);
-
-            FTTImageGenerator generator = new FTTImageGenerator(options);
-            return generator.QueryToImageStream(fttRecords);
-        }
-
-        private static void Validate(FTTRecord record)
-        {
-            if (!double.TryParse(record.Distance, out double _))
-                throw new FormatException($"FTT distance '{record.Distance}' is not a number.");
-
-            if (!DateTime.TryParse(record.EventTime, out DateTime _))
-                throw new FormatException($"FTT eventTime '{record.EventTime}' is not a valid date/time.");
-        }
 
         #endregion
     }

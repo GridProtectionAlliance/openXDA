@@ -33,13 +33,11 @@ using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Xml.Linq;
-using FaultData.DataWriters.GTC;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Xml;
 using log4net;
-using MathNet.Numerics.LinearAlgebra.Factorization;
 using openXDA.Configuration;
 using openXDA.Model;
 
@@ -184,7 +182,7 @@ namespace FaultData.DataWriters.Emails
                 XElement templateData = new XElement("data", responses.Select(r => r.Data));
                 XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
-                ApplyFTTTransform(attachments, htmlDocument);
+                ApplyImageEmbedTransform(attachments, htmlDocument);
                 SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
                 if (eventIDs.Count() > 0)
                     LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
@@ -227,7 +225,7 @@ namespace FaultData.DataWriters.Emails
                 XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                     
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
-                ApplyFTTTransform(attachments, htmlDocument);
+                ApplyImageEmbedTransform(attachments, htmlDocument);
                 SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
                 LoadSentEmail(email, xdaNow, recipients, htmlDocument);
             }
@@ -596,28 +594,28 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public void ApplyFTTTransform(List<Attachment> attachments, XDocument htmlDocument)
+        public void ApplyImageEmbedTransform(List<Attachment> attachments, XDocument htmlDocument)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                htmlDocument.TransformAll("ftt", (element, index) =>
+                htmlDocument.TransformAll("embed", (element, index) =>
                 {
-                    string fttEventID = (string)element.Attribute("eventID") ?? "-1";
-                    string cid = $"event{fttEventID}_ftt{index:00}.jpg";
+                    string cid = $"image{index:00}.jpg";
 
                     try
                     {
-                        Stream image = FTTImageGenerator.ConvertToFTTImageStream(connection, element);
-                        Attachment attachment = new Attachment(image, cid);
+                        string base64 = (string)element;
+                        byte[] imageData = Convert.FromBase64String(base64);
+                        MemoryStream stream = new MemoryStream(imageData);
+                        Attachment attachment = new Attachment(stream, cid);
                         attachment.ContentId = attachment.Name;
                         attachments.Add(attachment);
-
                         return new XElement("img", new XAttribute("src", $"cid:{cid}"));
                     }
                     catch (Exception ex)
                     {
                         string text = new StringBuilder()
-                            .AppendLine($"Error while querying {cid}:")
+                            .AppendLine($"Error while loading {cid}:")
                             .Append(ex.ToString())
                             .ToString();
 
