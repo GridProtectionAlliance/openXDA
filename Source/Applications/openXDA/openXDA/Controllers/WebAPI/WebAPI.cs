@@ -33,6 +33,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.IO;
 using GSF.Web.Model;
+using Newtonsoft.Json.Linq;
 using openXDA.Adapters;
 using openXDA.APIAuthentication;
 using openXDA.Model;
@@ -104,7 +105,75 @@ namespace openXDA.Controllers.WebAPI
     }
 
     [RoutePrefix("api/Channel")]
-    public class ChannelController : ModelController<ChannelDetail> {}
+    public class ChannelController : ModelController<ChannelDetail>
+    {
+        // ToDo: This is needed for TrenDAP, but something similar is in SEBrowser, should we consoladate?
+        #region [ Http Methods ]
+        [Route("GetTrendSearchData"), HttpPost]
+        public DataTable GetTrendSearchData([FromBody] JObject postData)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            {
+                string phaseFilter = GetIDFilter((JArray) postData["Phases"], "Phase.ID");
+                string channelGroupFilter = GetIDFilter((JArray) postData["ChannelGroups"], "ChannelGroup.ID");
+                string assetFilter = GetIDFilter((JArray) postData["AssetList"], "Asset.ID");
+                string meterFilter = GetIDFilter((JArray) postData["MeterList"], "Meter.ID");
+                // Phases and channels must be selected. Meters or assets must be selected.
+                if (string.IsNullOrEmpty(phaseFilter) || 
+                    string.IsNullOrEmpty(channelGroupFilter) || 
+                    (string.IsNullOrEmpty(assetFilter) && string.IsNullOrEmpty(meterFilter))) return new DataTable();
+
+                string filters =
+                    $@"Channel.Trend = 1
+                    {(string.IsNullOrEmpty(phaseFilter) ? "" : $"AND ({phaseFilter})")}
+                    {(string.IsNullOrEmpty(channelGroupFilter) ? "" : $"AND ({channelGroupFilter})")}
+                    {(string.IsNullOrEmpty(meterFilter) ? "" : $"AND {meterFilter}")}
+                    {(string.IsNullOrEmpty(assetFilter) ? "" : $"AND {assetFilter}")}";
+
+                string query =
+                    $@"SELECT
+                        Channel.ID,
+                        Meter.Name as Meter,
+                        Asset.AssetName as Asset,
+                        Phase.Name as Phase,
+                        Channel.Name,
+                        Channel.Adder,
+                        Channel.Multiplier,
+                        Channel.SamplesPerHour,
+                        Channel.PerUnitValue,
+                        Channel.HarmonicGroup,
+                        Channel.Description,
+                        Channel.Enabled,
+                        Channel.ConnectionPriority,
+                        Channel.Trend
+                    FROM 
+	                    Channel LEFT JOIN
+	                    Phase ON Channel.PhaseID = Phase.ID LEFT JOIN
+	                    Asset ON Asset.ID = Channel.AssetID LEFT JOIN
+	                    Meter ON Meter.ID = Channel.MeterID LEFT JOIN
+	                    ChannelGroupType ON Channel.MeasurementCharacteristicID = ChannelGroupType.MeasurementCharacteristicID AND 
+                                            Channel.MeasurementTypeID = ChannelGroupType.MeasurementTypeID LEFT JOIN
+	                    ChannelGroup ON ChannelGroup.ID = ChannelGroupType.ChannelGroupID
+                    WHERE
+	                    {filters}";
+
+                DataTable table = connection.RetrieveData(query);
+
+                return table;
+            }
+        }
+        #endregion
+
+        #region [ Private Methods ]
+        private string GetIDFilter(JArray idObjectList, string fieldName)
+        {
+            if (idObjectList is null) return null;
+            IEnumerable<int> ids = idObjectList.Values<int>();
+            if (ids.Count() == 0) return null;
+            return $"{fieldName} IN ({string.Join(", ", ids)})";
+        }
+        #endregion
+    }
 
     [RoutePrefix("api/Asset")]
     public class AssetController : ModelController<Asset> {}
