@@ -133,8 +133,10 @@ namespace openXDA.Controllers.WebAPI
                 string query =
                     $@"SELECT
                         Channel.ID,
+                        Meter.ID as MeterID,
                         Meter.Name as Meter,
                         Asset.AssetName as Asset,
+                        Asset.ID as AssetID,
                         Phase.Name as Phase,
                         Channel.Name,
                         Channel.Adder,
@@ -145,12 +147,17 @@ namespace openXDA.Controllers.WebAPI
                         Channel.Description,
                         Channel.Enabled,
                         Channel.ConnectionPriority,
-                        Channel.Trend
+                        Channel.Trend,
+                        ChannelGroup.Name as ChannelGroup,
+                        ChannelGroupType.Unit as Unit,
+                        Location.Longitude,
+                        Location.Latitude
                     FROM 
 	                    Channel LEFT JOIN
-	                    Phase ON Channel.PhaseID = Phase.ID LEFT JOIN
+	                    Phase ON Phase.ID = Channel.PhaseID LEFT JOIN
 	                    Asset ON Asset.ID = Channel.AssetID LEFT JOIN
 	                    Meter ON Meter.ID = Channel.MeterID LEFT JOIN
+                        Location ON Meter.LocationID = Location.ID LEFT JOIN
 	                    ChannelGroupType ON Channel.MeasurementCharacteristicID = ChannelGroupType.MeasurementCharacteristicID AND 
                                             Channel.MeasurementTypeID = ChannelGroupType.MeasurementTypeID LEFT JOIN
 	                    ChannelGroup ON ChannelGroup.ID = ChannelGroupType.ChannelGroupID
