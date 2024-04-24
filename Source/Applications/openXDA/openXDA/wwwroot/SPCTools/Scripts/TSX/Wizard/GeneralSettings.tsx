@@ -215,12 +215,12 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
                         </SearchBar>
                         <SelectTable<openXDA.IMeter>
                             cols={[
-                                { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Location', label: 'Substation', field: 'Location', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Make', label: 'Make', field: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Model', label: 'Model', field: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { verticalAlign: 'middle', width: 'auto' } },
+                                { key: 'Location', label: 'Substation', field: 'Location', headerStyle: { width: 'auto' }, rowStyle: { verticalAlign: 'middle', width: 'auto' } },
+                                { key: 'Make', label: 'Make', field: 'Make', headerStyle: { width: 'auto' }, rowStyle: { verticalAlign: 'middle', width: 'auto' } },
+                                { key: 'Model', label: 'Model', field: 'Model', headerStyle: { width: 'auto' }, rowStyle: { verticalAlign: 'middle', width: 'auto' } },
                             ]}
-                            tableClass="table table-hover"
+                            tableClass="table table-hover table-sm"
                             data={meterList}
                             sortKey={sort}
                             ascending={asc}
