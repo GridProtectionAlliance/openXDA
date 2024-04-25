@@ -65,16 +65,11 @@ const WizardTest = (props: IProps) => {
     const statTimeRange = useSelector(SelectStatisticsrange);
     const alarmVaues = useSelector(SelectAllAlarmValues);
 
-    //const testResult = useSelector(selectResultSummary)
-
     const [sort, setSort] = React.useState<keyof IChannelList>('NumberRaised')
     const [asc, setAsc] = React.useState<boolean>(false)
 
     const alarmFactors = useSelector(SelectAlarmFactors);
-    //const severityID = useSelector(selectSeverity);
     const severities = useSelector(SelectSeverities)
-
-    
 
     // Plot Data is Local since it is not used anywhere else
     const [selectedChannel, setSelectedChannel] = React.useState<number>(-1);
@@ -89,11 +84,6 @@ const WizardTest = (props: IProps) => {
     React.useEffect(() => {
         UpdateChannelTable();
     }, [selectedChannel]);
-
-    // To Load Something on Initialization
-    React.useEffect(() => {
-        handle.current = LoadTest();
-    }, []);
 
     function LoadTest(): JQuery.jqXHR {
 
