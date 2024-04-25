@@ -157,7 +157,6 @@ namespace SPCTools
 
         }
 
-
         /// <summary>
         /// Gets the Historical Data requested for a Channel and a SeriesType 
         /// </summary>
@@ -177,28 +176,36 @@ namespace SPCTools
                 else
                     testData = LoadChannel(request.ChannelID, request.Start, request.End);
 
-                bool isDynamic = !(tokenList.Count == 1);
-                bool isScalar = tokenList.All(item => item.IsScalar);
+                Func<int, double> GetThresholdFactory()
+                {
+                    // Dynamic alarms have no threshold
+                    if (tokenList.Count != 1)
+                        return _ => double.NaN;
 
+                    DataResponse token = tokenList[0];
+                    List<double> thresholds = token.Value;
+
+                    // If the token is scalar, every channel has the same threshold
+                    return token.IsScalar
+                        ? _ => thresholds[0]
+                        : UseThresholdLookup(request.StatisticsChannelID, thresholds);
+                }
+
+                Func<int, double> getThreshold = GetThresholdFactory();
                 Func<Point, double> seriesTypeFilter = GetSeriesTypeFilter(seriesTypeID);
 
                 List<ChannelTestResponse> result = request.ChannelID.Select((id, index) =>
                 {
-                    int statIndex = request.StatisticsChannelID.FindIndex(item => item == id);
-                    ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = (isDynamic ? double.NaN : (isScalar ? tokenList[0].Value.FirstOrDefault() : tokenList[0].Value[statIndex])) };
-
+                    ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = getThreshold(id) };
                     return TestChannel(index, testData[id], tokenList, request.AlarmFactors, request.AlarmTypeID, test, seriesTypeFilter);
-
                 }).ToList();
 
                 return Ok(result);
-
             }
             catch (Exception ex)
             {
                 return InternalServerError(ex);
             }
-
         }
 
         #endregion
@@ -320,6 +327,24 @@ namespace SPCTools
                 else
                     return (Point pt) => { return pt.Average; };
             }
+        }
+
+        private Func<int, double> UseThresholdLookup(List<int> statisticsChannelID, List<double> thresholds)
+        {
+            ILookup<int, int> statIndexLookup = statisticsChannelID
+                .Select((id, index) => new { id, index })
+                .ToLookup(obj => obj.id, obj => obj.index);
+
+            return id =>
+            {
+                int statIndex = statIndexLookup[id]
+                    .DefaultIfEmpty(-1)
+                    .First();
+
+                return (statIndex >= 0 && statIndex < thresholds.Count)
+                    ? thresholds[statIndex]
+                    : double.NaN;
+            };
         }
 
         #endregion
