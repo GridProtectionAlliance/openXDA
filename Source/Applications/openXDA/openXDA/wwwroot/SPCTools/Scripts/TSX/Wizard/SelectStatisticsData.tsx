@@ -257,16 +257,21 @@ const ChannelTable = () => {
     const sort = useSelector(SelectAffectedChannelSortField);
     const asc = useSelector(SelectAffectedChannelAscending);
 
+    const [selectAllCounter, setSelectAllCounter] = React.useState(0);
+    const [allSelected, setAllSelected] = React.useState(false);
+    const selectAllText = React.useMemo(() => allSelected ? "Deselect All" : "Select All", [allSelected]);
+
     return (
         <div style={{ width: '100%', height: '100%' }}>
+            <a href="#" className="link-primary" onClick={() => setSelectAllCounter(selectAllCounter + 1)}>{selectAllText}</a>
             <SelectTable<openXDA.IChannel>
                 cols={[
-                    { key: 'MeterName', label: 'Meter', field: 'MeterName', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                    { key: 'AssetKey', label: 'Asset', field: 'AssetKey', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                    { key: 'Name', label: 'Channel', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                    { key: 'Phase', label: 'Phase', field: 'Phase', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                    { key: 'MeterName', label: 'Meter', field: 'MeterName', headerStyle: { width: 'auto' }, rowStyle: { verticalAlign: 'middle', width: 'auto' } },
+                    { key: 'AssetKey', label: 'Asset', field: 'AssetKey', headerStyle: { width: 'auto' }, rowStyle: { verticalAlign: 'middle', width: 'auto' } },
+                    { key: 'Name', label: 'Channel', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { verticalAlign: 'middle', width: 'auto' } },
+                    { key: 'Phase', label: 'Phase', field: 'Phase', headerStyle: { width: 'auto' }, rowStyle: { verticalAlign: 'middle', width: 'auto' } },
                 ]}
-                tableClass="table table-hover"
+                tableClass="table table-hover table-sm"
                 data={channelList}
                 sortKey={sort}
                 ascending={asc}
@@ -274,7 +279,8 @@ const ChannelTable = () => {
                 tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 400, width: '100%' }}
                 rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                 KeyField={'ID'}
-                onSelection={(selected) => { dispatch(updateStatisticChannels(selected)); }}
+                onSelection={(selected) => { setAllSelected(selected.length === channelList.length); dispatch(updateStatisticChannels(selected)); }}
+                selectAllCounter={selectAllCounter}
             />
         </div>
     )
