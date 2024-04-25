@@ -200,7 +200,7 @@ const WizardTest = (props: IProps) => {
 
     let validStartDate = !isNaN(new Date(timeRange.start).getTime()) && timeRange.start != null;
     let validEndDate = !isNaN(new Date(timeRange.end).getTime()) && timeRange.end != null &&
-        (new Date(timeRange.end).getDate() > new Date(timeRange.start).getDate() || !validStartDate)
+        (new Date(timeRange.end) > new Date(timeRange.start) || !validStartDate)
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
