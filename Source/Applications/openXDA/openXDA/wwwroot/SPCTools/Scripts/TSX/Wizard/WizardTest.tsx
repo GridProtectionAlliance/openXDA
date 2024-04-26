@@ -27,11 +27,14 @@ import Table from '@gpa-gemstone/react-table';
 import { DateRangePicker } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
-import { selectAlarmGroup, selectSeriesTypeID, SelectAlarmFactors, SelectStatisticsFilter, SelectStatisticsChannels, SelectStatisticsrange, SelectAllAlarmValues } from './DynamicWizzardSlice';
+import { 
+    selectAlarmGroup, selectSeriesTypeID, SelectAlarmFactors,
+    SelectStatisticsFilter, SelectStatisticsChannels, SelectStatisticsrange, 
+    SelectAllAlarmValues } from './DynamicWizzardSlice';
 import { SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSeverities } from '../store/SeveritySlice';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
-import { LoadingIcon } from '@gpa-gemstone/react-interactive';
+import { LoadingIcon, Warning } from '@gpa-gemstone/react-interactive';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -41,6 +44,8 @@ declare var userIsAdmin: boolean;
 interface IProps { }
 interface IResultTable { Severity: string, Threshhold: number, NumberRaised: number, TimeInAlarm: number}
 interface IChannelList { MeterName: string, Name: string, NumberRaised: number, TimeInAlarm: number, ID: number }
+
+type preLoadState = 'uninitialized'|'confirm'|'loading'
 
 const defaultTimeRange = {
     start: `${(new Date()).getFullYear()}-${((new Date()).getMonth()).toString().padStart(2, '0')}-${(new Date()).getDate().toString().padStart(2, '0')}`,
@@ -78,6 +83,24 @@ const WizardTest = (props: IProps) => {
     const [resultSummary, setResultSummary] = React.useState<IResultTable[]>([]);
     const [channelSummary, setChannelSummary] = React.useState<IResultTable[]>([]);
     const [channelList, setChannelList] = React.useState<IChannelList[]>([])
+
+    // Logic for large DatasetWarning
+    const [userConfirm, setUserConfirm] = React.useState<preLoadState>('uninitialized')
+
+    React.useEffect(() => {
+        if (userConfirm == 'confirm') {
+            const nChannels = channelList.length;
+            const nDays = (Date.parse(timeRange.end) - Date.parse(timeRange.start)) / (1000.0 * 60.0 * 60.0 * 24.0);    
+
+            // Adjust statement below - if true it will not show the warning (e.g. for small datasets)
+            if (nDays*nChannels < 2)
+                setUserConfirm('loading')
+        }
+        if (userConfirm == 'loading') {
+            const h = LoadTest();
+            return () => { if (h != null && h.abort != null) h.abort(); }   
+        }
+    }, [userConfirm])
 
     React.useEffect(() => { setChannelList((old) => { return _.orderBy(old, [sort], [asc ? "asc" : "desc"]) }) }, [asc, sort]);
 
@@ -209,9 +232,7 @@ const WizardTest = (props: IProps) => {
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             <button type="button" className={"btn btn-primary btn-block"} disabled={loading != 'changed' || !validEndDate || !validStartDate} onClick={() => {
-                                if (handle.current != undefined && handle.current.abort != undefined)
-                                    handle.current.abort();
-                                handle.current = LoadTest();
+                               setUserConfirm('confirm')
                             }}>
                                     Test
                             </button>
@@ -326,7 +347,12 @@ const WizardTest = (props: IProps) => {
                     {selectedChannel != -1 && (loading == 'idle' || loading == 'changed') ? <AlarmTrendingCard Tend={effectiveTimeRange.end} Tstart={effectiveTimeRange.start} ChannelID={selectedChannel} /> : null}
                 </div>
             </div>
-            
+            <Warning  Title={'This operation may take some time to process.'}
+                CallBack={(c) => {if (c) setUserConfirm('loading'); else setUserConfirm('uninitialized')}}
+                Show={userConfirm == 'confirm'}
+                Message={'This operation may take some time to process. To speed up testing these setpoints please select a shorter timeframe or fewer channels.'}
+                ShowCancel={true}
+            />
            
             
         </div>      
