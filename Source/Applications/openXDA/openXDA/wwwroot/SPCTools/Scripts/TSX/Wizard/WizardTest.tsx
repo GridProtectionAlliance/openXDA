@@ -89,11 +89,11 @@ const WizardTest = (props: IProps) => {
 
     React.useEffect(() => {
         if (userConfirm == 'confirm') {
-            const nChannels = channelList.length;
+            const nChannels = statChannels.length;
             const nDays = (Date.parse(timeRange.end) - Date.parse(timeRange.start)) / (1000.0 * 60.0 * 60.0 * 24.0);
 
             // Adjust statement below - if true it will not show the warning (e.g. for small datasets)
-            if (nDays * nChannels < 2)
+            if (nDays * nChannels < 14)
                 setUserConfirm('loading');
         }
         if (userConfirm == 'loading') {
