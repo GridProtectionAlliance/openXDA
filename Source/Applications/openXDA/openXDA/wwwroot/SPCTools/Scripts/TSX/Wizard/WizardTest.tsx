@@ -27,9 +27,9 @@ import Table from '@gpa-gemstone/react-table';
 import { DateRangePicker } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
-import { 
+import {
     selectAlarmGroup, selectSeriesTypeID, SelectAlarmFactors,
-    SelectStatisticsFilter, SelectStatisticsChannels, SelectStatisticsrange, 
+    SelectStatisticsFilter, SelectStatisticsChannels, SelectStatisticsrange,
     SelectAllAlarmValues } from './DynamicWizzardSlice';
 import { SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSeverities } from '../store/SeveritySlice';
@@ -45,7 +45,7 @@ interface IProps { }
 interface IResultTable { Severity: string, Threshhold: number, NumberRaised: number, TimeInAlarm: number}
 interface IChannelList { MeterName: string, Name: string, NumberRaised: number, TimeInAlarm: number, ID: number }
 
-type preLoadState = 'uninitialized'|'confirm'|'loading'
+type preLoadState = 'uninitialized' | 'confirm' | 'loading';
 
 const defaultTimeRange = {
     start: `${(new Date()).getFullYear()}-${((new Date()).getMonth()).toString().padStart(2, '0')}-${(new Date()).getDate().toString().padStart(2, '0')}`,
@@ -85,22 +85,22 @@ const WizardTest = (props: IProps) => {
     const [channelList, setChannelList] = React.useState<IChannelList[]>([])
 
     // Logic for large DatasetWarning
-    const [userConfirm, setUserConfirm] = React.useState<preLoadState>('uninitialized')
+    const [userConfirm, setUserConfirm] = React.useState<preLoadState>('uninitialized');
 
     React.useEffect(() => {
         if (userConfirm == 'confirm') {
             const nChannels = channelList.length;
-            const nDays = (Date.parse(timeRange.end) - Date.parse(timeRange.start)) / (1000.0 * 60.0 * 60.0 * 24.0);    
+            const nDays = (Date.parse(timeRange.end) - Date.parse(timeRange.start)) / (1000.0 * 60.0 * 60.0 * 24.0);
 
             // Adjust statement below - if true it will not show the warning (e.g. for small datasets)
-            if (nDays*nChannels < 2)
-                setUserConfirm('loading')
+            if (nDays * nChannels < 2)
+                setUserConfirm('loading');
         }
         if (userConfirm == 'loading') {
             const h = LoadTest();
-            return () => { if (h != null && h.abort != null) h.abort(); }   
+            return () => { if (h != null && h.abort != null) h.abort(); };
         }
-    }, [userConfirm])
+    }, [userConfirm]);
 
     React.useEffect(() => { setChannelList((old) => { return _.orderBy(old, [sort], [asc ? "asc" : "desc"]) }) }, [asc, sort]);
 
@@ -231,10 +231,8 @@ const WizardTest = (props: IProps) => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            <button type="button" className={"btn btn-primary btn-block"} disabled={loading != 'changed' || !validEndDate || !validStartDate} onClick={() => {
-                               setUserConfirm('confirm')
-                            }}>
-                                    Test
+                            <button type="button" className={"btn btn-primary btn-block"} disabled={loading != 'changed' || !validEndDate || !validStartDate} onClick={() => setUserConfirm('confirm')}>
+                                Test
                             </button>
                         </div>
                         
@@ -348,14 +346,12 @@ const WizardTest = (props: IProps) => {
                 </div>
             </div>
             <Warning  Title={'This operation may take some time to process.'}
-                CallBack={(c) => {if (c) setUserConfirm('loading'); else setUserConfirm('uninitialized')}}
+                CallBack={(c) => { if (c) setUserConfirm('loading'); else setUserConfirm('uninitialized'); }}
                 Show={userConfirm == 'confirm'}
                 Message={'This operation may take some time to process. To speed up testing these setpoints please select a shorter timeframe or fewer channels.'}
                 ShowCancel={true}
             />
-           
-            
-        </div>      
+        </div>
     );
 }
 
