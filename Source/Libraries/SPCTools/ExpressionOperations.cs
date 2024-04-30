@@ -94,6 +94,8 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
+                if (slice.Values.Count() == 0)
+                    return new Scalar(0.0D)
                 return new Scalar(slice.Values.Min());
             }
             else if (operand is Matrix)
@@ -120,6 +122,8 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
+                if (slice.Values.Count() == 0)
+                    return new Scalar(0.0D)
                 return new Scalar(slice.Values.Max());
             }
             else if (operand is Matrix)
@@ -146,6 +150,8 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
+                if (slice.Values.Count() == 0)
+                    return new Scalar(0.0D)
                 return new Scalar(slice.Values.Sum() / slice.Values.Count());
             }
             else if (operand is Matrix)
@@ -203,7 +209,9 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
-                double maxValue = slice.Values.Min();
+                double maxValue = 0.0D;
+                if (slice.Values.Count() > 0)
+                    maxValue = slice.Values.Min();
                 return new Slice(slice.Values.Select(_ => maxValue).ToList());
             }
             else if (operand is Matrix)
@@ -230,7 +238,9 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
-                double maxValue = slice.Values.Max();
+                double maxValue = 0.0D;
+                 if (slice.Values.Count() > 0)
+                    maxValue = slice.Values.Max();
                 return new Slice(slice.Values.Select(_ => maxValue).ToList());
             }
             else if (operand is Matrix)
@@ -257,7 +267,7 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
-                double min = slice.Values.Min();
+                double min = slice.Values.Sum()/slice.Values.Count();
                 return new Slice(slice.Values.Select(_ => min).ToList());
             }
             else if (operand is Matrix)
