@@ -95,7 +95,7 @@ namespace SPCTools
             {
                 Slice slice = operand as Slice;
                 if (slice.Values.Count() == 0)
-                    return new Scalar(0.0D)
+                    return new Scalar(0.0D);
                 return new Scalar(slice.Values.Min());
             }
             else if (operand is Matrix)
@@ -123,7 +123,7 @@ namespace SPCTools
             {
                 Slice slice = operand as Slice;
                 if (slice.Values.Count() == 0)
-                    return new Scalar(0.0D)
+                    return new Scalar(0.0D);
                 return new Scalar(slice.Values.Max());
             }
             else if (operand is Matrix)
@@ -151,7 +151,7 @@ namespace SPCTools
             {
                 Slice slice = operand as Slice;
                 if (slice.Values.Count() == 0)
-                    return new Scalar(0.0D)
+                    return new Scalar(0.0D);
                 return new Scalar(slice.Values.Sum() / slice.Values.Count());
             }
             else if (operand is Matrix)
