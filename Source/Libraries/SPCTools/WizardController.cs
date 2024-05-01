@@ -172,7 +172,7 @@ namespace SPCTools
 
                     // AlarmValue (attaches to Alarm)
                     TableOperations<AlarmValue> alarmValueTbl = new TableOperations<AlarmValue>(connection);
-                    Dictionary<int, List<Point>> data = LoadChannel(request.StatisticChannelsID, request.StatisticsStart, request.StatisticsEnd);
+                    Dictionary<int, IAsyncEnumerable<Point>> data = LoadChannel(request.StatisticChannelsID, request.StatisticsStart, request.StatisticsEnd);
 
                     request.AlarmValues.ForEach(value =>
                     {
@@ -344,28 +344,35 @@ namespace SPCTools
 
         #region [ HelperFunction ]
 
-        private Dictionary<int, List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
         {
-            Dictionary<int, List<Point>> result = new Dictionary<int, List<Point>>();
+            Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
 
             string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
-            List<string> dataToGet = channelID.Select(item => item.ToString("x8")).ToList();
+            List<string> dataToGet = new List<string>();
+            channelID.ForEach(item =>
+            {
+                dataToGet.Add(item.ToString("x8"));
+            });
 
-            List<Point> data;
+            if (dataToGet.Count == 0)
+                return result;
+
+            IAsyncEnumerable<Point> data;
             using (API hids = new API())
             {
-                async Task<List<Point>> QueryHIDSAsync()
+                async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
                 {
                     HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
                     await hids.ConfigureAsync(settings);
-                    return await hids.ReadPointsAsync(dataToGet, start, end).ToListAsync();
+                    return hids.ReadPointsAsync(dataToGet, start, end);
                 }
 
-                Task<List<Point>> queryTask = QueryHIDSAsync();
+                Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
                 data = queryTask.GetAwaiter().GetResult();
             }
 
-            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
+            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")));
         }
 
         private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)
