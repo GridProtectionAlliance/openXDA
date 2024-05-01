@@ -23,9 +23,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Runtime.Caching;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
@@ -102,7 +101,7 @@ namespace SPCTools
         /// </summary>
         /// <returns> Returns a Parsed AlarmValue </returns>
         [HttpPost, Route("Parse")]
-        public IHttpActionResult ParseValue(TokenParseRequest request)
+        public IHttpActionResult ParseValue(TokenParseRequest request, CancellationToken cancellationToken)
         {
             if ((GetRoles != string.Empty && !User.IsInRole(GetRoles)))
                 return Unauthorized();
@@ -111,7 +110,7 @@ namespace SPCTools
             {
                 using (API hids = new API())
                 {
-                    Dictionary<int, IAsyncEnumerable<Point>> data = LoadChannel(hids, request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
+                    Dictionary<int, IAsyncEnumerable<Point>> data = LoadChannel(hids, request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd, cancellationToken);
                     ExpressionOperations root = new ExpressionOperations(request.TokeValue.Formula, data, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(request.TokeValue));
 
                     DataResponse resultant = root.Evaluate();
@@ -131,7 +130,7 @@ namespace SPCTools
 
         // Note for now this only pulls Channel 3 because We are still looking at two different DataBases (one for HIDS and one local for testing).
         // This needs to change before TVA deployment
-        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end, CancellationToken cancellationToken)
         {
             Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
 
@@ -149,7 +148,7 @@ namespace SPCTools
             {
                 HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
                 await hids.ConfigureAsync(settings);
-                return hids.ReadPointsAsync(dataToGet, start, end);
+                return hids.ReadPointsAsync(dataToGet, start, end, cancellationToken);
             }
 
             Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
@@ -158,7 +157,7 @@ namespace SPCTools
             return channelID
                 .ToAsyncEnumerable()
                 .GroupJoin(data.GroupBy(pt => pt.Tag), item => item.ToString("x8"), grouping => grouping.Key, (item, grouping) => new { Key = item, Value = grouping.SelectMany(inner => inner) })
-                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value)
+                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value, cancellationToken)
                 .GetAwaiter()
                 .GetResult();
         }

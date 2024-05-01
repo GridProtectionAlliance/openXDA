@@ -27,7 +27,7 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.Caching;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
@@ -111,7 +111,7 @@ namespace SPCTools
         /// </summary>
         /// <returns> List of DataPoints for the Channel  </returns>
         [HttpPost, Route("HistoryData/{ChannelId}/{SeriesTypeID}")]
-        public IHttpActionResult getChannelData(int ChannelId, int SeriesTypeID, [FromBody] DataFilter postedFilter)
+        public IHttpActionResult getChannelData(int ChannelId, int SeriesTypeID, [FromBody] DataFilter postedFilter, CancellationToken cancellationToken)
         {
             NameValueCollection queryParameters = Request.RequestUri.ParseQueryString();
             string startTime = queryParameters["start"];
@@ -129,7 +129,7 @@ namespace SPCTools
 
                     Func<Point, double> flattenData = GetSeriesTypeFilter(SeriesTypeID);
 
-                    IAsyncEnumerable<double[]> data = LoadChannel(hids, new List<int>() { ChannelId }, start, end)[ChannelId].Select(pt => new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) }); ;
+                    IAsyncEnumerable<double[]> data = LoadChannel(hids, new List<int>() { ChannelId }, start, end, cancellationToken)[ChannelId].Select(pt => new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) }); ;
 
                     if (postedFilter != null)
                         data = data.Select(pt => {
@@ -159,21 +159,21 @@ namespace SPCTools
         /// </summary>
         /// <returns> List of DataPoints for the Channel  </returns>
         [HttpPost, Route("Test/{SeriesTypeID}")]
-        public IHttpActionResult TestAlarmGroup(int seriesTypeID, [FromBody] TestRequest request)
+        public IHttpActionResult TestAlarmGroup(int seriesTypeID, [FromBody] TestRequest request, CancellationToken cancellationToken)
         {
             try
             {
                 using (API hids = new API())
                 {
                     //Grab Data For Setpoint Computation
-                    Dictionary<int, IAsyncEnumerable<Point>> statisticsData = LoadChannel(hids, request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
+                    Dictionary<int, IAsyncEnumerable<Point>> statisticsData = LoadChannel(hids, request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd, cancellationToken);
                     List<DataResponse> tokenList = request.TokenValues.Select(value => new ExpressionOperations(value.Formula, statisticsData, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate()).ToList();
 
                     Dictionary<int, IAsyncEnumerable<Point>> testData;
                     if (request.Start == request.StatisticsStart && request.End == request.StatisticsEnd && request.ChannelID.Count == request.StatisticsChannelID.Count)
                         testData = statisticsData;
                     else
-                        testData = LoadChannel(hids, request.ChannelID, request.Start, request.End);
+                        testData = LoadChannel(hids, request.ChannelID, request.Start, request.End, cancellationToken);
 
                     Func<int, double> GetThresholdFactory()
                     {
@@ -212,7 +212,7 @@ namespace SPCTools
 
         #region [ HelperFunction ]
 
-        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end, CancellationToken cancellationToken)
         {
             Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
 
@@ -230,7 +230,7 @@ namespace SPCTools
             {
                 HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
                 await hids.ConfigureAsync(settings);
-                return hids.ReadPointsAsync(dataToGet, start, end);
+                return hids.ReadPointsAsync(dataToGet, start, end, cancellationToken);
             }
 
             Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
@@ -239,7 +239,7 @@ namespace SPCTools
             return channelID
                 .ToAsyncEnumerable()
                 .GroupJoin(data.GroupBy(pt => pt.Tag), item => item.ToString("x8"), grouping => grouping.Key, (item, grouping) => new { Key = item, Value = grouping.SelectMany(inner => inner) })
-                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value)
+                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value, cancellationToken)
                 .GetAwaiter()
                 .GetResult();
         }
