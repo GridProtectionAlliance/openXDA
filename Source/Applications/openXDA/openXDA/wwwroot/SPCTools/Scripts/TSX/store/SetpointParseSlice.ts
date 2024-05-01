@@ -27,8 +27,14 @@ import _ from 'lodash';
 import { SelectStatisticsFilter, SelectStatisticsrange, SelectStatisticsChannels, SelectActiveAlarmValue } from '../Wizard/DynamicWizzardSlice';
 
 interface ParsedSetpointParam { content: DynamicWizzard.ITokenParseResponse, channelIDs: number[] }
+
+const fetchHandle;
+
 // #region [ Thunks ]
 export const FetchParsedSetPoint = createAsyncThunk('SetPointParse/FetchParsedSetPoint', async (param: { AlarmDayID: number, StartHour: number }, { getState, dispatch }) => {
+    if (fetchHandle != null && fetchHandle.abort != null)
+        fetchHandle.abort();
+
     let dataFilter = SelectStatisticsFilter(getState() as Redux.StoreState);
     let timeRange = SelectStatisticsrange(getState() as Redux.StoreState);
     let channelIDs = SelectStatisticsChannels(getState() as Redux.StoreState).map(ch => ch.ID);
@@ -40,7 +46,9 @@ export const FetchParsedSetPoint = createAsyncThunk('SetPointParse/FetchParsedSe
     if (token.Formula == "") {
         return Promise.resolve({ content: { Valid: false, IsScalar: false, Message: "Expression can not be empty.", Value: [] }, channelIDs: channelIDs } as ParsedSetpointParam);
     }
-    let handle = await GetParsedSetPoint(token, dataFilter, timeRange.start, timeRange.end, channelIDs);
+    fetchHandle = GetParsedSetPoint(token, dataFilter, timeRange.start, timeRange.end, channelIDs);
+    let handle = await fetchHandle;
+   
     return { content: handle, channelIDs: channelIDs };
 });
 
@@ -139,7 +147,7 @@ async function GetParsedSetPoint(token: DynamicWizzard.IAlarmvalue, dataFilter: 
         StatisticsEnd: end,
         StatisticsChannelID: channelIDs,
     }
-    return await $.ajax({
+    return $.ajax({
         type: "POST",
         url: `${apiHomePath}api/SPCTools/Token/Parse`,
         contentType: "application/json; charset=utf-8",
