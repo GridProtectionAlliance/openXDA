@@ -122,26 +122,29 @@ namespace SPCTools
 
             try
             {
-                DateTime start = DateTime.Parse(startTime);
-                DateTime end = DateTime.Parse(endTime);
+                using (API hids = new API())
+                {
+                    DateTime start = DateTime.Parse(startTime);
+                    DateTime end = DateTime.Parse(endTime);
 
-                Func<Point, double> flattenData = GetSeriesTypeFilter(SeriesTypeID);
+                    Func<Point, double> flattenData = GetSeriesTypeFilter(SeriesTypeID);
 
-                IAsyncEnumerable<double[]> data = LoadChannel(new List<int>() { ChannelId }, start, end)[ChannelId].Select(pt => new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) }); ;
+                    IAsyncEnumerable<double[]> data = LoadChannel(hids, new List<int>() { ChannelId }, start, end)[ChannelId].Select(pt => new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) }); ;
 
-                if (postedFilter != null)
-                    data = data.Select(pt => {
-                        if (postedFilter.FilterZero && pt[1] == 0.0D)
-                            return new double[] { pt[0], double.NaN };
-                        if (postedFilter.FilterLower && pt[1] < postedFilter.LowerLimit)
-                            return new double[] { pt[0], double.NaN };
-                        if (postedFilter.FilterUpper && pt[1] > postedFilter.UpperLimit)
-                            return new double[] { pt[0], double.NaN };
-                        return pt;
-                    });
+                    if (postedFilter != null)
+                        data = data.Select(pt => {
+                            if (postedFilter.FilterZero && pt[1] == 0.0D)
+                                return new double[] { pt[0], double.NaN };
+                            if (postedFilter.FilterLower && pt[1] < postedFilter.LowerLimit)
+                                return new double[] { pt[0], double.NaN };
+                            if (postedFilter.FilterUpper && pt[1] > postedFilter.UpperLimit)
+                                return new double[] { pt[0], double.NaN };
+                            return pt;
+                        });
 
 
-                return Ok(data);
+                    return Ok(data);
+                }
             }
             catch (Exception ex)
             {
@@ -160,41 +163,44 @@ namespace SPCTools
         {
             try
             {
-                //Grab Data For Setpoint Computation
-                Dictionary<int, IAsyncEnumerable<Point>> statisticsData = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
-                List<DataResponse> tokenList = request.TokenValues.Select(value => new ExpressionOperations(value.Formula, statisticsData, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate()).ToList();
-
-                Dictionary<int, IAsyncEnumerable<Point>> testData;
-                if (request.Start == request.StatisticsStart && request.End == request.StatisticsEnd && request.ChannelID.Count == request.StatisticsChannelID.Count)
-                    testData = statisticsData;
-                else
-                    testData = LoadChannel(request.ChannelID, request.Start, request.End);
-
-                Func<int, double> GetThresholdFactory()
+                using (API hids = new API())
                 {
-                    // Dynamic alarms have no threshold
-                    if (tokenList.Count != 1)
-                        return _ => double.NaN;
+                    //Grab Data For Setpoint Computation
+                    Dictionary<int, IAsyncEnumerable<Point>> statisticsData = LoadChannel(hids, request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
+                    List<DataResponse> tokenList = request.TokenValues.Select(value => new ExpressionOperations(value.Formula, statisticsData, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate()).ToList();
 
-                    DataResponse token = tokenList[0];
-                    List<double> thresholds = token.Value;
+                    Dictionary<int, IAsyncEnumerable<Point>> testData;
+                    if (request.Start == request.StatisticsStart && request.End == request.StatisticsEnd && request.ChannelID.Count == request.StatisticsChannelID.Count)
+                        testData = statisticsData;
+                    else
+                        testData = LoadChannel(hids, request.ChannelID, request.Start, request.End);
 
-                    // If the token is scalar, every channel has the same threshold
-                    return token.IsScalar
-                        ? _ => thresholds[0]
-                        : UseThresholdLookup(request.StatisticsChannelID, thresholds);
+                    Func<int, double> GetThresholdFactory()
+                    {
+                        // Dynamic alarms have no threshold
+                        if (tokenList.Count != 1)
+                            return _ => double.NaN;
+
+                        DataResponse token = tokenList[0];
+                        List<double> thresholds = token.Value;
+
+                        // If the token is scalar, every channel has the same threshold
+                        return token.IsScalar
+                            ? _ => thresholds[0]
+                            : UseThresholdLookup(request.StatisticsChannelID, thresholds);
+                    }
+
+                    Func<int, double> getThreshold = GetThresholdFactory();
+                    Func<Point, double> seriesTypeFilter = GetSeriesTypeFilter(seriesTypeID);
+
+                    List<ChannelTestResponse> result = request.ChannelID.Select((id, index) =>
+                    {
+                        ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = getThreshold(id) };
+                        return TestChannel(index, testData[id], tokenList, request.AlarmFactors, request.AlarmTypeID, test, seriesTypeFilter);
+                    }).ToList();
+
+                    return Ok(result);
                 }
-
-                Func<int, double> getThreshold = GetThresholdFactory();
-                Func<Point, double> seriesTypeFilter = GetSeriesTypeFilter(seriesTypeID);
-
-                List<ChannelTestResponse> result = request.ChannelID.Select((id, index) =>
-                {
-                    ChannelTestResponse test = new ChannelTestResponse() { ChannelID = id, Threshhold = getThreshold(id) };
-                    return TestChannel(index, testData[id], tokenList, request.AlarmFactors, request.AlarmTypeID, test, seriesTypeFilter);
-                }).ToList();
-
-                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -206,7 +212,7 @@ namespace SPCTools
 
         #region [ HelperFunction ]
 
-        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end)
         {
             Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
 
@@ -220,21 +226,22 @@ namespace SPCTools
             if (dataToGet.Count == 0)
                 return result;
 
-            IAsyncEnumerable<Point> data;
-            using (API hids = new API())
+            async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
             {
-                async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
-                {
-                    HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
-                    await hids.ConfigureAsync(settings);
-                    return hids.ReadPointsAsync(dataToGet, start, end);
-                }
-
-                Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
-                data = queryTask.GetAwaiter().GetResult();
+                HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
+                await hids.ConfigureAsync(settings);
+                return hids.ReadPointsAsync(dataToGet, start, end);
             }
 
-            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")));
+            Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
+            IAsyncEnumerable<Point> data = queryTask.GetAwaiter().GetResult();
+
+            return channelID
+                .ToAsyncEnumerable()
+                .GroupJoin(data.GroupBy(pt => pt.Tag), item => item.ToString("x8"), grouping => grouping.Key, (item, grouping) => new { Key = item, Value = grouping.SelectMany(inner => inner) })
+                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value)
+                .GetAwaiter()
+                .GetResult();
         }
 
         private ChannelTestResponse TestChannel(int channelIndex, IAsyncEnumerable<Point> data, List<DataResponse> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData)

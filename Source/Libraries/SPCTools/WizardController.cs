@@ -171,34 +171,37 @@ namespace SPCTools
                     });
 
                     // AlarmValue (attaches to Alarm)
-                    TableOperations<AlarmValue> alarmValueTbl = new TableOperations<AlarmValue>(connection);
-                    Dictionary<int, IAsyncEnumerable<Point>> data = LoadChannel(request.StatisticChannelsID, request.StatisticsStart, request.StatisticsEnd);
-
-                    request.AlarmValues.ForEach(value =>
+                    using (API hids = new API())
                     {
-                        ParseResponse token = new ExpressionOperations(value.Formula, data, request.StatisticChannelsID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate();
+                        TableOperations<AlarmValue> alarmValueTbl = new TableOperations<AlarmValue>(connection);
+                        Dictionary<int, IAsyncEnumerable<Point>> data = LoadChannel(hids, request.StatisticChannelsID, request.StatisticsStart, request.StatisticsEnd);
 
-                        updateAlarmID.ForEach(alarmID =>
+                        request.AlarmValues.ForEach(value =>
                         {
-                            if (!isNew)
-                            {
-                                connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID.Item1} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmDayID is null ? "IS NULL" : ("= " + value.AlarmDayID.ToString()))}");
-                            
-                            }
-                            AlarmValue alarmValue = new AlarmValue()
-                            {
-                                StartHour = value.StartHour,
-                                EndHour = value.EndHour,
-                                AlarmDayID = value.AlarmDayID,
-                                AlarmID = alarmID.Item1,
-                                Formula = value.Formula,
-                                Value = (token.IsScalar ? token.Value.FirstOrDefault() : token.Value[request.StatisticChannelsID.FindIndex(item => item == alarmID.Item2)])
-                            };
+                            ParseResponse token = new ExpressionOperations(value.Formula, data, request.StatisticChannelsID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate();
 
-                            alarmValueTbl.AddNewRecord(alarmValue);
+                            updateAlarmID.ForEach(alarmID =>
+                            {
+                                if (!isNew)
+                                {
+                                    connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID.Item1} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmDayID is null ? "IS NULL" : ("= " + value.AlarmDayID.ToString()))}");
 
+                                }
+                                AlarmValue alarmValue = new AlarmValue()
+                                {
+                                    StartHour = value.StartHour,
+                                    EndHour = value.EndHour,
+                                    AlarmDayID = value.AlarmDayID,
+                                    AlarmID = alarmID.Item1,
+                                    Formula = value.Formula,
+                                    Value = (token.IsScalar ? token.Value.FirstOrDefault() : token.Value[request.StatisticChannelsID.FindIndex(item => item == alarmID.Item2)])
+                                };
+
+                                alarmValueTbl.AddNewRecord(alarmValue);
+
+                            });
                         });
-                    });
+                    }
                 }
 
                 return Ok(true);
@@ -344,7 +347,7 @@ namespace SPCTools
 
         #region [ HelperFunction ]
 
-        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end)
         {
             Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
 
@@ -358,21 +361,22 @@ namespace SPCTools
             if (dataToGet.Count == 0)
                 return result;
 
-            IAsyncEnumerable<Point> data;
-            using (API hids = new API())
+            async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
             {
-                async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
-                {
-                    HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
-                    await hids.ConfigureAsync(settings);
-                    return hids.ReadPointsAsync(dataToGet, start, end);
-                }
-
-                Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
-                data = queryTask.GetAwaiter().GetResult();
+                HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
+                await hids.ConfigureAsync(settings);
+                return hids.ReadPointsAsync(dataToGet, start, end);
             }
 
-            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")));
+            Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
+            IAsyncEnumerable<Point> data = queryTask.GetAwaiter().GetResult();
+
+            return channelID
+                .ToAsyncEnumerable()
+                .GroupJoin(data.GroupBy(pt => pt.Tag), item => item.ToString("x8"), grouping => grouping.Key, (item, grouping) => new { Key = item, Value = grouping.SelectMany(inner => inner) })
+                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value)
+                .GetAwaiter()
+                .GetResult();
         }
 
         private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)

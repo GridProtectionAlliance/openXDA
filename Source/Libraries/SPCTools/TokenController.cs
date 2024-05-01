@@ -109,12 +109,15 @@ namespace SPCTools
 
             try
             {
-                Dictionary<int, IAsyncEnumerable<Point>> data = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
-                ExpressionOperations root = new ExpressionOperations(request.TokeValue.Formula, data, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(request.TokeValue));
+                using (API hids = new API())
+                {
+                    Dictionary<int, IAsyncEnumerable<Point>> data = LoadChannel(hids, request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
+                    ExpressionOperations root = new ExpressionOperations(request.TokeValue.Formula, data, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(request.TokeValue));
 
-                DataResponse resultant = root.Evaluate();
-                ParseResponse result = new ParseResponse(resultant);
-                return Ok(result);
+                    DataResponse resultant = root.Evaluate();
+                    ParseResponse result = new ParseResponse(resultant);
+                    return Ok(result);
+                }
             }
             catch (Exception ex)
             {
@@ -128,7 +131,7 @@ namespace SPCTools
 
         // Note for now this only pulls Channel 3 because We are still looking at two different DataBases (one for HIDS and one local for testing).
         // This needs to change before TVA deployment
-        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end)
         {
             Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
 
@@ -136,27 +139,28 @@ namespace SPCTools
             List<string> dataToGet = new List<string>();
             channelID.ForEach(item =>
             {
-                    dataToGet.Add(item.ToString("x8"));
+                dataToGet.Add(item.ToString("x8"));
             });
 
             if (dataToGet.Count == 0)
                 return result;
 
-            IAsyncEnumerable<Point> data;
-            using (API hids = new API())
+            async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
             {
-                async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
-                {
-                    HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
-                    await hids.ConfigureAsync(settings);
-                    return hids.ReadPointsAsync(dataToGet, start, end);
-                }
-
-                Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
-                data = queryTask.GetAwaiter().GetResult();
+                HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
+                await hids.ConfigureAsync(settings);
+                return hids.ReadPointsAsync(dataToGet, start, end);
             }
 
-            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")));
+            Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
+            IAsyncEnumerable<Point> data = queryTask.GetAwaiter().GetResult();
+
+            return channelID
+                .ToAsyncEnumerable()
+                .GroupJoin(data.GroupBy(pt => pt.Tag), item => item.ToString("x8"), grouping => grouping.Key, (item, grouping) => new { Key = item, Value = grouping.SelectMany(inner => inner) })
+                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value)
+                .GetAwaiter()
+                .GetResult();
         }
 
         private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)
