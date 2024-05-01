@@ -59,7 +59,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix matrix = obj as Matrix;
-                List<List<double[]>> result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], point[1] + scalar.Value }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], point[1] + scalar.Value })).ToList();
                 return new Matrix(result);
             }
 
@@ -93,7 +93,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix matrix = obj as Matrix;
-                var result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], point[1] - scalar.Value }).ToList()).ToList();
+                var result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], point[1] - scalar.Value })).ToList();
                 return new Matrix(result);
             }
 
@@ -128,7 +128,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix matrix = obj as Matrix;
-                List<List<double[]>> result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], point[1] * scalar.Value }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], point[1] * scalar.Value })).ToList();
                 return new Matrix(result);
             }
 
@@ -165,7 +165,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix matrix = obj as Matrix;
-                List<List<double[]>> result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], point[1] / scalar.Value }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], point[1] / scalar.Value })).ToList();
                 return new Matrix(result);
             }
 

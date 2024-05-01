@@ -65,7 +65,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix matrix = obj as Matrix;
-                List<List<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], point[1] + slice.Values[i] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], point[1] + slice.Values[i] })).ToList();
                 return new Matrix(result);
             }
 
@@ -104,7 +104,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix matrix = obj as Matrix;
-                List<List<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], point[1] * slice.Values[i] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], point[1] * slice.Values[i] })).ToList();
                 return new Matrix(result);
             }
 
@@ -143,7 +143,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix matrix = obj as Matrix;
-                List<List<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], point[1] - slice.Values[i] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], point[1] - slice.Values[i] })).ToList();
                 return new Matrix(result);
             }
 
@@ -190,7 +190,7 @@ namespace SPCTools
             {
                 //Probably should add checks to see if the lists are same size..
                 Matrix matrix = obj as Matrix;
-                List<List<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], point[1] / slice.Values[i] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], point[1] / slice.Values[i] })).ToList();
                 return new Matrix(result);
             }
 
