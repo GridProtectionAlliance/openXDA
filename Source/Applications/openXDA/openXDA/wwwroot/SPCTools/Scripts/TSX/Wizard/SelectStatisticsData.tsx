@@ -101,9 +101,11 @@ const SelectStatisticsData = (props: IProps) => {
                                 Field="start"
                                 Setter={(r) => { 
                                     if (range === 'Custom')
-                                        return;
-                                    const toTime: moment.Moment =  moment(r.start, "YYYY-MM-DD").add(GetDays(range), 'days');
-                                    dispatch(updateStatisticsRange({...r, end: toTime.format("YYYY-MM-DD")}))
+                                        dispatch(updateStatisticsRange(r));
+                                    else {
+                                        const toTime: moment.Moment = moment(r.start, "YYYY-MM-DD").add(GetDays(range), 'days');
+                                        dispatch(updateStatisticsRange({ ...r, end: toTime.format("YYYY-MM-DD") }))
+                                    }
                                 }}
                                 Label='From:'
                                 Type='date'
@@ -115,8 +117,12 @@ const SelectStatisticsData = (props: IProps) => {
                         <DatePicker<SPCTools.IDateRange> Record={dateRange}
                                 Field="end"
                                 Setter={(r) => {
-                                    dispatch(updateStatisticsRange(r))
-                                    setRange('Custom');
+                                    if (range === 'Custom')
+                                        dispatch(updateStatisticsRange(r));
+                                    else {
+                                        const fromTime: moment.Moment = moment(r.end, "YYYY-MM-DD").subtract(GetDays(range), 'days');
+                                        dispatch(updateStatisticsRange({ ...r, start: fromTime.format("YYYY-MM-DD") }))
+                                    }
                                 }}
                                 Label='To:'
                                 Type='date'
