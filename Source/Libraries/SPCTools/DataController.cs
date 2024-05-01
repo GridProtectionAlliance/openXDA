@@ -93,9 +93,6 @@ namespace SPCTools
 
         private static DateTime s_epoch = new DateTime(1970, 1, 1);
 
-        private static MemoryCache s_memoryCache;
-        private static readonly double s_cacheExipry = 5;
-
         private Host Host { get; }
 
         #endregion
@@ -104,9 +101,6 @@ namespace SPCTools
 
         public DataController(Host host) =>
             Host = host;
-
-        static DataController() =>
-            s_memoryCache = new MemoryCache("SPCToolsHIDSTestData");
 
         #endregion
 
@@ -133,7 +127,7 @@ namespace SPCTools
 
                 Func<Point, double> flattenData = GetSeriesTypeFilter(SeriesTypeID);
 
-                IEnumerable<double[]> data = LoadChannel(new List<int>() { ChannelId }, start, end)[ChannelId].Select(pt => new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) }); ;
+                IAsyncEnumerable<double[]> data = LoadChannel(new List<int>() { ChannelId }, start, end)[ChannelId].Select(pt => new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) }); ;
 
                 if (postedFilter != null)
                     data = data.Select(pt => {
@@ -144,7 +138,7 @@ namespace SPCTools
                         if (postedFilter.FilterUpper && pt[1] > postedFilter.UpperLimit)
                             return new double[] { pt[0], double.NaN };
                         return pt;
-                    }).ToList();
+                    });
 
 
                 return Ok(data);
@@ -167,10 +161,10 @@ namespace SPCTools
             try
             {
                 //Grab Data For Setpoint Computation
-                Dictionary<int, List<Point>> statisticsData = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
+                Dictionary<int, IAsyncEnumerable<Point>> statisticsData = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
                 List<DataResponse> tokenList = request.TokenValues.Select(value => new ExpressionOperations(value.Formula, statisticsData, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate()).ToList();
 
-                Dictionary<int, List<Point>> testData;
+                Dictionary<int, IAsyncEnumerable<Point>> testData;
                 if (request.Start == request.StatisticsStart && request.End == request.StatisticsEnd && request.ChannelID.Count == request.StatisticsChannelID.Count)
                     testData = statisticsData;
                 else
@@ -212,43 +206,38 @@ namespace SPCTools
 
         #region [ HelperFunction ]
 
-        private Dictionary<int, List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
         {
-            Dictionary<int, List<Point>> result = new Dictionary<int, List<Point>>();
+            Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
 
             string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
             List<string> dataToGet = new List<string>();
             channelID.ForEach(item =>
             {
-                if (s_memoryCache.Contains(cachTarget + item.ToString("x8")))
-                    result.Add(item, (List<Point>)s_memoryCache.Get(cachTarget + item.ToString("x8")));
-                else
-                    dataToGet.Add(item.ToString("x8"));
+                dataToGet.Add(item.ToString("x8"));
             });
 
             if (dataToGet.Count == 0)
                 return result;
 
-            List<Point> data;
+            IAsyncEnumerable<Point> data;
             using (API hids = new API())
             {
-                async Task<List<Point>> QueryHIDSAsync()
+                async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
                 {
                     HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
                     await hids.ConfigureAsync(settings);
-                    return await hids.ReadPointsAsync(dataToGet, start, end).ToListAsync();
+                    return hids.ReadPointsAsync(dataToGet, start, end);
                 }
 
-                Task<List<Point>> queryTask = QueryHIDSAsync();
+                Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
                 data = queryTask.GetAwaiter().GetResult();
             }
 
-            dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data.Where(pt => pt.Tag == item).ToList(), new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });
-
-            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
+            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")));
         }
 
-        private ChannelTestResponse TestChannel(int channelIndex, List<Point> data, List<DataResponse> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData)
+        private ChannelTestResponse TestChannel(int channelIndex, IAsyncEnumerable<Point> data, List<DataResponse> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData)
         {
             bool upper = true;
             using (AdoDataConnection connection = Host.CreateDbConnection())
@@ -275,26 +264,34 @@ namespace SPCTools
                     threshholds[i] = (tokenList[tokeIndex].IsScalar ? tokenList[tokeIndex].Value.FirstOrDefault() : tokenList[tokeIndex].Value[channelIndex]);
             }
 
+            Point prevPoint = null;
+
             //Find number of alarms
-            for (int i = 0; i < data.Count; i++)
+            foreach (Point pt in data.ToEnumerable())
             {
-                int hourofWeek = (int)data[i].Timestamp.DayOfWeek * 24 + data[i].Timestamp.Hour;
+                int hourofWeek = (int)pt.Timestamp.DayOfWeek * 24 + pt.Timestamp.Hour;
                 double threshold = threshholds[hourofWeek];
 
                 if (!double.IsNaN(threshold))
                     for (int jF = 0; jF < result.FactorTests.Count; jF++)
                     {
-                        double p1 = (i == 0 ? 0 : (getData(data[i - 1]) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D));
-                        double p2 = (getData(data[i]) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D);
+
+                        double p1;
+                        if (prevPoint is null)
+                            p1 = 0;
+                        else
+                            p1 = (getData(prevPoint) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D);
+                        double p2 = (getData(pt) - threshold * result.FactorTests[jF].Factor) * (upper ? 1.0D : -1.0D);
 
                         if (p2 > 0)
                             result.FactorTests[jF].TimeInAlarm++;
-                        if ((p1 * p2) < 0 && p2 > 0 && i > 0)
+                        if ((p1 * p2) < 0 && p2 > 0 && !(prevPoint is null))
                             result.FactorTests[jF].NumberRaised++;
                     }
             }
 
-            result.FactorTests = result.FactorTests.Select(f => new FactorTestResponse() { TimeInAlarm = (data.Count > 0 ? f.TimeInAlarm / data.Count : 0.0D), NumberRaised = f.NumberRaised, Factor = f.Factor }).ToList();
+            int n = data.CountAsync().Result;
+            result.FactorTests = result.FactorTests.Select(f => new FactorTestResponse() { TimeInAlarm = (n > 0 ? f.TimeInAlarm / n : 0.0D), NumberRaised = f.NumberRaised, Factor = f.Factor }).ToList();
             return result;
         }
 
