@@ -145,13 +145,15 @@ namespace SPCTools
                         Alarm alarm = null;
                         int seriesID = connection.ExecuteScalar<int>($"SELECT Top 1 ID FROM Series WHERE ChannelID = {item} AND SeriesTypeID = {request.SeriesTypeID}");
                         int alarmID = 0;
+
                         if (!isNew)
                         {
                             alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", alarmgroupID, seriesID);
-                            alarmID = alarm.ID;
-
+                            if (!(alarm is null))
+                                alarmID = alarm.ID;
                         }
-                        if (isNew || alarm == null)
+
+                        if (isNew || alarm is null)
                         {
                             alarm = new Alarm()
                             {
@@ -162,6 +164,7 @@ namespace SPCTools
                             alarmTbl.AddNewRecord(alarm);
                             alarmID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                         }
+
                         if (!alarm.Manual)
                             updateAlarmID.Add(new Tuple<int, int>(alarmID, item));
 
@@ -179,7 +182,7 @@ namespace SPCTools
                         {
                             if (!isNew)
                             {
-                                connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID.Item1} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmDayID == null ? "IS NULL" : ("= " + value.AlarmDayID.ToString()))}");
+                                connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID.Item1} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmDayID is null ? "IS NULL" : ("= " + value.AlarmDayID.ToString()))}");
                             
                             }
                             AlarmValue alarmValue = new AlarmValue()
