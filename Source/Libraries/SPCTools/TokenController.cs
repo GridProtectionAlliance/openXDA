@@ -83,9 +83,6 @@ namespace SPCTools
 
         private static DateTime s_epoch = new DateTime(1970, 1, 1);
 
-        private static MemoryCache s_memoryCache;
-        private static readonly double s_cacheExipry = 5;
-
 
         private Host Host { get; }
 
@@ -95,9 +92,6 @@ namespace SPCTools
 
         public TokenController(Host host) =>
             Host = host;
-
-        static TokenController() =>
-            s_memoryCache = new MemoryCache("SPCToolsHIDSData");
 
         #endregion
 
@@ -115,7 +109,7 @@ namespace SPCTools
 
             try
             {
-                Dictionary<int, List<Point>> data = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
+                Dictionary<int, IAsyncEnumerable<Point>> data = LoadChannel(request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd);
                 ExpressionOperations root = new ExpressionOperations(request.TokeValue.Formula, data, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(request.TokeValue));
 
                 DataResponse resultant = root.Evaluate();
@@ -134,42 +128,35 @@ namespace SPCTools
 
         // Note for now this only pulls Channel 3 because We are still looking at two different DataBases (one for HIDS and one local for testing).
         // This needs to change before TVA deployment
-        private Dictionary<int, List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
         {
-            Dictionary<int, List<Point>> result = new Dictionary<int, List<Point>>();
+            Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
 
             string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
             List<string> dataToGet = new List<string>();
             channelID.ForEach(item =>
             {
-
-                if (s_memoryCache.Contains(cachTarget + item.ToString("x8")))
-                    result.Add(item, (List<Point>)s_memoryCache.Get(cachTarget + item.ToString("x8")));
-                else
                     dataToGet.Add(item.ToString("x8"));
-
             });
 
             if (dataToGet.Count == 0)
                 return result;
 
-            List<Point> data;
+            IAsyncEnumerable<Point> data;
             using (API hids = new API())
             {
-                async Task<List<Point>> QueryHIDSAsync()
+                async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
                 {
                     HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
                     await hids.ConfigureAsync(settings);
-                    return await hids.ReadPointsAsync(dataToGet, start, end).ToListAsync();
+                    return hids.ReadPointsAsync(dataToGet, start, end);
                 }
 
-                Task<List<Point>> queryTask = QueryHIDSAsync();
+                Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
                 data = queryTask.GetAwaiter().GetResult();
             }
 
-            dataToGet.ForEach(item => { s_memoryCache.Add(cachTarget + item, data.Where(pt => pt.Tag == item).ToList(), new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(s_cacheExipry) }); });
-
-            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
+            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")));
         }
 
         private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)
