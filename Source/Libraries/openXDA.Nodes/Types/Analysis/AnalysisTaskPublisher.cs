@@ -79,7 +79,7 @@ namespace openXDA.Nodes.Types.Analysis
                 fileGroup.DataEndTime = dbFileGroup.DataEndTime;
                 fileGroup.ProcessingStatus = dbFileGroup.ProcessingStatus;
             }
-
+           
             fileGroupTable.AddNewOrUpdateRecord(fileGroup);
 
             if (fileGroup.ID == 0)

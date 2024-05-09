@@ -34,6 +34,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
+using System.Web.UI.WebControls;
 using FaultData;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
@@ -181,9 +182,9 @@ namespace openXDA.Nodes.Types.Analysis
 
         private void Process(AnalysisTask task)
         {
+            FileGroup fileGroup = task.FileGroup;
             try
             {
-                FileGroup fileGroup = task.FileGroup;
                 Meter meter = task.Meter;
                 Process(fileGroup, meter);
                 SaveMeterConfiguration(fileGroup, meter);
@@ -196,6 +197,10 @@ namespace openXDA.Nodes.Types.Analysis
 
                 try
                 {
+
+                    fileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Failed;
+                    UpdateFileGroup(fileGroup);
+
                     DailyStatisticOperation.UpdateFileProcessingStatistic(task.Meter.AssetKey, task.FileGroup, message);
                 }
                 catch (Exception e) {
@@ -215,6 +220,7 @@ namespace openXDA.Nodes.Types.Analysis
             TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
             fileGroup.ProcessingStartTime = timeZoneConverter.ToXDATimeZone(startTime);
             fileGroup.ProcessingVersion++;
+            fileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Processing;
             UpdateFileGroup(fileGroup);
 
             DataFile dataFile = fileGroup.DataFiles.First();
@@ -252,6 +258,7 @@ namespace openXDA.Nodes.Types.Analysis
 
             DateTime endTime = DateTime.UtcNow;
             fileGroup.ProcessingEndTime = timeZoneConverter.ToXDATimeZone(endTime);
+            fileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Processed;
             UpdateFileGroup(fileGroup);
         }
 
