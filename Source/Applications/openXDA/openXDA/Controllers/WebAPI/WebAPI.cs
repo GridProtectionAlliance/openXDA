@@ -190,6 +190,9 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/EventType")]
     public class EventTypeController : ModelController<EventType> {}
 
+    [RoutePrefix("api/StandardMagDurCurve")]
+    public class StandardMagDurCurveController : ModelController<StandardMagDurCurve> {}
+
     [RoutePrefix("api/Event")]
     public class EventController : ModelController<Event>
     {
