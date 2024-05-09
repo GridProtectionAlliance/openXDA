@@ -958,7 +958,7 @@ namespace openXDA.DataPusher
                                 ProcessingStartTime = fileGroup.ProcessingStartTime,
                                 DataEndTime = fileGroup.DataEndTime,
                                 DataStartTime = fileGroup.DataStartTime,
-                                Error = fileGroup.Error,
+                                ProcessingStatus = (int)FileGroupProcessingStatus.Created,
                                 MeterID = meterToDataPush.RemoteXDAMeterID
                             };
                             int remoteFileGroupId = WebAPIHub.CreateRecord<FileGroup>(instance.Address, fg, userAccount);
@@ -1062,7 +1062,7 @@ namespace openXDA.DataPusher
                             ProcessingStartTime = fileGroup.ProcessingStartTime,
                             DataEndTime = fileGroup.DataEndTime,
                             DataStartTime = fileGroup.DataStartTime,
-                            Error = fileGroup.Error,
+                            ProcessingStatus = (int)FileGroupProcessingStatus.Created,
                             MeterID = meterToDataPush.RemoteXDAMeterID
                         };
                         int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, fg, userAccount);
