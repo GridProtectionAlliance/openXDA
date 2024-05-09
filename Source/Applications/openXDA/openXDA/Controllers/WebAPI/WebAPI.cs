@@ -107,9 +107,8 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/Channel")]
     public class ChannelController : ModelController<ChannelDetail>
     {
-        // ToDo: This is needed for TrenDAP, but something similar is in SEBrowser, should we consoladate?
         #region [ Http Methods ]
-        [Route("GetTrendSearchData"), HttpPost]
+        [Route("TrenDAP"), HttpPost]
         public DataTable GetTrendSearchData([FromBody] JObject postData)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
