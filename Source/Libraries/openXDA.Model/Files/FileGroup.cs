@@ -50,7 +50,7 @@ namespace openXDA.Model
 
         public int ProcessingVersion { get; set; }
 
-        public int Error { get; set; }
+        public int ProcessingStatus { get; set; }
 
         [NonRecordField]
         public List<DataFile> DataFiles { get; set; } = new List<DataFile>();
@@ -87,5 +87,17 @@ namespace openXDA.Model
             fileGroupFieldValue.Value = value;
             fileGroupFieldValueTable.AddNewOrUpdateRecord(fileGroupFieldValue);
         }
+    }
+
+    /// <summary>
+    /// Number indicating the processing status of a file group.
+    /// </summary>
+    public enum FileGroupProcessingStatus
+    {
+        Created = 0,
+        Queued = 1,
+        Processing = 2,
+        Processed = 3,
+        Failed = 4
     }
 }

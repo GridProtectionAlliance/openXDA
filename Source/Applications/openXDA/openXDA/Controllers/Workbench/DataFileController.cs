@@ -41,9 +41,7 @@ using Newtonsoft.Json.Linq;
 using openXDA.Configuration;
 using openXDA.Model;
 using openXDA.Nodes;
-using openXDA.Nodes.Types.Analysis;
 using openXDA.Nodes.Types.FileProcessing;
-using openXDA.Nodes.Types.FilePruning;
 
 namespace openXDA.Controllers.Config
 {
@@ -202,95 +200,6 @@ namespace openXDA.Controllers.Config
                 await Task.WhenAll(reprocessTasks);
 
                 return 1;
-            }
-        }
-
-        [Route("ReprocessFiles"), HttpPost]
-        public async Task ReprocessFiles([FromBody] List<int> meterIDs, [FromBody] DateTime startDate, [FromBody] DateTime endDate)
-        {
-            using (AdoDataConnection connection = NodeHost.CreateDbConnection())
-            {
-                IEnumerable<DataRow> QueryFileGroupIDs(IEnumerable<int> ids)
-                {
-                    List<int> idList = ids.ToList();
-
-                    if (!ids.Any())
-                        yield break;
-
-                    IEnumerable<string> parameterList = idList
-                        .Select((_, index) => $"{{{index + 2}}}");
-
-                    string parameterFormats = string.Join(",", parameterList);
-
-                    string queryFormat =
-                        $"SELECT DISTINCT " +
-                        $"    FileGroup.ID FileGroupID, " +
-                        $"    Meter.ID MeterID " +
-                        $"FROM " +
-                        $"    FileGroup JOIN " +
-                        $"    Event ON Event.FileGroupID = FileGroup.ID JOIN " +
-                        $"    Meter ON Event.MeterID = Meter.ID " +
-                        $"WHERE " +
-                        $"    Meter.ID IN ({parameterFormats}) AND " +
-                        $"    Event.StartTime BETWEEN {{0}} AND {{1}}";
-
-                    object[] parameterValues = idList
-                        .Cast<object>()
-                        .Prepend(endDate)
-                        .Prepend(startDate)
-                        .ToArray();
-
-                    using (DataTable result = connection.RetrieveData(queryFormat, parameterValues))
-                    {
-                        foreach (DataRow row in result.Rows)
-                            yield return row;
-                    }
-                };
-
-                var records = meterIDs
-                    .Select((MeterID, Index) => new { MeterID, Index })
-                    .GroupBy(record => record.Index / 2000, record => record.MeterID)
-                    .SelectMany(QueryFileGroupIDs)
-                    .Select(row => new
-                    {
-                        FileGroupID = row.ConvertField<int>("FileGroupID"),
-                        MeterID = row.ConvertField<int>("MeterID")
-                    })
-                    .ToList();
-
-                IEnumerable<int> fileGroupIDs = records
-                    .Select(record => record.FileGroupID);
-
-                string fileGroupList = string.Join(",", fileGroupIDs);
-                CascadeDelete(connection, "Event", $"FileGroupID IN ({fileGroupList})");
-
-                Type filePrunerNodeType = typeof(FilePrunerNode);
-                _ = NotifyNodes(filePrunerNodeType, "PurgeOrphanData");
-
-                var groupings = records
-                    .Select((Record, Index) => new { Record, Index })
-                    .GroupBy(record => record.Index / 1000, record => record.Record);
-
-                foreach (var grouping in groupings)
-                {
-                    var list = grouping.ToList();
-
-                    IEnumerable<string> parameterList = list
-                        .Select((_, index) => $"SELECT {{{index * 2}}}, {{{index * 2 + 1}}}, 1");
-
-                    string selectFormat = string.Join(" UNION ", parameterList);
-                    string queryFormat = $"INSERT INTO AnalysisTask(FileGroupID, MeterID, Priority) {selectFormat}";
-
-                    object[] parameterValues = list
-                        .SelectMany(record => new[] { record.FileGroupID, record.MeterID })
-                        .Cast<object>()
-                        .ToArray();
-
-                    connection.ExecuteNonQuery(queryFormat, parameterValues);
-                }
-
-                Type analysisNodeType = typeof(AnalysisNode);
-                await NotifyNodes(analysisNodeType, "PollTaskQueue");
             }
         }
 
