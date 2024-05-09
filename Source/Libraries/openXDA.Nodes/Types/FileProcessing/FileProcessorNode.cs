@@ -643,11 +643,12 @@ namespace openXDA.Nodes.Types.FileProcessing
                 }
 
                 // Update the Processing State of the FileGroup to "Queued" Before Queuing the WorkItem
-                FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", fileGroupID);
+                TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
+                FileGroup fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", fileGroupID);
                 if (!(fileGroup is null))
                 {
-                       fileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Queued;
-                        new TableOperations<FileGroup>(connection).UpdateRecord(fileGroup);
+                    fileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Queued;
+                    fileGroupTable.UpdateRecord(fileGroup);
                 }
 
                 DataFile dataFile = new TableOperations<DataFile>(connection)

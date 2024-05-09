@@ -34,7 +34,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
-using System.Web.UI.WebControls;
 using FaultData;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
@@ -197,7 +196,6 @@ namespace openXDA.Nodes.Types.Analysis
 
                 try
                 {
-
                     fileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Failed;
                     UpdateFileGroup(fileGroup);
 

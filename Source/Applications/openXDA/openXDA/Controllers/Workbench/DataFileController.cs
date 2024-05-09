@@ -41,9 +41,7 @@ using Newtonsoft.Json.Linq;
 using openXDA.Configuration;
 using openXDA.Model;
 using openXDA.Nodes;
-using openXDA.Nodes.Types.Analysis;
 using openXDA.Nodes.Types.FileProcessing;
-using openXDA.Nodes.Types.FilePruning;
 
 namespace openXDA.Controllers.Config
 {
