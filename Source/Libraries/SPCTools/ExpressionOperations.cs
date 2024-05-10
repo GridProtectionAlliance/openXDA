@@ -21,13 +21,13 @@
 //
 //******************************************************************************************************
 
-using Ciloci.Flee;
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HIDS;
 using System.Text.RegularExpressions;
+using Ciloci.Flee;
+using GSF.Data;
+using HIDS;
 
 namespace SPCTools
 {
@@ -48,14 +48,14 @@ namespace SPCTools
     public class ExpressionOperations
     {
         private List<int> m_channels;
-        private Dictionary<int, List<Point>> m_data;
+        private Dictionary<int, IAsyncEnumerable<Point>> m_data;
         private static readonly DateTime m_epoch = new DateTime(1970, 1, 1);
         private DataFilter m_filter;
         private ExpressionContext m_evaluator;
         private string m_formula;
         private Func<DateTime, bool> m_timeFilter;
 
-        public ExpressionOperations(string formula, Dictionary<int, List<Point>> data, List<int> channels, DataFilter filter, Func<DateTime, bool> timeFilter)
+        public ExpressionOperations(string formula, Dictionary<int, IAsyncEnumerable<Point>> data, List<int> channels, DataFilter filter, Func<DateTime, bool> timeFilter)
         {
             m_channels = channels;
             m_data = data;
@@ -79,7 +79,7 @@ namespace SPCTools
             else if (operand is Matrix)
             {
                 Matrix matrix = operand as Matrix;
-                return new Matrix(matrix.Values.Select(channel => channel.Select(array => new double[] { array[0], Math.Abs(array[1]) }).ToList()).ToList());
+                return new Matrix(matrix.Values.Select(channel => channel.Select(array => new double[] { array[0], Math.Abs(array[1]) })).ToList());
             }
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
@@ -94,12 +94,21 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
+                if (slice.Values.Count() == 0)
+                    return new Scalar(0.0D);
                 return new Scalar(slice.Values.Min());
             }
             else if (operand is Matrix)
             {
                 Matrix matrix = operand as Matrix;
-                double minValue = matrix.Values.SelectMany(channel => channel).Where(array => !double.IsNaN(array[1])).Min(array => array[1]);
+
+                double minValue = matrix.Values
+                    .SelectMany(channel => channel.ToEnumerable())
+                    .Select(array => array[1])
+                    .Where(value => !double.IsNaN(value))
+                    .DefaultIfEmpty(0)
+                    .Min();
+
                 return new Scalar(minValue);
             }
             throw new InvalidOperationException("Unexpected type found in Expression");
@@ -120,12 +129,21 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
+                if (slice.Values.Count() == 0)
+                    return new Scalar(0.0D);
                 return new Scalar(slice.Values.Max());
             }
             else if (operand is Matrix)
             {
                 Matrix matrix = operand as Matrix;
-                double minValue = matrix.Values.SelectMany(channel => channel).Where(array => !double.IsNaN(array[1])).Max(array => array[1]);
+
+                double minValue = matrix.Values
+                    .SelectMany(channel => channel.ToEnumerable())
+                    .Select(array => array[1])
+                    .Where(value => !double.IsNaN(value))
+                    .DefaultIfEmpty(0)
+                    .Max();
+
                 return new Scalar(minValue);
             }
             throw new InvalidOperationException("Unexpected type found in Expression");
@@ -146,14 +164,22 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
-                return new Scalar(slice.Values.Sum() / slice.Values.Count());
+                if (slice.Values.Count() == 0)
+                    return new Scalar(0.0D);
+                return new Scalar(slice.Values.Average());
             }
             else if (operand is Matrix)
             {
                 Matrix matrix = operand as Matrix;
-                double totalSum = matrix.Values.SelectMany(channel => channel).Sum(array => array[1]);
-                int totalCount = matrix.Values.SelectMany(channel => channel).Count(array => !double.IsNaN(array[1]));
-                return new Scalar(totalSum / totalCount);
+
+                double totalMean = matrix.Values
+                    .SelectMany(channel => channel.ToEnumerable())
+                    .Select(array => array[1])
+                    .Where(value => !double.IsNaN(value))
+                    .DefaultIfEmpty(0)
+                    .Average();
+
+                return new Scalar(totalMean);
             }
             throw new InvalidOperationException("Unexpected type found in Expression");
         }
@@ -179,9 +205,9 @@ namespace SPCTools
             else if (operand is Matrix)
             {
                 Matrix matrix = operand as Matrix;
-                double x2 = matrix.Values.Sum(channel => channel.Sum(array => (double.IsNaN(array[1]) ? 0.0d : array[1] * array[1])));
-                double x = matrix.Values.Sum(channel => channel.Sum(array => (double.IsNaN(array[1]) ? 0.0d : array[1])));
-                int N = matrix.Values.Sum(channel => channel.Sum(array => (double.IsNaN(array[1]) ? 0 : 1)));
+                double x2 = matrix.Values.Sum(channel => channel.ToEnumerable().Sum(array => (double.IsNaN(array[1]) ? 0.0d : array[1] * array[1])));
+                double x = matrix.Values.Sum(channel => channel.ToEnumerable().Sum(array => (double.IsNaN(array[1]) ? 0.0d : array[1])));
+                int N = matrix.Values.Sum(channel => channel.ToEnumerable().Sum(array => (double.IsNaN(array[1]) ? 0 : 1)));
                 double variance = (x2 - x * x / ((double)N)) / (double)N;
                 return new Scalar(Math.Sqrt(variance));
             }
@@ -203,13 +229,22 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
-                double maxValue = slice.Values.Min();
+                double maxValue = 0.0D;
+                if (slice.Values.Count() > 0)
+                    maxValue = slice.Values.Min();
                 return new Slice(slice.Values.Select(_ => maxValue).ToList());
             }
             else if (operand is Matrix)
             {
+                double GetChannelMin(IAsyncEnumerable<double[]> channel) => channel
+                    .Select(array => array[1])
+                    .Where(value => !double.IsNaN(value))
+                    .DefaultIfEmpty(0)
+                    .ToEnumerable()
+                    .Min();
+
                 Matrix matrix = operand as Matrix;
-                List<double> values = matrix.Values.Select(channel => channel.Where(array => !double.IsNaN(array[1])).Min(array => array[1])).ToList();
+                List<double> values = matrix.Values.Select(GetChannelMin).ToList();
                 return new Slice(values);
             }
 
@@ -230,13 +265,22 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
-                double maxValue = slice.Values.Max();
+                double maxValue = 0.0D;
+                 if (slice.Values.Count() > 0)
+                    maxValue = slice.Values.Max();
                 return new Slice(slice.Values.Select(_ => maxValue).ToList());
             }
             else if (operand is Matrix)
             {
+                double GetChannelMax(IAsyncEnumerable<double[]> channel) => channel
+                    .Select(array => array[1])
+                    .Where(value => !double.IsNaN(value))
+                    .DefaultIfEmpty(0)
+                    .ToEnumerable()
+                    .Max();
+
                 Matrix matrix = operand as Matrix;
-                List<double> values = matrix.Values.Select(channel => channel.Where(array => !double.IsNaN(array[1])).Max(array => array[1])).ToList();
+                List<double> values = matrix.Values.Select(GetChannelMax).ToList();
                 return new Slice(values);
             }
 
@@ -257,15 +301,21 @@ namespace SPCTools
             else if (operand is Slice)
             {
                 Slice slice = operand as Slice;
-                double min = slice.Values.Min();
-                return new Slice(slice.Values.Select(_ => min).ToList());
+                double mean = slice.Values.Average();
+                return new Slice(slice.Values.Select(_ => mean).ToList());
             }
             else if (operand is Matrix)
             {
+                double GetChannelMean(IAsyncEnumerable<double[]> channel) => channel
+                    .Select(array => array[1])
+                    .Where(value => !double.IsNaN(value))
+                    .DefaultIfEmpty(0)
+                    .ToEnumerable()
+                    .Average();
+
                 Matrix matrix = operand as Matrix;
-                List<double> sum = matrix.Values.Select(channel => channel.Where(pt => !double.IsNaN(pt[1])).Sum(pt => pt[1])).ToList();
-                List<int> N = matrix.Values.Select(channel => channel.Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1))).ToList();
-                return new Slice(sum.Select((pt, index) => pt / (double)N[index]).ToList());
+                List<double> mean = matrix.Values.Select(GetChannelMean).ToList();
+                return new Slice(mean);
             }
 
             throw new InvalidOperationException("Unexpected type found in Expression");
@@ -292,9 +342,9 @@ namespace SPCTools
             else if (operand is Matrix)
             {
                 Matrix matrix = operand as Matrix;
-                List<double> x2 = matrix.Values.Select(channel => channel.Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1] * pt[1]))).ToList();
-                List<double> x = matrix.Values.Select(channel => channel.Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1]))).ToList();
-                List<int> N = matrix.Values.Select(channel => channel.Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1))).ToList();
+                List<double> x2 = matrix.Values.Select(channel => channel.ToEnumerable().Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1] * pt[1]))).ToList();
+                List<double> x = matrix.Values.Select(channel => channel.ToEnumerable().Sum(pt => (double.IsNaN(pt[1]) ? 0.0d : pt[1]))).ToList();
+                List<int> N = matrix.Values.Select(channel => channel.ToEnumerable().Sum(pt => (double.IsNaN(pt[1]) ? 0 : 1))).ToList();
                 return new Slice(x2.Select((pt, index) => Math.Sqrt((pt - x[index] * x[index] / ((double)N[index])) / (double)N[index])).ToList());
             }
 
@@ -392,17 +442,17 @@ namespace SPCTools
 
         private IExpressionOperands Xmin()
         {
-            return new Matrix(m_channels.Select(ch => m_data[ch].Select(pt => new double[] { pt.Timestamp.Subtract(m_epoch).TotalMilliseconds, ApplyDataFilter(pt.Minimum) }).ToList()).ToList());
+            return new Matrix(m_channels.Select(ch => m_data[ch].Select(pt => new double[] { pt.Timestamp.Subtract(m_epoch).TotalMilliseconds, ApplyDataFilter(pt.Minimum) })).ToList());
         }
 
         private IExpressionOperands Xavg()
         {
-            return new Matrix(m_channels.Select(ch => m_data[ch].Select(pt => new double[] { pt.Timestamp.Subtract(m_epoch).TotalMilliseconds, ApplyDataFilter(pt.Average) }).ToList()).ToList());
+            return new Matrix(m_channels.Select(ch => m_data[ch].Select(pt => new double[] { pt.Timestamp.Subtract(m_epoch).TotalMilliseconds, ApplyDataFilter(pt.Average) })).ToList());
         }
 
         private IExpressionOperands Xmax()
         {
-            return new Matrix(m_channels.Select(ch => m_data[ch].Select(pt => new double[] { pt.Timestamp.Subtract(m_epoch).TotalMilliseconds, ApplyDataFilter(pt.Maximum) }).ToList()).ToList());
+            return new Matrix(m_channels.Select(ch => m_data[ch].Select(pt => new double[] { pt.Timestamp.Subtract(m_epoch).TotalMilliseconds, ApplyDataFilter(pt.Maximum) })).ToList());
         }
 
         private double ApplyDataFilter(double input)
@@ -444,7 +494,7 @@ namespace SPCTools
         }
         public bool Applies(DateTime time) => m_timeFilter(time);
         public List<int> Channels => m_channels;
-        public Dictionary<int, List<Point>> Data => m_data;
+        public Dictionary<int, IAsyncEnumerable<Point>> Data => m_data;
         public static DateTime Epoch => m_epoch;
         public DataFilter Filter => m_filter;
         public ExpressionContext Evaluator => m_evaluator;

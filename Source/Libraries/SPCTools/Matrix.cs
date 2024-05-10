@@ -29,9 +29,9 @@ namespace SPCTools
 {
     public class Matrix : IExpressionOperands
     {
-        public List<List<double[]>> Values { get; private set; }
+        public List<IAsyncEnumerable<double[]>> Values { get; private set; }
 
-        public Matrix(List<List<double[]>> values)
+        public Matrix(List<IAsyncEnumerable<double[]>> values)
         {
             Values = values;
         }
@@ -58,7 +58,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix mat = obj as Matrix;
-                List<List<double[]>> result = mat.Values.Select((row, i) => row.Select((point, j) => new double[] { point[0], point[1] - matrix.Values[i][j][1] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = mat.Values.Select((row, i) => row.Zip(matrix.Values[i], (matPoint, matrixPoint) => new double[] { matPoint[0], matPoint[1] - matrixPoint[1] })).ToList();
                 return new Matrix(result);
             }
 
@@ -96,7 +96,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix mat = obj as Matrix;
-                List<List<double[]>> result = mat.Values.Select((row, i) => row.Select((point, j) => new double[] { point[0], point[1] + matrix.Values[i][j][1] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = mat.Values.Select((row, i) => row.Zip(matrix.Values[i], (matPoint, matrixPoint) => new double[] { matPoint[0], matPoint[1] + matrixPoint[1] })).ToList();
                 return new Matrix(result);
             }
 
@@ -134,7 +134,7 @@ namespace SPCTools
             else if (obj is Matrix)
             {
                 Matrix mat = obj as Matrix;
-                List<List<double[]>> result = mat.Values.Select((row, i) => row.Select((point, j) => new double[] { point[0], point[1] * matrix.Values[i][j][1] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = mat.Values.Select((row, i) => row.Zip(matrix.Values[i], (matPoint, matrixPoint) => new double[] { matPoint[0], matPoint[1] * matrixPoint[1] })).ToList();
                 return new Matrix(result);
             }
 
@@ -160,19 +160,19 @@ namespace SPCTools
             if (obj is Scalar)
             {
                 Scalar scalar = obj as Scalar;
-                List<List<double[]>> result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], scalar.Value / point[1] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], scalar.Value / point[1] })).ToList();
                 return new Matrix(result);
             }
             else if (obj is Slice)
             {
                 Slice slice = obj as Slice;
-                List<List<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], slice.Values[i] / point[1] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = matrix.Values.Select((row, i) => row.Select(point => new double[] { point[0], slice.Values[i] / point[1] })).ToList();
                 return new Matrix(result);
             }
             else if (obj is Matrix)
             {
                 Matrix mat = obj as Matrix;
-                List<List<double[]>> result = mat.Values.Select((row, i) => row.Select((point, j) => new double[] { point[0], point[1] / matrix.Values[i][j][1] }).ToList()).ToList();
+                List<IAsyncEnumerable<double[]>> result = mat.Values.Select((row, i) => row.Zip(matrix.Values[i], (matPoint, matrixPoint) => new double[] { matPoint[0], matPoint[1] / matrixPoint[1] })).ToList();
                 return new Matrix(result);
             }
 
@@ -196,13 +196,13 @@ namespace SPCTools
         //Unary Operator Overloads
         public static Matrix operator -(Matrix matrix)
         {
-            var result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], -point[1] }).ToList()).ToList();
+            var result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], -point[1] })).ToList();
             return new Matrix(result);
         }
 
         public static Matrix operator +(Matrix matrix)
         {
-            var result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], +point[1] }).ToList()).ToList();
+            var result = matrix.Values.Select(row => row.Select(point => new double[] { point[0], +point[1] })).ToList();
             return new Matrix(result);
         }
     }

@@ -286,7 +286,11 @@ export const AlarmTrendingCard = (props: IProps) => {
                 <div className="col-12" ref={divref}>
                     {loading ?
                         <LoadingIcon Show={true} Size={40} /> : 
-                        <Plot height={250} width={Width} defaultTdomain={[Tstart, Tend]} Tlabel={'Time'} zoom={true} showMouse={false} useMetricFactors={false}>
+                        <Plot height={250} width={Width}
+                            zoom={false}
+                            yDomain={'AutoValue'}
+                            defaultTdomain={[Tstart, Tend]}
+                             Tlabel={'Time'}showMouse={false} useMetricFactors={false} >
                             {(data.length > 0 && data[0].data.length > 0) ? data.map((series, i) => <Line key={i} data={series.data} color={series.color} lineStyle={series.lineStyle} />)
                             : <></>
                             }

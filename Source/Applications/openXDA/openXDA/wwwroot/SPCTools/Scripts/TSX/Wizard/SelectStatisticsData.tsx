@@ -23,12 +23,13 @@
 
 import * as React from 'react';
 import { SPCTools, openXDA } from '../global';
-import { DateRangePicker, CheckBox, Input } from '@gpa-gemstone/react-forms';
+import { DateRangePicker, CheckBox, Input, DatePicker } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import _ from 'lodash';
 import { SelectStatisticsrange, updateStatisticsRange, updateStatisticsFilter, updateStatisticChannels, SelectStatisticsFilter } from './DynamicWizzardSlice';
 import { SelectAffectedChannelSortField, SelectAffectedChannelAscending, SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectTable } from '@gpa-gemstone/react-table';
+import moment from 'moment';
 
 declare var homePath: string;
 declare var apiHomePath: string;
@@ -40,12 +41,38 @@ interface IProps { }
 //Todo
 // # Removed Meter table for now due to EPRI Time contraints
 
+type Duration = ('Custom' | '1 Day' | '7 Days' | '30 Days' | '90 Days' | '180 Days' | '365 Days')
+
 const SelectStatisticsData = (props: IProps) => {
     const dispatch = useDispatch();
 
     const dateRange = useSelector(SelectStatisticsrange)
     const dataFilter = useSelector(SelectStatisticsFilter)
 
+    const [range, setRange] = React.useState<Duration>('Custom');
+    
+    React.useEffect(() => {
+        if (range === 'Custom')
+            return;
+        const toTime: moment.Moment = moment(dateRange.start, "YYYY-MM-DD").add(GetDays(range), 'days');
+        dispatch(updateStatisticsRange({ ...dateRange, end: toTime.format("YYYY-MM-DD") }))
+    }, [range]);
+
+    function GetDays(val: Duration) {
+        if (val === '1 Day')
+          return 1;
+        if (val === '7 Days')
+          return 7;
+        if (val === '30 Days')
+          return 30;
+        if (val === '90 Days')
+          return 90;
+        if (val === '180 Days')
+          return 180;
+        if (val === '365 Days')
+          return 365;
+        return 0;
+      }
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
@@ -55,8 +82,55 @@ const SelectStatisticsData = (props: IProps) => {
                 </div>
             </div>
             <div className="row" style={{ margin: 0 }}>
-                <div className="col-6">
-                    <DateRangePicker<SPCTools.IDateRange> Label={''} Record={dateRange} FromField={'start'} ToField={'end'} Setter={(r) => dispatch(updateStatisticsRange(r))} Valid={() => true} />
+                <div className="col-12">
+                    <div className="row">
+                        <div className="col-3">
+                            <label>Duration:</label>
+                            <select className="form-control" value={range} onChange={(evt) => setRange(evt.target.value as Duration)}>
+                                <option value="Custom">Custom</option>
+                                <option value="1 Day">1 Day</option>
+                                <option value="7 Days">7 Days</option>
+                                <option value="30 Days">30 Days</option>
+                                <option value="90 Days">90 Days</option>
+                                <option value="180 Days">180 Days</option>
+                                <option value="365 Days">365 Days</option>
+                            </select>
+                        </div>
+                        <div className="col-3">
+                            <DatePicker<SPCTools.IDateRange> Record={dateRange}
+                                Field="start"
+                                Setter={(r) => { 
+                                    if (range === 'Custom')
+                                        dispatch(updateStatisticsRange(r));
+                                    else {
+                                        const toTime: moment.Moment = moment(r.start, "YYYY-MM-DD").add(GetDays(range), 'days');
+                                        dispatch(updateStatisticsRange({ ...r, end: toTime.format("YYYY-MM-DD") }))
+                                    }
+                                }}
+                                Label='From:'
+                                Type='date'
+                                Valid={() => true} 
+                                Format={"YYYY-MM-DD"}
+                            />
+                        </div> 
+                        <div className="col-3">
+                        <DatePicker<SPCTools.IDateRange> Record={dateRange}
+                                Field="end"
+                                Setter={(r) => {
+                                    if (range === 'Custom')
+                                        dispatch(updateStatisticsRange(r));
+                                    else {
+                                        const fromTime: moment.Moment = moment(r.end, "YYYY-MM-DD").subtract(GetDays(range), 'days');
+                                        dispatch(updateStatisticsRange({ ...r, start: fromTime.format("YYYY-MM-DD") }))
+                                    }
+                                }}
+                                Label='To:'
+                                Type='date'
+                                Valid={() => true} 
+                                Format={"YYYY-MM-DD"}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
             <div className="row" style={{ margin: 0 }}>

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
@@ -95,7 +96,7 @@ namespace SPCTools
         /// Saves a new or existing AlarmGroup with all associated Parts
         /// </summary>
         [HttpPost, Route("Save")]
-        public IHttpActionResult SaveAlarmGroup([FromBody] SaveRequest request)
+        public IHttpActionResult SaveAlarmGroup([FromBody] SaveRequest request, CancellationToken cancellationToken)
         {
             if ((SaveRoles != string.Empty && !User.IsInRole(SaveRoles)))
                 return Unauthorized();
@@ -145,13 +146,15 @@ namespace SPCTools
                         Alarm alarm = null;
                         int seriesID = connection.ExecuteScalar<int>($"SELECT Top 1 ID FROM Series WHERE ChannelID = {item} AND SeriesTypeID = {request.SeriesTypeID}");
                         int alarmID = 0;
+
                         if (!isNew)
                         {
                             alarm = alarmTbl.QueryRecordWhere("AlarmGroupID = {0} AND SeriesID = {1}", alarmgroupID, seriesID);
-                            alarmID = alarm.ID;
-
+                            if (!(alarm is null))
+                                alarmID = alarm.ID;
                         }
-                        if (isNew || alarm == null)
+
+                        if (isNew || alarm is null)
                         {
                             alarm = new Alarm()
                             {
@@ -162,40 +165,44 @@ namespace SPCTools
                             alarmTbl.AddNewRecord(alarm);
                             alarmID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                         }
+
                         if (!alarm.Manual)
                             updateAlarmID.Add(new Tuple<int, int>(alarmID, item));
 
                     });
 
                     // AlarmValue (attaches to Alarm)
-                    TableOperations<AlarmValue> alarmValueTbl = new TableOperations<AlarmValue>(connection);
-                    Dictionary<int, List<Point>> data = LoadChannel(request.StatisticChannelsID, request.StatisticsStart, request.StatisticsEnd);
-
-                    request.AlarmValues.ForEach(value =>
+                    using (API hids = new API())
                     {
-                        ParseResponse token = new ExpressionOperations(value.Formula, data, request.StatisticChannelsID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate();
+                        TableOperations<AlarmValue> alarmValueTbl = new TableOperations<AlarmValue>(connection);
+                        Dictionary<int, IAsyncEnumerable<Point>> data = LoadChannel(hids, request.StatisticChannelsID, request.StatisticsStart, request.StatisticsEnd, cancellationToken);
 
-                        updateAlarmID.ForEach(alarmID =>
+                        request.AlarmValues.ForEach(value =>
                         {
-                            if (!isNew)
-                            {
-                                connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID.Item1} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmDayID == null ? "IS NULL" : ("= " + value.AlarmDayID.ToString()))}");
-                            
-                            }
-                            AlarmValue alarmValue = new AlarmValue()
-                            {
-                                StartHour = value.StartHour,
-                                EndHour = value.EndHour,
-                                AlarmDayID = value.AlarmDayID,
-                                AlarmID = alarmID.Item1,
-                                Formula = value.Formula,
-                                Value = (token.IsScalar ? token.Value.FirstOrDefault() : token.Value[request.StatisticChannelsID.FindIndex(item => item == alarmID.Item2)])
-                            };
+                            ParseResponse token = new ExpressionOperations(value.Formula, data, request.StatisticChannelsID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate();
 
-                            alarmValueTbl.AddNewRecord(alarmValue);
+                            updateAlarmID.ForEach(alarmID =>
+                            {
+                                if (!isNew)
+                                {
+                                    connection.ExecuteNonQuery($"DELETE AlarmValue WHERE AlarmID = {alarmID.Item1} AND StartHour = {value.StartHour} AND AlarmDayID {(value.AlarmDayID is null ? "IS NULL" : ("= " + value.AlarmDayID.ToString()))}");
 
+                                }
+                                AlarmValue alarmValue = new AlarmValue()
+                                {
+                                    StartHour = value.StartHour,
+                                    EndHour = value.EndHour,
+                                    AlarmDayID = value.AlarmDayID,
+                                    AlarmID = alarmID.Item1,
+                                    Formula = value.Formula,
+                                    Value = (token.IsScalar ? token.Value.FirstOrDefault() : token.Value[request.StatisticChannelsID.FindIndex(item => item == alarmID.Item2)])
+                                };
+
+                                alarmValueTbl.AddNewRecord(alarmValue);
+
+                            });
                         });
-                    });
+                    }
                 }
 
                 return Ok(true);
@@ -341,28 +348,36 @@ namespace SPCTools
 
         #region [ HelperFunction ]
 
-        private Dictionary<int, List<Point>> LoadChannel(List<int> channelID, DateTime start, DateTime end)
+        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end, CancellationToken cancellationToken)
         {
-            Dictionary<int, List<Point>> result = new Dictionary<int, List<Point>>();
+            Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
 
             string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
-            List<string> dataToGet = channelID.Select(item => item.ToString("x8")).ToList();
-
-            List<Point> data;
-            using (API hids = new API())
+            List<string> dataToGet = new List<string>();
+            channelID.ForEach(item =>
             {
-                async Task<List<Point>> QueryHIDSAsync()
-                {
-                    HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
-                    await hids.ConfigureAsync(settings);
-                    return await hids.ReadPointsAsync(dataToGet, start, end).ToListAsync();
-                }
+                dataToGet.Add(item.ToString("x8"));
+            });
 
-                Task<List<Point>> queryTask = QueryHIDSAsync();
-                data = queryTask.GetAwaiter().GetResult();
+            if (dataToGet.Count == 0)
+                return result;
+
+            async Task<IAsyncEnumerable<Point>> QueryHIDSAsync()
+            {
+                HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
+                await hids.ConfigureAsync(settings);
+                return hids.ReadPointsAsync(dataToGet, start, end, cancellationToken);
             }
 
-            return channelID.ToDictionary(item => item, item => data.Where(pt => pt.Tag == item.ToString("x8")).ToList());
+            Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
+            IAsyncEnumerable<Point> data = queryTask.GetAwaiter().GetResult();
+
+            return channelID
+                .ToAsyncEnumerable()
+                .GroupJoin(data.GroupBy(pt => pt.Tag), item => item.ToString("x8"), grouping => grouping.Key, (item, grouping) => new { Key = item, Value = grouping.SelectMany(inner => inner) })
+                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value, cancellationToken)
+                .GetAwaiter()
+                .GetResult();
         }
 
         private Func<DateTime, bool> GetTimeFilter(AlarmValue alarmValue)
