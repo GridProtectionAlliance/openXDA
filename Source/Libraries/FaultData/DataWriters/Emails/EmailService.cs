@@ -124,6 +124,13 @@ namespace FaultData.DataWriters.Emails
 
             public EmailDataSource Model { get; set; }
         }
+
+        public class EmailResponse
+        {
+            public List<DataSourceResponse> DataSources { get; set; }
+            public string Body { get; set; }
+            public string Subject { get; set; }
+        }
         #endregion
 
         #region [ Constructors ]
@@ -160,30 +167,31 @@ namespace FaultData.DataWriters.Emails
             return true;
         }
 
-        public void SendEmail(EmailType email, Event evt, List<string> recipients, List<DataSourceResponse> dataSourceResponses) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, dataSourceResponses);
+        public void SendEmail(EmailType email, Event evt, List<string> recipients, out EmailResponse response, bool saveToFile  = false) =>
+            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), saveToFile, out response);
 
         public void SendEmail(EmailType email, Event evt, List<string> recipients) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, null);
+            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, out EmailResponse response);
 
         private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile) =>
-            SendEmail(email, evt, recipients, xdaNow, eventIDs, saveToFile, null);
+            SendEmail(email, evt, recipients, xdaNow, eventIDs, saveToFile, out EmailResponse response);
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, List<DataSourceResponse> dataSourceResponses)
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile,  out EmailResponse response)
         {
-            List<Attachment> attachments = new List<Attachment>();
-            List<DataSourceResponse> responses = dataSourceResponses ?? new List<DataSourceResponse>();
 
+            response = new EmailResponse() { };
+
+            List<Attachment> attachments = new List<Attachment>();
             try
             {
-                LoadDataSources(email, evt, responses);
+                LoadDataSources(email, evt, response.DataSources);
 
                 Settings settings = new Settings(Configure);
-                XElement templateData = new XElement("data", responses.Select(r => r.Data));
+                XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
                 XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
                 ApplyImageEmbedTransform(attachments, htmlDocument);
-                SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
+                SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
                 if (eventIDs.Count() > 0)
                     LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
             }
@@ -205,28 +213,31 @@ namespace FaultData.DataWriters.Emails
             return true;
         }
 
-        public void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, List<DataSourceResponse> dataSourceResponses, DateTime xdaNow) =>
-            SendScheduledEmail(email, recipients, false, dataSourceResponses, xdaNow);
+        public void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, out EmailResponse response, DateTime xdaNow) =>
+            SendScheduledEmail(email, recipients, false, out response, xdaNow);
 
         public void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, DateTime xdaNow) =>
-            SendScheduledEmail(email, recipients, saveToFile, null, xdaNow);
+            SendScheduledEmail(email, recipients, saveToFile, out EmailResponse response, xdaNow);
 
-        private void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, List<DataSourceResponse> dataSourceResponses, DateTime xdaNow)
+        private void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, out EmailResponse response, DateTime xdaNow)
         {
             List<Attachment> attachments = new List<Attachment>();
-            List<DataSourceResponse> responses = dataSourceResponses ?? new List<DataSourceResponse>();
+            response = new EmailResponse()
+            {
+                DataSources = new List<DataSourceResponse>(),
+            };
 
             try
             {
-                LoadDataSources(email, xdaNow, responses);
+                LoadDataSources(email, xdaNow, response.DataSources);
 
                 Settings settings = new Settings(Configure);
-                XElement templateData = new XElement("data", responses.Select(r => r.Data));
+                XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
                 XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                     
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
                 ApplyImageEmbedTransform(attachments, htmlDocument);
-                SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
+                SendEmail(recipients, htmlDocument, attachments, email, settings,response, (saveToFile ? email.FilePath : null));
                 LoadSentEmail(email, xdaNow, recipients, htmlDocument);
             }
             finally
@@ -631,13 +642,16 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, Settings settings, string filePath=null)
+        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, Settings settings, EmailResponse email, string filePath=null)
         {
             EmailSection emailSettings = settings.EmailSettings;
             string smtpServer = emailSettings.SMTPServer;
 
+            email.Body = GetBody(htmlDocument);
+            email.Subject = GetSubject(htmlDocument, emailType);
+
             if (string.IsNullOrEmpty(smtpServer))
-                return;
+                return;                
 
             using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
             using (MailMessage emailMessage = new MailMessage())
@@ -652,8 +666,8 @@ namespace FaultData.DataWriters.Emails
 
                 string fromAddress = emailSettings.FromAddress;
                 emailMessage.From = new MailAddress(fromAddress);
-                emailMessage.Subject = GetSubject(htmlDocument,emailType);
-                emailMessage.Body = GetBody(htmlDocument);
+                emailMessage.Subject = email.Subject;
+                emailMessage.Body = email.Body;
                 emailMessage.IsBodyHtml = true;
 
                 if (recipients.Count == 0)
