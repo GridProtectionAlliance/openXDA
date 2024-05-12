@@ -25,8 +25,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Security;
+using System.Threading.Tasks;
 using System.Web.Http;
 using FaultData.DataWriters.Emails;
 using GSF.Configuration;
@@ -138,13 +140,66 @@ namespace openXDA.Controllers.WebAPI
 
                 try
                 {
-                    emailService.SendEmail(email, evt, new List<string>() { account.Email }, response.DataSourceResponses);
+                    emailService.SendEmail(email, evt, new List<string>() { account.Email }, out EmailResponse resultEmail);
+                    response.DataSourceResponses = resultEmail.DataSources;
+
                     return Ok(response);
                 }
                 catch (Exception ex)
                 {
                     response.Exception = ex;
                     return UnprocessibleEntity(response);
+                }
+            }
+        }
+
+        [Route("testFile/{emailID:int}/{eventID:int}/{save:int}"), HttpGet]
+        public async Task<HttpResponseMessage> TestEmailFile(int emailID, int eventID, int save)
+        {
+            Settings settings = new Settings(GetConfigurator());
+            EventEmailSection eventEmailSettings = settings.EventEmailSettings;
+            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                if (evt is null)
+                    return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                    { 
+                        Content = new StringContent($"Event with ID {eventID} does not exists")
+                    };
+                    
+
+                EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
+                if (email is null)
+                    return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                    {
+                        Content = new StringContent($"Email type with ID {emailID} does not exists")
+                    };
+
+                try
+                {
+                    emailService.SendEmail(email, evt, new List<string>() {}, out EmailResponse emailresponse, save > 0);
+
+                    var result = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(emailresponse.Body)
+                    };
+
+                    result.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                    {
+                        FileName =emailresponse.Subject
+                    };
+
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                    {
+                        Content = new StringContent($"Email type does not produce valid email please check the Template")
+                    };
+
                 }
             }
         }
@@ -173,7 +228,8 @@ namespace openXDA.Controllers.WebAPI
                     if (!DateTime.TryParse(current, out DateTime xdaNow))
                         xdaNow = DateTime.UtcNow;
                     
-                    emailService.SendScheduledEmail(report, new List<string>() { account.Email }, response.DataSourceResponses, xdaNow);
+                    emailService.SendScheduledEmail(report, new List<string>() { account.Email }, out EmailResponse emailResponse, xdaNow);
+                    response.DataSourceResponses = emailResponse.DataSources;
                     return Ok(response);
                 }
                 catch (Exception ex)
