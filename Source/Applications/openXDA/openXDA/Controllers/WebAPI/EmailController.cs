@@ -28,6 +28,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using FaultData.DataWriters.Emails;
@@ -142,7 +143,6 @@ namespace openXDA.Controllers.WebAPI
                 {
                     emailService.SendEmail(email, evt, new List<string>() { account.Email }, out EmailResponse resultEmail);
                     response.DataSourceResponses = resultEmail.DataSources;
-
                     return Ok(response);
                 }
                 catch (Exception ex)
@@ -153,55 +153,54 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
-        [Route("testFile/{emailID:int}/{eventID:int}/{save:int}"), HttpGet]
-        public async Task<HttpResponseMessage> TestEmailFile(int emailID, int eventID, int save)
+        [Route("testFile/{emailID:int}/{eventID:int}/{save:bool}"), HttpGet]
+        public async Task<HttpResponseMessage> TestEmailFile(int emailID, int eventID, bool save, CancellationToken cancellationToken)
         {
-            Settings settings = new Settings(GetConfigurator());
-            EventEmailSection eventEmailSettings = settings.EventEmailSettings;
-            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+            string subject = null;
 
-            using (AdoDataConnection connection = CreateDbConnection())
+            IHttpActionResult RunTest()
             {
-                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
-                if (evt is null)
-                    return new HttpResponseMessage(HttpStatusCode.BadRequest)
-                    { 
-                        Content = new StringContent($"Event with ID {eventID} does not exists")
-                    };
-                    
+                Settings settings = new Settings(GetConfigurator());
+                EventEmailSection eventEmailSettings = settings.EventEmailSettings;
+                EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
 
-                EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
-                if (email is null)
-                    return new HttpResponseMessage(HttpStatusCode.BadRequest)
-                    {
-                        Content = new StringContent($"Email type with ID {emailID} does not exists")
-                    };
-
-                try
+                using (AdoDataConnection connection = CreateDbConnection())
                 {
-                    emailService.SendEmail(email, evt, new List<string>() {}, out EmailResponse emailresponse, save > 0);
+                    Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                    if (evt is null)
+                        return BadRequest($"Event with ID {eventID} does not exists");
 
-                    var result = new HttpResponseMessage(HttpStatusCode.OK)
+
+                    EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
+                    if (email is null)
+                        return BadRequest($"Email type with ID {emailID} does not exists");
+
+                    try
                     {
-                        Content = new StringContent(emailresponse.Body)
-                    };
-
-                    result.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                        emailService.SendEmail(email, evt, new List<string>() { }, save, out EmailResponse emailResponse);
+                        subject = emailResponse.Subject;
+                        return Ok(emailResponse.Body);
+                    }
+                    catch (Exception ex)
                     {
-                        FileName =emailresponse.Subject
-                    };
-
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    return new HttpResponseMessage(HttpStatusCode.InternalServerError)
-                    {
-                        Content = new StringContent($"Email type does not produce valid email please check the Template")
-                    };
-
+                        Exception wrapper = new Exception("Email type does not produce valid email please check the Template", ex);
+                        return UnprocessibleEntity(wrapper.ToString());
+                    }
                 }
             }
+
+            IHttpActionResult testResult = RunTest();
+            HttpResponseMessage httpResponse = await testResult.ExecuteAsync(cancellationToken);
+
+            if (!(subject is null))
+            {
+                httpResponse.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                {
+                    FileName = subject
+                };
+            }
+
+            return httpResponse;
         }
 
         [Route("testReport/{reportID:int}/{userID}/{current}"), HttpGet]
