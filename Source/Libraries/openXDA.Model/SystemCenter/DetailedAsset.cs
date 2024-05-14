@@ -79,6 +79,9 @@ namespace SystemCenter.Model
         public int Locations { get; set; } 
     }
 
+    [RootQueryRestriction("AssetType <> {0}", "LineSegment")]
+    public class RestrictedDetailedAsset : DetailedAsset { }
+
     public class DetailedAssetController<T> : ModelController<T> where T : DetailedAsset, new()
     {
         protected override DataTable GetSearchResults(PostData postData, int? page)
