@@ -40,6 +40,10 @@ namespace openXDA.Model
         public string Schedule { get; set; }
 
         public int EmailCategoryID { get; set; }
+
+        public bool ShowSubscription { get; set; }
+
+        public bool RequireApproval { get; set; }
     }
 }
 
