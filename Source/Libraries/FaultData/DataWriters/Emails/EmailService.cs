@@ -70,28 +70,6 @@ namespace FaultData.DataWriters.Emails
                 DataSourceTriggered = dataSourceTriggered;
                 DataSourceScheduled = dataSourceScheduled;
             }
-
-            public XElement TryProcess(Event evt, out Exception exception)
-            {
-                if (DataSourceTriggered is null)
-                {
-                    exception = new NullReferenceException("DataSource was not created.");
-                    Log.Debug($"Email data source {Name} was not created", exception);
-                    return null;
-                }
-
-                XElement element = null;
-                exception = null;
-                try { element = DataSourceTriggered.Process(evt); }
-                catch (Exception ex) { exception = ex; }
-
-                if (!(exception is null))
-                    Log.Error($"Email data source {Name} failed to process", exception);
-
-                return element;
-            }
-
-            public XElement TryProcess(Event evt) => TryProcess(evt, out _);
             public XElement TryProcess(DateTime xdaNow) => TryProcess(xdaNow, out _);
 
             public XElement TryProcess(DateTime xdaNow, out Exception exception)
@@ -113,16 +91,6 @@ namespace FaultData.DataWriters.Emails
 
                 return element;
             }
-        }
-
-        public class DataSourceResponse
-        {
-            public bool Success { set; get; }
-            public bool Created { get; set; }
-            public XElement Data { get; set; }
-            public Exception Exception { get; set; } = null;
-
-            public EmailDataSource Model { get; set; }
         }
 
         public class EmailResponse
@@ -188,7 +156,10 @@ namespace FaultData.DataWriters.Emails
 
             try
             {
-                LoadDataSources(email, evt, response.DataSources);
+                TriggeredDataSourceFactory factory = new TriggeredDataSourceFactory(ConnectionFactory);
+                List<TriggeredDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
+                IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, evt));
+                response.DataSources.AddRange(dataSourceResponses);
 
                 Settings settings = new Settings(Configure);
                 XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
@@ -245,39 +216,6 @@ namespace FaultData.DataWriters.Emails
             finally
             {
                 attachments?.ForEach(attachment => attachment.Dispose());
-            }
-        }
-
-        public void LoadDataSources(EmailType email, Event evt, List<DataSourceResponse> responses)
-        {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                /* Load All DataSources */
-                TableOperations<TriggeredEmailDataSource> dataSourceTable = new TableOperations<TriggeredEmailDataSource>(connection);
-                TableOperations<TriggeredEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<TriggeredEmailDataSourceEmailType>(connection);
-                IEnumerable<TriggeredEmailDataSourceEmailType> dataSourceMappings = dataSourceEmailTypeTable.QueryRecordsWhere("EmailTypeID = {0}", email.ID);
-
-                foreach (TriggeredEmailDataSourceEmailType dataSourceMapping in dataSourceMappings)
-                {
-                    TriggeredEmailDataSource dataSource = dataSourceTable.QueryRecordWhere("ID = {0}", dataSourceMapping.TriggeredEmailDataSourceID);
-                    DataSourceWrapper wrapper = CreateDataSource(dataSource, dataSourceMapping);
-
-                    Exception ex = null;
-                    XElement data = wrapper?.TryProcess(evt, out ex);
-                    if (wrapper is null)
-                        ex = new Exception("Failed to create data source");
-
-                    DataSourceResponse response = new DataSourceResponse();
-                    response.Model = dataSource;
-                    response.Created = !(wrapper is null);
-                    response.Success = !(data is null);
-                    response.Data = data;
-                    response.Exception = ex;
-                    responses.Add(response);
-                }
-
-                if (responses.Any(response => !response.Created))
-                    Log.Error("Failed to create one or more data sources for triggered email; check debug logs for details");
             }
         }
 
@@ -484,29 +422,6 @@ namespace FaultData.DataWriters.Emails
                 return f;
                 });
             return htmlDocument;
-        }
-
-        private DataSourceWrapper CreateDataSource(TriggeredEmailDataSource model, TriggeredEmailDataSourceEmailType connectionModel)
-        {
-            try
-            {
-                string assemblyName = model.AssemblyName;
-                string typeName = model.TypeName;
-                PluginFactory<ITriggeredDataSource> pluginFactory = new PluginFactory<ITriggeredDataSource>();
-                Type pluginType = pluginFactory.GetPluginType(assemblyName, typeName);
-                Type dbFactoryType = typeof(Func<AdoDataConnection>);
-                ConstructorInfo constructor = pluginType.GetConstructor(new[] { dbFactoryType });
-                object[] parameters = (constructor is null) ? Array.Empty<object>() : new object[] { ConnectionFactory };
-                ITriggeredDataSource dataSource = pluginFactory.Create(assemblyName, typeName, parameters);
-                ConfigurationLoader<TriggeredEmailDataSourceSetting> configurationLoader = new ConfigurationLoader<TriggeredEmailDataSourceSetting>(connectionModel.ID, ConnectionFactory);
-                dataSource.Configure(configurationLoader.Configure);
-                return new DataSourceWrapper(model.Name, dataSource);
-            }
-            catch (Exception ex)
-            {
-                Log.Debug($"Failed to create ITriggeredDataSource of type {model.TypeName}", ex);
-                return new DataSourceWrapper(model.Name, null);
-            }
         }
 
         private DataSourceWrapper CreateDataSource(ScheduledEmailDataSource model, ScheduledEmailDataSourceEmailType connectionModel)
