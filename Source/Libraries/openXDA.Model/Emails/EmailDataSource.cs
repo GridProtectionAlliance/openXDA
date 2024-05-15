@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  TriggeredEmailDataSource.cs - Gbtc
+//  EmailDataSource.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -42,5 +42,6 @@ namespace openXDA.Model
         public string ConfigUI { get; set; }
     }
 
-    public class TriggeredEmailDataSource: EmailDataSource { }
+    public class TriggeredEmailDataSource : EmailDataSource { }
+    public class ScheduledEmailDataSource : EmailDataSource { }
 }
