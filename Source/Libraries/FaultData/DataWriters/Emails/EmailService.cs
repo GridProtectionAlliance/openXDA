@@ -29,7 +29,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
-using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Xml.Linq;
@@ -202,7 +201,10 @@ namespace FaultData.DataWriters.Emails
 
             try
             {
-                LoadDataSources(email, xdaNow, response.DataSources);
+                ScheduledDataSourceFactory factory = new ScheduledDataSourceFactory(ConnectionFactory);
+                List<ScheduledDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
+                IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, xdaNow));
+                response.DataSources.AddRange(dataSourceResponses);
 
                 Settings settings = new Settings(Configure);
                 XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
@@ -216,39 +218,6 @@ namespace FaultData.DataWriters.Emails
             finally
             {
                 attachments?.ForEach(attachment => attachment.Dispose());
-            }
-        }
-
-        public void LoadDataSources(ScheduledEmailType email, DateTime now, List<DataSourceResponse> responses)
-        {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                /* Load All DataSources */
-                TableOperations<ScheduledEmailDataSource> dataSourceTable = new TableOperations<ScheduledEmailDataSource>(connection);
-                TableOperations<ScheduledEmailDataSourceEmailType> dataSourceEmailTypeTable = new TableOperations<ScheduledEmailDataSourceEmailType>(connection);
-                IEnumerable<ScheduledEmailDataSourceEmailType> dataSourceMappings = dataSourceEmailTypeTable.QueryRecordsWhere("ScheduledEmailTypeID = {0}", email.ID);
-
-                foreach (ScheduledEmailDataSourceEmailType dataSourceMapping in dataSourceMappings)
-                {
-                    ScheduledEmailDataSource dataSource = dataSourceTable.QueryRecordWhere("ID = {0}", dataSourceMapping.ScheduledEmailDataSourceID);
-                    DataSourceWrapper wrapper = CreateDataSource(dataSource, dataSourceMapping);
-
-                    Exception ex = null;
-                    XElement data = wrapper?.TryProcess(now);
-                    if (wrapper is null)
-                        ex = new Exception("Failed to create data source");
-
-                    DataSourceResponse response = new DataSourceResponse();
-                    response.Model = dataSource;
-                    response.Created = !(wrapper is null);
-                    response.Success = !(data is null);
-                    response.Data = data;
-                    response.Exception = ex;
-                    responses.Add(response);
-                }
-
-                if (responses.Any(response => !response.Created))
-                    Log.Error("Failed to create one or more data sources for scheduled email; check debug logs for details");
             }
         }
 
@@ -422,29 +391,6 @@ namespace FaultData.DataWriters.Emails
                 return f;
                 });
             return htmlDocument;
-        }
-
-        private DataSourceWrapper CreateDataSource(ScheduledEmailDataSource model, ScheduledEmailDataSourceEmailType connectionModel)
-        {
-            try
-            {
-                string assemblyName = model.AssemblyName;
-                string typeName = model.TypeName;
-                PluginFactory<IScheduledDataSource> pluginFactory = new PluginFactory<IScheduledDataSource>();
-                Type pluginType = pluginFactory.GetPluginType(assemblyName, typeName);
-                Type dbFactoryType = typeof(Func<AdoDataConnection>);
-                ConstructorInfo constructor = pluginType.GetConstructor(new[] { dbFactoryType });
-                object[] parameters = (constructor is null) ? Array.Empty<object>() : new object[] { ConnectionFactory };
-                IScheduledDataSource dataSource = pluginFactory.Create(assemblyName, typeName, parameters);
-                ConfigurationLoader<ScheduledEmailDataSourceSetting> configurationLoader = new ConfigurationLoader<ScheduledEmailDataSourceSetting>(connectionModel.ID, ConnectionFactory);
-                dataSource.Configure(configurationLoader.Configure);
-                return new DataSourceWrapper(model.Name, null, dataSource);
-            }
-            catch (Exception ex)
-            {
-                Log.Debug($"Failed to create ITriggeredDataSource of type {model.TypeName}", ex);
-                return new DataSourceWrapper(model.Name, null);
-            }
         }
 
         private List<AssetGroup> GetAssetGroups(List<int> eventIDs)

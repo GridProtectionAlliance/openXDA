@@ -262,17 +262,21 @@ namespace openXDA.Controllers.WebAPI
         [Route("testReportData/{reportID:int}/{current}"), HttpGet]
         public IHttpActionResult TestReportDataSource(int reportID, string current)
         {
-            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+            ScheduledDataSourceFactory factory = new ScheduledDataSourceFactory(CreateDbConnection);
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 ScheduledEmailType report = new TableOperations<ScheduledEmailType>(connection).QueryRecordWhere("ID = {0}", reportID);
-                List<DataSourceResponse> dataSourceResponses = new List<DataSourceResponse>();
 
                 if (!DateTime.TryParse(current, out DateTime xdaNow))
                     xdaNow = DateTime.UtcNow;
 
-                emailService.LoadDataSources(report,xdaNow, dataSourceResponses);
+                List<ScheduledDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(report);
+
+                List<DataSourceResponse> dataSourceResponses = definitions
+                    .Select(definition => definition.CreateAndProcess(factory, xdaNow))
+                    .ToList();
+
                 return Ok(dataSourceResponses);
             }
         }
