@@ -30,12 +30,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Security;
-using System.Text;
 using System.Xml.Linq;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Xml;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
@@ -155,16 +153,20 @@ namespace FaultData.DataWriters.Emails
 
             try
             {
+                Settings settings = new Settings(Configure);
+
                 TriggeredDataSourceFactory factory = new TriggeredDataSourceFactory(ConnectionFactory);
                 List<TriggeredDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
                 IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, evt));
                 response.DataSources.AddRange(dataSourceResponses);
 
-                Settings settings = new Settings(Configure);
+                double chartSampleRate = settings.EmailSettings.MinimumChartSamplesPerCycle;
+                TemplateProcessor templateProcessor = new TemplateProcessor(ConnectionFactory);
                 XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
-                XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
-                ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
-                ApplyImageEmbedTransform(attachments, htmlDocument);
+                XDocument htmlDocument = templateProcessor.ApplyTemplate(email, templateData.ToString());
+                templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
+                templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
+
                 SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
                 if (eventIDs.Count() > 0)
                     LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
@@ -201,23 +203,62 @@ namespace FaultData.DataWriters.Emails
 
             try
             {
+                Settings settings = new Settings(Configure);
+
                 ScheduledDataSourceFactory factory = new ScheduledDataSourceFactory(ConnectionFactory);
                 List<ScheduledDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
                 IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, xdaNow));
                 response.DataSources.AddRange(dataSourceResponses);
 
-                Settings settings = new Settings(Configure);
+                double chartSampleRate = settings.EmailSettings.MinimumChartSamplesPerCycle;
+                TemplateProcessor templateProcessor = new TemplateProcessor(ConnectionFactory);
                 XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
-                XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
+                XDocument htmlDocument = templateProcessor.ApplyTemplate(email, templateData.ToString());
+                templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
+                templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
 
-                ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
-                ApplyImageEmbedTransform(attachments, htmlDocument);
                 SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
                 LoadSentEmail(email, xdaNow, recipients, htmlDocument);
             }
             finally
             {
                 attachments?.ForEach(attachment => attachment.Dispose());
+            }
+        }
+
+        public void SendAdminEmail(string subject, string message, List<string> replyToRecipients)
+        {
+            Settings settings = new Settings(Configure);
+            EmailSection emailSettings = settings.EmailSettings;
+            string smtpServer = emailSettings.SMTPServer;
+
+            if (string.IsNullOrEmpty(smtpServer))
+                return;
+
+            using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
+            using (MailMessage emailMessage = new MailMessage())
+            {
+                string username = emailSettings.Username;
+                SecureString password = emailSettings.SecurePassword;
+
+                if (!string.IsNullOrEmpty(username) && (object)password != null)
+                    smtpClient.Credentials = new NetworkCredential(username, password);
+
+                smtpClient.EnableSsl = emailSettings.EnableSSL;
+
+                string fromAddress = emailSettings.FromAddress;
+                string toAddress = emailSettings.AdminAddress;
+                emailMessage.From = new MailAddress(fromAddress);
+                emailMessage.To.Add(toAddress);
+                emailMessage.Subject = subject;
+                emailMessage.Body = message;
+
+                // Add the specified To recipients for the email message
+                foreach (string replyToRecipient in replyToRecipients)
+                    emailMessage.ReplyToList.Add(replyToRecipient.Trim());
+
+                // Send the email
+                smtpClient.Send(emailMessage);
             }
         }
 
@@ -379,20 +420,6 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public XDocument ApplyTemplate(EmailTypeBase emailType, string templateData)
-        {
-            string htmlText = templateData.ApplyXSLTransform(emailType.Template);
-
-            XDocument htmlDocument = XDocument.Parse(htmlText, LoadOptions.PreserveWhitespace);
-            htmlDocument.TransformAll("format", element => {
-                object f;
-                try { f = element.Format(); }
-                catch { f = ""; }
-                return f;
-                });
-            return htmlDocument;
-        }
-
         private List<AssetGroup> GetAssetGroups(List<int> eventIDs)
         {
             if (eventIDs.Count == 0)
@@ -441,67 +468,6 @@ namespace FaultData.DataWriters.Emails
                     eventSentEmail.SentEmailID = sentEmailID;
                     eventSentEmailTable.AddNewRecord(eventSentEmail);
                 }
-            }
-        }
-
-        public void ApplyChartTransform(List<Attachment> attachments, XDocument htmlDocument, int minSamplesPerCycle = -1)
-        {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                htmlDocument.TransformAll("chart", (element, index) =>
-                {
-                    string chartEventID = (string) element.Attribute("eventID") ?? "-1";
-                    string cid = $"event{chartEventID}_chart{index:00}.png";
-
-                    string stringMinimum = (string) element.Attribute("minimumSamplesPerCycleOverride");
-                    int passedMinimum = minSamplesPerCycle;
-                    if (!(stringMinimum is null) && !int.TryParse(stringMinimum, out passedMinimum))
-                        passedMinimum = -1;
-
-                    Stream image = ChartGenerator.ConvertToChartImageStream(connection, element, passedMinimum);
-                    Attachment attachment = new Attachment(image, cid);
-                    attachment.ContentId = attachment.Name;
-                    attachments.Add(attachment);
-
-                    return new XElement("img", new XAttribute("src", $"cid:{cid}"));
-                });
-            }
-        }
-
-        public void ApplyImageEmbedTransform(List<Attachment> attachments, XDocument htmlDocument)
-        {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                htmlDocument.TransformAll("embed", (element, index) =>
-                {
-                    string cid = $"image{index:00}.jpg";
-
-                    try
-                    {
-                        string base64 = (string)element;
-                        byte[] imageData = Convert.FromBase64String(base64);
-                        MemoryStream stream = new MemoryStream(imageData);
-                        Attachment attachment = new Attachment(stream, cid);
-                        attachment.ContentId = attachment.Name;
-                        attachments.Add(attachment);
-                        return new XElement("img", new XAttribute("src", $"cid:{cid}"));
-                    }
-                    catch (Exception ex)
-                    {
-                        string text = new StringBuilder()
-                            .AppendLine($"Error while loading {cid}:")
-                            .Append(ex.ToString())
-                            .ToString();
-
-                        object[] content = text
-                            .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
-                            .SelectMany(line => new object[] { new XElement("br"), new XText(line) })
-                            .Skip(1)
-                            .ToArray();
-
-                        return new XElement("div", content);
-                    }
-                });
             }
         }
 
@@ -576,42 +542,6 @@ namespace FaultData.DataWriters.Emails
                 File.Delete(dstFile);
             using (StreamWriter fileWriter = File.CreateText(dstFile))
                 fileWriter.Write(mail.Body);
-        }
-
-        public void SendAdminEmail(string subject, string message, List<string> replyToRecipients)
-        {
-            Settings settings = new Settings(Configure);
-            EmailSection emailSettings = settings.EmailSettings;
-            string smtpServer = emailSettings.SMTPServer;
-
-            if (string.IsNullOrEmpty(smtpServer))
-                return;
-
-            using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
-            using (MailMessage emailMessage = new MailMessage())
-            {
-                string username = emailSettings.Username;
-                SecureString password = emailSettings.SecurePassword;
-
-                if (!string.IsNullOrEmpty(username) && (object)password != null)
-                    smtpClient.Credentials = new NetworkCredential(username, password);
-
-                smtpClient.EnableSsl = emailSettings.EnableSSL;
-
-                string fromAddress = emailSettings.FromAddress;
-                string toAddress = emailSettings.AdminAddress;
-                emailMessage.From = new MailAddress(fromAddress);
-                emailMessage.To.Add(toAddress);
-                emailMessage.Subject = subject;
-                emailMessage.Body = message;
-
-                // Add the specified To recipients for the email message
-                foreach (string replyToRecipient in replyToRecipients)
-                    emailMessage.ReplyToList.Add(replyToRecipient.Trim());
-
-                // Send the email
-                smtpClient.Send(emailMessage);
-            }
         }
 
         private string GetSubject(XDocument htmlDocument, EmailTypeBase emailType)
