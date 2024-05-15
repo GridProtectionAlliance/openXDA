@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
@@ -242,14 +243,18 @@ namespace openXDA.Controllers.WebAPI
         [Route("testData/{emailID:int}/{eventID:int}"), HttpGet]
         public IHttpActionResult TestDataSource(int emailID, int eventID)
         {
-            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+            TriggeredDataSourceFactory factory = new TriggeredDataSourceFactory(CreateDbConnection);
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                 EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
-                List<DataSourceResponse> dataSourceResponses = new List<DataSourceResponse>();
-                emailService.LoadDataSources(email, evt, dataSourceResponses);
+                List<TriggeredDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
+
+                List<DataSourceResponse> dataSourceResponses = definitions
+                    .Select(definition => definition.CreateAndProcess(factory, evt))
+                    .ToList();
+
                 return Ok(dataSourceResponses);
             }
         }

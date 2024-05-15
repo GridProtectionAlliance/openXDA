@@ -175,7 +175,11 @@
     <Compile Include="DataSets\INFDataSet.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
     <Compile Include="DataWriters\Emails\ConfigurationLoader.cs" />
+    <Compile Include="DataWriters\Emails\DataSourceResponse.cs" />
     <Compile Include="DataWriters\Emails\EmailService.cs" />
+    <Compile Include="DataWriters\Emails\TriggeredDataSource.cs" />
+    <Compile Include="DataWriters\Emails\TriggeredDataSourceFactory.cs" />
+    <Compile Include="DataWriters\Emails\TriggeredDataSourceDefinition.cs" />
     <Compile Include="DataWriters\FaultTypeGenerator.cs" />
     <Compile Include="DataWriters\LightningGenerator.cs" />
     <Compile Include="DataWriters\PQIGenerator.cs" />
