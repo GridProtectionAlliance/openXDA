@@ -168,8 +168,7 @@ namespace FaultData.DataWriters.Emails
                 templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
 
                 SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
-                if (eventIDs.Count() > 0)
-                    LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
+                LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
             }
             finally
             {
@@ -450,27 +449,6 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
-        {
-            int sentEmailID = LoadSentEmail(email, now, recipients, htmlDocument);
-
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
-
-                foreach (int eventID in eventIDs)
-                {
-                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
-                        continue;
-
-                    EventSentEmail eventSentEmail = new EventSentEmail();
-                    eventSentEmail.EventID = eventID;
-                    eventSentEmail.SentEmailID = sentEmailID;
-                    eventSentEmailTable.AddNewRecord(eventSentEmail);
-                }
-            }
-        }
-
         private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, Settings settings, EmailResponse email, string filePath = null)
         {
             EmailSection emailSettings = settings.EmailSettings;
@@ -530,44 +508,28 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void WriteEmailToFile(string datafolder, MailMessage mail)
+        private void LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
         {
-            if (string.IsNullOrEmpty(datafolder))
+            int sentEmailID = LoadSentEmail(email, now, recipients, htmlDocument);
+
+            if (eventIDs.Count == 0)
                 return;
 
-            Directory.CreateDirectory(datafolder);
-            string dstFile = Path.Combine(datafolder, mail.Subject);
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
 
-            if (File.Exists(dstFile))
-                File.Delete(dstFile);
-            using (StreamWriter fileWriter = File.CreateText(dstFile))
-                fileWriter.Write(mail.Body);
-        }
+                foreach (int eventID in eventIDs)
+                {
+                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
+                        continue;
 
-        private string GetSubject(XDocument htmlDocument, EmailTypeBase emailType)
-        {
-            string subject = (string)((string)htmlDocument
-                .Descendants("title")
-                .FirstOrDefault());
-
-            return (subject ?? emailType.Name).Trim();
-        }
-
-        private string GetBody(XDocument htmlDocument) => htmlDocument
-            .ToString(SaveOptions.DisableFormatting)
-            .Replace("&amp;", "&")
-            .Replace("&lt;", "<")
-            .Replace("&gt;", ">");
-
-        private SmtpClient CreateSmtpClient(string smtpServer)
-        {
-            string[] smtpServerParts = smtpServer.Split(':');
-            string host = smtpServerParts[0];
-
-            if (smtpServerParts.Length > 1 && int.TryParse(smtpServerParts[1], out int port))
-                return new SmtpClient(host, port);
-
-            return new SmtpClient(host);
+                    EventSentEmail eventSentEmail = new EventSentEmail();
+                    eventSentEmail.EventID = eventID;
+                    eventSentEmail.SentEmailID = sentEmailID;
+                    eventSentEmailTable.AddNewRecord(eventSentEmail);
+                }
+            }
         }
 
         private int LoadSentEmail(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument)
@@ -586,6 +548,46 @@ namespace FaultData.DataWriters.Emails
                 return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
         }
+
+        private void WriteEmailToFile(string datafolder, MailMessage mail)
+        {
+            if (string.IsNullOrEmpty(datafolder))
+                return;
+
+            Directory.CreateDirectory(datafolder);
+            string dstFile = Path.Combine(datafolder, mail.Subject);
+
+            if (File.Exists(dstFile))
+                File.Delete(dstFile);
+            using (StreamWriter fileWriter = File.CreateText(dstFile))
+                fileWriter.Write(mail.Body);
+        }
+
+        private SmtpClient CreateSmtpClient(string smtpServer)
+        {
+            string[] smtpServerParts = smtpServer.Split(':');
+            string host = smtpServerParts[0];
+
+            if (smtpServerParts.Length > 1 && int.TryParse(smtpServerParts[1], out int port))
+                return new SmtpClient(host, port);
+
+            return new SmtpClient(host);
+        }
+
+        private string GetSubject(XDocument htmlDocument, EmailTypeBase emailType)
+        {
+            string subject = (string)((string)htmlDocument
+                .Descendants("title")
+                .FirstOrDefault());
+
+            return (subject ?? emailType.Name).Trim();
+        }
+
+        private string GetBody(XDocument htmlDocument) => htmlDocument
+            .ToString(SaveOptions.DisableFormatting)
+            .Replace("&amp;", "&")
+            .Replace("&lt;", "<")
+            .Replace("&gt;", ">");
 
         #endregion
 
