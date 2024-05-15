@@ -34,7 +34,7 @@ using GSF.Data.Model;
 using GSF.IO;
 using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
-using openXDA.APIAuthentication;
+using openXDA.APIMiddleware;
 using openXDA.Model;
 using SystemCenter.Model;
 

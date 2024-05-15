@@ -33,7 +33,7 @@ using GSF.Security;
 using Microsoft.Owin;
 using Owin;
 
-namespace openXDA.APIAuthentication
+namespace openXDA.APIMiddleware
 {
     /// <summary>
     /// Middleware to authenticate users of the API via <see cref="APIAccessKey"/>.

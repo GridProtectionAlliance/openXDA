@@ -27,11 +27,11 @@ using System.Text;
 using System.Web.Http;
 using GSF.Web.Security;
 
-namespace openXDA.APIAuthentication
+namespace openXDA.APIMiddleware
 {
     /// <summary>
     /// Provides the endpoint for requests to retrieve CSRF anti-forgery tokens.
-    /// This needs to be included in all apps that support APIAuthentication.
+    /// This needs to be included in all apps that support APIMiddleware.
     /// </summary>
     public class RequestVerificationHeaderTokenController : ApiController
     {

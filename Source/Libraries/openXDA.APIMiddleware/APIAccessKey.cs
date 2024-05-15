@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
-using System;
 using GSF.Data.Model;
+using System;
 
-namespace openXDA.APIAuthentication
+namespace openXDA.APIMiddleware
 {
     /// <summary>
     /// Model that represents a valid set of credentials to access the API.

@@ -27,7 +27,7 @@ using GSF.Diagnostics;
 using GSF.Security;
 
 
-namespace openXDA.APIAuthentication
+namespace openXDA.APIMiddleware
 {
     /// <summary>
     /// Middleware to authenticate users of the API via <see cref="APIAccessKey"/>.

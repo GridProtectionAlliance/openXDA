@@ -26,7 +26,7 @@ using System.Security.Principal;
 using GSF;
 using GSF.ServiceProcess;
 
-namespace openXDA.APIAuthentication
+namespace openXDA.APIMiddleware
 {
     /// <summary>
     /// Interface for a Program.Host to include all required pieces for a <see cref="APIConsoleController"/> to hook into.
