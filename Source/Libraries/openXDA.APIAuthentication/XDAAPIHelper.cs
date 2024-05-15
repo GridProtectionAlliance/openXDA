@@ -131,7 +131,7 @@ namespace openXDA.APIAuthentication
         /// Makes a Get Request to OpenXDA to obtain an object
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
-        /// <returns> a <see cref="{T}"/> object</returns>
+        /// <returns> a <see cref="Task{T}"/> object</returns>
         public async Task<T> Get<T>(string requestURI)
         {
             string result = await Get(requestURI).ConfigureAwait(false);
@@ -164,15 +164,15 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <param name="endpoint">Path to specific API request</param>
         /// <param name="content"> The <see cref="HttpContent"/> of the request </param>
-        /// <returns> response as a <see cref="IEnumerable{T}"/></returns>
+        /// <returns> response as a <see cref="string"/></returns>
         public async Task<string> PostAll<T>(string endpoint, HttpContent content) => await Post(endpoint, content).ConfigureAwait(false);
 
         /// <summary>
-        /// Makes a Get Request to OpenXDA to obtain a <see cref="List{T} of Objects"/> objects
+        /// Makes a Get Request to OpenXDA to obtain a <see cref="List{T}"/> objects
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
-        /// <returns> a <see cref="{T}"/> object</returns>
-        public async Task<List<T>> GetAll<T>(string endpoint) => await Get<List<T>>(endpoint).ConfigureAwait(false);
+        /// <returns> a <see cref="List{T}"/> object</returns>
+        public async Task<List<T>> GetAll<T>(string requestURI) => await Get<List<T>>(requestURI).ConfigureAwait(false);
 
         #endregion
 
