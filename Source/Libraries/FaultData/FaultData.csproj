@@ -178,6 +178,7 @@
     <Compile Include="DataWriters\Emails\DataSourceResponse.cs" />
     <Compile Include="DataWriters\Emails\EmailService.cs" />
     <Compile Include="DataWriters\Emails\ScheduledDataSource.cs" />
+    <Compile Include="DataWriters\Emails\ScheduledEmailService.cs" />
     <Compile Include="DataWriters\Emails\TemplateProcessor.cs" />
     <Compile Include="DataWriters\Emails\TriggeredDataSource.cs" />
     <Compile Include="DataWriters\Emails\ScheduledDataSourceFactory.cs" />

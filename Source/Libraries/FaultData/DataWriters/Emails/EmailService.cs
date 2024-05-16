@@ -118,24 +118,6 @@ namespace FaultData.DataWriters.Emails
 
         #region [ Methods ]
 
-        public bool SendScheduledEmail(ScheduledEmailType email, DateTime xdaNow)
-        {
-            List<string> recipients = GetRecipients(email);
-
-            if (recipients.Count == 0 && string.IsNullOrEmpty(email.FilePath))
-                return false;
-
-            SendScheduledEmail(email, recipients, true, xdaNow);
-
-            return true;
-        }
-
-        public void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, out EmailResponse response, DateTime xdaNow) =>
-            SendScheduledEmail(email, recipients, false, out response, xdaNow);
-
-        public void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, DateTime xdaNow) =>
-            SendScheduledEmail(email, recipients, saveToFile, out EmailResponse _, xdaNow);
-
         public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailResponse email, string filePath = null) =>
             SendEmail(recipients, htmlDocument, attachments, emailType, QuerySettings(), email, filePath);
 
@@ -194,37 +176,6 @@ namespace FaultData.DataWriters.Emails
 
                 //Write the email to a File
                 WriteEmailToFile(filePath, emailMessage);
-            }
-        }
-
-        private void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, out EmailResponse response, DateTime xdaNow)
-        {
-            List<Attachment> attachments = new List<Attachment>();
-
-            response = new EmailResponse();
-
-            try
-            {
-                EmailSection settings = QuerySettings();
-
-                ScheduledDataSourceFactory factory = new ScheduledDataSourceFactory(ConnectionFactory);
-                List<ScheduledDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
-                IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, xdaNow));
-                response.DataSources.AddRange(dataSourceResponses);
-
-                double chartSampleRate = settings.MinimumChartSamplesPerCycle;
-                TemplateProcessor templateProcessor = new TemplateProcessor(ConnectionFactory);
-                XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
-                XDocument htmlDocument = templateProcessor.ApplyTemplate(email, templateData.ToString());
-                templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.MinimumChartSamplesPerCycle);
-                templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
-
-                SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
-                LoadSentEmail(email, xdaNow, recipients, htmlDocument);
-            }
-            finally
-            {
-                attachments?.ForEach(attachment => attachment.Dispose());
             }
         }
 
@@ -298,56 +249,6 @@ namespace FaultData.DataWriters.Emails
                   "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
                   "WHERE " +
                   "    UserAccountEmailType.EmailTypeID = {0} AND " +
-                  "    UserAccount.PhoneConfirmed <> 0 AND " +
-                  "    UserAccount.Approved <> 0";
-
-                processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
-            }
-
-            using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID))
-            {
-                return emailAddressTable
-                    .Select()
-                    .Select(processor)
-                    .ToList();
-            }
-        }
-
-        public List<string> GetRecipients(ScheduledEmailType emailType)
-        {
-            string emailAddressQuery;
-            Func<DataRow, string> processor;
-
-            if (!emailType.SMS)
-            {
-                bool requireEmailConfirm;
-                using (AdoDataConnection connection = ConnectionFactory())
-                    requireEmailConfirm = connection.ExecuteScalar<bool>("SELECT Value From [Setting] Where Name = 'Subscription.RequireConfirmation'");
-
-                emailAddressQuery =
-                   "SELECT DISTINCT UserAccount.Email AS Email " +
-                   "FROM " +
-                   "    UserAccountScheduledEmailType JOIN " +
-                   "    UserAccount ON UserAccountScheduledEmailType.UserAccountID = UserAccount.ID " +
-                   "WHERE " +
-                   "    UserAccountScheduledEmailType.ScheduledEmailTypeID = {0} AND " +
-                   (requireEmailConfirm ? "    UserAccount.EmailConfirmed <> 0 AND " : "") +
-                   "    UserAccount.Approved <> 0";
-
-                processor = row => row.ConvertField<string>("Email");
-            }
-            else
-            {
-                emailAddressQuery =
-                  "SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
-                  "FROM " +
-                  "    UserAccountScheduledEmailType JOIN " +
-                  "    UserAccount ON UserAccountScheduledEmailType.UserAccountID = UserAccount.ID LEFT JOIN" +
-                  "    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
-                  "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
-                  "WHERE " +
-                  "    UserAccountScheduledEmailType.ScheduledEmailTypeID = {0} AND " +
                   "    UserAccount.PhoneConfirmed <> 0 AND " +
                   "    UserAccount.Approved <> 0";
 
