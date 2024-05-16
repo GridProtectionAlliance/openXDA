@@ -285,9 +285,7 @@ namespace FaultData.DataWriters.Emails
 
         private string GetBody(XDocument htmlDocument) => htmlDocument
             .ToString(SaveOptions.DisableFormatting)
-            .Replace("&amp;", "&")
-            .Replace("&lt;", "<")
-            .Replace("&gt;", ">");
+            .Replace("&amp;", "&");
 
         #endregion
 
