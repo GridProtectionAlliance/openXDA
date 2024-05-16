@@ -122,7 +122,7 @@ namespace openXDA.Controllers.WebAPI
         {
             Settings settings = new Settings(GetConfigurator());
             EventEmailSection eventEmailSettings = settings.EventEmailSettings;
-            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+            TriggeredEmailService emailService = new TriggeredEmailService(CreateDbConnection, GetConfigurator());
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -163,7 +163,7 @@ namespace openXDA.Controllers.WebAPI
             {
                 Settings settings = new Settings(GetConfigurator());
                 EventEmailSection eventEmailSettings = settings.EventEmailSettings;
-                EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+                TriggeredEmailService emailService = new TriggeredEmailService(CreateDbConnection, GetConfigurator());
 
                 using (AdoDataConnection connection = CreateDbConnection())
                 {

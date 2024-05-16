@@ -111,70 +111,12 @@ namespace FaultData.DataWriters.Emails
 
         #region [ Properties ]
 
-        private Func<AdoDataConnection> ConnectionFactory { get; }
+        protected Func<AdoDataConnection> ConnectionFactory { get; }
         private Action<object> Configure { get; }
 
         #endregion
 
         #region [ Methods ]
-
-        public bool SendEmail(EmailType email, List<int> eventIDs, Event evt, DateTime xdaNow)
-        {
-            if (eventIDs.Count == 0)
-                return false;
-
-            List<string> recipients = GetRecipients(email, eventIDs);
-
-            if (recipients.Count == 0 && String.IsNullOrEmpty(email.FilePath))
-                return false;
-
-            SendEmail(email, evt, recipients, xdaNow, eventIDs, true);
-
-            return true;
-        }
-
-        public void SendEmail(EmailType email, Event evt, List<string> recipients, bool saveToFile, out EmailResponse response) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), saveToFile, out response);
-
-        public void SendEmail(EmailType email, Event evt, List<string> recipients, out EmailResponse response) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, out response);
-
-        public void SendEmail(EmailType email, Event evt, List<string> recipients) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, out EmailResponse _);
-
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile) =>
-            SendEmail(email, evt, recipients, xdaNow, eventIDs, saveToFile, out EmailResponse _);
-
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, out EmailResponse response)
-        {
-            List<Attachment> attachments = new List<Attachment>();
-
-            response = new EmailResponse();
-
-            try
-            {
-                Settings settings = new Settings(Configure);
-
-                TriggeredDataSourceFactory factory = new TriggeredDataSourceFactory(ConnectionFactory);
-                List<TriggeredDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
-                IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, evt));
-                response.DataSources.AddRange(dataSourceResponses);
-
-                double chartSampleRate = settings.EmailSettings.MinimumChartSamplesPerCycle;
-                TemplateProcessor templateProcessor = new TemplateProcessor(ConnectionFactory);
-                XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
-                XDocument htmlDocument = templateProcessor.ApplyTemplate(email, templateData.ToString());
-                templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
-                templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
-
-                SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
-                LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
-            }
-            finally
-            {
-                attachments?.ForEach(attachment => attachment.Dispose());
-            }
-        }
 
         public bool SendScheduledEmail(ScheduledEmailType email, DateTime xdaNow)
         {
@@ -194,6 +136,67 @@ namespace FaultData.DataWriters.Emails
         public void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, DateTime xdaNow) =>
             SendScheduledEmail(email, recipients, saveToFile, out EmailResponse _, xdaNow);
 
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailResponse email, string filePath = null) =>
+            SendEmail(recipients, htmlDocument, attachments, emailType, QuerySettings(), email, filePath);
+
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailSection settings, EmailResponse email, string filePath = null)
+        {
+            string smtpServer = settings.SMTPServer;
+
+            email.Body = GetBody(htmlDocument);
+            email.Subject = GetSubject(htmlDocument, emailType);
+
+            if (string.IsNullOrEmpty(smtpServer))
+                return;
+
+            using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
+            using (MailMessage emailMessage = new MailMessage())
+            {
+                string username = settings.Username;
+                SecureString password = settings.SecurePassword;
+
+                if (!string.IsNullOrEmpty(username) && (object)password != null)
+                    smtpClient.Credentials = new NetworkCredential(username, password);
+
+                smtpClient.EnableSsl = settings.EnableSSL;
+
+                string fromAddress = settings.FromAddress;
+                emailMessage.From = new MailAddress(fromAddress);
+                emailMessage.Subject = email.Subject;
+                emailMessage.Body = email.Body;
+                emailMessage.IsBodyHtml = true;
+
+                if (recipients.Count == 0)
+                {
+                    WriteEmailToFile(filePath, emailMessage);
+                    return;
+                }
+
+                string blindCopyAddress = settings.BlindCopyAddress;
+                string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
+
+                if (string.IsNullOrEmpty(blindCopyAddress))
+                {
+                    emailMessage.To.Add(recipientList);
+                }
+                else
+                {
+                    emailMessage.To.Add(blindCopyAddress);
+                    emailMessage.Bcc.Add(recipientList);
+                }
+
+                // Create the image attachment for the email message
+                foreach (Attachment attachment in attachments)
+                    emailMessage.Attachments.Add(attachment);
+
+                // Send the email
+                smtpClient.Send(emailMessage);
+
+                //Write the email to a File
+                WriteEmailToFile(filePath, emailMessage);
+            }
+        }
+
         private void SendScheduledEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, out EmailResponse response, DateTime xdaNow)
         {
             List<Attachment> attachments = new List<Attachment>();
@@ -202,18 +205,18 @@ namespace FaultData.DataWriters.Emails
 
             try
             {
-                Settings settings = new Settings(Configure);
+                EmailSection settings = QuerySettings();
 
                 ScheduledDataSourceFactory factory = new ScheduledDataSourceFactory(ConnectionFactory);
                 List<ScheduledDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
                 IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, xdaNow));
                 response.DataSources.AddRange(dataSourceResponses);
 
-                double chartSampleRate = settings.EmailSettings.MinimumChartSamplesPerCycle;
+                double chartSampleRate = settings.MinimumChartSamplesPerCycle;
                 TemplateProcessor templateProcessor = new TemplateProcessor(ConnectionFactory);
                 XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
                 XDocument htmlDocument = templateProcessor.ApplyTemplate(email, templateData.ToString());
-                templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
+                templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.MinimumChartSamplesPerCycle);
                 templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
 
                 SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
@@ -258,64 +261,6 @@ namespace FaultData.DataWriters.Emails
 
                 // Send the email
                 smtpClient.Send(emailMessage);
-            }
-        }
-
-        public List<string> GetRecipients(EmailType emailType, List<int> eventIDs)
-        {
-            List<int> assetGroups = GetAssetGroups(eventIDs)
-                .Select(item => item.ID)
-                .ToList();
-
-            if (assetGroups.Count == 0)
-                return new List<string>();
-
-            string assetGroupFilter = string.Join(",", assetGroups);
-
-            string emailAddressQuery;
-            Func<DataRow, string> processor;
-
-            if (!emailType.SMS)
-            {
-
-                emailAddressQuery =
-                    $"SELECT DISTINCT UserAccount.Email AS Email " +
-                    $"FROM " +
-                    $"    UserAccountEmailType JOIN " +
-                    $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
-                    $"WHERE " +
-                    $"    UserAccountEmailType.EmailTypeID = {{0}} AND " +
-                    $"    UserAccount.EmailConfirmed <> 0 AND " +
-                    $"    UserAccount.Approved <> 0 AND " +
-                    $"    UserAccountEmailType.AssetGroupID IN ({assetGroupFilter})";
-
-                processor = row => row.ConvertField<string>("Email");
-            }
-            else
-            {
-                emailAddressQuery =
-                     $"SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
-                     $"FROM " +
-                     $"    UserAccountEmailType JOIN " +
-                     $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID LEFT JOIN " +
-                     $"    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
-                     $"    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
-                     $"WHERE " +
-                     $"    UserAccountEmailType.EmailTypeID = {{0}} AND " +
-                     $"    UserAccount.PhoneConfirmed <> 0 AND " +
-                     $"    UserAccount.Approved <> 0 AND " +
-                     $"    UserAccountEmailType.AssetGroupID IN ({assetGroupFilter})";
-
-                processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
-            }
-
-            using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID))
-            {
-                return emailAddressTable
-                    .Select()
-                    .Select(processor)
-                    .ToList();
             }
         }
 
@@ -419,120 +364,7 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private List<AssetGroup> GetAssetGroups(List<int> eventIDs)
-        {
-            if (eventIDs.Count == 0)
-                return new List<AssetGroup>();
-
-            string query =
-                $"SELECT DISTINCT AssetGroup.* " +
-                $"FROM " +
-                $"    AssetGroup LEFT OUTER JOIN " +
-                $"    MeterAssetGroup ON MeterAssetGroup.AssetGroupID = AssetGroup.ID LEFT OUTER JOIN " +
-                $"    AssetAssetGroup ON AssetAssetGroup.AssetGroupID = AssetGroup.ID JOIN " +
-                $"    Event ON " +
-                $"        Event.ID IN ({string.Join(",", eventIDs)}) AND " +
-                $"        (" +
-                $"            Event.MeterID = MeterAssetGroup.MeterID OR " +
-                $"            Event.AssetID = AssetAssetGroup.AssetID " +
-                $"        )";
-
-            using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable table = connection.RetrieveData(query))
-            {
-                TableOperations<AssetGroup> assetGroupTable = new TableOperations<AssetGroup>(connection);
-
-                return table
-                    .AsEnumerable()
-                    .Select(assetGroupTable.LoadRecord)
-                    .ToList();
-            }
-        }
-
-        private void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, Settings settings, EmailResponse email, string filePath = null)
-        {
-            EmailSection emailSettings = settings.EmailSettings;
-            string smtpServer = emailSettings.SMTPServer;
-
-            email.Body = GetBody(htmlDocument);
-            email.Subject = GetSubject(htmlDocument, emailType);
-
-            if (string.IsNullOrEmpty(smtpServer))
-                return;
-
-            using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
-            using (MailMessage emailMessage = new MailMessage())
-            {
-                string username = emailSettings.Username;
-                SecureString password = emailSettings.SecurePassword;
-
-                if (!string.IsNullOrEmpty(username) && (object)password != null)
-                    smtpClient.Credentials = new NetworkCredential(username, password);
-
-                smtpClient.EnableSsl = emailSettings.EnableSSL;
-
-                string fromAddress = emailSettings.FromAddress;
-                emailMessage.From = new MailAddress(fromAddress);
-                emailMessage.Subject = email.Subject;
-                emailMessage.Body = email.Body;
-                emailMessage.IsBodyHtml = true;
-
-                if (recipients.Count == 0)
-                {
-                    WriteEmailToFile(filePath, emailMessage);
-                    return;
-                }
-
-                string blindCopyAddress = emailSettings.BlindCopyAddress;
-                string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
-
-                if (string.IsNullOrEmpty(blindCopyAddress))
-                {
-                    emailMessage.To.Add(recipientList);
-                }
-                else
-                {
-                    emailMessage.To.Add(blindCopyAddress);
-                    emailMessage.Bcc.Add(recipientList);
-                }
-
-                // Create the image attachment for the email message
-                foreach (Attachment attachment in attachments)
-                    emailMessage.Attachments.Add(attachment);
-
-                // Send the email
-                smtpClient.Send(emailMessage);
-
-                //Write the email to a File
-                WriteEmailToFile(filePath, emailMessage);
-            }
-        }
-
-        private void LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
-        {
-            int sentEmailID = LoadSentEmail(email, now, recipients, htmlDocument);
-
-            if (eventIDs.Count == 0)
-                return;
-
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
-
-                foreach (int eventID in eventIDs)
-                {
-                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
-                        continue;
-
-                    EventSentEmail eventSentEmail = new EventSentEmail();
-                    eventSentEmail.EventID = eventID;
-                    eventSentEmail.SentEmailID = sentEmailID;
-                    eventSentEmailTable.AddNewRecord(eventSentEmail);
-                }
-            }
-        }
-
-        private int LoadSentEmail(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument)
+        protected int LoadSentEmail(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -548,6 +380,8 @@ namespace FaultData.DataWriters.Emails
                 return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
         }
+
+        protected EmailSection QuerySettings() => new Settings(Configure).EmailSettings;
 
         private void WriteEmailToFile(string datafolder, MailMessage mail)
         {
