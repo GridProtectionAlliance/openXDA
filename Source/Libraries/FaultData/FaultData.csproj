@@ -184,6 +184,7 @@
     <Compile Include="DataWriters\Emails\ScheduledDataSourceDefinition.cs" />
     <Compile Include="DataWriters\Emails\TriggeredDataSourceFactory.cs" />
     <Compile Include="DataWriters\Emails\TriggeredDataSourceDefinition.cs" />
+    <Compile Include="DataWriters\Emails\TriggeredEmailService.cs" />
     <Compile Include="DataWriters\FaultTypeGenerator.cs" />
     <Compile Include="DataWriters\LightningGenerator.cs" />
     <Compile Include="DataWriters\PQIGenerator.cs" />
