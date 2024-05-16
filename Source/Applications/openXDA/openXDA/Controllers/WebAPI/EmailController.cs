@@ -209,7 +209,7 @@ namespace openXDA.Controllers.WebAPI
         {
             Action<object> configurator = GetConfigurator();
             Settings settings = new Settings(configurator);
-            EmailService emailService = new EmailService(CreateDbConnection, configurator);
+            ScheduledEmailService emailService = new ScheduledEmailService(CreateDbConnection, configurator);
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -228,7 +228,7 @@ namespace openXDA.Controllers.WebAPI
                     if (!DateTime.TryParse(current, out DateTime xdaNow))
                         xdaNow = DateTime.UtcNow;
                     
-                    emailService.SendScheduledEmail(report, new List<string>() { account.Email }, out EmailResponse emailResponse, xdaNow);
+                    emailService.SendEmail(report, new List<string>() { account.Email }, out EmailResponse emailResponse, xdaNow);
                     response.DataSourceResponses = emailResponse.DataSources;
                     return Ok(response);
                 }
