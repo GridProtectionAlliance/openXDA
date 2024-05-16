@@ -55,41 +55,6 @@ namespace FaultData.DataWriters.Emails
             public EmailSection EmailSettings { get; } = new EmailSection();
         }
 
-        private class DataSourceWrapper
-        {
-            public string Name { get; }
-            public ITriggeredDataSource DataSourceTriggered { get; }
-            public IScheduledDataSource DataSourceScheduled { get; }
-
-            public DataSourceWrapper(string name, ITriggeredDataSource dataSourceTriggered = null, IScheduledDataSource dataSourceScheduled  = null)
-            {
-                Name = name;
-                DataSourceTriggered = dataSourceTriggered;
-                DataSourceScheduled = dataSourceScheduled;
-            }
-            public XElement TryProcess(DateTime xdaNow) => TryProcess(xdaNow, out _);
-
-            public XElement TryProcess(DateTime xdaNow, out Exception exception)
-            {
-                if (DataSourceScheduled is null)
-                {
-                    exception = new NullReferenceException("DataSource was not created.");
-                    Log.Debug($"Email data source {Name} was not created", exception);
-                    return null;
-                }
-
-                XElement element = null;
-                exception = null;
-                try { element = DataSourceScheduled.Process(xdaNow); }
-                catch (Exception ex) { exception = ex; }
-
-                if (!(exception is null))
-                    Log.Error($"Email data source {Name} failed to process", exception);
-
-                return element;
-            }
-        }
-
         public class EmailResponse
         {
             public List<DataSourceResponse> DataSources { get; } = new List<DataSourceResponse>();
