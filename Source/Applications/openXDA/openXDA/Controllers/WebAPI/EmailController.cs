@@ -93,8 +93,8 @@ namespace openXDA.Controllers.WebAPI
                 ConfirmableUserAccount account = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordWhere("ID = {0}", userID);
                 if (account == null)
                     return BadRequest($"User with ID {userID} does not exists");
-                SendVerificationEmail(account.Email);
-                return Ok(1);
+                int code = SendVerificationEmail(account.Email);
+                return Ok(code);
             }
         }
 
