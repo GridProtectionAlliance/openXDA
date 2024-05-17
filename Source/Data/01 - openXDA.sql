@@ -5484,7 +5484,7 @@ GO
  AS
  SELECT
     AssetAssetGroup.ID,
-    Asset.AssetKey AS Assetname,
+    Asset.AssetKey AS AssetName,
     Asset.AssetName AS LongAssetName,
     Asset.ID AS AssetID,
 	AssetType.Name AS AssetType,
