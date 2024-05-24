@@ -182,15 +182,13 @@ namespace openXDA.Controllers.Config
         }
 
         [Route("ReprocessFilesByID"), HttpPost]
-        public async Task<int> ReprocessFiles([FromBody] JObject fileGroupIDs)
+        public async Task<int> ReprocessFiles([FromBody] IEnumerable<int> fileGroupIDs)
         {
-            List<int> fileGroupIDList = fileGroupIDs.ToObject<List<int>>();
-
             using (AdoDataConnection connection = NodeHost.CreateDbConnection())
             {
                 List<Task> reprocessTasks = new List<Task>();
 
-                foreach (int fileGroupID in fileGroupIDList)
+                foreach (int fileGroupID in fileGroupIDs)
                 {
                     CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
                     CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
