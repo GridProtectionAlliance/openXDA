@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33516.290
@@ -140,7 +140,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.PQI", "Libraries\op
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.XMLConfig", "Libraries\openXDA.XMLConfigLoader\openXDA.XMLConfig.csproj", "{280F475D-7D5C-4BB7-98BE-DB0F3CBE40BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.APIAuthentication", "Libraries\openXDA.APIAuthentication\openXDA.APIAuthentication.csproj", "{93FF1E73-CD8B-4F01-89BC-A4A242FA06A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "openXDA.APIAuthentication", "Libraries\openXDA.APIAuthentication\openXDA.APIAuthentication.csproj", "{93FF1E73-CD8B-4F01-89BC-A4A242FA06A6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.NotificationDataSources", "Libraries\OpenXDA.NotificationDataSources\openXDA.NotificationDataSources.csproj", "{2813A92F-8CB5-4EC3-976C-8690C90C6DD0}"
 EndProject
@@ -160,6 +160,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FLEE", "FLEE", "{C7A4CCDE-4
 		Dependencies\FLEE\Ciloci.Flee.dll = Dependencies\FLEE\Ciloci.Flee.dll
 		Dependencies\FLEE\Ciloci.Flee.xml = Dependencies\FLEE\Ciloci.Flee.xml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.APIMiddleware", "Libraries\openXDA.APIMiddleware\openXDA.APIMiddleware.csproj", "{AB824302-D4F1-4173-A46E-5328C31F4D65}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -581,6 +583,18 @@ Global
 		{DB45E2DC-9B08-4549-9DB5-9C99BBEE1379}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB45E2DC-9B08-4549-9DB5-9C99BBEE1379}.Release|x86.ActiveCfg = Release|Any CPU
 		{DB45E2DC-9B08-4549-9DB5-9C99BBEE1379}.Release|x86.Build.0 = Release|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Debug|x86.Build.0 = Debug|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Mono|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Mono|Any CPU.Build.0 = Debug|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Mono|x86.ActiveCfg = Debug|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Mono|x86.Build.0 = Debug|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Release|x86.ActiveCfg = Release|Any CPU
+		{AB824302-D4F1-4173-A46E-5328C31F4D65}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -628,6 +642,7 @@ Global
 		{DB45E2DC-9B08-4549-9DB5-9C99BBEE1379} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{598B0FE9-B4EA-4797-982D-BF243F3C5BEC} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
 		{C7A4CCDE-42A5-4AF8-A632-6695F63D39E4} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
+		{AB824302-D4F1-4173-A46E-5328C31F4D65} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77720899-DA0C-45E0-AE45-677A89071A7B}

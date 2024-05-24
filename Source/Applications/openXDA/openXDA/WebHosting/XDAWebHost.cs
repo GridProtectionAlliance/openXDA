@@ -47,7 +47,7 @@ using Microsoft.Owin.Cors;
 using Microsoft.Owin.Extensions;
 using Newtonsoft.Json;
 using openXDA.Adapters;
-using openXDA.APIAuthentication.Extensions;
+using openXDA.APIMiddleware.Extensions;
 using openXDA.Hubs;
 using openXDA.Model;
 using openXDA.Nodes;

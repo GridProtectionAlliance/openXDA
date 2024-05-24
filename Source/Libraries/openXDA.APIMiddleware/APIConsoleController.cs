@@ -29,7 +29,7 @@ using System.Web.Http;
 using GSF;
 using GSF.ServiceProcess;
 
-namespace openXDA.APIAuthentication
+namespace openXDA.APIMiddleware
 {
     /// <summary>
     /// Base Class that includes the endpoints needed for the API based Console.

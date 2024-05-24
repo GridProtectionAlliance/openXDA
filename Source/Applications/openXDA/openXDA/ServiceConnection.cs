@@ -29,7 +29,7 @@ using GSF.ServiceProcess;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using Microsoft.AspNet.SignalR.Infrastructure;
-using openXDA.APIAuthentication;
+using openXDA.APIMiddleware;
 
 namespace openXDA
 {

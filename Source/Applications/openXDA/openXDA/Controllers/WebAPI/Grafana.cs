@@ -20,23 +20,9 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Web.Http;
 using GSF.Data;
-using GSF.Data.Model;
-using GSF.IO;
-using GSF.Web.Model;
-using openXDA.Adapters;
-using openXDA.APIAuthentication;
-using openXDA.Model;
-using openXDA.Nodes;
-using SystemCenter.Model;
 
 namespace openXDA.Controllers.WebAPI
 {
