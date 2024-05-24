@@ -105,7 +105,6 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/Channel")]
     public class ChannelController : ModelController<ChannelDetail>
     {
-        #region [ Http Methods ]
         [Route("TrenDAP"), HttpPost]
         public DataTable GetTrendSearchData([FromBody] JObject postData)
         {
@@ -166,9 +165,7 @@ namespace openXDA.Controllers.WebAPI
                 return table;
             }
         }
-        #endregion
 
-        #region [ Private Methods ]
         private string GetIDFilter(JArray idObjectList, string fieldName)
         {
             if (idObjectList is null) return null;
@@ -176,7 +173,6 @@ namespace openXDA.Controllers.WebAPI
             if (ids.Count() == 0) return null;
             return $"{fieldName} IN ({string.Join(", ", ids)})";
         }
-        #endregion
     }
 
     [RoutePrefix("api/Asset")]

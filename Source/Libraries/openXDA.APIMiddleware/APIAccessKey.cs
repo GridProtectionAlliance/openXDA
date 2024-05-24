@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-using GSF.Data.Model;
 using System;
+using GSF.Data.Model;
 
 namespace openXDA.APIMiddleware
 {

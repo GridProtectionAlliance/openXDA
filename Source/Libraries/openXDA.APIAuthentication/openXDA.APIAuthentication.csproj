@@ -7,8 +7,6 @@
     <Company>GPA</Company>
     <Product>openXDA.APIAuthentication</Product>
     <Copyright>Copyright ©  2022</Copyright>
-    <AssemblyVersion>3.0.3.457</AssemblyVersion>
-    <FileVersion>3.0.3.457</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>..\..\..\Build\Output\Debug\Libraries\</OutputPath>

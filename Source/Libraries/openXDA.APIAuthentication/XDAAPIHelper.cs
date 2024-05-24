@@ -37,7 +37,7 @@ namespace openXDA.APIAuthentication
     public abstract class XDAAPIHelper
     {
 
-        #region [Abstract]
+        #region [ Properties ]
         /// <summary>
         /// API Token used to access OpenXDA
         /// </summary>
@@ -54,7 +54,7 @@ namespace openXDA.APIAuthentication
         protected abstract string Host { get; }
         #endregion
 
-        #region [Methods]
+        #region [ Methods ]
         /// <summary>
         /// Gets Response Task from XDA 
         /// </summary>
@@ -88,7 +88,7 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
         /// <returns>string</returns>
-        public async Task<string> Get(string requestURI)
+        public async Task<string> GetAsync(string requestURI)
         {
             APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
 
@@ -100,8 +100,7 @@ namespace openXDA.APIAuthentication
             }
 
             HttpResponseMessage responseMessage = await query.SendWebRequestAsync(ConfigureRequest, requestURI).ConfigureAwait(false);
-            if (!responseMessage.IsSuccessStatusCode)
-                throw new Exception(responseMessage.ReasonPhrase);
+            responseMessage.EnsureSuccessStatusCode();
             return await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
 
@@ -110,7 +109,7 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
         /// <returns>stream</returns>
-        public async Task<Stream> GetStream(string requestURI)
+        public async Task<Stream> GetStreamAsync(string requestURI)
         {
             APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
 
@@ -122,8 +121,7 @@ namespace openXDA.APIAuthentication
             }
 
             HttpResponseMessage responseMessage = await query.SendWebRequestAsync(ConfigureRequest, requestURI).ConfigureAwait(false);
-            if (!responseMessage.IsSuccessStatusCode)
-                throw new Exception(responseMessage.ReasonPhrase);
+            responseMessage.EnsureSuccessStatusCode();
             return await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
         }
 
@@ -132,9 +130,9 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
         /// <returns> a <see cref="Task{T}"/> object</returns>
-        public async Task<T> Get<T>(string requestURI)
+        public async Task<T> GetAsync<T>(string requestURI)
         {
-            string result = await Get(requestURI).ConfigureAwait(false);
+            string result = await GetAsync(requestURI).ConfigureAwait(false);
             T resultObject = JsonConvert.DeserializeObject<T>(result);
             return resultObject;
         }
@@ -145,7 +143,7 @@ namespace openXDA.APIAuthentication
         /// <param name="requestURI">Path to specific API request</param>
         /// <param name="content"> The <see cref="HttpContent"/> of the request </param>
         /// <returns> response as a <see cref="string"/></returns>
-        public async Task<string> Post(string requestURI, HttpContent content)
+        public async Task<string> PostAsync(string requestURI, HttpContent content)
         {
             APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
 
@@ -165,14 +163,14 @@ namespace openXDA.APIAuthentication
         /// <param name="endpoint">Path to specific API request</param>
         /// <param name="content"> The <see cref="HttpContent"/> of the request </param>
         /// <returns> response as a <see cref="string"/></returns>
-        public async Task<string> PostAll<T>(string endpoint, HttpContent content) => await Post(endpoint, content).ConfigureAwait(false);
+        public async Task<string> PostAllAsync<T>(string endpoint, HttpContent content) => await PostAsync(endpoint, content).ConfigureAwait(false);
 
         /// <summary>
         /// Makes a Get Request to OpenXDA to obtain a <see cref="List{T}"/> objects
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
         /// <returns> a <see cref="List{T}"/> object</returns>
-        public async Task<List<T>> GetAll<T>(string requestURI) => await Get<List<T>>(requestURI).ConfigureAwait(false);
+        public async Task<List<T>> GetAllAsync<T>(string requestURI) => await GetAsync<List<T>>(requestURI).ConfigureAwait(false);
 
         #endregion
 
