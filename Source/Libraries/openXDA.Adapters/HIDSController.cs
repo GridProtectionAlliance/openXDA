@@ -164,6 +164,65 @@ namespace openXDA.Adapters
 
         [HttpPost]
         [ValidateRequestVerificationToken]
+        public async Task<HttpResponseMessage> QueryPointsByTimeSpans([FromBody] JObject query, CancellationToken cancellationToken)
+        {
+            void BuildQuery(IQueryBuilder builder)
+            {
+                if (query["Channels"] is JArray channels)
+                {
+                    IEnumerable<string> tags = channels
+                        .ToObject<List<int>>()
+                        .Select(channelID => APIExtensions.ToTag(null, channelID));
+
+                    builder.FilterTags(tags);
+                }
+
+                if (query["TimeSpans"] is JArray timeSpans)
+                {
+                    IEnumerable<Tuple<DateTime, DateTime>> spans = timeSpans
+                        .ToObject<IEnumerable<JToken>>()
+                        .Select((spanToken) => {
+                            JArray bounds = (JArray) spanToken;
+
+                            return new Tuple<DateTime, DateTime>(bounds[0].Value<DateTime>(), bounds[1].Value<DateTime>());
+                        });
+
+                    builder.RangeFilters(spans);
+                };
+
+                if (query.ContainsKey("InvalidFlags"))
+                {
+                    uint invalidFlags = query.Value<uint>("InvalidFlags");
+                    builder.TestQuality(invalidFlags);
+                }
+
+                if (query.ContainsKey("AggregateDuration"))
+                {
+                    string aggregateDuration = query.Value<string>("AggregateDuration");
+                    builder.Aggregate(aggregateDuration);
+                }
+            }
+
+            if (!query.ContainsKey("TimeSpans"))
+            {
+                BadRequestErrorMessageResult result = BadRequest("Missing query parameter: TimeSpans");
+                return await result.ExecuteAsync(cancellationToken);
+            }
+
+            MediaTypeHeaderValue contentType = new MediaTypeHeaderValue("text/plain");
+            contentType.CharSet = "utf-8";
+
+            Stream pointStream = PointStream.QueryPoints(CreateHIDSConnectionAsync, BuildQuery);
+            StreamContent content = new StreamContent(pointStream);
+            content.Headers.ContentType = contentType;
+
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = content;
+            return response;
+        }
+
+        [HttpPost]
+        [ValidateRequestVerificationToken]
         public async Task<List<HistogramMetadata>> QueryHistogramMetadata([FromBody] JObject query, CancellationToken cancellationToken)
         {
             using (API hids = await CreateHIDSConnectionAsync())
