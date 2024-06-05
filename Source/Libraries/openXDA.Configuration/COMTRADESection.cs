@@ -50,6 +50,10 @@ namespace openXDA.Configuration
         public bool UseRelaxedValidation { get; set; }
 
         [Setting]
+        [DefaultValue("SELECT ID FROM Meter WHERE Make = 'SEL'")]
+        public string Root2AdjustmentQuery { get; set; }
+
+        [Setting]
         [SettingName(nameof(MinWaitTime))]
         [DefaultValue(15.0D)]
         [EditorBrowsable(EditorBrowsableState.Never)]
