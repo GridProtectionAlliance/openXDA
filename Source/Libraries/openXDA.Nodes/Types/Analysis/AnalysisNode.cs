@@ -68,6 +68,10 @@ namespace openXDA.Nodes.Types.Analysis
             [Category]
             [SettingName(TaskProcessorSection.CategoryName)]
             public TaskProcessorSection TaskProcessorSettings { get; } = new TaskProcessorSection();
+
+            [Category]
+            [SettingName(COMTRADESection.CategoryName)]
+            public COMTRADESection COMTRADESettings { get; } = new COMTRADESection();
         }
 
         private class AnalysisWebController : ApiController
@@ -240,8 +244,13 @@ namespace openXDA.Nodes.Types.Analysis
                 meterDataSet.Configure = configurator;
                 meterDataSet.Meter.AssetKey = meter.AssetKey;
 
-                // Shift date/time values to the configured time zone and set the start and end time values on the file group
                 NodeSettings settings = new NodeSettings(configurator);
+
+                // Apply sqrt(2) multiplier for SEL (and similar) meters, unless already adjusted by data reader
+                if (reader is COMTRADEReader && RequiresRoot2Adjustment(meter, settings.COMTRADESettings.Root2AdjustmentQuery))
+                    ApplyRoot2Adjustment(meterDataSet);
+
+                // Shift date/time values to the configured time zone and set the start and end time values on the file group
                 TimeZoneInfo defaultMeterTimeZone = settings.SystemSettings.DefaultMeterTimeZoneInfo;
                 TimeZoneInfo meterTimeZone = meter.GetTimeZoneInfo(defaultMeterTimeZone);
                 Func<DateTime, DateTime> toXDATime = timeZoneConverter.GetMeterTimeZoneConverter(meterTimeZone);
@@ -330,6 +339,21 @@ namespace openXDA.Nodes.Types.Analysis
                 MeterConfiguration currentConfiguration = meterConfigurationTable.QueryRecord("ID DESC", queryRestriction);
                 connection.ExecuteNonQuery("DELETE FROM FileGroupMeterConfiguration WHERE FileGroupID = {0} AND MeterConfigurationID IN (SELECT ID FROM MeterConfiguration WHERE ConfigKey = {1})", fileGroup.ID, ConfigKey);
                 connection.ExecuteNonQuery("INSERT INTO FileGroupMeterConfiguration VALUES({0}, {1})", fileGroup.ID, currentConfiguration.ID);
+            }
+        }
+
+        private bool RequiresRoot2Adjustment(Meter meter, string meterQuery)
+        {
+            string scalarQuery =
+                $"SELECT CASE " +
+                $"    WHEN {{0}} IN ({meterQuery}) " +
+                $"    THEN 1 " +
+                $"    ELSE 0 " +
+                $"END";
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                return connection.ExecuteScalar<int>(scalarQuery, meter.ID) != 0;
             }
         }
 
@@ -525,6 +549,17 @@ namespace openXDA.Nodes.Types.Analysis
         private static readonly ILog Log = LogManager.GetLogger(typeof(AnalysisNode));
 
         // Static Methods
+        private static void ApplyRoot2Adjustment(MeterDataSet meterDataSet)
+        {
+            double adjustment = Math.Sqrt(2.0D);
+
+            foreach (DataSeries analogSeries in meterDataSet.DataSeries)
+            {
+                foreach (DataPoint point in analogSeries.DataPoints)
+                    point.Value *= adjustment;
+            }
+        }
+
         private static void SetDataTimeRange(MeterDataSet meterDataSet)
         {
             DateTime dataStartTime = meterDataSet.DataSeries

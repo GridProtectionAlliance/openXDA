@@ -25,6 +25,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADE.MinWaitTime', '15.0', '15.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADE.Root2AdjustmentQuery', 'SELECT ID FROM Meter WHERE Make = ''SEL''', 'SELECT ID FROM Meter WHERE Make = ''SEL''')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADE.UseRelaxedValidation', 'False', 'False')
 GO
 
