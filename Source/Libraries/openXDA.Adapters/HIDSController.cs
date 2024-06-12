@@ -187,6 +187,7 @@ namespace openXDA.Adapters
                             return new Tuple<DateTime, DateTime>(bounds[0].Value<DateTime>(), bounds[1].Value<DateTime>());
                         });
 
+                    if (spans.Count() == 0) throw new ArgumentException("No timespans specified in query parameter");
                     builder.RangeFilters(spans);
                 };
 
