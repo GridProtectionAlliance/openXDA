@@ -237,10 +237,13 @@ namespace openXDA.Controllers.WebAPI
 
                 string query =
                     $@"SELECT 
-                        Event.StartTime as Time,
-                        Event.Name as Title,
+                        Event.ID,
+                        Event.StartTime,
+                        Event.EndTime,
+                        Event.Name,
                         Event.Description,
-                        DATEDIFF(millisecond, Event.StartTime, Event.EndTime) as Duration
+                        Event.AssetID,
+                        Event.MeterID
                     FROM 
                         Event JOIN 
                         EventType ON
