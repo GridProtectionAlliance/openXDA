@@ -636,7 +636,7 @@ namespace openXDA.Nodes.Types.FileProcessing
                         "INSERT INTO AnalysisTask(FileGroupID, MeterID, Priority) " +
                         "SELECT ID, MeterID, {1} " +
                         "FROM FileGroup " +
-                        "WHERE FileGroupID = {0}";
+                        "WHERE ID = {0}";
 
                     connection.ExecuteNonQuery(InsertQueryFormat, fileGroupID, AnalysisTask.RequeuePriority);
                     NotifyOperation.RunOnceAsync();
