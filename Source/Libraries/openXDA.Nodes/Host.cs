@@ -455,6 +455,9 @@ namespace openXDA.Nodes
                     equilibrium = GetEquilibrium(activeHosts, activeNodes);
                     RetireNodes(connection, equilibrium);
 
+                    if (equilibrium.Count == 0)
+                        return true;
+
                     activeConfiguration = UpdateNodeConfiguration(connection, equilibrium);
                     ActivateNodes(connection, activeConfiguration);
                 }
