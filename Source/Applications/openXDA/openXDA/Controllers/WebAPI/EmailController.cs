@@ -24,9 +24,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Security;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
 using FaultData.DataWriters.Emails;
 using GSF.Configuration;
@@ -118,7 +122,7 @@ namespace openXDA.Controllers.WebAPI
         {
             Settings settings = new Settings(GetConfigurator());
             EventEmailSection eventEmailSettings = settings.EventEmailSettings;
-            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+            TriggeredEmailService emailService = new TriggeredEmailService(CreateDbConnection, GetConfigurator());
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -138,7 +142,8 @@ namespace openXDA.Controllers.WebAPI
 
                 try
                 {
-                    emailService.SendEmail(email, evt, new List<string>() { account.Email }, response.DataSourceResponses);
+                    emailService.SendEmail(email, evt, new List<string>() { account.Email }, out EmailResponse resultEmail);
+                    response.DataSourceResponses = resultEmail.DataSources;
                     return Ok(response);
                 }
                 catch (Exception ex)
@@ -149,12 +154,62 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
+        [Route("testFile/{emailID:int}/{eventID:int}/{save:bool}"), HttpGet]
+        public async Task<HttpResponseMessage> TestEmailFile(int emailID, int eventID, bool save, CancellationToken cancellationToken)
+        {
+            string subject = null;
+
+            IHttpActionResult RunTest()
+            {
+                Settings settings = new Settings(GetConfigurator());
+                EventEmailSection eventEmailSettings = settings.EventEmailSettings;
+                TriggeredEmailService emailService = new TriggeredEmailService(CreateDbConnection, GetConfigurator());
+
+                using (AdoDataConnection connection = CreateDbConnection())
+                {
+                    Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                    if (evt is null)
+                        return BadRequest($"Event with ID {eventID} does not exists");
+
+
+                    EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
+                    if (email is null)
+                        return BadRequest($"Email type with ID {emailID} does not exists");
+
+                    try
+                    {
+                        emailService.SendEmail(email, evt, new List<string>() { }, save, out EmailResponse emailResponse);
+                        subject = emailResponse.Subject;
+                        return Ok(emailResponse.Body);
+                    }
+                    catch (Exception ex)
+                    {
+                        Exception wrapper = new Exception("Email type does not produce valid email please check the Template", ex);
+                        return UnprocessibleEntity(wrapper.ToString());
+                    }
+                }
+            }
+
+            IHttpActionResult testResult = RunTest();
+            HttpResponseMessage httpResponse = await testResult.ExecuteAsync(cancellationToken);
+
+            if (!(subject is null))
+            {
+                httpResponse.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                {
+                    FileName = subject
+                };
+            }
+
+            return httpResponse;
+        }
+
         [Route("testReport/{reportID:int}/{userID}/{current}"), HttpGet]
         public IHttpActionResult SendTestReport(int reportID, string userID, string current)
         {
             Action<object> configurator = GetConfigurator();
             Settings settings = new Settings(configurator);
-            EmailService emailService = new EmailService(CreateDbConnection, configurator);
+            ScheduledEmailService emailService = new ScheduledEmailService(CreateDbConnection, configurator);
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -173,7 +228,8 @@ namespace openXDA.Controllers.WebAPI
                     if (!DateTime.TryParse(current, out DateTime xdaNow))
                         xdaNow = DateTime.UtcNow;
                     
-                    emailService.SendScheduledEmail(report, new List<string>() { account.Email }, response.DataSourceResponses, xdaNow);
+                    emailService.SendEmail(report, new List<string>() { account.Email }, out EmailResponse emailResponse, xdaNow);
+                    response.DataSourceResponses = emailResponse.DataSources;
                     return Ok(response);
                 }
                 catch (Exception ex)
@@ -187,14 +243,18 @@ namespace openXDA.Controllers.WebAPI
         [Route("testData/{emailID:int}/{eventID:int}"), HttpGet]
         public IHttpActionResult TestDataSource(int emailID, int eventID)
         {
-            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+            TriggeredDataSourceFactory factory = new TriggeredDataSourceFactory(CreateDbConnection);
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                 EmailType email = new TableOperations<EmailType>(connection).QueryRecordWhere("ID = {0}", emailID);
-                List<DataSourceResponse> dataSourceResponses = new List<DataSourceResponse>();
-                emailService.LoadDataSources(email, evt, dataSourceResponses);
+                List<TriggeredDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
+
+                List<DataSourceResponse> dataSourceResponses = definitions
+                    .Select(definition => definition.CreateAndProcess(factory, evt))
+                    .ToList();
+
                 return Ok(dataSourceResponses);
             }
         }
@@ -202,17 +262,21 @@ namespace openXDA.Controllers.WebAPI
         [Route("testReportData/{reportID:int}/{current}"), HttpGet]
         public IHttpActionResult TestReportDataSource(int reportID, string current)
         {
-            EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
+            ScheduledDataSourceFactory factory = new ScheduledDataSourceFactory(CreateDbConnection);
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 ScheduledEmailType report = new TableOperations<ScheduledEmailType>(connection).QueryRecordWhere("ID = {0}", reportID);
-                List<DataSourceResponse> dataSourceResponses = new List<DataSourceResponse>();
 
                 if (!DateTime.TryParse(current, out DateTime xdaNow))
                     xdaNow = DateTime.UtcNow;
 
-                emailService.LoadDataSources(report,xdaNow, dataSourceResponses);
+                List<ScheduledDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(report);
+
+                List<DataSourceResponse> dataSourceResponses = definitions
+                    .Select(definition => definition.CreateAndProcess(factory, xdaNow))
+                    .ToList();
+
                 return Ok(dataSourceResponses);
             }
         }
