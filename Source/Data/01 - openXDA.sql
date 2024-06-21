@@ -24,7 +24,7 @@ GO
 CREATE TABLE Setting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NULL UNIQUE,
+    Name VARCHAR(200) NOT NULL UNIQUE,
     Value VARCHAR(MAX) NULL,
     DefaultValue VARCHAR(MAX) NULL
 )
@@ -6374,41 +6374,34 @@ END
 GO
 
 ----- Standard PQ Apps -----
-INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES ('',1)
+INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES ('Configure',1)
+GO
+INSERT INTO PQApplicationCategory (Name, SortOrder) VALUES ('Visualize',3)
+GO
+INSERT INTO PQApplicationCategory (Name, SortOrder) VALUES ('Interval Data',4)
 GO
 
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD Assets', './Assets/index.cshtml','./Images/Tiles/dD_Assets.png',1,1)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('System Center', 'http://localhost:8987','./Images/Tiles/SystemCenter.png',1,0)
 GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD Config', './Config/index.cshtml','./Images/Tiles/dD_Config.png',1,0)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Dashboard', 'http://localhost/PQDashboard','./Images/Tiles/PQDashboard.png',2,1)
 GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD Export', './DataPusher/index.cshtml','./Images/Tiles/dD_Export.png',1,3)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Browser', 'http://localhost/PQBrowser','./Images/Tiles/PQBrowser.png',2,2)
 GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD Reports', './Reports/index.cshtml','./Images/Tiles/dD_Reports.png',1,4)
-GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('dD WorkBench', './Workbench/index.cshtml','./Images/Tiles/dD_Workbench.png',1,2)
-GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('SPCTools', 'SPCTools/index.cshtml','./Images/Tiles/SPCTools.png',1,5)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('SPCTools', 'SPCTools/index.cshtml','./Images/Tiles/SPCTools.png',4,0)
 GO
 -- The Following are separate Apps (only to be added if the Apps are installed) --
 --INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES 
---('Configure',1),
---('Acquire',2),
---('Study',3),
---('Display',4),
---('Report',5),
--- ('Integrate & Share',6)
+--('Collection',2),
+--('Report',5)
 --GO
 
 --INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES 
---('LSCVS', 'https://gridprotectionalliance.org/productsDisturbance.asp#LSCVS','./Images/Tiles/LSCVS.png',5,2),
---('miMD', 'https://gridprotectionalliance.org/productsDisturbance.asp#miMD','./Images/Tiles/miMD.png',1,3),
---('openMIC', 'https://gridprotectionalliance.org/productsDisturbance.asp#MICEE','./Images/Tiles/openMIC.png',2,1),
---('PQDashboard', 'https://gridprotectionalliance.org/productsDisturbance.asp#PQD','./Images/Tiles/PQDashboard.png',4,1),
---('PQDigest', 'https://gridprotectionalliance.org/productsDisturbance.asp#PQDigest','./Images/Tiles/PQDigest.png',4,3)
--- ('SEBrowser', 'https://gridprotectionalliance.org/productsDisturbance.asp#SEBrowser','./Images/Tiles/SEBrowser.png',4,2)
---('SystemCenter', 'https://gridprotectionalliance.org/productsDisturbance.asp#SystemCenter','./Images/Tiles/SystemCenter.png',1,1)
---(Name,URL,Image,CategoryID,SortOrder) VALUES ('TrendAP', 'https://gridprotectionalliance.org/productsDisturbance.asp#TrenDAP','./Images/Tiles/TrendAP.png',3,1)
---('Voltage Regulation Report', 'https://gridprotectionalliance.org/productsDisturbance.asp#VoltReg','./Images/Tiles/VoltageRegReport.png',5,3)
+--('LSCVS', 'http://localhost/LSCVS','./Images/Tiles/LSCVS.png',5,0),
+--('miMD', 'http://localhost:8986','./Images/Tiles/miMD.png',1,2),
+--('openMIC', 'http://localhost:8089','./Images/Tiles/openMIC.png',2,0),
+--('PQDigest', 'http://localhost/PQDigest','./Images/Tiles/PQDigest.png',3,3),
+--('TrenDAP', 'http://localhost/TrenDAP','./Images/Tiles/TrenDAP.png',4,1),
+--('Notification Pages', 'http://localhost/NotificationPages','./Images/Tiles/NotificationPages.png',1,1)
 --GO
 
 ----- PQInvestigator Integration -----
