@@ -1122,6 +1122,8 @@
     <None Include="wwwroot\Layout.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="wwwroot\Images\Tiles\NotificationPages.png" />
+    <Content Include="wwwroot\Images\Tiles\PQBrowser.png" />
     <Content Include="wwwroot\Logout.cshtml" />
     <None Include="wwwroot\OpenSEE.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -4317,9 +4319,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="wwwroot\Images\Tiles\PQDigest.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\Images\Tiles\SEBrowser.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="wwwroot\Images\Tiles\SPCTools.png">
