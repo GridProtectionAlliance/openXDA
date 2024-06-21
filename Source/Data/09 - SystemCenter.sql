@@ -1,7 +1,7 @@
 ﻿---------------- System Center TableSpace -------------
 CREATE TABLE [SystemCenter.Setting](
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NULL,
+    Name VARCHAR(200) NOT NULL UNIQUE,
     Value VARCHAR(MAX) NULL,
     DefaultValue VARCHAR(MAX) NULL
 )
