@@ -33,6 +33,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.IO;
 using GSF.Web.Model;
+using HIDS;
 using Newtonsoft.Json.Linq;
 using openXDA.APIMiddleware;
 using openXDA.Model;
@@ -194,10 +195,11 @@ namespace openXDA.Controllers.WebAPI
         {
             public DateTime StartTime { get; set; }
             public DateTime EndTime { get; set; }
-            public string By { get; set; } //
-            public List<int> IDs { get; set; }//
-            public List<int> Phases { get; set; }//
-            public List<int> Types { get; set; }//
+            public string By { get; set; }
+            public List<int> IDs { get; set; }
+            public List<int> Phases { get; set; }
+            public List<int> Types { get; set; }
+            public List<TimeFilter> TimeFilters { get; set; }
             public int? CurveID { get; set; }
             public bool CurveInside { get; set; }
             public int? DurationMin { get; set; }
@@ -223,6 +225,7 @@ namespace openXDA.Controllers.WebAPI
                 string charFilter = getEventCharacteristicFilter(postData);
                 string byField = postData.By == "Meter" ? "Event.MeterID" : "Event.AssetID";
                 string byFilter = getIDFilter(postData.IDs, byField);
+                string timeFilter = getTimeExclusionFilter(postData);
                 // Phases and types must be selected. Meters or assets must be selected.
                 if (string.IsNullOrEmpty(phaseFilter) ||
                     string.IsNullOrEmpty(typeFilter) ||
@@ -233,7 +236,8 @@ namespace openXDA.Controllers.WebAPI
                     {(string.IsNullOrEmpty(phaseFilter) ? "" : $"AND ({phaseFilter})")}
                     {(string.IsNullOrEmpty(typeFilter) ? "" : $"AND ({typeFilter})")}
                     {(string.IsNullOrEmpty(byFilter) ? "" : $"AND {byFilter}")}
-                    {(string.IsNullOrEmpty(charFilter) ? "" : $"AND {charFilter}")}";
+                    {(string.IsNullOrEmpty(charFilter) ? "" : $"AND {charFilter}")}
+                    {(string.IsNullOrEmpty(timeFilter) ? "" : $"{timeFilter}")}";
 
                 string query =
                     $@"SELECT 
@@ -395,6 +399,28 @@ namespace openXDA.Controllers.WebAPI
             return string.Join(" AND ", characteristics);
         }
 
+        private string getTimeExclusionFilter(EventPost postData)
+        {
+            IEnumerable<int> hours = postData.TimeFilters.Where(filt => filt < TimeFilter.Sunday).Select(filt => (int) filt);
+            // SQL dw is 1-7, starting on sunday
+            IEnumerable<int> days = postData.TimeFilters.Where(filt => filt >= TimeFilter.Sunday && filt < TimeFilter.Week00).Select(filt => filt - TimeFilter.Sunday + 1);
+            // Influx uses the iso week standard, i.e. 1-53
+            IEnumerable<int> weeks = postData.TimeFilters.Where(filt => filt >= TimeFilter.Week00 && filt < TimeFilter.January).Select(filt => filt - TimeFilter.Week00 + 1);
+            IEnumerable<int> months = postData.TimeFilters.Where(filt => filt >= TimeFilter.January).Select(filt => filt - TimeFilter.January + 1);
+
+            string hourFilt = hours.Count() != 0 ? $"DATEPART(hh,Event.StartTime) not in ({string.Join(",", hours)})" : null;
+            string dayFilt = days.Count() != 0 ? $"DATEPART(dw, Event.StartTime) not in ({string.Join(",", days)})" : null;
+            string weekFilt = weeks.Count() != 0 ? $"DATEPART(isowk, Event.StartTime) not in ({string.Join(",", weeks)})" : null;
+            string monthFilt = months.Count() != 0 ? $"DATEPART(mm, Event.StartTime) not in ({string.Join(",", months)})" : null;
+
+            string filters =
+                $"{(string.IsNullOrEmpty(hourFilt) ? "" : $"AND {hourFilt}")}" +
+                $"{(string.IsNullOrEmpty(dayFilt) ? "" : $"AND {dayFilt}")}" +
+                $"{(string.IsNullOrEmpty(weekFilt) ? "" : $"AND {weekFilt}")}" +
+                $"{(string.IsNullOrEmpty(monthFilt) ? "" : $"AND {monthFilt}")}";
+
+            return filters;
+        }
         private string getIDFilter(List<int> ids, string fieldName)
         {
             if (ids is null) return null;
