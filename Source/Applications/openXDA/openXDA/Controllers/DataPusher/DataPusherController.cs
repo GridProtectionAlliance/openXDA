@@ -417,7 +417,7 @@ namespace openXDA.Controllers.Config
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
-            return Ok(engine.TestInstance(instanceId) ? 1 : 0);
+            return Ok(engine.TestInstance(instanceId));
         }
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherController));

@@ -302,7 +302,7 @@ namespace openXDA.DataPusher
 
             return simpleCertificateChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
         }
-        public static async Task<bool> TestConnection(string instance, UserAccount userAccount)
+        public static async Task<(bool, Exception)> TestConnection(string instance, UserAccount userAccount)
         {
             string url = BuildURL(instance, "api/PQMark/Alive");
 
@@ -313,12 +313,12 @@ namespace openXDA.DataPusher
                 {
                     using (HttpResponseMessage response = await HttpClient.SendAsync(request))
                     {
-                        return response.IsSuccessStatusCode;
+                        return (response.IsSuccessStatusCode, null);
                     }
                 }
-                catch //Exception here is a fail state, must be caught reported back so that testers know the failpoint is downstream
+                catch (Exception ex)//Exception here is a fail state, must be caught reported back so that testers know the failpoint is downstream
                 {
-                    return false;
+                    return (false, ex);
                 }
             }
         }

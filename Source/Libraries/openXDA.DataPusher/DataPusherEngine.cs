@@ -873,7 +873,7 @@ namespace openXDA.DataPusher
             }
         }
 
-        public bool TestInstance(int instanceId)
+        public (bool, Exception) TestInstance(int instanceId)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
