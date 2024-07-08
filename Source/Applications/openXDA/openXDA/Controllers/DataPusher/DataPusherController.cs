@@ -427,7 +427,7 @@ namespace openXDA.Controllers.Config
             return Ok(new TestResponse()
             { 
                 Success = result.Item1,
-                ErrorMessage = result.Item2.InnerException?.Message ?? result.Item2.Message
+                ErrorMessage = result.Item2?.InnerException?.Message ?? result.Item2?.Message ?? ""
             });
         }
 
