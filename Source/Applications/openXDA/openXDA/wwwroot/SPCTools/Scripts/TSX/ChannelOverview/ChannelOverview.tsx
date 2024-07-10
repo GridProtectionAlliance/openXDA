@@ -25,12 +25,12 @@ import * as React from 'react';
 import { SPCTools } from '../global';
 import Table from '@gpa-gemstone/react-table';
 import { useSelector, useDispatch } from 'react-redux';
-import { SortChannelOverviews, FilterChannelOverviews, SelectChannelOverviews, SelectChannelOverviewsFilters,SelectChannelOverviewsStatus, SelectChannelOverviewsSortField, SelectChannelOverviewsAscending, FetchChannelOverviews } from '../store/ChannelOverviewSlice';
+import { SortChannelOverviews, FilterChannelOverviews, SelectChannelOverviews, SelectChannelOverviewsFilters, SelectChannelOverviewsStatus, SelectChannelOverviewsSortField, SelectChannelOverviewsAscending, FetchChannelOverviews } from '../store/ChannelOverviewSlice';
 import { ChangeStatusChannelAlarmGroups, SortChannelAlarmGroups, SelectChannelAlarmGroups, SelectChannelAlarmGroupsStatus, SelectChannelAlarmGroupsSortField, SelectChannelAlarmGroupsAscending, FetchChannelAlarmGroups } from '../store/ChannelAlarmGroupSlice';
 import { SearchBar } from '@gpa-gemstone/react-interactive'
 
 
-const ChannelOverview: React.FunctionComponent = (props: {}) => {
+const ChannelOverview: React.FunctionComponent = () => {
     const dispatch = useDispatch();
 
     const channels = useSelector(SelectChannelOverviews);
@@ -73,11 +73,10 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
                 ]}
                 SetFilter={(filter) => dispatch(FilterChannelOverviews(filter))}
                 Direction='left'
-            >
-            </SearchBar>
+            />
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
-                    <div className="col" style={{height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
+                    <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
                         <Table<SPCTools.IChannelOverview>
                             cols={[
                                 { key: 'Meter', label: 'Meter', field: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
@@ -100,7 +99,7 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            selected={(item) => item.ID == channelID }
+                            selected={(item) => item.ID == channelID}
                         />
                     </div>
 
@@ -132,7 +131,7 @@ const ChannelOverview: React.FunctionComponent = (props: {}) => {
                 </div>
 
             </div>
-        </div>      
+        </div>
     );
 }
 

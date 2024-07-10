@@ -28,8 +28,7 @@ import { LoadSelectedPhase, SelectSelectedPhases } from '../store/WizardPhaseOpt
 import { LoadSelectedVoltages, SelectSelectedVoltages } from '../store/WizardVoltageOptionSlice';
 import { SelectAlarmDayGroups } from '../store/AlarmDayGroupSlice';
 import { SelectAlarmDays } from '../store/AlarmDaySlice';
-import { FetchParsedSetPoint } from '../store/SetPointParseSlice';
-import { Reset as ResetParsedSetpoint, UpdateAlarmValues as UpdateAlarmValuesParsedSetpoint, UpdateAlarmValueContent as UpdateAlarmValueContentParsedSetpoint } from '../store/SetPointParseSlice';
+import { Reset as ResetParsedSetpoint, UpdateAlarmValues as UpdateAlarmValuesParsedSetpoint, UpdateAlarmValueContent as UpdateAlarmValueContentParsedSetpoint, FetchParsedSetPoint } from '../store/SetpointParseSlice';
 
 declare var homePath: string;
 declare var apiHomePath: string;
