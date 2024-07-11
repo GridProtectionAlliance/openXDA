@@ -37,7 +37,7 @@ import MeterReducer from './MeterSlice';
 import MeterAlarmGroupReducer from './MeterAlarmGroupSlice';
 import WizardAffectedChannelReducer from './WizardAffectedChannelSlice';
 import SeverityReducer from './SeveritySlice';
-import SetPointParseReducer from './SetPointParseSlice';
+import SetPointParseReducer from './SetpointParseSlice';
 import { SPCTools } from '../global';
 
 export const AlarmGroupViewSlice = new GenericSlice<SPCTools.IAlarmGroupView>("AlarmGroupView", `${apiHomePath}api/SPCTools/AlarmGroupView/SearchableList`, "Name", true);

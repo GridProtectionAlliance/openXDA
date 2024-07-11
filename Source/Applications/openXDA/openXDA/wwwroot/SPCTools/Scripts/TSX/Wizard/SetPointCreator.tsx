@@ -30,7 +30,7 @@ import { selectAlarmGroup, updateFactor, removeFactor, SelectAlarmFactors, Selec
 import { DynamicTimeRange } from './DynamicTimeRange';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
 import { SelectAlarmDayByID } from '../store/AlarmDaySlice';
-import { SelectSetPointParseStatus, SelectSetPointParseResult } from '../store/SetPointParseSlice';
+import { SelectSetPointParseStatus, SelectSetPointParseResult } from '../store/SetpointParseSlice';
 import { TrashCan, Plus } from '@gpa-gemstone/gpa-symbols';
 import { Select, TextArea } from '@gpa-gemstone/react-forms';
 import { LoadingIcon } from '@gpa-gemstone/react-interactive';

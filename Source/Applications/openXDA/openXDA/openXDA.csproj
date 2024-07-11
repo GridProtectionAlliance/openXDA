@@ -4525,7 +4525,7 @@
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\AlarmGroup\AlarmGroup.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\MeterOverview\MeterOverview.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\NavBar.tsx" />
-    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\SpcTools.tsx" />
+    <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\SPCTools.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\GeneralSettings.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\WizardHome.tsx" />
     <TypeScriptCompile Include="wwwroot\SPCTools\Scripts\TSX\Wizard\DynamicWizzardSlice.tsx" />
