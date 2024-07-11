@@ -57,7 +57,7 @@ namespace openXDA.Controllers.Config
         }
 
         [Route("Recieve/XML"), HttpPost]
-        public IHttpActionResult RecieveXML( CancellationToken cancellationToken)
+        public IHttpActionResult RecieveXML(CancellationToken cancellationToken)
         {
             if (User.IsInRole("DataPusher"))
             {
@@ -84,7 +84,7 @@ namespace openXDA.Controllers.Config
         }
 
         [Route("Send/XML/{instanceId:int}/{meterId:int}"), HttpGet]
-        public IHttpActionResult SendMeterConfigurationForInstance( int instanceId, int meterId, CancellationToken cancellationToken)
+        public IHttpActionResult SendMeterConfigurationForInstance(int instanceId, int meterId, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -308,7 +308,7 @@ namespace openXDA.Controllers.Config
                             fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, ToDateTime2(connection, fileGroupPost.FileGroup.DataStartTime), ToDateTime2(connection, fileGroupPost.FileGroup.DataEndTime));
                         }
 
-                        foreach(DataFile file in fileGroupPost.DataFiles)
+                        foreach (DataFile file in fileGroupPost.DataFiles)
                         {
                             DataFile dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
                             FileBlob blob = fileGroupPost.FileBlobs.Find(x => x.DataFileID == file.ID);
@@ -412,12 +412,23 @@ namespace openXDA.Controllers.Config
             }, cancellationToken);
         }
 
+        public class TestResponse 
+        {
+            public bool Success;
+            public string ErrorMessage;
+        }
+
         [Route("TestConnection/{instanceId:int}"), HttpGet]
         public IHttpActionResult TestRemoteInstanceConnection(int instanceId)
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
-            return Ok(engine.TestInstance(instanceId) ? 1 : 0);
+            (bool, Exception) result = engine.TestInstance(instanceId);
+            return Ok(new TestResponse()
+            { 
+                Success = result.Item1,
+                ErrorMessage = result.Item2?.InnerException?.Message ?? result.Item2?.Message ?? ""
+            });
         }
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherController));
