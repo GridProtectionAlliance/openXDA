@@ -713,17 +713,20 @@
   <Component Id="wwwroot_Images_Tiles_miMD_png">
     <File Id="wwwroot_Images_Tiles_miMD.png" Name="miMD.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\miMD.png" />
   </Component>
+  <Component Id="wwwroot_Images_Tiles_NotificationPages_png">
+    <File Id="wwwroot_Images_Tiles_NotificationPages.png" Name="NotificationPages.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\NotificationPages.png" />
+  </Component>
   <Component Id="wwwroot_Images_Tiles_openMIC_png">
     <File Id="wwwroot_Images_Tiles_openMIC.png" Name="openMIC.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\openMIC.png" />
+  </Component>
+  <Component Id="wwwroot_Images_Tiles_PQBrowser_png">
+    <File Id="wwwroot_Images_Tiles_PQBrowser.png" Name="PQBrowser.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\PQBrowser.png" />
   </Component>
   <Component Id="wwwroot_Images_Tiles_PQDashboard_png">
     <File Id="wwwroot_Images_Tiles_PQDashboard.png" Name="PQDashboard.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\PQDashboard.png" />
   </Component>
   <Component Id="wwwroot_Images_Tiles_PQDigest_png">
     <File Id="wwwroot_Images_Tiles_PQDigest.png" Name="PQDigest.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\PQDigest.png" />
-  </Component>
-  <Component Id="wwwroot_Images_Tiles_SEBrowser_png">
-    <File Id="wwwroot_Images_Tiles_SEBrowser.png" Name="SEBrowser.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\SEBrowser.png" />
   </Component>
   <Component Id="wwwroot_Images_Tiles_SPCTools_png">
     <File Id="wwwroot_Images_Tiles_SPCTools.png" Name="SPCTools.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Tiles\SPCTools.png" />
