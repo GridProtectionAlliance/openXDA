@@ -94,7 +94,7 @@ export const SelectChannelOverviewsFilters = (state: Redux.StoreState) => state.
 // #region [ Async Functions ]
 
 function GetChannelOverview(filters, sort, asc): JQuery.jqXHR<string> {
-    let expandedFilter = [
+    const expandedFilter = [
         {
             FieldName: '(SELECT COUNT(Alarm.ID) FROM Alarm LEFT JOIN Series ON Alarm.SeriesID = Series.ID WHERE Series.channelID = FullTbl.ID)',
             SearchText: '0',

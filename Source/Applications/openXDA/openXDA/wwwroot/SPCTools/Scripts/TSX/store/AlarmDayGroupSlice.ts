@@ -51,8 +51,8 @@ export const AlarmDayGroupSlice = createSlice({
         builder.addCase(FetchAlarmDayGroup.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            let tmp = action.payload;
-            let grp = _.groupBy(tmp, item => item.ID as number);
+            const tmp = action.payload;
+            const grp = _.groupBy(tmp, item => item.ID as number);
             state.Data = Object.keys(grp).map(id => {
                 return {
                     ID: parseInt(id),

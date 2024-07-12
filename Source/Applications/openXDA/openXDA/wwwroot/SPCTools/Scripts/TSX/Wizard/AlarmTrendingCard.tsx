@@ -93,28 +93,28 @@ export const AlarmTrendingCard = (props: IProps) => {
         if (alarmValueResults.length == 0 || data.length == 0)
             setThreshold([]);
 
-        let T0 = moment(props.Tstart).startOf('day').valueOf();
+        const T0 = moment(props.Tstart).startOf('day').valueOf();
         // Start By attempting to grab a single threshhold for any Day
-        let regularday = CreateDailyThreshold(T0, undefined);
+        const regularday = CreateDailyThreshold(T0, undefined);
 
         //if (moment(props.Tstart).day() == 0 || moment(props.Tstart).day() == 6) {
-        let weekday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "WeekDay") == undefined ? -1 : alarmDays.find(item => item.Name == "WeekDay").ID));
-        let weekend = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "WeekEnd") == undefined ? -1 : alarmDays.find(item => item.Name == "WeekEnd").ID));
-        let sunday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Sunday") == undefined ? -1 : alarmDays.find(item => item.Name == "Sunday").ID));
-        let monday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Monday") == undefined ? -1 : alarmDays.find(item => item.Name == "Monday").ID));
-        let tuesday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Tuesday") == undefined ? -1 : alarmDays.find(item => item.Name == "Tuesday").ID));
-        let wednesday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Wednesday") == undefined ? -1 : alarmDays.find(item => item.Name == "Wednesday").ID));
-        let thursday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Thursday") == undefined ? -1 : alarmDays.find(item => item.Name == "Thursday").ID));
-        let friday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Friday") == undefined ? -1 : alarmDays.find(item => item.Name == "Friday").ID));
-        let saturday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Saturday") == undefined ? -1 : alarmDays.find(item => item.Name == "Saturday").ID));
+        const weekday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "WeekDay") == undefined ? -1 : alarmDays.find(item => item.Name == "WeekDay").ID));
+        const weekend = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "WeekEnd") == undefined ? -1 : alarmDays.find(item => item.Name == "WeekEnd").ID));
+        const sunday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Sunday") == undefined ? -1 : alarmDays.find(item => item.Name == "Sunday").ID));
+        const monday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Monday") == undefined ? -1 : alarmDays.find(item => item.Name == "Monday").ID));
+        const tuesday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Tuesday") == undefined ? -1 : alarmDays.find(item => item.Name == "Tuesday").ID));
+        const wednesday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Wednesday") == undefined ? -1 : alarmDays.find(item => item.Name == "Wednesday").ID));
+        const thursday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Thursday") == undefined ? -1 : alarmDays.find(item => item.Name == "Thursday").ID));
+        const friday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Friday") == undefined ? -1 : alarmDays.find(item => item.Name == "Friday").ID));
+        const saturday = CreateDailyThreshold(T0, (alarmDays.find(item => item.Name == "Saturday") == undefined ? -1 : alarmDays.find(item => item.Name == "Saturday").ID));
 
         //  Form a full week
-        let weeklyThreshold = [];
+        const weeklyThreshold = [];
         let i = 0;
         let Toff = 0;
         for (i = 0; i < 7; i = i + 1)
         {
-            let d = (moment(props.Tstart).day() + i)%7
+            const d = (moment(props.Tstart).day() + i)%7
             if (d == 0) {
                 if (sunday.some(pt => !isNaN(pt[1])))
                     weeklyThreshold.push(...sunday.map(pt => [pt[0] + Toff, pt[1]]));
@@ -175,9 +175,9 @@ export const AlarmTrendingCard = (props: IProps) => {
         }
 
         // For now try to do Regular Days...
-        let nWeeks = Math.ceil((moment(props.Tend).valueOf() - moment(props.Tstart).valueOf()) / 604800000.0);
+        const nWeeks = Math.ceil((moment(props.Tend).valueOf() - moment(props.Tstart).valueOf()) / 604800000.0);
 
-        let fullResult = [];
+        const fullResult = [];
         
         for (i = 0; i < nWeeks; i = i + 1) {
             fullResult.push(...weeklyThreshold.map(item => [item[0] + i * 604800000, item[1]]))
@@ -209,7 +209,7 @@ export const AlarmTrendingCard = (props: IProps) => {
     function CreateDailyThreshold(Tday, alarmDayId): number[][] {
 
         /* alarmValues are the sections of the alarm that apply on this day. */
-        let alarmValues = alarmValueResults.filter(item => (item.AlarmDayID == alarmDayId) || (alarmDayId == undefined && item.AlarmDayID == undefined));
+        const alarmValues = alarmValueResults.filter(item => (item.AlarmDayID == alarmDayId) || (alarmDayId == undefined && item.AlarmDayID == undefined));
 
         /* If no alarm applies on this day we return NaN */
         if (alarmValues.length == 0)
@@ -228,17 +228,17 @@ export const AlarmTrendingCard = (props: IProps) => {
             channelIndex = 0;
 
 
-        let result = [];
+        const result = [];
         let i = 0;
         for (i = 0; i < (alarmValues.length - 1); i = i + 1) {
             /* for each little section we compute the actual number based on the channel to be used */
-            let lim = alarmValues[i].Value[channelIndex];
+            const lim = alarmValues[i].Value[channelIndex];
 
             /* an add 2 points at the beginning and beinning of the next section (end of this one) */
             result.push([Tstart + alarmValues[i].StartHour * 3600000, (lim == undefined ? NaN : lim.Value)]);
             result.push([Tstart + alarmValues[i + 1].StartHour * 3600000, (lim == undefined ? NaN : lim.Value)]);
         }
-        let lim = alarmValues[alarmValues.length - 1].Value[channelIndex];
+        const lim = alarmValues[alarmValues.length - 1].Value[channelIndex];
         result.push([Tstart + alarmValues[alarmValues.length - 1].StartHour * 3600000, (lim == undefined ? NaN : lim.Value)]);
         result.push([Tstart + 24 * 3600000, (lim == undefined ? NaN : lim.Value)]);
 
@@ -246,7 +246,7 @@ export const AlarmTrendingCard = (props: IProps) => {
     }
 
     function getData(channelId: number): JQuery.jqXHR<Array<number[]>> {
-        let handle = $.ajax({
+        const handle = $.ajax({
             type: "POST",
             url: `${apiHomePath}api/SPCTools/Data/HistoryData/${channelId}/${0}?start=${props.Tstart}&end=${props.Tend}`,
             contentType: "application/json; charset=utf-8",
@@ -270,8 +270,8 @@ export const AlarmTrendingCard = (props: IProps) => {
         return handle;
     }
 
-    let Tstart: number = (data.length > 0? (data[0].data.length > 0? data[0].data[0][0] : 0) : 0);
-    let Tend: number = (data.length > 0 ? (data[0].data.length > 0? data[0].data[data[0].data.length - 1][0] : 1500) : 1500);
+    const Tstart: number = (data.length > 0? (data[0].data.length > 0? data[0].data[0][0] : 0) : 0);
+    const Tend: number = (data.length > 0 ? (data[0].data.length > 0? data[0].data[data[0].data.length - 1][0] : 1500) : 1500);
 
 
     return (

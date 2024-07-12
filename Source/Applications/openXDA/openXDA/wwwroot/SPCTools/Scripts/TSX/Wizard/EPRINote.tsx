@@ -33,14 +33,12 @@ import { SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSeverities } from '../store/SeveritySlice';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
 
-declare var homePath: string;
-declare var apiHomePath: string;
+declare let homePath: string;
+declare let apiHomePath: string;
 
-declare var userIsAdmin: boolean;
+declare let userIsAdmin: boolean;
 
-interface IProps { }
-
-const EPRINote = (props: IProps) => {
+const EPRINote = () => {
 
     return (
         <div style={{ width: '100%', height: '100%' }}>

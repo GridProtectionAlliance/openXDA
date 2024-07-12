@@ -29,9 +29,9 @@ import { SelectSeriesTypes } from './SeriesTypeSlice';
 
 // #region [ Thunks ]
 export const FetchAvailablePhases = createAsyncThunk('WizardPhaseOption/FetchChannelOverview', async ( _, { getState }) => {
-    let meterIDs = selectSelectedMeter(getState() as Redux.StoreState).map(m => m.ID);
-    let measurmentTypeID = selectMeasurmentTypeID(getState() as Redux.StoreState);
-    let seriesTypeID = SelectSeriesTypes(getState() as Redux.StoreState).map(item => item.ID)
+    const meterIDs = selectSelectedMeter(getState() as Redux.StoreState).map(m => m.ID);
+    const measurmentTypeID = selectMeasurmentTypeID(getState() as Redux.StoreState);
+    const seriesTypeID = SelectSeriesTypes(getState() as Redux.StoreState).map(item => item.ID)
     return await getAvailablePhases(meterIDs, measurmentTypeID, seriesTypeID);
 });
 
@@ -69,7 +69,7 @@ export const WizardPhaseOptionSlice = createSlice({
         builder.addCase(FetchAvailablePhases.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            let oldState = state.Data.filter((p, i) => state.Selected[i]).map(ch => ch.ID);
+            const oldState = state.Data.filter((p, i) => state.Selected[i]).map(ch => ch.ID);
             state.Data = JSON.parse(action.payload) as openXDA.IPhase[];
             state.Selected = state.Data.map(ph => oldState.findIndex(item => item == ph.ID) > -1)
         });
@@ -122,7 +122,7 @@ function getAvailablePhases(meterIDs: number[], measurementTypeID: number, serie
     sqlFilter = sqlFilter + `Channel.MeasurementCharacteristicID = (SELECT ChannelGroupType.MeasurementCharacteristicID FROM ChannelGroupType WHERE ID = ${measurementTypeID}) AND `
     sqlFilter = sqlFilter + `(SELECT COUNT(Series.ID) FROM SERIES WHERE Series.ChannelID = Channel.ID AND Series.SeriesTypeID IN (${(seriesTypeIDs.length > 0?seriesTypeIDs.join(',') : 0)})) > 0)`
 
-    let filter = [{
+    const filter = [{
         FieldName: "ID",
         SearchText: `(${sqlFilter})`,
         Operator: "IN",

@@ -1,0 +1,41 @@
+{
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": [ "@typescript-eslint" ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    "rules": {
+      "@typescript-eslint/no-namespace": "off",
+      "@typescript-eslint/ban-types": "warn",
+      "@typescript-eslint/no-explicit-any": "warn", //This needs to be removed after all warnings are clear..
+      "@typescript-eslint/no-unused-vars": "warn", //This needs to be removed after all warnings are clear..
+      "@typescript-eslint/no-this-alias": "warn", //This needs to be removed after all warnings are clear..
+      "no-empty-pattern": "warn", //This needs to be removed after all warnings are clear..
+      "no-async-promise-executor": "warn", //This needs to be removed after all warnings are clear..
+      "no-fallthrough": "warn", //This needs to be removed after all warnings are clear..
+      "no-prototype-builtins": "warn", //This needs to be removed after all warnings are clear..
+      "no-useless-escape": "warn" //This needs to be removed after all warnings are clear..
+  
+     /* "@typescript-eslint/strict-boolean-expressions": [
+        "warn", //This needs to switch back to error after warnings have been cleaned up..
+        {
+          "allowString": false,
+          "allowNumber": false,
+          "allowNullableObject": false,
+          "allowNullableBoolean": false,
+          "allowNullableString": false,
+          "allowNullableNumber": false,
+          "allowNullableEnum": false,
+          "allowAny": false,
+          "allowRuleToRunWithoutStrictNullChecksIKnowWhatIAmDoing": false
+        }
+      ]*/
+    },
+    "ignorePatterns": [ "package/**/*", "__tests__", "lib", "**/*.d.ts" ],
+    "parserOptions": {
+      "project": [ "./tsconfig.json" ]
+    }
+  }

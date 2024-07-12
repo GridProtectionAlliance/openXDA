@@ -30,9 +30,9 @@ import { SelectAlarmDayGroups } from '../store/AlarmDayGroupSlice';
 import { SelectAlarmDays } from '../store/AlarmDaySlice';
 import { Reset as ResetParsedSetpoint, UpdateAlarmValues as UpdateAlarmValuesParsedSetpoint, UpdateAlarmValueContent as UpdateAlarmValueContentParsedSetpoint, FetchParsedSetPoint } from '../store/SetpointParseSlice';
 
-declare var homePath: string;
-declare var apiHomePath: string;
-declare var userIsAdmin: boolean;
+declare let homePath: string;
+declare let apiHomePath: string;
+declare let userIsAdmin: boolean;
 
 // Thunk For Reseting Wizrd
 export const ResetWizzard = createAsyncThunk('DynamicWizzard/ResetWizzard', (arg: DynamicWizzard.WizardType, { dispatch, getState }) => {
@@ -100,7 +100,7 @@ export const DynamicWizzardSlice = createSlice({
     reducers: {
         reset: (state, action: PayloadAction<DynamicWizzard.WizardType>) => {
 
-            let dt = new Date();
+            const dt = new Date();
 
             state.Step = 'general'
             state.AlarmGroup = { AlarmTypeID: 1, SeverityID: 1, ID: -1, Name: "" }
@@ -186,7 +186,7 @@ export const DynamicWizzardSlice = createSlice({
             state.AlarmValues.push(...action.payload.alarmValues);
         },
         updateAlarmValueContent: (state, action: PayloadAction<DynamicWizzard.IAlarmvalue>) => {
-            let index = state.AlarmValues.findIndex(item => item.StartHour == action.payload.StartHour && item.AlarmDayID == action.payload.AlarmDayID);
+            const index = state.AlarmValues.findIndex(item => item.StartHour == action.payload.StartHour && item.AlarmDayID == action.payload.AlarmDayID);
             if (index == -1)
                 state.AlarmValues.push(action.payload);
             else           
@@ -211,7 +211,7 @@ export const DynamicWizzardSlice = createSlice({
 
          });
          builder.addCase(LoadWizard.fulfilled, (state, action) => {
-             let dt = new Date();
+             const dt = new Date();
              state.Status = 'idle';
              state.Error = null;
              state.Step = 'general'
@@ -224,7 +224,7 @@ export const DynamicWizzardSlice = createSlice({
              state.StatisticsChannelIDs = []
             
 
-             let loaded = JSON.parse(action.payload);
+             const loaded = JSON.parse(action.payload);
              state.AlarmGroup = loaded.AlarmGroup as SPCTools.IAlarmGroup;
              state.SelectedMeter = loaded.SelectedMeter as openXDA.IMeter[];
              state.SeriesTypeID = loaded.SeriesTypeID;
@@ -284,7 +284,7 @@ export const SelectStatisticsChannels = createSelector(SelectAffectedChannels, (
 export const SelectAlarmFactors = (state: Redux.StoreState) => state.DynamicWizzard.AlarmFactors;
 
 export const SelectSetPointAlarmDays = createSelector(selectAlarmDayGroupID, SelectAlarmDayGroups, SelectAlarmDays, (id, alarmDayGroups, alarmDays) => {
-    let grp = alarmDayGroups.find(item => item.ID == id);
+    const grp = alarmDayGroups.find(item => item.ID == id);
     return alarmDays.filter(item => grp.AlarmDayIDs.findIndex(i => i == item.ID) > -1);
 });
 
@@ -311,12 +311,12 @@ export const selectErrors = createSelector(
     (state: Redux.StoreState) => (state.DynamicWizzard.AlarmFactors),
     (state: Redux.StoreState) => state.SetPointParse.AlarmValueResults ,
     (step, channelCount, name, meterCount, phaseCount, voltageCount, statisticsRange, statisticsChannelCount, alarmFactors, setPointResults) => {
-        let result = [] as StaticWizzard.IRequirement[];
+        const result = [] as StaticWizzard.IRequirement[];
 
-        let setpointsValid = !setPointResults.some(item => item.Value.length == 0 || item.Value.some(pt => isNaN(pt.Value)));
-        let setPointScalar = !setPointResults.some(item => !item.IsScalar);
-        let validStartDate = !isNaN(new Date(statisticsRange.start).getTime()) && statisticsRange.start != null;
-        let validEndDate = !isNaN(new Date(statisticsRange.end).getTime()) && statisticsRange.end != null &&
+        const setpointsValid = !setPointResults.some(item => item.Value.length == 0 || item.Value.some(pt => isNaN(pt.Value)));
+        const setPointScalar = !setPointResults.some(item => !item.IsScalar);
+        const validStartDate = !isNaN(new Date(statisticsRange.start).getTime()) && statisticsRange.start != null;
+        const validEndDate = !isNaN(new Date(statisticsRange.end).getTime()) && statisticsRange.end != null &&
             (new Date(statisticsRange.end) > new Date(statisticsRange.start) || !validStartDate)
         if (step == 'general') {
             result.push({ text: "A Name is required", complete: (name ? 'complete' : 'required') });
@@ -352,7 +352,7 @@ export const selectErrors = createSelector(
 // #region [ Async Functions ]
 
 function GetSave(state: Redux.StoreState): JQuery.jqXHR<string> {
-    let request = {
+    const request = {
         AlarmGroup: selectAlarmGroup(state),
         AlarmValues: SelectAllAlarmValues(state),
         AlarmFactors: SelectAlarmFactors(state),

@@ -32,7 +32,7 @@ import { SelectWizardType } from '../Wizard/DynamicWizzardSlice';
 
 interface IDocumentation { Name: string, Description: string, Example: string }
 
-export const FunctionHelp = (props: {}) => {
+export const FunctionHelp = () => {
     const type = useSelector(SelectWizardType);
 
     const codeStyle = {
@@ -61,8 +61,7 @@ export const FunctionHelp = (props: {}) => {
                         data={(type == 'dynamic' ? [...staticData, ...dynamicData] : staticData)}
                         sortKey={''}
                         ascending={true}
-                        onSort={() => { }}
-                        onClick={(d) => { }}
+                        onSort={() => { /* do nothing */}}
                         theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                         tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 500, width: '100%' }}
                         rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}

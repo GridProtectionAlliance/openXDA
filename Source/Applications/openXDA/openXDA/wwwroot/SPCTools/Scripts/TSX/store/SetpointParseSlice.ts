@@ -35,11 +35,11 @@ export const FetchParsedSetPoint = createAsyncThunk('SetPointParse/FetchParsedSe
     if (fetchHandle != null && fetchHandle.abort != null)
         fetchHandle.abort();
 
-    let dataFilter = SelectStatisticsFilter(getState() as Redux.StoreState);
-    let timeRange = SelectStatisticsrange(getState() as Redux.StoreState);
-    let channelIDs = SelectStatisticsChannels(getState() as Redux.StoreState).map(ch => ch.ID);
+    const dataFilter = SelectStatisticsFilter(getState() as Redux.StoreState);
+    const timeRange = SelectStatisticsrange(getState() as Redux.StoreState);
+    const channelIDs = SelectStatisticsChannels(getState() as Redux.StoreState).map(ch => ch.ID);
 
-    let token = SelectActiveAlarmValue(getState() as Redux.StoreState, param.AlarmDayID, param.StartHour);
+    const token = SelectActiveAlarmValue(getState() as Redux.StoreState, param.AlarmDayID, param.StartHour);
 
     if (token == undefined)
         return Promise.resolve({ content: { Valid: false, IsScalar: false, Message: "An unidentified error occured when parsing the setpoint", Value: [] }, channelIDs: channelIDs } as ParsedSetpointParam);
@@ -48,7 +48,7 @@ export const FetchParsedSetPoint = createAsyncThunk('SetPointParse/FetchParsedSe
     }
     const rvht = await GetRequestVerificationHeaderToken();
     fetchHandle = GetParsedSetPoint(token, dataFilter, timeRange.start, timeRange.end, channelIDs, rvht);
-    let handle = await fetchHandle;
+    const handle = await fetchHandle;
    
     return { content: handle, channelIDs: channelIDs };
 });
@@ -72,7 +72,7 @@ export const SetpointParseSlice = createSlice({
             state.AlarmValueResults = [];
         },
         UpdateAlarmValueContent: (state, action: PayloadAction<DynamicWizzard.IAlarmvalue >) => {
-            let index = state.AlarmValueResults.findIndex(item => item.StartHour == action.payload.StartHour && item.AlarmDayID == action.payload.AlarmDayID);
+            const index = state.AlarmValueResults.findIndex(item => item.StartHour == action.payload.StartHour && item.AlarmDayID == action.payload.AlarmDayID);
             if (index == -1)
                 state.AlarmValueResults.push({ AlarmDayID: action.payload.AlarmDayID, StartHour: action.payload.StartHour, Value: [], IsScalar: true });
         },
@@ -88,7 +88,7 @@ export const SetpointParseSlice = createSlice({
 
         builder.addCase(FetchParsedSetPoint.fulfilled, (state, action) => {
 
-            let index = state.AlarmValueResults.findIndex(item => item.StartHour == action.meta.arg.StartHour && item.AlarmDayID == action.meta.arg.AlarmDayID);
+            const index = state.AlarmValueResults.findIndex(item => item.StartHour == action.meta.arg.StartHour && item.AlarmDayID == action.meta.arg.AlarmDayID);
             if (index > -1)
                 state.AlarmValueResults[index] = {
                     AlarmDayID: action.meta.arg.AlarmDayID,
@@ -144,7 +144,7 @@ async function GetRequestVerificationHeaderToken(): Promise<string> {
 
 function GetParsedSetPoint(token: DynamicWizzard.IAlarmvalue, dataFilter: SPCTools.IDataFilter, start: string, end: string, channelIDs: number[], rvht: string): JQuery.jqXHR<DynamicWizzard.ITokenParseResponse> {
 
-    let request = {
+    const request = {
         TokeValue: token,
         StatisticsFilter: dataFilter,
         StatisticsStart: start,

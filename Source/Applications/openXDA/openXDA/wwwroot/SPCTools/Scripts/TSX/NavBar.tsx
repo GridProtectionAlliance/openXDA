@@ -25,8 +25,8 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { SPCTools } from './global';
 
-declare var homePath: string;
-declare var userIsAdmin: boolean;
+declare let homePath: string;
+declare let userIsAdmin: boolean;
 
 interface IProps { page: SPCTools.Page, pageSetter: (page: SPCTools.Page) => void }
 

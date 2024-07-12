@@ -31,19 +31,18 @@ import { SelectAffectedChannelSortField, SelectAffectedChannelAscending, SelectA
 import { SelectTable } from '@gpa-gemstone/react-table';
 import moment from 'moment';
 
-declare var homePath: string;
-declare var apiHomePath: string;
+declare let homePath: string;
+declare let apiHomePath: string;
 
-declare var userIsAdmin: boolean;
+declare let userIsAdmin: boolean;
 
-interface IProps { }
 
 //Todo
 // # Removed Meter table for now due to EPRI Time contraints
 
 type Duration = ('Custom' | '1 Day' | '7 Days' | '30 Days' | '90 Days' | '180 Days' | '365 Days')
 
-const SelectStatisticsData = (props: IProps) => {
+const SelectStatisticsData = () => {
     const dispatch = useDispatch();
 
     const dateRange = useSelector(SelectStatisticsrange)

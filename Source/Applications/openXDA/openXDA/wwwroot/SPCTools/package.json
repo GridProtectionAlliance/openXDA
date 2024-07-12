@@ -6,15 +6,20 @@
   "scripts": {
     "builddebug": "set NODE_OPTIONS=--openssl-legacy-provider && webpack --mode=development",
     "buildrelease": "set NODE_OPTIONS=--openssl-legacy-provider && npm prune && npm ci && webpack --mode=production",
-    "build": "set NODE_OPTIONS=--openssl-legacy-provider && npm prune && npm ci && webpack --mode=development"
+    "build": "set NODE_OPTIONS=--openssl-legacy-provider && npm prune && npm ci && webpack --mode=development",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint-fix": "eslint . --ext .ts,.tsx --fix"
   },
   "author": "GridProtectionAlliance",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^13.13.28",
     "@types/webpack": "^4.41.23",
+    "@typescript-eslint/eslint-plugin": "^5.60.0",
+    "@typescript-eslint/parser": "^5.60.0",
     "css-loader": "^3.2.0",
     "css-modules-typescript-loader": "4.0.0",
+    "eslint": "^8.43.0",
     "html-webpack-plugin": "^5.5.0",
     "mini-css-extract-plugin": "0.11.1",
     "path": "0.12.7",

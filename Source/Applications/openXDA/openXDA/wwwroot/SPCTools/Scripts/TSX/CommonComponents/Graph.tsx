@@ -117,7 +117,7 @@ export default class TrendingCard extends React.Component<IProps, IState>{
         else if (this.state.hover !== prevState.hover) {
             this.setState({
                 points: this.props.data.filter(series => series.includeLegend).map((series, index) => {
-                    let i = this.reduceIndex(series.data, series.data.length - 1, 0, this.state.hover)
+                    const i = this.reduceIndex(series.data, series.data.length - 1, 0, this.state.hover)
                     return { t: series.data[i][0], y: series.data[i][1], index: index }
                 })
             })
@@ -132,9 +132,9 @@ export default class TrendingCard extends React.Component<IProps, IState>{
         d3.select("#trendWindow-" + this.props.keyString + ">svg").remove()
 
         //add new Plot
-        var container = d3.select("#trendWindow-" + this.props.keyString);
+        const container = d3.select("#trendWindow-" + this.props.keyString);
 
-        var svg = container.append("svg")
+        const svg = container.append("svg")
             .attr("width", '100%')
             .attr("height", this.props.height).append("g")
             .attr("transform", "translate(40,10)");
@@ -142,8 +142,8 @@ export default class TrendingCard extends React.Component<IProps, IState>{
         if (this.props.data.length == 0)
             return;
         //Then Create Axis
-        let ymax = Math.max(...this.props.data.map(item => Math.max(...item.data.map(p => p[1]).filter(p => !isNaN(p) && isFinite(p)))).filter(p => !isNaN(p)));;
-        let ymin = Math.min(...this.props.data.map(item => Math.min(...item.data.map(p => p[1]).filter(p => !isNaN(p) && isFinite(p)))).filter(p => !isNaN(p)));;
+        const ymax = Math.max(...this.props.data.map(item => Math.max(...item.data.map(p => p[1]).filter(p => !isNaN(p) && isFinite(p)))).filter(p => !isNaN(p)));
+        const ymin = Math.min(...this.props.data.map(item => Math.min(...item.data.map(p => p[1]).filter(p => !isNaN(p) && isFinite(p)))).filter(p => !isNaN(p)));
 
         this.yscale = d3.scaleLinear()
             .domain([ymin, ymax])
@@ -219,10 +219,10 @@ export default class TrendingCard extends React.Component<IProps, IState>{
         this.paths = svg.append("g").attr("id", "path-" + this.props.keyString).attr("clip-path", "url(#clip-" + this.props.keyString + ")");
         this.markers = svg.append("g").attr("id", "marker-" + this.props.keyString).attr("clip-path", "url(#Markerclip-" + this.props.keyString + ")")
 
-        let ctrl = this;
+        const ctrl = this;
 
         this.props.data.forEach(row => {
-            let ln = this.paths.append("path").datum(row.data.map(p => { return { x: p[0], y: p[1] } })).attr("fill", "none")
+            const ln = this.paths.append("path").datum(row.data.map(p => { return { x: p[0], y: p[1] } })).attr("fill", "none")
                 .attr("stroke", row.color)
                 .attr("stroke-width", 2.0)
                 .attr("opacity", (row.opacity == undefined ? 1 : row.opacity))
@@ -230,8 +230,8 @@ export default class TrendingCard extends React.Component<IProps, IState>{
                     .x(function (d) { return ctrl.xscale(d.x) })
                     .y(function (d) { return ctrl.yscale(d.y) })
                     .defined(function (d) {
-                        let tx = !isNaN(parseFloat(ctrl.xscale(d.x)));
-                        let ty = !isNaN(parseFloat(ctrl.yscale(d.y)));
+                        const tx = !isNaN(parseFloat(ctrl.xscale(d.x)));
+                        const ty = !isNaN(parseFloat(ctrl.yscale(d.y)));
                         return tx && ty;
                     }))
 
@@ -291,7 +291,7 @@ export default class TrendingCard extends React.Component<IProps, IState>{
         this.xAxis.transition().duration(1000).call(d3.axisBottom(this.xscale).tickFormat((d, i) => this.formatTimeTick(d)));
 
         //Set Colors, update Visibility and Points
-        let ctrl = this;
+        const ctrl = this;
         this.paths.selectAll('path')
             .transition()
             .duration(1000)
@@ -303,8 +303,8 @@ export default class TrendingCard extends React.Component<IProps, IState>{
                     return ctrl.yscale(d.y)
                 })
                 .defined(function (d) {
-                    let tx = !isNaN(parseFloat(ctrl.xscale(d.x)));
-                    let ty = !isNaN(parseFloat(ctrl.yscale(d.y)));
+                    const tx = !isNaN(parseFloat(ctrl.xscale(d.x)));
+                    const ty = !isNaN(parseFloat(ctrl.yscale(d.y)));
                     return tx && ty;
                 })
             );
@@ -321,7 +321,7 @@ export default class TrendingCard extends React.Component<IProps, IState>{
     }
 
     updateMouse() {
-        let ctrl = this;
+        const ctrl = this;
         this.mouseMarker.selectAll("circle").style('opacity', 0.0);
 
         this.mouseMarker.selectAll("circle").data(this.state.points).enter().append("circle")
@@ -344,11 +344,11 @@ export default class TrendingCard extends React.Component<IProps, IState>{
 
 
     updateAxisLabel() {
-        let lim = this.getYlimit().map(p => Math.abs(p));
+        const lim = this.getYlimit().map(p => Math.abs(p));
         let h = Math.max(...lim);
 
-        let exp = Math.floor(Math.log10(h));
-        let tripple = Math.floor(exp / 3);
+        const exp = Math.floor(Math.log10(h));
+        const tripple = Math.floor(exp / 3);
         if (tripple == 0)
             this.yExp.text("");
         else
@@ -405,7 +405,7 @@ export default class TrendingCard extends React.Component<IProps, IState>{
     }
 
     formatTimeTick(d: number) {
-        let TS = moment.utc(d);
+        const TS = moment.utc(d);
         let h = this.state.Tend - this.state.Tstart
         h = h / 1000.0;
 
@@ -435,12 +435,12 @@ export default class TrendingCard extends React.Component<IProps, IState>{
     }
 
     formatValueTick(d: number) {
-        let lim = this.getYlimit().map(p => Math.abs(p));
-        let h = Math.max(...lim);
+        const lim = this.getYlimit().map(p => Math.abs(p));
+        const h = Math.max(...lim);
         let val = d;
 
-        let exp = Math.floor(Math.log10(h));
-        let tripple = Math.floor(exp / 3);
+        const exp = Math.floor(Math.log10(h));
+        const tripple = Math.floor(exp / 3);
         if (tripple !== 0)
             val = d / (10 ** (tripple * 3));
 
@@ -454,14 +454,14 @@ export default class TrendingCard extends React.Component<IProps, IState>{
 
     mousemove() {
 
-        let x = d3.mouse(this.area.node())[0];
+        const x = d3.mouse(this.area.node())[0];
         this.hover.attr("x1", x)
             .attr("x2", x);
 
         this.hover.style("opacity", 1);
 
         if (this.props.allowZoom) {
-            let w = this.mouseDownPos.x - x;
+            const w = this.mouseDownPos.x - x;
 
             if (x < this.mouseDownPos.x)
                 this.brush.attr("x", x).attr("width", w)
@@ -469,7 +469,7 @@ export default class TrendingCard extends React.Component<IProps, IState>{
                 this.brush.attr("x", this.mouseDownPos.x).attr("width", -w)
         }
 
-        let t = this.xscale.invert(x)
+        const t = this.xscale.invert(x)
         this.setState({ hover: t })
     }
 
@@ -498,10 +498,10 @@ export default class TrendingCard extends React.Component<IProps, IState>{
         if (this.props.allowZoom) {
             this.brush.style("opacity", 0);
 
-            let x = d3.mouse(this.area.node())[0];
-            let t = this.xscale.invert(x);
+            const x = d3.mouse(this.area.node())[0];
+            const t = this.xscale.invert(x);
 
-            let dT = Math.abs(t - this.mouseDownPos.t);
+            const dT = Math.abs(t - this.mouseDownPos.t);
             if (dT < 10)
                 return;
 
