@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "builddebug": "set NODE_OPTIONS=--openssl-legacy-provider && webpack --mode=development",
+    "buildrelease": "set NODE_OPTIONS=--openssl-legacy-provider && npm prune && npm ci && webpack --mode=production",
     "build": "set NODE_OPTIONS=--openssl-legacy-provider && npm prune && npm ci && webpack --mode=development"
   },
   "author": "GridProtectionAlliance",
