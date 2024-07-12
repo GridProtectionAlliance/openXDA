@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "set NODE_OPTIONS=--openssl-legacy-provider && npm prune && npm install && webpack --mode=development"
+    "build": "set NODE_OPTIONS=--openssl-legacy-provider && npm prune && npm ci && webpack --mode=development"
   },
   "author": "GridProtectionAlliance",
   "license": "MIT",
