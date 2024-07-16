@@ -4583,7 +4583,7 @@
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>
-    <PreBuildEvent>CALL cd "$(ProjectDir)\wwwroot\SPCTools"
+    <PreBuildEvent>CALL cd "$(ProjectDir)wwwroot\SPCTools"
       if $(ConfigurationName) == Debug npm run builddebug
       if $(ConfigurationName) == Release npm run buildrelease
 
