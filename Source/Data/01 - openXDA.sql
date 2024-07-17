@@ -6374,20 +6374,21 @@ END
 GO
 
 ----- Standard PQ Apps -----
+----- Standard PQ Apps -----
 INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES ('Configure',1)
 GO
-INSERT INTO PQApplicationCategory (Name, SortOrder) VALUES ('Visualize',3)
+INSERT INTO PQApplicationsCategory (Name, SortOrder) VALUES ('Visualize',3)
 GO
-INSERT INTO PQApplicationCategory (Name, SortOrder) VALUES ('Interval Data',4)
+INSERT INTO PQApplicationsCategory (Name, SortOrder) VALUES ('Interval Data',4)
 GO
 
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('System Center', 'http://localhost:8987','./Images/Tiles/SystemCenter.png',1,0)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('System Center', 'http://localhost:8987','./Images/Tiles/SystemCenter.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),0)
 GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Dashboard', 'http://localhost/PQDashboard','./Images/Tiles/PQDashboard.png',2,1)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Dashboard', 'http://localhost/PQDashboard','./Images/Tiles/PQDashboard.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),1)
 GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Browser', 'http://localhost/PQBrowser','./Images/Tiles/PQBrowser.png',2,2)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Browser', 'http://localhost/PQBrowser','./Images/Tiles/PQBrowser.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),2)
 GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('SPCTools', 'SPCTools/index.cshtml','./Images/Tiles/SPCTools.png',4,0)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('SPCTools', 'SPCTools/index.cshtml','./Images/Tiles/SPCTools.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Interval Data'),0)
 GO
 -- The Following are separate Apps (only to be added if the Apps are installed) --
 --INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES 
