@@ -22,8 +22,8 @@ RUN POWERSHELL Import-Module SQLPS; \
     $tcp.Alter(); \
     Restart-Service -Name 'SQL Server (SQLEXPRESS)' -Force;
 
-COPY ./start.ps1 c:/scripts/
-COPY ../../Data/*.sql c:/scripts/sql/
+COPY ./startDocker.ps1 c:/scripts/
+COPY ./*.sql c:/scripts/sql/
 RUN POWERSHELL ls 'c:/scripts/sql/'
 # Generate openXDA Database
 RUN POWERSHELL Start-SERVICE -Name 'SQL Server (SQLEXPRESS)'; \
