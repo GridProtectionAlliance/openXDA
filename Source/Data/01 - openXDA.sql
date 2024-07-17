@@ -6397,12 +6397,12 @@ GO
 --GO
 
 --INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES 
---('LSCVS', 'http://localhost/LSCVS','./Images/Tiles/LSCVS.png',5,0),
---('miMD', 'http://localhost:8986','./Images/Tiles/miMD.png',1,2),
---('openMIC', 'http://localhost:8089','./Images/Tiles/openMIC.png',2,0),
---('PQDigest', 'http://localhost/PQDigest','./Images/Tiles/PQDigest.png',3,3),
---('TrenDAP', 'http://localhost/TrenDAP','./Images/Tiles/TrenDAP.png',4,1),
---('Notification Pages', 'http://localhost/NotificationPages','./Images/Tiles/NotificationPages.png',1,1)
+--('LSCVS', 'http://localhost/LSCVS','./Images/Tiles/LSCVS.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Report'),0),
+--('miMD', 'http://localhost:8986','./Images/Tiles/miMD.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),2),
+--('openMIC', 'http://localhost:8089','./Images/Tiles/openMIC.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Collection'),0),
+--('PQDigest', 'http://localhost/PQDigest','./Images/Tiles/PQDigest.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),3),
+--('TrenDAP', 'http://localhost/TrenDAP','./Images/Tiles/TrenDAP.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Interval Data'),1),
+--('Notification Pages', 'http://localhost/NotificationPages','./Images/Tiles/NotificationPages.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),1)
 --GO
 
 ----- PQInvestigator Integration -----
