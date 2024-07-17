@@ -174,7 +174,7 @@ namespace FaultData.DataOperations
                 if (rejectionBadData + rejectionNoCustomer + rejectionThreshold > 0)
                 {
                     Log.Info($"{rejectionBadData + rejectionNoCustomer + rejectionThreshold} lscvs events not sent for meter {meterDataSet.Meter.Name}:");
-                    Log.Info($@"    {rejectionThreshold} due to not meeting MW ratio; {rejectionNoCustomer} due to not having customers assigned to relavent meters; {rejectionBadData} due to not having all line-neutral phase data.");
+                    Log.Info($@"    {rejectionThreshold} due to not meeting MW ratio; {rejectionNoCustomer} due to not having customers assigned to relevant meters; {rejectionBadData} due to not having all line-neutral phase data.");
                 }
 
                 if (lscvsEventList.Count != 0)
