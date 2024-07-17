@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigurationLoader.cs" />
     <Compile Include="DataPusherEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebAPIHub.cs" />
