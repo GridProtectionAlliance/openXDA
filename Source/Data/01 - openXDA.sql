@@ -6374,7 +6374,6 @@ END
 GO
 
 ----- Standard PQ Apps -----
------ Standard PQ Apps -----
 INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES ('Configure',1)
 GO
 INSERT INTO PQApplicationsCategory (Name, SortOrder) VALUES ('Visualize',3)

@@ -101,9 +101,6 @@ namespace openXDA.DataPusher
 
             return settingList.Select(setting => ToArray(setting.Name, setting.Value));
         }
-
-      
-
         private string[] ToArray(string key, string value) =>
             key.Split('.').Append(value).ToArray();
 

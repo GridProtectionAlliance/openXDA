@@ -73,8 +73,7 @@ namespace openXDA.DataPusher
 
             [Category]
             [SettingName(DataPusherSettings.CategoryName)]
-            public DataPusherSettings DatapusherSettings { get; } = new DataPusherSettings();
-
+            public DataPusherSettings DataPusherSettings { get; } = new DataPusherSettings();
         }
 
 
@@ -221,14 +220,11 @@ namespace openXDA.DataPusher
             }
         }
 
-
         protected Action<object> GetConfigurator()
         {
             ConfigurationLoader configurationLoader = new ConfigurationLoader(ConnectionFactory);
             return configurationLoader.Configure;
         }
-
-
 
         #endregion
 
@@ -918,7 +914,7 @@ namespace openXDA.DataPusher
 
                     Settings settings = new Settings(GetConfigurator());
 
-                    DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(settings.DatapusherSettings.TimeWindow * -1);
+                    DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(settings.DataPusherSettings.TimeWindow * -1);
 
                     MetersToDataPush meterToDataPush = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                     if (meterToDataPush.RemoteXDAMeterID <= 0)
@@ -926,8 +922,7 @@ namespace openXDA.DataPusher
 
                     string localAssetKey = new TableOperations<Meter>(connection).QueryRecordWhere("ID={0}", meterToDataPush.LocalXDAMeterID).AssetKey;
 
-                   
-                    if (settings.DatapusherSettings.TimeWindow != 0)
+                    if (settings.DataPusherSettings.TimeWindow != 0)
                         localFileGroups = new TableOperations<FileGroup>(connection).QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0} AND StartTime >= {1})", meterToDataPush.LocalXDAMeterID, timeWindowStartDate);
                     else
                         localFileGroups = new TableOperations<FileGroup>(connection).QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0})", meterToDataPush.LocalXDAMeterID);
