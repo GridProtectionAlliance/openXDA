@@ -4583,6 +4583,14 @@
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>
+    <PreBuildEvent>CALL cd "$(ProjectDir)wwwroot\SPCTools"
+      if $(ConfigurationName) == Debug npm run builddebug
+      if $(ConfigurationName) == Release npm run buildrelease
+
+</PreBuildEvent>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <PostBuildEvent>COPY "$(SolutionDir)Dependencies\GSF\ValidateAssemblyBindings.exe" "$(TargetDir)"
 "$(TargetDir)\ValidateAssemblyBindings.exe" "$(TargetPath).config"
 DEL "$(TargetDir)\ValidateAssemblyBindings.exe"

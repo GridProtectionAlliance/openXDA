@@ -30,13 +30,13 @@ import { SelectAvailableVoltages, SelectSelectedVoltages } from './WizardVoltage
 
 // #region [ Thunks ]
 export const FetchAffectedChannels = createAsyncThunk('WizardAffectedChannel/FetchAffectedChannels', async (_, { getState }) => {
-    let meterIDs = selectSelectedMeter(getState() as Redux.StoreState).map(m => m.ID);
-    let measurmentTypeID = selectMeasurmentTypeID(getState() as Redux.StoreState);
-    let seriesTypeID = selectSeriesTypeID(getState() as Redux.StoreState)
-    let phaseSelect = SelectSelectedPhases(getState() as Redux.StoreState)
-    let phaseIDs = SelectAvailablePhases(getState() as Redux.StoreState).filter((p, i) => phaseSelect[i]).map(p => p.ID);
-    let voltageSelect = SelectSelectedVoltages(getState() as Redux.StoreState)
-    let voltages = SelectAvailableVoltages(getState() as Redux.StoreState).filter((p, i) => voltageSelect[i])
+    const meterIDs = selectSelectedMeter(getState() as Redux.StoreState).map(m => m.ID);
+    const measurmentTypeID = selectMeasurmentTypeID(getState() as Redux.StoreState);
+    const seriesTypeID = selectSeriesTypeID(getState() as Redux.StoreState)
+    const phaseSelect = SelectSelectedPhases(getState() as Redux.StoreState)
+    const phaseIDs = SelectAvailablePhases(getState() as Redux.StoreState).filter((p, i) => phaseSelect[i]).map(p => p.ID);
+    const voltageSelect = SelectSelectedVoltages(getState() as Redux.StoreState)
+    const voltages = SelectAvailableVoltages(getState() as Redux.StoreState).filter((p, i) => voltageSelect[i])
 
     return await GetAffectedChannels(meterIDs, measurmentTypeID, seriesTypeID,voltages,phaseIDs);
 });
@@ -102,7 +102,7 @@ export const SelectAffectedChannelsByIDs = (state: Redux.StoreState, id: number[
 // #region [ Async Functions ]
 
 function GetAffectedChannels(meterIDs: number[], measurementTypeID: number, seriesTypeID: number, voltages: number[], phaseIDs: number[]): JQuery.jqXHR<string> {
-    let filter = [
+    const filter = [
         {
             FieldName: "MeterID",
             SearchText: `${(meterIDs.length > 0 ? meterIDs.join(',') : 0)}`,

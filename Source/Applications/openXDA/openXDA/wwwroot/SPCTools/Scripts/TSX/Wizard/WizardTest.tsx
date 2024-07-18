@@ -36,12 +36,11 @@ import { SelectSeverities } from '../store/SeveritySlice';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
 import { LoadingIcon, Warning } from '@gpa-gemstone/react-interactive';
 
-declare var homePath: string;
-declare var apiHomePath: string;
+declare let homePath: string;
+declare let apiHomePath: string;
 
-declare var userIsAdmin: boolean;
+declare let userIsAdmin: boolean;
 
-interface IProps { }
 interface IResultTable { Severity: string, Threshhold: number, NumberRaised: number, TimeInAlarm: number}
 interface IChannelList { MeterName: string, Name: string, NumberRaised: number, TimeInAlarm: number, ID: number }
 
@@ -53,7 +52,7 @@ const defaultTimeRange = {
 } as SPCTools.IDateRange
 
 
-const WizardTest = (props: IProps) => {
+const WizardTest = () => {
     const handle = React.useRef<JQuery.jqXHR>(undefined);
 
     const [loading, setLoading] = React.useState<SPCTools.Status>('unitiated');
@@ -113,7 +112,7 @@ const WizardTest = (props: IProps) => {
         setLoading('loading');
         setEffectiveTimeRange(timeRange);
 
-        let request = {
+        const request = {
             AlarmFactors: alarmFactors.map(item => item.Factor),
             Start: timeRange.start,
             End: timeRange.end,
@@ -126,7 +125,7 @@ const WizardTest = (props: IProps) => {
             AlarmTypeID: alarmGroup.AlarmTypeID
         };
 
-        let h = $.ajax({
+        const h = $.ajax({
             type: "POST",
             url: `${apiHomePath}api/SPCTools/Data/Test/${seriesTypeID}`,
             contentType: "application/json; charset=utf-8",
@@ -146,8 +145,8 @@ const WizardTest = (props: IProps) => {
     function updateData(data) {
         setLoading('idle');
         setChannelList(data.map(item => {
-            let bindex = item.FactorTests.findIndex(d => d.Factor == 1.0)
-            let cindex = allChannels.findIndex(c => item.ChannelID == c.ID)
+            const bindex = item.FactorTests.findIndex(d => d.Factor == 1.0)
+            const cindex = allChannels.findIndex(c => item.ChannelID == c.ID)
             return {
                 TimeInAlarm: item.FactorTests[bindex].TimeInAlarm * 100.0,
                 NumberRaised: item.FactorTests[bindex].NumberRaised,
@@ -185,7 +184,7 @@ const WizardTest = (props: IProps) => {
             setChannelSummary([]);
             return;
         }
-        let index = response.findIndex(ch => ch.ChannelID == selectedChannel);
+        const index = response.findIndex(ch => ch.ChannelID == selectedChannel);
 
         if (index == -1) {
             setChannelSummary([]);
@@ -211,8 +210,8 @@ const WizardTest = (props: IProps) => {
         ])
     }
 
-    let validStartDate = !isNaN(new Date(timeRange.start).getTime()) && timeRange.start != null;
-    let validEndDate = !isNaN(new Date(timeRange.end).getTime()) && timeRange.end != null &&
+    const validStartDate = !isNaN(new Date(timeRange.start).getTime()) && timeRange.start != null;
+    const validEndDate = !isNaN(new Date(timeRange.end).getTime()) && timeRange.end != null &&
         (new Date(timeRange.end) > new Date(timeRange.start) || !validStartDate)
 
     return (
@@ -294,9 +293,7 @@ const WizardTest = (props: IProps) => {
                                     data={resultSummary}
                                     sortKey={'Severity'}
                                     ascending={false}
-                                    onSort={(d) => {
-                                    }}
-                                    onClick={(d) => { }}
+                                    onSort={() => {/* do nothing */}}
                                     theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
                                     rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
@@ -326,9 +323,7 @@ const WizardTest = (props: IProps) => {
                                     data={channelSummary}
                                     sortKey={'Severity'}
                                     ascending={false}
-                                    onSort={(d) => {
-                                    }}
-                                    onClick={(d) => { }}
+                                    onSort={(d) => {/* do nothing */}}
                                     theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
                                     rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}

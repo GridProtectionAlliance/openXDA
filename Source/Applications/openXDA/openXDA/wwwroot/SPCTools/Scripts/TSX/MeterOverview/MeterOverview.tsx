@@ -30,7 +30,7 @@ import { ChangeStatusMeterAlarmGroups, SortMeterAlarmGroups, SelectMeterAlarmGro
 import { SearchBar } from '@gpa-gemstone/react-interactive'
 
 
-const MeterOverview: React.FunctionComponent = (props: {}) => {
+const MeterOverview: React.FunctionComponent = () => {
     const dispatch = useDispatch();
 
     const meters = useSelector(SelectMeters);
@@ -117,7 +117,6 @@ const MeterOverview: React.FunctionComponent = (props: {}) => {
                                 else
                                     dispatch(SortMeterAlarmGroups({ SortField: d.colKey, Ascending: agAsc }));
                             }}
-                            onClick={(d) => { }}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}

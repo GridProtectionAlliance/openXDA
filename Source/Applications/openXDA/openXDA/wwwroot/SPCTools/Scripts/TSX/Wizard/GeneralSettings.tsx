@@ -37,14 +37,12 @@ import { SelectAlarmDayGroups } from '../store/AlarmDayGroupSlice';
 import { FetchAffectedChannels, SelectAffectedChannelCount, SelectAffectedChannelStatus } from '../store/WizardAffectedChannelSlice';
 
 
-declare var homePath: string;
-declare var apiHomePath: string;
+declare let homePath: string;
+declare let apiHomePath: string;
 
-declare var userIsAdmin: boolean;
+declare let userIsAdmin: boolean;
 
-interface IProps {}
-
-const GeneralSettings = (props: IProps) => {
+const GeneralSettings = () => {
     const isDynamic = useSelector(SelectWizardType);
 
     const group = useSelector(selectAlarmGroup);
@@ -125,7 +123,6 @@ const GeneralSettings = (props: IProps) => {
                                 sortKey={sort}
                                 ascending={asc}
                                 onSort={(d) => { dispatch(sortSelectedMeters({ field: d.colField, asc: d.ascending })) }}
-                                onClick={(d) => { }}
                                 theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                 tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 300, width: '100%' }}
                                 rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
@@ -165,7 +162,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
     const [selectedMeterList, setSelectedMeterList] = React.useState<Array<openXDA.IMeter>>([]);
 
     React.useEffect(() => {
-        let handle = getList();
+        const handle = getList();
 
         return () => {
             if (handle != undefined && handle.abort != undefined)
@@ -174,7 +171,7 @@ const AddMeterPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => void 
     }, [filters, sort, asc])
 
     function getList(): JQuery.jqXHR<string> {
-        let handle = $.ajax({
+        const handle = $.ajax({
             type: "POST",
             url: `${apiHomePath}api/MeterDetail/SearchableList`,
             contentType: "application/json; charset=utf-8",
@@ -254,7 +251,7 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
 
 
     React.useEffect(() => {
-        let handle = getList();
+        const handle = getList();
 
         return () => {
             if (handle != undefined && handle.abort != undefined)
@@ -272,7 +269,7 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
     }, [selectedAssetGroupID])
 
     function getList(): JQuery.jqXHR<string> {
-        let handle = $.ajax({
+        const handle = $.ajax({
             type: "POST",
             url: `${apiHomePath}api/SPCTools/AssetGroupView/SearchableList`,
             contentType: "application/json; charset=utf-8",
@@ -290,7 +287,7 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
     }
 
     function getMeters(): JQuery.jqXHR<Array<openXDA.IMeter>> {
-        let handle = $.ajax({
+        const handle = $.ajax({
             type: "GET",
             url: `${apiHomePath}api/SPCTools/AssetGroupView/${selectedAssetGroupID}/Meters`,
             contentType: "application/json; charset=utf-8",

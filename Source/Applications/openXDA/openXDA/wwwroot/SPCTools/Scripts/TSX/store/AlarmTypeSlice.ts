@@ -82,7 +82,7 @@ export const SelectAlarmTypeStatus = (state: Redux.StoreState) => state.AlarmTyp
 
 function GetAlarmTypes(): JQuery.jqXHR<string> {
     // not really an int but this avoids some of the replacment going on server side
-    let filter = [{
+    const filter = [{
         FieldName: "Name",
         SearchText: "Upper Limit,Lower Limit",
         Operator: "IN",

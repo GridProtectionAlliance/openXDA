@@ -83,7 +83,7 @@ export const SelectSeriesTypesAscending = (state: Redux.StoreState) => state.Ser
 
 function GetSeriesType(): JQuery.jqXHR<string> {
     // not really an int but this avoids some of the replacment going on server side
-    let filter = [{
+    const filter = [{
         FieldName: "Name",
         SearchText: "Minimum,Maximum,Average",
         Operator: "IN",

@@ -34,10 +34,10 @@ import SetPointCreator from './SetPointCreator';
 import { FunctionHelp } from '../CommonComponents/FunctionHelp';
 import WizardTest from './WizardTest';
 
-declare var homePath: string;
-declare var apiHomePath: string;
+declare let homePath: string;
+declare let apiHomePath: string;
 
-declare var userIsAdmin: boolean;
+declare let userIsAdmin: boolean;
 
 interface IProps { complete: () => void }
 
@@ -52,10 +52,10 @@ const WizardHome = (props: IProps) => {
 
 
     // Define Step Numbers
-    const generalStep: string = 'general';
-    const selectStep: string = 'selectData';
-    const setpointStep: string = 'setpoint';
-    const testStep: string = 'test';
+    const generalStep = 'general';
+    const selectStep = 'selectData';
+    const setpointStep = 'setpoint';
+    const testStep = 'test';
 
     function Continue() {
 

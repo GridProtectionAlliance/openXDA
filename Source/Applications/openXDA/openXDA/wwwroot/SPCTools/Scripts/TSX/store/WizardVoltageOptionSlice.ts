@@ -29,9 +29,9 @@ import { SelectSeriesTypes } from './SeriesTypeSlice';
 
 // #region [ Thunks ]
 export const FetchAvailableVoltages = createAsyncThunk('WizardVoltageOption/FetchAvailableVoltages', async (_, { getState }) => {
-    let meterIDs = selectSelectedMeter(getState() as Redux.StoreState).map(m => m.ID);
-    let measurmentTypeID = selectMeasurmentTypeID(getState() as Redux.StoreState);
-    let seriesTypeID = SelectSeriesTypes(getState() as Redux.StoreState).map(item => item.ID)
+    const meterIDs = selectSelectedMeter(getState() as Redux.StoreState).map(m => m.ID);
+    const measurmentTypeID = selectMeasurmentTypeID(getState() as Redux.StoreState);
+    const seriesTypeID = SelectSeriesTypes(getState() as Redux.StoreState).map(item => item.ID)
     return await getAvailableVoltages(meterIDs, measurmentTypeID, seriesTypeID);
 });
 
@@ -70,7 +70,7 @@ export const WizardVoltageOptionSlice = createSlice({
         builder.addCase(FetchAvailableVoltages.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            let oldState =state.Data.filter((v,i) => state.Selected[i]);
+            const oldState =state.Data.filter((v,i) => state.Selected[i]);
             state.Data = _.uniq(JSON.parse(action.payload).map(item => item.VoltageKV) as number[]);
             state.Selected = state.Data.map(ph => oldState.findIndex(item => item == ph) > -1)
         });
@@ -123,7 +123,7 @@ function getAvailableVoltages(meterIDs: number[], measurementTypeID: number, ser
     sqlFilter = sqlFilter + `Channel.MeasurementCharacteristicID = (SELECT ChannelGroupType.MeasurementCharacteristicID FROM ChannelGroupType WHERE ID = ${measurementTypeID}) AND `
     sqlFilter = sqlFilter + `(SELECT COUNT(Series.ID) FROM SERIES WHERE Series.ChannelID = Channel.ID AND Series.SeriesTypeID IN (${(seriesTypeID.length > 0 ? seriesTypeID.join(',') : 0)})) > 0)`
 
-    let filter = [{
+    const filter = [{
         FieldName: "ID",
         SearchText: `(${sqlFilter})`,
         Operator: "IN",

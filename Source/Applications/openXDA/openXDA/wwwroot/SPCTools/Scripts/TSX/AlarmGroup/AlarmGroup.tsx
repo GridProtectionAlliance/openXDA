@@ -86,9 +86,9 @@ const AlarmGroupHome = (props: { loadAlarm: () => void }) => {
     }, [selectedAlarmGroup])
 
     function FormatDifference() {
-        let d = (selectedAlarmGroup.LastAlarmEnd == undefined ? moment() : moment(selectedAlarmGroup.LastAlarmEnd)).diff(selectedAlarmGroup.LastAlarmStart, 'days', true)
-        let h = (d - Math.floor(d)) * 24.0;
-        let m = (h - Math.floor(h)) * 60.0;
+        const d = (selectedAlarmGroup.LastAlarmEnd == undefined ? moment() : moment(selectedAlarmGroup.LastAlarmEnd)).diff(selectedAlarmGroup.LastAlarmStart, 'days', true)
+        const h = (d - Math.floor(d)) * 24.0;
+        const m = (h - Math.floor(h)) * 60.0;
         return (d >= 1 ? (d.toFixed(0) + "d ") : "") + (h >= 1 ? (h.toFixed(0) + "h ") : "") + (m >= 1 ? (m.toFixed(0) + "m") : "");
     }
 
@@ -172,7 +172,7 @@ const AlarmGroupHome = (props: { loadAlarm: () => void }) => {
                             Data={detailedData}
                             SortKey={'Content'}
                             Ascending={false}
-                            OnSort={() => { }}
+                            OnSort={() => { /* do nothing */}}
                             TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}

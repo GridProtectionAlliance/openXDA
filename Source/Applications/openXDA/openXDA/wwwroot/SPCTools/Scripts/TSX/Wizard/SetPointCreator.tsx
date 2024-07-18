@@ -35,17 +35,16 @@ import { TrashCan, Plus } from '@gpa-gemstone/gpa-symbols';
 import { Select, TextArea } from '@gpa-gemstone/react-forms';
 import { LoadingIcon } from '@gpa-gemstone/react-interactive';
 
-declare var homePath: string;
-declare var apiHomePath: string;
+declare let homePath: string;
+declare let apiHomePath: string;
 
-declare var userIsAdmin: boolean;
+declare let userIsAdmin: boolean;
 
-interface IProps { }
 
 interface DropDownMeter { MeterId: number, Name: string, Channels: Array<openXDA.IChannel> }
 interface IChannelGraphProps {ChannelID: number}
 
-const SetPointCreator = (props: IProps) => {
+const SetPointCreator = () => {
     const isDynamic = useSelector(SelectWizardType);
     const alarmDays = useSelector(SelectSetPointAlarmDays);
     const [plot, setPlot] = React.useState<Array<IChannelGraphProps>>([]);
@@ -63,7 +62,7 @@ const SetPointCreator = (props: IProps) => {
 
     // This only triggers on First render to create a List of Available Meters for the Graph Dropdown
     React.useEffect(() => {
-        let meterIds: number[]  = _.uniq(availableChannels.map((item) => item.MeterID))
+        const meterIds: number[]  = _.uniq(availableChannels.map((item) => item.MeterID))
 
         setMeterList(meterIds.map(id => {
             return { MeterId: id, Channels: availableChannels.filter(ch => ch.MeterID == id), Name: availableChannels.find(ch => ch.MeterID == id).MeterName }
@@ -73,7 +72,6 @@ const SetPointCreator = (props: IProps) => {
             setActiveDayID(undefined);
         else
             setActiveDayID(alarmDays[0].ID)
-       return () => { }
     }, [])
 
 

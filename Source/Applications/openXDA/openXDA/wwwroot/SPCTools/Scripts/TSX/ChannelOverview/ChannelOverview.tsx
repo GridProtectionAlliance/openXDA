@@ -120,7 +120,6 @@ const ChannelOverview: React.FunctionComponent = () => {
                                 else
                                     dispatch(SortChannelAlarmGroups({ SortField: d.colKey, Ascending: agAsc }));
                             }}
-                            onClick={(d) => { }}
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}

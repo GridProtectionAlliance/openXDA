@@ -42,8 +42,8 @@ import { FetchSeverities } from './store/SeveritySlice';
 import EPRINote from './Wizard/EPRINote';
 
 
-declare var homePath: string;
-declare var userIsAdmin: boolean;
+declare let homePath: string;
+declare let userIsAdmin: boolean;
 
 
 const SPCTools: React.FunctionComponent = (props: {}) => {
