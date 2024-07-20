@@ -123,8 +123,6 @@ namespace openXDA.DataPusher
 
         #region [ Class Functions ]
 
-        public void Initialize() {}
-
         public void Dispose()
         {
             if (!m_disposed)
