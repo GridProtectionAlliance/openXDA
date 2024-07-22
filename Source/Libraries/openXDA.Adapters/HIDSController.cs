@@ -166,54 +166,66 @@ namespace openXDA.Adapters
         [ValidateRequestVerificationToken]
         public async Task<HttpResponseMessage> QueryPointsByTimeSpans([FromBody] JObject query, CancellationToken cancellationToken)
         {
-            void BuildQuery(IQueryBuilder builder)
-            {
-                if (query["Channels"] is JArray channels)
-                {
-                    IEnumerable<string> tags = channels
-                        .ToObject<List<int>>()
-                        .Select(channelID => APIExtensions.ToTag(null, channelID));
-
-                    builder.FilterTags(tags);
-                }
-
-                if (query["TimeSpans"] is JArray timeSpans)
-                {
-                    IEnumerable<Tuple<DateTime, DateTime>> spans = timeSpans
-                        .ToObject<IEnumerable<JToken>>()
-                        .Select((spanToken) => {
-                            JArray bounds = (JArray) spanToken;
-
-                            return new Tuple<DateTime, DateTime>(bounds[0].Value<DateTime>(), bounds[1].Value<DateTime>());
-                        });
-
-                    if (spans.Count() == 0) throw new ArgumentException("No timespans specified in query parameter");
-                    builder.RangeFilters(spans);
-                };
-
-                if (query.ContainsKey("InvalidFlags"))
-                {
-                    uint invalidFlags = query.Value<uint>("InvalidFlags");
-                    builder.TestQuality(invalidFlags);
-                }
-
-                if (query.ContainsKey("AggregateDuration"))
-                {
-                    string aggregateDuration = query.Value<string>("AggregateDuration");
-                    builder.Aggregate(aggregateDuration);
-                }
-            }
-
             if (!query.ContainsKey("TimeSpans"))
             {
                 BadRequestErrorMessageResult result = BadRequest("Missing query parameter: TimeSpans");
                 return await result.ExecuteAsync(cancellationToken);
             }
 
+            IEnumerable<GSF.Range<DateTime>> spans = query["TimeSpans"].ToObject<IEnumerable<JToken>>().Select((spanToken) =>
+            {
+                JArray bounds = (JArray)spanToken;
+
+                return new GSF.Range<DateTime>(bounds[0].Value<DateTime>(), bounds[1].Value<DateTime>());
+            });
+            spans = GSF.Range<DateTime>.MergeAllOverlapping(spans).OrderBy(span => span.Start);
+            if (spans.Count() == 0)
+            {
+                BadRequestErrorMessageResult result = BadRequest("No timespans specified in query parameter");
+                return await result.ExecuteAsync(cancellationToken);
+            }
+
+            IAsyncEnumerable<Point> hidsCaller(API instance, CancellationToken token = default)
+            {
+                IEnumerable<string> tags = Enumerable.Empty<string>();
+                if (query["Channels"] is JArray channels)
+                {
+                    tags = channels
+                        .ToObject<List<int>>()
+                        .Select(channelID => APIExtensions.ToTag(null, channelID));
+                }
+
+                uint invalidFlags = 0;
+                if (query.ContainsKey("InvalidFlags"))
+                {
+                    invalidFlags = query.Value<uint>("InvalidFlags");
+                }
+
+                string aggregateDuration = "";
+                if (query.ContainsKey("AggregateDuration"))
+                {
+                    aggregateDuration = query.Value<string>("AggregateDuration");
+                }
+
+                return spans
+                    .ToAsyncEnumerable()
+                    .SelectMany(span =>
+                    {
+                        void BuildQuery(IQueryBuilder builder)
+                        {
+                            builder.Range(span.Start, span.End);
+                            if (tags.Count() != 0) builder.FilterTags(tags);
+                            if (query.ContainsKey("InvalidFlags")) builder.TestQuality(invalidFlags);
+                            if (query.ContainsKey("AggregateDuration")) builder.Aggregate(aggregateDuration);
+                        }
+                        return instance.ReadPointsAsync(BuildQuery, cancellationToken);
+                    });
+            }
+
             MediaTypeHeaderValue contentType = new MediaTypeHeaderValue("text/plain");
             contentType.CharSet = "utf-8";
 
-            Stream pointStream = PointStream.QueryPoints(CreateHIDSConnectionAsync, BuildQuery);
+            Stream pointStream = PointStream.QueryPoints(CreateHIDSConnectionAsync, hidsCaller);
             StreamContent content = new StreamContent(pointStream);
             content.Headers.ContentType = contentType;
 
