@@ -65,7 +65,16 @@ namespace openXDA.DataPusher
         private bool m_disposed;
         private ScheduleManager m_scheduler;
         private bool m_running = false;
-        private DataPusherSettings m_dataPusherSettings;
+
+        private class Settings
+        {
+            public Settings(Action<object> configure) =>
+                configure(this);
+
+            [Category]
+            [SettingName(DataPusherSettings.CategoryName)]
+            public DataPusherSettings DataPusherSettings { get; } = new DataPusherSettings();
+        }
 
 
         #endregion
@@ -75,19 +84,6 @@ namespace openXDA.DataPusher
         public DataPusherEngine(Func<AdoDataConnection> connectionFactory)
         {
             ConnectionFactory = connectionFactory;
-            using(AdoDataConnection connection = ConnectionFactory())
-            {
-                m_dataPusherSettings = new DataPusherSettings();
-                m_dataPusherSettings.Enabled = connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = 'DataPusher.Enabled'") == "True";
-                m_dataPusherSettings.OnlyValidFaults = connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = 'DataPusher.OnlyValidFaults'") == "True";
-                m_dataPusherSettings.TimeWindow = int.Parse(connection.ExecuteScalar<string>("SELECT Value from Setting WHERE Name = 'DataPusher.TimeWindow'")?.ToString() ?? "1");
-
-            }
-        }
-
-        public DataPusherEngine(DataPusherSettings settings)
-        {
-            m_dataPusherSettings = settings;
         }
 
         #endregion
@@ -95,10 +91,6 @@ namespace openXDA.DataPusher
         #region [ Properties ]
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
         public bool Running => m_running;
-
-        [Category]
-        [SettingName(DataPusherSettings.CategoryName)]
-        public DataPusherSettings DataPusherSettings => m_dataPusherSettings;
 
         private Func<AdoDataConnection> ConnectionFactory { get; }
 
@@ -130,17 +122,6 @@ namespace openXDA.DataPusher
         #region [ Methods ]
 
         #region [ Class Functions ]
-
-        public void Initialize()
-        {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                m_dataPusherSettings = new DataPusherSettings();
-                m_dataPusherSettings.Enabled = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.Enabled'") ?? false;
-                m_dataPusherSettings.OnlyValidFaults = connection.ExecuteScalar<bool?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.OnlyValidFaults'") ?? true;
-                m_dataPusherSettings.TimeWindow = connection.ExecuteScalar<int?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.TimeWindow'") ?? 0;
-            }
-        }
 
         public void Dispose()
         {
@@ -235,6 +216,12 @@ namespace openXDA.DataPusher
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("Name = {0}", e.Argument.Name);
                 SyncInstanceFiles(string.Empty, instance, new CancellationToken());
             }
+        }
+
+        protected Action<object> GetConfigurator()
+        {
+            ConfigurationLoader configurationLoader = new ConfigurationLoader(ConnectionFactory);
+            return configurationLoader.Configure;
         }
 
         #endregion
@@ -923,7 +910,9 @@ namespace openXDA.DataPusher
                     IEnumerable<FileGroup> localFileGroups;
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
 
-                    DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(DataPusherSettings.TimeWindow * -1);
+                    Settings settings = new Settings(GetConfigurator());
+
+                    DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(settings.DataPusherSettings.TimeWindow * -1);
 
                     MetersToDataPush meterToDataPush = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
                     if (meterToDataPush.RemoteXDAMeterID <= 0)
@@ -931,7 +920,7 @@ namespace openXDA.DataPusher
 
                     string localAssetKey = new TableOperations<Meter>(connection).QueryRecordWhere("ID={0}", meterToDataPush.LocalXDAMeterID).AssetKey;
 
-                    if (DataPusherSettings.TimeWindow != 0)
+                    if (settings.DataPusherSettings.TimeWindow != 0)
                         localFileGroups = new TableOperations<FileGroup>(connection).QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0} AND StartTime >= {1})", meterToDataPush.LocalXDAMeterID, timeWindowStartDate);
                     else
                         localFileGroups = new TableOperations<FileGroup>(connection).QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0})", meterToDataPush.LocalXDAMeterID);

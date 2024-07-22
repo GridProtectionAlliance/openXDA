@@ -27,11 +27,12 @@ using System.Linq;
 using System.Text;
 using GSF.Data.Model;
 using GSF.IO.Checksums;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    [TableName("DataFile")]
-    public class DataFileDb
+    [Serializable]
+    public class DataFile
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
@@ -50,12 +51,9 @@ namespace openXDA.Model
         public DateTime LastWriteTime { get; set; }
 
         public DateTime LastAccessTime { get; set; }
-    }
-    [Serializable]
-    public class DataFile : DataFileDb
-    {
 
         [NonRecordField]
+        [JsonIgnore]
         public FileBlob FileBlob { get; set; }
 
         public static int GetHash(string filePath)
@@ -65,6 +63,9 @@ namespace openXDA.Model
             return unchecked((int)Crc32.Compute(pathData, 0, pathData.Length));
         }
     }
+
+    [TableName("DataFile")]
+    public class DataFileDb : DataFile { }
 
     public static partial class TableOperationsExtensions
     {

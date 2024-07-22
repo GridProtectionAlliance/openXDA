@@ -6376,18 +6376,18 @@ GO
 ----- Standard PQ Apps -----
 INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES ('Configure',1)
 GO
-INSERT INTO PQApplicationCategory (Name, SortOrder) VALUES ('Visualize',3)
+INSERT INTO PQApplicationsCategory (Name, SortOrder) VALUES ('Visualize',3)
 GO
-INSERT INTO PQApplicationCategory (Name, SortOrder) VALUES ('Interval Data',4)
+INSERT INTO PQApplicationsCategory (Name, SortOrder) VALUES ('Interval Data',4)
 GO
 
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('System Center', 'http://localhost:8987','./Images/Tiles/SystemCenter.png',1,0)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('System Center', 'http://localhost:8987','./Images/Tiles/SystemCenter.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),0)
 GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Dashboard', 'http://localhost/PQDashboard','./Images/Tiles/PQDashboard.png',2,1)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Dashboard', 'http://localhost/PQDashboard','./Images/Tiles/PQDashboard.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),1)
 GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Browser', 'http://localhost/PQBrowser','./Images/Tiles/PQBrowser.png',2,2)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Browser', 'http://localhost/PQBrowser','./Images/Tiles/PQBrowser.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),2)
 GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('SPCTools', 'SPCTools/index.cshtml','./Images/Tiles/SPCTools.png',4,0)
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('SPCTools', 'SPCTools/index.cshtml','./Images/Tiles/SPCTools.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Interval Data'),0)
 GO
 -- The Following are separate Apps (only to be added if the Apps are installed) --
 --INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES 
@@ -6396,12 +6396,12 @@ GO
 --GO
 
 --INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES 
---('LSCVS', 'http://localhost/LSCVS','./Images/Tiles/LSCVS.png',5,0),
---('miMD', 'http://localhost:8986','./Images/Tiles/miMD.png',1,2),
---('openMIC', 'http://localhost:8089','./Images/Tiles/openMIC.png',2,0),
---('PQDigest', 'http://localhost/PQDigest','./Images/Tiles/PQDigest.png',3,3),
---('TrenDAP', 'http://localhost/TrenDAP','./Images/Tiles/TrenDAP.png',4,1),
---('Notification Pages', 'http://localhost/NotificationPages','./Images/Tiles/NotificationPages.png',1,1)
+--('LSCVS', 'http://localhost/LSCVS','./Images/Tiles/LSCVS.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Report'),0),
+--('miMD', 'http://localhost:8986','./Images/Tiles/miMD.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),2),
+--('openMIC', 'http://localhost:8089','./Images/Tiles/openMIC.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Collection'),0),
+--('PQDigest', 'http://localhost/PQDigest','./Images/Tiles/PQDigest.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),3),
+--('TrenDAP', 'http://localhost/TrenDAP','./Images/Tiles/TrenDAP.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Interval Data'),1),
+--('Notification Pages', 'http://localhost/NotificationPages','./Images/Tiles/NotificationPages.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),1)
 --GO
 
 ----- PQInvestigator Integration -----

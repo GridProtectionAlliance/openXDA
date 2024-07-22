@@ -113,7 +113,7 @@ namespace FaultData.DataOperations
                     UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
                     MetersToDataPush metersToDataPush = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("LocalXDAMeterID = {0} AND RemoteXDAInstanceID = {1}", meterDataSet.Meter.ID, instance.ID);
                     post.MeterKey = metersToDataPush.RemoteXDAAssetKey;
-                    Log.Info($"Sending data to intance: {instance.Name} for FileGroup: {meterDataSet.FileGroup.ID}...");
+                    Log.Info($"Sending data to instance: {instance.Name} for FileGroup: {meterDataSet.FileGroup.ID}...");
                     DataPusherEngine engine = new DataPusherEngine(meterDataSet.CreateDbConnection);
                     engine.SendFiles(post, instance.Address, userAccount);
 
