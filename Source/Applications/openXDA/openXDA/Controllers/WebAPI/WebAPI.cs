@@ -413,13 +413,9 @@ namespace openXDA.Controllers.WebAPI
             string weekFilt = weeks.Any() ? $"DATEPART(isowk, Event.StartTime) not in ({string.Join(",", weeks)})" : null;
             string monthFilt = months.Any() ? $"DATEPART(mm, Event.StartTime) not in ({string.Join(",", months)})" : null;
 
-            string filters =
-                $"{(string.IsNullOrEmpty(hourFilt) ? "" : $"AND {hourFilt}")}" +
-                $"{(string.IsNullOrEmpty(dayFilt) ? "" : $"AND {dayFilt}")}" +
-                $"{(string.IsNullOrEmpty(weekFilt) ? "" : $"AND {weekFilt}")}" +
-                $"{(string.IsNullOrEmpty(monthFilt) ? "" : $"AND {monthFilt}")}";
+            string[] filters = { hourFilt, dayFilt, weekFilt, monthFilt };
 
-            return filters;
+            return string.Join(" AND ", filters.Where(filt => !(filt is null)));
         }
         private string getIDFilter(List<int> ids, string fieldName)
         {
