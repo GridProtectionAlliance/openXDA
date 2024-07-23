@@ -33,6 +33,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.IO;
 using GSF.Web.Model;
+using HIDS;
 using Newtonsoft.Json.Linq;
 using openXDA.APIMiddleware;
 using openXDA.Model;
@@ -170,7 +171,7 @@ namespace openXDA.Controllers.WebAPI
         {
             if (idObjectList is null) return null;
             IEnumerable<int> ids = idObjectList.Values<int>();
-            if (ids.Count() == 0) return null;
+            if (!ids.Any()) return null;
             return $"{fieldName} IN ({string.Join(", ", ids)})";
         }
     }
@@ -194,10 +195,11 @@ namespace openXDA.Controllers.WebAPI
         {
             public DateTime StartTime { get; set; }
             public DateTime EndTime { get; set; }
-            public string By { get; set; } //
-            public List<int> IDs { get; set; }//
-            public List<int> Phases { get; set; }//
-            public List<int> Types { get; set; }//
+            public string By { get; set; }
+            public List<int> IDs { get; set; }
+            public List<int> Phases { get; set; }
+            public List<int> Types { get; set; }
+            public List<TimeFilter> TimeFilters { get; set; }
             public int? CurveID { get; set; }
             public bool CurveInside { get; set; }
             public int? DurationMin { get; set; }
@@ -223,6 +225,7 @@ namespace openXDA.Controllers.WebAPI
                 string charFilter = getEventCharacteristicFilter(postData);
                 string byField = postData.By == "Meter" ? "Event.MeterID" : "Event.AssetID";
                 string byFilter = getIDFilter(postData.IDs, byField);
+                string timeFilter = getTimeExclusionFilter(postData);
                 // Phases and types must be selected. Meters or assets must be selected.
                 if (string.IsNullOrEmpty(phaseFilter) ||
                     string.IsNullOrEmpty(typeFilter) ||
@@ -233,14 +236,18 @@ namespace openXDA.Controllers.WebAPI
                     {(string.IsNullOrEmpty(phaseFilter) ? "" : $"AND ({phaseFilter})")}
                     {(string.IsNullOrEmpty(typeFilter) ? "" : $"AND ({typeFilter})")}
                     {(string.IsNullOrEmpty(byFilter) ? "" : $"AND {byFilter}")}
-                    {(string.IsNullOrEmpty(charFilter) ? "" : $"AND {charFilter}")}";
+                    {(string.IsNullOrEmpty(charFilter) ? "" : $"AND {charFilter}")}
+                    {(string.IsNullOrEmpty(timeFilter) ? "" : $"{timeFilter}")}";
 
                 string query =
                     $@"SELECT 
-                        Event.StartTime as Time,
-                        Event.Name as Title,
+                        Event.ID,
+                        Event.StartTime,
+                        Event.EndTime,
+                        Event.Name,
                         Event.Description,
-                        DATEDIFF(millisecond, Event.StartTime, Event.EndTime) as Duration
+                        Event.AssetID,
+                        Event.MeterID
                     FROM 
                         Event JOIN 
                         EventType ON
@@ -279,7 +286,7 @@ namespace openXDA.Controllers.WebAPI
         #region [ Private Methods ]
         private string getEventTypeFilter(EventPost postData)
         {
-            if (postData.Types.Count() == 0) return null;
+            if (!postData.Types.Any()) return null;
 
             return $"Event.EventTypeID IN ({string.Join(",", postData.Types)}) OR  " +
                 $"(SELECT d.EventTypeID FROM Disturbance d WHERE d.ID = EventWorstDisturbance.WorstDisturbanceID) IN ({string.Join(",", postData.Types)}))";
@@ -287,7 +294,7 @@ namespace openXDA.Controllers.WebAPI
 
         private string getPhaseFilter(EventPost postData)
         {
-            if (postData.Phases is null || postData.Phases.Count() == 0) return null;
+            if (postData.Phases is null || !postData.Phases.Any()) return null;
             return $"(EventWorstDisturbance.WorstDisturbanceID IN (SELECT Disturbance.ID FROM Disturbance WHERE Disturbance.PhaseID IN ({string.Join(", ", postData.Phases)}))";
         }
 
@@ -392,10 +399,28 @@ namespace openXDA.Controllers.WebAPI
             return string.Join(" AND ", characteristics);
         }
 
+        private string getTimeExclusionFilter(EventPost postData)
+        {
+            IEnumerable<int> hours = postData.TimeFilters.Where(filt => filt < TimeFilter.Sunday).Select(filt => (int) filt);
+            // SQL dw is 1-7, starting on sunday
+            IEnumerable<int> days = postData.TimeFilters.Where(filt => filt >= TimeFilter.Sunday && filt < TimeFilter.Week00).Select(filt => filt - TimeFilter.Sunday + 1);
+            // Influx uses the iso week standard, i.e. 1-53
+            IEnumerable<int> weeks = postData.TimeFilters.Where(filt => filt >= TimeFilter.Week00 && filt < TimeFilter.January).Select(filt => filt - TimeFilter.Week00 + 1);
+            IEnumerable<int> months = postData.TimeFilters.Where(filt => filt >= TimeFilter.January).Select(filt => filt - TimeFilter.January + 1);
+
+            string hourFilt = hours.Any() ? $"DATEPART(hh,Event.StartTime) not in ({string.Join(",", hours)})" : null;
+            string dayFilt = days.Any() ? $"DATEPART(dw, Event.StartTime) not in ({string.Join(",", days)})" : null;
+            string weekFilt = weeks.Any() ? $"DATEPART(isowk, Event.StartTime) not in ({string.Join(",", weeks)})" : null;
+            string monthFilt = months.Any() ? $"DATEPART(mm, Event.StartTime) not in ({string.Join(",", months)})" : null;
+
+            string[] filters = { hourFilt, dayFilt, weekFilt, monthFilt };
+
+            return string.Join(" AND ", filters.Where(filt => !(filt is null)));
+        }
         private string getIDFilter(List<int> ids, string fieldName)
         {
             if (ids is null) return null;
-            if (ids.Count() == 0) return null;
+            if (!ids.Any()) return null;
             return $"{fieldName} IN ({string.Join(", ", ids)})";
         }
         #endregion
