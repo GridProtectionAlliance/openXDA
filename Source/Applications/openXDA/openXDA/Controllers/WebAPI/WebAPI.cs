@@ -171,7 +171,7 @@ namespace openXDA.Controllers.WebAPI
         {
             if (idObjectList is null) return null;
             IEnumerable<int> ids = idObjectList.Values<int>();
-            if (ids.Count() == 0) return null;
+            if (!ids.Any()) return null;
             return $"{fieldName} IN ({string.Join(", ", ids)})";
         }
     }
@@ -286,7 +286,7 @@ namespace openXDA.Controllers.WebAPI
         #region [ Private Methods ]
         private string getEventTypeFilter(EventPost postData)
         {
-            if (postData.Types.Count() == 0) return null;
+            if (!postData.Types.Any()) return null;
 
             return $"Event.EventTypeID IN ({string.Join(",", postData.Types)}) OR  " +
                 $"(SELECT d.EventTypeID FROM Disturbance d WHERE d.ID = EventWorstDisturbance.WorstDisturbanceID) IN ({string.Join(",", postData.Types)}))";
@@ -294,7 +294,7 @@ namespace openXDA.Controllers.WebAPI
 
         private string getPhaseFilter(EventPost postData)
         {
-            if (postData.Phases is null || postData.Phases.Count() == 0) return null;
+            if (postData.Phases is null || !postData.Phases.Any()) return null;
             return $"(EventWorstDisturbance.WorstDisturbanceID IN (SELECT Disturbance.ID FROM Disturbance WHERE Disturbance.PhaseID IN ({string.Join(", ", postData.Phases)}))";
         }
 
@@ -408,10 +408,10 @@ namespace openXDA.Controllers.WebAPI
             IEnumerable<int> weeks = postData.TimeFilters.Where(filt => filt >= TimeFilter.Week00 && filt < TimeFilter.January).Select(filt => filt - TimeFilter.Week00 + 1);
             IEnumerable<int> months = postData.TimeFilters.Where(filt => filt >= TimeFilter.January).Select(filt => filt - TimeFilter.January + 1);
 
-            string hourFilt = hours.Count() != 0 ? $"DATEPART(hh,Event.StartTime) not in ({string.Join(",", hours)})" : null;
-            string dayFilt = days.Count() != 0 ? $"DATEPART(dw, Event.StartTime) not in ({string.Join(",", days)})" : null;
-            string weekFilt = weeks.Count() != 0 ? $"DATEPART(isowk, Event.StartTime) not in ({string.Join(",", weeks)})" : null;
-            string monthFilt = months.Count() != 0 ? $"DATEPART(mm, Event.StartTime) not in ({string.Join(",", months)})" : null;
+            string hourFilt = hours.Any() ? $"DATEPART(hh,Event.StartTime) not in ({string.Join(",", hours)})" : null;
+            string dayFilt = days.Any() ? $"DATEPART(dw, Event.StartTime) not in ({string.Join(",", days)})" : null;
+            string weekFilt = weeks.Any() ? $"DATEPART(isowk, Event.StartTime) not in ({string.Join(",", weeks)})" : null;
+            string monthFilt = months.Any() ? $"DATEPART(mm, Event.StartTime) not in ({string.Join(",", months)})" : null;
 
             string filters =
                 $"{(string.IsNullOrEmpty(hourFilt) ? "" : $"AND {hourFilt}")}" +
@@ -424,7 +424,7 @@ namespace openXDA.Controllers.WebAPI
         private string getIDFilter(List<int> ids, string fieldName)
         {
             if (ids is null) return null;
-            if (ids.Count() == 0) return null;
+            if (!ids.Any()) return null;
             return $"{fieldName} IN ({string.Join(", ", ids)})";
         }
         #endregion

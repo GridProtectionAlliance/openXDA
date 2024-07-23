@@ -179,7 +179,7 @@ namespace openXDA.Adapters
                 return new GSF.Range<DateTime>(bounds[0].Value<DateTime>(), bounds[1].Value<DateTime>());
             });
             spans = GSF.Range<DateTime>.MergeAllOverlapping(spans).OrderBy(span => span.Start);
-            if (spans.Count() == 0)
+            if (!spans.Any())
             {
                 BadRequestErrorMessageResult result = BadRequest("No timespans specified in query parameter");
                 return await result.ExecuteAsync(cancellationToken);
@@ -214,7 +214,7 @@ namespace openXDA.Adapters
                         void BuildQuery(IQueryBuilder builder)
                         {
                             builder.Range(span.Start, span.End);
-                            if (tags.Count() != 0) builder.FilterTags(tags);
+                            if (tags.Any()) builder.FilterTags(tags);
                             if (query.ContainsKey("InvalidFlags")) builder.TestQuality(invalidFlags);
                             if (query.ContainsKey("AggregateDuration")) builder.Aggregate(aggregateDuration);
                         }
