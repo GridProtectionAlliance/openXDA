@@ -233,11 +233,11 @@ namespace openXDA.Controllers.WebAPI
 
                 string filters =
                     $@"Event.StartTime BETWEEN {{0}} AND {{1}}
-                    {(string.IsNullOrEmpty(phaseFilter) ? "" : $"AND ({phaseFilter})")}
-                    {(string.IsNullOrEmpty(typeFilter) ? "" : $"AND ({typeFilter})")}
-                    {(string.IsNullOrEmpty(byFilter) ? "" : $"AND {byFilter}")}
-                    {(string.IsNullOrEmpty(charFilter) ? "" : $"AND {charFilter}")}
-                    {(string.IsNullOrEmpty(timeFilter) ? "" : $"{timeFilter}")}";
+                    {(string.IsNullOrEmpty(phaseFilter) ? "" : $" AND ({phaseFilter})")}
+                    {(string.IsNullOrEmpty(typeFilter) ? "" : $" AND ({typeFilter})")}
+                    {(string.IsNullOrEmpty(byFilter) ? "" : $" AND {byFilter}")}
+                    {(string.IsNullOrEmpty(charFilter) ? "" : $" AND {charFilter}")}
+                    {(string.IsNullOrEmpty(timeFilter) ? "" : $" AND {timeFilter}")}";
 
                 string query =
                     $@"SELECT 
