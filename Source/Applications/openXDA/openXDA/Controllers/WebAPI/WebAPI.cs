@@ -244,14 +244,19 @@ namespace openXDA.Controllers.WebAPI
                         Event.ID,
                         Event.StartTime,
                         Event.EndTime,
-                        Event.Name,
-                        Event.Description,
                         Event.AssetID,
-                        Event.MeterID
+                        Event.MeterID,
+                        EventType.Name as Type,
+                        Asset.AssetName,
+                        Meter.Name as MeterName
                     FROM 
                         Event JOIN 
                         EventType ON
-                            EventType.ID = Event.EventTypeID LEFT OUTER JOIN
+                            EventType.ID = Event.EventTypeID INNER JOIN
+                        Meter ON
+                            Meter.ID = Event.MeterID INNER JOIN
+                        Asset ON
+                            Asset.ID = Event.AssetID LEFT OUTER JOIN
                         EventWorstDisturbance ON 
                             EventWorstDisturbance.EventID = Event.ID AND 
                             EventType.Name IN ('Sag', 'Swell', 'Interruption', 'Transient') LEFT OUTER JOIN 
