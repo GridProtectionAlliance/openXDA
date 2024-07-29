@@ -39,6 +39,7 @@
     "@gpa-gemstone/react-graph": "1.0.59",
     "@gpa-gemstone/react-interactive": "1.0.131",
     "@gpa-gemstone/react-table": "1.2.53",
+    "@gpa-gemstone/common-pages": "0.0.117",
     "@reduxjs/toolkit": "1.4.0",
     "@types/d3": "^4.13.2",
     "@types/jquery": "3.3.1",
