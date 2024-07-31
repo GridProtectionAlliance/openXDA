@@ -266,8 +266,7 @@ CREATE TABLE [LocationDrawing] (
     Link VARCHAR(max) NOT NUll,
     Description VARCHAR(max) NULL,
     Number VARCHAR(200) NULL,
-    Category VARCHAR(max) NULL,
-    CONSTRAINT UC_SystemCenter_LocationDrawing_Number UNIQUE (Number)
+    Category VARCHAR(max) NULL
 )
 GO
 
