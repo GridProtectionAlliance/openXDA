@@ -17,6 +17,7 @@ CREATE TABLE AccessLog(
     ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
     UserName varchar(200) NOT NULL,
     AccessGranted bit NOT NULL,
+    NodeID uniqueidentifier NOT NULL,
     CreatedOn datetime NOT NULL CONSTRAINT [DF_AccessLog_Timestamp]  DEFAULT (getutcdate())
 )
 GO
