@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="APIAccessKey.cs" />
+    <Compile Include="APIPingController.cs" />
     <Compile Include="ImpersonationSecurityProvider.cs" />
     <Compile Include="APIConsoleController.cs" />
     <Compile Include="IAPIConsoleHost.cs" />
