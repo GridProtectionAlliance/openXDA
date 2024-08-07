@@ -28,6 +28,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.RightsManagement;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
@@ -547,5 +548,38 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/Console")]
     public class ConsoleController : APIConsoleController {
         protected override IAPIConsoleHost Host => ServiceConnection.Default;
+    }
+
+    [RoutePrefix("api/FTT")]
+    public class FTTController : ApiController
+    {
+        [HttpGet, Route("XDAEventList")]
+        public IHttpActionResult GetEventList([FromUri]string startdate, [FromUri] string enddate)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                string sqlQuery = @"SELECT     
+                    Event.ID as eventID,
+                    FaultSummary.Inception as event_datetime,
+                    Location.ShortName as substation,
+                    try_parse(Asset.AssetKey as int) as lineID,
+                    Asset.AssetName as line,
+                    CASE WHEN FaultSummary.Distance = '-1E308'
+                        THEN 'NaN'
+                    ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19))
+                    END AS distance_miles
+                FROM FaultSummary JOIN
+                     Event ON FaultSummary.EventID = Event.ID JOIN
+                     EventType ON Event.EventTypeID = EventType.ID JOIN
+                     Meter ON Event.MeterID = Meter.ID JOIN
+                     Location ON Meter.LocationID = Location.ID JOIN
+                     Asset ON Event.AssetID = Asset.ID     
+                WHERE      
+                    IsSelectedAlgorithm = 1 AND  EventType.Name = 'Fault' AND Inception BETWEEN {0} AND {1}
+                ";
+
+                return Ok(connection.RetrieveData(sqlQuery,startdate,enddate));
+            }
+        }
     }
 }
