@@ -498,7 +498,7 @@ namespace openXDA.Controllers.WebAPI
     }
 
     [RoutePrefix("api")]
-    public class GeneralController : ApiController
+    public class GeneralController : APIPingController
     {
         [HttpGet, Route("TestAuth")]
         public IHttpActionResult Alive()
