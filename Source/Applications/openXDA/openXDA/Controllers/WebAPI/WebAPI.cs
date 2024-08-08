@@ -28,7 +28,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.RightsManagement;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
@@ -554,7 +553,7 @@ namespace openXDA.Controllers.WebAPI
     public class FTTController : ApiController
     {
         [HttpGet, Route("XDAEventList")]
-        public IHttpActionResult GetEventList([FromUri]string startdate, [FromUri] string enddate)
+        public IHttpActionResult GetEventList([FromUri] string startdate, [FromUri] string enddate)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             {
@@ -578,7 +577,7 @@ namespace openXDA.Controllers.WebAPI
                     IsSelectedAlgorithm = 1 AND  EventType.Name = 'Fault' AND Inception BETWEEN {0} AND {1}
                 ";
 
-                return Ok(connection.RetrieveData(sqlQuery,startdate,enddate));
+                return Ok(connection.RetrieveData(sqlQuery, startdate, enddate));
             }
         }
     }
