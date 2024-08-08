@@ -16,29 +16,20 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/27/2023 - Christoph Lackner
+//  08/08/2024 - Christoph Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Security.Principal;
 using System.Web.Http;
-using GSF;
-using GSF.ServiceProcess;
 
 namespace openXDA.APIMiddleware
 {
     /// <summary>
     /// Base Class that includes the endpoint needed for Pinging the service.
     /// </summary>
-    public abstract class  APIPingController : ApiController
+    public abstract class APIPingController : ApiController
     {
-
-        #region [ HTTP Methods ]
-
         /// <summary>
         /// Returns a 1 if the service is running
         /// </summary>
@@ -48,7 +39,5 @@ namespace openXDA.APIMiddleware
         {
             return Ok(1);          
         }
-
-        #endregion
     }
 }
