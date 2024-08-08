@@ -5128,7 +5128,8 @@ CREATE VIEW ActiveSubscription AS
 		SentEmail.Subject AS Subject,
 		SentEmail.TimeSent AS LastSent,
         UserAccount.Name AS UserName,
-		UserAccount.Email AS Email
+		UserAccount.Email AS Email,
+        EmailType.RequireApproval AS RequireApproval
 	FROM UserAccountEmailType LEFT JOIN
 		AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
 		EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID LEFT JOIN
