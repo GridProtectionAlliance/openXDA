@@ -24,7 +24,7 @@
 import * as React from 'react';
 import { SPCTools, DynamicWizzard } from '../global';
 import Table from '@gpa-gemstone/react-table';
-import { DateRangePicker } from '@gpa-gemstone/react-forms';
+import { TimeFilter } from '@gpa-gemstone/common-pages'
 import { useSelector, useDispatch } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
 import {
@@ -210,6 +210,7 @@ const WizardTest = () => {
         ])
     }
 
+    type TimeUnit = 'y' | 'M' | 'w' | 'd' | 'h' | 'm' | 's' | 'ms'
     const validStartDate = !isNaN(new Date(timeRange.start).getTime()) && timeRange.start != null;
     const validEndDate = !isNaN(new Date(timeRange.end).getTime()) && timeRange.end != null &&
         (new Date(timeRange.end) > new Date(timeRange.start) || !validStartDate)
@@ -225,7 +226,10 @@ const WizardTest = () => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            <DateRangePicker<SPCTools.IDateRange> Label={''} Record={timeRange} FromField={'start'} ToField={'end'} Setter={(r) => { setLoading('changed'); setTimeRange(r); }} Disabled={loading == 'loading'} Valid={ () => true} />
+                            <TimeFilter filter={{ start: timeRange.start, end: timeRange.end }} setFilter={(center: string, start: string, end: string, unit: TimeUnit, duration: number) => {
+                                setLoading('changed');
+                                setTimeRange({ start: start, end: end });
+                            }} showQuickSelect={true} timeZone={'UTC'} dateTimeSetting={'startEnd'} isHorizontal={true} format={"date"} />
                         </div>
                     </div>
                     <div className="row" style={{ margin: 0 }}>
