@@ -50,7 +50,7 @@ namespace openXDA.APIMiddleware
         /// <summary>
         /// The date and time at which the access key is no longer valid.
         /// </summary>
-        public DateTime Expires { get; set; }
+        public DateTime? Expires { get; set; }
 
         /// <summary>
         /// A Flag indicating if this key is allowed to impersonate regular users.
