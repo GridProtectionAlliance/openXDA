@@ -37,6 +37,7 @@ namespace openXDA.Model
     [DeleteRoles("Administrator")]
     public class ApplicationNode
     {
+        [PrimaryKey(true)]
         public Guid ID { get; set; }
         public string Name { get; set; }
     }
