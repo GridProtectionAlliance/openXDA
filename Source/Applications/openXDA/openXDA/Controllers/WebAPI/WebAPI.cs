@@ -177,7 +177,16 @@ namespace openXDA.Controllers.WebAPI
     }
 
     [RoutePrefix("api/Asset")]
-    public class AssetController : ModelController<Asset> {}
+    public class AssetController : ModelController<Asset> { }
+
+    [RoutePrefix("api/DetailedAsset")]
+    public class DetailedAssetController : ModelController<DetailedAsset> { }
+
+    [RoutePrefix("api/DetailedLocation")]
+    public class DetailedLocationController : ModelController<DetailedLocation> { }
+
+    [RoutePrefix("api/AssetGroup")]
+    public class AssetGroupController : ModelController<AssetGroup> { }
 
     [RoutePrefix("api/Phase")]
     public class PhaseController : ModelController<Phase> {}
