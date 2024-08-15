@@ -4,7 +4,8 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2022
 ENV sa_password="_" \
     sa_password_path="C:\ProgramData\Docker\secrets\sa-password" \
     openXDAUser="openXDA" \
-    openXDAPassword="openXDA1" 
+    openXDAPassword="openXDA1" \
+    onStartSQL=""
 
 ADD https://go.microsoft.com/fwlink/p/?linkid=2216019&clcid=0x409&culture=en-us&country=us c:/setup/
 RUN C:/setup/SQL2022-SSEI-Expr.exe /Q /Action=Install /IAcceptSQLServerLicenseTerms
