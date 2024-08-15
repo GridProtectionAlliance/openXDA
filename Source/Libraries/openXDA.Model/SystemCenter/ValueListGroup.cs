@@ -32,7 +32,21 @@ namespace SystemCenter.Model
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [GetRoles("Administrator, Transmission SME")]
-    [TableName("ValueListGroup"), UseEscapedName, PrimaryLabel("Name"), AllowSearch]
+    [TableName("ValueListGroup"), UseEscapedName, PrimaryLabel("Name"), AllowSearch, 
+    CustomView(@"
+     SELECT
+         ValueListGroup.ID,
+         ValueListGroup.Name,
+         ValueListGroup.Description,
+         COUNT(ValueList.ID) AS Items
+     FROM 
+         ValueListGroup 
+         LEFT JOIN ValueList ON ValueListGroup.ID = ValueList.GroupID
+     GROUP BY 
+         ValueListGroup.ID,
+         ValueListGroup.Name,
+         ValueListGroup.Description
+     ")]    
     public class ValueListGroup
     {
         [PrimaryKey(true)]
@@ -41,5 +55,6 @@ namespace SystemCenter.Model
         [StringLength(200)]
         public string Name { get; set; }
         public string Description { get; set; }
+        public int Items { get; set; }
     }
 }
