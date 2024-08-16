@@ -1,0 +1,21 @@
+
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+ENV CompanyName="Grid Protection Alliance" \
+    CompanyAcronym="GPA" \
+    ConnectionString="Data Source=localhost;; Initial Catalog=openXDA" \
+    NodeID="00000000-0000-0000-0000-000000000000"
+
+RUN ["powershell","[Environment]::SetEnvironmentVariable('CompanyName', 'Grid Protection Alliance', 'Machine')"]
+RUN ["powershell","[Environment]::SetEnvironmentVariable('NodeID', '00000000-0000-0000-0000-000000000000', 'Machine')"]
+RUN ["powershell","[Environment]::SetEnvironmentVariable('CompanyAcronym', 'GPA', 'Machine')"]
+RUN ["powershell","[Environment]::SetEnvironmentVariable('ConnectionString', 'Data Source=localhost; Initial Catalog=openXDA', 'Machine')"]
+
+ADD ./OpenXDASetup.msi c:/setup/
+RUN C:/setup/OpenXDASetup.msi  ADDLOCAL="ServiceFeature,ConsoleFeature" INTEGRATEDSECURITY=NO COMPANYNAME=env(CompanyName) COMPANYACRONYM=env(CompanyAcronym) DEFAULTCONNECTIONSTRING=env(ConnectionString) NODEID=env(NodeID) /q /l*v log.log
+
+
+COPY ./startDocker.ps1 c:/scripts/
+
+EXPOSE 8989/tcp
+CMD ["powershell", "C:/scripts/startDocker.ps1"]
