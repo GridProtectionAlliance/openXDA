@@ -36,4 +36,4 @@ foreach ($file in Get-ChildItem 'c:/scripts/sql/') { \
 }
 
 EXPOSE 1433/tcp
-CMD ["powershell", "C:/scripts/start.ps1"]
+CMD ["powershell", "C:/scripts/startDocker.ps1"]
