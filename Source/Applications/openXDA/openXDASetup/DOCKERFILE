@@ -13,6 +13,7 @@ RUN ["powershell","[Environment]::SetEnvironmentVariable('ConnectionString', 'Da
 
 ADD ./OpenXDASetup.msi c:/setup/
 RUN C:/setup/OpenXDASetup.msi  ADDLOCAL="ServiceFeature,ConsoleFeature" INTEGRATEDSECURITY=NO COMPANYNAME=env(CompanyName) COMPANYACRONYM=env(CompanyAcronym) DEFAULTCONNECTIONSTRING=env(ConnectionString) NODEID=env(NodeID) /q /l*v log.log
+RUN sc config "OpenXDA" start= demand
 
 
 COPY ./startDocker.ps1 c:/scripts/

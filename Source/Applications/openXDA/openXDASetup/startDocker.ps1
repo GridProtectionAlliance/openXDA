@@ -4,10 +4,10 @@
 [Environment]::SetEnvironmentVariable("ConnectionString", "$env:ConnectionString", "Machine")
 [Environment]::SetEnvironmentVariable("NodeID", "$env:NodeID", "Machine")
 
+$ServiceName = 'OpenXDA';
+$ConfigFile = 'C:/Program Files/OpenXDA/OpenXDA.StatusLog.txt'
+Write-Host "Starting $ServiceName" 
+net start $ServiceName
+Write-Host "Started $ServiceName"
 
-Write-Host "Starting OpenXDA"
-$ServiceName = 'OpenXDA'; 
-Restart-Service $ServiceName
-Write-Host "Started OpenXDA"
-
-get-content 'C:/Program Files/OpenXDA/OpenXDA.StatusLog.txt' -tail 1 -wait
+get-content "$ConfigFile" -tail 1 -wait
