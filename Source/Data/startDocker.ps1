@@ -3,6 +3,7 @@ $sa_password = $env:sa_password
 $openXDAUser = $env:openXDAUser
 $openXDAPassword = $env:openXDAPassword
 $onStartSQL = $env:onStartSQL
+$onStartSQLFile = $env:onStartSQLFile
 
 # start the service
 Write-Host "Starting SQL Server"
@@ -39,6 +40,12 @@ if ($onStartSQL -ne "") {
     Write-Host "Running On Start SQL"
     sqlcmd -S "localhost\SQLEXPRESS" -Q $onStartSQL
 }
+
+if ($onStartSQLFile -ne "") {
+    Write-Host "Running File $onStartSQLFile" 
+    sqlcmd -S "localhost\SQLEXPRESS" -d openXDA -i "$onStartSQLFile"
+}
+
 
 $lastCheck = (Get-Date).AddSeconds(-2) 
 while ($true) 
