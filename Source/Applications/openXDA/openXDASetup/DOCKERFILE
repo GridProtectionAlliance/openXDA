@@ -12,7 +12,7 @@ RUN ["powershell","[Environment]::SetEnvironmentVariable('CompanyAcronym', 'GPA'
 RUN ["powershell","[Environment]::SetEnvironmentVariable('ConnectionString', 'Data Source=localhost; Initial Catalog=openXDA', 'Machine')"]
 
 ADD ./OpenXDASetup.msi c:/setup/
-RUN C:/setup/OpenXDASetup.msi  ADDLOCAL="ServiceFeature,ConsoleFeature" INTEGRATEDSECURITY=NO COMPANYNAME=env(CompanyName) COMPANYACRONYM=env(CompanyAcronym) DEFAULTCONNECTIONSTRING=env(ConnectionString) NODEID=env(NodeID) /q /l*v log.log
+RUN C:/setup/OpenXDASetup.msi  ADDLOCAL="ServiceFeature,ConsoleFeature,WebFilesFeature" INTEGRATEDSECURITY=NO COMPANYNAME=env(CompanyName) COMPANYACRONYM=env(CompanyAcronym) DEFAULTCONNECTIONSTRING=env(ConnectionString) NODEID=env(NodeID) /q /l*v log.log
 RUN sc config "OpenXDA" start= demand
 
 
