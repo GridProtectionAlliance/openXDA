@@ -101,7 +101,7 @@ namespace FaultData.DataResources
 
                 EventClassification classification = Classify(meterDataSet, dataGroup);
 
-                if (!(dataGroup.Asset is null) && !ValidateEventType(classification, dataGroup.Asset))
+                if (!ValidateEventType(classification, dataGroup.Asset))
                     classification = EventClassification.Other;
 
                 Classifications.Add(dataGroup, classification);
@@ -176,7 +176,7 @@ namespace FaultData.DataResources
 
                 EventTypeAssetType evtAssetType = new TableOperations<EventTypeAssetType>(connection).QueryRecordWhere("EventTypeID = {0} AND AssetTypeID = {1}", evtType.ID, asset.AssetTypeID);
                 return !(evtAssetType is null);
-            }        
+            }
         }
 
         private static bool HasBreakerChannels(DataGroup dataGroup)
