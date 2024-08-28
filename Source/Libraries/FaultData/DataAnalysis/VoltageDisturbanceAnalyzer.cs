@@ -125,14 +125,6 @@ namespace FaultData.DataAnalysis
         {
             Asset asset = dataGroup.Asset;
 
-            if ((object)asset == null)
-            {
-                if (meter.Location.AssetLocations.Count != 1)
-                    return;
-
-                asset = meter.Location.AssetLocations.Single().Asset;
-            }
-
             List<Disturbance> disturbanceList = dataGroup.Disturbances
                 .Select(disturbance => ToDisturbance(asset, disturbance))
                 .Where(IsDisturbed)

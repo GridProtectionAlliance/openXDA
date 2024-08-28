@@ -117,7 +117,7 @@ namespace FaultData.DataOperations
                     if (dataGroup.Classification != DataClassification.Event)
                         continue;
 
-                    Asset asset = dataGroup.Asset ?? meterDataSet.Meter.Location.AssetLocations.Single().Asset;
+                    Asset asset = dataGroup.Asset;
                     IDbDataParameter startTime2 = ToDateTime2(connection, dataGroup.StartTime);
                     IDbDataParameter endTime2 = ToDateTime2(connection, dataGroup.EndTime);
 
@@ -177,10 +177,7 @@ namespace FaultData.DataOperations
                 if (!eventClassifications.TryGetValue(dataGroup, out EventClassification eventClassification))
                     continue;
 
-                if ((object)dataGroup.Asset == null && meterDataSet.Meter.Location.AssetLocations.Count != 1)
-                    continue;
-
-                Asset asset = dataGroup.Asset ?? meterDataSet.Meter.Location.AssetLocations.Single().Asset;
+                Asset asset = dataGroup.Asset;
                 IDbDataParameter startTime2 = ToDateTime2(connection, dataGroup.StartTime);
                 IDbDataParameter endTime2 = ToDateTime2(connection, dataGroup.EndTime);
 

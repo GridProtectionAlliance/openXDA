@@ -98,13 +98,15 @@ namespace FaultData.DataResources
 
             if (meterDataSet.Meter.MeterAssets.Count == 1)
             {
+                Asset asset = meterDataSet.Meter.MeterAssets[0].Asset;
+
                 foreach (ReportedDisturbance disturbance in meterDataSet.ReportedDisturbances.OrderBy(dist => dist.Time))
                 {
                     DataGroup dataGroup = dataGroups.FirstOrDefault(dg => dg.Add(disturbance));
 
                     if ((object)dataGroup == null)
                     {
-                        dataGroup = new DataGroup();
+                        dataGroup = new DataGroup(asset);
                         dataGroup.Add(disturbance);
                         dataGroups.Add(dataGroup);
                     }
