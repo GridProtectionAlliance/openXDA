@@ -159,7 +159,8 @@ CREATE TABLE [MiMD.ConfigFileRules](
 	[Value] VARCHAR(255) NOT NULL,
 	Comparison VARCHAR(50) NOT NULL,
 	FieldType VARCHAR(50) NOT NULL,
-	AdditionalFieldID INT NULL REFERENCES AdditionalField(ID)
+	AdditionalFieldID INT NULL REFERENCES AdditionalField(ID),
+	PreVal VARCHAR(MAX) NOT NULL DEFAULT('0')
 );
 GO
 
