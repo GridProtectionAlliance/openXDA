@@ -140,8 +140,6 @@
     <Property Id="NODEIDMAPPING" Value="NODEID={//systemSettings/add[@name='NodeID']/@value}" />
     <Property Id="COMPANYACRONYMMAPPING" Value="COMPANYACRONYM={//add[@name='CompanyAcronym']/@value}" />
 
-
-
     <!-- JRC: Something to consider:
     <Property Id="SYSTEMNAME" Value=" " />
     -->
@@ -152,7 +150,7 @@
     <SetProperty Action="SetServiceAccountDefault" Id="SERVICEACCOUNT" After="LaunchConditions" Value="NT SERVICE\[SERVICENAME]" Sequence="first"><![CDATA[NOT REGSERVICEACCOUNT AND NOT SERVICEACCOUNT]]></SetProperty>
     <SetProperty Action="SetServiceAccountRegistry" Id="SERVICEACCOUNT" After="LaunchConditions" Value="[REGSERVICEACCOUNT]" Sequence="first"><![CDATA[REGSERVICEACCOUNT AND NOT SERVICEACCOUNT]]></SetProperty>
 
-    <SetProperty Action="SetDataBase" Id="DATABASENAME" Value="[SERVICENAME]" After="LaunchConditions" Sequence="first"><![CDATA[NOT DATABASENAME]]></SetProperty>
+    <SetProperty Action="SetDatabase" Id="DATABASENAME" Value="[SERVICENAME]" After="LaunchConditions" Sequence="first"><![CDATA[NOT DATABASENAME]]></SetProperty>
     <SetProperty Action="SetConnectionStringDefault" Id="DEFAULTCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;User Id=[DBUSERNAME];;Password=[DBPASSWORD]" After="LaunchConditions" Sequence="first"><![CDATA[NOT DEFAULTCONNECTIONSTRING AND NOT(INTEGRATEDSECURITY = "SSPI")]]></SetProperty>
     <SetProperty Action="SetConnectionStringDefaultSSPI" Id="DEFAULTCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;Integrated Security=[INTEGRATEDSECURITY]" After="LaunchConditions" Sequence="first"><![CDATA[NOT DEFAULTCONNECTIONSTRING AND (INTEGRATEDSECURITY = "SSPI")]]></SetProperty>
     <SetProperty Action="SetXDAConnectionString" Id="XDACONNECTIONSTRING" After="LaunchConditions" Value="[DEFAULTCONNECTIONSTRING]" Sequence="first"><![CDATA[NOT XDACONNECTIONSTRING]]></SetProperty>
