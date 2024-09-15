@@ -7541,7 +7541,9 @@ namespace openXDA.Hubs
                     CancellationTokenSource source = new CancellationTokenSource();
                     CancellationToken token = source.Token;
 
-                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, userAccount, token);
+                    DatapusherRequester requester = new DatapusherRequester(instance, connection);
+
+                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, requester, token);
 
                 }
                 catch (Exception ex)
