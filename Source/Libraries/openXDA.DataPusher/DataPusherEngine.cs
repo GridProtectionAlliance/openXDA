@@ -109,6 +109,14 @@ namespace openXDA.DataPusher
                 UpdateProgressForMeter?.Invoke(new object(), new EventArgs<string, string, int>(client, meter, update));
         }
 
+        public static event EventHandler<EventArgs<string, string, int>> UpdateProgressForAssets;
+
+        private static void OnUpdateProgressForAssets(string client, string asset, int update)
+        {
+            if (client != string.Empty)
+                UpdateProgressForAssets?.Invoke(new object(), new EventArgs<string, string, int>(client, asset, update));
+        }
+
         public static event EventHandler<EventArgs<string, string, int>> UpdateProgressForInstance;
 
         private static void OnUpdateProgressForInstance(string client, string instance, int update)
