@@ -600,7 +600,8 @@ namespace openXDA.DataPusher
                     remoteMeter = new Meter()
                     {
                         Alias = meter.RemoteXDAName,
-                        ShortName = newShortName
+                        ShortName = newShortName,
+                        Name = meter.RemoteXDAName
                     };
 
                 }
@@ -610,10 +611,10 @@ namespace openXDA.DataPusher
                     {
                         Alias = localMeterRecord.Alias,
                         ShortName = localMeterRecord.ShortName,
+                        Name = localMeterRecord.Name
                     };
                 }
                 remoteMeter.AssetKey = meter.RemoteXDAAssetKey.ToString();
-                remoteMeter.Name = meter.RemoteXDAName;
                 remoteMeter.LocationID = remoteMeterLocation.ID;
                 remoteMeter.Make = localMeterRecord.Make;
                 remoteMeter.Model = localMeterRecord.Model;
@@ -631,15 +632,16 @@ namespace openXDA.DataPusher
                     else
                         remoteMeter.ShortName = meter.RemoteXDAName;
                     remoteMeter.Alias = meter.RemoteXDAName;
+                    remoteMeter.Name = meter.RemoteXDAName;
                 }
                 else
                 {
                     remoteMeter.Alias = localMeterRecord.Alias;
                     remoteMeter.ShortName = localMeterRecord.ShortName;
+                    remoteMeter.Name = localMeterRecord.Name;
                 }
 
                 remoteMeter.AssetKey = meter.RemoteXDAAssetKey.ToString();
-                remoteMeter.Name = meter.RemoteXDAName;
                 remoteMeter.LocationID = remoteMeterLocation.ID;
                 remoteMeter.Make = localMeterRecord.Make;
                 remoteMeter.Model = localMeterRecord.Model;
