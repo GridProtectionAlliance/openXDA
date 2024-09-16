@@ -274,9 +274,9 @@ namespace openXDA.DataPusher
                     }
 
                     SyncAssetConfigurationForInstance(clientId, instance, assets, localAssetTypes, remoteAssetTypes, remoteLocations, requester, cancellationToken);
-                        OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
-                    }
+                    OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
                 }
+            }
             catch (Exception ex)
             {
                 Log.Error(ex);
@@ -353,7 +353,7 @@ namespace openXDA.DataPusher
         }
 
         public void SyncAssetConfigurationForInstance(
-            string clientId, RemoteXDAInstance instance, IEnumerable<AssetsToDataPush> assetsToDataPushes,
+            string clientId, RemoteXDAInstance instance, IEnumerable<AssetsToDataPush> assets,
             IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, IEnumerable<Location> remoteLocations,
             DatapusherRequester requester, CancellationToken cancellationToken)
         {
@@ -361,6 +361,27 @@ namespace openXDA.DataPusher
             {
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
+                    // By default, line segments are not associated with meters, so they often get overlooked. Decision was made to always add them if the associated line is here
+                    IEnumerable<AssetsToDataPush> lineSegments = new TableOperations<Line>(connection).
+                        QueryRecordsWhere("ID in (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0})", instance.ID).
+                        SelectMany(line =>
+                        {
+                            AssetsToDataPush lineAssetPush = assets.Where(asset => asset.ID == line.ID).First();
+                            return line.Segments.Select((segment, index) => new AssetsToDataPush()
+                            {
+                                ID = -1,
+                                RemoteXDAInstanceID = instance.ID,
+                                LocalXDAAssetID = segment.ID,
+                                RemoteXDAAssetID = -1,
+                                RemoteXDAAssetKey = $"{lineAssetPush.RemoteXDAAssetKey}-S{index}",
+                                Obsfucate = lineAssetPush.Obsfucate,
+                                Synced = false,
+                                RemoteAssetCreatedByDataPusher = false
+                            });
+                        });
+
+                    IEnumerable<AssetsToDataPush> assetsToDataPushes = assets.Concat(lineSegments);
+
                     TableOperations<MetersToDataPush> meterPushTable = new TableOperations<MetersToDataPush>(connection);
                     IEnumerable<MetersToDataPush> meterDataPushes = meterPushTable.
                         QueryRecordsWhere("SELECT LocalXDAMeterID FROM MetersToDataPush WHERE RemoteXDAInstanceID = {0} AND Synced = 1)", instance.ID);
@@ -376,15 +397,15 @@ namespace openXDA.DataPusher
                         if (cancellationToken.IsCancellationRequested)
                             break;
 
-                    // Add or Update Asset
-                    Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
-                    // Is null if this fails, error logged in func
-                    Asset remoteAsset = AddOrGetRemoteAsset(assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, requester);
+                        // Add or Update Asset
+                        Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
+                        // Is null if this fails, error logged in func
+                        Asset remoteAsset = AddOrGetRemoteAsset(assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, requester);
 
                         // update progress
                         OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (++progressCount) / progressTotal));
 
-                    if (remoteAsset is null)
+                        if (remoteAsset is null)
                         {
                             progressCount += (stepsPerAsset - 1);
                             OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (progressCount) / progressTotal));
@@ -439,8 +460,8 @@ namespace openXDA.DataPusher
                         OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (++progressCount) / progressTotal));
 
 
-                    connection.ExecuteNonQuery("UPDATE AssetsToDataPush SET Synced = 1 where ID = {0}", assetToDataPush.ID);
-                }
+                        connection.ExecuteNonQuery("UPDATE AssetsToDataPush SET Synced = 1 where ID = {0}", assetToDataPush.ID);
+                    }
 
                     IEnumerable<AssetConnection> localAssetConnections = new TableOperations<AssetConnection>(connection).QueryRecordsWhere(@"
                         ParentID IN (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0})
