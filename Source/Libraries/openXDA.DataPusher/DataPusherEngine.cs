@@ -242,13 +242,9 @@ namespace openXDA.DataPusher
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     IEnumerable<MetersToDataPush> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0}", instanceId);
+                    IEnumerable<AssetsToDataPush> assets = new TableOperations<AssetsToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0}", instanceId);
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
 
-                    // Meter Updates every asset push associated with the meter
-                    IEnumerable<AssetsToDataPush> meterlessAssets = new TableOperations<AssetsToDataPush>(connection).
-                        QueryRecordsWhere(@"RemoteXDAInstanceID = {0} and LocalXDAAssetID in 
-                        (Select Asset.ID From Asset Full Outer Join MeterAsset On MeterAsset.AssetID = Asset.ID Where MeterID is null or MeterID not in 
-                        (Select LocalXDAMeterID From MetersToDataPush Where RemoteXDAInstanceID = {0}))", instance.ID);
 
                     // Setup Progress
                     int progressTotal = meters.Count() + meterlessAssets.Count()+ 1;
@@ -258,17 +254,22 @@ namespace openXDA.DataPusher
                     // Do other operations needed
                     DatapusherRequester requester = new DatapusherRequester(instance, connection);
 
+                    IEnumerable<Location> remoteLocations = Enumerable.Empty<Location>();
                     IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
+
                     IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>("all", requester);
                     OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
+
                     AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(requester);
+                    OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
 
                     foreach (MetersToDataPush meter in meters)
                     {
                         if (cancellationToken.IsCancellationRequested)
                             break;
 
-                        SyncMeterConfigurationForInstance(null, instance, meter, remoteAssetGroup, localAssetTypes, remoteAssetTypes, requester, cancellationToken);
+                        // Locations are attached to meters on remote pushes, therefore we only have locations if there is a meter for them
+                        remoteLocations.Append(SyncMeterConfigurationForInstance(clientId, meter, remoteAssetGroup, requester, cancellationToken));
                         OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
                     }
                     foreach (AssetsToDataPush asset in meterlessAssets)
@@ -286,7 +287,7 @@ namespace openXDA.DataPusher
             }
         }
 
-        public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, MetersToDataPush meterToDataPush, AssetGroup remoteAssetGroup, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, DatapusherRequester requester, CancellationToken cancellationToken)
+        public Location SyncMeterConfigurationForInstance(string clientId, MetersToDataPush meterToDataPush, AssetGroup remoteAssetGroup, DatapusherRequester requester, CancellationToken cancellationToken)
         {
             try
             {
@@ -294,21 +295,16 @@ namespace openXDA.DataPusher
                 {
                     // Get local meter record
                     Meter localMeterRecord = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
-                    // get local MeterLine table 
-                    // Get Asset Datapushes assciated with this meter
-                    IEnumerable<AssetsToDataPush> assetDataPushes = new TableOperations<AssetsToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0} and LocalXDAAssetID in (Select AssetID From MeterAsset Where MeterID = {1})", instance.ID, localMeterRecord.ID);
-
 
                     // update progress
-                    int progressTotal = assetDataPushes.Count() + 2;
+                    int progressTotal = 3;
                     int progressCount = 0;
-
 
                     // Add or Update remote meter location
                     Location remoteLocation = AddOrGetRemoteLocation(meterToDataPush, localMeterRecord, requester);
 
                     // update progress
-                    OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (progressCount) / progressTotal));
+                    OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
 
                     // if meter doesnt exist remotely add it
                     AddOrGetRemoteMeter(meterToDataPush, localMeterRecord, remoteLocation, requester);
@@ -322,52 +318,15 @@ namespace openXDA.DataPusher
                     // update progress
                     OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
 
-                    // if there is a line for the meter ensure that its data has been uploaded remotely
-                    foreach (AssetsToDataPush assetToDataPush in assetDataPushes)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                            break;
-
-                        // Add or Update Asset
-                        Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
-                        // Is null if this fails, error logged in func
-                        Asset remoteAsset = AddOrGetRemoteAsset(assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, requester);
-                        if (remoteAsset is null)
-                            continue;
-                        // Note that this needs to get the Asset specifics (e.g. LineAttributes) sepperatly
-                        // That broke in 3.0 
-
-                        // if MeterLine association has not been previously made, make it
-                        MeterAsset localMeterAsset = new TableOperations<MeterAsset>(connection).QueryRecordWhere("MeterID = {0} and AssetID = {1}", meterToDataPush.LocalXDAMeterID, assetToDataPush.LocalXDAAssetID);
-                        MeterAsset remoteMeterAsset = AddMeterAsset(meterToDataPush, assetToDataPush, requester, localMeterAsset);
-
-                        // add line to meterlocationline table
-                        AssetLocation remoteAssetLocation = AddOrUpdateAssetLocation(remoteAsset, remoteLocation, requester);
-
-                        // Sync Channel and channel dependant data
-                        AddOrUpdateChannelsForLine(localMeterAsset, remoteMeterAsset, requester);
-
-                        connection.ExecuteNonQuery("UPDATE AssetsToDataPush SET Synced = 1 where ID = {0}", assetToDataPush.ID);
-
-                        OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
-                    }
-
-                    IEnumerable<AssetConnection> localAssetConnections = new TableOperations<AssetConnection>(connection).QueryRecordsWhere(@"
-                        ParentID IN (SELECT AssetID FROM AssetLocation INNER JOIN AssetsToDataPush ON AssetLocation.AssetID = AssetsToDataPush.LocalXDAAssetID WHERE LocationID = {0})
-                        OR ChildID IN (SELECT AssetID FROM AssetLocation INNER JOIN AssetsToDataPush ON AssetLocation.AssetID = AssetsToDataPush.LocalXDAAssetID WHERE LocationID = {0})", 
-                        localMeterRecord.LocationID);
-                    IEnumerable<AssetConnectionType> localAssetConnectionTypes = new TableOperations<AssetConnectionType>(connection).QueryRecords();
-                    IEnumerable<AssetConnectionType> remoteAssetConnectionTypes = WebAPIHub.GetRecords<AssetConnectionType>("all", requester);
-                    foreach (var localAssetConnection in localAssetConnections) {
-                        AddAssetConnections(localAssetConnection, localAssetConnectionTypes.First(x => x.ID == localAssetConnection.ID).Name, remoteAssetConnectionTypes, requester);
-                    }
-
                     connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterToDataPush.ID);
+
+                    return remoteLocation;
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
+                return null;
             }
         }
 
@@ -380,7 +339,15 @@ namespace openXDA.DataPusher
                     IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
                     IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>("all", requester);
                     AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(requester);
-                    SyncMeterConfigurationForInstance(clientId, instance, meterToDataPush, remoteAssetGroup, localAssetTypes, remoteAssetTypes, requester, cancellationToken);
+                    IEnumerable<Location> remoteLocation = Enumerable.Empty<Location>().Append(SyncMeterConfigurationForInstance(clientId, meterToDataPush, remoteAssetGroup, requester, cancellationToken));
+
+                    // Meter Updates every asset push associated with the meter
+                    IEnumerable<AssetsToDataPush> assets = new TableOperations<AssetsToDataPush>(connection).
+                        QueryRecordsWhere(@"
+                        RemoteXDAInstanceID = {0} AND
+                        LocalXDAAssetID IN (Select AssetID From MeterAsset Where MeterID = {1}) ", instance.ID, meterToDataPush.LocalXDAMeterID);
+
+                    SyncAssetConfigurationForInstance(clientId, instance, assets, localAssetTypes, remoteAssetTypes, remoteLocation, requester, cancellationToken);
                 }
             }
             catch (Exception ex)
