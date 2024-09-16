@@ -639,7 +639,8 @@ namespace openXDA.DataPusher
 
                 // Case where the typed asset doesn't exist locally, just do regular asset
                 if (localTypedAsset is null)
-                    return AddOrGetAssetAny<Asset>(assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, requester);
+                    if (typeof(Asset) == typeof(T)) throw new NullReferenceException($"Unable to resolve local asset with key {localAsset.AssetKey}");
+                    else return AddOrGetAssetAny<Asset>(assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, requester);
 
                 //if the asset does not exist in the PQMarkPusher Database to allow for obsfucation add it.
                 remoteTypedAsset = WebAPIHub.GetRecordWhere<T>($"ID={assetToDataPush.RemoteXDAAssetID}", requester);
