@@ -4,7 +4,9 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2022
 ENV sa_password="_" \
     sa_password_path="C:\ProgramData\Docker\secrets\sa-password" \
     openXDAUser="openXDA" \
-    openXDAPassword="openXDA1" 
+    openXDAPassword="openXDA1" \
+    onStartSQL="" \
+    onStartSQLFile=""
 
 ADD https://go.microsoft.com/fwlink/p/?linkid=2216019&clcid=0x409&culture=en-us&country=us c:/setup/
 RUN C:/setup/SQL2022-SSEI-Expr.exe /Q /Action=Install /IAcceptSQLServerLicenseTerms
@@ -35,4 +37,4 @@ foreach ($file in Get-ChildItem 'c:/scripts/sql/') { \
 }
 
 EXPOSE 1433/tcp
-CMD ["powershell", "C:/scripts/start.ps1"]
+CMD ["powershell", "C:/scripts/startDocker.ps1"]
