@@ -218,3 +218,4 @@ _Pvt_Extensions
 
 # SPCTools JS File
 **/*.SPCTools/Scripts/js/
+/Source/Applications/openXDA/openXDA/wwwroot/SPCTools/Scripts/js/SPCTools.js
