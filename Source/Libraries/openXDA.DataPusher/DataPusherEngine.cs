@@ -377,20 +377,20 @@ namespace openXDA.DataPusher
                                     (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {1})", line.ID, instance.ID).
                                 Select((segment, index) => {
                                     AssetsToDataPush lineSegment = new AssetsToDataPush()
-                            {
-                                ID = -1,
-                                RemoteXDAInstanceID = instance.ID,
-                                LocalXDAAssetID = segment.ID,
-                                RemoteXDAAssetID = -1,
-                                RemoteXDAAssetKey = $"{lineAssetPush.RemoteXDAAssetKey}-S{index}",
-                                Obsfucate = lineAssetPush.Obsfucate,
-                                Synced = false,
-                                RemoteAssetCreatedByDataPusher = false
+                                    {
+                                        ID = -1,
+                                        RemoteXDAInstanceID = instance.ID,
+                                        LocalXDAAssetID = segment.ID,
+                                        RemoteXDAAssetID = -1,
+                                        RemoteXDAAssetKey = $"{lineAssetPush.RemoteXDAAssetKey}-S{index}",
+                                        Obsfucate = lineAssetPush.Obsfucate,
+                                        Synced = false,
+                                        RemoteAssetCreatedByDataPusher = false
                                     };
                                     assetPushTable.AddNewRecord(lineSegment);
                                     lineSegment.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                                     return lineSegment;
-                            });
+                                });
                             return newPushes;
                         }).ToList();
 
@@ -487,7 +487,7 @@ namespace openXDA.DataPusher
 
                     foreach (AssetConnection localAssetConnection in localAssetConnections)
                     {
-                        AddAssetConnections(localAssetConnection, localAssetConnectionTypes.First(x => x.ID == localAssetConnection.ID).Name, remoteAssetConnectionTypes, requester);
+                        AddAssetConnections(localAssetConnection, localAssetConnectionTypes.First(type => type.ID == localAssetConnection.AssetRelationshipTypeID).Name, remoteAssetConnectionTypes, requester);
                     }
                     OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (++progressCount) / progressTotal));
                 }
