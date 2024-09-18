@@ -952,8 +952,12 @@ namespace openXDA.DataPusher
                     remoteAssetConnection.ParentID = remoteXDAAssetID1;
                     remoteAssetConnection.ChildID = remoteXDAAssetID2;
                     remoteAssetConnection.AssetRelationshipTypeID = remoteAssetConnectionTypes.First(x => x.Name == connectionType).ID;
-
                     WebAPIHub.CreateRecord(remoteAssetConnection, requester);
+                }
+                else
+                {
+                    remoteAssetConnection.AssetRelationshipTypeID = remoteAssetConnectionTypes.First(x => x.Name == connectionType).ID;
+                    WebAPIHub.UpdateRecord(remoteAssetConnection, requester);
                 }
 
             }
