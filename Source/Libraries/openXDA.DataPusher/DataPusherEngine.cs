@@ -362,12 +362,21 @@ namespace openXDA.DataPusher
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     // By default, line segments are not associated with meters, so they often get overlooked. Decision was made to always add them if the associated line is here
-                    IEnumerable<AssetsToDataPush> lineSegments = new TableOperations<Line>(connection).
+                    TableOperations<LineSegment> lineSegmentTable = new TableOperations<LineSegment>(connection);
+                    TableOperations<AssetsToDataPush> assetPushTable = new TableOperations<AssetsToDataPush>(connection);
+                    List<AssetsToDataPush> lineSegments = new TableOperations<Line>(connection).
                         QueryRecordsWhere("ID in (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0})", instance.ID).
                         SelectMany(line =>
                         {
-                            AssetsToDataPush lineAssetPush = assets.Where(asset => asset.ID == line.ID).First();
-                            return line.Segments.Select((segment, index) => new AssetsToDataPush()
+                            AssetsToDataPush lineAssetPush = assets.Where(asset => asset.LocalXDAAssetID == line.ID).First();
+                            IEnumerable<AssetsToDataPush> newPushes = lineSegmentTable.QueryRecordsWhere(@"
+                                ID in
+                                    (SELECT ParentID as AssetID FROM AssetRelationship WHERE ChildID = {0} UNION
+                                    SELECT ChildID as AssetID FROM AssetRelationship WHERE ParentID = {0})
+                                AND ID not in 
+                                    (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {1})", line.ID, instance.ID).
+                                Select((segment, index) => {
+                                    AssetsToDataPush lineSegment = new AssetsToDataPush()
                             {
                                 ID = -1,
                                 RemoteXDAInstanceID = instance.ID,
@@ -377,8 +386,13 @@ namespace openXDA.DataPusher
                                 Obsfucate = lineAssetPush.Obsfucate,
                                 Synced = false,
                                 RemoteAssetCreatedByDataPusher = false
+                                    };
+                                    assetPushTable.AddNewRecord(lineSegment);
+                                    lineSegment.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                                    return lineSegment;
                             });
-                        });
+                            return newPushes;
+                        }).ToList();
 
                     IEnumerable<AssetsToDataPush> assetsToDataPushes = assets.Concat(lineSegments);
 
