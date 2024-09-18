@@ -398,7 +398,7 @@ namespace openXDA.DataPusher
 
                     TableOperations<MetersToDataPush> meterPushTable = new TableOperations<MetersToDataPush>(connection);
                     IEnumerable<MetersToDataPush> meterDataPushes = meterPushTable.
-                        QueryRecordsWhere("SELECT LocalXDAMeterID FROM MetersToDataPush WHERE RemoteXDAInstanceID = {0} AND Synced = 1)", instance.ID);
+                        QueryRecordsWhere("RemoteXDAInstanceID = {0} AND Synced = 1", instance.ID);
 
                     // update progress
                     int stepsPerAsset = 3;
@@ -449,11 +449,11 @@ namespace openXDA.DataPusher
                                 LocationID in (
                                     SELECT LocationID
                                     FROM Meter
-                                    WHERE MeterID IN (SELECT LocalXDAMeterID FROM MetersToDataPush WHERE RemoteXDAInstanceID = {1} AND Synced = 1)
+                                    WHERE ID IN (SELECT LocalXDAMeterID FROM MetersToDataPush WHERE RemoteXDAInstanceID = {1} AND Synced = 1)
                                 )", assetToDataPush.LocalXDAAssetID, assetToDataPush.RemoteXDAInstanceID);
                         foreach (AssetLocation assetLocation in localAssetLocations)
                         {
-                            IEnumerable<MetersToDataPush> meterToDataPush = meterPushTable.
+                            IEnumerable<MetersToDataPush> meterPushMatches = meterPushTable.
                                 QueryRecordsWhere(@"
                                     LocalXDAMeterID in (
                                         SELECT ID 
@@ -463,8 +463,8 @@ namespace openXDA.DataPusher
                                             FROM MetersToDataPush
                                             Where RemoteXDAInstanceID = {1}
                                         )
-                                    )", assetLocation.ID, assetToDataPush.RemoteXDAAssetKey);
-                            if (!meterToDataPush.Any()) continue;
+                                    )", assetLocation.LocationID, instance.ID);
+                            if (!meterPushMatches.Any()) continue;
 
                             IEnumerable<Location> remoteLocation = remoteLocations.Where(remote => meterPushMatches.Where(meterPush => meterPush.RemoteXDAAssetKey == remote.LocationKey).Any());
                             if (!remoteLocation.Any()) continue;
@@ -478,8 +478,8 @@ namespace openXDA.DataPusher
                     }
 
                     IEnumerable<AssetConnection> localAssetConnections = new TableOperations<AssetConnection>(connection).QueryRecordsWhere(@"
-                        ParentID IN (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0})
-                        AND ChildID IN (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0})",
+                        ParentID IN (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0} AND Synced = 1)
+                        AND ChildID IN (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0} AND Synced = 1)",
                         instance.ID);
                     IEnumerable<AssetConnectionType> localAssetConnectionTypes = new TableOperations<AssetConnectionType>(connection).QueryRecords();
                     IEnumerable<AssetConnectionType> remoteAssetConnectionTypes = WebAPIHub.GetRecords<AssetConnectionType>("all", requester);
