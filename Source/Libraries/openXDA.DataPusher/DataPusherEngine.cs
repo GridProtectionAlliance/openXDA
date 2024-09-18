@@ -254,7 +254,7 @@ namespace openXDA.DataPusher
                     // Do other operations needed
                     DatapusherRequester requester = new DatapusherRequester(instance, connection);
 
-                    IEnumerable<Location> remoteLocations = Enumerable.Empty<Location>();
+                    List<Location> remoteLocations = new List<Location>();
                     IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
 
                     IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>("all", requester);
@@ -269,7 +269,7 @@ namespace openXDA.DataPusher
                             break;
 
                         // Locations are attached to meters on remote pushes, therefore we only have locations if there is a meter for them
-                        remoteLocations.Append(SyncMeterConfigurationForInstance(clientId, meter, remoteAssetGroup, requester, cancellationToken));
+                        remoteLocations.Add(SyncMeterConfigurationForInstance(clientId, meter, remoteAssetGroup, requester, cancellationToken));
                         OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
                     }
 
@@ -452,7 +452,7 @@ namespace openXDA.DataPusher
                                     )", assetLocation.ID, assetToDataPush.RemoteXDAAssetKey);
                             if (!meterToDataPush.Any()) continue;
 
-                            IEnumerable<Location> remoteLocation = remoteLocations.Where(location => location.LocationKey == meterToDataPush.First().RemoteXDAAssetKey);
+                            IEnumerable<Location> remoteLocation = remoteLocations.Where(remote => meterPushMatches.Where(meterPush => meterPush.RemoteXDAAssetKey == remote.LocationKey).Any());
                             if (!remoteLocation.Any()) continue;
 
                             AddOrUpdateAssetLocation(remoteAsset, remoteLocation.First(), requester);
