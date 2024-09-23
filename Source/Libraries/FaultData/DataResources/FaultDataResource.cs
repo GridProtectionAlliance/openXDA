@@ -97,7 +97,7 @@ namespace FaultData.DataResources
                             PathNumber = index,
                             // TODO: This has an implicit assumption of forward traversing. This might be undesirable
                             TraverseForward =
-                                path.Segments.Count == 1 ||
+                                path.Segments.Count <= 1 ||
                                 !path.Segments.Last().AssetLocations.Any(assetLocation => assetLocation.LocationID == Meter.LocationID),
                             Path = path.Segments.Select(segment => new FaultLocationDataSet.LineSegment()
                             {
