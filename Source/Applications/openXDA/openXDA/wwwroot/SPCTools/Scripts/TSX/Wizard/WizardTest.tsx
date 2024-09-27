@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { SPCTools, DynamicWizzard } from '../global';
-import Table from '@gpa-gemstone/react-table';
+import { ReactTable } from '@gpa-gemstone/react-table';
 import { DateRangePicker } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
@@ -240,31 +240,59 @@ const WizardTest = () => {
                         <div className="col">
                             {loading == 'loading' ?
                                 <LoadingIcon Show={true} Size={40} />:
-                                <Table<IChannelList>
-                                    tableStyle={{ height: '100%' }}
-                                    cols={[
-                                        { key: 'MeterName', label: 'Meter', field: 'MeterName', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'Name', label: 'Channel', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
-                                        
-                                    ]}
-                                    tableClass="table table-hover"
-                                    data={channelList}
-                                    sortKey={sort}
-                                    ascending={asc}
-                                    onSort={(d) => {
+                                <ReactTable.Table<IChannelList>
+                                    TableStyle={{ height: '100%' }}
+                                    TableClass="table table-hover"
+                                    Data={channelList}
+                                    SortKey={sort}
+                                    Ascending={asc}
+                                    OnSort={(d) => {
                                         if (sort === d.colKey)
                                             setAsc(!asc)
                                         else
                                             setSort(d.colField)
                                     }}
-                                    onClick={(d) => setSelectedChannel(d.row.ID)}
-                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 400, width: '100%' }}
-                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    selected={(item) => item.ID == selectedChannel}
-                                />
+                                    OnClick={(d) => setSelectedChannel(d.row.ID)}
+                                    TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 400, width: '100%' }}
+                                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    Selected={(item) => item.ID == selectedChannel}
+                                    KeySelector={item => item.ID}
+                                >
+                                    <ReactTable.Column<IChannelList>
+                                        Key="MeterName"
+                                        Field="MeterName"
+                                        AllowSort={true}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                    > Meter
+                                    </ReactTable.Column>
+                                    <ReactTable.Column<IChannelList>
+                                        Key="Name"
+                                        Field="Name"
+                                        AllowSort={true}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                    > Channel
+                                    </ReactTable.Column>
+                                    <ReactTable.Column<IChannelList>
+                                        Key="NumberRaised"
+                                        Field="NumberRaised"
+                                        AllowSort={true}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                    > Raised
+                                    </ReactTable.Column>
+                                    <ReactTable.Column<IChannelList>
+                                        Key="TimeInAlarm"
+                                        Field="TimeInAlarm"
+                                        AllowSort={true}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                        Content={row => (row.item.TimeInAlarm.toFixed(2) + "%") }
+                                    > Time in Alarm (%)
+                                    </ReactTable.Column>
+                                </ReactTable.Table>
                             }
                         </div>
                     </div>
@@ -279,26 +307,59 @@ const WizardTest = () => {
 
                     <div className="row">
                         <div className="col">
-                            {loading == 'loading' ? 
+                            {loading == 'loading' ?
                                 <LoadingIcon Show={true} Size={40} /> :
-                                <Table<IResultTable>
-                                    tableStyle={{ maxHeight: '300px' }}
-                                    cols={[
-                                        { key: 'Severity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p> },
-                                        { key: 'Threshhold', label: 'Threshhold', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => (item.Threshhold == undefined ? "N/A" : item.Threshhold) },
-                                        { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
-                                    ]}
-                                    tableClass="table thead-dark table-striped"
-                                    data={resultSummary}
-                                    sortKey={'Severity'}
-                                    ascending={false}
-                                    onSort={() => {/* do nothing */}}
-                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
-                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    selected={(item) => false}
-                                />
+                                <ReactTable.Table<IResultTable>
+                                    TableStyle={{ maxHeight: '300px' }}
+                                    TableClass="table thead-dark table-striped"
+                                    Data={resultSummary}
+                                    SortKey={'Severity'}
+                                    Ascending={false}
+                                    OnSort={() => {/* do nothing */ }}
+                                    TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
+                                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    Selected={(item) => false}
+                                    KeySelector={(_item, index) => index /* ToDo: Get a better key */}
+                                >
+                                    <ReactTable.Column<IResultTable>
+                                        Key="Severity"
+                                        Field="Severity"
+                                        AllowSort={false}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                        Content={row => (
+                                            <p style={{ color: severities.find(s => s.Name == row.item.Severity).Color }}>{row.item.Severity}</p>
+                                        )}
+                                    > Severity
+                                    </ReactTable.Column>
+                                    <ReactTable.Column<IResultTable>
+                                        Key="Threshhold"
+                                        Field="Threshhold"
+                                        AllowSort={false}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                        Content={row => (row.item.Threshhold == undefined ? "N/A" : row.item.Threshhold)}
+                                    > Threshhold
+                                    </ReactTable.Column>
+                                    <ReactTable.Column<IResultTable>
+                                        Key="NumberRaised"
+                                        Field="NumberRaised"
+                                        AllowSort={false}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                    > Raised
+                                    </ReactTable.Column>
+                                    <ReactTable.Column<IResultTable>
+                                        Key="TimeInAlarm"
+                                        Field="TimeInAlarm"
+                                        AllowSort={false}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                        Content={row => (row.item.TimeInAlarm.toFixed(2) + "%")}
+                                    > Time in Alarm (%)
+                                    </ReactTable.Column>
+                                </ReactTable.Table>
                             }
                         </div>
                     </div>
@@ -311,24 +372,57 @@ const WizardTest = () => {
                         <div className="col">
                             {loading == 'loading' ?
                                 <LoadingIcon Show={true} Size={40} /> :
-                                <Table<IResultTable>
-                                    tableStyle={{ maxHeight: '300px' }}
-                                    cols={[
-                                        { key: 'Severity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p> },
-                                        { key: 'Threshhold', label: 'Threshhold', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => (item.Threshhold == undefined ? "N/A" : item.Threshhold) },
-                                        { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + " %" },
-                                    ]}
-                                    tableClass="table thead-dark table-striped"
-                                    data={channelSummary}
-                                    sortKey={'Severity'}
-                                    ascending={false}
-                                    onSort={(d) => {/* do nothing */}}
-                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
-                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    selected={(item) => false}
-                                />
+                                <ReactTable.Table<IResultTable>
+                                    TableStyle={{ maxHeight: '300px' }}
+                                    TableClass="table thead-dark table-striped"
+                                    Data={channelSummary}
+                                    SortKey={'Severity'}
+                                    Ascending={false}
+                                    OnSort={(d) => {/* do nothing */}}
+                                    TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
+                                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    Selected={(item) => false}
+                                    KeySelector={(_item, index) => index /* ToDo: Get a better key */}
+                                >
+                                    <ReactTable.Column<IResultTable>
+                                        Key="Severity"
+                                        Field="Severity"
+                                        AllowSort={false}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                        Content={row => (
+                                            <p style={{ color: severities.find(s => s.Name == row.item.Severity).Color }}>{row.item.Severity}</p>
+                                        )}
+                                    > Severity
+                                    </ReactTable.Column>
+                                    <ReactTable.Column<IResultTable>
+                                        Key="Threshhold"
+                                        Field="Threshhold"
+                                        AllowSort={false}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                        Content={row => (row.item.Threshhold == undefined ? "N/A" : row.item.Threshhold)}
+                                    > Threshhold
+                                    </ReactTable.Column>
+                                    <ReactTable.Column<IResultTable>
+                                        Key="NumberRaised"
+                                        Field="NumberRaised"
+                                        AllowSort={false}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                    > Raised
+                                    </ReactTable.Column>
+                                    <ReactTable.Column<IResultTable>
+                                        Key="TimeInAlarm"
+                                        Field="TimeInAlarm"
+                                        AllowSort={false}
+                                        HeaderStyle={{ width: 'auto' }}
+                                        RowStyle={{ width: 'auto' }}
+                                        Content={row => (row.item.TimeInAlarm.toFixed(2) + "%")}
+                                    > Time in Alarm (%)
+                                    </ReactTable.Column>
+                                </ReactTable.Table>
                             }
                         </div>
                     </div>
