@@ -23,7 +23,6 @@
 
 import * as React from 'react';
 import { SPCTools, DynamicWizzard } from '../global';
-import Table from '@gpa-gemstone/react-table';
 import { DateRangePicker } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
@@ -58,8 +57,6 @@ const EPRINote = () => {
                     <p> For more information contact Tom Cooke (TCOOKE@epri.com), EPRI Support or GPA (info@GridProtectionAlliance.org).</p>
                 </div>
             </div>
-           
-            
         </div>      
     );
 }

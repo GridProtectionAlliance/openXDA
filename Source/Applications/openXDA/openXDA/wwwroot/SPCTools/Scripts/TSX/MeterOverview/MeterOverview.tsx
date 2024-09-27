@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { SPCTools, openXDA } from '../global';
-import Table from '@gpa-gemstone/react-table';
+import { ReactTable } from '@gpa-gemstone/react-table';
 import { useSelector, useDispatch } from 'react-redux';
 import { SortMeters, FilterMeters, SelectMeters, SelectMetersFilters, SelectMetersStatus, SelectMetersSortField, SelectMetersAscending, FetchMeters } from '../store/MeterSlice';
 import { ChangeStatusMeterAlarmGroups, SortMeterAlarmGroups, SelectMeterAlarmGroups, SelectMeterAlarmGroupsStatus, SelectMeterAlarmGroupsSortField, SelectMeterAlarmGroupsAscending, FetchMeterAlarmGroups } from '../store/MeterAlarmGroupSlice';
@@ -75,54 +75,101 @@ const MeterOverview: React.FunctionComponent = () => {
             <div style={{ width: '100%' }}>
                 <div className="row" style={{ margin: 0 }}>
                     <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
-                        <Table<openXDA.IMeter>
-                            cols={[
-                                { key: 'Name', label: 'Meter', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Make', label: 'Make', field: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Model', label: 'Model', field: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                            ]}
-                            tableClass="table table-hover"
-                            data={meters}
-                            sortKey={mSort}
-                            ascending={mAsc}
-                            onSort={(d) => {
+                        <ReactTable.Table<openXDA.IMeter>
+                            TableClass="table table-hover"
+                            Data={meters}
+                            SortKey={mSort}
+                            Ascending={mAsc}
+                            OnSort={(d) => {
                                 if (d.colKey == mSort)
                                     dispatch(SortMeters({ SortField: mSort, Ascending: !mAsc }));
                                 else
                                     dispatch(SortMeters({ SortField: d.colKey, Ascending: mAsc }));
                             }}
-                            onClick={(d) => setMeterID(d.row.ID)}
-                            theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
-                            rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            selected={(item) => item.ID == MeterID}
-                        />
+                            OnClick={(d) => setMeterID(d.row.ID)}
+                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
+                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            Selected={(item) => item.ID == MeterID}
+                            KeySelector={item => item.ID}
+                        >
+                            <ReactTable.Column<openXDA.IMeter>
+                                Key="Name"
+                                Field="Name"
+                                AllowSort={true}
+                                HeaderStyle={{ width: 'auto' }}
+                                RowStyle={{ width: 'auto' }}
+                            > Meter
+                            </ReactTable.Column>
+                            <ReactTable.Column<openXDA.IMeter>
+                                Key="Make"
+                                Field="Make"
+                                AllowSort={true}
+                                HeaderStyle={{ width: 'auto' }}
+                                RowStyle={{ width: 'auto' }}
+                            > Make
+                            </ReactTable.Column>
+                            <ReactTable.Column<openXDA.IMeter>
+                                Key="Model"
+                                Field="Model"
+                                AllowSort={true}
+                                HeaderStyle={{ width: 'auto' }}
+                                RowStyle={{ width: 'auto' }}
+                            > Model
+                            </ReactTable.Column>
+                        </ReactTable.Table>
                     </div>
-
                     <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
-                        <Table<SPCTools.IMeterAlarmGroup>
-                            cols={[
-                                { key: 'Name', label: 'AlarmGroup', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'AlarmSeverity', label: 'Severity', field: 'AlarmSeverity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Channel', label: 'Num. of Channels', field: 'Channel', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'TimeInAlarm', label: 'Time In Alarm', field: 'TimeInAlarm', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                            ]}
-                            tableClass="table table-hover"
-                            data={alarmGroups}
-                            sortKey={agSort}
-                            ascending={agAsc}
-                            onSort={(d) => {
+                        <ReactTable.Table<SPCTools.IMeterAlarmGroup>
+                            TableClass="table table-hover"
+                            Data={alarmGroups}
+                            SortKey={agSort}
+                            Ascending={agAsc}
+                            OnSort={(d) => {
                                 if (d.colKey == agSort)
                                     dispatch(SortMeterAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
                                 else
                                     dispatch(SortMeterAlarmGroups({ SortField: d.colKey, Ascending: agAsc }));
                             }}
-                            theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
-                            rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            selected={(item) => false}
-                        />
-
+                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
+                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            Selected={(item) => false}
+                            KeySelector={item => item.ID}
+                        >
+                            <ReactTable.Column<SPCTools.IMeterAlarmGroup>
+                                Key="Name"
+                                Field="Name"
+                                AllowSort={true}
+                                HeaderStyle={{ width: 'auto' }}
+                                RowStyle={{ width: 'auto' }}
+                            > Alarm Group
+                            </ReactTable.Column>
+                            <ReactTable.Column<SPCTools.IMeterAlarmGroup>
+                                Key="AlarmSeverity"
+                                Field="AlarmSeverity"
+                                AllowSort={true}
+                                HeaderStyle={{ width: 'auto' }}
+                                RowStyle={{ width: 'auto' }}
+                            > Severity
+                            </ReactTable.Column>
+                            <ReactTable.Column<SPCTools.IMeterAlarmGroup>
+                                Key="Channel"
+                                Field="Channel"
+                                AllowSort={true}
+                                HeaderStyle={{ width: 'auto' }}
+                                RowStyle={{ width: 'auto' }}
+                            > Num. of Channels
+                            </ReactTable.Column>
+                            <ReactTable.Column<SPCTools.IMeterAlarmGroup>
+                                Key="TimeInAlarm"
+                                Field="TimeInAlarm"
+                                AllowSort={true}
+                                HeaderStyle={{ width: 'auto' }}
+                                RowStyle={{ width: 'auto' }}
+                            > Time In Alarm
+                            </ReactTable.Column>
+                        </ReactTable.Table>
                     </div>
                 </div>
 

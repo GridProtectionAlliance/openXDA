@@ -25,7 +25,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import _ from 'lodash';
 import { StaticWizzard } from '../global';
-import Table from '@gpa-gemstone/react-table';
+import { ReactTable } from '@gpa-gemstone/react-table';
 import { useSelector } from 'react-redux';
 import { SelectWizardType } from '../Wizard/DynamicWizzardSlice';
 
@@ -51,22 +51,46 @@ export const FunctionHelp = () => {
                      <button type = "button" className = "close" data-dismiss="modal">&times; </button>
                 </div>
                 <div className="modal-body" >
-                    <Table<IDocumentation> cols={[
-                        { key: 'Name', label: 'Function', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key) => <p> {item.Name}</p> },
-                        { key: 'Description', label: 'Description', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key) => <p> {item.Description}</p> },
-                        { key: 'Example', label: 'Example', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key) => <p style={codeStyle}> {item.Example}</p> },
-
-                    ]}
-                        tableClass="table table-striped"
-                        data={(type == 'dynamic' ? [...staticData, ...dynamicData] : staticData)}
-                        sortKey={''}
-                        ascending={true}
-                        onSort={() => { /* do nothing */}}
-                        theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 500, width: '100%' }}
-                        rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        selected={(item) => false}
-                    />
+                    <ReactTable.Table<IDocumentation>
+                        TableClass="table table-striped"
+                        Data={(type == 'dynamic' ? [...staticData, ...dynamicData] : staticData)}
+                        SortKey={''}
+                        Ascending={true}
+                        OnSort={() => { /* do nothing */ }}
+                        TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 500, width: '100%' }}
+                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        Selected={(item) => false}
+                        KeySelector={item => item.Name}
+                    >
+                        <ReactTable.Column<IDocumentation>
+                            Key="Name"
+                            Field="Name"
+                            AllowSort={false}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                            Content={row => (<p>{row.item.Name}</p>)}
+                        > Function
+                        </ReactTable.Column>
+                        <ReactTable.Column<IDocumentation>
+                            Key="Description"
+                            Field="Description"
+                            AllowSort={false}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                            Content={row => (<p>{row.item.Description}</p>)}
+                        > Description
+                        </ReactTable.Column>
+                        <ReactTable.Column<IDocumentation>
+                            Key="Example"
+                            Field="Example"
+                            AllowSort={false}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                            Content={row => (<p style={codeStyle}> {row.item.Example}</p>)}
+                        > Example
+                        </ReactTable.Column>
+                    </ReactTable.Table>
                 </div>
 
             </div>
