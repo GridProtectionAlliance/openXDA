@@ -50,17 +50,17 @@ namespace openXDA.DataPusher
 
         public T GetRecordIDWhereHub<T>(string instance, string whereClause, UserAccount userAccount) where T : class
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return GetRecordIDWhere<T>(whereClause, requester);
         }
 
-        public static T GetRecordIDWhere<T>(string whereClause, DatapusherRequester requester) where T : class
+        public static T GetRecordIDWhere<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             Task<T> task = GetRecordIDWhereAsync<T>(whereClause, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<T> GetRecordIDWhereAsync<T>(string whereClause, DatapusherRequester requester) where T : class
+        public static async Task<T> GetRecordIDWhereAsync<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             string path = BuildPath<T>($"api/PQMark/GetRecordIDWhere", whereClause);
 
@@ -77,17 +77,17 @@ namespace openXDA.DataPusher
 
         public IEnumerable<T> GetRecordIDsWhereHub<T>(string instance, string whereClause, UserAccount userAccount) where T : class
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return GetRecordIDsWhere<T>(whereClause, requester);
         }
 
-        public static IEnumerable<T> GetRecordIDsWhere<T>(string whereClause, DatapusherRequester requester) where T : class
+        public static IEnumerable<T> GetRecordIDsWhere<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             Task<IEnumerable<T>> task = GetRecordIDsWhereAsync<T>(whereClause, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<IEnumerable<T>> GetRecordIDsWhereAsync<T>(string whereClause, DatapusherRequester requester) where T : class
+        public static async Task<IEnumerable<T>> GetRecordIDsWhereAsync<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             string path = BuildPath<T>("api/PQMark/GetRecordIDsWhere", whereClause);
 
@@ -104,18 +104,18 @@ namespace openXDA.DataPusher
 
         public T GetRecordHub<T>(string instance, int id, UserAccount userAccount) where T : class
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return GetRecord<T>(id, requester);
         }
             
 
-        public static T GetRecord<T>(int id, DatapusherRequester requester) where T : class
+        public static T GetRecord<T>(int id, DataPusherRequester requester) where T : class
         {
             Task<T> task = GetRecordAsync<T>(id, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<T> GetRecordAsync<T>(int id, DatapusherRequester requester) where T : class
+        public static async Task<T> GetRecordAsync<T>(int id, DataPusherRequester requester) where T : class
         {
             string basepath = BuildPath<T>("api/PQMark/GetRecord");
             string path = $"{basepath}/{id}";
@@ -133,17 +133,17 @@ namespace openXDA.DataPusher
 
         public IEnumerable<T> GetRecordsHub<T>(string instance, string ids, UserAccount userAccount) where T : class
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return GetRecords<T>(ids, requester);
         }
 
-        public static IEnumerable<T> GetRecords<T>(string ids, DatapusherRequester requester) where T : class
+        public static IEnumerable<T> GetRecords<T>(string ids, DataPusherRequester requester) where T : class
         {
             Task<IEnumerable<T>> task = GetRecordsAsync<T>(ids, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<IEnumerable<T>> GetRecordsAsync<T>(string ids, DatapusherRequester requester) where T : class
+        public static async Task<IEnumerable<T>> GetRecordsAsync<T>(string ids, DataPusherRequester requester) where T : class
         {
             string basepath = BuildPath<T>("api/PQMark/GetRecords");
             string path = $"{basepath}/{ids}";
@@ -161,17 +161,17 @@ namespace openXDA.DataPusher
 
         public IEnumerable<T> GetRecordsWhereHub<T>(string instance, string tableName, string whereClause, UserAccount userAccount) where T : class
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return GetRecordsWhere<T>(whereClause, requester);
         }
 
-        public static IEnumerable<T> GetRecordsWhere<T>(string whereClause, DatapusherRequester requester) where T : class
+        public static IEnumerable<T> GetRecordsWhere<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             Task<IEnumerable<T>> task = GetRecordsWhereAsync<T>(whereClause, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<IEnumerable<T>> GetRecordsWhereAsync<T>(string whereClause, DatapusherRequester requester) where T : class
+        public static async Task<IEnumerable<T>> GetRecordsWhereAsync<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             string path = BuildPath<T>("api/PQMark/GetRecordsWhere", whereClause);
 
@@ -188,17 +188,17 @@ namespace openXDA.DataPusher
 
         public T GetRecordWhereHub<T>(string instance, string whereClause, UserAccount userAccount) where T : class
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return GetRecordWhere<T>(whereClause, requester);
         }
 
-        public static T GetRecordWhere<T>(string whereClause, DatapusherRequester requester) where T : class
+        public static T GetRecordWhere<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             Task<T> task = GetRecordWhereAsync<T>(whereClause, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<T> GetRecordWhereAsync<T>(string whereClause, DatapusherRequester requester) where T : class
+        public static async Task<T> GetRecordWhereAsync<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             string path = BuildPath<T>("api/PQMark/GetRecordWhere", whereClause);
 
@@ -215,17 +215,17 @@ namespace openXDA.DataPusher
 
         public dynamic GetChannelsHub(string instance, string ids, UserAccount userAccount)
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return GetChannels(ids, requester);
         }
 
-        public static IEnumerable<ChannelDetail> GetChannels(string ids, DatapusherRequester requester)
+        public static IEnumerable<ChannelDetail> GetChannels(string ids, DataPusherRequester requester)
         {
             Task<IEnumerable<ChannelDetail>> task = GetChannelsAsync(ids, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<IEnumerable<ChannelDetail>> GetChannelsAsync(string ids, DatapusherRequester requester)
+        public static async Task<IEnumerable<ChannelDetail>> GetChannelsAsync(string ids, DataPusherRequester requester)
         {
             using (HttpResponseMessage response = await requester.SendRequestAsync($"api/PQMark/GetChannels/channel/{ids}", HttpMethod.Get))
             {
@@ -235,7 +235,7 @@ namespace openXDA.DataPusher
                 return await response.Content.ReadAsAsync<IEnumerable<ChannelDetail>>();
             }
         }
-        public static async Task<(bool, Exception)> TestConnection(DatapusherRequester requester)
+        public static async Task<(bool, Exception)> TestConnection(DataPusherRequester requester)
         {
             try
             {
@@ -256,17 +256,17 @@ namespace openXDA.DataPusher
 
         public int CreateRecordHub<T>(string instance, T record, UserAccount userAccount) where T : class
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return CreateRecord(record, requester);
         }
 
-        public static int CreateRecord<T>(T record, DatapusherRequester requester) where T : class
+        public static int CreateRecord<T>(T record, DataPusherRequester requester) where T : class
         {
             Task<int> task = CreateRecordAsync(record, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<int> CreateRecordAsync<T>(T record, DatapusherRequester requester) where T : class
+        public static async Task<int> CreateRecordAsync<T>(T record, DataPusherRequester requester) where T : class
         {
             JObject jObject = JObject.FromObject(record);
             string path = BuildPath<T>("api/PQMark/CreateRecord");
@@ -285,17 +285,17 @@ namespace openXDA.DataPusher
 
         public int CreateChannelHub(string instance, JObject record, UserAccount userAccount)
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return CreateChannel(record, requester);
         }
 
-        public static int CreateChannel(JObject record, DatapusherRequester requester)
+        public static int CreateChannel(JObject record, DataPusherRequester requester)
         {
             Task<int> task = CreateChannelAsync(record, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<int> CreateChannelAsync(JObject record, DatapusherRequester requester)
+        public static async Task<int> CreateChannelAsync(JObject record, DataPusherRequester requester)
         {
             using (HttpResponseMessage response = await requester.SendRequestAsync("api/PQMark/CreateChannel", HttpMethod.Post, record))
             {
@@ -313,17 +313,17 @@ namespace openXDA.DataPusher
 
         public HttpResponseMessage UpdateRecordHub<T>(string instance, T record, UserAccount userAccount) where T : class
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return UpdateRecord(record, requester);
         }
 
-        public static HttpResponseMessage UpdateRecord<T>(T record, DatapusherRequester requester) where T : class
+        public static HttpResponseMessage UpdateRecord<T>(T record, DataPusherRequester requester) where T : class
         {
             Task<HttpResponseMessage> task = UpdateRecordAsync(record, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<HttpResponseMessage> UpdateRecordAsync<T>(T record, DatapusherRequester requester) where T : class
+        public static async Task<HttpResponseMessage> UpdateRecordAsync<T>(T record, DataPusherRequester requester) where T : class
         {
             string path = BuildPath<T>("api/PQMark/UpdateRecord");
             JObject jObject = JObject.FromObject(record);
@@ -342,17 +342,17 @@ namespace openXDA.DataPusher
 
         public HttpResponseMessage UpdateChannelHub(string instance, JObject record, UserAccount userAccount) 
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return UpdateChannel(record, requester);
         }
 
-        public static HttpResponseMessage UpdateChannel(JObject record, DatapusherRequester requester)
+        public static HttpResponseMessage UpdateChannel(JObject record, DataPusherRequester requester)
         {
             Task<HttpResponseMessage> task = UpdateChannelAsync(record, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<HttpResponseMessage> UpdateChannelAsync(JObject record, DatapusherRequester requester)
+        public static async Task<HttpResponseMessage> UpdateChannelAsync(JObject record, DataPusherRequester requester)
         {
             HttpResponseMessage response = await requester.SendRequestAsync("api/PQMark/UpdateChannel", HttpMethod.Post, record);
             if (!response.IsSuccessStatusCode)
@@ -370,17 +370,17 @@ namespace openXDA.DataPusher
 
         public HttpResponseMessage DeleteRecordHub(string instance, string tableName, int id, UserAccount userAccount)
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return DeleteRecord(tableName, id, requester);
         }
 
-        public static HttpResponseMessage DeleteRecord(string tableName, int id, DatapusherRequester requester)
+        public static HttpResponseMessage DeleteRecord(string tableName, int id, DataPusherRequester requester)
         {
             Task<HttpResponseMessage> task = DeleteRecordAsync(tableName, id, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<HttpResponseMessage> DeleteRecordAsync(string tableName, int id, DatapusherRequester requester)
+        public static async Task<HttpResponseMessage> DeleteRecordAsync(string tableName, int id, DataPusherRequester requester)
         {
             HttpResponseMessage response = await requester.SendRequestAsync($"api/PQMark/DeleteRecord/{tableName}/{id}", HttpMethod.Delete);
             if (!response.IsSuccessStatusCode)
@@ -398,17 +398,17 @@ namespace openXDA.DataPusher
 
         public HttpResponseMessage AppendToFileBlobHub(string instance, JObject record, UserAccount userAccount)
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return AppendToFileBlob(record, requester);
         }
 
-        public static HttpResponseMessage AppendToFileBlob(JObject record, DatapusherRequester requester)
+        public static HttpResponseMessage AppendToFileBlob(JObject record, DataPusherRequester requester)
         {
             Task<HttpResponseMessage> task = AppendToFileBlobAsync(record, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<HttpResponseMessage> AppendToFileBlobAsync(JObject record, DatapusherRequester requester)
+        public static async Task<HttpResponseMessage> AppendToFileBlobAsync(JObject record, DataPusherRequester requester)
         {
             HttpResponseMessage response = await requester.SendRequestAsync("api/PQMark/AppendToFileBlob", HttpMethod.Put, record);
             if (!response.IsSuccessStatusCode)
@@ -422,17 +422,17 @@ namespace openXDA.DataPusher
 
         public HttpResponseMessage ProcessFileGroupHub(string instance, JObject record, UserAccount userAccount)
         {
-            DatapusherRequester requester = new DatapusherRequester(instance, userAccount);
+            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
             return ProcessFileGroup(record, requester);
         }
 
-        public static HttpResponseMessage ProcessFileGroup(JObject record, DatapusherRequester requester)
+        public static HttpResponseMessage ProcessFileGroup(JObject record, DataPusherRequester requester)
         {
             Task<HttpResponseMessage> task = ProcessFileGroupAsync(record, requester);
             return task.GetAwaiter().GetResult();
         }
 
-        public static async Task<HttpResponseMessage> ProcessFileGroupAsync(JObject record, DatapusherRequester requester)
+        public static async Task<HttpResponseMessage> ProcessFileGroupAsync(JObject record, DataPusherRequester requester)
         {
             HttpResponseMessage response = await requester.SendRequestAsync("api/PQMark/ProcessFileGroup", HttpMethod.Post, record);
             if (!response.IsSuccessStatusCode)
