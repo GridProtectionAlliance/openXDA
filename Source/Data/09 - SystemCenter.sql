@@ -280,6 +280,27 @@ CREATE TABLE [LSCVSAccount] (
 GO
 
 -- Default Settings --
+Insert into ValueListGroup (Name, Description) VALUES('SpareChannel', 'List of spare channel names and descriptions for filtering in new meter wizard, case insensitive.')
+GO
+Insert into ValueList (GroupID, Value, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'SpareChannel'), 'Spare',0)
+GO
+Insert into ValueList (GroupID, Value, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'SpareChannel'), 'Virtual Spare',0)
+GO
+Insert into ValueList (GroupID, Value, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'SpareChannel'), 'Spare Virtual',0)
+GO
+Insert into ValueList (GroupID, Value, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'SpareChannel'), 'Current Spare',0)
+GO
+Insert into ValueList (GroupID, Value, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'SpareChannel'), 'Spare Current',0)
+GO
+Insert into ValueList (GroupID, Value, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'SpareChannel'), 'Voltage Spare',0)
+GO
+Insert into ValueList (GroupID, Value, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'SpareChannel'), 'Spare Voltage',0)
+GO
+Insert into ValueList (GroupID, Value, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'SpareChannel'), 'Spare Trigger',0)
+GO
+Insert into ValueList (GroupID, Value, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'SpareChannel'), 'Spare Channel',0)
+GO
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
