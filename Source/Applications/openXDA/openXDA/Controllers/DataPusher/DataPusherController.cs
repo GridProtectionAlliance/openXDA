@@ -26,17 +26,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Security.Model;
-using GSF.Web;
 using log4net;
-using openXDA.Controllers.Helpers;
 using openXDA.DataPusher;
 using openXDA.Model;
 using openXDA.Nodes;
@@ -91,33 +87,20 @@ namespace openXDA.Controllers.Config
 
                 try
                 {
-                    //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
+                    DataPusherRequester requester = new DataPusherRequester(instanceId, connection);
                     MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
-
                     Producer producer = new Producer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
                     Stream stream = producer.Get(instanceId, new List<int> { meter.LocalXDAMeterID });
                     stream.Seek(0, SeekOrigin.Begin);
-                    using (WebRequestHandler handler = new WebRequestHandler())
-                    using (HttpClient client = new HttpClient(handler))
+                    HttpContent httpContent = new StreamContent(stream);
+
+                    using (HttpResponseMessage response = requester.SendRequestAsync("api/DataPusher/Recieve/XML", HttpMethod.Post, httpContent, "application/text").Result)
                     {
-                        handler.ServerCertificateValidationCallback += ControllerHelpers.HandleCertificateValidation;
-
-                        client.BaseAddress = new Uri(instance.Address);
-                        client.DefaultRequestHeaders.Accept.Clear();
-                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/text"));
-                        client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
-                        client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-
-                        HttpContent httpContent = new StreamContent(stream);
-                        HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/XML", httpContent).Result;
-                        string connectionID = response.Content.ReadAsStringAsync().Result;
-                        connectionID = connectionID.Replace("\"", "");
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
+                        string connectionID = response.Content.ReadAsStringAsync().Result;
+                        connectionID = connectionID.Replace("\"", "");
                         connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterId);
                         return Ok(connectionID);
                     }
@@ -140,36 +123,20 @@ namespace openXDA.Controllers.Config
 
                 try
                 {
-                    //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
-
-
+                    DataPusherRequester requester = new DataPusherRequester(instanceId, connection);
                     Producer producer = new Producer(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
                     Stream stream = producer.Get(instanceId, new List<int> { });
                     stream.Seek(0, SeekOrigin.Begin);
-                    using (WebRequestHandler handler = new WebRequestHandler())
-                    using (HttpClient client = new HttpClient(handler))
+                    HttpContent httpContent = new StreamContent(stream);
+
+                    using (HttpResponseMessage response = requester.SendRequestAsync("api/DataPusher/Recieve/XML", HttpMethod.Post, httpContent, "application/text").Result)
                     {
-                        handler.ServerCertificateValidationCallback += ControllerHelpers.HandleCertificateValidation;
-
-                        client.BaseAddress = new Uri(instance.Address);
-                        client.DefaultRequestHeaders.Accept.Clear();
-                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/text"));
-                        client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
-                        client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-
-                        HttpContent httpContent = new StreamContent(stream);
-                        HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/XML", httpContent).Result;
-
-                        string connectionID = response.Content.ReadAsStringAsync().Result;
-                        connectionID = connectionID.Replace("\"", "");
-
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
-                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE RemoteXDAInstanceID = {0}", instance.ID);
+                        string connectionID = response.Content.ReadAsStringAsync().Result;
+                        connectionID = connectionID.Replace("\"", "");
+                        connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE RemoteXDAInstanceID = {0}", instanceId);
                         return Ok(connectionID);
                     }
                 }
@@ -206,27 +173,14 @@ namespace openXDA.Controllers.Config
 
                 try
                 {
-                    //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                    RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    string antiForgeryToken = ControllerHelpers.GenerateAntiForgeryToken(instance.Address, userAccount);
+                    DataPusherRequester requester = new DataPusherRequester(instanceId, connection);
 
-                    using (WebRequestHandler handler = new WebRequestHandler())
-                    using (HttpClient client = new HttpClient(handler))
+                    using (HttpResponseMessage response = requester.SendRequestAsync($"api/DataPusher/LoaderStatus/XML/{connectionID}", HttpMethod.Get).Result)
                     {
-                        handler.ServerCertificateValidationCallback += ControllerHelpers.HandleCertificateValidation;
-
-                        client.BaseAddress = new Uri(instance.Address);
-                        client.DefaultRequestHeaders.Accept.Clear();
-                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                        client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
-                        client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-
-                        HttpResponseMessage response = client.GetAsync($"api/DataPusher/LoaderStatus/XML/{connectionID}").Result;
-                        string result = response.Content.ReadAsStringAsync().Result;
                         if (!response.IsSuccessStatusCode)
                             throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
+                        string result = response.Content.ReadAsStringAsync().Result;
                         return Ok(result);
                     }
                 }
@@ -234,7 +188,6 @@ namespace openXDA.Controllers.Config
                 {
                     Log.Error(ex.Message, ex);
                     return InternalServerError(ex);
-
                 }
             }
 
