@@ -60,10 +60,6 @@ namespace openXDA.Model
         [InitialValueScript("''")]
         public string Frequency { get; set; }
 
-        public bool UseApiAuth { get; set; }
-
-        public Guid? UserAccountID { get; set; }
-
         public string RegistrationKey { get; set; }
 
         public string APIToken { get; set; }

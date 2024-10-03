@@ -48,12 +48,6 @@ namespace openXDA.DataPusher
 
         #region [ Get ]
 
-        public T GetRecordIDWhereHub<T>(string instance, string whereClause, UserAccount userAccount) where T : class
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return GetRecordIDWhere<T>(whereClause, requester);
-        }
-
         public static T GetRecordIDWhere<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             Task<T> task = GetRecordIDWhereAsync<T>(whereClause, requester);
@@ -73,14 +67,6 @@ namespace openXDA.DataPusher
             }
         }
 
-
-
-        public IEnumerable<T> GetRecordIDsWhereHub<T>(string instance, string whereClause, UserAccount userAccount) where T : class
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return GetRecordIDsWhere<T>(whereClause, requester);
-        }
-
         public static IEnumerable<T> GetRecordIDsWhere<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             Task<IEnumerable<T>> task = GetRecordIDsWhereAsync<T>(whereClause, requester);
@@ -98,16 +84,7 @@ namespace openXDA.DataPusher
 
                 return await response.Content.ReadAsAsync<IEnumerable<T>>();
             }
-        }
-
-
-
-        public T GetRecordHub<T>(string instance, int id, UserAccount userAccount) where T : class
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return GetRecord<T>(id, requester);
-        }
-            
+        } 
 
         public static T GetRecord<T>(int id, DataPusherRequester requester) where T : class
         {
@@ -127,14 +104,6 @@ namespace openXDA.DataPusher
 
                 return await response.Content.ReadAsAsync<T>();
             }
-        }
-
-
-
-        public IEnumerable<T> GetRecordsHub<T>(string instance, string ids, UserAccount userAccount) where T : class
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return GetRecords<T>(ids, requester);
         }
 
         public static IEnumerable<T> GetRecords<T>(string ids, DataPusherRequester requester) where T : class
@@ -157,14 +126,6 @@ namespace openXDA.DataPusher
             }
         }
 
-
-
-        public IEnumerable<T> GetRecordsWhereHub<T>(string instance, string tableName, string whereClause, UserAccount userAccount) where T : class
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return GetRecordsWhere<T>(whereClause, requester);
-        }
-
         public static IEnumerable<T> GetRecordsWhere<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             Task<IEnumerable<T>> task = GetRecordsWhereAsync<T>(whereClause, requester);
@@ -184,14 +145,6 @@ namespace openXDA.DataPusher
             }
         }
 
-
-
-        public T GetRecordWhereHub<T>(string instance, string whereClause, UserAccount userAccount) where T : class
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return GetRecordWhere<T>(whereClause, requester);
-        }
-
         public static T GetRecordWhere<T>(string whereClause, DataPusherRequester requester) where T : class
         {
             Task<T> task = GetRecordWhereAsync<T>(whereClause, requester);
@@ -209,14 +162,6 @@ namespace openXDA.DataPusher
 
                 return await response.Content.ReadAsAsync<T>();
             }
-        }
-
-
-
-        public dynamic GetChannelsHub(string instance, string ids, UserAccount userAccount)
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return GetChannels(ids, requester);
         }
 
         public static IEnumerable<ChannelDetail> GetChannels(string ids, DataPusherRequester requester)
@@ -254,12 +199,6 @@ namespace openXDA.DataPusher
 
         #region [ Create ]
 
-        public int CreateRecordHub<T>(string instance, T record, UserAccount userAccount) where T : class
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return CreateRecord(record, requester);
-        }
-
         public static int CreateRecord<T>(T record, DataPusherRequester requester) where T : class
         {
             Task<int> task = CreateRecordAsync(record, requester);
@@ -279,14 +218,6 @@ namespace openXDA.DataPusher
                 dynamic r = response.Content.ReadAsAsync<dynamic>();
                 return (int)r.Result;
             }
-        }
-
-
-
-        public int CreateChannelHub(string instance, JObject record, UserAccount userAccount)
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return CreateChannel(record, requester);
         }
 
         public static int CreateChannel(JObject record, DataPusherRequester requester)
@@ -311,12 +242,6 @@ namespace openXDA.DataPusher
 
         #region [ Update ]
 
-        public HttpResponseMessage UpdateRecordHub<T>(string instance, T record, UserAccount userAccount) where T : class
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return UpdateRecord(record, requester);
-        }
-
         public static HttpResponseMessage UpdateRecord<T>(T record, DataPusherRequester requester) where T : class
         {
             Task<HttpResponseMessage> task = UpdateRecordAsync(record, requester);
@@ -336,14 +261,6 @@ namespace openXDA.DataPusher
                 throw new InvalidOperationException(message);
             }
             return response;
-        }
-
-
-
-        public HttpResponseMessage UpdateChannelHub(string instance, JObject record, UserAccount userAccount) 
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return UpdateChannel(record, requester);
         }
 
         public static HttpResponseMessage UpdateChannel(JObject record, DataPusherRequester requester)
@@ -368,12 +285,6 @@ namespace openXDA.DataPusher
 
         #region [ Delete ]
 
-        public HttpResponseMessage DeleteRecordHub(string instance, string tableName, int id, UserAccount userAccount)
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return DeleteRecord(tableName, id, requester);
-        }
-
         public static HttpResponseMessage DeleteRecord(string tableName, int id, DataPusherRequester requester)
         {
             Task<HttpResponseMessage> task = DeleteRecordAsync(tableName, id, requester);
@@ -396,12 +307,6 @@ namespace openXDA.DataPusher
 
         #region [ Files ]
 
-        public HttpResponseMessage AppendToFileBlobHub(string instance, JObject record, UserAccount userAccount)
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return AppendToFileBlob(record, requester);
-        }
-
         public static HttpResponseMessage AppendToFileBlob(JObject record, DataPusherRequester requester)
         {
             Task<HttpResponseMessage> task = AppendToFileBlobAsync(record, requester);
@@ -418,12 +323,6 @@ namespace openXDA.DataPusher
                 throw new InvalidOperationException(message);
             }
             return response;
-        }
-
-        public HttpResponseMessage ProcessFileGroupHub(string instance, JObject record, UserAccount userAccount)
-        {
-            DataPusherRequester requester = new DataPusherRequester(instance, userAccount);
-            return ProcessFileGroup(record, requester);
         }
 
         public static HttpResponseMessage ProcessFileGroup(JObject record, DataPusherRequester requester)

@@ -320,7 +320,7 @@ namespace openXDA.Controllers.Config
                         DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                         RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                         MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
-                        DataPusherRequester requester = new DataPusherRequester(instance, connection);
+                        DataPusherRequester requester = new DataPusherRequester(instance);
                         engine.SyncMeterConfigurationForInstance(connectionId, instance, meter, requester, cancellationToken);
                     }
                     catch (Exception ex)
