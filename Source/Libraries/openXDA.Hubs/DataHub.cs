@@ -7540,7 +7540,7 @@ namespace openXDA.Hubs
                     CancellationTokenSource source = new CancellationTokenSource();
                     CancellationToken token = source.Token;
 
-                    DataPusherRequester requester = new DataPusherRequester(instance, connection);
+                    DataPusherRequester requester = new DataPusherRequester(instance);
 
                     engine.SyncMeterConfigurationForInstance(clientId, instance, meter, requester, token);
 

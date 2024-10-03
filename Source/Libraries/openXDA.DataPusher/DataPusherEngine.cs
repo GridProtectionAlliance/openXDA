@@ -252,7 +252,7 @@ namespace openXDA.DataPusher
                     OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (progressCount) / progressTotal));
 
                     // Do other operations needed
-                    DataPusherRequester requester = new DataPusherRequester(instance, connection);
+                    DataPusherRequester requester = new DataPusherRequester(instance);
 
                     List<Location> remoteLocations = new List<Location>();
                     IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
@@ -969,7 +969,7 @@ namespace openXDA.DataPusher
             {
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                 if (instance is null) throw new Exception($"No remote XDA instance found with this instance ID${instanceId}");
-                DataPusherRequester requester = new DataPusherRequester(instance, connection);
+                DataPusherRequester requester = new DataPusherRequester(instance);
                 return WebAPIHub.TestConnection(requester).GetAwaiter().GetResult();
             }
         }
@@ -1012,7 +1012,7 @@ namespace openXDA.DataPusher
                 {
                     IEnumerable<FileGroup> localFileGroups;
 
-                    DataPusherRequester requester = new DataPusherRequester(instance, connection);
+                    DataPusherRequester requester = new DataPusherRequester(instance);
                     Settings settings = new Settings(GetConfigurator());
 
                     DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(settings.DataPusherSettings.TimeWindow * -1);
@@ -1140,7 +1140,7 @@ namespace openXDA.DataPusher
                 if (cancellationToken.IsCancellationRequested) return;
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
-                    DataPusherRequester requester = new DataPusherRequester(instance, connection);
+                    DataPusherRequester requester = new DataPusherRequester(instance);
 
                     FileGroupLocalToRemote fileGroupLocalToRemote = new TableOperations<FileGroupLocalToRemote>(connection).QueryRecordWhere("LocalFileGroupID = {0} AND RemoteXDAInstanceID = {1}", fileGroupId, instance.ID);
                     FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", fileGroupId);

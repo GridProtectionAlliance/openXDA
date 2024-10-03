@@ -114,7 +114,7 @@ namespace FaultData.DataOperations
                     post.MeterKey = metersToDataPush.RemoteXDAAssetKey;
                     Log.Info($"Sending data to instance: {instance.Name} for FileGroup: {meterDataSet.FileGroup.ID}...");
                     DataPusherEngine engine = new DataPusherEngine(meterDataSet.CreateDbConnection);
-                    DataPusherRequester requester = new DataPusherRequester(instance, connection);
+                    DataPusherRequester requester = new DataPusherRequester(instance);
                     engine.SendFiles(post, requester);
 
 
