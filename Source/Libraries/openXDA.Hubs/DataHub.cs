@@ -7536,12 +7536,13 @@ namespace openXDA.Hubs
                     DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                     MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
 
                     CancellationTokenSource source = new CancellationTokenSource();
                     CancellationToken token = source.Token;
 
-                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, userAccount, token);
+                    DataPusherRequester requester = new DataPusherRequester(instance);
+
+                    engine.SyncMeterConfigurationForInstance(clientId, instance, meter, requester, token);
 
                 }
                 catch (Exception ex)
