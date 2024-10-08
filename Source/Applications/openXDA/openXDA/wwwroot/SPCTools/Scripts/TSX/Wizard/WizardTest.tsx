@@ -304,7 +304,7 @@ const WizardTest = () => {
                                     TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
                                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     Data={resultSummary}
-                                    SortKey={'Severity'}
+                                    SortKey={''}
                                     Ascending={false}
                                     OnSort={() => {/* do nothing */ }}
                                     Selected={(item) => false}
@@ -360,7 +360,7 @@ const WizardTest = () => {
                                     TableStyle={{ maxHeight: '300px' }}
                                     TableClass="table thead-dark table-striped"
                                     Data={channelSummary}
-                                    SortKey={'Severity'}
+                                    SortKey={''}
                                     Ascending={false}
                                     OnSort={(d) => {/* do nothing */ }}
                                     TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
