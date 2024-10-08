@@ -256,12 +256,6 @@ const WizardTest = () => {
                                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     Selected={(item) => item.ID == selectedChannel}
                                     KeySelector={(key) => key.ID}
-                                /*cols={[
-                                    { key: 'MeterName', label: 'Meter', field: 'MeterName', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'Name', label: 'Channel', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
-                                ]}*/
                                 >
                                     <ReactTable.Column
                                         Key='MeterName'
@@ -284,6 +278,7 @@ const WizardTest = () => {
                                     <ReactTable.Column
                                         Key='TimeInAlarm'
                                         Field='TimeInAlarm'
+                                        Content={({ item }) => item.TimeInAlarm.toFixed(2) + "%"}
                                         HeaderStyle={{ width: 'auto' }}
                                         RowStyle={{ width: 'auto' }}
                                     >Time in Alarm (%)</ReactTable.Column>
@@ -314,35 +309,37 @@ const WizardTest = () => {
                                     OnSort={() => {/* do nothing */ }}
                                     Selected={(item) => false}
                                     KeySelector={(key) => key.NumberRaised}
-                                /*
-                                Cols={[
-                                    { key: 'Severity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p> },
-                                    { key: 'Threshhold', label: 'Threshhold', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => (item.Threshhold == undefined ? "N/A" : item.Threshhold) },
-                                    { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
-                                ]}
-                                 */
                                 >
                                     <ReactTable.Column
                                         Key='Severity'
+                                        Field={'Severity'}
+                                        Content={({ item }) => {
+                                            return <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p>
+                                        }}
+                                        AllowSort={true}
                                         HeaderStyle={{ width: 'auto' }}
                                         RowStyle={{ width: 'auto' }}
                                     >Severity</ReactTable.Column>
                                     <ReactTable.Column
                                         Key='Threshhold'
-                                        Field='Name'
+                                        Field={'Threshhold'}
+                                        AllowSort={true}
+                                        Content={({ item }) => item.Threshhold == undefined ? "N/A" : item.Threshhold}
                                         HeaderStyle={{ width: 'auto' }}
                                         RowStyle={{ width: 'auto' }}
                                     >Threshhold</ReactTable.Column>
                                     <ReactTable.Column
                                         Key='NumberRaised'
                                         Field='NumberRaised'
+                                        AllowSort={true}
                                         HeaderStyle={{ width: 'auto' }}
                                         RowStyle={{ width: 'auto' }}
                                     >Raised</ReactTable.Column>
                                     <ReactTable.Column
                                         Key='TimeInAlarm'
                                         Field='TimeInAlarm'
+                                        AllowSort={true}
+                                        Content={({ item }) => item.TimeInAlarm.toFixed(2) + "%"}
                                         HeaderStyle={{ width: 'auto' }}
                                         RowStyle={{ width: 'auto' }}
                                     >Time in Alarm (%)</ReactTable.Column>
