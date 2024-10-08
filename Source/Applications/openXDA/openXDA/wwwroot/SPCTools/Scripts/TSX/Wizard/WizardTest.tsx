@@ -309,7 +309,7 @@ const WizardTest = () => {
                                     TableStyle={{ maxHeight: '300px' }}
                                     TableClass="table thead-dark table-striped"
                                     Data={resultSummary}
-                                    SortKey={'Severity'}
+                                    SortKey={''}
                                     Ascending={false}
                                     OnSort={() => {/* do nothing */ }}
                                     TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
@@ -372,7 +372,7 @@ const WizardTest = () => {
                                     TableStyle={{ maxHeight: '300px' }}
                                     TableClass="table thead-dark table-striped"
                                     Data={channelSummary}
-                                    SortKey={'Severity'}
+                                    SortKey={''}
                                     Ascending={false}
                                     OnSort={(d) => {/* do nothing */}}
                                     TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
