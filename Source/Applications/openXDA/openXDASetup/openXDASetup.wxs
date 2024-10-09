@@ -469,6 +469,7 @@
       <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
 	  <ComponentRef Id="openXDA.APIMiddleware" />
+	  <ComponentRef Id="openXDA.APIAuthentication" />
       <ComponentRef Id="openXDA.Nodes" />
       <ComponentRef Id="openXDA.NotificationDataSources" />
       <ComponentRef Id="openXDA.XMLConfig" />
@@ -655,6 +656,9 @@
       </Component>
 	  <Component Id="openXDA.APIMiddleware">
 		<File Id="openXDA.APIMiddleware.dll" Name="$(var.openXDA.APIMiddleware.TargetFileName)" Source="$(var.openXDA.APIMiddleware.TargetPath)" />
+	  </Component>
+	  <Component Id="openXDA.APIAuthentication">
+		<File Id="openXDA.APIAuthentication.dll" Name="$(var.openXDA.APIAuthentication.TargetFileName)" Source="$(var.openXDA.APIAuthentication.TargetPath)" />
 	  </Component>
       <Component Id="openXDA.Nodes">
         <File Id="openXDA.Nodes.dll" Name="$(var.openXDA.Nodes.TargetFileName)" Source="$(var.openXDA.Nodes.TargetPath)" />
