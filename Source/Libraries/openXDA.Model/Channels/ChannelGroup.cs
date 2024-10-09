@@ -34,6 +34,20 @@ namespace openXDA.Model
     [PostRoles("Administrator, Transmission SME")]
     [PatchRoles("Administrator, Transmission SME")]
     [DeleteRoles("Administrator, Transmission SME")]
+    [CustomView(@"
+    SELECT
+        ChannelGroup.ID,
+        ChannelGroup.Name,
+        ChannelGroup.Description,
+        COUNT(ChannelGroupType.ID) AS Items
+    FROM 
+        ChannelGroup
+        LEFT JOIN ChannelGroupType ON ChannelGroup.ID = ChannelGroupType.ChannelGroupID
+    GROUP BY 
+        ChannelGroup.ID,
+        ChannelGroup.Name,
+        ChannelGroup.Description
+    ")]
     public class ChannelGroup
     {
         [PrimaryKey(true)]
@@ -43,5 +57,7 @@ namespace openXDA.Model
         public string Name { get; set; }
 
         public string Description { get; set; }
+
+        public int Items { get; set; }
     }
 }
