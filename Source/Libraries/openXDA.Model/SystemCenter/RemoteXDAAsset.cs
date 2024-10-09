@@ -41,7 +41,9 @@ namespace openXDA.Model
         AssetsToDataPush.Synced,
         AssetsToDataPush.RemoteAssetCreatedByDataPusher,
         Asset.AssetName as LocalAssetName,
-        Asset.AssetKey as LocalAssetKey
+        Asset.AssetKey as LocalAssetKey,
+        CASE WHEN AssetsToDataPush.Obsfucate = 1 THEN AssetsToDataPush.RemoteXDAAssetKey ELSE Asset.AssetName END as RemoteAssetName,
+        CASE WHEN AssetsToDataPush.Obsfucate = 1 THEN AssetsToDataPush.RemoteXDAAssetKey ELSE Asset.AssetKey END as RemoteAssetKey
     FROM
         AssetsToDataPush LEFT JOIN
         Asset ON AssetsToDataPush.LocalXDAAssetID = [Asset].ID")]
@@ -49,5 +51,7 @@ namespace openXDA.Model
     {
         public string LocalAssetName { get; set; }
         public string LocalAssetKey { get; set; }
+        public string RemoteAssetName { get; set; }
+        public string RemoteAssetKey { get; set; }
     }
 }
