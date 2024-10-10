@@ -37,6 +37,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web.Http, Version=5.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -47,6 +48,7 @@
   <ItemGroup>
     <Compile Include="BreakerSection.cs" />
     <Compile Include="Edition\EditionChecker.cs" />
+    <Compile Include="Edition\HttpEditionFilterAttribute.cs" />
     <Compile Include="GrafanaSection.cs" />
     <Compile Include="SSAMSSection.cs" />
     <Compile Include="Subscription.cs" />
