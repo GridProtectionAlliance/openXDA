@@ -36,6 +36,7 @@ using GSF.Web.Model;
 using HIDS;
 using Newtonsoft.Json.Linq;
 using openXDA.APIMiddleware;
+using openXDA.Configuration;
 using openXDA.Model;
 using SystemCenter.Model;
 
@@ -284,6 +285,19 @@ namespace openXDA.Controllers.WebAPI
         public IHttpActionResult Alive()
         {
             return Ok(1);
+        }
+
+        [HttpGet, Route("RecheckEdition")]
+        public IHttpActionResult RecheckEdition()
+        {
+            EditionChecker.UpdateEdition();
+            return Ok(1);
+        }
+
+        [HttpGet, Route("GetEdition")]
+        public IHttpActionResult GetEdition()
+        {
+            return Ok(EditionChecker.GetEdition());
         }
 
         [HttpGet, Route("TileList/GetAll")]
