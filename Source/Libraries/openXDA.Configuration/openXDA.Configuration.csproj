@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BreakerSection.cs" />
+    <Compile Include="Edition\EditionChecker.cs" />
     <Compile Include="GrafanaSection.cs" />
     <Compile Include="SSAMSSection.cs" />
     <Compile Include="Subscription.cs" />
@@ -69,6 +70,12 @@
     <Compile Include="SystemSection.cs" />
     <Compile Include="TaskProcessorSection.cs" />
     <Compile Include="TrendingDataSection.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
+      <Project>{A1A0BC13-50ED-4DC9-8C1E-3293B0B69281}</Project>
+      <Name>openXDA.Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
