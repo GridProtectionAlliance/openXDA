@@ -134,6 +134,7 @@ namespace FaultData.DataReaders
             channel.Name = FixChannelName(channelName);
             channel.Description = channelName;
             channel.HarmonicGroup = ParseHarmonicGroup(channel);
+            channel.Trend = true;
 
             return channel;
         }

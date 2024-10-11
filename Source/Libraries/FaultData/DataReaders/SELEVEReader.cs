@@ -277,6 +277,7 @@ namespace FaultData.DataReaders
             channel.Phase = new Phase();
             channel.Name = analogChannel.Name;
             channel.HarmonicGroup = 0;
+            channel.Trend = false;
 
             switch (analogChannel.Name)
             {
@@ -360,6 +361,7 @@ namespace FaultData.DataReaders
             channel.Phase = new Phase() { Name = "None" };
             channel.Name = digitalChannel.Name;
             channel.HarmonicGroup = 0;
+            channel.Trend = false;
 
             channel.MeasurementType.Description = channel.MeasurementType.Name;
             channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;
@@ -388,6 +390,7 @@ namespace FaultData.DataReaders
             channel.Phase = new Phase();
             channel.Name = analogChannel.Name;
             channel.HarmonicGroup = 0;
+            channel.Trend = false;
 
             Match regexMatch = Regex.Match(analogChannel.Name, ChannelWithUnitsPattern);
             string channelName = regexMatch.Success ? regexMatch.Groups["Name"].Value : analogChannel.Name;
@@ -472,6 +475,7 @@ namespace FaultData.DataReaders
             channel.Phase = new Phase() { Name = "None" };
             channel.Name = digitalChannel.Name;
             channel.HarmonicGroup = 0;
+            channel.Trend = false;
 
             channel.MeasurementType.Description = channel.MeasurementType.Name;
             channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;

@@ -371,6 +371,7 @@ namespace FaultData.DataReaders
             channel.Name = analogChannel.Name;
             channel.Description = analogChannel.CircuitComponent;
             channel.HarmonicGroup = 0;
+            channel.Trend = false;
 
             return channel;
         }
@@ -392,6 +393,7 @@ namespace FaultData.DataReaders
             channel.Name = digitalChannel.Name;
             channel.Description = digitalChannel.CircuitComponent;
             channel.HarmonicGroup = 0;
+            channel.Trend = false;
 
             return channel;
         }
