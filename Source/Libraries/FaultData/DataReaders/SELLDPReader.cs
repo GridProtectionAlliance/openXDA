@@ -377,7 +377,7 @@ namespace FaultData.DataReaders
 
             Series series = new Series();
             series.Channel = new Channel();
-            series.SeriesType = new SeriesType() { Name = "Values" };
+            series.SeriesType = new SeriesType() { Name = "Average" };
             series.SourceIndexes = (index + 1).ToString();
 
             Channel channel = series.Channel;
@@ -388,6 +388,7 @@ namespace FaultData.DataReaders
             channel.Name = record.Name;
             channel.Description = record.Name;
             channel.HarmonicGroup = 0;
+            channel.Trend = true;
 
             return channel;
         }
