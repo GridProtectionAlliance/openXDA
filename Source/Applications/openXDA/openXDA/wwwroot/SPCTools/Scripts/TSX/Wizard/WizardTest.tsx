@@ -371,12 +371,17 @@ const WizardTest = () => {
                                 >
                                     <ReactTable.Column
                                         Key='Severity'
+                                        Field='Severity'
+                                        Content={({ item }) => {
+                                            return <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p>
+                                        }}
                                         HeaderStyle={{ width: 'auto' }}
                                         RowStyle={{ width: 'auto' }}
                                     >Severity</ReactTable.Column>
                                     <ReactTable.Column
                                         Key='Threshhold'
-                                        Field='Name'
+                                        Field='Threshhold'
+                                        Content={({ item }) => item.Threshhold == undefined ? "N/A" : item.Threshhold}
                                         HeaderStyle={{ width: 'auto' }}
                                         RowStyle={{ width: 'auto' }}
                                     >Threshhold</ReactTable.Column>
@@ -389,6 +394,7 @@ const WizardTest = () => {
                                     <ReactTable.Column
                                         Key='TimeInAlarm'
                                         Field='TimeInAlarm'
+                                        Content={({ item }) => item.TimeInAlarm.toFixed(2) + "%"}
                                         HeaderStyle={{ width: 'auto' }}
                                         RowStyle={{ width: 'auto' }}
                                     >Time in Alarm (%)</ReactTable.Column>
