@@ -42,7 +42,8 @@ namespace openXDA.Model
         MetersToDataPush.Synced,
         Meter.Alias as LocalAlias,
         Meter.Name as LocalMeterName,
-        Meter.AssetKey as LocalAssetKey
+        Meter.AssetKey as LocalAssetKey,
+        CASE WHEN MetersToDataPush.Obsfucate = 1 THEN MetersToDataPush.RemoteXDAName ELSE Meter.Alias END as RemoteAlias
     FROM
         MetersToDataPush LEFT JOIN
         Meter ON MetersToDataPush.LocalXDAMeterID = Meter.ID")]
@@ -51,5 +52,6 @@ namespace openXDA.Model
         public string LocalAlias { get; set; }
         public string LocalMeterName { get; set; }
         public string LocalAssetKey { get; set; }
+        public string RemoteAlias { get; set; }
     }
 }
