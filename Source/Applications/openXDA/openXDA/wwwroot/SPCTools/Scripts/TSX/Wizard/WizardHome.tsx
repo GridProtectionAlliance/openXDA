@@ -1,4 +1,4 @@
-﻿//******************************************************************************************************
+//******************************************************************************************************
 //  DynamicAlarm.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
@@ -24,7 +24,7 @@
 import * as React from 'react';
 import GeneralSettings from './GeneralSettings';
 
-import { selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror } from './DynamicWizzardSlice'
+import { selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror, ResetWizzard } from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 
 import { ToolTip, ProgressBar, ServerErrorIcon, LoadingIcon } from '@gpa-gemstone/react-interactive';
@@ -71,7 +71,12 @@ const WizardHome = (props: IProps) => {
 
     }
 
-    React.useEffect(() => { if (tab == 'done') props.complete(); }, [tab])
+    React.useEffect(() => {
+        if (tab == 'done') {
+            props.complete();
+            dispatch(ResetWizzard('static'));
+        }
+    }, [tab])
     return (
         <div style={{ width: '100%', height: '100%' }}>
             <div className="row" style={{ height: '40px', marginTop: '25px', marginRight: '25px', marginLeft: '25px', marginBottom: '25px' }}>
