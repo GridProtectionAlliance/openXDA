@@ -375,6 +375,7 @@
     <Compile Include="Controllers\WebAPI\Grafana.cs" />
     <Compile Include="Controllers\WebAPI\LSCVSController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
+    <Compile Include="Controllers\SystemCenter\SystemCenterController.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
     <Compile Include="DatabaseConnectionFactory.cs" />
     <Compile Include="DebugHost.cs">
