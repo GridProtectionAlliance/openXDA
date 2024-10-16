@@ -393,12 +393,6 @@
     <Compile Include="WebHosting\XDAWebHost.cs" />
     <Compile Include="WebHosting\XDAControllerActivator.cs" />
     <Compile Include="WebHosting\XDAControllerSelector.cs" />
-    <Compile Include="wwwroot\Config\EmailTemplateHandler.ashx.cs">
-      <DependentUpon>EmailTemplateHandler.ashx</DependentUpon>
-    </Compile>
-    <Compile Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx.cs">
-      <DependentUpon>AlarmRangeLimitCSVUploadHandler.ashx</DependentUpon>
-    </Compile>
     <Compile Include="Logging\SimpleLogger.cs" />
     <Compile Include="Logging\ServiceHelperAppender.cs" />
     <Compile Include="ServiceHost.cs">
@@ -409,12 +403,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="wwwroot\Config\HowlCSVDownloadHandler.ashx.cs">
-      <DependentUpon>HowlCSVDownloadHandler.ashx</DependentUpon>
-    </Compile>
-    <Compile Include="wwwroot\Config\HowlCSVUploadHandler.ashx.cs">
-      <DependentUpon>HowlCSVUploadHandler.ashx</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DebugHost.resx">
@@ -508,168 +496,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="wwwroot\Assets\Asset.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\AssetConnections.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Breakers.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Buss.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\CapacitorBanks.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Channels.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Customer.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\CustomerAsset.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Help.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\index.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Layout.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Lines.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\LineSegments.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\MeterLines.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Meters.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Sites.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\SpareAsset.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Assets\Transformers.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\AlarmViewer.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\AssetGroupAssetGroupView.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\AssetGroups.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\ChannelsWithHourlyLimits.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\ChannelsWithNormalLimits.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\DashSettings.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\DefaultAlarmSettings.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\EditEventEmailParameters.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\EmailRMarkdownViewer.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\EmailTemplateHandler.ashx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\EmailTemplatesUsers.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\EmailTypes.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\EventEmailConfiguration.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\ExternalLinks\PQViewDataLoader.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\Groups.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\Help.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\HourOfWeekLimits.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\HowlCSVDownloadHandler.ashx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\HowlCSVUploadHandler.ashx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\index.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\Layout.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\LineAssetGroupView.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\MeterAssetGroupView.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\MetersWithHourlyLimits.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\MetersWithNormalLimits.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\ProblematicUserAccounts.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\Query.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\RemoteConsole.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\Settings.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\TemplateEditor.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\UserAccountAssetGroupView.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\UserDashSettings.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\Users.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\UsersEmailTemplates.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Config\XSLTemplate.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="wwwroot\Content\BigTable.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -916,21 +742,6 @@
     <None Include="wwwroot\Content\_themes_mdl_styles.sass">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="wwwroot\DataPusher\index.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\DataPusher\Layout.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Content Include="wwwroot\DataPusher\FilesToDataPush.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="wwwroot\DataPusher\MetersToDataPush.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\DataPusher\RemoteXDAInstances.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="wwwroot\Docs\openXDAsettings.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -998,9 +809,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\Images\dD Reports.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Images\dD Tools.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\Images\dD Workbench old.png">
@@ -1114,13 +922,7 @@
     <None Include="wwwroot\Images\XDA.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="wwwroot\dDtools.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="wwwroot\index.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Layout.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="wwwroot\Images\Tiles\NotificationPages.png" />
@@ -1136,18 +938,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\OpenSTE.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Reports\index.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Reports\Layout.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Reports\Report.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Reports\Reports.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\RestoreEventEmail.cshtml">
@@ -4367,84 +4157,6 @@
     <Content Include="wwwroot\SPCTools\Scripts\Bootstrap\CSS\bootstrap.min.css.map" />
     <Content Include="wwwroot\SPCTools\package.json" />
     <Content Include="wwwroot\SPCTools\tsconfig.json" />
-    <None Include="wwwroot\WorkBench\AuditLog.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\Breaker.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\BreakersForDay.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\Charts.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\DataFiles.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\DataQualitySummary.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\DisturbancesForDay.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\DisturbancesForMeter.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\Event.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\Events.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\EventsForDate.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\EventsForDay.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\EventsForMeter.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\FaultsDetailsByDate.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\FaultsForDay.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\FaultsForMeter.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\Filters.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\Help.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\index.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\Layout.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\MeterEventsByLine.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\PeriodicDataDisplay.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\SiteSummary.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\SpectralDataDisplay.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\WorkBench\TrendingDataDisplay.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Content Include="wwwroot\Assets\CapacitorBankRelays.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="wwwroot\Scripts\TS\Services\DataQualitySummary.ts" />
     <None Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay.ts" />
     <None Include="wwwroot\Scripts\TS\Services\PQTrendingWebReport.ts" />
