@@ -397,6 +397,7 @@ namespace FaultData.DataReaders
             channel.Phase = new Phase() { Name = "Unknown" };
             channel.Name = analogChannel.title;
             channel.HarmonicGroup = 0;
+            channel.Trend = false;
 
             return channel;
         }
@@ -415,6 +416,7 @@ namespace FaultData.DataReaders
             channel.Phase = new Phase() { Name = "Unknown" };
             channel.Name = digitalChannel.e_title;
             channel.HarmonicGroup = 0;
+            channel.Trend = false;
 
             return channel;
         }
