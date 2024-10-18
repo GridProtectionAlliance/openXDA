@@ -176,9 +176,9 @@ namespace openXDA.Nodes.Types.Email
                 if (!triggersEmail)
                     return;
 
-                EmailService emailService = new EmailService(CreateDbConnection, configurator);
+                ScheduledEmailService emailService = new ScheduledEmailService(CreateDbConnection, configurator);
 
-                emailService.SendScheduledEmail(scheduledEmailType, xdaNow);
+                emailService.SendEmail(scheduledEmailType, xdaNow);
             }
         }
 
