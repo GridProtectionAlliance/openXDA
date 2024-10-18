@@ -287,16 +287,10 @@ namespace openXDA.Controllers.WebAPI
             return Ok(1);
         }
 
-        [HttpGet, Route("RecheckEdition")]
-        public IHttpActionResult RecheckEdition()
-        {
-            EditionChecker.UpdateEdition();
-            return Ok(1);
-        }
-
         [HttpGet, Route("GetEdition")]
         public IHttpActionResult GetEdition()
         {
+            EditionChecker.UpdateEdition();
             return Ok(EditionChecker.GetEdition());
         }
 
