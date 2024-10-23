@@ -22,26 +22,24 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { SPCTools, DynamicWizzard } from '../global';
+import { SPCTools } from '../global';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { DateRangePicker } from '@gpa-gemstone/react-forms';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
 import {
     selectAlarmGroup, selectSeriesTypeID, SelectAlarmFactors,
     SelectStatisticsFilter, SelectStatisticsChannels, SelectStatisticsrange,
-    SelectAllAlarmValues } from './DynamicWizzardSlice';
+    SelectAllAlarmValues
+} from './DynamicWizzardSlice';
 import { SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSeverities } from '../store/SeveritySlice';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
 import { LoadingIcon, Warning } from '@gpa-gemstone/react-interactive';
 
-declare let homePath: string;
 declare let apiHomePath: string;
 
-declare let userIsAdmin: boolean;
-
-interface IResultTable { Severity: string, Threshhold: number, NumberRaised: number, TimeInAlarm: number}
+interface IResultTable { Severity: string, Threshhold: number, NumberRaised: number, TimeInAlarm: number }
 interface IChannelList { MeterName: string, Name: string, NumberRaised: number, TimeInAlarm: number, ID: number }
 
 type preLoadState = 'uninitialized' | 'confirm' | 'loading';
@@ -195,7 +193,7 @@ const WizardTest = () => {
             {
                 Severity: severities.find(item => item.ID == alarmGroup.SeverityID).Name,
                 NumberRaised: response[index].FactorTests.find(i => i.Factor == 1.0).NumberRaised,
-                TimeInAlarm: response[index].FactorTests.find(i => i.Factor == 1.0).TimeInAlarm *100.0,
+                TimeInAlarm: response[index].FactorTests.find(i => i.Factor == 1.0).TimeInAlarm * 100.0,
                 Threshhold: undefined
             },
             ...alarmFactors.map(f => {
@@ -225,7 +223,7 @@ const WizardTest = () => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            <DateRangePicker<SPCTools.IDateRange> Label={''} Record={timeRange} FromField={'start'} ToField={'end'} Setter={(r) => { setLoading('changed'); setTimeRange(r); }} Disabled={loading == 'loading'} Valid={ () => true} />
+                            <DateRangePicker<SPCTools.IDateRange> Label={''} Record={timeRange} FromField={'start'} ToField={'end'} Setter={(r) => { setLoading('changed'); setTimeRange(r); }} Disabled={loading == 'loading'} Valid={() => true} />
                         </div>
                     </div>
                     <div className="row" style={{ margin: 0 }}>
@@ -234,12 +232,12 @@ const WizardTest = () => {
                                 Test
                             </button>
                         </div>
-                        
+
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             {loading == 'loading' ?
-                                <LoadingIcon Show={true} Size={40} />:
+                                <LoadingIcon Show={true} Size={40} /> :
                                 <ReactTable.Table<IChannelList>
                                     TableStyle={{ height: '100%' }}
                                     TableClass="table table-hover"
@@ -298,13 +296,11 @@ const WizardTest = () => {
                     </div>
                 </div>
                 <div className="col-6">
-                    
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             <h3>Overview Alarm:</h3 >
                         </div>
                     </div>
-
                     <div className="row">
                         <div className="col">
                             {loading == 'loading' ?
@@ -313,7 +309,7 @@ const WizardTest = () => {
                                     TableStyle={{ maxHeight: '300px' }}
                                     TableClass="table thead-dark table-striped"
                                     Data={resultSummary}
-                                    SortKey={'Severity'}
+                                    SortKey={''}
                                     Ascending={false}
                                     OnSort={() => {/* do nothing */ }}
                                     TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
@@ -376,7 +372,7 @@ const WizardTest = () => {
                                     TableStyle={{ maxHeight: '300px' }}
                                     TableClass="table thead-dark table-striped"
                                     Data={channelSummary}
-                                    SortKey={'Severity'}
+                                    SortKey={''}
                                     Ascending={false}
                                     OnSort={(d) => {/* do nothing */}}
                                     TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
@@ -434,7 +430,7 @@ const WizardTest = () => {
                     {selectedChannel != -1 && (loading == 'idle' || loading == 'changed') ? <AlarmTrendingCard Tend={effectiveTimeRange.end} Tstart={effectiveTimeRange.start} ChannelID={selectedChannel} /> : null}
                 </div>
             </div>
-            <Warning  Title={'This operation may take some time to process.'}
+            <Warning Title={'This operation may take some time to process.'}
                 CallBack={(c) => { if (c) setUserConfirm('loading'); else setUserConfirm('uninitialized'); }}
                 Show={userConfirm == 'confirm'}
                 Message={'This operation may take some time to process. To speed up testing these setpoints please select a shorter timeframe or fewer channels.'}
