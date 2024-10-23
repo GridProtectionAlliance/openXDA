@@ -111,7 +111,7 @@ namespace SPCTools
         /// </summary>
         /// <returns> List of DataPoints for the Channel  </returns>
         [HttpPost, Route("HistoryData/{ChannelId}/{SeriesTypeID}")]
-        public IHttpActionResult getChannelData(int ChannelId, int SeriesTypeID, [FromBody] DataFilter postedFilter, CancellationToken cancellationToken)
+        public async Task<IHttpActionResult> getChannelData(int ChannelId, int SeriesTypeID, [FromBody] DataFilter postedFilter, CancellationToken cancellationToken)
         {
             NameValueCollection queryParameters = Request.RequestUri.ParseQueryString();
             string startTime = queryParameters["start"];
@@ -129,8 +129,9 @@ namespace SPCTools
 
                     Func<Point, double> flattenData = GetSeriesTypeFilter(SeriesTypeID);
 
-                    IAsyncEnumerable<double[]> data = LoadChannel(hids, new List<int>() { ChannelId }, start, end, cancellationToken)[ChannelId].Select(pt => new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) }); ;
-
+                    var channels = await LoadChannel(hids, new List<int>() { ChannelId }, start, end, cancellationToken);
+                    IAsyncEnumerable<double[]> data = channels[ChannelId].Select(pt =>
+                            new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) });
                     if (postedFilter != null)
                         data = data.Select(pt => {
                             if (postedFilter.FilterZero && pt[1] == 0.0D)
@@ -159,21 +160,21 @@ namespace SPCTools
         /// </summary>
         /// <returns> List of DataPoints for the Channel  </returns>
         [HttpPost, Route("Test/{SeriesTypeID}")]
-        public IHttpActionResult TestAlarmGroup(int seriesTypeID, [FromBody] TestRequest request, CancellationToken cancellationToken)
+        public async Task<IHttpActionResult> TestAlarmGroup(int seriesTypeID, [FromBody] TestRequest request, CancellationToken cancellationToken)
         {
             try
             {
                 using (API hids = new API())
                 {
                     //Grab Data For Setpoint Computation
-                    Dictionary<int, IAsyncEnumerable<Point>> statisticsData = LoadChannel(hids, request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd, cancellationToken);
+                    Dictionary<int, IAsyncEnumerable<Point>> statisticsData = await LoadChannel(hids, request.StatisticsChannelID, request.StatisticsStart, request.StatisticsEnd, cancellationToken);
                     List<DataResponse> tokenList = request.TokenValues.Select(value => new ExpressionOperations(value.Formula, statisticsData, request.StatisticsChannelID, request.StatisticsFilter, GetTimeFilter(value)).Evaluate()).ToList();
 
                     Dictionary<int, IAsyncEnumerable<Point>> testData;
                     if (request.Start == request.StatisticsStart && request.End == request.StatisticsEnd && request.ChannelID.Count == request.StatisticsChannelID.Count)
                         testData = statisticsData;
                     else
-                        testData = LoadChannel(hids, request.ChannelID, request.Start, request.End, cancellationToken);
+                        testData = await LoadChannel(hids, request.ChannelID, request.Start, request.End, cancellationToken);
 
                     Func<int, double> GetThresholdFactory()
                     {
@@ -212,16 +213,10 @@ namespace SPCTools
 
         #region [ HelperFunction ]
 
-        private Dictionary<int, IAsyncEnumerable<Point>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end, CancellationToken cancellationToken)
+        private async Task<Dictionary<int, IAsyncEnumerable<Point>>> LoadChannel(API hids, List<int> channelID, DateTime start, DateTime end, CancellationToken cancellationToken)
         {
             Dictionary<int, IAsyncEnumerable<Point>> result = new Dictionary<int, IAsyncEnumerable<Point>>();
-
-            string cachTarget = start.Subtract(s_epoch).TotalMilliseconds + "-" + end.Subtract(s_epoch).TotalMilliseconds + "-";
-            List<string> dataToGet = new List<string>();
-            channelID.ForEach(item =>
-            {
-                dataToGet.Add(item.ToString("x8"));
-            });
+            List<string> dataToGet = channelID.Select(item => item.ToString("x8")).ToList();
 
             if (dataToGet.Count == 0)
                 return result;
@@ -230,18 +225,27 @@ namespace SPCTools
             {
                 HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
                 await hids.ConfigureAsync(settings);
-                return hids.ReadPointsAsync(dataToGet, start, end, cancellationToken);
+                IAsyncEnumerable<Point> hidsData = hids.ReadPointsAsync(dataToGet, start, end, cancellationToken);
+                return hidsData;
             }
 
-            Task<IAsyncEnumerable<Point>> queryTask = QueryHIDSAsync();
-            IAsyncEnumerable<Point> data = queryTask.GetAwaiter().GetResult();
+            IAsyncEnumerable<Point> data = await QueryHIDSAsync();
 
-            return channelID
+            Dictionary<int, IAsyncEnumerable<Point>> resultDict = await channelID
                 .ToAsyncEnumerable()
-                .GroupJoin(data.GroupBy(pt => pt.Tag), item => item.ToString("x8"), grouping => grouping.Key, (item, grouping) => new { Key = item, Value = grouping.SelectMany(inner => inner) })
-                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value, cancellationToken)
-                .GetAwaiter()
-                .GetResult();
+                .GroupJoin(
+                    data.GroupBy(pt => pt.Tag),  // Grouping the data by Tag
+                    item => item.ToString("x8"), // Joining based on formatted channel ID
+                    grouping => grouping.Key,    // Grouping key
+                    (item, grouping) => new
+                    {
+                        Key = item,
+                        Value = grouping.SelectMany(inner => inner)
+                    }
+                )
+                .ToDictionaryAsync(obj => obj.Key, obj => obj.Value, cancellationToken);
+
+            return resultDict;
         }
 
         private ChannelTestResponse TestChannel(int channelIndex, IAsyncEnumerable<Point> data, List<DataResponse> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData)
