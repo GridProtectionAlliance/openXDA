@@ -528,6 +528,12 @@ namespace openXDA.Controllers.WebAPI
     [RoutePrefix("api/AlarmType")]
     public class AlarmTypeController : ModelController<AlarmType> {}
 
+    [RoutePrefix("api/AlarmGroup")]
+    public class AlarmGroupController : ModelController<AlarmGroup> {}
+
+    [RoutePrefix("api/AlarmSeverity")]
+    public class AlarmSeverityController : ModelController<AlarmSeverity> {}
+
     [RoutePrefix("api/MeterDetail")]
     public class MeterDetailController : ModelController<MeterDetail> {}
 
