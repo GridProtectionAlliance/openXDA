@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  AlarmValueController.cs - Gbtc
+//  TrenDAPController.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/17/2020 - Billy Ernest
+//  10/29/2024 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -24,26 +24,11 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
 using GSF.Data;
-using GSF.Data.Model;
-using GSF.Web.Security;
 using HIDS;
 using log4net;
-using Microsoft.AspNet.SignalR.Infrastructure;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace openXDA.Controllers.WebAPI
 {
