@@ -209,7 +209,6 @@ const WizardTest = () => {
         ])
     }
 
-    type TimeUnit = 'y' | 'M' | 'w' | 'd' | 'h' | 'm' | 's' | 'ms'
     const validStartDate = !isNaN(new Date(timeRange.start).getTime()) && timeRange.start != null;
     const validEndDate = !isNaN(new Date(timeRange.end).getTime()) && timeRange.end != null &&
         (new Date(timeRange.end) > new Date(timeRange.start) || !validStartDate)
@@ -225,7 +224,7 @@ const WizardTest = () => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            <TimeFilter filter={{ start: timeRange.start, end: timeRange.end }} setFilter={(center: string, start: string, end: string, unit: TimeUnit, duration: number) => {
+                            <TimeFilter filter={{ start: timeRange.start, end: timeRange.end }} setFilter={(center: string, start: string, end: string) => {
                                 setLoading('changed');
                                 setTimeRange({ start: start, end: end });
                             }} showQuickSelect={true} timeZone={'UTC'} dateTimeSetting={'startEnd'} isHorizontal={true} format={"date"} />

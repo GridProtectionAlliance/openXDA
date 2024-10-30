@@ -24,7 +24,7 @@
 import * as React from 'react';
 import { SPCTools, openXDA } from '../global';
 import { CheckBox, Input } from '@gpa-gemstone/react-forms';
-import { TimeFilter } from '@gpa-gemstone/common-pages'
+import { TimeFilter } from '@gpa-gemstone/common-pages';
 import { useSelector, useDispatch } from 'react-redux';
 import _ from 'lodash';
 import { SelectStatisticsrange, updateStatisticsRange, updateStatisticsFilter, updateStatisticChannels, SelectStatisticsFilter } from './DynamicWizzardSlice';
@@ -33,9 +33,7 @@ import { SelectTable } from '@gpa-gemstone/react-table';
 
 declare let homePath: string;
 declare let apiHomePath: string;
-
 declare let userIsAdmin: boolean;
-
 
 //Todo
 // # Removed Meter table for now due to EPRI Time contraints
@@ -46,8 +44,6 @@ const SelectStatisticsData = () => {
     const dateRange = useSelector(SelectStatisticsrange)
     const dataFilter = useSelector(SelectStatisticsFilter)
 
-    type TimeUnit = 'y' | 'M' | 'w' | 'd' | 'h' | 'm' | 's' | 'ms'
-
     return (
         <div style={{ width: '100%', height: '100%' }}>
             <div className="row" style={{ margin: 0 }}>
@@ -57,7 +53,7 @@ const SelectStatisticsData = () => {
             </div>
             <div className="row" style={{ margin: 0 }}>
                 <div className="col-8">
-                    <TimeFilter filter={{ start: dateRange.start, end: dateRange.end }} setFilter={(center: string, start: string, end: string, unit: TimeUnit, duration: number) => {
+                    <TimeFilter filter={{ start: dateRange.start, end: dateRange.end }} setFilter={(center: string, start: string, end: string) => {
                         dispatch(updateStatisticsRange({ start: start, end: end }));
                     }} showQuickSelect={true} timeZone={'UTC'} dateTimeSetting={'startEnd'} isHorizontal={true} format={"date"} />
                 </div>
