@@ -92,7 +92,9 @@ namespace FaultData.DataReaders
                     double num;
 
                     comtradeAnalog.Index = i + 1;
-                    comtradeAnalog.Name = analogChannel.title;
+                    comtradeAnalog.CircuitComponent = analogChannel.title;
+                    comtradeAnalog.ChannelName = "A" + (i + 1);
+                    comtradeAnalog.PhaseID = "?";
 
                     comtradeAnalog.Units = new Func<string, string>(type =>
                     {
@@ -125,7 +127,9 @@ namespace FaultData.DataReaders
                     EVNT_CHNL_NEW digitalChannel = DigitalChannels[i];
                     DigitalChannel comtradeDigital = new DigitalChannel();
                     comtradeDigital.Index = i + 1;
-                    comtradeDigital.ChannelName = digitalChannel.e_title;
+                    comtradeDigital.CircuitComponent = digitalChannel.e_title;
+                    comtradeDigital.ChannelName = "A" + (i + 1);
+                    comtradeDigital.PhaseID = "?";
                     comtradeSchema.DigitalChannels[i] = comtradeDigital;
                 }
 
