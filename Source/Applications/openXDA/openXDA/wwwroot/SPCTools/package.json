@@ -34,12 +34,12 @@
     "webpack-cli": "4.10.0"
   },
   "dependencies": {
-    "@gpa-gemstone/gpa-symbols": "0.0.41",
-    "@gpa-gemstone/react-forms": "1.1.71",
-    "@gpa-gemstone/react-graph": "1.0.59",
-    "@gpa-gemstone/react-interactive": "1.0.131",
-    "@gpa-gemstone/react-table": "1.2.53",
-    "@gpa-gemstone/common-pages": "0.0.117",
+    "@gpa-gemstone/gpa-symbols": "0.0.43",
+    "@gpa-gemstone/react-forms": "1.1.74",
+    "@gpa-gemstone/react-graph": "1.0.62",
+    "@gpa-gemstone/react-interactive": "1.0.134",
+    "@gpa-gemstone/react-table": "1.2.56",
+    "@gpa-gemstone/common-pages": "0.0.120",
     "@reduxjs/toolkit": "1.4.0",
     "@types/d3": "^4.13.2",
     "@types/jquery": "3.3.1",
