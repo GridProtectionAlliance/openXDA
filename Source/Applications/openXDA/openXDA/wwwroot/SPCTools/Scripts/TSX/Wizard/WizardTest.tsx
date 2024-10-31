@@ -224,7 +224,7 @@ const WizardTest = () => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            <TimeFilter filter={{ start: timeRange.start, end: timeRange.end }} setFilter={(center: string, start: string, end: string) => {
+                            <TimeFilter filter={{ start: timeRange.start, end: timeRange.end }} setFilter={(start: string, end: string) => {
                                 setLoading('changed');
                                 setTimeRange({ start: start, end: end });
                             }} showQuickSelect={true} timeZone={'UTC'} dateTimeSetting={'startEnd'} isHorizontal={true} format={"date"} />
