@@ -66,7 +66,7 @@ export const AlarmTrendingCard = (props: IProps) => {
     }
 
     const [Width, SetWidth] = React.useState<number>(0);
-    React.useLayoutEffect(() => { SetWidth(divref?.current?.offsetWidth-25 ?? 0) });
+    React.useLayoutEffect(() => { SetWidth((divref?.current?.offsetWidth ?? 25) - 25) });
 
     React.useEffect(() => {
         setData([]);
