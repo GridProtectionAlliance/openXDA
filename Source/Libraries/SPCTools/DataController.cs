@@ -25,7 +25,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -130,6 +132,7 @@ namespace SPCTools
                     Func<Point, double> flattenData = GetSeriesTypeFilter(SeriesTypeID);
 
                     var channels = await LoadChannel(hids, new List<int>() { ChannelId }, start, end, cancellationToken);
+                    var l = LoadChannelStream(hids, new List<int>() { ChannelId }, start, end);
                     IAsyncEnumerable<double[]> data = channels[ChannelId].Select(pt =>
                             new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) });
                     if (postedFilter != null)
@@ -246,6 +249,41 @@ namespace SPCTools
                 .ToDictionaryAsync(obj => obj.Key, obj => obj.Value, cancellationToken);
 
             return resultDict;
+        }
+        private HttpResponseMessage LoadChannelStream(API hids, List<int> channelID, DateTime start, DateTime end)
+        {
+            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+            List<string> dataToGet = channelID.Select(item => item.ToString("x8")).ToList();
+
+            if (dataToGet.Count == 0)
+                return result;
+
+            HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
+            async Task<API> CreateHIDSConnectionAsync()
+            {
+                openXDA.Nodes.ConfigurationLoader configurationLoader = new openXDA.Nodes.ConfigurationLoader(Host.ID, Host.CreateDbConnection);
+                configurationLoader.Configure(settings);
+                await hids.ConfigureAsync(settings);
+                return hids;
+            }
+
+            void BuildQuery(IQueryBuilder builder)
+            {
+                string startTime = start.ToString();
+                string stopTime = end.ToString();
+
+                if (!string.IsNullOrEmpty(stopTime))
+                    builder.Range(startTime, stopTime);
+                else
+                    builder.Range(startTime);
+            }
+
+            Stream pointStream = PointStream.QueryPoints(CreateHIDSConnectionAsync, BuildQuery);
+            StreamContent content = new StreamContent(pointStream);
+
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = content;
+            return response;
         }
 
         private ChannelTestResponse TestChannel(int channelIndex, IAsyncEnumerable<Point> data, List<DataResponse> tokenList, List<double> factors, int alarmtypeID, ChannelTestResponse result, Func<Point, double> getData)
