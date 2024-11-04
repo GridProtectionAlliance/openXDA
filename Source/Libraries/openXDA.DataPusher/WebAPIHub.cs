@@ -60,9 +60,7 @@ namespace openXDA.DataPusher
 
             using (HttpResponseMessage response = await requester.SendRequestAsync(path, HttpMethod.Get))
             {
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
+                response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsAsync<T>();
             }
         }
@@ -79,9 +77,7 @@ namespace openXDA.DataPusher
 
             using (HttpResponseMessage response = await requester.SendRequestAsync(path, HttpMethod.Get))
             {
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
+                response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsAsync<IEnumerable<T>>();
             }
         } 
@@ -99,9 +95,7 @@ namespace openXDA.DataPusher
 
             using (HttpResponseMessage response = await requester.SendRequestAsync(path, HttpMethod.Get))
             {
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
+                response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsAsync<T>();
             }
         }
@@ -119,9 +113,7 @@ namespace openXDA.DataPusher
 
             using (HttpResponseMessage response = await requester.SendRequestAsync(path, HttpMethod.Get))
             {
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
+                response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsAsync<IEnumerable<T>>();
             }
         }
@@ -138,9 +130,7 @@ namespace openXDA.DataPusher
 
             using (HttpResponseMessage response = await requester.SendRequestAsync(path, HttpMethod.Get))
             {
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
+                response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsAsync<IEnumerable<T>>();
             }
         }
@@ -157,9 +147,7 @@ namespace openXDA.DataPusher
 
             using (HttpResponseMessage response = await requester.SendRequestAsync(path, HttpMethod.Get))
             {
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
+                response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsAsync<T>();
             }
         }
@@ -174,9 +162,7 @@ namespace openXDA.DataPusher
         {
             using (HttpResponseMessage response = await requester.SendRequestAsync($"api/PQMark/GetChannels/channel/{ids}", HttpMethod.Get))
             {
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
+                response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsAsync<IEnumerable<ChannelDetail>>();
             }
         }
@@ -212,9 +198,7 @@ namespace openXDA.DataPusher
 
             using (HttpResponseMessage response = await requester.SendRequestAsync(path, HttpMethod.Post, jObject))
             {
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
+                response.EnsureSuccessStatusCode();
                 dynamic r = response.Content.ReadAsAsync<dynamic>();
                 return (int)r.Result;
             }
@@ -230,9 +214,7 @@ namespace openXDA.DataPusher
         {
             using (HttpResponseMessage response = await requester.SendRequestAsync("api/PQMark/CreateChannel", HttpMethod.Post, record))
             {
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
+                response.EnsureSuccessStatusCode();
                 dynamic r = response.Content.ReadAsAsync<dynamic>();
                 return (int)r.Result;
             }
@@ -255,11 +237,7 @@ namespace openXDA.DataPusher
 
             HttpResponseMessage response = await requester.SendRequestAsync(path, HttpMethod.Put, jObject);
             if (!response.IsSuccessStatusCode)
-            {
-                string message = $"Server returned status code {response.StatusCode}: {response.ReasonPhrase}";
-                response.Dispose();
-                throw new InvalidOperationException(message);
-            }
+                using (response) { response.EnsureSuccessStatusCode(); }
             return response;
         }
 
@@ -273,11 +251,7 @@ namespace openXDA.DataPusher
         {
             HttpResponseMessage response = await requester.SendRequestAsync("api/PQMark/UpdateChannel", HttpMethod.Post, record);
             if (!response.IsSuccessStatusCode)
-            {
-                string message = $"Server returned status code {response.StatusCode}: {response.ReasonPhrase}";
-                response.Dispose();
-                throw new InvalidOperationException(message);
-            }
+                using (response) { response.EnsureSuccessStatusCode(); }
             return response;
         }
 
@@ -295,11 +269,7 @@ namespace openXDA.DataPusher
         {
             HttpResponseMessage response = await requester.SendRequestAsync($"api/PQMark/DeleteRecord/{tableName}/{id}", HttpMethod.Delete);
             if (!response.IsSuccessStatusCode)
-            {
-                string message = $"Server returned status code {response.StatusCode}: {response.ReasonPhrase}";
-                response.Dispose();
-                throw new InvalidOperationException(message);
-            }
+                using (response) { response.EnsureSuccessStatusCode(); }
             return response;
         }
 
@@ -317,11 +287,7 @@ namespace openXDA.DataPusher
         {
             HttpResponseMessage response = await requester.SendRequestAsync("api/PQMark/AppendToFileBlob", HttpMethod.Put, record);
             if (!response.IsSuccessStatusCode)
-            {
-                string message = $"Server returned status code {response.StatusCode}: {response.ReasonPhrase}";
-                response.Dispose();
-                throw new InvalidOperationException(message);
-            }
+                using (response) { response.EnsureSuccessStatusCode(); }
             return response;
         }
 
@@ -335,11 +301,7 @@ namespace openXDA.DataPusher
         {
             HttpResponseMessage response = await requester.SendRequestAsync("api/PQMark/ProcessFileGroup", HttpMethod.Post, record);
             if (!response.IsSuccessStatusCode)
-            {
-                string message = $"Server returned status code {response.StatusCode}: {response.ReasonPhrase}";
-                response.Dispose();
-                throw new InvalidOperationException(message);
-            }
+                using (response) { response.EnsureSuccessStatusCode(); }
             return response;
         }
 

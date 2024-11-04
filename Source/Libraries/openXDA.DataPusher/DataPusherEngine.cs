@@ -366,6 +366,7 @@ namespace openXDA.DataPusher
                     TableOperations<AssetsToDataPush> assetPushTable = new TableOperations<AssetsToDataPush>(connection);
                     List<AssetsToDataPush> lineSegments = new TableOperations<Line>(connection).
                         QueryRecordsWhere("ID in (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0})", instance.ID).
+                        ToList().
                         SelectMany(line =>
                         {
                             AssetsToDataPush lineAssetPush = assets.Where(asset => asset.LocalXDAAssetID == line.ID).First();
@@ -450,7 +451,7 @@ namespace openXDA.DataPusher
                                     SELECT LocationID
                                     FROM Meter
                                     WHERE ID IN (SELECT LocalXDAMeterID FROM MetersToDataPush WHERE RemoteXDAInstanceID = {1} AND Synced = 1)
-                                )", assetToDataPush.LocalXDAAssetID, assetToDataPush.RemoteXDAInstanceID);
+                                )", assetToDataPush.LocalXDAAssetID, assetToDataPush.RemoteXDAInstanceID).ToList();
                         foreach (AssetLocation assetLocation in localAssetLocations)
                         {
                             IEnumerable<MetersToDataPush> meterPushMatches = meterPushTable.
