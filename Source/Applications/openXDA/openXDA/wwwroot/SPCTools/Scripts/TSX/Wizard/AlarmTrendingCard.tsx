@@ -26,7 +26,7 @@ import * as React from 'react';
 import { useSelector } from "react-redux";
 import { openXDA } from "../global";
 import { SelectAffectedChannelByID } from "../store/WizardAffectedChannelSlice";
-import { SelectStatisticsFilter, SelectThresholdValues, selectAlarmGroup, SelectAlarmFactors, SelectStatisticsChannels } from "./DynamicWizzardSlice";
+import { SelectStatisticsFilter, SelectThresholdValues, selectAlarmGroup, SelectAlarmFactors, SelectStatisticsChannels, selectSeriesTypeID } from "./DynamicWizzardSlice";
 import _ from "lodash";
 import moment from "moment";
 import { SelectSeverities } from "../store/SeveritySlice";
@@ -34,6 +34,7 @@ import { SelectAlarmDays } from "../store/AlarmDaySlice";
 import { Line, Plot } from '@gpa-gemstone/react-graph'
 import { TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { LoadingIcon } from '@gpa-gemstone/react-interactive';
+import { SelectSeriesTypes } from "../store/SeriesTypeSlice";
 
 interface IProps { ChannelID: number, Remove?: () => void, Tstart: string, Tend: string }
 
@@ -66,6 +67,9 @@ export const AlarmTrendingCard = (props: IProps) => {
     const channel = useSelector(memChannelSelector)
     const [loading, setLoading] = React.useState<boolean>(false);
     const dataFilter = useSelector(SelectStatisticsFilter);
+
+    const seriesFilterId = useSelector(selectSeriesTypeID);
+    const seriesTypes = useSelector(SelectSeriesTypes);
 
     const severities = useSelector(SelectSeverities);
     const alarmGroup = useSelector(selectAlarmGroup)
@@ -268,6 +272,7 @@ export const AlarmTrendingCard = (props: IProps) => {
             async: true
         }).done((data: string) => {
             const newPoints: string[] = data.split("\n");
+            const seriesUsed = seriesTypes.find(type => type.ID === seriesFilterId)?.Name ?? "Values";
             const allData = new Map<string, [number, number][]>();
             newPoints.forEach(jsonPoint => {
                 let point: HIDSPoint = undefined;
@@ -282,7 +287,17 @@ export const AlarmTrendingCard = (props: IProps) => {
                     if (!allData.has(point.Tag)) allData.set(point.Tag, []);
                     const channelData = allData.get(point.Tag);
                     let pointValue;
+                    switch (seriesUsed) {
+                        case "Maximum":
+                            pointValue = point.Maximum;
+                            break;
+                        case "Minimum":
+                            pointValue = point.Minimum;
+                            break;
+                        default:
                             pointValue = point.Average;
+                            break;
+                    }
                     channelData.push([timeStamp, pointValue]);
                 }
         });
