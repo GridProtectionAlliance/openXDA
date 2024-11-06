@@ -25,14 +25,19 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Results;
 using GSF.Data;
 using GSF.Data.Model;
 using HIDS;
+using Newtonsoft.Json.Linq;
 using openXDA.HIDS;
 using openXDA.HIDS.APIExtensions;
 using openXDA.Model;
@@ -110,48 +115,47 @@ namespace SPCTools
         /// Gets the Historical Data requested for a Channel and a SeriesType 
         /// </summary>
         /// <returns> List of DataPoints for the Channel  </returns>
-        [HttpPost, Route("HistoryData/{ChannelId}/{SeriesTypeID}")]
-        public IHttpActionResult getChannelData(int ChannelId, int SeriesTypeID, [FromBody] DataFilter postedFilter, CancellationToken cancellationToken)
+        [HttpPost, Route("HistoryData")]
+        public async Task<HttpResponseMessage> QueryPoints([FromBody] JObject query, CancellationToken cancellationToken)
         {
-            NameValueCollection queryParameters = Request.RequestUri.ParseQueryString();
-            string startTime = queryParameters["start"];
-            string endTime = queryParameters["end"];
-
-            if ((GetRoles != string.Empty && !User.IsInRole(GetRoles)))
-                return Unauthorized();
-
-            try
+            void BuildQuery(IQueryBuilder builder)
             {
-                using (API hids = new API())
+                if (query["Channels"] is JArray channels)
                 {
-                    DateTime start = DateTime.Parse(startTime);
-                    DateTime end = DateTime.Parse(endTime);
+                    IEnumerable<string> tags = channels
+                        .ToObject<List<int>>()
+                        .Select(channelID => APIExtensions.ToTag(null, channelID));
 
-                    Func<Point, double> flattenData = GetSeriesTypeFilter(SeriesTypeID);
-
-                    IAsyncEnumerable<double[]> data = LoadChannel(hids, new List<int>() { ChannelId }, start, end, cancellationToken)[ChannelId].Select(pt => new double[] { pt.Timestamp.Subtract(s_epoch).TotalMilliseconds, flattenData(pt) }); ;
-
-                    if (postedFilter != null)
-                        data = data.Select(pt => {
-                            if (postedFilter.FilterZero && pt[1] == 0.0D)
-                                return new double[] { pt[0], double.NaN };
-                            if (postedFilter.FilterLower && pt[1] < postedFilter.LowerLimit)
-                                return new double[] { pt[0], double.NaN };
-                            if (postedFilter.FilterUpper && pt[1] > postedFilter.UpperLimit)
-                                return new double[] { pt[0], double.NaN };
-                            return pt;
-                        });
-
-
-                    return Ok(data);
+                    builder.FilterTags(tags);
                 }
+
+                string startTime = ReadDate(query, "StartTime");
+                string stopTime = ReadDate(query, "StopTime");
+
+                if (!string.IsNullOrEmpty(stopTime))
+                    builder.Range(startTime, stopTime);
+                else
+                    builder.Range(startTime);
             }
-            catch (Exception ex)
+
+            if (!query.ContainsKey("StartTime"))
             {
-                return InternalServerError(ex);
+                BadRequestErrorMessageResult result = BadRequest("Missing query parameter: StartTime");
+                return await result.ExecuteAsync(cancellationToken);
             }
 
+            MediaTypeHeaderValue contentType = new MediaTypeHeaderValue("text/plain");
+            contentType.CharSet = "utf-8";
+            using (API hids = new API())
+            {
+                Stream pointStream = PointStream.QueryPoints(() => CreateHIDSConnectionAsync(hids), BuildQuery);
+                StreamContent content = new StreamContent(pointStream);
+                content.Headers.ContentType = contentType;
 
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+                response.Content = content;
+                return response;
+            }
         }
 
         /// <summary>
@@ -349,6 +353,27 @@ namespace SPCTools
                     ? thresholds[statIndex]
                     : double.NaN;
             };
+        }
+
+        private async Task<API> CreateHIDSConnectionAsync(API hids)
+        {
+            HIDSSettings settings = SettingsHelper.GetHIDSSettings(Host);
+            await hids.ConfigureAsync(settings);
+            return hids;
+        }
+
+        private static string ReadDate(JObject obj, string key)
+        {
+            JToken token = obj[key];
+
+            if (token is null)
+                return null;
+
+            if (token.Type != JTokenType.Date)
+                return token.Value<string>();
+
+            DateTime dt = token.Value<DateTime>();
+            return API.FormatTimestamp(dt);
         }
 
         #endregion
