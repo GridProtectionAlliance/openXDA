@@ -298,6 +298,13 @@ export const AlarmTrendingCard = (props: IProps) => {
                             pointValue = point.Average;
                             break;
                     }
+                    if (dataFilter.FilterZero && pointValue == 0)
+                        pointValue = NaN;
+                    else if (dataFilter.FilterLower && pointValue < dataFilter.LowerLimit)
+                        pointValue = NaN;
+                    else if (dataFilter.FilterUpper && pointValue > dataFilter.UpperLimit)
+                        pointValue = NaN;
+
                     channelData.push([timeStamp, pointValue]);
                 }
         });
