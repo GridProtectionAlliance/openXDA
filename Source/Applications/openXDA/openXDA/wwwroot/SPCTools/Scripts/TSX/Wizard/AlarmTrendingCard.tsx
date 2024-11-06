@@ -71,7 +71,7 @@ export const AlarmTrendingCard = (props: IProps) => {
     const seriesFilterId = useSelector(selectSeriesTypeID);
     const seriesTypes = useSelector(SelectSeriesTypes);
 
-    const severities = useSelector(SelectSeverities);
+    const severities = useSelector(SelectSeverities); 
     const alarmGroup = useSelector(selectAlarmGroup)
     const alarmFactors = useSelector(SelectAlarmFactors)
     const alarmDays = useSelector(SelectAlarmDays)
@@ -307,18 +307,18 @@ export const AlarmTrendingCard = (props: IProps) => {
 
                     channelData.push([timeStamp, pointValue]);
                 }
-        });
+            });
             setChartData(
                 [...allData.keys()].map(key => {
                     const channelId = Number("0x" + key);
                     const chartData = allData.get(key);
                     return {
-                color: '#3333ff',
-                includeLegend: false,
-                label: "",
-                lineStyle: '-',
+                        color: '#3333ff',
+                        includeLegend: false,
+                        label: "",
+                        lineStyle: '-',
                         data: allData.get(key),
-                opacity: (props.ChannelID == -1 ? 0.5 : 1.0)
+                        opacity: (props.ChannelID == -1 ? 0.5 : 1.0)
                     }
                 })
             );
@@ -342,10 +342,9 @@ export const AlarmTrendingCard = (props: IProps) => {
                     {loading ?
                         <LoadingIcon Show={true} Size={40} /> : 
                         <Plot height={250} width={Width}
-                            zoom={false}
-                            yDomain={'AutoValue'}
+                            yDomain={'AutoValue'} zoom={false} menuLocation="hide"
                             defaultTdomain={[Tstart, Tend]}
-                             Tlabel={'Time'}showMouse={false} useMetricFactors={false} >
+                            Tlabel={'Time'} showMouse={false} useMetricFactors={false}>
                             {(chartData.length > 0 && chartData[0].data.length > 0) ? chartData.map((series, i) => <Line key={i} data={series.data} color={series.color} lineStyle={series.lineStyle} />)
                             : <></>
                             }
