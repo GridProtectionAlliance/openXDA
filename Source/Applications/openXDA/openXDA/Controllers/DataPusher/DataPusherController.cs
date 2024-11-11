@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Net.Http;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -244,8 +244,7 @@ namespace openXDA.Controllers.Config
                     try
                     {
                         Stream stream = Request.Content.ReadAsStreamAsync().Result;
-                        BinaryFormatter binaryFormatter = new BinaryFormatter();
-                        FileGroupPost fileGroupPost = (FileGroupPost)binaryFormatter.Deserialize(stream);
+                        FileGroupPost fileGroupPost = JsonSerializer.Deserialize<FileGroupPost>(stream);
 
                         Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("AssetKey = {0}", fileGroupPost.MeterKey);
                         if (meter == null) throw new Exception($"{fileGroupPost.MeterKey} is not defined in database");
