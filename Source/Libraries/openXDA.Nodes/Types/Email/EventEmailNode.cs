@@ -259,7 +259,8 @@ namespace openXDA.Nodes.Types.Email
                 DateTime now = DateTime.UtcNow;
                 TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
                 DateTime xdaNow = timeZoneConverter.ToXDATimeZone(now);
-                if (!emailService.SendEmail(parameters, eventIDs, evt, xdaNow))
+
+                if (!emailService.SendEmail(parameters, eventIDs, evt, xdaNow, eventEmailSettings.EmailDuplicateThreshold))
                     return;
 
                 if (TripsMaxEmailThreshold(eventEmailSettings))
