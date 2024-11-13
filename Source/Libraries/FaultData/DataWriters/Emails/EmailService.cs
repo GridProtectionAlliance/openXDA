@@ -194,11 +194,11 @@ namespace FaultData.DataWriters.Emails
                 {
                     // Find duplicate email messages within the time frame specified, if any exist, don't send email
                     DateTime timeThreshold = DateTime.UtcNow.Subtract(duplicateFilterThreshold);
-                    IEnumerable<SentEmail> emailDuplicates = new TableOperations<SentEmail>(connection)
+                    bool hasDuplicateInThreshold = new TableOperations<SentEmail>(connection)
                         .QueryRecordsWhere("EmailTypeID = {0} AND TimeSent >= {1}", sentEmailRecord.EmailTypeID, timeThreshold)
-                        .Where(potentialDuplicate => string.Equals(potentialDuplicate.Message, sentEmailRecord.Message, StringComparison.OrdinalIgnoreCase));
+                        .Any(potentialDuplicate => string.Equals(potentialDuplicate.Message, sentEmailRecord.Message, StringComparison.OrdinalIgnoreCase));
 
-                    if (!emailDuplicates.Any())
+                    if (!hasDuplicateInThreshold)
                     {
                         SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
                         LoadSentEmail(sentEmailRecord, eventIDs, connection);
