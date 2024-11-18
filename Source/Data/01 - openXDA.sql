@@ -230,6 +230,16 @@ CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupFieldID
 ON FileGroupFieldValue(FileGroupFieldID ASC)
 GO
 
+CREATE TABLE DataOperationFailure
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataOperationID INT NOT NULL REFERENCES DataOperation(ID),
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    [Log] VARCHAR(1000) NOT NULL,
+    StackTrace VARCHAR(MAX) NOT NULL,
+    TimeOfFailure DATETIME NOT NULL
+)
+GO
 
 CREATE TABLE HostRegistration
 (
