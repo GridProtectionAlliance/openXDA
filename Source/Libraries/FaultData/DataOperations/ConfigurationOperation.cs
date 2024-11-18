@@ -55,7 +55,8 @@ namespace FaultData.DataOperations
             public bool IsRMSTrend;
             public bool IsFLKRTrend;
             public bool IsTriggerTrend;
-            public bool IsTrend { get => IsRMSTrend || IsFLKRTrend || IsTriggerTrend; }
+            public bool IsFrequencyTrend;
+            public bool IsTrend { get => IsRMSTrend || IsFLKRTrend || IsTriggerTrend || IsFrequencyTrend; }
 
             public static SourceIndex Parse(string text)
             {
@@ -71,6 +72,7 @@ namespace FaultData.DataOperations
                 sourceIndex.IsRMSTrend = trim.StartsWith("RMS", StringComparison.OrdinalIgnoreCase);
                 sourceIndex.IsFLKRTrend = trim.StartsWith("FLKR", StringComparison.OrdinalIgnoreCase);
                 sourceIndex.IsTriggerTrend = trim.StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase);
+                sourceIndex.IsFrequencyTrend = trim.StartsWith("FREQ", StringComparison.OrdinalIgnoreCase);
 
                 string channelMapping;
 
@@ -78,13 +80,13 @@ namespace FaultData.DataOperations
                 if (sourceIndex.IsTrend)
                 {
                     // language=regex
-                    // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n) where n is a Channel ID (not a Series ID)
+                    // The format is RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n), FREQAVG(n), FREQMIN(n), FREQMAX(n) where n is a Channel ID (not a Series ID)
                     const string Pattern = @"(?<Name>[A-Za-z]+)\((?<Channel>[0-9]+)\)";
                     Match match = Regex.Match(trim, Pattern);
 
                     if (!match.Success)
                     {
-                        Log.Debug($"Incorrect format for trend channel name: {trim} doesn't match format RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n).");
+                        Log.Debug($"Incorrect format for trend channel name: {trim} doesn't match format RMSAVG(n), RMSMIN(n), RMSMAX(n), FLKR(n), FREQAVG(n), FREQMIN(n), FREQMAX(n).");
                         return null;
                     }
 
@@ -131,7 +133,8 @@ namespace FaultData.DataOperations
             PointOnWave,
             RMS,
             Flicker,
-            Trigger
+            Trigger,
+            Frequency
         }
 
         // Constants
@@ -187,6 +190,9 @@ namespace FaultData.DataOperations
 
                 if (Regex.IsMatch(filePath, TrendingDataSettings.Trigger.FolderPath))
                     return APPDataType.Trigger;
+
+                if (Regex.IsMatch(filePath, TrendingDataSettings.Frequency.FolderPath))
+                    return APPDataType.Frequency;
 
                 return APPDataType.PointOnWave;
             })(meterDataSet.FilePath);
@@ -315,6 +321,9 @@ namespace FaultData.DataOperations
 
                 case APPDataType.Trigger:
                     return sourceIndex => sourceIndex.IsTriggerTrend;
+
+                case APPDataType.Frequency:
+                    return sourceIndex => sourceIndex.IsFrequencyTrend;
             }
         }
 
@@ -349,6 +358,11 @@ namespace FaultData.DataOperations
                             channel.MeasurementType.Name == "Digital" &&
                             measurementCharacteristics.Contains(channel.MeasurementCharacteristic.Name);
 
+                    case APPDataType.Frequency:
+                        return channel =>
+                            (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") &&
+                            channel.MeasurementCharacteristic.Name == "Frequency";
+
                     default:
                         return channel => false;
                 }
@@ -361,6 +375,7 @@ namespace FaultData.DataOperations
                     case APPDataType.RMS: return AddRMSChannel;
                     case APPDataType.Flicker: return AddFlkrChannel;
                     case APPDataType.Trigger: return AddTriggerChannel;
+                    case APPDataType.Frequency: return AddFrequencyChannel;
                     default: return new Action<Channel, MeterDataSet>((_, __) => { });
                 }
             })(appDataType);
@@ -413,6 +428,7 @@ namespace FaultData.DataOperations
                 IEnumerable<SourceIndex> powIndexes = sourceIndexLookup[sourceIndex.ChannelIndex];
                 bool isRMS = sourceIndex.ChannelName.StartsWith("RMS", StringComparison.OrdinalIgnoreCase);
                 bool isTrigger = !isRMS && sourceIndex.ChannelName.StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase);
+                bool isFreq = sourceIndex.ChannelName.StartsWith("FREQ", StringComparison.OrdinalIgnoreCase);
                 bool isMax = sourceIndex.ChannelName.EndsWith("MAX", StringComparison.OrdinalIgnoreCase);
                 bool isMin = !isMax && sourceIndex.ChannelName.EndsWith("MIN", StringComparison.OrdinalIgnoreCase);
 
@@ -422,12 +438,14 @@ namespace FaultData.DataOperations
                         return "A";
                     if (isTrigger)
                         return "T";
+                    if (isFreq)
+                        return "F";
                     return "";
                 }
 
                 string GetAggregatePrefix(double multiplier)
                 {
-                    if (!isRMS && !isTrigger)
+                    if (!isRMS && !isTrigger && !isFreq)
                         return "";
                     if (isMax || (isMin && multiplier < 0.0D))
                         return "Max_";
@@ -455,6 +473,7 @@ namespace FaultData.DataOperations
                     newIndex.IsRMSTrend = sourceIndex.IsRMSTrend;
                     newIndex.IsFLKRTrend = sourceIndex.IsFLKRTrend;
                     newIndex.IsTriggerTrend = sourceIndex.IsTriggerTrend;
+                    newIndex.IsFrequencyTrend = sourceIndex.IsFrequencyTrend;
                     return newIndex;
                 });
             }
@@ -1063,6 +1082,77 @@ namespace FaultData.DataOperations
                     ChannelID = dbChannel.ID,
                     SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Maximum'").ID,
                     SourceIndexes = "TRIGGERMAX(" + powChannel.ID + ")"
+                };
+
+                seriesTable.AddNewRecord(avgSeries);
+                seriesTable.AddNewRecord(minSeries);
+                seriesTable.AddNewRecord(maxSeries);
+            }
+        }
+
+        /// <summary>
+        /// Checks if the Frequency Trend Channels exist and adds them if necesarry.
+        /// </summary>
+        /// <param name="powChannel">The point on Wave Data Channel.</param>
+        /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
+        private void AddFrequencyChannel(Channel powChannel, MeterDataSet meterDataSet)
+        {
+            //Create new Frequency Channel and Series
+            Channel freqChannel = new Channel()
+            {
+                MeterID = powChannel.MeterID,
+                AssetID = powChannel.AssetID,
+                MeasurementTypeID = powChannel.MeasurementTypeID,
+                MeasurementCharacteristicID = powChannel.MeasurementCharacteristicID,
+                PhaseID = powChannel.PhaseID,
+                Name = powChannel.Name,
+                SamplesPerHour = powChannel.SamplesPerHour,
+                PerUnitValue = powChannel.PerUnitValue,
+                HarmonicGroup = powChannel.HarmonicGroup,
+                Description = powChannel.Description,
+                Enabled = powChannel.Enabled,
+                MeasurementType = powChannel.MeasurementType,
+                Phase = powChannel.Phase,
+                Trend = true
+            };
+
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
+                TableOperations<SeriesType> seriesTypeTable = new TableOperations<SeriesType>(connection);
+                TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+                TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
+
+                freqChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = 'Frequency'");
+                freqChannel.MeasurementCharacteristicID = freqChannel.MeasurementCharacteristic.ID;
+
+                ChannelKey key = new ChannelKey(freqChannel);
+                Channel dbChannel = key.Find(connection, meterDataSet.Meter.ID);
+
+                if (dbChannel is null)
+                {
+                    channelTable.AddNewRecord(freqChannel);
+                    dbChannel = key.Find(connection, meterDataSet.Meter.ID);
+                }
+
+                //Create all 3 Series for this Channel
+                Series avgSeries = new Series()
+                {
+                    ChannelID = dbChannel.ID,
+                    SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Average'").ID,
+                    SourceIndexes = "FREQAVG(" + powChannel.ID + ")"
+                };
+                Series minSeries = new Series()
+                {
+                    ChannelID = dbChannel.ID,
+                    SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Minimum'").ID,
+                    SourceIndexes = "FREQMIN(" + powChannel.ID + ")"
+                };
+                Series maxSeries = new Series()
+                {
+                    ChannelID = dbChannel.ID,
+                    SeriesTypeID = seriesTypeTable.QueryRecordWhere("Name = 'Maximum'").ID,
+                    SourceIndexes = "FREQMAX(" + powChannel.ID + ")"
                 };
 
                 seriesTable.AddNewRecord(avgSeries);

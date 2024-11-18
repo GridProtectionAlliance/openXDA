@@ -52,6 +52,13 @@ namespace openXDA.Configuration
             public string FolderPath { get; set; }
         }
 
+        public class FrequencySubSection
+        {
+            [Setting]
+            [DefaultValue(@"Tfrq[0-9]*\.dat")]
+            public string FolderPath { get; set; }
+        }
+
         // Constants
         public const string CategoryName = "TrendingData";
 
@@ -76,6 +83,12 @@ namespace openXDA.Configuration
         /// </summary>
         [Category]
         public TriggerSubSection Trigger { get; } = new TriggerSubSection();
+
+        /// <summary>
+        /// Gets frequency folder path settings.
+        /// </summary>
+        [Category]
+        public FrequencySubSection Frequency { get; } = new FrequencySubSection();
 
         #endregion
     }

@@ -389,6 +389,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.FolderPath', 'TrR[0-9]*\.dat', 'TrR[0-9]*\.dat')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Frequency.FolderPath', 'Tfrq[0-9]*\.dat', 'Tfrq[0-9]*\.dat')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.URL', 'http://localhost:53030', 'http://localhost:53030')
 GO
 
