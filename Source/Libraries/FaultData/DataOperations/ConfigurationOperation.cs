@@ -851,7 +851,8 @@ namespace FaultData.DataOperations
                 Description = powChannel.Description,
                 Enabled = powChannel.Enabled,
                 MeasurementType = powChannel.MeasurementType,
-                Phase = powChannel.Phase
+                Phase = powChannel.Phase,
+                Trend = true
             };
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
@@ -922,7 +923,8 @@ namespace FaultData.DataOperations
                 Description = powChannel.Description,
                 Enabled = powChannel.Enabled,
                 MeasurementType = powChannel.MeasurementType,
-                Phase = powChannel.Phase
+                Phase = powChannel.Phase,
+                Trend = true
             };
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
@@ -979,7 +981,8 @@ namespace FaultData.DataOperations
                 Description = powChannel.Description,
                 Enabled = powChannel.Enabled,
                 MeasurementType = powChannel.MeasurementType,
-                Phase = powChannel.Phase
+                Phase = powChannel.Phase,
+                Trend = true
             };
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
