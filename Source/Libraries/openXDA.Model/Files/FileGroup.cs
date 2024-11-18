@@ -97,7 +97,8 @@ namespace openXDA.Model
         Created = 0,
         Queued = 1,
         Processing = 2,
-        Processed = 3,
-        Failed = 4
+        Success = 3,
+        Failed = 4,
+        PartialSuccess = 5
     }
 }
