@@ -39,7 +39,7 @@ namespace openXDA.Model
     public class ApplicationNode
     {
         [PrimaryKey(true)]
-        [DefaultValue("00000000-0000-0000-0000-000000000001")]
+        [DefaultValue(typeof(Guid), "00000000-0000-0000-0000-000000000001")]
         public Guid ID { get; set; }
         public string Name { get; set; }
     }
