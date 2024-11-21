@@ -24,7 +24,7 @@
 import * as React from 'react';
 import { SearchBar, LoadingIcon } from '@gpa-gemstone/react-interactive'
 import { SPCTools, openXDA, Filter } from '../global';
-import Table, { SelectTable } from '@gpa-gemstone/react-table';
+import { SelectTable, ReactTable } from '@gpa-gemstone/react-table';
 import { Input, Select, ArrayCheckBoxes } from '@gpa-gemstone/react-forms';
 import { updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID, SelectWizardType } from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
@@ -69,7 +69,7 @@ const GeneralSettings = () => {
     }, [])
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
+        <div className="container-fluid d-flex h-100 flex-column">
             <div className="row" style={{ margin: 0 }}>
                 <div className="col" style={{ width: '50%' }}>
                     <Input<SPCTools.IAlarmGroup>
@@ -104,39 +104,56 @@ const GeneralSettings = () => {
                     <span className="float-right"> Number of Channels Selected: {(affectedChannelState != 'idle' ? <LoadingIcon Show={true} Size={40} /> : affectedChannelCount)}</span>
                 </div>
             </div>
-            <div className="row" style={{ margin: 0, height: 'calc(100% - 218px)' }}>
-                <div className="col" style={{ height: '100%' }}>
+            <div className="row" style={{ margin: 0, flex: 1, overflow: 'auto'  }}>
+                <div className="col" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <div className="row" style={{ margin: 0, width: '100%' }}>
                         <h3> Selected Meters </h3>
                     </div>
-                    <div className="row" style={{ margin: 0, width: '100%', height: 'calc(100% - 137px)' }}>
-                        <div className="col">
-                            <Table<openXDA.IMeter>
-                                tableStyle={{ height: '100%' }}
-                                cols={[
-                                    { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
-                                    { key: 'Location', label: 'Substation', field: 'Location', headerStyle: { width: '45%' }, rowStyle: { width: '45%' } },
-                                    { key: null, label: '', headerStyle: { width: '10%' }, rowStyle: { width: '10%' }, content: (item, key) => <div onClick={() => dispatch(removeMeter([item]))} style={{ width: '100%', height: '100%', marginTop: '2px', textAlign: 'center' }}><i className="fa fa-trash-o"></i></div> },
-                                ]}
-                                tableClass="table table-hover"
-                                data={selectedMeter}
-                                sortKey={sort}
-                                ascending={asc}
-                                onSort={(d) => { dispatch(sortSelectedMeters({ field: d.colField, asc: d.ascending })) }}
-                                theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 300, width: '100%' }}
-                                rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                selected={(item) => false}
-                            />
-                        </div>
-                    </div>
-                    <div style={{ width: '50%', display: 'inline-block', margin: 0 }}>
-                        <div className="col" style={{ padding: 0 }}>
-                            <div className="btn-group mr-2" role="group">
-                            <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddAssetGroup'}>Add Asset Group</button>
-                            <button type="button" className="btn btn-primary" data-toggle='modal' data-target={'#AddMeter'} style={{ marginLeft: '10px' }}>Add Meter</button>
-                            </div>
-                        </div>
+                    <ReactTable.Table<openXDA.IMeter>
+                        TableClass="table table-hover"
+                        Data={selectedMeter}
+                        SortKey={sort}
+                        Ascending={asc}
+                        OnSort={(d) => { dispatch(sortSelectedMeters({ field: d.colField, asc: d.ascending })) }}
+                        TableStyle={{ height: '100%', width: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                        TheadStyle={{ fontSize: 'smaller', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        Selected={(item) => false}
+                        KeySelector={item => item.ID}
+                    >
+                        <ReactTable.Column<openXDA.IMeter>
+                            Key="Name"
+                            Field="Name"
+                            AllowSort={true}
+                            HeaderStyle={{ width: '45%' }}
+                            RowStyle={{ width: '45%' }}
+                        > Name
+                        </ReactTable.Column>
+                        <ReactTable.Column<openXDA.IMeter>
+                            Key="Location"
+                            Field="Location"
+                            AllowSort={true}
+                            HeaderStyle={{ width: '45%' }}
+                            RowStyle={{ width: '45%' }}
+                        > Substation
+                        </ReactTable.Column>
+                        <ReactTable.Column<openXDA.IMeter>
+                            Key="remove"
+                            AllowSort={false}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                            Content={row => (
+                                <div onClick={() => dispatch(removeMeter([row.item]))} style={{ width: '100%', height: '100%', marginTop: '2px', textAlign: 'center' }}>
+                                    <i className="fa fa-trash-o"></i>
+                                </div>
+                            )}
+                        > {" "}
+                        </ReactTable.Column>
+                    </ReactTable.Table>
+                    <div className="row" style={{ paddingBottom: '20px' }}>
+                        <button type="button" className="btn btn-info mr-2" data-toggle='modal' data-target={'#AddAssetGroup'}>Add Asset Group</button>
+                        <button type="button" className="btn btn-info mr-2" data-toggle='modal' data-target={'#AddMeter'} style={{ marginLeft: '10px' }}>Add Meter</button>
                     </div>
                 </div>
                 <div className="col">
@@ -320,17 +337,12 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                             Direction={'left'}
                         >
                         </SearchBar>
-                        <Table<openXDA.IAssetGroup>
-                            cols={[
-                                { key: 'Name', label: 'Name', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                { key: 'Meters', label: 'Num. of Meters', field: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-
-                            ]}
-                            tableClass="table table-hover"
-                            data={assetGroupList}
-                            sortKey={sort}
-                            ascending={asc}
-                            onSort={(d) => {
+                        <ReactTable.Table<openXDA.IAssetGroup>
+                            TableClass="table table-hover"
+                            Data={assetGroupList}
+                            SortKey={sort}
+                            Ascending={asc}
+                            OnSort={(d) => {
                                 if (d.colField == sort) {
                                     setAsc(!asc);
                                 }
@@ -339,12 +351,30 @@ const AddAssetgroupPopUp = (props: { setter: (meters: Array<openXDA.IMeter>) => 
                                     setSort(d.colField);
                                 }
                             }}
-                            onClick={(d) => { setSelectedAssetGroupID(d.row.ID) }}
-                            theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 500, width: '100%' }}
-                            rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            selected={(item) => item.ID == selectedAssetGroupID}
-                        />
+                            OnClick={(d) => { setSelectedAssetGroupID(d.row.ID) }}
+                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 500, width: '100%' }}
+                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            Selected={(item) => item.ID == selectedAssetGroupID}
+                            KeySelector={item => item.ID}
+                        >
+                            <ReactTable.Column<openXDA.IAssetGroup>
+                                Key="Name"
+                                Field="Name"
+                                AllowSort={true}
+                                HeaderStyle={{ width: 'auto' }}
+                                RowStyle={{ width: 'auto' }}
+                            > Name
+                            </ReactTable.Column>
+                            <ReactTable.Column<openXDA.IAssetGroup>
+                                Key="Meters"
+                                Field="Meters"
+                                AllowSort={true}
+                                HeaderStyle={{ width: 'auto' }}
+                                RowStyle={{ width: 'auto' }}
+                            > Num. of Meters
+                            </ReactTable.Column>
+                        </ReactTable.Table>
                     </div>
 
                     <div className="modal-footer">

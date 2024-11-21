@@ -22,26 +22,25 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { SPCTools, DynamicWizzard } from '../global';
-import Table from '@gpa-gemstone/react-table';
+import { SPCTools } from '../global';
+import { ReactTable } from '@gpa-gemstone/react-table';
 import { DateRangePicker } from '@gpa-gemstone/react-forms';
-import { useSelector, useDispatch } from 'react-redux';
+import { TimeFilter } from '@gpa-gemstone/common-pages';
+import { useSelector, } from 'react-redux';
 import _, { cloneDeep } from 'lodash';
 import {
     selectAlarmGroup, selectSeriesTypeID, SelectAlarmFactors,
     SelectStatisticsFilter, SelectStatisticsChannels, SelectStatisticsrange,
-    SelectAllAlarmValues } from './DynamicWizzardSlice';
+    SelectAllAlarmValues
+} from './DynamicWizzardSlice';
 import { SelectAffectedChannels } from '../store/WizardAffectedChannelSlice';
 import { SelectSeverities } from '../store/SeveritySlice';
 import { AlarmTrendingCard } from './AlarmTrendingCard';
 import { LoadingIcon, Warning } from '@gpa-gemstone/react-interactive';
 
-declare let homePath: string;
 declare let apiHomePath: string;
 
-declare let userIsAdmin: boolean;
-
-interface IResultTable { Severity: string, Threshhold: number, NumberRaised: number, TimeInAlarm: number}
+interface IResultTable { Severity: string, Threshhold: number, NumberRaised: number, TimeInAlarm: number }
 interface IChannelList { MeterName: string, Name: string, NumberRaised: number, TimeInAlarm: number, ID: number }
 
 type preLoadState = 'uninitialized' | 'confirm' | 'loading';
@@ -195,7 +194,7 @@ const WizardTest = () => {
             {
                 Severity: severities.find(item => item.ID == alarmGroup.SeverityID).Name,
                 NumberRaised: response[index].FactorTests.find(i => i.Factor == 1.0).NumberRaised,
-                TimeInAlarm: response[index].FactorTests.find(i => i.Factor == 1.0).TimeInAlarm *100.0,
+                TimeInAlarm: response[index].FactorTests.find(i => i.Factor == 1.0).TimeInAlarm * 100.0,
                 Threshhold: undefined
             },
             ...alarmFactors.map(f => {
@@ -215,9 +214,9 @@ const WizardTest = () => {
         (new Date(timeRange.end) > new Date(timeRange.start) || !validStartDate)
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
-            <div className="row" style={{ margin: 0 }}>
-                <div className="col-6">
+        <div className="container-fluid d-flex h-100 flex-column">
+            <div className="row" style={{ margin: 0, flex: 1, overflow: 'auto' }}>
+                <div className="col-6" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             <h2>Test results of Alarm calculation:</h2>
@@ -225,7 +224,10 @@ const WizardTest = () => {
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
-                            <DateRangePicker<SPCTools.IDateRange> Label={''} Record={timeRange} FromField={'start'} ToField={'end'} Setter={(r) => { setLoading('changed'); setTimeRange(r); }} Disabled={loading == 'loading'} Valid={ () => true} />
+                            <TimeFilter filter={{ start: timeRange.start, end: timeRange.end }} setFilter={(start: string, end: string) => {
+                                setLoading('changed');
+                                setTimeRange({ start: start, end: end });
+                            }} showQuickSelect={true} timeZone={'UTC'} dateTimeSetting={'startEnd'} isHorizontal={true} format={"date"} />
                         </div>
                     </div>
                     <div className="row" style={{ margin: 0 }}>
@@ -234,105 +236,190 @@ const WizardTest = () => {
                                 Test
                             </button>
                         </div>
-                        
+
                     </div>
-                    <div className="row" style={{ margin: 0 }}>
-                        <div className="col">
-                            {loading == 'loading' ?
-                                <LoadingIcon Show={true} Size={40} />:
-                                <Table<IChannelList>
-                                    tableStyle={{ height: '100%' }}
-                                    cols={[
-                                        { key: 'MeterName', label: 'Meter', field: 'MeterName', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'Name', label: 'Channel', field: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
-                                        
-                                    ]}
-                                    tableClass="table table-hover"
-                                    data={channelList}
-                                    sortKey={sort}
-                                    ascending={asc}
-                                    onSort={(d) => {
-                                        if (sort === d.colKey)
-                                            setAsc(!asc)
-                                        else
-                                            setSort(d.colField)
-                                    }}
-                                    onClick={(d) => setSelectedChannel(d.row.ID)}
-                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 400, width: '100%' }}
-                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    selected={(item) => item.ID == selectedChannel}
-                                />
-                            }
-                        </div>
+                    <div className="row" style={{ margin: 0, flex: 1, overflow: 'hidden' }}>
+                        {loading == 'loading' ?
+                            <LoadingIcon Show={true} Size={40} /> :
+                            <ReactTable.Table<IChannelList>
+                                TableClass="table table-hover"
+                                Data={channelList}
+                                SortKey={sort}
+                                Ascending={asc}
+                                OnSort={(d) => {
+                                    if (sort === d.colKey)
+                                        setAsc(!asc)
+                                    else
+                                        setSort(d.colField)
+                                }}
+                                OnClick={(d) => setSelectedChannel(d.row.ID)}
+                                TableStyle={{ height: '100%', width: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                                TheadStyle={{ fontSize: 'smaller', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                Selected={(item) => item.ID == selectedChannel}
+                                KeySelector={item => item.ID}
+                            >
+                                <ReactTable.Column<IChannelList>
+                                    Key="MeterName"
+                                    Field="MeterName"
+                                    AllowSort={true}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                > Meter
+                                </ReactTable.Column>
+                                <ReactTable.Column<IChannelList>
+                                    Key="Name"
+                                    Field="Name"
+                                    AllowSort={true}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                > Channel
+                                </ReactTable.Column>
+                                <ReactTable.Column<IChannelList>
+                                    Key="NumberRaised"
+                                    Field="NumberRaised"
+                                    AllowSort={true}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                > Raised
+                                </ReactTable.Column>
+                                <ReactTable.Column<IChannelList>
+                                    Key="TimeInAlarm"
+                                    Field="TimeInAlarm"
+                                    AllowSort={true}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                    Content={row => (row.item.TimeInAlarm.toFixed(2) + "%") }
+                                > Time in Alarm (%)
+                                </ReactTable.Column>
+                            </ReactTable.Table>
+                        }
                     </div>
                 </div>
-                <div className="col-6">
-                    
+                <div className="col-6" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             <h3>Overview Alarm:</h3 >
                         </div>
                     </div>
-
-                    <div className="row">
-                        <div className="col">
-                            {loading == 'loading' ? 
-                                <LoadingIcon Show={true} Size={40} /> :
-                                <Table<IResultTable>
-                                    tableStyle={{ maxHeight: '300px' }}
-                                    cols={[
-                                        { key: 'Severity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p> },
-                                        { key: 'Threshhold', label: 'Threshhold', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => (item.Threshhold == undefined ? "N/A" : item.Threshhold) },
-                                        { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + "%" },
-                                    ]}
-                                    tableClass="table thead-dark table-striped"
-                                    data={resultSummary}
-                                    sortKey={'Severity'}
-                                    ascending={false}
-                                    onSort={() => {/* do nothing */}}
-                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
-                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    selected={(item) => false}
-                                />
-                            }
-                        </div>
+                    <div className="row" style={{ height: '45%'}}>
+                        {loading == 'loading' ?
+                            <LoadingIcon Show={true} Size={40} /> :
+                            <ReactTable.Table<IResultTable>
+                                TableClass="table thead-dark table-striped"
+                                Data={resultSummary}
+                                SortKey={''}
+                                Ascending={false}
+                                OnSort={() => {/* do nothing */ }}
+                                TableStyle={{ height: '100%', width: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                                TheadStyle={{ fontSize: 'smaller', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                Selected={(item) => false}
+                                KeySelector={(_item, index) => index /* ToDo: Get a better key */}
+                            >
+                                <ReactTable.Column<IResultTable>
+                                    Key="Severity"
+                                    Field="Severity"
+                                    AllowSort={false}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                    Content={row => (
+                                        <p style={{ color: severities.find(s => s.Name == row.item.Severity).Color }}>{row.item.Severity}</p>
+                                    )}
+                                > Severity
+                                </ReactTable.Column>
+                                <ReactTable.Column<IResultTable>
+                                    Key="Threshhold"
+                                    Field="Threshhold"
+                                    AllowSort={false}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                    Content={row => (row.item.Threshhold == undefined ? "N/A" : row.item.Threshhold)}
+                                > Threshhold
+                                </ReactTable.Column>
+                                <ReactTable.Column<IResultTable>
+                                    Key="NumberRaised"
+                                    Field="NumberRaised"
+                                    AllowSort={false}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                > Raised
+                                </ReactTable.Column>
+                                <ReactTable.Column<IResultTable>
+                                    Key="TimeInAlarm"
+                                    Field="TimeInAlarm"
+                                    AllowSort={false}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                    Content={row => (row.item.TimeInAlarm.toFixed(2) + "%")}
+                                > Time in Alarm (%)
+                                </ReactTable.Column>
+                            </ReactTable.Table>
+                        }
                     </div>
                     <div className="row" style={{ margin: 0 }}>
                         <div className="col">
                             {selectedChannel > -1 ? <h3>{channelList.find(item => item.ID == selectedChannel).MeterName} - {channelList.find(item => item.ID == selectedChannel).Name}:</h3> : null}
                         </div>
                     </div>
-                    <div className="row">
-                        <div className="col">
-                            {loading == 'loading' ?
-                                <LoadingIcon Show={true} Size={40} /> :
-                                <Table<IResultTable>
-                                    tableStyle={{ maxHeight: '300px' }}
-                                    cols={[
-                                        { key: 'Severity', label: 'Severity', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => <p style={{ color: severities.find(s => s.Name == item.Severity).Color }}>{item.Severity}</p> },
-                                        { key: 'Threshhold', label: 'Threshhold', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => (item.Threshhold == undefined ? "N/A" : item.Threshhold) },
-                                        { key: 'NumberRaised', label: 'Raised', field: 'NumberRaised', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'TimeInAlarm', label: 'Time in Alarm (%)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item) => item.TimeInAlarm.toFixed(2) + " %" },
-                                    ]}
-                                    tableClass="table thead-dark table-striped"
-                                    data={channelSummary}
-                                    sortKey={'Severity'}
-                                    ascending={false}
-                                    onSort={(d) => {/* do nothing */}}
-                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: 240, width: '100%' }}
-                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    selected={(item) => false}
-                                />
-                            }
-                        </div>
+                    <div className="row" style={{ margin: 0, flex: 1, overflow: 'hidden' }}>
+                        {loading == 'loading' ?
+                            <LoadingIcon Show={true} Size={40} /> :
+                            <ReactTable.Table<IResultTable>
+                                TableClass="table thead-dark table-striped"
+                                Data={channelSummary}
+                                SortKey={''}
+                                Ascending={false}
+                                OnSort={(d) => {/* do nothing */ }}
+                                TableStyle={{ height: '100%', width: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                                TheadStyle={{ fontSize: 'smaller', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                Selected={(item) => false}
+                                KeySelector={(_item, index) => index /* ToDo: Get a better key */}
+                            >
+                                <ReactTable.Column<IResultTable>
+                                    Key="Severity"
+                                    Field="Severity"
+                                    AllowSort={false}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                    Content={row => (
+                                        <p style={{ color: severities.find(s => s.Name == row.item.Severity).Color }}>{row.item.Severity}</p>
+                                    )}
+                                > Severity
+                                </ReactTable.Column>
+                                <ReactTable.Column<IResultTable>
+                                    Key="Threshhold"
+                                    Field="Threshhold"
+                                    AllowSort={false}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                    Content={row => (row.item.Threshhold == undefined ? "N/A" : row.item.Threshhold)}
+                                > Threshhold
+                                </ReactTable.Column>
+                                <ReactTable.Column<IResultTable>
+                                    Key="NumberRaised"
+                                    Field="NumberRaised"
+                                    AllowSort={false}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                > Raised
+                                </ReactTable.Column>
+                                <ReactTable.Column<IResultTable>
+                                    Key="TimeInAlarm"
+                                    Field="TimeInAlarm"
+                                    AllowSort={false}
+                                    HeaderStyle={{ width: 'auto' }}
+                                    RowStyle={{ width: 'auto' }}
+                                    Content={row => (row.item.TimeInAlarm.toFixed(2) + "%")}
+                                > Time in Alarm (%)
+                                </ReactTable.Column>
+                            </ReactTable.Table>
+                        }
                     </div>
-
                 </div>
             </div>
             <div className="row" style={{ margin: 0 }}>
@@ -340,7 +427,7 @@ const WizardTest = () => {
                     {selectedChannel != -1 && (loading == 'idle' || loading == 'changed') ? <AlarmTrendingCard Tend={effectiveTimeRange.end} Tstart={effectiveTimeRange.start} ChannelID={selectedChannel} /> : null}
                 </div>
             </div>
-            <Warning  Title={'This operation may take some time to process.'}
+            <Warning Title={'This operation may take some time to process.'}
                 CallBack={(c) => { if (c) setUserConfirm('loading'); else setUserConfirm('uninitialized'); }}
                 Show={userConfirm == 'confirm'}
                 Message={'This operation may take some time to process. To speed up testing these setpoints please select a shorter timeframe or fewer channels.'}
