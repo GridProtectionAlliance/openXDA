@@ -50,15 +50,16 @@ export const FunctionHelp = () => {
                     <h4 className="modal-title" >Setpoint Computation Functions </h4>
                      <button type = "button" className = "close" data-dismiss="modal">&times; </button>
                 </div>
-                <div className="modal-body" >
+                <div className="modal-body" style={{ maxHeight: 'calc(100vh - 210px)', overflowY: 'hidden', display: 'flex' }}>
                     <ReactTable.Table<IDocumentation>
                         TableClass="table table-striped"
                         Data={(type == 'dynamic' ? [...staticData, ...dynamicData] : staticData)}
                         SortKey={''}
                         Ascending={true}
                         OnSort={() => { /* do nothing */ }}
-                        TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 500, width: '100%' }}
+                        TableStyle={{ width: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}
+                        TheadStyle={{ fontSize: 'smaller', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                         RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                         Selected={(item) => false}
                         KeySelector={item => item.Name}

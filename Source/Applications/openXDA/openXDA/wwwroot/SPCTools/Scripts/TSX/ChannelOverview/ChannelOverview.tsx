@@ -62,119 +62,120 @@ const ChannelOverview: React.FunctionComponent = () => {
 
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
-            <SearchBar<SPCTools.IChannelOverview>
-                CollumnList={[
-                    { label: 'Meter', key: 'Meter', type: 'string', isPivotField: false },
-                    { label: 'Channel', key: 'Channel', type: 'string', isPivotField: false },
-                    { label: 'Type', key: 'Type', type: 'string', isPivotField: false },
-                    { label: 'Phase', key: 'Phase', type: 'string', isPivotField: false },
-                    { label: 'Asset', key: 'Asset', type: 'string', isPivotField: false },
-                ]}
-                SetFilter={(filter) => dispatch(FilterChannelOverviews(filter))}
-                Direction='left'
-            />
-            <div style={{ width: '100%' }}>
-                <div className="row" style={{ margin: 0 }}>
-                    <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0, marginLeft: '10px' }}>
-                        <ReactTable.Table<SPCTools.IChannelOverview>
-                            TableClass="table table-hover"
-                            Data={channels}
-                            SortKey={coSort}
-                            Ascending={coAsc}
-                            OnSort={(d) => {
-                                if (d.colKey == coSort)
-                                    dispatch(SortChannelOverviews({ SortField: coSort, Ascending: !coAsc }));
-                                else
-                                    dispatch(SortChannelOverviews({ SortField: d.colKey, Ascending: coAsc }));
-                            }}
-                            OnClick={(d) => setChannelID(d.row.ID)}
-                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
-                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            Selected={(item) => item.ID == channelID}
-                            KeySelector={item => item.ID}
-                        >
-                            <ReactTable.Column<SPCTools.IChannelOverview>
-                                Key="Meter"
-                                Field="Meter"
-                                AllowSort={true}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                            > Meter
-                            </ReactTable.Column>
-                            <ReactTable.Column<SPCTools.IChannelOverview>
-                                Key="Type"
-                                Field="Type"
-                                AllowSort={true}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                            > Type
-                            </ReactTable.Column>
-                            <ReactTable.Column<SPCTools.IChannelOverview>
-                                Key="Phase"
-                                Field="Phase"
-                                AllowSort={true}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                            > Phase
-                            </ReactTable.Column>
-                            <ReactTable.Column<SPCTools.IChannelOverview>
-                                Key="Asset"
-                                Field="Asset"
-                                AllowSort={true}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                            > Asset
-                            </ReactTable.Column>
-                        </ReactTable.Table>
-                    </div>
-                    <div className="col" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
-                        <ReactTable.Table<SPCTools.IChannelAlarmGroup>
-                            TableClass="table table-hover"
-                            Data={alarmGroups}
-                            SortKey={agSort}
-                            Ascending={agAsc}
-                            OnSort={(d) => {
-                                if (d.colKey == agSort)
-                                    dispatch(SortChannelAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
-                                else
-                                    dispatch(SortChannelAlarmGroups({ SortField: d.colKey, Ascending: agAsc }));
-                            }}
-                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 190, width: '100%' }}
-                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            Selected={(item) => false}
-                            KeySelector={item => item.ID}
-                        >
-                            <ReactTable.Column<SPCTools.IChannelAlarmGroup>
-                                Key="Name"
-                                Field="Name"
-                                AllowSort={true}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                            > Alarm Group
-                            </ReactTable.Column>
-                            <ReactTable.Column<SPCTools.IChannelAlarmGroup>
-                                Key="AlarmSeverity"
-                                Field="AlarmSeverity"
-                                AllowSort={true}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                            > Severity
-                            </ReactTable.Column>
-                            <ReactTable.Column<SPCTools.IChannelAlarmGroup>
-                                Key="TimeInAlarm"
-                                Field="TimeInAlarm"
-                                AllowSort={true}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                            > Time In Alarm
-                            </ReactTable.Column>
-                        </ReactTable.Table>
-                    </div>
+        <div className="container-fluid d-flex h-100 flex-column">
+            <div className="row">
+                <SearchBar<SPCTools.IChannelOverview>
+                    CollumnList={[
+                        { label: 'Meter', key: 'Meter', type: 'string', isPivotField: false },
+                        { label: 'Channel', key: 'Channel', type: 'string', isPivotField: false },
+                        { label: 'Type', key: 'Type', type: 'string', isPivotField: false },
+                        { label: 'Phase', key: 'Phase', type: 'string', isPivotField: false },
+                        { label: 'Asset', key: 'Asset', type: 'string', isPivotField: false },
+                    ]}
+                    SetFilter={(filter) => dispatch(FilterChannelOverviews(filter))}
+                    Direction='left'
+                />
+            </div>
+            <div className={'row'} style={{ flex: 1, overflow: 'hidden', margin: 0 }}>
+                <div className="col" style={{ padding: 0, marginLeft: '10px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <ReactTable.Table<SPCTools.IChannelOverview>
+                        TableClass="table table-hover"
+                        Data={channels}
+                        SortKey={coSort}
+                        Ascending={coAsc}
+                        OnSort={(d) => {
+                            if (d.colKey == coSort)
+                                dispatch(SortChannelOverviews({ SortField: coSort, Ascending: !coAsc }));
+                            else
+                                dispatch(SortChannelOverviews({ SortField: d.colKey, Ascending: coAsc }));
+                        }}
+                        OnClick={(d) => setChannelID(d.row.ID)}
+                        TableStyle={{ width: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}
+                        TheadStyle={{ fontSize: 'smaller', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        Selected={(item) => item.ID == channelID}
+                        KeySelector={item => item.ID}
+                    >
+                        <ReactTable.Column<SPCTools.IChannelOverview>
+                            Key="Meter"
+                            Field="Meter"
+                            AllowSort={true}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                        > Meter
+                        </ReactTable.Column>
+                        <ReactTable.Column<SPCTools.IChannelOverview>
+                            Key="Type"
+                            Field="Type"
+                            AllowSort={true}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                        > Type
+                        </ReactTable.Column>
+                        <ReactTable.Column<SPCTools.IChannelOverview>
+                            Key="Phase"
+                            Field="Phase"
+                            AllowSort={true}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                        > Phase
+                        </ReactTable.Column>
+                        <ReactTable.Column<SPCTools.IChannelOverview>
+                            Key="Asset"
+                            Field="Asset"
+                            AllowSort={true}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                        > Asset
+                        </ReactTable.Column>
+                    </ReactTable.Table>
                 </div>
-
+                <div className="col" style={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <ReactTable.Table<SPCTools.IChannelAlarmGroup>
+                        TableClass="table table-hover"
+                        Data={alarmGroups}
+                        SortKey={agSort}
+                        Ascending={agAsc}
+                        OnSort={(d) => {
+                            if (d.colKey == agSort)
+                                dispatch(SortChannelAlarmGroups({ SortField: agSort, Ascending: !agAsc }));
+                            else
+                                dispatch(SortChannelAlarmGroups({ SortField: d.colKey, Ascending: agAsc }));
+                        }}
+                        TableStyle={{ width: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}
+                        TheadStyle={{ fontSize: 'smaller', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        Selected={(item) => false}
+                        KeySelector={item => item.ID}
+                    >
+                        <ReactTable.Column<SPCTools.IChannelAlarmGroup>
+                            Key="Name"
+                            Field="Name"
+                            AllowSort={true}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                        > Alarm Group
+                        </ReactTable.Column>
+                        <ReactTable.Column<SPCTools.IChannelAlarmGroup>
+                            Key="AlarmSeverity"
+                            Field="AlarmSeverity"
+                            AllowSort={true}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                        > Severity
+                        </ReactTable.Column>
+                        <ReactTable.Column<SPCTools.IChannelAlarmGroup>
+                            Key="TimeInAlarm"
+                            Field="TimeInAlarm"
+                            AllowSort={true}
+                            HeaderStyle={{ width: 'auto' }}
+                            RowStyle={{ width: 'auto' }}
+                        > Time In Alarm
+                        </ReactTable.Column>
+                    </ReactTable.Table>
+                </div>
             </div>
         </div>
     );

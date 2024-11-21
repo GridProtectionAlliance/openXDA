@@ -78,7 +78,7 @@ const WizardHome = (props: IProps) => {
         }
     }, [tab])
     return (
-        <div style={{ width: '100%', height: '100%' }}>
+        <div className="container-fluid d-flex h-100 flex-column" style={{ paddingBottom: "15px" }}>
             <div className="row" style={{ height: '40px', marginTop: '25px', marginRight: '25px', marginLeft: '25px', marginBottom: '25px' }}>
                 <ProgressBar width={'100%'} height={20}
                     steps={[
@@ -90,7 +90,7 @@ const WizardHome = (props: IProps) => {
                     activeStep={tab}
                 />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', height: "calc(100% - 200px)" }}>
+            <div className="row" style={{ overflow: 'hidden', flex:1}}>
                 {status == 'loading' ? <div style={{ height: '40px', width: '40px', margin: 'auto' }}>
                     <LoadingIcon Show={true} Size={40} />
                 </div> : null}

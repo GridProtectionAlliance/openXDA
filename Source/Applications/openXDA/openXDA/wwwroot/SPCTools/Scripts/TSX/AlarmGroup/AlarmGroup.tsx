@@ -26,7 +26,7 @@ import { SPCTools } from '../global';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
 import { LoadWizard } from '../Wizard/DynamicWizzardSlice';
-import { SearchBar, Search } from '@gpa-gemstone/react-interactive'
+import { SearchBar, Search, ToolTip } from '@gpa-gemstone/react-interactive'
 import { Paging } from '@gpa-gemstone/react-table';
 import { AlarmGroupViewSlice } from '../store/store'
 import { ReactTable } from '@gpa-gemstone/react-table';
@@ -59,6 +59,7 @@ const AlarmGroupHome = (props: { loadAlarm: () => void }) => {
     const [ascending, setAscending] = React.useState<boolean>(true);
     const [page, setPage] = React.useState<number>(currentPage);
 
+    const [hover, setHover] = React.useState<('None' | 'Edit')>('None');
 
     React.useEffect(() => {
         dispatch(AlarmGroupViewSlice.PagedSearch({ sortField: sortKey, ascending, filter: search, page }))
@@ -93,118 +94,125 @@ const AlarmGroupHome = (props: { loadAlarm: () => void }) => {
     }
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
-            <SearchBar<SPCTools.IAlarmGroupView> CollumnList={filterableList} SetFilter={(flds) => setSearch(flds)} Direction='left'
-                ShowLoading={cState == 'loading'}
-                ResultNote={cState == 'error' ? 'Could not complete Search' : ('Displaying  Alarm Group(s) ' + (50 * page + 1) + ' - ' + (50 * page + data.length)) + ' out of ' + totalRecords}
-            > </SearchBar>
-            <div style={{ width: '100%' }}>
-                <div className="row" style={{ margin: 0 }}>
-                    <div className="col-8" style={{paddingLeft: 0}}>
-                        <ReactTable.Table<SPCTools.IAlarmGroupView>
-                            TableClass="table table-hover"
-                            Data={data}
-                            SortKey={sortKey}
-                            Ascending={ascending}
-                            OnSort={d => {
-                                if (d.colKey === sortKey)
-                                    setAscending(!ascending);
-                                else {
-                                    setAscending(true);
-                                    setSortKey(d.colField);
-                                }
-                            }}
-                            OnClick={d => { setSelectedAlarmGroup(d.row) }}
-                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
-                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            Selected={(item) => (selectedAlarmGroup == undefined ? false : selectedAlarmGroup.ID == item.ID)}
-                            KeySelector={(item) => item.ID}
+        <div className="container-fluid d-flex h-100 flex-column">
+            <div className="row">
+                <SearchBar<SPCTools.IAlarmGroupView> CollumnList={filterableList} SetFilter={(flds) => setSearch(flds)} Direction='left'
+                    ShowLoading={cState == 'loading'}
+                    ResultNote={cState == 'error' ? 'Could not complete Search' : ('Displaying  Alarm Group(s) ' + (50 * page + 1) + ' - ' + (50 * page + data.length)) + ' out of ' + totalRecords}
+                />
+            </div>
+            <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
+                <div className="col-8" style={{paddingLeft: 0, height: '100%', display: 'flex', flexDirection: 'column'}}>
+                    <ReactTable.Table<SPCTools.IAlarmGroupView>
+                        TableClass="table table-hover"
+                        Data={data}
+                        SortKey={sortKey}
+                        Ascending={ascending}
+                        OnSort={d => {
+                            if (d.colKey === sortKey)
+                                setAscending(!ascending);
+                            else {
+                                setAscending(true);
+                                setSortKey(d.colField);
+                            }
+                        }}
+                        OnClick={d => { setSelectedAlarmGroup(d.row) }}
+                        TableStyle={{ width: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}
+                        TheadStyle={{ fontSize: 'smaller', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        Selected={(item) => (selectedAlarmGroup == undefined ? false : selectedAlarmGroup.ID == item.ID)}
+                        KeySelector={(item) => item.ID}
+                    >
+                        <ReactTable.Column<SPCTools.IAlarmGroupView>
+                            Key={'Name'}
+                            AllowSort={true}
+                            Field={'Name'}
+                            RowStyle={{ width: 'auto' }}
                         >
-                            <ReactTable.Column<SPCTools.IAlarmGroupView>
-                                Key={'Name'}
-                                AllowSort={true}
-                                Field={'Name'}
-                                RowStyle={{ width: 'auto' }}
-                            >
-                            Name
-                            </ReactTable.Column> 
-                            <ReactTable.Column<SPCTools.IAlarmGroupView>
-                                Key={'Meters'}
-                                AllowSort={true}
-                                Field={'Meters'}
-                                RowStyle={{ width: 'auto' }}
-                            >
-                            Meters
-                            </ReactTable.Column> 
-                            <ReactTable.Column<SPCTools.IAlarmGroupView>
-                                Key={'Channels'}
-                                AllowSort={true}
-                                Field={'Channels'}
-                                RowStyle={{ width: 'auto' }}
-                            >
-                            Channels
-                            </ReactTable.Column> 
-                            <ReactTable.Column<SPCTools.IAlarmGroupView>
-                                Key={'AlarmSeverity'}
-                                AllowSort={true}
-                                Field={'AlarmSeverity'}
-                                RowStyle={{ width: 'auto' }}
-                            >
-                            Alarm Severity
-                            </ReactTable.Column> 
-                            <ReactTable.Column<SPCTools.IAlarmGroupView>
-                                Key={'LastAlarmEnd'}
-                                AllowSort={true}
-                                Field={'LastAlarmEnd'}
-                                RowStyle={{ width: 'auto' }}
-                                Content={() => 'N/A'}
-                            >
-                            Time in Alarm
-                            </ReactTable.Column> 
-                        </ReactTable.Table>
-                        <Paging Current={page + 1} Total={allPages} SetPage={(p) => setPage(p - 1)} />
-                    </div>
-
-                    <div className="col-4" style={{ height: 'calc( 100% - 136px)', padding: 0 }}>
-                        <ReactTable.Table<IDetailRow>
-                            TableClass="table thead-dark table-striped"
-                            Data={detailedData}
-                            SortKey={'Content'}
-                            Ascending={false}
-                            OnSort={() => { /* do nothing */}}
-                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 300, width: '100%' }}
-                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            Selected={() => false}
-                            KeySelector={(item) => item.Content}
+                        Name
+                        </ReactTable.Column> 
+                        <ReactTable.Column<SPCTools.IAlarmGroupView>
+                            Key={'Meters'}
+                            AllowSort={true}
+                            Field={'Meters'}
+                            RowStyle={{ width: 'auto' }}
                         >
-                            <ReactTable.Column<IDetailRow>
-                                Key={'Content'}
-                                AllowSort={false}
-                                Field={'Content'}
-                                RowStyle={{ width: 'auto' }}
-                            >
-                                {'\u200B'}
-                            </ReactTable.Column>
-                            <ReactTable.Column<IDetailRow>
-                                Key={'Value'}
-                                AllowSort={false}
-                                Field={'Value'}
-                                RowStyle={{ width: 'auto' }}
-                            >
-                                {'\u200B'}
-                            </ReactTable.Column>
-                        </ReactTable.Table>
-                        {selectedAlarmGroup != undefined ?
-                            <div className="btn-group mr-2" role="group">
-                                <button type="button" className="btn btn-primary" onClick={() => { dispatch(LoadWizard(selectedAlarmGroup.ID)); props.loadAlarm() }}>
-                                    Edit AlarmGroup
-                                </button>
-                            </div>
-                            : null}
+                        Meters
+                        </ReactTable.Column> 
+                        <ReactTable.Column<SPCTools.IAlarmGroupView>
+                            Key={'Channels'}
+                            AllowSort={true}
+                            Field={'Channels'}
+                            RowStyle={{ width: 'auto' }}
+                        >
+                        Channels
+                        </ReactTable.Column> 
+                        <ReactTable.Column<SPCTools.IAlarmGroupView>
+                            Key={'AlarmSeverity'}
+                            AllowSort={true}
+                            Field={'AlarmSeverity'}
+                            RowStyle={{ width: 'auto' }}
+                        >
+                        Alarm Severity
+                        </ReactTable.Column> 
+                        <ReactTable.Column<SPCTools.IAlarmGroupView>
+                            Key={'LastAlarmEnd'}
+                            AllowSort={true}
+                            Field={'LastAlarmEnd'}
+                            RowStyle={{ width: 'auto' }}
+                            Content={() => 'N/A'}
+                        >
+                        Time in Alarm
+                        </ReactTable.Column> 
+                    </ReactTable.Table>
+                    <div className="row">
+                        <div className="col">
+                            <Paging Current={page + 1} Total={allPages} SetPage={(p) => setPage(p - 1)} />
+                        </div>
                     </div>
-
+                </div>
+                <div className="col-4" style={{ height: '100%', padding: 0, display: 'flex', flexDirection: 'column' }}>
+                    <ReactTable.Table<IDetailRow>
+                        TableClass="table thead-dark table-striped"
+                        Data={detailedData}
+                        SortKey={'Content'}
+                        Ascending={false}
+                        OnSort={() => { /* do nothing */ }}
+                        TableStyle={{ width: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                        TheadStyle={{ fontSize: 'smaller', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        Selected={() => false}
+                        KeySelector={(item) => item.Content}
+                    >
+                        <ReactTable.Column<IDetailRow>
+                            Key={'Content'}
+                            AllowSort={false}
+                            Field={'Content'}
+                            RowStyle={{ width: 'auto' }}
+                        >
+                            {'\u200B'}
+                        </ReactTable.Column>
+                        <ReactTable.Column<IDetailRow>
+                            Key={'Value'}
+                            AllowSort={false}
+                            Field={'Value'}
+                            RowStyle={{ width: 'auto' }}
+                        >
+                            {'\u200B'}
+                        </ReactTable.Column>
+                    </ReactTable.Table>
+                    <div className="row">
+                        <button type="button" className={`btn btn-info mr-2${(selectedAlarmGroup == null ? ' disabled' : '')}`}
+                            onClick={() => { if (selectedAlarmGroup != undefined) dispatch(LoadWizard(selectedAlarmGroup.ID)); props.loadAlarm() }}
+                            onMouseOver={() => setHover('Edit')} onMouseOut={() => setHover('None')} data-tooltip={'Edit'}>
+                            Edit AlarmGroup
+                        </button>
+                    </div>
+                    <ToolTip Position={'top'} Show={hover == 'Edit' && (selectedAlarmGroup == null)} Target={'Edit'}>
+                        <p> An Alarm Group must be selected.</p>
+                    </ToolTip>
                 </div>
             </div>
         </div>

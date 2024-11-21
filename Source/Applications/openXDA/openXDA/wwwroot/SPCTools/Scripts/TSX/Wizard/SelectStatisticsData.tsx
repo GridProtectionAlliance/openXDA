@@ -45,7 +45,7 @@ const SelectStatisticsData = () => {
     const dataFilter = useSelector(SelectStatisticsFilter)
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
+        <div className="container-fluid d-flex h-100 flex-column">
             <div className="row" style={{ margin: 0 }}>
                 <div className="col">
                     <h2>Select the Historical Data to use as the basis for creating Alarm Setpoints:</h2>
@@ -73,7 +73,7 @@ const SelectStatisticsData = () => {
                     </div>
                 </div>*/}
             </div>
-            <div className="row" style={{ margin: 0 }}>
+            <div className="row" style={{ margin: 0, flex: 1, overflow: 'auto' }}>
                 <div className="col-8">
                     {/*showChannels ? <ChannelTable selectAll={selectAll} /> : <MeterTable selectAll={selectAll} />*/}
                     <ChannelTable />
