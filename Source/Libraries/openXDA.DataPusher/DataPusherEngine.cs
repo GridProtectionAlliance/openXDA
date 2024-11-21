@@ -109,6 +109,14 @@ namespace openXDA.DataPusher
                 UpdateProgressForMeter?.Invoke(new object(), new EventArgs<string, string, int>(client, meter, update));
         }
 
+        public static event EventHandler<EventArgs<string, string, int>> UpdateProgressForAssets;
+
+        private static void OnUpdateProgressForAssets(string client, string asset, int update)
+        {
+            if (client != string.Empty)
+                UpdateProgressForAssets?.Invoke(new object(), new EventArgs<string, string, int>(client, asset, update));
+        }
+
         public static event EventHandler<EventArgs<string, string, int>> UpdateProgressForInstance;
 
         private static void OnUpdateProgressForInstance(string client, string instance, int update)
@@ -234,41 +242,39 @@ namespace openXDA.DataPusher
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     IEnumerable<MetersToDataPush> meters = new TableOperations<MetersToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0}", instanceId);
+                    IEnumerable<AssetsToDataPush> assets = new TableOperations<AssetsToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0}", instanceId);
                     RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
 
-                    // Meter Updates every asset push associated with the meter
-                    IEnumerable<AssetsToDataPush> meterlessAssets = new TableOperations<AssetsToDataPush>(connection).
-                        QueryRecordsWhere(@"RemoteXDAInstanceID = {0} and LocalXDAAssetID in 
-                        (Select Asset.ID From Asset Full Outer Join MeterAsset On MeterAsset.AssetID = Asset.ID Where MeterID is null or MeterID not in 
-                        (Select LocalXDAMeterID From MetersToDataPush Where RemoteXDAInstanceID = {0}))", instance.ID);
 
                     // Setup Progress
-                    int progressTotal = meters.Count() + meterlessAssets.Count()+ 1;
+                    int progressTotal = 3 + meters.Count();
                     int progressCount = 0;
                     OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (progressCount) / progressTotal));
 
                     // Do other operations needed
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    DataPusherRequester requester = new DataPusherRequester(instance);
+
+                    List<Location> remoteLocations = new List<Location>();
                     IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
-                    IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>(instance.Address, "all", userAccount);
+
+                    IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>("all", requester);
                     OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
-                    AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(instance.Address, userAccount);
+
+                    AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(requester);
+                    OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
 
                     foreach (MetersToDataPush meter in meters)
                     {
                         if (cancellationToken.IsCancellationRequested)
                             break;
 
-                        SyncMeterConfigurationForInstance(null, instance, meter, remoteAssetGroup, localAssetTypes, remoteAssetTypes, userAccount, cancellationToken);
+                        // Locations are attached to meters on remote pushes, therefore we only have locations if there is a meter for them
+                        remoteLocations.Add(SyncMeterConfigurationForInstance(clientId, meter, remoteAssetGroup, requester, cancellationToken));
                         OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
                     }
-                    foreach (AssetsToDataPush asset in meterlessAssets)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                            break;
-                        SyncAssetConfigurationOnlyForInstance(instance, asset, localAssetTypes, remoteAssetTypes, userAccount, cancellationToken);
-                        OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
-                    }
+
+                    SyncAssetConfigurationForInstance(clientId, instance, assets, localAssetTypes, remoteAssetTypes, remoteLocations, requester, cancellationToken);
+                    OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
                 }
             }
             catch (Exception ex)
@@ -277,7 +283,7 @@ namespace openXDA.DataPusher
             }
         }
 
-        public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, MetersToDataPush meterToDataPush, AssetGroup remoteAssetGroup, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes ,UserAccount userAccount, CancellationToken cancellationToken)
+        public Location SyncMeterConfigurationForInstance(string clientId, MetersToDataPush meterToDataPush, AssetGroup remoteAssetGroup, DataPusherRequester requester, CancellationToken cancellationToken)
         {
             try
             {
@@ -285,36 +291,123 @@ namespace openXDA.DataPusher
                 {
                     // Get local meter record
                     Meter localMeterRecord = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
-                    // get local MeterLine table 
-                    // Get Asset Datapushes assciated with this meter
-                    IEnumerable<AssetsToDataPush> assetDataPushes = new TableOperations<AssetsToDataPush>(connection).QueryRecordsWhere("RemoteXDAInstanceID = {0} and LocalXDAAssetID in (Select AssetID From MeterAsset Where MeterID = {1})", instance.ID, localMeterRecord.ID);
-
 
                     // update progress
-                    int progressTotal = assetDataPushes.Count() + 2;
+                    int progressTotal = 3;
                     int progressCount = 0;
 
-
                     // Add or Update remote meter location
-                    Location remoteLocation = AddOrGetRemoteLocation(instance.Address, meterToDataPush, localMeterRecord, userAccount);
+                    Location remoteLocation = AddOrGetRemoteLocation(meterToDataPush, localMeterRecord, requester);
 
                     // update progress
-                    OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (progressCount) / progressTotal));
+                    OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
 
                     // if meter doesnt exist remotely add it
-                    AddOrGetRemoteMeter(instance.Address, meterToDataPush, localMeterRecord, remoteLocation, userAccount);
+                    AddOrGetRemoteMeter(meterToDataPush, localMeterRecord, remoteLocation, requester);
 
                     // update progress
                     OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
 
                     // If does not exist add link for meter to the appropriate asset group
-                    AddMeterAssetGroup(instance.Address, remoteAssetGroup.ID, meterToDataPush.RemoteXDAMeterID, userAccount);
+                    AddMeterAssetGroup(remoteAssetGroup.ID, meterToDataPush.RemoteXDAMeterID, requester);
 
                     // update progress
                     OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
 
+                    connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterToDataPush.ID);
+
+                    return remoteLocation;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return null;
+            }
+        }
+
+        public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, MetersToDataPush meterToDataPush, DataPusherRequester requester, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
+                    IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>("all", requester);
+                    AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(requester);
+                    IEnumerable<Location> remoteLocation = Enumerable.Empty<Location>().Append(SyncMeterConfigurationForInstance(clientId, meterToDataPush, remoteAssetGroup, requester, cancellationToken));
+
+                    // Meter Updates every asset push associated with the meter
+                    IEnumerable<AssetsToDataPush> assets = new TableOperations<AssetsToDataPush>(connection).
+                        QueryRecordsWhere(@"
+                        RemoteXDAInstanceID = {0} AND
+                        LocalXDAAssetID IN (Select AssetID From MeterAsset Where MeterID = {1}) ", instance.ID, meterToDataPush.LocalXDAMeterID);
+
+                    SyncAssetConfigurationForInstance(clientId, instance, assets, localAssetTypes, remoteAssetTypes, remoteLocation, requester, cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
+        }
+
+        public void SyncAssetConfigurationForInstance(
+            string clientId, RemoteXDAInstance instance, IEnumerable<AssetsToDataPush> assets,
+            IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, IEnumerable<Location> remoteLocations,
+            DataPusherRequester requester, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    // By default, line segments are not associated with meters, so they often get overlooked. Decision was made to always add them if the associated line is here
+                    TableOperations<LineSegment> lineSegmentTable = new TableOperations<LineSegment>(connection);
+                    TableOperations<AssetsToDataPush> assetPushTable = new TableOperations<AssetsToDataPush>(connection);
+                    List<AssetsToDataPush> lineSegments = new TableOperations<Line>(connection).
+                        QueryRecordsWhere("ID in (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0})", instance.ID).
+                        ToList().
+                        SelectMany(line =>
+                        {
+                            AssetsToDataPush lineAssetPush = assets.Where(asset => asset.LocalXDAAssetID == line.ID).First();
+                            IEnumerable<AssetsToDataPush> newPushes = lineSegmentTable.QueryRecordsWhere(@"
+                                ID in
+                                    (SELECT ParentID as AssetID FROM AssetRelationship WHERE ChildID = {0} UNION
+                                    SELECT ChildID as AssetID FROM AssetRelationship WHERE ParentID = {0})
+                                AND ID not in 
+                                    (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {1})", line.ID, instance.ID).
+                                Select((segment, index) => {
+                                    AssetsToDataPush lineSegment = new AssetsToDataPush()
+                                    {
+                                        ID = -1,
+                                        RemoteXDAInstanceID = instance.ID,
+                                        LocalXDAAssetID = segment.ID,
+                                        RemoteXDAAssetID = -1,
+                                        RemoteXDAAssetKey = $"{lineAssetPush.RemoteXDAAssetKey}-S{index}",
+                                        Obsfucate = lineAssetPush.Obsfucate,
+                                        Synced = false,
+                                        RemoteAssetCreatedByDataPusher = false
+                                    };
+                                    assetPushTable.AddNewRecord(lineSegment);
+                                    lineSegment.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                                    return lineSegment;
+                                });
+                            return newPushes;
+                        }).ToList();
+
+                    IEnumerable<AssetsToDataPush> assetsToDataPushes = assets.Concat(lineSegments);
+
+                    TableOperations<MetersToDataPush> meterPushTable = new TableOperations<MetersToDataPush>(connection);
+                    IEnumerable<MetersToDataPush> meterDataPushes = meterPushTable.
+                        QueryRecordsWhere("RemoteXDAInstanceID = {0} AND Synced = 1", instance.ID);
+
+                    // update progress
+                    int stepsPerAsset = 3;
+                    int progressTotal = assetsToDataPushes.Count() * stepsPerAsset + 2;
+                    int progressCount = 0;
+
                     // if there is a line for the meter ensure that its data has been uploaded remotely
-                    foreach (AssetsToDataPush assetToDataPush in assetDataPushes)
+                    foreach (AssetsToDataPush assetToDataPush in assetsToDataPushes)
                     {
                         if (cancellationToken.IsCancellationRequested)
                             break;
@@ -322,38 +415,82 @@ namespace openXDA.DataPusher
                         // Add or Update Asset
                         Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
                         // Is null if this fails, error logged in func
-                        Asset remoteAsset = AddOrGetRemoteAsset(instance.Address, assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, userAccount);
+                        Asset remoteAsset = AddOrGetRemoteAsset(assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, requester);
+
+                        // update progress
+                        OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (++progressCount) / progressTotal));
+
                         if (remoteAsset is null)
+                        {
+                            progressCount += (stepsPerAsset - 1);
+                            OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (progressCount) / progressTotal));
                             continue;
-                        // Note that this needs to get the Asset specifics (e.g. LineAttributes) sepperatly
-                        // That broke in 3.0 
+                        }
 
-                        // if MeterLine association has not been previously made, make it
-                        MeterAsset localMeterAsset = new TableOperations<MeterAsset>(connection).QueryRecordWhere("MeterID = {0} and AssetID = {1}", meterToDataPush.LocalXDAMeterID, assetToDataPush.LocalXDAAssetID);
-                        MeterAsset remoteMeterAsset = AddMeterAsset(instance.Address, meterToDataPush, assetToDataPush, userAccount, localMeterAsset);
+                        // if MeterAsset association has not been previously made, make it
+                        IEnumerable<MeterAsset> localMeterAssets = new TableOperations<MeterAsset>(connection).
+                            QueryRecordsWhere(@"
+                                AssetID = {0} AND 
+                                MeterID in (SELECT LocalXDAMeterID FROM MetersToDataPush WHERE RemoteXDAInstanceID = {1} AND Synced = 1)", assetToDataPush.LocalXDAAssetID, assetToDataPush.RemoteXDAInstanceID);
+                        foreach(MeterAsset meterAsset in localMeterAssets)
+                        {
+                            IEnumerable<MetersToDataPush> meterToDataPush = meterDataPushes.Where(meter => meter.LocalXDAMeterID == meterAsset.MeterID);
+                            if (!meterToDataPush.Any()) continue;
 
-                        // add line to meterlocationline table
-                        AssetLocation remoteAssetLocation = AddOrUpdateAssetLocation(instance.Address, remoteAsset, remoteLocation, userAccount);
+                            MeterAsset remoteMeterAsset = AddMeterAsset(meterToDataPush.First(), assetToDataPush, requester, meterAsset);
+                            // Sync Channel and channel dependant data
+                            AddOrUpdateChannelsForLine(meterAsset, remoteMeterAsset, requester);
+                        }
+                        OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (++progressCount) / progressTotal));
 
-                        // Sync Channel and channel dependant data
-                        AddOrUpdateChannelsForLine(instance.Address, localMeterAsset, remoteMeterAsset, userAccount);
+                        // if AssetLocation association has not been previously made, make it
+                        IEnumerable<AssetLocation> localAssetLocations = new TableOperations<AssetLocation>(connection).
+                            QueryRecordsWhere(@"
+                                AssetID = {0} AND 
+                                LocationID in (
+                                    SELECT LocationID
+                                    FROM Meter
+                                    WHERE ID IN (SELECT LocalXDAMeterID FROM MetersToDataPush WHERE RemoteXDAInstanceID = {1} AND Synced = 1)
+                                )", assetToDataPush.LocalXDAAssetID, assetToDataPush.RemoteXDAInstanceID).ToList();
+                        foreach (AssetLocation assetLocation in localAssetLocations)
+                        {
+                            IEnumerable<MetersToDataPush> meterPushMatches = meterPushTable.
+                                QueryRecordsWhere(@"
+                                    LocalXDAMeterID in (
+                                        SELECT ID 
+                                        FROM Meter
+                                        WHERE LocationID = {0} AND ID in (
+                                            SELECT LocalXDAMeterID
+                                            FROM MetersToDataPush
+                                            Where RemoteXDAInstanceID = {1}
+                                        )
+                                    )", assetLocation.LocationID, instance.ID);
+                            if (!meterPushMatches.Any()) continue;
+
+                            IEnumerable<Location> remoteLocation = remoteLocations.Where(remote => meterPushMatches.Where(meterPush => meterPush.RemoteXDAAssetKey == remote.LocationKey).Any());
+                            if (!remoteLocation.Any()) continue;
+
+                            AddOrUpdateAssetLocation(remoteAsset, remoteLocation.First(), requester);
+                        }
+                        OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (++progressCount) / progressTotal));
+
 
                         connection.ExecuteNonQuery("UPDATE AssetsToDataPush SET Synced = 1 where ID = {0}", assetToDataPush.ID);
-
-                        OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
                     }
 
                     IEnumerable<AssetConnection> localAssetConnections = new TableOperations<AssetConnection>(connection).QueryRecordsWhere(@"
-                        ParentID IN (SELECT AssetID FROM AssetLocation INNER JOIN AssetsToDataPush ON AssetLocation.AssetID = AssetsToDataPush.LocalXDAAssetID WHERE LocationID = {0})
-                        OR ChildID IN (SELECT AssetID FROM AssetLocation INNER JOIN AssetsToDataPush ON AssetLocation.AssetID = AssetsToDataPush.LocalXDAAssetID WHERE LocationID = {0})", 
-                        localMeterRecord.LocationID);
+                        ParentID IN (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0} AND Synced = 1)
+                        AND ChildID IN (SELECT LocalXDAAssetID FROM AssetsToDataPush WHERE RemoteXDAInstanceID = {0} AND Synced = 1)",
+                        instance.ID);
                     IEnumerable<AssetConnectionType> localAssetConnectionTypes = new TableOperations<AssetConnectionType>(connection).QueryRecords();
-                    IEnumerable<AssetConnectionType> remoteAssetConnectionTypes = WebAPIHub.GetRecords<AssetConnectionType>(instance.Address, "all", userAccount);
-                    foreach (var localAssetConnection in localAssetConnections) {
-                        AddAssetConnections(instance.Address, localAssetConnection, localAssetConnectionTypes.First(x => x.ID == localAssetConnection.ID).Name, remoteAssetConnectionTypes, userAccount);
+                    IEnumerable<AssetConnectionType> remoteAssetConnectionTypes = WebAPIHub.GetRecords<AssetConnectionType>("all", requester);
+                    OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (++progressCount) / progressTotal));
+
+                    foreach (AssetConnection localAssetConnection in localAssetConnections)
+                    {
+                        AddAssetConnections(localAssetConnection, localAssetConnectionTypes.First(type => type.ID == localAssetConnection.AssetRelationshipTypeID).Name, remoteAssetConnectionTypes, requester);
                     }
-
-                    connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterToDataPush.ID);
+                    OnUpdateProgressForAssets(clientId, instance.Name + " Assets", (int)(100 * (++progressCount) / progressTotal));
                 }
             }
             catch (Exception ex)
@@ -362,49 +499,9 @@ namespace openXDA.DataPusher
             }
         }
 
-        public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, MetersToDataPush meterToDataPush, UserAccount userAccount, CancellationToken cancellationToken)
+        private AssetGroup AddOrGetRemoteAssetGroup(DataPusherRequester requester)
         {
-            try
-            {
-                using (AdoDataConnection connection = ConnectionFactory())
-                {
-                    IEnumerable<AssetTypes> localAssetTypes = new TableOperations<AssetTypes>(connection).QueryRecords();
-                    IEnumerable<AssetTypes> remoteAssetTypes = WebAPIHub.GetRecords<AssetTypes>(instance.Address, "all", userAccount);
-                    AssetGroup remoteAssetGroup = AddOrGetRemoteAssetGroup(instance.Address, userAccount);
-                    SyncMeterConfigurationForInstance(clientId, instance, meterToDataPush, remoteAssetGroup, localAssetTypes, remoteAssetTypes, userAccount, cancellationToken);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex);
-            }
-        }
-
-        public void SyncAssetConfigurationOnlyForInstance(RemoteXDAInstance instance, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount, CancellationToken cancellationToken)
-        {
-            try
-            {
-                using (AdoDataConnection connection = ConnectionFactory())
-                {
-                    // Add or Update Asset
-                    Asset localAsset = new TableOperations<Asset>(connection).QueryRecordWhere("ID = {0}", assetToDataPush.LocalXDAAssetID);
-
-                    // Is null if this fails, error logged in func
-                    Asset remoteAsset = AddOrGetRemoteAsset(instance.Address, assetToDataPush, localAsset, localAssetTypes, remoteAssetTypes, userAccount);
-                    if (remoteAsset is null)
-                        return;
-                    connection.ExecuteNonQuery("UPDATE AssetsToDataPush SET Synced = 1 where ID = {0}", assetToDataPush.ID);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex);
-            }
-        }
-
-        private AssetGroup AddOrGetRemoteAssetGroup(string address, UserAccount userAccount)
-        {
-            AssetGroup remoteAssetGroup = WebAPIHub.GetRecordWhere<AssetGroup>(address, $"Name = '{WebAPIHub.CompanyName}'", userAccount);
+            AssetGroup remoteAssetGroup = WebAPIHub.GetRecordWhere<AssetGroup>($"Name = '{WebAPIHub.CompanyName}'", requester);
             // if the company meter location does not exist, create it
             if (remoteAssetGroup == null)
             {
@@ -413,20 +510,20 @@ namespace openXDA.DataPusher
                     Name = WebAPIHub.CompanyName
                 };
 
-                remoteAssetGroup.ID = WebAPIHub.CreateRecord<AssetGroup>(address, remoteAssetGroup, userAccount);
+                remoteAssetGroup.ID = WebAPIHub.CreateRecord<AssetGroup>(remoteAssetGroup, requester);
             }
 
             // There is nothing to update so just return group if found
             return remoteAssetGroup;
         }
 
-        private Location AddOrGetRemoteLocation(string address, MetersToDataPush meterToDataPush, Meter localMeterRecord, UserAccount userAccount)
+        private Location AddOrGetRemoteLocation(MetersToDataPush meterToDataPush, Meter localMeterRecord, DataPusherRequester requester)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
 
                 Location localLocation = new TableOperations<Location>(connection).QueryRecordWhere("ID = {0}", localMeterRecord.LocationID);
-                Location remoteLocation = WebAPIHub.GetRecordWhere<Location>(address, $"LocationKey='{meterToDataPush.RemoteXDAAssetKey}'", userAccount);
+                Location remoteLocation = WebAPIHub.GetRecordWhere<Location>($"LocationKey='{meterToDataPush.RemoteXDAAssetKey}'", requester);
 
                 // if the company meter location does not exist, create it
                 if (remoteLocation == null)
@@ -458,7 +555,7 @@ namespace openXDA.DataPusher
 
                         };
                     }
-                    remoteLocation.ID = WebAPIHub.CreateRecord(address, remoteLocation, userAccount);
+                    remoteLocation.ID = WebAPIHub.CreateRecord(remoteLocation, requester);
 
                 }
                 else
@@ -485,20 +582,20 @@ namespace openXDA.DataPusher
                         remoteLocation.Longitude = localLocation.Longitude;
                     }
 
-                    WebAPIHub.UpdateRecord(address, remoteLocation, userAccount);
+                    WebAPIHub.UpdateRecord(remoteLocation, requester);
                 }
 
                 return remoteLocation;
             }
         }
 
-        private Meter AddOrGetRemoteMeter(string address, MetersToDataPush meter, Meter localMeterRecord, Location remoteMeterLocation, UserAccount userAccount)
+        private Meter AddOrGetRemoteMeter(MetersToDataPush meter, Meter localMeterRecord, Location remoteMeterLocation, DataPusherRequester requester)
         {
-            Meter remoteMeter = WebAPIHub.GetRecordWhere<Meter>(address, $"ID={meter.RemoteXDAMeterID}", userAccount);
+            Meter remoteMeter = WebAPIHub.GetRecordWhere<Meter>($"ID={meter.RemoteXDAMeterID}", requester);
 
             if (remoteMeter == null)
             {
-                remoteMeter = WebAPIHub.GetRecordWhere<Meter>(address, $"AssetKey='{meter.RemoteXDAAssetKey}'", userAccount);
+                remoteMeter = WebAPIHub.GetRecordWhere<Meter>($"AssetKey='{meter.RemoteXDAAssetKey}'", requester);
                 if (remoteMeter != null)
                     throw new Exception($"A meter with this Asset Key ({meter.RemoteXDAAssetKey}) already exists.  Please update the Remote Asset Key field in the data pusher.");
             }
@@ -518,7 +615,8 @@ namespace openXDA.DataPusher
                     remoteMeter = new Meter()
                     {
                         Alias = meter.RemoteXDAName,
-                        ShortName = newShortName
+                        ShortName = newShortName,
+                        Name = meter.RemoteXDAName
                     };
 
                 }
@@ -528,17 +626,17 @@ namespace openXDA.DataPusher
                     {
                         Alias = localMeterRecord.Alias,
                         ShortName = localMeterRecord.ShortName,
+                        Name = localMeterRecord.Name
                     };
                 }
                 remoteMeter.AssetKey = meter.RemoteXDAAssetKey.ToString();
-                remoteMeter.Name = meter.RemoteXDAName;
                 remoteMeter.LocationID = remoteMeterLocation.ID;
                 remoteMeter.Make = localMeterRecord.Make;
                 remoteMeter.Model = localMeterRecord.Model;
                 remoteMeter.Description = localMeterRecord.Description;
                 remoteMeter.TimeZone = localMeterRecord.TimeZone;
 
-                remoteMeter.ID = meter.RemoteXDAMeterID = WebAPIHub.CreateRecord(address, remoteMeter, userAccount);
+                remoteMeter.ID = meter.RemoteXDAMeterID = WebAPIHub.CreateRecord(remoteMeter, requester);
             }
             else
             {
@@ -549,22 +647,23 @@ namespace openXDA.DataPusher
                     else
                         remoteMeter.ShortName = meter.RemoteXDAName;
                     remoteMeter.Alias = meter.RemoteXDAName;
+                    remoteMeter.Name = meter.RemoteXDAName;
                 }
                 else
                 {
                     remoteMeter.Alias = localMeterRecord.Alias;
                     remoteMeter.ShortName = localMeterRecord.ShortName;
+                    remoteMeter.Name = localMeterRecord.Name;
                 }
 
                 remoteMeter.AssetKey = meter.RemoteXDAAssetKey.ToString();
-                remoteMeter.Name = meter.RemoteXDAName;
                 remoteMeter.LocationID = remoteMeterLocation.ID;
                 remoteMeter.Make = localMeterRecord.Make;
                 remoteMeter.Model = localMeterRecord.Model;
                 remoteMeter.Description = localMeterRecord.Description;
                 remoteMeter.TimeZone = localMeterRecord.TimeZone;
 
-                WebAPIHub.UpdateRecord<Meter>(address, remoteMeter, userAccount);
+                WebAPIHub.UpdateRecord<Meter>(remoteMeter, requester);
                 meter.RemoteXDAMeterID = remoteMeter.ID;
 
             }
@@ -578,9 +677,9 @@ namespace openXDA.DataPusher
             return remoteMeter;
         }
 
-        private void AddMeterAssetGroup(string address, int assetGroupId, int meterId, UserAccount userAccount)
+        private void AddMeterAssetGroup(int assetGroupId, int meterId, DataPusherRequester requester)
         {
-            MeterAssetGroup remoteMeterAssetGroup = WebAPIHub.GetRecordWhere<MeterAssetGroup>(address, $"MeterID = {meterId} AND AssetGroupID = {assetGroupId}", userAccount);
+            MeterAssetGroup remoteMeterAssetGroup = WebAPIHub.GetRecordWhere<MeterAssetGroup>($"MeterID = {meterId} AND AssetGroupID = {assetGroupId}", requester);
 
             // if MeterLine association has not been previously made, make it
             if (remoteMeterAssetGroup == null)
@@ -591,11 +690,11 @@ namespace openXDA.DataPusher
                     AssetGroupID = assetGroupId
                 };
 
-                WebAPIHub.CreateRecord(address, remoteMeterAssetGroup, userAccount);
+                WebAPIHub.CreateRecord(remoteMeterAssetGroup, requester);
             }
         }
 
-        private Asset AddOrGetRemoteAsset(string address, AssetsToDataPush assetToDataPush, Asset localAsset, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount)
+        private Asset AddOrGetRemoteAsset(AssetsToDataPush assetToDataPush, Asset localAsset, IEnumerable<AssetTypes> localAssetTypes, IEnumerable<AssetTypes> remoteAssetTypes, DataPusherRequester requester)
         {
             try
             {
@@ -618,7 +717,7 @@ namespace openXDA.DataPusher
                     var assetAnyMethod = typeof(DataPusherEngine).GetMethod("AddOrGetAssetAny", BindingFlags.Instance | BindingFlags.NonPublic);
                     var assetTypedMethod = assetAnyMethod.MakeGenericMethod(new[] { type });
 
-                    remoteAsset = (Asset)assetTypedMethod.Invoke(this, new object[] { address, assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, userAccount });
+                    remoteAsset = (Asset)assetTypedMethod.Invoke(this, new object[] { assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, requester });
                     return remoteAsset;
                 }
             }
@@ -629,7 +728,7 @@ namespace openXDA.DataPusher
             }
         }
 
-        private Asset AddOrGetAssetAny<T>(string address, string assetTypeText, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, UserAccount userAccount) where T : Asset, new()
+        private Asset AddOrGetAssetAny<T>(string assetTypeText, Asset localAsset, AssetsToDataPush assetToDataPush, IEnumerable<AssetTypes> remoteAssetTypes, DataPusherRequester requester) where T : Asset, new()
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -638,14 +737,15 @@ namespace openXDA.DataPusher
 
                 // Case where the typed asset doesn't exist locally, just do regular asset
                 if (localTypedAsset is null)
-                    return AddOrGetAssetAny<Asset>(address, assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, userAccount);
+                    if (typeof(Asset) == typeof(T)) throw new NullReferenceException($"Unable to resolve local asset with key {localAsset.AssetKey}");
+                    else return AddOrGetAssetAny<Asset>(assetTypeText, localAsset, assetToDataPush, remoteAssetTypes, requester);
 
                 //if the asset does not exist in the PQMarkPusher Database to allow for obsfucation add it.
-                remoteTypedAsset = WebAPIHub.GetRecordWhere<T>(address, $"ID={assetToDataPush.RemoteXDAAssetID}", userAccount);
+                remoteTypedAsset = WebAPIHub.GetRecordWhere<T>($"ID={assetToDataPush.RemoteXDAAssetID}", requester);
 
                 if (remoteTypedAsset is null)
                 {
-                    Asset checkKey = WebAPIHub.GetRecordWhere<Asset>(address, $"AssetKey='{(assetToDataPush.Obsfucate ? assetToDataPush.RemoteXDAAssetKey : localTypedAsset.AssetKey)}'", userAccount);
+                    Asset checkKey = WebAPIHub.GetRecordWhere<Asset>($"AssetKey='{(assetToDataPush.Obsfucate ? assetToDataPush.RemoteXDAAssetKey : localTypedAsset.AssetKey)}'", requester);
                     if (!(checkKey is null))
                         throw new Exception($"An asset with this Asset Key ({(assetToDataPush.Obsfucate ? assetToDataPush.RemoteXDAAssetKey : localTypedAsset.AssetKey)}) already exists.  Please update the Remote Asset Key field in the data pusher.");
                 }
@@ -662,7 +762,7 @@ namespace openXDA.DataPusher
 
                     remoteTypedAsset.ID = 0;
                     remoteTypedAsset.AssetTypeID = remoteAssetTypes.First(x => x.Name == assetTypeText).ID; //Can't find based on T since T might be different than type text
-                    remoteTypedAsset.ID = WebAPIHub.CreateRecord<T>(address, remoteTypedAsset, userAccount);
+                    remoteTypedAsset.ID = WebAPIHub.CreateRecord<T>(remoteTypedAsset, requester);
 
                     assetToDataPush.RemoteXDAAssetID = remoteTypedAsset.ID;
                     assetToDataPush.RemoteXDAAssetKey = remoteTypedAsset.AssetKey;
@@ -678,7 +778,7 @@ namespace openXDA.DataPusher
                     remoteTypedAsset.AssetTypeID = localAsset.AssetTypeID;
                     remoteTypedAsset.Spare = localAsset.Spare;
                     remoteTypedAsset.Description = (assetToDataPush.Obsfucate ? "" : localAsset.Description);
-                    WebAPIHub.UpdateRecord(address, remoteTypedAsset, userAccount);
+                    WebAPIHub.UpdateRecord(remoteTypedAsset, requester);
                 }
 
                 if (remoteTypedAsset == null) throw new Exception("Asset not defined.");
@@ -686,9 +786,9 @@ namespace openXDA.DataPusher
             }
         }
 
-        private MeterAsset AddMeterAsset(string address, MetersToDataPush meter, AssetsToDataPush asset, UserAccount userAccount, MeterAsset localMeterLine)
+        private MeterAsset AddMeterAsset(MetersToDataPush meter, AssetsToDataPush asset, DataPusherRequester requester, MeterAsset localMeterLine)
         {
-            MeterAsset remoteMeterLine = WebAPIHub.GetRecordWhere<MeterAsset>(address, $"MeterID = {meter.RemoteXDAMeterID} AND AssetID = {asset.RemoteXDAAssetID}", userAccount);
+            MeterAsset remoteMeterLine = WebAPIHub.GetRecordWhere<MeterAsset>($"MeterID = {meter.RemoteXDAMeterID} AND AssetID = {asset.RemoteXDAAssetID}", requester);
 
             // if MeterLine association has not been previously made, make it
             if (remoteMeterLine == null)
@@ -699,26 +799,26 @@ namespace openXDA.DataPusher
                     AssetID = asset.RemoteXDAAssetID,
                 };
 
-                remoteMeterLine.ID = WebAPIHub.CreateRecord(address, remoteMeterLine, userAccount);
+                remoteMeterLine.ID = WebAPIHub.CreateRecord(remoteMeterLine, requester);
             }
             else
             {
-                WebAPIHub.UpdateRecord(address, remoteMeterLine, userAccount);
+                WebAPIHub.UpdateRecord(remoteMeterLine, requester);
             }
 
-            AddFaultDetectionLogic(address, localMeterLine, remoteMeterLine, userAccount);
+            AddFaultDetectionLogic(localMeterLine, remoteMeterLine, requester);
 
             return remoteMeterLine;
         }
 
-        private void AddFaultDetectionLogic(string address, MeterAsset localMeterLine, MeterAsset remoteMeterLine, UserAccount userAccount)
+        private void AddFaultDetectionLogic(MeterAsset localMeterLine, MeterAsset remoteMeterLine, DataPusherRequester requester)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 FaultDetectionLogic localFaultDetectionLogic = new TableOperations<FaultDetectionLogic>(connection).QueryRecordWhere("MeterAssetID = {0}", localMeterLine.ID);
                 if (localFaultDetectionLogic == null) return;
 
-                FaultDetectionLogic remoteFaultDetectionLogic = WebAPIHub.GetRecordWhere<FaultDetectionLogic>(address, $"MeterAssetID = {remoteMeterLine.ID}", userAccount);
+                FaultDetectionLogic remoteFaultDetectionLogic = WebAPIHub.GetRecordWhere<FaultDetectionLogic>($"MeterAssetID = {remoteMeterLine.ID}", requester);
 
 
                 if (remoteFaultDetectionLogic == null)
@@ -728,20 +828,20 @@ namespace openXDA.DataPusher
                         MeterAssetID = remoteMeterLine.ID,
                         Expression = localFaultDetectionLogic.Expression
                     };
-                    WebAPIHub.CreateRecord<FaultDetectionLogic>(address, remoteFaultDetectionLogic, userAccount);
+                    WebAPIHub.CreateRecord<FaultDetectionLogic>(remoteFaultDetectionLogic, requester);
                 }
                 else
                 {
                     remoteFaultDetectionLogic.Expression = localFaultDetectionLogic.Expression;
-                    WebAPIHub.UpdateRecord<FaultDetectionLogic>(address, remoteFaultDetectionLogic, userAccount);
+                    WebAPIHub.UpdateRecord<FaultDetectionLogic>(remoteFaultDetectionLogic, requester);
                 }
             }
         }
 
-        private AssetLocation AddOrUpdateAssetLocation(string address, Asset remoteAsset, Location remoteLocation, UserAccount userAccount)
+        private AssetLocation AddOrUpdateAssetLocation(Asset remoteAsset, Location remoteLocation, DataPusherRequester requester)
         {
             // add line to meterlocationline table
-            AssetLocation remoteMeterLocationLine = WebAPIHub.GetRecordWhere<AssetLocation>(address, $"LocationID = {remoteLocation.ID} AND AssetID = {remoteAsset.ID}", userAccount);
+            AssetLocation remoteMeterLocationLine = WebAPIHub.GetRecordWhere<AssetLocation>($"LocationID = {remoteLocation.ID} AND AssetID = {remoteAsset.ID}", requester);
 
             if (remoteMeterLocationLine == null)
             {
@@ -749,19 +849,19 @@ namespace openXDA.DataPusher
                 remoteMeterLocationLine.AssetID = remoteAsset.ID;
                 remoteMeterLocationLine.LocationID = remoteLocation.ID;
 
-                WebAPIHub.CreateRecord(address, remoteMeterLocationLine, userAccount);
+                WebAPIHub.CreateRecord(remoteMeterLocationLine, requester);
             }
 
             return remoteMeterLocationLine;
         }
 
-        private void AddOrUpdateChannelsForLine(string address, MeterAsset localMeterAsset, MeterAsset remoteMeterAsset, UserAccount userAccount)
+        private void AddOrUpdateChannelsForLine(MeterAsset localMeterAsset, MeterAsset remoteMeterAsset, DataPusherRequester requester)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 // ensure remote and local line impedance matches
                 IEnumerable<ChannelDetail> localChannels = new TableOperations<ChannelDetail>(connection).QueryRecordsWhere("MeterID = {0} AND AssetID = {1}", localMeterAsset.MeterID, localMeterAsset.AssetID);
-                List<ChannelDetail> remoteChannels = WebAPIHub.GetChannels(address, $"MeterID = {remoteMeterAsset.MeterID} AND AssetID = {remoteMeterAsset.AssetID}", userAccount).ToList();
+                List<ChannelDetail> remoteChannels = WebAPIHub.GetChannels($"MeterID = {remoteMeterAsset.MeterID} AND AssetID = {remoteMeterAsset.AssetID}", requester).ToList();
 
                 // if there is a local record but not a remote record
                 foreach (ChannelDetail localChannelDetail in localChannels)
@@ -782,7 +882,7 @@ namespace openXDA.DataPusher
                         remoteChannelDetail.Description = localChannelDetail.Description;
                         remoteChannelDetail.Enabled = localChannelDetail.Enabled;
 
-                        remoteChannelDetail.ID = WebAPIHub.CreateChannel(address, JObject.FromObject(remoteChannelDetail), userAccount);
+                        remoteChannelDetail.ID = WebAPIHub.CreateChannel(JObject.FromObject(remoteChannelDetail), requester);
 
                     }
                     else
@@ -797,21 +897,21 @@ namespace openXDA.DataPusher
                         remoteChannelDetail.Description = localChannelDetail.Description;
                         remoteChannelDetail.Enabled = localChannelDetail.Enabled;
 
-                        WebAPIHub.UpdateChannel(address, JObject.FromObject(remoteChannelDetail), userAccount);
+                        WebAPIHub.UpdateChannel(JObject.FromObject(remoteChannelDetail), requester);
                     }
 
-                    AddOrGetSeries(address, localChannelDetail, remoteChannelDetail, userAccount);
+                    AddOrGetSeries(localChannelDetail, remoteChannelDetail, requester);
                 }
             }
         }
 
-        private void AddOrGetSeries(string address, ChannelDetail localChannel, ChannelDetail remoteChannel, UserAccount userAccount)
+        private void AddOrGetSeries(ChannelDetail localChannel, ChannelDetail remoteChannel, DataPusherRequester requester)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
 
                 IEnumerable<Series> local = new TableOperations<Series>(connection).QueryRecordsWhere("ChannelID = {0}", localChannel.ID);
-                List<Series> remote = WebAPIHub.GetRecordsWhere<Series>(address, $"ChannelID = {remoteChannel.ID}", userAccount).ToList();
+                List<Series> remote = WebAPIHub.GetRecordsWhere<Series>($"ChannelID = {remoteChannel.ID}", requester).ToList();
 
                 // if there is a local record but not a remote record
                 foreach (Series localSeries in local)
@@ -826,35 +926,39 @@ namespace openXDA.DataPusher
                             SourceIndexes = localSeries.SourceIndexes
                         };
 
-                        remoteSeries.ID = WebAPIHub.CreateRecord(address, remoteSeries, userAccount);
+                        remoteSeries.ID = WebAPIHub.CreateRecord(remoteSeries, requester);
 
                     }
                     else
                     {
                         remoteSeries.SeriesTypeID = localSeries.SeriesTypeID;
                         remoteSeries.SourceIndexes = localSeries.SourceIndexes;
-                        WebAPIHub.UpdateRecord(address, remoteSeries, userAccount);
+                        WebAPIHub.UpdateRecord(remoteSeries, requester);
                     }
                 }
             }
 
         }
 
-        private void AddAssetConnections(string address, AssetConnection assetConnection, string connectionType, IEnumerable<AssetConnectionType> remoteAssetConnectionTypes,UserAccount userAccount) {
+        private void AddAssetConnections(AssetConnection assetConnection, string connectionType, IEnumerable<AssetConnectionType> remoteAssetConnectionTypes, DataPusherRequester requester) {
             using (AdoDataConnection connection = ConnectionFactory()) {
                 int remoteXDAAssetID1 = connection.ExecuteScalar<int>("SELECT RemoteXDAAssetID FROM AssetsToDataPush WHERE LocalXDAAssetID = {0}", assetConnection.ParentID);
                 int remoteXDAAssetID2 = connection.ExecuteScalar<int>("SELECT RemoteXDAAssetID FROM AssetsToDataPush WHERE LocalXDAAssetID = {0}", assetConnection.ChildID);
                 if ((remoteXDAAssetID1 <= 0) || (remoteXDAAssetID2 <= 0))
                     return;
-                AssetConnection remoteAssetConnection = WebAPIHub.GetRecordWhere<AssetConnection>(address, $"ParentID = {remoteXDAAssetID1}  AND ChildID = {remoteXDAAssetID2}", userAccount);
+                AssetConnection remoteAssetConnection = WebAPIHub.GetRecordWhere<AssetConnection>($"ParentID = {remoteXDAAssetID1}  AND ChildID = {remoteXDAAssetID2}", requester);
                 if(remoteAssetConnection == null)
                 {
                     remoteAssetConnection = new AssetConnection();
                     remoteAssetConnection.ParentID = remoteXDAAssetID1;
                     remoteAssetConnection.ChildID = remoteXDAAssetID2;
                     remoteAssetConnection.AssetRelationshipTypeID = remoteAssetConnectionTypes.First(x => x.Name == connectionType).ID;
-
-                    WebAPIHub.CreateRecord(address, remoteAssetConnection, userAccount);
+                    WebAPIHub.CreateRecord(remoteAssetConnection, requester);
+                }
+                else
+                {
+                    remoteAssetConnection.AssetRelationshipTypeID = remoteAssetConnectionTypes.First(x => x.Name == connectionType).ID;
+                    WebAPIHub.UpdateRecord(remoteAssetConnection, requester);
                 }
 
             }
@@ -866,8 +970,8 @@ namespace openXDA.DataPusher
             {
                 RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                 if (instance is null) throw new Exception($"No remote XDA instance found with this instance ID${instanceId}");
-                UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                return WebAPIHub.TestConnection(instance.Address, userAccount).GetAwaiter().GetResult();
+                DataPusherRequester requester = new DataPusherRequester(instance);
+                return WebAPIHub.TestConnection(requester).GetAwaiter().GetResult();
             }
         }
 
@@ -908,8 +1012,8 @@ namespace openXDA.DataPusher
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     IEnumerable<FileGroup> localFileGroups;
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
 
+                    DataPusherRequester requester = new DataPusherRequester(instance);
                     Settings settings = new Settings(GetConfigurator());
 
                     DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(settings.DataPusherSettings.TimeWindow * -1);
@@ -950,7 +1054,7 @@ namespace openXDA.DataPusher
                                 ProcessingStatus = (int)FileGroupProcessingStatus.Created,
                                 MeterID = meterToDataPush.RemoteXDAMeterID
                             };
-                            int remoteFileGroupId = WebAPIHub.CreateRecord<FileGroup>(instance.Address, fg, userAccount);
+                            int remoteFileGroupId = WebAPIHub.CreateRecord<FileGroup>(fg, requester);
                             fileGroupLocalToRemote = new FileGroupLocalToRemote()
                             {
                                 RemoteXDAInstanceID = instance.ID,
@@ -961,7 +1065,7 @@ namespace openXDA.DataPusher
                         }
 
                         IEnumerable<DataFile> localDataFiles = new TableOperations<DataFile>(connection).QueryRecordsWhere("FileGroupID = {0}", fileGroupLocalToRemote.LocalFileGroupID);
-                        IEnumerable<DataFile> remoteDataFiles = WebAPIHub.GetRecordsWhere<DataFile>(instance.Address, $"FileGroupID = {fileGroupLocalToRemote.RemoteFileGroupID}", userAccount);
+                        IEnumerable<DataFile> remoteDataFiles = WebAPIHub.GetRecordsWhere<DataFile>($"FileGroupID = {fileGroupLocalToRemote.RemoteFileGroupID}", requester);
 
                         bool process = false;
                         foreach (DataFile localDataFile in localDataFiles)
@@ -979,13 +1083,13 @@ namespace openXDA.DataPusher
                                     LastAccessTime = localDataFile.LastAccessTime,
                                     LastWriteTime = localDataFile.LastWriteTime
                                 };
-                                remoteDataFileId = WebAPIHub.CreateRecord(instance.Address, df, userAccount);
+                                remoteDataFileId = WebAPIHub.CreateRecord(df, requester);
                                 process = true;
                             }
                             else
                                 remoteDataFileId = remoteDataFiles.Where(x => x.FilePath == localDataFile.FilePath).First().ID;
 
-                            FileBlob remoteFileBlob = WebAPIHub.GetRecordWhere<FileBlob>(instance.Address, $"DataFileID = {remoteDataFileId}", userAccount);
+                            FileBlob remoteFileBlob = WebAPIHub.GetRecordWhere<FileBlob>($"DataFileID = {remoteDataFileId}", requester);
 
                             if (remoteFileBlob == null)
                             {
@@ -1005,7 +1109,7 @@ namespace openXDA.DataPusher
                                     process = false;
                                 }
                                 localFileBlob.DataFileID = remoteDataFileId;
-                                WebAPIHub.CreateRecord(instance.Address, new FileBlob() { DataFileID = remoteDataFileId, Blob = localFileBlob.Blob }, userAccount);
+                                WebAPIHub.CreateRecord(new FileBlob() { DataFileID = remoteDataFileId, Blob = localFileBlob.Blob }, requester);
 
                             }
                         }
@@ -1015,7 +1119,7 @@ namespace openXDA.DataPusher
                             Dictionary<string, int> dictionary = new Dictionary<string, int>();
                             dictionary.Add("FileGroupID", fileGroupLocalToRemote.RemoteFileGroupID);
                             dictionary.Add("MeterID", meterToDataPush.RemoteXDAMeterID);
-                            WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary), userAccount);
+                            WebAPIHub.ProcessFileGroup(JObject.FromObject(dictionary), requester);
 
                         }
 
@@ -1037,8 +1141,7 @@ namespace openXDA.DataPusher
                 if (cancellationToken.IsCancellationRequested) return;
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
-
-                    UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    DataPusherRequester requester = new DataPusherRequester(instance);
 
                     FileGroupLocalToRemote fileGroupLocalToRemote = new TableOperations<FileGroupLocalToRemote>(connection).QueryRecordWhere("LocalFileGroupID = {0} AND RemoteXDAInstanceID = {1}", fileGroupId, instance.ID);
                     FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", fileGroupId);
@@ -1054,7 +1157,7 @@ namespace openXDA.DataPusher
                             ProcessingStatus = (int)FileGroupProcessingStatus.Created,
                             MeterID = meterToDataPush.RemoteXDAMeterID
                         };
-                        int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, fg, userAccount);
+                        int remoteFileGroupId = WebAPIHub.CreateRecord(fg, requester);
                         fileGroupLocalToRemote = new FileGroupLocalToRemote()
                         {
                             LocalFileGroupID = fileGroup.ID,
@@ -1064,7 +1167,7 @@ namespace openXDA.DataPusher
                     }
 
                     IEnumerable<DataFile> localDataFiles = new TableOperations<DataFile>(connection).QueryRecordsWhere("FileGroupID = {0}", fileGroupLocalToRemote.LocalFileGroupID);
-                    IEnumerable<DataFile> remoteDataFiles = WebAPIHub.GetRecordsWhere<DataFile>(instance.Address, $"FileGroupID = {fileGroupLocalToRemote.RemoteFileGroupID}", userAccount);
+                    IEnumerable<DataFile> remoteDataFiles = WebAPIHub.GetRecordsWhere<DataFile>($"FileGroupID = {fileGroupLocalToRemote.RemoteFileGroupID}", requester);
 
                     bool process = false;
                     foreach (DataFile localDataFile in localDataFiles)
@@ -1082,13 +1185,13 @@ namespace openXDA.DataPusher
                                 LastAccessTime = localDataFile.LastAccessTime,
                                 LastWriteTime = localDataFile.LastWriteTime
                             };
-                            remoteDataFileId = WebAPIHub.CreateRecord(instance.Address, df, userAccount);
+                            remoteDataFileId = WebAPIHub.CreateRecord(df, requester);
                             process = true;
                         }
                         else
                             remoteDataFileId = remoteDataFiles.Where(x => x.FilePath == localDataFile.FilePath).First().ID;
 
-                        FileBlob remoteFileBlob = WebAPIHub.GetRecordWhere<FileBlob>(instance.Address, $"DataFileID = {remoteDataFileId}", userAccount);
+                        FileBlob remoteFileBlob = WebAPIHub.GetRecordWhere<FileBlob>($"DataFileID = {remoteDataFileId}", requester);
 
                         if (remoteFileBlob == null)
                         {
@@ -1107,7 +1210,7 @@ namespace openXDA.DataPusher
                                 process = false;
                             }
                             localFileBlob.DataFileID = remoteDataFileId;
-                            WebAPIHub.CreateRecord(instance.Address, new FileBlob() { DataFileID = remoteDataFileId, Blob = localFileBlob.Blob }, userAccount);
+                            WebAPIHub.CreateRecord(new FileBlob() { DataFileID = remoteDataFileId, Blob = localFileBlob.Blob }, requester);
                         }
                     }
 
@@ -1116,7 +1219,7 @@ namespace openXDA.DataPusher
                         Dictionary<string, int> dictionary = new Dictionary<string, int>();
                         dictionary.Add("FileGroupID", fileGroupLocalToRemote.RemoteFileGroupID);
                         dictionary.Add("MeterID", meterToDataPush.RemoteXDAMeterID);
-                        WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary), userAccount);
+                        WebAPIHub.ProcessFileGroup(JObject.FromObject(dictionary), requester);
 
                     }
                 }
@@ -1133,11 +1236,8 @@ namespace openXDA.DataPusher
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-
                 //// for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-                RemoteXDAInstance instance = new TableOperations<RemoteXDAInstance>(connection).QueryRecordWhere("ID = {0}", instanceId);
                 MetersToDataPush meter = new TableOperations<MetersToDataPush>(connection).QueryRecordWhere("ID = {0}", meterId);
-                UserAccount userAccount = new TableOperations<UserAccount>(connection).QueryRecordWhere("ID = {0}", instance.UserAccountID);
                 FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("ID = {0}", fileGroupID);
                 List<DataFile> files = new TableOperations<DataFile>(connection).QueryRecordsWhere("FileGroupID = {0}", fileGroupID).ToList();
                 List<FileBlob> fileBlobs = new TableOperations<FileBlob>(connection).QueryRecordsWhere("DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID = {0})", fileGroupID).ToList();
@@ -1147,37 +1247,27 @@ namespace openXDA.DataPusher
                 post.DataFiles = files;
                 post.FileBlobs = fileBlobs;
 
-                int id = SendFiles(post, instance.Address, userAccount).Result;
+                DataPusherRequester requester = new DataPusherRequester(instanceId, connection);
+                int id = SendFiles(post, requester).Result;
                 connection.ExecuteNonQuery("INSERT INTO FileGroupLocalToRemote (RemoteXDAInstanceID, LocalFileGroupID, remoteFileGroupID) VALUES ({0},{1},{2}) ", instanceId, fileGroupID, id);
 
             }
 
         }
 
-        public Task<int> SendFiles(FileGroupPost post, string address, UserAccount userAccount)
+        public Task<int> SendFiles(FileGroupPost post, DataPusherRequester requester)
         {
             return Task.Run(() =>
             {
-                string antiForgeryToken = GenerateAntiForgeryToken(address, userAccount);
 
                 MemoryStream stream = new MemoryStream();
                 BinaryFormatter binaryFormater = new BinaryFormatter();
                 binaryFormater.Serialize(stream, post);
-
                 stream.Seek(0, SeekOrigin.Begin);
-                using (WebRequestHandler handler = new WebRequestHandler())
-                using (HttpClient client = new HttpClient(handler))
+                HttpContent httpContent = new StreamContent(stream);
+
+                using (HttpResponseMessage response = requester.SendRequestAsync("api/DataPusher/Recieve/Files", HttpMethod.Post, httpContent, "application/text").Result)
                 {
-                    handler.ServerCertificateValidationCallback += HandleCertificateValidation;
-
-                    client.BaseAddress = new Uri(address);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/text"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-
-                    HttpContent httpContent = new StreamContent(stream);
-                    HttpResponseMessage response = client.PostAsync($"api/DataPusher/Recieve/Files", httpContent).Result;
                     string remoteFGID = response.Content.ReadAsStringAsync().Result;
                     remoteFGID = remoteFGID.Replace("\"", "");
                     int id = int.Parse(remoteFGID);
@@ -1188,55 +1278,6 @@ namespace openXDA.DataPusher
                 }
             });
         }
-
-
-        #endregion
-
-        #region [ Helpers ]
-        public bool HandleCertificateValidation(Object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            SimpleCertificateChecker simpleCertificateChecker = new SimpleCertificateChecker();
-
-            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-            systemSettings.Add("CertFile", "", "This is a certfile.");
-            systemSettings.Add("ValidPolicyErrors", "None", "Password for OpenXDA Web API access.");
-            systemSettings.Add("ValidChainFlags", "NoError", "Password for OpenXDA Web API access.");
-
-            try
-            {
-                simpleCertificateChecker.ValidPolicyErrors = (SslPolicyErrors)Enum.Parse(typeof(SslPolicyErrors), (systemSettings["ValidPolicyErrors"].Value != "All" ? systemSettings["ValidPolicyErrors"].Value : "7"));
-                simpleCertificateChecker.ValidChainFlags = (X509ChainStatusFlags)Enum.Parse(typeof(X509ChainStatusFlags), (systemSettings["ValidChainFlags"].Value != "All" ? systemSettings["ValidChainFlags"].Value : (~0).ToString()));
-                simpleCertificateChecker.TrustedCertificates.Add((!string.IsNullOrEmpty(systemSettings["CertFile"].Value) ? new X509Certificate2(systemSettings["CertFile"].Value) : certificate));
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex.ToString());
-            }
-
-            return simpleCertificateChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
-        }
-
-        public string GenerateAntiForgeryToken(string instance, UserAccount userAccount)
-        {
-            using (WebRequestHandler handler = new WebRequestHandler())
-            using (HttpClient client = new HttpClient(handler))
-            {
-                handler.ServerCertificateValidationCallback += HandleCertificateValidation;
-
-                client.BaseAddress = new Uri(instance);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-
-                HttpResponseMessage response = client.GetAsync("api/rvht").Result;
-
-                if (!response.IsSuccessStatusCode)
-                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
-                return response.Content.ReadAsStringAsync().Result;
-            }
-        }
-
 
         #endregion
         #endregion

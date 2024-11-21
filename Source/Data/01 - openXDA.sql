@@ -4383,7 +4383,8 @@ CREATE TABLE RemoteXDAInstance
     Name VARCHAR(200) NOT NULL,
     Address VARCHAR(200) NULL,
     Frequency VARCHAR(20) NOT NULL,
-    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
+    RegistrationKey VARCHAR(50) NOT NULL,
+    APIToken VARCHAR(50) NOT NULL
 )
 GO
 
