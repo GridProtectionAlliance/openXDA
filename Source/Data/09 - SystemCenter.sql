@@ -350,3 +350,31 @@ INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('MiMD.APIKe
 GO
 INSERT INTO [SystemCenter.Setting](Name, Value, DefaultValue) VALUES('MiMD.APIToken', '', '')
 GO
+
+---------------- OpenSEE TableSpace -------------
+CREATE TABLE [OpenSEE.Setting](
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL UNIQUE,
+    Value VARCHAR(MAX) NULL,
+    DefaultValue VARCHAR(MAX) NULL
+)
+GO
+
+INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('applicationName', 'OpenSEE', 'OpenSEE')
+GO
+INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('applicationDescription', 'Event Viewing Engine', 'Event Viewing Engine')
+GO
+INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('applicationKeywords', 'open source, utility, browser, power quality, management', 'open source, utility, browser, power quality, management')
+GO
+INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('bootstrapTheme', '~/Content/bootstrap-theme.css', '~/Content/bootstrap-theme.css')
+GO
+INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('useLLVoltage', 'false', 'false')
+GO
+INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('SlidingCacheExpiration', '2.0', '2.0')
+GO
+INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('maxSampleRate', '-1', '-1')
+GO
+INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('minSampleRate', '-1', '-1')
+GO
+INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('maxFFTHarmonic', '50', '50')
+GO
