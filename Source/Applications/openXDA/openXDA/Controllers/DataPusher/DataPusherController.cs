@@ -33,6 +33,8 @@ using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
+using openXDA.Configuration;
+using openXDA.Controllers.Helpers;
 using openXDA.DataPusher;
 using openXDA.Model;
 using openXDA.Nodes;
@@ -52,14 +54,13 @@ namespace openXDA.Controllers.Config
             NodeHost = host;
         }
 
-        [Route("Recieve/XML"), HttpPost]
+        [Route("Recieve/XML"), HttpPost, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult RecieveXML(CancellationToken cancellationToken)
         {
             if (User.IsInRole("DataPusher"))
             {
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
-
                     try
                     {
                         Stream stream = Request.Content.ReadAsStreamAsync().Result;
@@ -79,12 +80,11 @@ namespace openXDA.Controllers.Config
 
         }
 
-        [Route("Send/XML/{instanceId:int}/{meterId:int}"), HttpGet]
+        [Route("Send/XML/{instanceId:int}/{meterId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult SendMeterConfigurationForInstance(int instanceId, int meterId, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-
                 try
                 {
                     DataPusherRequester requester = new DataPusherRequester(instanceId, connection);
@@ -115,12 +115,11 @@ namespace openXDA.Controllers.Config
 
         }
 
-        [Route("Send/XML/{instanceId:int}"), HttpGet]
+        [Route("Send/XML/{instanceId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult SendMeterConfigurationForInstance(int instanceId, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-
                 try
                 {
                     DataPusherRequester requester = new DataPusherRequester(instanceId, connection);
@@ -150,8 +149,9 @@ namespace openXDA.Controllers.Config
 
         }
 
-        [Route("LoaderStatus/XML/{connectionID}"), HttpGet]
-        public IHttpActionResult GetStatus(string connectionID) {
+        [Route("LoaderStatus/XML/{connectionID}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
+        public IHttpActionResult GetStatus(string connectionID)
+        {
             try
             {
                 Guid guid = Guid.Parse(connectionID);
@@ -165,12 +165,11 @@ namespace openXDA.Controllers.Config
             }
         }
 
-        [Route("LoaderStatus/XML/{instanceId:int}/{connectionID}"), HttpGet]
+        [Route("LoaderStatus/XML/{instanceId:int}/{connectionID}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult GetStatus(int instanceId, string connectionID)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-
                 try
                 {
                     DataPusherRequester requester = new DataPusherRequester(instanceId, connection);
@@ -193,7 +192,7 @@ namespace openXDA.Controllers.Config
 
         }
 
-        [Route("LoaderStatus/XML"), HttpGet]
+        [Route("LoaderStatus/XML"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult InstantiateStatus()
         {
             try
@@ -208,7 +207,7 @@ namespace openXDA.Controllers.Config
             }
         }
 
-        [Route("Send/Files/{instanceId:int}/{meterId:int}/{fileGroupID:int}"), HttpGet]
+        [Route("Send/Files/{instanceId:int}/{meterId:int}/{fileGroupID:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult SendFiles(int instanceId, int meterId, int fileGroupID, CancellationToken cancellationToken)
         {
             try
@@ -234,7 +233,7 @@ namespace openXDA.Controllers.Config
             }
         }
 
-        [Route("Recieve/Files"), HttpPost]
+        [Route("Recieve/Files"), HttpPost, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult RecieveFiles(CancellationToken cancellationToken)
         {
             if (User.IsInRole("DataPusher"))
@@ -306,14 +305,13 @@ namespace openXDA.Controllers.Config
 
         }
 
-        [Route("SyncMeterConfig/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet]
+        [Route("SyncMeterConfig/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public Task SyncMeterConfigurationForInstance(string connectionId, int instanceId, int meterId, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
-
                     try
                     {
                         // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
@@ -332,7 +330,7 @@ namespace openXDA.Controllers.Config
 
         }
 
-        [Route("SyncMeterFiles/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet]
+        [Route("SyncMeterFiles/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public Task SyncMeterFilesForInstance(string connectionId, int instanceId, int meterId, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
@@ -354,7 +352,7 @@ namespace openXDA.Controllers.Config
             }, cancellationToken);
         }
 
-        [Route("SyncInstanceConfig/{connectionId}/{instanceId:int}"), HttpGet]
+        [Route("SyncInstanceConfig/{connectionId}/{instanceId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public Task SyncInstanceConfiguration(string connectionId, int instanceId, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
@@ -365,13 +363,12 @@ namespace openXDA.Controllers.Config
             }, cancellationToken);
         }
 
-        public class TestResponse 
+        public class TestResponse
         {
             public bool Success;
             public string ErrorMessage;
         }
-
-        [Route("TestConnection/{instanceId:int}"), HttpGet]
+        [Route("TestConnection/{instanceId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult TestRemoteInstanceConnection(int instanceId)
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously

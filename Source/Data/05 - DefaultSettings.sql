@@ -362,6 +362,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('System.XDATimeZone', 'UTC', 'UTC')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('System.EditionKey', '', '')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SystemMVABase', '100.0', '100.0')
 GO
 

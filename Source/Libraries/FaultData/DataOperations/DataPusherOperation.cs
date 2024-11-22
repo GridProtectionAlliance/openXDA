@@ -30,6 +30,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.Security.Model;
 using log4net;
+using openXDA.Configuration;
 using openXDA.DataPusher;
 using openXDA.Model;
 
@@ -67,14 +68,18 @@ namespace FaultData.DataOperations
         #region [ Methods ]
         public override void Execute(MeterDataSet meterDataSet)
         {
-            //meterDataSet.FileGroup.DataFiles[0].FileBlob.
-            if (DataPusherSettings.Enabled)
+            if (!DataPusherSettings.Enabled)
             {
-                Log.Info("Executing operation to push data to remote instances...");
-                PushDataToRemoteInstances(meterDataSet);
-            }
-            else
                 Log.Info("Data Push Operation skipped because it is not enabled...");
+                return;
+            }
+            if (!EditionChecker.CheckEdition(Edition.Enterprise))
+            {
+                Log.Info("Data Push Operation skipped because system is not Enterprise Edition...");
+                return;
+            }
+            Log.Info("Executing operation to push data to remote instances...");
+            PushDataToRemoteInstances(meterDataSet);
 
         }
 
