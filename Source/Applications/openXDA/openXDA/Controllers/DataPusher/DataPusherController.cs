@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Net.Http;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -57,27 +57,21 @@ namespace openXDA.Controllers.Config
         [Route("Recieve/XML"), HttpPost, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult RecieveXML(CancellationToken cancellationToken)
         {
-            if (User.IsInRole("DataPusher"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
-                using (AdoDataConnection connection = ConnectionFactory())
+                try
                 {
-                    try
-                    {
-                        Stream stream = Request.Content.ReadAsStreamAsync().Result;
-                        Loader loader = new Loader(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
-                        loader.Load(stream);
-                        return Ok(loader.ConnectionID);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex.Message, ex);
-                        return InternalServerError(ex);
-                    }
+                    Stream stream = Request.Content.ReadAsStreamAsync().Result;
+                    Loader loader = new Loader(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
+                    loader.Load(stream);
+                    return Ok(loader.ConnectionID);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                    return InternalServerError(ex);
                 }
             }
-            else
-                return Unauthorized();
-
         }
 
         [Route("Send/XML/{instanceId:int}/{meterId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
@@ -236,72 +230,66 @@ namespace openXDA.Controllers.Config
         [Route("Recieve/Files"), HttpPost, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult RecieveFiles(CancellationToken cancellationToken)
         {
-            if (User.IsInRole("DataPusher"))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
-                using (AdoDataConnection connection = ConnectionFactory())
+
+                try
                 {
+                    Stream stream = Request.Content.ReadAsStreamAsync().Result;
+                    FileGroupPost fileGroupPost = JsonSerializer.Deserialize<FileGroupPost>(stream);
 
-                    try
+                    Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("AssetKey = {0}", fileGroupPost.MeterKey);
+                    if (meter == null) throw new Exception($"{fileGroupPost.MeterKey} is not defined in database");
+
+                    FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, ToDateTime2(connection, fileGroupPost.FileGroup.DataStartTime), ToDateTime2(connection, fileGroupPost.FileGroup.DataEndTime));
+                    if (fileGroup == null) {
+                        fileGroup = fileGroupPost.FileGroup;
+                        fileGroup.ID = 0;
+                        fileGroup.MeterID = meter.ID;
+
+                        new TableOperations<FileGroup>(connection).AddNewRecord(fileGroup);
+                        fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, ToDateTime2(connection, fileGroupPost.FileGroup.DataStartTime), ToDateTime2(connection, fileGroupPost.FileGroup.DataEndTime));
+                    }
+
+                    foreach (DataFile file in fileGroupPost.DataFiles)
                     {
-                        Stream stream = Request.Content.ReadAsStreamAsync().Result;
-                        BinaryFormatter binaryFormatter = new BinaryFormatter();
-                        FileGroupPost fileGroupPost = (FileGroupPost)binaryFormatter.Deserialize(stream);
+                        DataFile dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
+                        FileBlob blob = fileGroupPost.FileBlobs.Find(x => x.DataFileID == file.ID);
 
-                        Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("AssetKey = {0}", fileGroupPost.MeterKey);
-                        if (meter == null) throw new Exception($"{fileGroupPost.MeterKey} is not defined in database");
-
-                        FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, ToDateTime2(connection, fileGroupPost.FileGroup.DataStartTime), ToDateTime2(connection, fileGroupPost.FileGroup.DataEndTime));
-                        if (fileGroup == null) {
-                            fileGroup = fileGroupPost.FileGroup;
-                            fileGroup.ID = 0;
-                            fileGroup.MeterID = meter.ID;
-
-                            new TableOperations<FileGroup>(connection).AddNewRecord(fileGroup);
-                            fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, ToDateTime2(connection, fileGroupPost.FileGroup.DataStartTime), ToDateTime2(connection, fileGroupPost.FileGroup.DataEndTime));
-                        }
-
-                        foreach (DataFile file in fileGroupPost.DataFiles)
+                        if (dataFile == null)
                         {
-                            DataFile dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
-                            FileBlob blob = fileGroupPost.FileBlobs.Find(x => x.DataFileID == file.ID);
-
-                            if (dataFile == null)
-                            {
-                                dataFile = file;
-                                dataFile.ID = 0;
-                                dataFile.FileGroupID = fileGroup.ID;
-                                new TableOperations<DataFile>(connection).AddNewRecord(dataFile);
-                                dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
-                            }
-
-                            FileBlob fileBlob = new TableOperations<FileBlob>(connection).QueryRecordWhere("DataFileID = {0}", dataFile.ID);
-                            if (fileBlob == null)
-                            {
-                                fileBlob = blob;
-                                fileBlob.ID = 0;
-                                fileBlob.DataFileID = dataFile.ID;
-
-                                new TableOperations<FileBlob>(connection).AddNewRecord(fileBlob);
-                            }
-
-
-
+                            dataFile = file;
+                            dataFile.ID = 0;
+                            dataFile.FileGroupID = fileGroup.ID;
+                            new TableOperations<DataFile>(connection).AddNewRecord(dataFile);
+                            dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
                         }
 
-                        DataFileController dataFileController = new DataFileController(NodeHost);
-                        dataFileController.ReprocessFile(fileGroup.ID).Wait();
+                        FileBlob fileBlob = new TableOperations<FileBlob>(connection).QueryRecordWhere("DataFileID = {0}", dataFile.ID);
+                        if (fileBlob == null)
+                        {
+                            fileBlob = blob;
+                            fileBlob.ID = 0;
+                            fileBlob.DataFileID = dataFile.ID;
 
-                        return Ok(fileGroup.ID);
+                            new TableOperations<FileBlob>(connection).AddNewRecord(fileBlob);
+                        }
+
+
+
                     }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex.Message, ex);
-                        return InternalServerError(ex);
-                    }
+
+                    DataFileController dataFileController = new DataFileController(NodeHost);
+                    dataFileController.ReprocessFile(fileGroup.ID).Wait();
+
+                    return Ok(fileGroup.ID);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.Message, ex);
+                    return InternalServerError(ex);
                 }
             }
-            else
-                return Unauthorized();
 
         }
 

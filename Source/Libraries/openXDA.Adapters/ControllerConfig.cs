@@ -95,7 +95,7 @@ namespace openXDA.Adapters
                 defaults: new
                 {
                     controller = "HIDS",
-                    action = "LegacyPost"
+                    action = "QueryPoints"
                 }
             );
 

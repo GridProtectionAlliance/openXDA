@@ -27,21 +27,15 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Security;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Net.Security;
 using GSF.Scheduling;
-using GSF.Security.Model;
-using GSF.Web;
 using log4net;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
@@ -1259,10 +1253,8 @@ namespace openXDA.DataPusher
         {
             return Task.Run(() =>
             {
-
                 MemoryStream stream = new MemoryStream();
-                BinaryFormatter binaryFormater = new BinaryFormatter();
-                binaryFormater.Serialize(stream, post);
+                JsonSerializer.SerializeAsync(stream, post);
                 stream.Seek(0, SeekOrigin.Begin);
                 HttpContent httpContent = new StreamContent(stream);
 
