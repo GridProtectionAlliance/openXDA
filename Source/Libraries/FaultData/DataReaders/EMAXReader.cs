@@ -92,7 +92,8 @@ namespace FaultData.DataReaders
                     double num;
 
                     comtradeAnalog.Index = i + 1;
-                    comtradeAnalog.Name = analogChannel.title;
+                    comtradeAnalog.CircuitComponent = analogChannel.title;
+                    comtradeAnalog.Name = "A" + (i + 1);
 
                     comtradeAnalog.Units = new Func<string, string>(type =>
                     {
@@ -114,8 +115,19 @@ namespace FaultData.DataReaders
 
                     comtradeAnalog.Multiplier = (max - min) / (2 * short.MaxValue);
                     comtradeAnalog.Adder = (max + min) / 2.0D;
-                    comtradeAnalog.PrimaryRatio = double.TryParse(analogChannel.primary, out num) ? num * unitMultiplier : 0.0D;
-                    comtradeAnalog.SecondaryRatio = double.TryParse(analogChannel.secondary, out num) ? num * unitMultiplier : 0.0D;
+                    // Setting Secondary to 1 and adjusting primary accordingly (for human readability)
+                    double basePrimary = double.TryParse(analogChannel.primary, out num) ? num * unitMultiplier : 0.0D;
+                    double inverseSecondaryMultiplier = double.TryParse(analogChannel.secondary, out num) ? num * unitMultiplier : 0.0D;
+                    if (inverseSecondaryMultiplier != 0.0D)
+                    {
+                        comtradeAnalog.PrimaryRatio = basePrimary / inverseSecondaryMultiplier;
+                        comtradeAnalog.SecondaryRatio = 1.0D;
+                    }
+                    else
+                    {
+                        comtradeAnalog.PrimaryRatio = basePrimary;
+                        comtradeAnalog.SecondaryRatio = 0.0D;
+                    }
 
                     comtradeSchema.AnalogChannels[i] = comtradeAnalog;
                 }
@@ -125,7 +137,9 @@ namespace FaultData.DataReaders
                     EVNT_CHNL_NEW digitalChannel = DigitalChannels[i];
                     DigitalChannel comtradeDigital = new DigitalChannel();
                     comtradeDigital.Index = i + 1;
-                    comtradeDigital.ChannelName = digitalChannel.e_title;
+                    comtradeDigital.CircuitComponent = digitalChannel.e_title;
+                    comtradeDigital.ChannelName = "E" + (i + 1);
+                    comtradeDigital.PhaseID = "?";
                     comtradeSchema.DigitalChannels[i] = comtradeDigital;
                 }
 
