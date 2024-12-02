@@ -340,6 +340,7 @@ namespace FaultData.DataOperations
                 {
                     case APPDataType.RMS:
                     case APPDataType.Flicker:
+                    case APPDataType.Frequency:
                         return channel =>
                             (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") &&
                             channel.MeasurementCharacteristic.Name == "Instantaneous";
@@ -357,11 +358,6 @@ namespace FaultData.DataOperations
                         return channel =>
                             channel.MeasurementType.Name == "Digital" &&
                             measurementCharacteristics.Contains(channel.MeasurementCharacteristic.Name);
-
-                    case APPDataType.Frequency:
-                        return channel =>
-                            (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") &&
-                            channel.MeasurementCharacteristic.Name == "Frequency";
 
                     default:
                         return channel => false;
@@ -427,10 +423,10 @@ namespace FaultData.DataOperations
 
                 IEnumerable<SourceIndex> powIndexes = sourceIndexLookup[sourceIndex.ChannelIndex];
                 bool isRMS = sourceIndex.ChannelName.StartsWith("RMS", StringComparison.OrdinalIgnoreCase);
-                bool isTrigger = !isRMS && sourceIndex.ChannelName.StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase);
+                bool isTrigger = sourceIndex.ChannelName.StartsWith("TRIGGER", StringComparison.OrdinalIgnoreCase);
                 bool isFreq = sourceIndex.ChannelName.StartsWith("FREQ", StringComparison.OrdinalIgnoreCase);
                 bool isMax = sourceIndex.ChannelName.EndsWith("MAX", StringComparison.OrdinalIgnoreCase);
-                bool isMin = !isMax && sourceIndex.ChannelName.EndsWith("MIN", StringComparison.OrdinalIgnoreCase);
+                bool isMin = sourceIndex.ChannelName.EndsWith("MIN", StringComparison.OrdinalIgnoreCase);
 
                 string GetIndexPrefix()
                 {
