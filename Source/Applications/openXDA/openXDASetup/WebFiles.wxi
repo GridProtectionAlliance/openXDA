@@ -3,6 +3,9 @@
   <Component Id="wwwroot_index_cshtml">
     <File Id="wwwroot_._index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\index.cshtml" />
   </Component>
+  <Component Id="wwwroot_Layout_cshtml">
+	 <File Id="wwwroot_._Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Layout.cshtml" />
+  </Component>
   <Component Id="wwwroot_Logout_cshtml">
     <File Id="wwwroot_._Logout.cshtml" Name="Logout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Logout.cshtml" />
   </Component>
