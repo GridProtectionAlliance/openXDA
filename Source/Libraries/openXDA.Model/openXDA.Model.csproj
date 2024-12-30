@@ -179,6 +179,7 @@
     <Compile Include="PQMarkRestrictedAttribute.cs" />
     <Compile Include="SystemCenter\ChannelTemplateFile.cs" />
     <Compile Include="SystemCenter\ExternalDatabase.cs" />
+    <Compile Include="System\DataOperationFailure.cs" />
     <Compile Include="TransmissionElements\Generation.cs" />
     <Compile Include="TransmissionElements\StandardMagDurCurve.cs" />
     <Compile Include="Reports\Report.cs" />
