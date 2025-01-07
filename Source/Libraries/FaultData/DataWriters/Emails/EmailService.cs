@@ -145,7 +145,7 @@ namespace FaultData.DataWriters.Emails
 
         #region [ Methods ]
 
-        public bool SendEmail(EmailType email, List<int> eventIDs, Event evt, DateTime xdaNow)
+        public bool SendEmail(EmailType email, List<int> eventIDs, Event evt, DateTime xdaNow, TimeSpan duplicateFilterThreshold)
         {
             if (eventIDs.Count == 0)
                 return false;
@@ -155,21 +155,26 @@ namespace FaultData.DataWriters.Emails
             if (recipients.Count == 0 && String.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, evt, recipients, xdaNow, eventIDs, true);
+            SendEmail(email, evt, recipients, xdaNow, eventIDs, true, duplicateFilterThreshold);
 
             return true;
         }
 
         public void SendEmail(EmailType email, Event evt, List<string> recipients, List<DataSourceResponse> dataSourceResponses) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, dataSourceResponses);
+            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, dataSourceResponses, new TimeSpan(0));
 
         public void SendEmail(EmailType email, Event evt, List<string> recipients) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, null);
+            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, null, new TimeSpan(0));
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile) =>
-            SendEmail(email, evt, recipients, xdaNow, eventIDs, saveToFile, null);
+        private void SendEmail(
+            EmailType email, Event evt, List<string> recipients, 
+            DateTime xdaNow, List<int> eventIDs, bool saveToFile, TimeSpan duplicateFilterThreshold) =>
+            SendEmail(email, evt, recipients, xdaNow, eventIDs, saveToFile, null, duplicateFilterThreshold);
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, List<DataSourceResponse> dataSourceResponses)
+        private void SendEmail(
+            EmailType email, Event evt, List<string> recipients, DateTime xdaNow, 
+            List<int> eventIDs, bool saveToFile, List<DataSourceResponse> dataSourceResponses,
+            TimeSpan duplicateFilterThreshold)
         {
             List<Attachment> attachments = new List<Attachment>();
             List<DataSourceResponse> responses = dataSourceResponses ?? new List<DataSourceResponse>();
@@ -183,9 +188,22 @@ namespace FaultData.DataWriters.Emails
                 XDocument htmlDocument = ApplyTemplate(email, templateData.ToString());
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
                 ApplyImageEmbedTransform(attachments, htmlDocument);
-                SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
-                if (eventIDs.Count() > 0)
-                    LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
+
+                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    // Find duplicate email messages within the time frame specified, if any exist, don't send email
+                    DateTime timeThreshold = xdaNow.Subtract(duplicateFilterThreshold);
+                    bool hasDuplicateInThreshold = new TableOperations<SentEmail>(connection)
+                        .QueryRecordsWhere("EmailTypeID = {0} AND TimeSent >= {1}", sentEmailRecord.EmailTypeID, timeThreshold)
+                        .Any(potentialDuplicate => string.Equals(potentialDuplicate.Message, sentEmailRecord.Message, StringComparison.OrdinalIgnoreCase));
+
+                    if (!hasDuplicateInThreshold)
+                    {
+                        SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
+                        LoadSentEmail(sentEmailRecord, eventIDs, connection);
+                    }
+                }
             }
             finally
             {
@@ -227,7 +245,10 @@ namespace FaultData.DataWriters.Emails
                 ApplyChartTransform(attachments, htmlDocument, settings.EmailSettings.MinimumChartSamplesPerCycle);
                 ApplyImageEmbedTransform(attachments, htmlDocument);
                 SendEmail(recipients, htmlDocument, attachments, email, settings, (saveToFile ? email.FilePath : null));
-                LoadSentEmail(email, xdaNow, recipients, htmlDocument);
+
+                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
+                using (AdoDataConnection connection = ConnectionFactory())
+                    LoadSentEmail(sentEmailRecord, connection);
             }
             finally
             {
@@ -549,24 +570,31 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
+        private void LoadSentEmail(SentEmail sentEmail, List<int> eventIDs, AdoDataConnection connection)
         {
-            int sentEmailID = LoadSentEmail(email, now, recipients, htmlDocument);
+            int sentEmailId = LoadSentEmail(sentEmail, connection);
+            LoadEventSentEmail(eventIDs, sentEmailId, connection);
+        }
 
-            using (AdoDataConnection connection = ConnectionFactory())
+        private int LoadSentEmail(SentEmail sentEmail, AdoDataConnection connection)
+        {
+            TableOperations<SentEmail> sentEmailTable = new TableOperations<SentEmail>(connection);
+            sentEmailTable.AddNewRecord(sentEmail);
+            return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+        }
+
+        private void LoadEventSentEmail(List<int> eventIDs, int sentEmailID, AdoDataConnection connection)
+        {
+            TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
+            foreach (int eventID in eventIDs)
             {
-                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
+                if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
+                    continue;
 
-                foreach (int eventID in eventIDs)
-                {
-                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
-                        continue;
-
-                    EventSentEmail eventSentEmail = new EventSentEmail();
-                    eventSentEmail.EventID = eventID;
-                    eventSentEmail.SentEmailID = sentEmailID;
-                    eventSentEmailTable.AddNewRecord(eventSentEmail);
-                }
+                EventSentEmail eventSentEmail = new EventSentEmail();
+                eventSentEmail.EventID = eventID;
+                eventSentEmail.SentEmailID = sentEmailID;
+                eventSentEmailTable.AddNewRecord(eventSentEmail);
             }
         }
 
@@ -763,21 +791,15 @@ namespace FaultData.DataWriters.Emails
             return new SmtpClient(host);
         }
 
-        private int LoadSentEmail(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument)
+        private SentEmail CreateSentEmailRecord(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument)
         {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                SentEmail sentEmail = new SentEmail();
-                sentEmail.EmailTypeID = email.ID;
-                sentEmail.TimeSent = now;
-                sentEmail.ToLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
-                sentEmail.Subject = GetSubject(htmlDocument, email);
-                sentEmail.Message = GetBody(htmlDocument);
-
-                TableOperations<SentEmail> sentEmailTable = new TableOperations<SentEmail>(connection);
-                sentEmailTable.AddNewRecord(sentEmail);
-                return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-            }
+            SentEmail sentEmail = new SentEmail();
+            sentEmail.EmailTypeID = email.ID;
+            sentEmail.TimeSent = now;
+            sentEmail.ToLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
+            sentEmail.Subject = GetSubject(htmlDocument, email);
+            sentEmail.Message = GetBody(htmlDocument);
+            return sentEmail;
         }
 
         #endregion
