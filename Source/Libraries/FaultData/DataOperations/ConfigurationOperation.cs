@@ -430,12 +430,10 @@ namespace FaultData.DataOperations
 
                 string GetIndexPrefix()
                 {
-                    if (isRMS)
+                    if (isRMS || isFreq)
                         return "A";
                     if (isTrigger)
                         return "T";
-                    if (isFreq)
-                        return "F";
                     return "";
                 }
 
