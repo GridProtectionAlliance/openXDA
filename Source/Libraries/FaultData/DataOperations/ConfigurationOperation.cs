@@ -342,22 +342,15 @@ namespace FaultData.DataOperations
                     case APPDataType.Flicker:
                     case APPDataType.Frequency:
                         return channel =>
+                            !channel.Trend &&
                             (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") &&
                             channel.MeasurementCharacteristic.Name == "Instantaneous";
 
                     case APPDataType.Trigger:
-                        string[] measurementCharacteristics =
-                        {
-                            "Trigger - RMS",
-                            "Trigger - Impulse",
-                            "Trigger - THD",
-                            "Trigger - Ubal",
-                            "Trigger - I"
-                        };
-
                         return channel =>
+                            !channel.Trend &&
                             channel.MeasurementType.Name == "Digital" &&
-                            measurementCharacteristics.Contains(channel.MeasurementCharacteristic.Name);
+                            channel.MeasurementCharacteristic.Name == "Instantaneous";
 
                     default:
                         return channel => false;
