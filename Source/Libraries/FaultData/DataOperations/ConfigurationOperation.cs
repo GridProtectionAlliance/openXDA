@@ -999,48 +999,46 @@ namespace FaultData.DataOperations
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
                 TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
 
-                trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("ID = {0}", trendChannel.MeasurementTypeID);
-                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("ID = {0}", trendChannel.MeasurementCharacteristicID);
+                string measCharacteristic = "";
+                string measurementType = "";
 
-                if (trendChannel.MeasurementCharacteristic.Name == "Trigger - RMS" || trendChannel.MeasurementCharacteristic.Name == "Trigger - Impulse")
+                if (Regex.IsMatch(trendChannel.Description, " RMS\\s*$", RegexOptions.IgnoreCase))
                 {
-                    trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = 'Voltage'");
-                    trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
+                    measCharacteristic = "RMS";
+                    measurementType = "Voltage";
                 }
-                else if (trendChannel.MeasurementCharacteristic.Name == "Trigger - I")
+                else if (Regex.IsMatch(trendChannel.Description, " Impulse\\s*$", RegexOptions.IgnoreCase))
                 {
-                    trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = 'Current'");
-                    trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
+                    measCharacteristic = "Instantaneous";
+                    measurementType = "Voltage";
+                }
+                else if (Regex.IsMatch(trendChannel.Description, " THD\\s*$", RegexOptions.IgnoreCase))
+                {
+                    measCharacteristic = "TotalTHD";
+                    measurementType = "Analog";
+                }
+                else if (Regex.IsMatch(trendChannel.Description, " Unbalance\\s*$", RegexOptions.IgnoreCase))
+                {
+                    measCharacteristic = "Instantaneous";
+                    measurementType = "Analog";
+                }
+                else if (Regex.IsMatch(trendChannel.Description, " I.+\\s*$$", RegexOptions.IgnoreCase))
+                {
+                    measCharacteristic = "Instantaneous";
+                    measurementType = "Current";
                 }
                 else
                 {
-                    trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = 'Analog'");
-                    trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
-                }
-
-                string measCharacteristic = "";
-
-                switch (trendChannel.MeasurementCharacteristic.Name)
-                {
-                    case ("Trigger - RMS"):
-                        measCharacteristic = "RMS";
-                        break;
-                    case ("Trigger - Impulse"):
-                        measCharacteristic = "Instantaneous";
-                        break;
-                    case ("Trigger - THD"):
-                        measCharacteristic = "TotalTHD";
-                        break;
-                    case ("Trigger - Ubal"):
-                        measCharacteristic = "Instantaneous";
-                        break;
-                    case ("Trigger - I"):
-                        measCharacteristic = "Instantaneous";
-                        break;
+                    Log.Warn("Unable to match digital to trigger measurement characteristic for channel " + powChannel.ID);
+                    measCharacteristic = "RMS";
+                    measurementType = "Voltage";
                 }
 
                 trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name ={0}", measCharacteristic);
                 trendChannel.MeasurementCharacteristicID = trendChannel.MeasurementCharacteristic.ID;
+
+                trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = {0}", measurementType);
+                trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
 
                 ChannelKey key = new ChannelKey(trendChannel);
                 Channel dbChannel = key.Find(connection, meterDataSet.Meter.ID);
