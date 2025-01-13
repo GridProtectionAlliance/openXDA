@@ -342,22 +342,22 @@ namespace FaultData.DataOperations
                     case APPDataType.Flicker:
                     case APPDataType.Frequency:
                         return channel =>
+                            !channel.Trend &&
                             (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") &&
                             channel.MeasurementCharacteristic.Name == "Instantaneous";
 
                     case APPDataType.Trigger:
-                        string[] measurementCharacteristics =
-                        {
-                            "Trigger - RMS",
-                            "Trigger - Impulse",
-                            "Trigger - THD",
-                            "Trigger - Ubal",
-                            "Trigger - I"
-                        };
-
                         return channel =>
+                            !channel.Trend &&
                             channel.MeasurementType.Name == "Digital" &&
-                            measurementCharacteristics.Contains(channel.MeasurementCharacteristic.Name);
+                            channel.MeasurementCharacteristic.Name == "Instantaneous" &&
+                            (
+                                IsRMSTrigger(channel) ||
+                                IsImpulseTrigger(channel) ||
+                                IsTHDTrigger(channel) ||
+                                IsUnbalanceTrigger(channel) ||
+                                IsCurrentTrigger(channel)
+                            );
 
                     default:
                         return channel => false;
@@ -430,12 +430,10 @@ namespace FaultData.DataOperations
 
                 string GetIndexPrefix()
                 {
-                    if (isRMS)
+                    if (isRMS || isFreq)
                         return "A";
                     if (isTrigger)
                         return "T";
-                    if (isFreq)
-                        return "F";
                     return "";
                 }
 
@@ -859,7 +857,7 @@ namespace FaultData.DataOperations
                 MeasurementTypeID = powChannel.MeasurementTypeID,
                 MeasurementCharacteristicID = powChannel.MeasurementCharacteristicID,
                 PhaseID = powChannel.PhaseID,
-                Name = powChannel.Name,
+                Name = powChannel.Name + "RMS",
                 SamplesPerHour = powChannel.SamplesPerHour,
                 PerUnitValue = powChannel.PerUnitValue,
                 HarmonicGroup = powChannel.HarmonicGroup,
@@ -989,7 +987,7 @@ namespace FaultData.DataOperations
                 MeasurementTypeID = powChannel.MeasurementTypeID,
                 MeasurementCharacteristicID = powChannel.MeasurementCharacteristicID,
                 PhaseID = powChannel.PhaseID,
-                Name = powChannel.Name,
+                Name = powChannel.Name + "Trend",
                 SamplesPerHour = powChannel.SamplesPerHour,
                 PerUnitValue = powChannel.PerUnitValue,
                 HarmonicGroup = powChannel.HarmonicGroup,
@@ -1008,48 +1006,40 @@ namespace FaultData.DataOperations
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
                 TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
 
-                trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("ID = {0}", trendChannel.MeasurementTypeID);
-                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("ID = {0}", trendChannel.MeasurementCharacteristicID);
+                string measurementCharacteristic = "";
+                string measurementType = "";
 
-                if (trendChannel.MeasurementCharacteristic.Name == "Trigger - RMS" || trendChannel.MeasurementCharacteristic.Name == "Trigger - Impulse")
+                if (IsRMSTrigger(trendChannel))
                 {
-                    trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = 'Voltage'");
-                    trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
+                    measurementCharacteristic = "RMS";
+                    measurementType = "Voltage";
                 }
-                else if (trendChannel.MeasurementCharacteristic.Name == "Trigger - I")
+                else if (IsImpulseTrigger(trendChannel))
                 {
-                    trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = 'Current'");
-                    trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
+                    measurementCharacteristic = "Instantaneous";
+                    measurementType = "Voltage";
                 }
-                else
+                else if (IsTHDTrigger(trendChannel))
                 {
-                    trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = 'Analog'");
-                    trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
+                    measurementCharacteristic = "TotalTHD";
+                    measurementType = "Analog";
                 }
-
-                string measCharacteristic = "";
-
-                switch (trendChannel.MeasurementCharacteristic.Name)
+                else if (IsUnbalanceTrigger(trendChannel))
                 {
-                    case ("Trigger - RMS"):
-                        measCharacteristic = "RMS";
-                        break;
-                    case ("Trigger - Impulse"):
-                        measCharacteristic = "Instantaneous";
-                        break;
-                    case ("Trigger - THD"):
-                        measCharacteristic = "TotalTHD";
-                        break;
-                    case ("Trigger - Ubal"):
-                        measCharacteristic = "Instantaneous";
-                        break;
-                    case ("Trigger - I"):
-                        measCharacteristic = "Instantaneous";
-                        break;
+                    measurementCharacteristic = "Instantaneous";
+                    measurementType = "Analog";
+                }
+                else if (IsCurrentTrigger(trendChannel))
+                {
+                    measurementCharacteristic = "Instantaneous";
+                    measurementType = "Current";
                 }
 
-                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name ={0}", measCharacteristic);
+                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name ={0}", measurementCharacteristic);
                 trendChannel.MeasurementCharacteristicID = trendChannel.MeasurementCharacteristic.ID;
+
+                trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = {0}", measurementType);
+                trendChannel.MeasurementTypeID = trendChannel.MeasurementType.ID;
 
                 ChannelKey key = new ChannelKey(trendChannel);
                 Channel dbChannel = key.Find(connection, meterDataSet.Meter.ID);
@@ -1101,7 +1091,7 @@ namespace FaultData.DataOperations
                 MeasurementTypeID = powChannel.MeasurementTypeID,
                 MeasurementCharacteristicID = powChannel.MeasurementCharacteristicID,
                 PhaseID = powChannel.PhaseID,
-                Name = powChannel.Name,
+                Name = powChannel.Name + "Freq",
                 SamplesPerHour = powChannel.SamplesPerHour,
                 PerUnitValue = powChannel.PerUnitValue,
                 HarmonicGroup = powChannel.HarmonicGroup,
@@ -1193,6 +1183,31 @@ namespace FaultData.DataOperations
                    channel.Phase.Name == "BC" ||
                    channel.Phase.Name == "CA" ||
                    channel.Phase.Name == "LineToLineAverage";
+        }
+
+        private static bool IsRMSTrigger(Channel channel)
+        {
+            return Regex.IsMatch(channel.Description, @"\s-\sV\S*\sRMS\s*$", RegexOptions.IgnoreCase);
+        }
+
+        private static bool IsImpulseTrigger(Channel channel)
+        {
+            return Regex.IsMatch(channel.Description, @"\s-\sV\S*\sImpulse\s*$", RegexOptions.IgnoreCase);
+        }
+
+        private static bool IsTHDTrigger(Channel channel)
+        {
+            return Regex.IsMatch(channel.Description, @"\s-\s\S+\sTHD\s*$", RegexOptions.IgnoreCase);
+        }
+
+        private static bool IsUnbalanceTrigger(Channel channel)
+        {
+            return Regex.IsMatch(channel.Description, @"\s-\sUnbalance\s*$", RegexOptions.IgnoreCase);
+        }
+
+        private static bool IsCurrentTrigger(Channel channel)
+        {
+            return Regex.IsMatch(channel.Description, @"\s-\s\S*I\S*\s*$", RegexOptions.IgnoreCase);
         }
 
         public static double CalculateSamplesPerHour(DataSeries dataSeries)
