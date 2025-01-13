@@ -1207,7 +1207,7 @@ namespace FaultData.DataOperations
 
         private static bool IsCurrentTrigger(Channel channel)
         {
-            return Regex.IsMatch(channel.Description, " I.*\\s*$$", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(channel.Description, " I.*\\s*$", RegexOptions.IgnoreCase);
         }
 
         public static double CalculateSamplesPerHour(DataSeries dataSeries)
