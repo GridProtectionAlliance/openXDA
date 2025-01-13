@@ -1187,27 +1187,27 @@ namespace FaultData.DataOperations
 
         private static bool IsRMSTrigger(Channel channel)
         {
-            return Regex.IsMatch(channel.Description, @" RMS\s*$", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(channel.Description, @"\s-\sV\S*\sRMS\s*$", RegexOptions.IgnoreCase);
         }
 
         private static bool IsImpulseTrigger(Channel channel)
         {
-            return Regex.IsMatch(channel.Description, @" Impulse\s*$", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(channel.Description, @"\s-\sV\S*\sImpulse\s*$", RegexOptions.IgnoreCase);
         }
 
         private static bool IsTHDTrigger(Channel channel)
         {
-            return Regex.IsMatch(channel.Description, @" THD\s*$", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(channel.Description, @"\s-\s\S+\sTHD\s*$", RegexOptions.IgnoreCase);
         }
 
         private static bool IsUnbalanceTrigger(Channel channel)
         {
-            return Regex.IsMatch(channel.Description, @" Unbalance\s*$", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(channel.Description, @"\s-\sUnbalance\s*$", RegexOptions.IgnoreCase);
         }
 
         private static bool IsCurrentTrigger(Channel channel)
         {
-            return Regex.IsMatch(channel.Description, @"I.*\s*$", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(channel.Description, @"\s-\s\S*I\S*\s*$", RegexOptions.IgnoreCase);
         }
 
         public static double CalculateSamplesPerHour(DataSeries dataSeries)
