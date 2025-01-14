@@ -26,7 +26,7 @@ import * as React from 'react';
 import { useSelector } from "react-redux";
 import { openXDA } from "../global";
 import { SelectAffectedChannelByID } from "../store/WizardAffectedChannelSlice";
-import { SelectStatisticsFilter, SelectThresholdValues, selectAlarmGroup, SelectAlarmFactors, SelectStatisticsChannels } from "./DynamicWizzardSlice";
+import { SelectStatisticsFilter, SelectThresholdValues, selectAlarmGroup, SelectAlarmFactors, SelectStatisticsChannels, selectSeriesTypeID } from "./DynamicWizzardSlice";
 import _ from "lodash";
 import moment from "moment";
 import { SelectSeverities } from "../store/SeveritySlice";
@@ -34,8 +34,22 @@ import { SelectAlarmDays } from "../store/AlarmDaySlice";
 import { Line, Plot } from '@gpa-gemstone/react-graph'
 import { TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { LoadingIcon } from '@gpa-gemstone/react-interactive';
+import { SelectSeriesTypes } from "../store/SeriesTypeSlice";
 
 interface IProps { ChannelID: number, Remove?: () => void, Tstart: string, Tend: string }
+
+//Todo: Add this to gemstone
+interface HIDSPoint {
+    Tag: string,
+    Minimum: number,
+    Maximum: number,
+    Average: number,
+    QualityFlags: number,
+    Timestamp: string
+}
+
+// Time formats
+const serverFormat = "YYYY-MM-DD[T]HH:mm:ss.SSSZ";
 
 export const AlarmTrendingCard = (props: IProps) => {
     const memChannelSelector = React.useMemo<(state) => openXDA.IChannel>(() => {
@@ -46,7 +60,7 @@ export const AlarmTrendingCard = (props: IProps) => {
     }, [props.ChannelID])
 
     const allChannels = useSelector(SelectStatisticsChannels)
-    const [data, setData] = React.useState<Array<SPCTools.ITrendSeries>>([]);
+    const [chartData, setChartData] = React.useState<Array<SPCTools.ITrendSeries>>([]);
     const [threshhold, setThreshold] = React.useState<Array<SPCTools.ITrendSeries>>([]);
     const alarmValueResults = useSelector(SelectThresholdValues);
 
@@ -54,7 +68,10 @@ export const AlarmTrendingCard = (props: IProps) => {
     const [loading, setLoading] = React.useState<boolean>(false);
     const dataFilter = useSelector(SelectStatisticsFilter);
 
-    const severities = useSelector(SelectSeverities);
+    const seriesFilterId = useSelector(selectSeriesTypeID);
+    const seriesTypes = useSelector(SelectSeriesTypes);
+
+    const severities = useSelector(SelectSeverities); 
     const alarmGroup = useSelector(selectAlarmGroup)
     const alarmFactors = useSelector(SelectAlarmFactors)
     const alarmDays = useSelector(SelectAlarmDays)
@@ -69,28 +86,23 @@ export const AlarmTrendingCard = (props: IProps) => {
     React.useLayoutEffect(() => { SetWidth((divref?.current?.offsetWidth ?? 25) - 25) });
 
     React.useEffect(() => {
-        setData([]);
+        setChartData([]);
         setLoading(true);
 
-        let handle = [];
-        if (channel == null)
-            handle = allChannels.map(item => getData(item.ID));
-        else
-            handle.push(getData(props.ChannelID));
-
-        Promise.all(handle).then(() => setLoading(false));
+        const handle = getData(channel == null ? allChannels.map(channel => channel.ID) : [props.ChannelID])
+            .done(() => setLoading(false));
 
         return () => {
-            handle.forEach(h => { if (h != undefined && h.abort != undefined) h.abort();})
+            if (handle != undefined && handle.abort != undefined) handle.abort();
         }
     }, [channel])
 
     React.useEffect(() => {
         CreateThreshhold();
-    }, [data, alarmValueResults, severities, alarmGroup, alarmFactors]) 
+    }, [chartData, alarmValueResults, severities, alarmGroup, alarmFactors]) 
 
     function CreateThreshhold() {
-        if (alarmValueResults.length == 0 || data.length == 0)
+        if (alarmValueResults.length == 0 || chartData.length == 0)
             setThreshold([]);
 
         const T0 = moment(props.Tstart).startOf('day').valueOf();
@@ -245,33 +257,76 @@ export const AlarmTrendingCard = (props: IProps) => {
         return result
     }
 
-    function getData(channelId: number): JQuery.jqXHR<Array<number[]>> {
-        const handle = $.ajax({
+    function getData(channelIds: number[]): JQuery.jqXHR<Array<number[]>> {
+        return $.ajax({
             type: "POST",
-            url: `${apiHomePath}api/SPCTools/Data/HistoryData/${channelId}/${0}?start=${props.Tstart}&end=${props.Tend}`,
+            url: `${apiHomePath}api/SPCTools/Data/HistoryData`,
             contentType: "application/json; charset=utf-8",
-            data: JSON.stringify(dataFilter),
-            dataType: 'json',
+            data: JSON.stringify({
+                Channels: channelIds,
+                StartTime: props.Tstart,
+                StopTime: props.Tend
+            }),
+            dataType: 'text',
             cache: false,
             async: true
-        });
+        }).done((data: string) => {
+            const newPoints: string[] = data.split("\n");
+            const seriesUsed = seriesTypes.find(type => type.ID === seriesFilterId)?.Name ?? "Values";
+            const allData = new Map<string, [number, number][]>();
+            newPoints.forEach(jsonPoint => {
+                let point: HIDSPoint = undefined;
+                try {
+                    if (jsonPoint !== "") point = JSON.parse(jsonPoint);
+                }
+                catch {
+                    console.error("Failed to parse point: " + jsonPoint);
+                }
+                if (point !== undefined) {
+                    const timeStamp = moment.utc(point.Timestamp, serverFormat).valueOf();
+                    if (!allData.has(point.Tag)) allData.set(point.Tag, []);
+                    const channelData = allData.get(point.Tag);
+                    let pointValue;
+                    switch (seriesUsed) {
+                        case "Maximum":
+                            pointValue = point.Maximum;
+                            break;
+                        case "Minimum":
+                            pointValue = point.Minimum;
+                            break;
+                        default:
+                            pointValue = point.Average;
+                            break;
+                    }
+                    if (dataFilter.FilterZero && pointValue == 0)
+                        pointValue = NaN;
+                    else if (dataFilter.FilterLower && pointValue < dataFilter.LowerLimit)
+                        pointValue = NaN;
+                    else if (dataFilter.FilterUpper && pointValue > dataFilter.UpperLimit)
+                        pointValue = NaN;
 
-        handle.done((data) => {
-            setData((old) => [...old, {
-                color: '#3333ff',
-                includeLegend: false,
-                label: "",
-                lineStyle: '-',
-                data: data,
-                opacity: (props.ChannelID == -1 ? 0.5 : 1.0)
-            }]);
+                    channelData.push([timeStamp, pointValue]);
+                }
+            });
+            setChartData(
+                [...allData.keys()].map(key => {
+                    const channelId = Number("0x" + key);
+                    const chartData = allData.get(key);
+                    return {
+                        color: '#3333ff',
+                        includeLegend: false,
+                        label: "",
+                        lineStyle: '-',
+                        data: allData.get(key),
+                        opacity: (props.ChannelID == -1 ? 0.5 : 1.0)
+                    }
+                })
+            );
         });
-          
-        return handle;
     }
 
-    const Tstart: number = (data.length > 0? (data[0].data.length > 0? data[0].data[0][0] : 0) : 0);
-    const Tend: number = (data.length > 0 ? (data[0].data.length > 0? data[0].data[data[0].data.length - 1][0] : 1500) : 1500);
+    const Tstart: number = (chartData.length > 0 ? (chartData[0].data.length > 0 ? chartData[0].data[0][0] : 0) : 0);
+    const Tend: number = (chartData.length > 0 ? (chartData[0].data.length > 0 ? chartData[0].data[chartData[0].data.length - 1][0] : 1500) : 1500);
 
 
     return (
@@ -287,11 +342,10 @@ export const AlarmTrendingCard = (props: IProps) => {
                     {loading ?
                         <LoadingIcon Show={true} Size={40} /> : 
                         <Plot height={250} width={Width}
-                            zoom={false}
-                            yDomain={'AutoValue'}
+                            yDomain={'AutoValue'} zoom={false} menuLocation="hide"
                             defaultTdomain={[Tstart, Tend]}
-                             Tlabel={'Time'}showMouse={false} useMetricFactors={false} >
-                            {(data.length > 0 && data[0].data.length > 0) ? data.map((series, i) => <Line key={i} data={series.data} color={series.color} lineStyle={series.lineStyle} />)
+                            Tlabel={'Time'} showMouse={false} useMetricFactors={false}>
+                            {(chartData.length > 0 && chartData[0].data.length > 0) ? chartData.map((series, i) => <Line key={i} data={series.data} color={series.color} lineStyle={series.lineStyle} />)
                             : <></>
                             }
 
