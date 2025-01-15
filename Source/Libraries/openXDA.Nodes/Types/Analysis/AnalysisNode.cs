@@ -234,7 +234,7 @@ namespace openXDA.Nodes.Types.Analysis
             configurator(reader);
 
             MeterDataSet meterDataSet = reader.Parse(fileGroup);
-            FileGroupProcessingStatus processingStatus = FileGroupProcessingStatus.Failed;
+            FileGroupProcessingStatus processingStatus;
 
             if (!(meterDataSet is null))
             {
@@ -263,6 +263,7 @@ namespace openXDA.Nodes.Types.Analysis
                 processingStatus = Process(meterDataSet);
                 Log.Info($"Finished processing file group \"{fileGroupPath}\".");
             }
+            else processingStatus = FileGroupProcessingStatus.Success;
 
             DateTime endTime = DateTime.UtcNow;
             fileGroup.ProcessingEndTime = timeZoneConverter.ToXDATimeZone(endTime);
@@ -332,31 +333,36 @@ namespace openXDA.Nodes.Types.Analysis
                     });
                     if (IsDisposed)
                     {
-                        LogDataOperationFailures(dataOperationFailures);
-                        if (index == 0) return FileGroupProcessingStatus.Failed;
-                        return status;
+                        TryLogDataOperationFailures(dataOperationFailures);
+                        return FileGroupProcessingStatus.Failed;
                     }
                 }
 
                 index++;
             }
 
-            LogDataOperationFailures(dataOperationFailures);
+            TryLogDataOperationFailures(dataOperationFailures);
             _ = NotifyEventEmailNode(fileGroup.ID, fileGroup.ProcessingVersion);
             _ = NotifyEPRICapBankAnalysisNode(fileGroup.ID, fileGroup.ProcessingVersion);
 
             return status;
         }
 
-        private void LogDataOperationFailures(IEnumerable<DataOperationFailure> failures)
+        private void TryLogDataOperationFailures(IEnumerable<DataOperationFailure> failures)
         {
-            using (AdoDataConnection connection = CreateDbConnection())
+            try
             {
-                TableOperations<DataOperationFailure> failureTable = new TableOperations<DataOperationFailure>(connection);
-                foreach (DataOperationFailure failure in failures)
-                    failureTable.AddNewRecord(failure);
+                using (AdoDataConnection connection = CreateDbConnection())
+                {
+                    TableOperations<DataOperationFailure> failureTable = new TableOperations<DataOperationFailure>(connection);
+                    foreach (DataOperationFailure failure in failures)
+                        failureTable.AddNewRecord(failure);
+                }
             }
-
+            catch (Exception ex)
+            {
+                Log.Error("Unable to log data operation failures: " + ex.Message, ex);
+            }
         }
 
         private void SaveMeterConfiguration(FileGroup fileGroup, Meter meter)
