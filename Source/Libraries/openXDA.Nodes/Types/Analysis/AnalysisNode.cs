@@ -234,6 +234,7 @@ namespace openXDA.Nodes.Types.Analysis
             configurator(reader);
 
             MeterDataSet meterDataSet = reader.Parse(fileGroup);
+            FileGroupProcessingStatus processingStatus;
 
             if (!(meterDataSet is null))
             {
@@ -259,23 +260,26 @@ namespace openXDA.Nodes.Types.Analysis
                 UpdateFileGroup(fileGroup);
 
                 Log.Info($"Processing file group \"{fileGroupPath}\"...");
-                Process(meterDataSet);
+                processingStatus = Process(meterDataSet);
                 Log.Info($"Finished processing file group \"{fileGroupPath}\".");
             }
+            else processingStatus = FileGroupProcessingStatus.Success;
 
             DateTime endTime = DateTime.UtcNow;
             fileGroup.ProcessingEndTime = timeZoneConverter.ToXDATimeZone(endTime);
-            fileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Processed;
+            fileGroup.ProcessingStatus = (int)processingStatus;
             UpdateFileGroup(fileGroup);
         }
 
-        private void Process(MeterDataSet meterDataSet)
+        private FileGroupProcessingStatus Process(MeterDataSet meterDataSet)
         {
+            FileGroup fileGroup = meterDataSet.FileGroup;
             List<DataOperation> dataOperationDefinitions;
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 TableOperations<DataOperation> dataOperationTable = new TableOperations<DataOperation>(connection);
+                new TableOperations<DataOperationFailure>(connection).DeleteRecordWhere("FileGroupID={0}", fileGroup.ID);
 
                 // Load the data operations from the database
                 dataOperationDefinitions = dataOperationTable
@@ -284,14 +288,17 @@ namespace openXDA.Nodes.Types.Analysis
             }
 
             PluginFactory<IDataOperation> dataOperationFactory = new PluginFactory<IDataOperation>();
+            FileGroupProcessingStatus status = FileGroupProcessingStatus.Failed;
+            List<DataOperationFailure> dataOperationFailures = new List<DataOperationFailure>();
+            int index = 0;
 
             foreach (DataOperation dataOperationDefinition in dataOperationDefinitions)
             {
-                if (IsDisposed)
-                    return;
-
                 try
                 {
+                    if (IsDisposed)
+                        throw new Exception("Data operation pipeline is disposed");
+
                     Log.Debug($"Executing data operation '{dataOperationDefinition.UnqualifiedTypeName}'...");
 
                     // Call the execute method on the data operation to perform in-memory data transformations
@@ -306,19 +313,56 @@ namespace openXDA.Nodes.Types.Analysis
                     }
 
                     Log.Debug($"Finished executing data operation '{dataOperationDefinition.UnqualifiedTypeName}'.");
+                    if (index == 0) status = FileGroupProcessingStatus.Success;
+                    else if (status == FileGroupProcessingStatus.Failed) status = FileGroupProcessingStatus.PartialSuccess;
                 }
                 catch (Exception ex)
                 {
                     // Log the error and skip to the next data operation
                     string message = $"An error occurred while executing data operation of type '{dataOperationDefinition.TypeName}' on data from meter '{meterDataSet.Meter.AssetKey}': {ex.Message}";
                     Exception wrapper = new Exception(message, ex);
+                    if (status == FileGroupProcessingStatus.Success) status = FileGroupProcessingStatus.PartialSuccess;
                     Log.Error(wrapper.Message, wrapper);
+                    dataOperationFailures.Add(new DataOperationFailure
+                    {
+                        DataOperationID = dataOperationDefinition.ID,
+                        FileGroupID = meterDataSet.FileGroup.ID,
+                        Log = message,
+                        StackTrace = ex.StackTrace,
+                        TimeOfFailure = DateTime.UtcNow
+                    });
+                    if (IsDisposed)
+                    {
+                        TryLogDataOperationFailures(dataOperationFailures);
+                        return FileGroupProcessingStatus.Failed;
+                    }
                 }
+
+                index++;
             }
 
-            FileGroup fileGroup = meterDataSet.FileGroup;
+            TryLogDataOperationFailures(dataOperationFailures);
             _ = NotifyEventEmailNode(fileGroup.ID, fileGroup.ProcessingVersion);
             _ = NotifyEPRICapBankAnalysisNode(fileGroup.ID, fileGroup.ProcessingVersion);
+
+            return status;
+        }
+
+        private void TryLogDataOperationFailures(IEnumerable<DataOperationFailure> failures)
+        {
+            try
+            {
+                using (AdoDataConnection connection = CreateDbConnection())
+                {
+                    TableOperations<DataOperationFailure> failureTable = new TableOperations<DataOperationFailure>(connection);
+                    foreach (DataOperationFailure failure in failures)
+                        failureTable.AddNewRecord(failure);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Unable to log data operation failures: " + ex.Message, ex);
+            }
         }
 
         private void SaveMeterConfiguration(FileGroup fileGroup, Meter meter)
