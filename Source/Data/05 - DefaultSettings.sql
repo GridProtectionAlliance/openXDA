@@ -103,7 +103,7 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.MinimumChartSamplesPerCycle', '-1', '-1')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.EmailDuplicateThesholdMinutes', '0', '0')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.EmailDuplicateThresholdMinutes', '0', '0')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.AdminUser', 'admin', 'admin')

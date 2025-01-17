@@ -56,9 +56,9 @@ namespace openXDA.Configuration
         public TimeSpan MaxEmailSpan { get; set; }
 
         [Setting]
-        [SettingName(nameof(EmailDuplicateThesholdMinutes))]
+        [SettingName(nameof(EmailDuplicateThresholdMinutes))]
         [DefaultValue(0.0D)]
-        public double EmailDuplicateThesholdMinutes
+        public double EmailDuplicateThresholdMinutes
         {
             get => EmailDuplicateThreshold.TotalMinutes;
             set => EmailDuplicateThreshold = TimeSpan.FromMinutes(value);
