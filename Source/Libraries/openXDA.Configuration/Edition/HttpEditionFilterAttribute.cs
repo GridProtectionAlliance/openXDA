@@ -32,7 +32,7 @@ namespace openXDA.Configuration
     /// <summary>
     /// Defines an attribute that will disallow an http method if it does not pass the edition requirement.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
     public class HttpEditionFilterAttribute : ActionFilterAttribute
     {
         /// <summary>
