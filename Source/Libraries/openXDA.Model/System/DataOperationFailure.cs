@@ -26,9 +26,9 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [PostRoles("Administrator, Transmission SME")]
+    [PostRoles("")]
+    [PatchRoles("")]
     [DeleteRoles("Administrator, Transmission SME")]
-    [PatchRoles("Administrator, Transmission SME")]
     [AllowSearch]
     public class DataOperationFailure
     {
