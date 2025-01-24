@@ -29,6 +29,7 @@ using GSF.Data.Model;
 namespace openXDA.Model
 {
     [SettingsCategory("systemSettings")]
+    [AllowSearch]
     public class EventType
     {
         [PrimaryKey(true)]
