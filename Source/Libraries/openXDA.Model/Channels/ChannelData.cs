@@ -220,21 +220,14 @@ namespace openXDA.Model
         private static byte[] ToData(List<DataPoint> data, int seriesID)
         {
             //We can use Digital compression if the data changes no more than 10% of the time.
-            bool useDigitalCompression = true;
 
-            int nChanges = 0;
             int i = 0;
-            while (i < data.Count)
-            {
-                if (nChanges > 0.1 * data.Count)
-                {
-                    useDigitalCompression = false;
-                    break;
-                }
-                if (i < 1 && data[i].Value != data[i + 1].Value)
-                    nChanges++;
-                i++;
-            }
+            bool useDigitalCompression = data
+                .Skip(1)
+                .Zip(data, (p2, p1) => new { p1, p2 })
+                .Where(obj => obj.p1.Value != obj.p2.Value)
+                .Select((_, index) => index + 1)
+                .All(nChanges => nChanges <= 0.1 * data.Count);
 
             if (useDigitalCompression)
                 return ToDigitalData(data, seriesID);
@@ -324,7 +317,7 @@ namespace openXDA.Model
             long startTime = data.First().Time.Ticks;
             long sampleRate = data[1].Time.Ticks -  startTime;
 
-            int totalByteLength = 2 * sizeof(int) + 2 * sizeof(long) + 2 * sizeof(double) + changeSeries.Count() * (sizeof(int) + sizeof(ushort));
+            int totalByteLength = 2 * sizeof(int) + 2 * sizeof(long) + 2 * sizeof(double) + changeSeries.Count() * (sizeof(long) + sizeof(ushort));
 
             byte[] result = new byte[totalByteLength];
             int offset = 0;
@@ -348,7 +341,7 @@ namespace openXDA.Model
                 if (double.IsNaN(dataPoint.Value))
                     compressedValue = NaNValue;
 
-                int time = (int)(dataPoint.Time.Ticks - startTime);
+                long time = dataPoint.Time.Ticks - startTime;
 
                 offset += LittleEndian.CopyBytes(time, result, offset);
                 offset += LittleEndian.CopyBytes(compressedValue, result, offset);
@@ -544,25 +537,25 @@ namespace openXDA.Model
             offset += 2 * sizeof(double);
 
             // Always have the first point available.
-            int time = LittleEndian.ToUInt16(uncompressedData, offset);
-            offset += sizeof(int);
+            ulong time = LittleEndian.ToUInt64(uncompressedData, offset);
+            offset += sizeof(long);
             ushort compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
             offset += sizeof(ushort);
 
             double decompressedValue = decompressionScale * compressedValue + decompressionOffset;
 
             double lastValue = decompressedValue;
-            long lastTime = time;
+            long lastTime = (long)time;
 
             for (int i = 1; i < m_samples; i++)
             {
-                time = LittleEndian.ToUInt16(uncompressedData, offset);
+                time = LittleEndian.ToUInt64(uncompressedData, offset);
                 offset += sizeof(int);
                 compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
                 offset += sizeof(ushort);
 
                 decompressedValue = decompressionScale * compressedValue + decompressionOffset;
-                while (time > (lastTime + samplingrate))
+                while (time > (ulong)(lastTime + samplingrate))
                 {
                     lastTime += samplingrate;
                     points.Add(new DataPoint()
@@ -575,11 +568,11 @@ namespace openXDA.Model
 
                 points.Add(new DataPoint()
                 {
-                    Time = startTime.AddTicks(time),
+                    Time = startTime.AddTicks((long)time),
                     Value = decompressedValue
                 });
 
-                lastTime = time;
+                lastTime = (long)time;
                 lastValue = decompressedValue;
             }
 
