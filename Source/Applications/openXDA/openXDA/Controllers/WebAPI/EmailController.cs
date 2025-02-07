@@ -142,7 +142,7 @@ namespace openXDA.Controllers.WebAPI
 
                 try
                 {
-                    emailService.SendEmail(email, evt, new List<string>() { account.Email }, out EmailResponse resultEmail);
+                    emailService.SendEmail(email, evt, new List<string>() { account.Email }, false, out EmailResponse resultEmail);
                     response.DataSourceResponses = resultEmail.DataSources;
                     return Ok(response);
                 }

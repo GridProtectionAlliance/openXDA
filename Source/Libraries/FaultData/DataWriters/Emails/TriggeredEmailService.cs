@@ -51,7 +51,7 @@ namespace FaultData.DataWriters.Emails
             if (recipients.Count == 0 && String.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, evt, recipients, xdaNow, eventIDs, true);
+            SendEmail(email, evt, recipients, xdaNow, eventIDs, true, out EmailResponse _);
 
             return true;
         }
@@ -59,11 +59,60 @@ namespace FaultData.DataWriters.Emails
         public void SendEmail(EmailType email, Event evt, List<string> recipients, bool saveToFile, out EmailResponse response) =>
             SendEmail(email, evt, recipients, new DateTime(), new List<int>(), saveToFile, out response);
 
-        public void SendEmail(EmailType email, Event evt, List<string> recipients, out EmailResponse response) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, out response);
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, out EmailResponse response)
+        {
+            List<Attachment> attachments = new List<Attachment>();
 
-        public void SendEmail(EmailType email, Event evt, List<string> recipients) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), false, out EmailResponse _);
+            response = new EmailResponse();
+
+            try
+            {
+                EmailSection settings = QuerySettings();
+
+                TriggeredDataSourceFactory factory = new TriggeredDataSourceFactory(ConnectionFactory);
+                List<TriggeredDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
+                IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, evt));
+                response.DataSources.AddRange(dataSourceResponses);
+
+                double chartSampleRate = settings.MinimumChartSamplesPerCycle;
+                TemplateProcessor templateProcessor = new TemplateProcessor(ConnectionFactory);
+                XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
+                XDocument htmlDocument = templateProcessor.ApplyTemplate(email, templateData.ToString());
+                templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.MinimumChartSamplesPerCycle);
+                templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
+
+                SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
+                LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
+            }
+            finally
+            {
+                attachments?.ForEach(attachment => attachment.Dispose());
+            }
+        }
+
+        private void LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
+        {
+            int sentEmailID = LoadSentEmail(email, now, recipients, htmlDocument);
+
+            if (eventIDs.Count == 0)
+                return;
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
+
+                foreach (int eventID in eventIDs)
+                {
+                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
+                        continue;
+
+                    EventSentEmail eventSentEmail = new EventSentEmail();
+                    eventSentEmail.EventID = eventID;
+                    eventSentEmail.SentEmailID = sentEmailID;
+                    eventSentEmailTable.AddNewRecord(eventSentEmail);
+                }
+            }
+        }
 
         public List<string> GetRecipients(EmailType emailType, List<int> eventIDs)
         {
@@ -120,64 +169,6 @@ namespace FaultData.DataWriters.Emails
                     .Select()
                     .Select(processor)
                     .ToList();
-            }
-        }
-
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile) =>
-            SendEmail(email, evt, recipients, xdaNow, eventIDs, saveToFile, out EmailResponse _);
-
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, out EmailResponse response)
-        {
-            List<Attachment> attachments = new List<Attachment>();
-
-            response = new EmailResponse();
-
-            try
-            {
-                EmailSection settings = QuerySettings();
-
-                TriggeredDataSourceFactory factory = new TriggeredDataSourceFactory(ConnectionFactory);
-                List<TriggeredDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
-                IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, evt));
-                response.DataSources.AddRange(dataSourceResponses);
-
-                double chartSampleRate = settings.MinimumChartSamplesPerCycle;
-                TemplateProcessor templateProcessor = new TemplateProcessor(ConnectionFactory);
-                XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
-                XDocument htmlDocument = templateProcessor.ApplyTemplate(email, templateData.ToString());
-                templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.MinimumChartSamplesPerCycle);
-                templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
-
-                SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
-                LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
-            }
-            finally
-            {
-                attachments?.ForEach(attachment => attachment.Dispose());
-            }
-        }
-
-        private void LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
-        {
-            int sentEmailID = LoadSentEmail(email, now, recipients, htmlDocument);
-
-            if (eventIDs.Count == 0)
-                return;
-
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
-
-                foreach (int eventID in eventIDs)
-                {
-                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
-                        continue;
-
-                    EventSentEmail eventSentEmail = new EventSentEmail();
-                    eventSentEmail.EventID = eventID;
-                    eventSentEmail.SentEmailID = sentEmailID;
-                    eventSentEmailTable.AddNewRecord(eventSentEmail);
-                }
             }
         }
 

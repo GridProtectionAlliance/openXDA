@@ -47,16 +47,13 @@ namespace FaultData.DataWriters.Emails
             if (recipients.Count == 0 && string.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, recipients, true, xdaNow);
+            SendEmail(email, recipients, true, out EmailResponse _, xdaNow);
 
             return true;
         }
 
         public void SendEmail(ScheduledEmailType email, List<string> recipients, out EmailResponse response, DateTime xdaNow) =>
             SendEmail(email, recipients, false, out response, xdaNow);
-
-        public void SendEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, DateTime xdaNow) =>
-            SendEmail(email, recipients, saveToFile, out EmailResponse _, xdaNow);
 
         private void SendEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, out EmailResponse response, DateTime xdaNow)
         {
