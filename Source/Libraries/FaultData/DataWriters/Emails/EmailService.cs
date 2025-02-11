@@ -230,21 +230,22 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        protected int LoadSentEmail(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument)
+        protected SentEmail CreateSentEmailRecord(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument)
         {
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                SentEmail sentEmail = new SentEmail();
-                sentEmail.EmailTypeID = email.ID;
-                sentEmail.TimeSent = now;
-                sentEmail.ToLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
-                sentEmail.Subject = GetSubject(htmlDocument, email);
-                sentEmail.Message = GetBody(htmlDocument);
+            SentEmail sentEmail = new SentEmail();
+            sentEmail.EmailTypeID = email.ID;
+            sentEmail.TimeSent = now;
+            sentEmail.ToLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
+            sentEmail.Subject = GetSubject(htmlDocument, email);
+            sentEmail.Message = GetBody(htmlDocument);
+            return sentEmail;
+        }
 
-                TableOperations<SentEmail> sentEmailTable = new TableOperations<SentEmail>(connection);
-                sentEmailTable.AddNewRecord(sentEmail);
-                return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-            }
+        protected int LoadSentEmail(SentEmail sentEmail, AdoDataConnection connection)
+        {
+            TableOperations<SentEmail> sentEmailTable = new TableOperations<SentEmail>(connection);
+            sentEmailTable.AddNewRecord(sentEmail);
+            return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
         }
 
         protected EmailSection QuerySettings() => new Settings(Configure).EmailSettings;

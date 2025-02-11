@@ -41,7 +41,7 @@ namespace FaultData.DataWriters.Emails
         {
         }
 
-        public bool SendEmail(EmailType email, List<int> eventIDs, Event evt, DateTime xdaNow)
+        public bool SendEmail(EmailType email, List<int> eventIDs, Event evt, DateTime xdaNow, TimeSpan disallowedWindow)
         {
             if (eventIDs.Count == 0)
                 return false;
@@ -51,15 +51,15 @@ namespace FaultData.DataWriters.Emails
             if (recipients.Count == 0 && String.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, evt, recipients, xdaNow, eventIDs, true, out EmailResponse _);
+            SendEmail(email, evt, recipients, xdaNow, disallowedWindow, eventIDs, true, out EmailResponse _);
 
             return true;
         }
 
         public void SendEmail(EmailType email, Event evt, List<string> recipients, bool saveToFile, out EmailResponse response) =>
-            SendEmail(email, evt, recipients, new DateTime(), new List<int>(), saveToFile, out response);
+            SendEmail(email, evt, recipients, new DateTime(), new TimeSpan(0), new List<int>(), saveToFile, out response);
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, List<int> eventIDs, bool saveToFile, out EmailResponse response)
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, bool saveToFile, out EmailResponse response)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -81,8 +81,21 @@ namespace FaultData.DataWriters.Emails
                 templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.MinimumChartSamplesPerCycle);
                 templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
 
-                SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
-                LoadSentEmail(email, xdaNow, recipients, htmlDocument, eventIDs);
+                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
+                using (AdoDataConnection connection = ConnectionFactory())
+                {
+                    // Find duplicate email messages within the time frame specified, if any exist, don't send email
+                    DateTime timeThreshold = xdaNow.Subtract(disallowedWindow);
+                    bool hasDuplicateInThreshold = new TableOperations<SentEmail>(connection)
+                        .QueryRecordsWhere("EmailTypeID = {0} AND TimeSent >= {1}", sentEmailRecord.EmailTypeID, timeThreshold)
+                        .Any(potentialDuplicate => string.Equals(potentialDuplicate.Message, sentEmailRecord.Message, StringComparison.OrdinalIgnoreCase));
+
+                    if (!hasDuplicateInThreshold)
+                    {
+                        SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
+                        LoadSentEmail(sentEmailRecord, eventIDs, connection);
+                    }
+                }
             }
             finally
             {
@@ -90,27 +103,24 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void LoadSentEmail(EmailType email, DateTime now, List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
+        private void LoadSentEmail(SentEmail sentEmail, List<int> eventIDs, AdoDataConnection connection)
         {
-            int sentEmailID = LoadSentEmail(email, now, recipients, htmlDocument);
+            int sentEmailId = LoadSentEmail(sentEmail, connection);
 
             if (eventIDs.Count == 0)
                 return;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+            TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
+
+            foreach (int eventID in eventIDs)
             {
-                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
+                if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailId) > 0)
+                    continue;
 
-                foreach (int eventID in eventIDs)
-                {
-                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", eventID, sentEmailID) > 0)
-                        continue;
-
-                    EventSentEmail eventSentEmail = new EventSentEmail();
-                    eventSentEmail.EventID = eventID;
-                    eventSentEmail.SentEmailID = sentEmailID;
-                    eventSentEmailTable.AddNewRecord(eventSentEmail);
-                }
+                EventSentEmail eventSentEmail = new EventSentEmail();
+                eventSentEmail.EventID = eventID;
+                eventSentEmail.SentEmailID = sentEmailId;
+                eventSentEmailTable.AddNewRecord(eventSentEmail);
             }
         }
 
