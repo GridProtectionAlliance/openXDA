@@ -57,7 +57,7 @@ namespace FaultData.DataWriters.Emails
         }
 
         public void SendEmail(EmailType email, Event evt, List<string> recipients, bool saveToFile, out EmailResponse response) =>
-            SendEmail(email, evt, recipients, new DateTime(), new TimeSpan(0), new List<int>(), saveToFile, out response);
+            SendEmail(email, evt, recipients, DateTime.Now, new TimeSpan(0), new List<int>(), saveToFile, out response);
 
         private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, bool saveToFile, out EmailResponse response)
         {
