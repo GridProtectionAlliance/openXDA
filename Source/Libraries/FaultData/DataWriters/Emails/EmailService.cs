@@ -34,6 +34,7 @@ using System.Xml.Linq;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.SELEventParser;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
@@ -144,7 +145,7 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public void SendAdminEmail(string subject, string message, List<string> replyToRecipients)
+        public void SendEmail(List<string> recipients, string subject, string message, List<string> replyToRecipients)
         {
             Settings settings = new Settings(Configure);
             EmailSection emailSettings = settings.EmailSettings;
@@ -165,9 +166,10 @@ namespace FaultData.DataWriters.Emails
                 smtpClient.EnableSsl = emailSettings.EnableSSL;
 
                 string fromAddress = emailSettings.FromAddress;
-                string toAddress = emailSettings.AdminAddress;
                 emailMessage.From = new MailAddress(fromAddress);
-                emailMessage.To.Add(toAddress);
+
+                string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
+                emailMessage.To.Add(recipientList);
                 emailMessage.Subject = subject;
                 emailMessage.Body = message;
 
@@ -178,6 +180,13 @@ namespace FaultData.DataWriters.Emails
                 // Send the email
                 smtpClient.Send(emailMessage);
             }
+        }
+
+        public void SendAdminEmail(string subject, string message, List<string> replyToRecipients)
+        {
+            Settings settings = new Settings(Configure);
+            EmailSection emailSettings = settings.EmailSettings;
+            SendEmail(new List<string> { emailSettings.AdminAddress }, subject, message, replyToRecipients);
         }
 
         public List<string> GetRecipients(EmailType emailType)
