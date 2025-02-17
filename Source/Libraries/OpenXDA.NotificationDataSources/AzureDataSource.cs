@@ -180,13 +180,7 @@ namespace openXDA.NotificationDataSources
 
             try
             {
-                IUserRequest request = graphClient.Users[userName].Request();
-
-                // Load user data - note that external users need to be looked up by userPrincipalName
-                User user = userName.Contains("#EXT#") ?
-                    (await graphClient.Users.Request().Filter($"userPrincipalName eq '{userName}'").GetAsync()).FirstOrDefault() :
-                    await request.GetAsync();
-
+                User user = await LoadAzureUserAsync(userName);
                 return !(user is null);
             }
             catch (ServiceException ex)
@@ -208,7 +202,11 @@ namespace openXDA.NotificationDataSources
             TableOperations<AdditionalUserFieldValue> addlFieldTbl = new TableOperations<AdditionalUserFieldValue>(connection);
             AdditionalUserFieldValue addlFld = addlFieldTbl.QueryRecordWhere("AdditionalUserFieldID = {0} AND UserAccountID = {1}", field.ID, user.ID);
             update.Previous = addlFld;
-            User adUser = LoadAzureUser(user.Name);
+
+            User adUser = LoadAzureUserAsync(user.Name)
+                .GetAwaiter()
+                .GetResult();
+
             if (addlFld is null)
             {
                 update.Updated = new AdditionalUserFieldValue()
@@ -243,13 +241,25 @@ namespace openXDA.NotificationDataSources
             return update;
         }
 
-        private User LoadAzureUser(string username)
+        private async Task<User> LoadAzureUserAsync(string username)
         {
             GraphServiceClient graphClient = GraphClient;
+            string escapedUsername = Uri.EscapeUriString(username.Replace("'", "''"));
 
-            return username.Contains("#EXT#") ?
-                graphClient.Users.Request().Filter($"userPrincipalName eq '{username}'").GetAsync().Result.FirstOrDefault() :
-                graphClient.Users[username].Request().GetAsync().Result;
+            if (!username.Contains("#EXT#"))
+            {
+                return await graphClient.Users[escapedUsername]
+                    .Request()
+                    .GetAsync();
+            }
+
+            // External users need to be looked up by userPrincipalName
+            IGraphServiceUsersCollectionPage page = await graphClient.Users
+                .Request()
+                .Filter($"userPrincipalName eq '{escapedUsername}'")
+                .GetAsync();
+
+            return page.FirstOrDefault();
         }
 
         #endregion
