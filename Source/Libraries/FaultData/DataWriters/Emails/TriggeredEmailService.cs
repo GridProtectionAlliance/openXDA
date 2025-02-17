@@ -85,12 +85,13 @@ namespace FaultData.DataWriters.Emails
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     // Find duplicate email messages within the time frame specified, if any exist, don't send email
+                    TableOperations<SentEmail> sentEmailTable = new TableOperations<SentEmail>(connection);
                     DateTime timeThreshold = xdaNow.Subtract(disallowedWindow);
-                    bool hasDuplicateInThreshold = new TableOperations<SentEmail>(connection)
-                        .QueryRecordsWhere("EmailTypeID = {0} AND TimeSent >= {1}", sentEmailRecord.EmailTypeID, timeThreshold)
-                        .Any(potentialDuplicate => string.Equals(potentialDuplicate.Message, sentEmailRecord.Message, StringComparison.OrdinalIgnoreCase));
 
-                    if (!hasDuplicateInThreshold)
+                    int duplicateEmailCount = sentEmailTable
+                        .QueryRecordCountWhere("EmailTypeID = {0} AND TimeSent >= {1} AND Message = {2}", sentEmailRecord.EmailTypeID, timeThreshold, sentEmailRecord.Message);
+
+                    if (duplicateEmailCount == 0)
                     {
                         SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
                         LoadSentEmail(sentEmailRecord, eventIDs, connection);
