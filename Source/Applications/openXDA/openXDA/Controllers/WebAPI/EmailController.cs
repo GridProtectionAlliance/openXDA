@@ -36,9 +36,7 @@ using FaultData.DataWriters.Emails;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Identity;
 using GSF.Security;
-using openXDA.APIMiddleware;
 using openXDA.Configuration;
 using openXDA.Model;
 using openXDA.Nodes;
@@ -80,36 +78,6 @@ namespace openXDA.Controllers.WebAPI
         }
 
         private Host Host { get; }
-
-        private AzureADSettings m_azureADSettings;
-        private Microsoft.Graph.GraphServiceClient m_graphClient;
-
-        public string LDAPPath
-        {
-            get
-            {
-                ConfigurationFile configFile = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection securityProviderSettings = configFile.Settings["securityProvider"];
-                securityProviderSettings.Add("LdapPath", "", "Specifies the LDAP path used to initialize the security provider.");
-                return securityProviderSettings["LdapPath"].Value;
-            }
-        }
-
-        /// <summary>
-        /// Gets Azure AD settings.
-        /// </summary>
-        public AzureADSettings AzureADSettings
-        {
-            get => m_azureADSettings ?? (m_azureADSettings = AzureADSettings.Load());
-        }
-
-        /// <summary>
-        /// Gets Graph client.
-        /// </summary>
-        public Microsoft.Graph.GraphServiceClient GraphClient 
-        {
-            get => m_graphClient ?? (m_graphClient = AzureADSettings.GetGraphClient());
-        }
 
         #endregion
 
@@ -153,52 +121,29 @@ namespace openXDA.Controllers.WebAPI
         [Route("TestSMTPServer"), HttpGet]
         public IHttpActionResult SendTestEmail()
         {
-            Settings settings = new Settings(GetConfigurator());
+            SecurityIdentity securityIdentity = User.Identity as SecurityIdentity;
+            UserData userData = securityIdentity?.Provider.UserData;
+            string email = userData?.EmailAddress;
+
+            if (string.IsNullOrEmpty(email))
+            {
+                string username = securityIdentity?.Name ?? userData?.LoginID;
+
+                return !string.IsNullOrEmpty(username)
+                    ? UnprocessibleEntity($"User {username} has no email address configured.")
+                    : UnprocessibleEntity("Cannot send test email to unknown user.");
+            }
+
             EmailService emailService = new EmailService(CreateDbConnection, GetConfigurator());
 
-            using (AdoDataConnection connection = CreateDbConnection())
+            try
             {
-                // If this is the API key instead of the user, allow impersonation
-                string username = User.Identity.Name;
-                string email = null;
-
-                if (IsValidADUser(username))
-                {
-                    // Our db saves AD usernames as the SID, need to convert
-                    string adUsername = UserInfo.UserNameToSID(username);
-                    IEnumerable<ConfirmableUserAccount> localUser = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordsWhere("Name = {0}", adUsername);
-                    // Use email saved in our db if available, if not default to AD email
-                    if (localUser.Any() && !string.IsNullOrEmpty(localUser.First().Email))
-                        email = localUser.First().Email;
-                    else
-                        email = new UserInfo(UserInfo.SIDToAccountName(username), LDAPPath).Email;
-                }
-                // for AzureAD, the principle is the email
-                else if (IsValidAzureADUserName(username).Result)
-                    email = username;
-                // not ad or azure, means a DB user
-                else
-                {
-                    IEnumerable<ConfirmableUserAccount> localUser = new TableOperations<ConfirmableUserAccount>(connection).QueryRecordsWhere("Name = {0}", username);
-                    if (localUser.Any() && !string.IsNullOrEmpty(localUser.First().Email))
-                        email = localUser.First().Email;
-                }
-
-                try
-                {
-                    if (string.IsNullOrEmpty(email))
-                    {
-                        if (new TableOperations<APIAccessKey>(connection).QueryRecordsWhere("RegistrationKey = {0}", username).Any())
-                            throw new Exception($"API key {username} must allow impersonation for this endpoint.");
-                        throw new Exception($"Could not resolve user {username} to an email account.");
-                    }
-                    emailService.SendEmail(new List<string>() { email }, "Test Email", "This is a Test Email", new List<string>() { });
-                    return Ok(1);
-                }
-                catch (Exception ex)
-                {
-                    return UnprocessibleEntity(ex);
-                }
+                emailService.SendEmail(new List<string>() { email }, "Test Email", "This is a Test Email", new List<string>() { });
+                return Ok(1);
+            }
+            catch (Exception ex)
+            {
+                return UnprocessibleEntity(ex);
             }
         }
 
@@ -369,44 +314,6 @@ namespace openXDA.Controllers.WebAPI
         #endregion
 
         #region [ Methods ]
-        private bool IsValidADUser(string userName)
-        {
-            if (string.IsNullOrWhiteSpace(userName))
-                return false;
-            string sid = UserInfo.GroupNameToSID(userName);
-            return UserInfo.IsUserSID(sid);
-        }
-
-        private async Task<bool> IsValidAzureADUserName(string userName)
-        {
-            Microsoft.Graph.GraphServiceClient graphClient = GraphClient;
-
-            if (graphClient is null)
-                return false;
-            if (string.IsNullOrWhiteSpace(userName))
-                return false;
-
-            try
-            {
-                Microsoft.Graph.IGraphServiceUsersCollectionRequest request = graphClient.Users.Request().Filter($"mail eq '{userName}'");
-
-                // Load user data - note that external users need to be looked up by userPrincipalName
-                Microsoft.Graph.User user = (await request.GetAsync()).FirstOrDefault();
-
-                return !(user is null);
-            }
-            catch (Microsoft.Graph.ServiceException ex)
-            {
-                if (ex.Error.Code == "Request_ResourceNotFound")
-                    return false;
-                else
-                    throw new Exception("Unable to query Azure", ex);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Exception attempting to query Azure", ex);
-            }
-        }
 
         private int SendVerificationEmail(string recipient)
         {
