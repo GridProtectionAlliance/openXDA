@@ -34,7 +34,6 @@ using System.Xml.Linq;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.SELEventParser;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
@@ -94,6 +93,12 @@ namespace FaultData.DataWriters.Emails
             email.Body = GetBody(htmlDocument);
             email.Subject = GetSubject(htmlDocument, emailType);
 
+            if (recipients.Count == 0)
+            {
+                WriteEmailToFile(filePath, email.Subject, email.Body);
+                return;
+            }
+
             if (string.IsNullOrEmpty(smtpServer))
                 return;
 
@@ -113,12 +118,6 @@ namespace FaultData.DataWriters.Emails
                 emailMessage.Subject = email.Subject;
                 emailMessage.Body = email.Body;
                 emailMessage.IsBodyHtml = true;
-
-                if (recipients.Count == 0)
-                {
-                    WriteEmailToFile(filePath, emailMessage);
-                    return;
-                }
 
                 string blindCopyAddress = settings.BlindCopyAddress;
                 string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
@@ -141,7 +140,7 @@ namespace FaultData.DataWriters.Emails
                 smtpClient.Send(emailMessage);
 
                 //Write the email to a File
-                WriteEmailToFile(filePath, emailMessage);
+                WriteEmailToFile(filePath, email.Subject, email.Body);
             }
         }
 
@@ -259,18 +258,19 @@ namespace FaultData.DataWriters.Emails
 
         protected EmailSection QuerySettings() => new Settings(Configure).EmailSettings;
 
-        private void WriteEmailToFile(string datafolder, MailMessage mail)
+        private void WriteEmailToFile(string datafolder, string subject, string body)
         {
             if (string.IsNullOrEmpty(datafolder))
                 return;
 
             Directory.CreateDirectory(datafolder);
-            string dstFile = Path.Combine(datafolder, mail.Subject);
+            string dstFile = Path.Combine(datafolder, subject);
 
             if (File.Exists(dstFile))
                 File.Delete(dstFile);
+
             using (StreamWriter fileWriter = File.CreateText(dstFile))
-                fileWriter.Write(mail.Body);
+                fileWriter.Write(body);
         }
 
         private SmtpClient CreateSmtpClient(string smtpServer)
