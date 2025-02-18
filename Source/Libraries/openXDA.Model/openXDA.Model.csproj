@@ -108,14 +108,13 @@
     <Compile Include="Emails\IScheduledDataSource.cs" />
     <Compile Include="Emails\EmailDataSourceSettingBase.cs" />
     <Compile Include="Emails\ITriggeredDataSource.cs" />
-    <Compile Include="Emails\ScheduledEmailDataSource.cs" />
     <Compile Include="Emails\ScheduledEmailDataSourceEmailType.cs" />
     <Compile Include="Emails\ScheduledEmailDataSourceSetting.cs" />
     <Compile Include="Emails\SubscribeScheduledEmails.cs" />
     <Compile Include="Emails\SubscribeEmails.cs" />
     <Compile Include="Emails\ScheduledEmailType.cs" />
     <Compile Include="Emails\EmailTemplateUser.cs" />
-    <Compile Include="Emails\TriggeredEmailDataSource.cs" />
+    <Compile Include="Emails\EmailDataSource.cs" />
     <Compile Include="Emails\TriggeredEmailDataSourceEmailType.cs" />
     <Compile Include="Emails\TriggeredEmailDataSourceSetting.cs" />
     <Compile Include="Emails\ActiveSubscription.cs" />

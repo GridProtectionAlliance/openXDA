@@ -1,12 +1,12 @@
 ﻿//******************************************************************************************************
-//  ScheduledEmailDataSource.cs - Gbtc
+//  DataSourceResponse.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,12 +16,23 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/9/2021 - Samuel Robinson
+//  05/15/2024 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-namespace openXDA.Model
+using System;
+using System.Xml.Linq;
+using openXDA.Model;
+
+namespace FaultData.DataWriters.Emails
 {
-    public class ScheduledEmailDataSource: EmailDataSource { }
+    public class DataSourceResponse
+    {
+        public bool Success { set; get; }
+        public bool Created { get; set; }
+        public XElement Data { get; set; }
+        public Exception Exception { get; set; } = null;
+        public EmailDataSource Model { get; set; }
+    }
 }

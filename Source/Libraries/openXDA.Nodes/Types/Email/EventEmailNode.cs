@@ -254,7 +254,7 @@ namespace openXDA.Nodes.Types.Email
                 if (!eventEmailSettings.Enabled || Tripped)
                     return;
 
-                EmailService emailService = new EmailService(CreateDbConnection, configurator);
+                TriggeredEmailService emailService = new TriggeredEmailService(CreateDbConnection, configurator);
 
                 DateTime now = DateTime.UtcNow;
                 TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
@@ -302,7 +302,7 @@ namespace openXDA.Nodes.Types.Email
             Tripped = false;
         }
 
-        private void SendTripNotification(EventEmailSection eventEmailSettings, EmailService emailService)
+        private void SendTripNotification(EventEmailSection eventEmailSettings, TriggeredEmailService emailService)
         {
             string subject = "openXDA email flooding detected";
             StringBuilder message = new StringBuilder();
