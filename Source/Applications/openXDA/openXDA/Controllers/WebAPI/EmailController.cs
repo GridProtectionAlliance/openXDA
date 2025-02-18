@@ -32,6 +32,7 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using FaultData;
 using FaultData.DataWriters.Emails;
 using GSF.Configuration;
 using GSF.Data;
@@ -78,13 +79,24 @@ namespace openXDA.Controllers.WebAPI
         }
 
         private Host Host { get; }
+        private TimeZoneConverter TimeZoneConverter => LazyTimeZoneConverter.Value;
+        private Lazy<TimeZoneConverter> LazyTimeZoneConverter { get; }
+        private DateTime XDANow => TimeZoneConverter.ToXDATimeZone(DateTime.UtcNow);
 
         #endregion
 
         #region [ Constructor ]
 
-        public EmailController(Host host) =>
+        public EmailController(Host host)
+        {
             Host = host;
+
+            LazyTimeZoneConverter = new Lazy<TimeZoneConverter>(() =>
+            {
+                ConfigurationLoader loader = new ConfigurationLoader(Host.ID, Host.CreateDbConnection);
+                return new TimeZoneConverter(loader.Configure);
+            });
+        }
 
         #endregion
 
@@ -172,7 +184,7 @@ namespace openXDA.Controllers.WebAPI
 
                 try
                 {
-                    emailService.SendEmail(email, evt, new List<string>() { account.Email }, false, out EmailResponse resultEmail);
+                    emailService.SendEmail(email, evt, XDANow, new List<string>() { account.Email }, false, out EmailResponse resultEmail);
                     response.DataSourceResponses = resultEmail.DataSources;
                     return Ok(response);
                 }
@@ -208,7 +220,7 @@ namespace openXDA.Controllers.WebAPI
 
                     try
                     {
-                        emailService.SendEmail(email, evt, new List<string>() { }, save, out EmailResponse emailResponse);
+                        emailService.SendEmail(email, evt, XDANow, new List<string>() { }, save, out EmailResponse emailResponse);
                         subject = emailResponse.Subject;
                         return Ok(emailResponse.Body);
                     }
