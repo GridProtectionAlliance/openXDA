@@ -301,8 +301,8 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
-        [Route("testReportData/{reportID:int}/{current}"), HttpGet]
-        public IHttpActionResult TestReportDataSource(int reportID, string current)
+        [Route("testReportData/{reportID:int}/{currentTicks:long}"), HttpGet]
+        public IHttpActionResult TestReportDataSource(int reportID, long currentTicks)
         {
             ScheduledDataSourceFactory factory = new ScheduledDataSourceFactory(CreateDbConnection);
 
@@ -310,8 +310,7 @@ namespace openXDA.Controllers.WebAPI
             {
                 ScheduledEmailType report = new TableOperations<ScheduledEmailType>(connection).QueryRecordWhere("ID = {0}", reportID);
 
-                if (!DateTime.TryParse(current, out DateTime xdaNow))
-                    xdaNow = DateTime.UtcNow;
+                DateTime xdaNow = new DateTime(currentTicks);
 
                 List<ScheduledDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(report);
 
