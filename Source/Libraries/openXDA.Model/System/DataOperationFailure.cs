@@ -35,7 +35,6 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        [ParentKey(typeof(DataOperation))]
         public int DataOperationID { get; set; }
 
         [ParentKey(typeof(FileGroup))]
@@ -46,5 +45,18 @@ namespace openXDA.Model
         public string StackTrace { get; set; }
 
         public DateTime TimeOfFailure { get; set; }
+    }
+
+    [CustomView(@"
+        SELECT
+	        DataOperationFailure.*,
+	        DataOperation.TypeName as DataOperationTypeName
+        FROM
+	        DataOperationFailure JOIN 
+	        DataOperation ON DataOperationFailure.DataOperationID = DataOperation.ID
+    ")]
+    public class DataOperationFailureDetails : DataOperationFailure
+    {
+        public string DataOperationTypeName { get; set; }
     }
 }
