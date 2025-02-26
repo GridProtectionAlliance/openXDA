@@ -26,6 +26,21 @@ CREATE TABLE [MiMD.DBCleanUpTask]
 )
 GO
 
+INSERT INTO [MiMD.DBCleanUpTask] (SQLCommand, Schedule, Name) VALUES
+(
+'WITH TempTable as (
+	SELECT Max(TimeOfFailure) as MaxTimeOfFailure, FileGroupID
+	FROM DataOperationFailure
+	Group By (FileGroupID)
+)
+
+DELETE FROM DataOperationFailure WHERE ID in (
+	SELECT DataOperationFailure.ID FROM DataOperationFailure
+	JOIN TempTable ON TempTable.FileGroupID = DataOperationFailure.FileGroupID
+	Where DATEADD(DAY, -1, MaxTimeOfFailure) > DataOperationFailure.TimeOfFailure
+)', '0 0 1 * *', 'DataOperations Failures Cleanup')
+GO
+
 CREATE TABLE [MiMD.DataReader]
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

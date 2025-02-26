@@ -857,19 +857,3 @@ INSERT INTO CellCarrier (Name,Transform) VALUES
 ('Republic Wireless','{0}@text.republicwireless.com'),
 ('Google Fi','{0}@msg.fi.google.com')
 GO
-
-INSERT INTO [MiMD.DBCleanUpTask] (SQLCommand, Schedule, Name) VALUES
-(
-'WITH TempTable as (
-	SELECT Max(TimeOfFailure) as MaxTimeOfFailure, FileGroupID
-	FROM DataOperationFailure
-	Group By (FileGroupID)
-)
-
-DELETE FROM DataOperationFailure WHERE ID in (
-	SELECT DataOperationFailure.ID FROM DataOperationFailure
-	JOIN TempTable ON TempTable.FileGroupID = DataOperationFailure.FileGroupID
-	Where DATEADD(DAY, -1, MaxTimeOfFailure) > DataOperationFailure.TimeOfFailure
-	)
-GO', '0 0 1 * *', 'DataOperations Failures Cleanup')
-GO
