@@ -206,6 +206,13 @@ namespace FaultData.DataAnalysis
         }
 
         /// <summary>
+        /// Gets flag that indicates whether the data series
+        /// in this data group are marked as trend channels.
+        /// </summary>
+        public bool Trend =>
+            m_dataSeries.Any(dataSeries => dataSeries.SeriesInfo?.Channel.Trend == true);
+
+        /// <summary>
         /// Gets the channels contained in this data group.
         /// </summary>
         public IReadOnlyList<DataSeries> DataSeries
@@ -267,6 +274,7 @@ namespace FaultData.DataAnalysis
             DateTime startTime;
             DateTime endTime;
             int samples;
+            bool trend;
 
             // Unable to add null data series
             if ((object)dataSeries == null)
@@ -286,11 +294,12 @@ namespace FaultData.DataAnalysis
             else
                 asset = null;
 
-            // Get the start time, end time, and number of samples
-            // for the data series passed into this function
+            // Get the start time, end time, number of samples, and
+            // trend flag for the data series passed into this function
             startTime = dataSeries.DataPoints[0].Time;
             endTime = dataSeries.DataPoints[dataSeries.DataPoints.Count - 1].Time;
             samples = dataSeries.DataPoints.Count;
+            trend = dataSeries.SeriesInfo?.Channel.Trend == true;
 
             // If there are any disturbances in this data group that do not overlap
             // with the data series, do not include the data series in the data group
@@ -322,7 +331,7 @@ namespace FaultData.DataAnalysis
 
             // If the data being added matches the parameters for this data group, add the data to the data group
             // Note that it does not have to match Asset
-            if (startTime == m_startTime && endTime == m_endTime && samples == m_samples)
+            if (startTime == m_startTime && endTime == m_endTime && samples == m_samples && trend == Trend)
             {
                 m_dataSeries.Add(dataSeries);
                 return true;
