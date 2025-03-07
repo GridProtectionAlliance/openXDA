@@ -48,18 +48,18 @@ namespace FaultData.DataReaders
             public int Length { get; set; }
             public int Checksum { get; set; }
 
-            public static Record PareseNext(byte[] data)
+            public static Record ParseNext(byte[] data, int offset)
             {
-                ushort recordType = Parse16Int(data,0);
+                ushort recordType = ParseUInt16(data, offset + 0);
                 Record result = new Record();
                 result.Type = (RecordType)recordType;
 
-                ushort size = Parse16Int(data, 2);
+                ushort size = ParseUInt16(data, offset + 2);
                 result.Length = size;
                 result.Data = new byte[(result.Length - 2)];
-                Buffer.BlockCopy(data, 4, result.Data, 0, (result.Length - 2));
+                Buffer.BlockCopy(data, offset + 4, result.Data, 0, result.Length - 2);
 
-                ushort checkSum = Parse16Int(data, result.Length + 2);
+                ushort checkSum = ParseUInt16(data, offset + result.Length + 2);
                 result.Checksum = checkSum;
 
                 return result;
@@ -132,11 +132,12 @@ namespace FaultData.DataReaders
             MeterDataSet meterDataSet = new MeterDataSet();
             meterDataSet.Meter = new Meter();
             List<Record> records = new List<Record>();
+            int offset = 0;
 
-            while (data.Length > 0)
+            while (offset < data.Length)
             {
-                records.Add(Record.PareseNext(data));
-                data = data.Skip(records.Last().Length + 4).ToArray();
+                records.Add(Record.ParseNext(data, offset));
+                offset += records.Last().Length + 4;
             }
 
             Meter meter = meterDataSet.Meter;
@@ -184,11 +185,11 @@ namespace FaultData.DataReaders
                         DateTime TS;
 
                         index++;
-                        int year = Parse16Int(record.Data, index);
+                        int year = ParseUInt16(record.Data, index);
                         index = index + 2;
-                        int day = Parse16Int(record.Data, index);
+                        int day = ParseUInt16(record.Data, index);
                         index = index + 2;
-                        long milliseconds = Parse32Int(record.Data, index);
+                        long milliseconds = ParseUInt32(record.Data, index);
                         index = index + 4;
 
                         TS = new DateTime(year, 1, 1);
@@ -196,7 +197,7 @@ namespace FaultData.DataReaders
 
                         for (int i = 0; i < channels.Count; i++)
                         {
-                            double value = Parse32Float(record.Data, index);
+                            double value = ParseFloat32(record.Data, index);
                             index = index + 4;
                             meterDataSet.DataSeries[i].DataPoints.Add(new DataPoint() { Time = TS, Value = channels[i].Scalar * value });
                         }
@@ -244,7 +245,7 @@ namespace FaultData.DataReaders
             if (meterConfiguration.Type != RecordType.MeterConfig)
                 return channels;
 
-            int nChannels = Parse16Int(meterConfiguration.Data, 151);
+            int nChannels = ParseUInt16(meterConfiguration.Data, 151);
             int index = 153;
             
             //Get Names of Channels
@@ -288,21 +289,21 @@ namespace FaultData.DataReaders
             //Get Channel Type
             for (int i = 0; i < nChannels; i++)
             {
-                channels[i].Type = (ChannelType)Parse32Int(meterConfiguration.Data, index);
+                channels[i].Type = (ChannelType)ParseUInt32(meterConfiguration.Data, index);
                 index = index + 4;
             }
 
             // Get Channel Multiplier
             for (int i = 0; i < nChannels; i++)
             {
-                channels[i].Multiplier = Parse32Float(meterConfiguration.Data, index);
+                channels[i].Multiplier = ParseFloat32(meterConfiguration.Data, index);
                 index = index + 4;
             }
 
             // Get Channel Scalar
             for (int i = 0; i < nChannels; i++)
             {
-                channels[i].Scalar = Parse32Float(meterConfiguration.Data, index);
+                channels[i].Scalar = ParseFloat32(meterConfiguration.Data, index);
                 index = index + 4;
             }
 
@@ -310,7 +311,7 @@ namespace FaultData.DataReaders
 
         }
 
-        private static ushort Parse16Int(byte[] data, int start)
+        private static ushort ParseUInt16(byte[] data, int start)
         {
             byte[] adjData = new byte[2];
             if (BitConverter.IsLittleEndian)
@@ -328,7 +329,7 @@ namespace FaultData.DataReaders
 
         }
 
-        private static uint Parse32Int(byte[] data, int start)
+        private static uint ParseUInt32(byte[] data, int start)
         {
             byte[] adjData = new byte[4];
             if (BitConverter.IsLittleEndian)
@@ -350,7 +351,7 @@ namespace FaultData.DataReaders
 
         }
 
-        private static float Parse32Float(byte[] data, int start)
+        private static float ParseFloat32(byte[] data, int start)
         {
             byte[] adjData = new byte[4];
             if (BitConverter.IsLittleEndian)
