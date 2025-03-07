@@ -190,8 +190,7 @@ namespace FaultData.DataResources
                         TrendingDataSummary summary = new TrendingDataSummary();
 
                         // Get the date-time of the summary
-                        DateTime time = minSeries.DataPoints[i].Time;
-                        summary.Time = RoundTimestamp(time);
+                        summary.Time = minSeries.DataPoints[i].Time;
 
                         // Get the min and the max of the current sample
                         summary.Minimum = minSeries.DataPoints[i].Value;
@@ -207,13 +206,46 @@ namespace FaultData.DataResources
                         if (double.IsNaN(summary.Minimum) || double.IsNaN(summary.Maximum) || double.IsNaN(summary.Average))
                             continue;
 
-                        if (time != summary.Time)
-                            WarnAboutRounding();
-
                         summaries.Add(summary);
                     }
+
+                    if (dataGroup.Classification == DataClassification.Trend)
+                        RoundAllTimestamps(summaries);
+                    else
+                        Aggregate(summaries);
                 }
             }
+        }
+
+        private void RoundAllTimestamps(List<TrendingDataSummary> summaries)
+        {
+            foreach (TrendingDataSummary summary in summaries)
+            {
+                DateTime time = summary.Time;
+                summary.Time = RoundTimestamp(time);
+
+                if (time != summary.Time)
+                    WarnAboutRounding();
+            }
+        }
+
+        private void Aggregate(List<TrendingDataSummary> summaries)
+        {
+            List<IGrouping<DateTime, TrendingDataSummary>> groupings = summaries
+                .GroupBy(summary => TruncateTimestamp(summary.Time))
+                .ToList();
+
+            for (int i = 0; i < groupings.Count; i++)
+            {
+                TrendingDataSummary summary = new TrendingDataSummary();
+                summary.Time = groupings[i].Key;
+                summary.Minimum = groupings[i].Min(sum => sum.Minimum);
+                summary.Maximum = groupings[i].Max(sum => sum.Maximum);
+                summary.Average = groupings[i].Average(sum => sum.Average);
+                summaries[i] = summary;
+            }
+
+            summaries.RemoveRange(groupings.Count, summaries.Count - groupings.Count);
         }
 
         private DateTime RoundTimestamp(DateTime timestamp)
@@ -223,6 +255,12 @@ namespace FaultData.DataResources
             if (ticks >= TimeSpan.TicksPerMinute / 2L)
                 ticks -= TimeSpan.TicksPerMinute;
 
+            return timestamp.AddTicks(-ticks);
+        }
+
+        private DateTime TruncateTimestamp(DateTime timestamp)
+        {
+            long ticks = timestamp.Ticks % TimeSpan.TicksPerMinute;
             return timestamp.AddTicks(-ticks);
         }
 

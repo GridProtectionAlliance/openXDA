@@ -27,6 +27,7 @@ using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using openXDA.Model;
+using DataGroupKey = System.Tuple<System.DateTime, System.DateTime, int, bool>;
 
 namespace FaultData.DataResources
 {
@@ -57,42 +58,36 @@ namespace FaultData.DataResources
         {
             List<DataGroup> dataGroups = new List<DataGroup>();
 
-            foreach (IGrouping<DateTime, DataSeries> startTimeGroup in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(dataSeries => dataSeries.DataPoints[0].Time))
+            foreach (IGrouping<DataGroupKey, DataSeries> dataGrouping in meterDataSet.DataSeries.GroupBy(GetKey))
             {
-                foreach (IGrouping<DateTime, DataSeries> endTimeGroup in startTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints[dataSeries.DataPoints.Count - 1].Time))
+                HashSet<int> completedAsset = new HashSet<int>();
+
+                foreach (IGrouping<Asset, DataSeries> assetGroup in dataGrouping.GroupBy(GetAsset))
                 {
-                    foreach (IGrouping<int, DataSeries> sampleCountGroup in endTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints.Count))
-                    {
-                        HashSet<int> completedAsset = new HashSet<int>();
+                    completedAsset.Add(assetGroup.Key.ID);
 
-                        foreach (IGrouping<Asset, DataSeries> assetGroup in sampleCountGroup.GroupBy(GetAsset))
-                        {
-                            completedAsset.Add(assetGroup.Key.ID);
+                    DataGroup dataGroup = new DataGroup();
 
-                            DataGroup dataGroup = new DataGroup();
+                    foreach (DataSeries dataSeries in assetGroup)
+                        dataGroup.Add(dataSeries);
 
-                            foreach (DataSeries dataSeries in assetGroup)
-                                dataGroup.Add(dataSeries);
+                    foreach (DataSeries dataSeries in GetConnectedSeries(dataGrouping, assetGroup.Key))
+                        dataGroup.Add(dataSeries);
 
-                            foreach (DataSeries dataSeries in GetConnectedSeries(sampleCountGroup,assetGroup.Key))
-                                dataGroup.Add(dataSeries);
+                    dataGroups.Add(dataGroup);
+                }
 
-                            dataGroups.Add(dataGroup);
-                        }
+                //Add Any Datagroups for Assets that have no directly connected Assets
+                foreach (Asset asset in meterDataSet.Meter.MeterAssets.Select(item => item.Asset))
+                {
+                    if (completedAsset.Contains(asset.ID))
+                        continue;
 
-                        //Add Any Datagroups for Assets that have no directly connected Assets
-                        foreach (Asset asset in meterDataSet.Meter.MeterAssets.Select(item => item.Asset))
-                        {
-                            if (completedAsset.Contains(asset.ID))
-                                continue;
+                    DataGroup dataGroup = new DataGroup(asset);
+                    foreach (DataSeries dataSeries in GetConnectedSeries(dataGrouping, asset))
+                        dataGroup.Add(dataSeries);
 
-                            DataGroup dataGroup = new DataGroup(asset);
-                            foreach (DataSeries dataSeries in GetConnectedSeries(sampleCountGroup, asset))
-                                dataGroup.Add(dataSeries);
-
-                            dataGroups.Add(dataGroup);
-                        }
-                    }
+                    dataGroups.Add(dataGroup);
                 }
             }
 
@@ -124,7 +119,7 @@ namespace FaultData.DataResources
             return null;
         }
 
-        private List<DataSeries> GetConnectedSeries(IGrouping<int, DataSeries> groupedSeries, Asset asset)
+        private List<DataSeries> GetConnectedSeries(IEnumerable<DataSeries> groupedSeries, Asset asset)
         {
             List<DataSeries> result = new List<DataSeries>();
             List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
@@ -137,6 +132,16 @@ namespace FaultData.DataResources
 
             return result;
         }
+
+        private DataGroupKey GetKey(DataSeries dataSeries)
+        {
+            DateTime startTime = dataSeries.StartTime;
+            DateTime endTime = dataSeries.EndTime;
+            int sampleCount = dataSeries.DataPoints.Count;
+            bool trend = dataSeries.SeriesInfo?.Channel.Trend == true;
+            return Tuple.Create(startTime, endTime, sampleCount, trend);
+        }
+
         #endregion
     }
 }
