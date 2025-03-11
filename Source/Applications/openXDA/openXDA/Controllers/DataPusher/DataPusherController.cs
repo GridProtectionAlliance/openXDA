@@ -54,16 +54,17 @@ namespace openXDA.Controllers.Config
             NodeHost = host;
         }
 
-        [Route("Recieve/XML"), HttpPost, HttpEditionFilter(Edition.Enterprise)]
-        public IHttpActionResult RecieveXML(CancellationToken cancellationToken)
+        // TODO: Misspelled route is deprecated and should be removed when typos are fixed downstream
+        [Route("Recieve/XML"), Route("Receive/XML"), HttpPost, HttpEditionFilter(Edition.Enterprise)]
+        public async Task<IHttpActionResult> ReceiveXML()
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 try
                 {
-                    Stream stream = Request.Content.ReadAsStreamAsync().Result;
+                    Stream stream = await Request.Content.ReadAsStreamAsync();
                     Loader loader = new Loader(connection.Connection.ConnectionString, $"AssemblyName={{{connection.AdapterType.Assembly.FullName}}}; ConnectionType={connection.Connection.GetType().FullName}; AdapterType={connection.AdapterType.FullName}");
-                    loader.Load(stream);
+                    await loader.LoadAsync(stream);
                     return Ok(loader.ConnectionID);
                 }
                 catch (Exception ex)
@@ -75,7 +76,7 @@ namespace openXDA.Controllers.Config
         }
 
         [Route("Send/XML/{instanceId:int}/{meterId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
-        public IHttpActionResult SendMeterConfigurationForInstance(int instanceId, int meterId, CancellationToken cancellationToken)
+        public async Task<IHttpActionResult> SendMeterConfigurationForInstance(int instanceId, int meterId)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -88,12 +89,10 @@ namespace openXDA.Controllers.Config
                     stream.Seek(0, SeekOrigin.Begin);
                     HttpContent httpContent = new StreamContent(stream);
 
-                    using (HttpResponseMessage response = requester.SendRequestAsync("api/DataPusher/Recieve/XML", HttpMethod.Post, httpContent, "application/text").Result)
+                    using (HttpResponseMessage response = await requester.SendRequestAsync("api/DataPusher/Receive/XML", HttpMethod.Post, httpContent, "application/text"))
                     {
-                        if (!response.IsSuccessStatusCode)
-                            throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
-                        string connectionID = response.Content.ReadAsStringAsync().Result;
+                        response.EnsureSuccessStatusCode();
+                        string connectionID = await response.Content.ReadAsStringAsync();
                         connectionID = connectionID.Replace("\"", "");
                         connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterId);
                         return Ok(connectionID);
@@ -103,14 +102,12 @@ namespace openXDA.Controllers.Config
                 {
                     Log.Error(ex.Message, ex);
                     return InternalServerError(ex);
-
                 }
             }
-
         }
 
         [Route("Send/XML/{instanceId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
-        public IHttpActionResult SendMeterConfigurationForInstance(int instanceId, CancellationToken cancellationToken)
+        public async Task<IHttpActionResult> SendMeterConfigurationForInstance(int instanceId)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -122,12 +119,10 @@ namespace openXDA.Controllers.Config
                     stream.Seek(0, SeekOrigin.Begin);
                     HttpContent httpContent = new StreamContent(stream);
 
-                    using (HttpResponseMessage response = requester.SendRequestAsync("api/DataPusher/Recieve/XML", HttpMethod.Post, httpContent, "application/text").Result)
+                    using (HttpResponseMessage response = await requester.SendRequestAsync("api/DataPusher/Receive/XML", HttpMethod.Post, httpContent, "application/text"))
                     {
-                        if (!response.IsSuccessStatusCode)
-                            throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
-                        string connectionID = response.Content.ReadAsStringAsync().Result;
+                        response.EnsureSuccessStatusCode();
+                        string connectionID = await response.Content.ReadAsStringAsync();
                         connectionID = connectionID.Replace("\"", "");
                         connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE RemoteXDAInstanceID = {0}", instanceId);
                         return Ok(connectionID);
@@ -160,7 +155,7 @@ namespace openXDA.Controllers.Config
         }
 
         [Route("LoaderStatus/XML/{instanceId:int}/{connectionID}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
-        public IHttpActionResult GetStatus(int instanceId, string connectionID)
+        public async Task<IHttpActionResult> GetStatus(int instanceId, string connectionID)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -168,12 +163,10 @@ namespace openXDA.Controllers.Config
                 {
                     DataPusherRequester requester = new DataPusherRequester(instanceId, connection);
 
-                    using (HttpResponseMessage response = requester.SendRequestAsync($"api/DataPusher/LoaderStatus/XML/{connectionID}", HttpMethod.Get).Result)
+                    using (HttpResponseMessage response = await requester.SendRequestAsync($"api/DataPusher/LoaderStatus/XML/{connectionID}", HttpMethod.Get))
                     {
-                        if (!response.IsSuccessStatusCode)
-                            throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
-                        string result = response.Content.ReadAsStringAsync().Result;
+                        response.EnsureSuccessStatusCode();
+                        string result = await response.Content.ReadAsStringAsync();
                         return Ok(result);
                     }
                 }
@@ -202,12 +195,12 @@ namespace openXDA.Controllers.Config
         }
 
         [Route("Send/Files/{instanceId:int}/{meterId:int}/{fileGroupID:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
-        public IHttpActionResult SendFiles(int instanceId, int meterId, int fileGroupID, CancellationToken cancellationToken)
+        public async Task<IHttpActionResult> SendFiles(int instanceId, int meterId, int fileGroupID)
         {
             try
             {
                 DataPusherEngine engine = new DataPusherEngine(ConnectionFactory);
-                engine.SendFiles(instanceId, meterId, fileGroupID);
+                await engine.SendFilesAsync(instanceId, meterId, fileGroupID);
                 return Ok("Completed sycning file.");
             }
             catch (Exception ex)
@@ -227,22 +220,23 @@ namespace openXDA.Controllers.Config
             }
         }
 
-        [Route("Recieve/Files"), HttpPost, HttpEditionFilter(Edition.Enterprise)]
-        public IHttpActionResult RecieveFiles(CancellationToken cancellationToken)
+        // TODO: Misspelled route is deprecated and should be removed when typos are fixed downstream
+        [Route("Recieve/Files"), Route("Receive/Files"), HttpPost, HttpEditionFilter(Edition.Enterprise)]
+        public async Task<IHttpActionResult> ReceiveFiles()
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
-
                 try
                 {
-                    Stream stream = Request.Content.ReadAsStreamAsync().Result;
+                    Stream stream = await Request.Content.ReadAsStreamAsync();
                     FileGroupPost fileGroupPost = JsonSerializer.Deserialize<FileGroupPost>(stream);
 
-                    Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("AssetKey = {0}", fileGroupPost.MeterKey);
-                    if (meter == null) throw new Exception($"{fileGroupPost.MeterKey} is not defined in database");
+                    Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("AssetKey = {0}", fileGroupPost.MeterKey)
+                        ?? throw new Exception($"{fileGroupPost.MeterKey} is not defined in database");
 
                     FileGroup fileGroup = new TableOperations<FileGroup>(connection).QueryRecordWhere("MeterID = {0} AND DataStartTime = {1} AND DataEndtime = {2}", meter.ID, ToDateTime2(connection, fileGroupPost.FileGroup.DataStartTime), ToDateTime2(connection, fileGroupPost.FileGroup.DataEndTime));
-                    if (fileGroup == null) {
+                    if (fileGroup is null)
+                    {
                         fileGroup = fileGroupPost.FileGroup;
                         fileGroup.ID = 0;
                         fileGroup.MeterID = meter.ID;
@@ -256,7 +250,7 @@ namespace openXDA.Controllers.Config
                         DataFile dataFile = new TableOperations<DataFile>(connection).QueryRecordWhere("FileGroupID = {0} AND FilePath = {1} AND FilePathHash = {2} AND FileSize = {3}", fileGroup.ID, file.FilePath, file.FilePathHash, file.FileSize);
                         FileBlob blob = fileGroupPost.FileBlobs.Find(x => x.DataFileID == file.ID);
 
-                        if (dataFile == null)
+                        if (dataFile is null)
                         {
                             dataFile = file;
                             dataFile.ID = 0;
@@ -266,7 +260,7 @@ namespace openXDA.Controllers.Config
                         }
 
                         FileBlob fileBlob = new TableOperations<FileBlob>(connection).QueryRecordWhere("DataFileID = {0}", dataFile.ID);
-                        if (fileBlob == null)
+                        if (fileBlob is null)
                         {
                             fileBlob = blob;
                             fileBlob.ID = 0;
@@ -274,13 +268,10 @@ namespace openXDA.Controllers.Config
 
                             new TableOperations<FileBlob>(connection).AddNewRecord(fileBlob);
                         }
-
-
-
                     }
 
                     DataFileController dataFileController = new DataFileController(NodeHost);
-                    dataFileController.ReprocessFile(fileGroup.ID).Wait();
+                    await dataFileController.ReprocessFile(fileGroup.ID);
 
                     return Ok(fileGroup.ID);
                 }
@@ -290,7 +281,6 @@ namespace openXDA.Controllers.Config
                     return InternalServerError(ex);
                 }
             }
-
         }
 
         [Route("SyncMeterConfig/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
@@ -315,7 +305,6 @@ namespace openXDA.Controllers.Config
                     }
                 }
             }, cancellationToken);
-
         }
 
         [Route("SyncMeterFiles/{connectionId}/{instanceId:int}/{meterId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
@@ -351,11 +340,6 @@ namespace openXDA.Controllers.Config
             }, cancellationToken);
         }
 
-        public class TestResponse
-        {
-            public bool Success;
-            public string ErrorMessage;
-        }
         [Route("TestConnection/{instanceId:int}"), HttpGet, HttpEditionFilter(Edition.Enterprise)]
         public IHttpActionResult TestRemoteInstanceConnection(int instanceId)
         {
@@ -363,21 +347,21 @@ namespace openXDA.Controllers.Config
             DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
             (bool success, Exception ex) = engine.TestInstance(instanceId);
 
-            return Ok(new TestResponse()
+            return Ok(new
             {
                 Success = success,
                 ErrorMessage = GetErrorMessage(ex)
             });
         }
 
-        private string GetErrorMessage(Exception ex)
+        private static string GetErrorMessage(Exception ex)
         {
             IEnumerable<Exception> unwrappedExceptions = Unwrap(ex);
             IEnumerable<string> messages = unwrappedExceptions.Select((e, l) => l == 0 ? e.Message : $"([{l}] {e.Message})");
             return string.Join(" ", messages);
         }
 
-        private IEnumerable<Exception> Unwrap(Exception ex)
+        private static IEnumerable<Exception> Unwrap(Exception ex)
         {
             while (!(ex is null))
             {
