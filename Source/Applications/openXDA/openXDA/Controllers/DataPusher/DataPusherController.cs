@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -34,7 +35,6 @@ using GSF.Data;
 using GSF.Data.Model;
 using log4net;
 using openXDA.Configuration;
-using openXDA.Controllers.Helpers;
 using openXDA.DataPusher;
 using openXDA.Model;
 using openXDA.Nodes;
@@ -361,12 +361,29 @@ namespace openXDA.Controllers.Config
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine(() => new AdoDataConnection("systemSettings"));
-            (bool, Exception) result = engine.TestInstance(instanceId);
+            (bool success, Exception ex) = engine.TestInstance(instanceId);
+
             return Ok(new TestResponse()
-            { 
-                Success = result.Item1,
-                ErrorMessage = result.Item2?.InnerException?.Message ?? result.Item2?.Message ?? ""
+            {
+                Success = success,
+                ErrorMessage = GetErrorMessage(ex)
             });
+        }
+
+        private string GetErrorMessage(Exception ex)
+        {
+            IEnumerable<Exception> unwrappedExceptions = Unwrap(ex);
+            IEnumerable<string> messages = unwrappedExceptions.Select((e, l) => l == 0 ? e.Message : $"([{l}] {e.Message})");
+            return string.Join(" ", messages);
+        }
+
+        private IEnumerable<Exception> Unwrap(Exception ex)
+        {
+            while (!(ex is null))
+            {
+                yield return ex;
+                ex = ex.InnerException;
+            }
         }
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherController));
