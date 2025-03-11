@@ -172,7 +172,8 @@ namespace openXDA.DataPusher
             {
                 using (HttpResponseMessage response = await requester.SendRequestAsync("api/PQMark/Alive", HttpMethod.Get))
                 {
-                    return (response.IsSuccessStatusCode, null);
+                    response.EnsureSuccessStatusCode();
+                    return (true, null);
                 }
             }
             catch (Exception ex)//Exception here is a fail state, must be caught reported back so that testers know the failpoint is downstream
