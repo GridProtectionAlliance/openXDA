@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -28,7 +29,6 @@ using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Security.Model;
 using log4net;
 using openXDA.Configuration;
 using openXDA.DataPusher;
@@ -39,7 +39,10 @@ namespace FaultData.DataOperations
     public class DataPusherOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
+
+        // Fields
         private DataPusherSettings m_dataPusherSettings;
+
         #endregion
 
         #region [ Constructors ]
@@ -66,6 +69,7 @@ namespace FaultData.DataOperations
         #endregion
 
         #region [ Methods ]
+
         public override void Execute(MeterDataSet meterDataSet)
         {
             if (!DataPusherSettings.Enabled)
@@ -73,21 +77,21 @@ namespace FaultData.DataOperations
                 Log.Info("Data Push Operation skipped because it is not enabled...");
                 return;
             }
+
             if (!EditionChecker.CheckEdition(Edition.Enterprise))
             {
                 Log.Info("Data Push Operation skipped because system is not Enterprise Edition...");
                 return;
             }
+
             Log.Info("Executing operation to push data to remote instances...");
             PushDataToRemoteInstances(meterDataSet);
-
         }
 
         private void PushDataToRemoteInstances(MeterDataSet meterDataSet)
         {
             using (AdoDataConnection connection =  meterDataSet.CreateDbConnection())
             {
-
                 // If only valid fault setting is set to true, count faults in file group and return if 0
                 if (DataPusherSettings?.OnlyValidFaults ?? false)
                 {
@@ -95,7 +99,6 @@ namespace FaultData.DataOperations
                     int faultSummaryCount = faultSummaryTable.QueryRecordCountWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0} AND FileVersion = {1}) AND IsValid = 1 AND IsSuppressed = 0", meterDataSet.FileGroup.ID, meterDataSet.FileGroup.ProcessingVersion);
                     if (faultSummaryCount == 0) return;
                 }
-
 
                 TableOperations<RemoteXDAInstance> instanceTable = new TableOperations<RemoteXDAInstance>(connection);
                 IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*' AND ID IN (SELECT RemoteXDAInstanceID FROM MetersToDataPush WHERE LocalXDAMeterID = {0})", meterDataSet.Meter.ID);
@@ -120,14 +123,12 @@ namespace FaultData.DataOperations
                     Log.Info($"Sending data to instance: {instance.Name} for FileGroup: {meterDataSet.FileGroup.ID}...");
                     DataPusherEngine engine = new DataPusherEngine(meterDataSet.CreateDbConnection);
                     DataPusherRequester requester = new DataPusherRequester(instance);
-                    engine.SendFiles(post, requester);
-
-
+                    try { engine.SendFilesAsync(post, requester).GetAwaiter().GetResult(); }
+                    catch (Exception ex) { Log.Error($"Error pushing data to remote instance {instance.Name}: {ex.Message}", ex); }
                 }
+
                 Log.Info("Sync complete...");
-
             }
-
         }
 
         #endregion
@@ -137,6 +138,6 @@ namespace FaultData.DataOperations
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherOperation));
 
-        #endregion        
+        #endregion
     }
 }

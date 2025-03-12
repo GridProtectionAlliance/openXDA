@@ -1226,7 +1226,7 @@ namespace openXDA.DataPusher
         }
 
 
-        public void SendFiles(int instanceId, int meterId, int fileGroupID)
+        public async Task SendFilesAsync(int instanceId, int meterId, int fileGroupID)
         {
             using (AdoDataConnection connection = ConnectionFactory())
             {
@@ -1242,30 +1242,26 @@ namespace openXDA.DataPusher
                 post.FileBlobs = fileBlobs;
 
                 DataPusherRequester requester = new DataPusherRequester(instanceId, connection);
-                int id = SendFiles(post, requester).Result;
+                int id = await SendFilesAsync(post, requester);
                 connection.ExecuteNonQuery("INSERT INTO FileGroupLocalToRemote (RemoteXDAInstanceID, LocalFileGroupID, remoteFileGroupID) VALUES ({0},{1},{2}) ", instanceId, fileGroupID, id);
-
             }
-
         }
 
-        public Task<int> SendFiles(FileGroupPost post, DataPusherRequester requester)
+        public Task<int> SendFilesAsync(FileGroupPost post, DataPusherRequester requester)
         {
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
                 MemoryStream stream = new MemoryStream();
-                JsonSerializer.SerializeAsync(stream, post);
+                await JsonSerializer.SerializeAsync(stream, post);
                 stream.Seek(0, SeekOrigin.Begin);
                 HttpContent httpContent = new StreamContent(stream);
 
-                using (HttpResponseMessage response = requester.SendRequestAsync("api/DataPusher/Recieve/Files", HttpMethod.Post, httpContent, "application/text").Result)
+                using (HttpResponseMessage response = await requester.SendRequestAsync("api/DataPusher/Recieve/Files", HttpMethod.Post, httpContent, "application/text"))
                 {
-                    string remoteFGID = response.Content.ReadAsStringAsync().Result;
+                    string remoteFGID = await response.Content.ReadAsStringAsync();
+                    response.EnsureSuccessStatusCode();
                     remoteFGID = remoteFGID.Replace("\"", "");
                     int id = int.Parse(remoteFGID);
-                    if (!response.IsSuccessStatusCode)
-                        throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
-
                     return id;
                 }
             });

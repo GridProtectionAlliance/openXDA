@@ -163,7 +163,7 @@ namespace DeviceDefinitionsMigrator
                 else if (operation == "load")
                 {
                     Loader loader = new Loader(connectionString, dataProvider);
-                    loader.Load(deviceDefinitionsFile).Wait();
+                    loader.LoadAsync(deviceDefinitionsFile).GetAwaiter().GetResult();
                 }
                 else if (operation == "export")
                 {
