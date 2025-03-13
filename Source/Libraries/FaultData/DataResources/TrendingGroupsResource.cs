@@ -62,7 +62,7 @@ namespace FaultData.DataResources
             // The flattened collection is then grouped by channel to get all groups for each channel.
             // The final result is a lookup table from channel to list of all of that channel's data groups
             m_trendingGroups = dataGroups
-                .Where(dataGroup => dataGroup.Classification == DataClassification.Trend)
+                .Where(dataGroup => dataGroup.Trend || dataGroup.Classification == DataClassification.Trend)
                 .Select(dataGroup => dataGroup.DataSeries.GroupBy(dataSeries => dataSeries.SeriesInfo.Channel))
                 .SelectMany(channelSeries => channelSeries.Select(grouping => Tuple.Create(grouping.Key, new DataGroup(grouping))))
                 .GroupBy(tuple => tuple.Item1, tuple => tuple.Item2)
