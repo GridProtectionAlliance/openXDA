@@ -162,6 +162,8 @@ namespace FaultData.DataAnalysis
                     return 1;
                 if (a.AllVoltagesDefined && !b.AllVoltagesDefined)
                     return -1;
+                if (!(a.Distance >= 0 && b.Distance >= 0))
+                    return b.Distance.CompareTo(a.Distance);
                 return a.Distance.CompareTo(b.Distance);
             });
         }
