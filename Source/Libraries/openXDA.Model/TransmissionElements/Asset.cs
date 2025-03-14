@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.RegularExpressions;
+using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
@@ -403,28 +404,29 @@ namespace openXDA.Model
         }
 
         // Logic to find distance between two Assets
-        public int DistanceToAsset(int assetID, IEnumerable<int> ignoreAssets = null)
+        public int DistanceToAsset(int assetID)
         {
-            ignoreAssets = (ignoreAssets == null) ? new List<int>() : ignoreAssets;
-            if (ConnectedAssets.Select(item => item.ID).Contains(assetID))
-                return 1;
+            int distance = 0;
+            HashSet<int> visited = new HashSet<int>();
+            List<Asset> next = new List<Asset>() { this };
 
-            List<int> paths = new List<int>();
-
-            foreach (Asset connectedAsset in ConnectedAssets)
+            while (next.Count > 0)
             {
-                if (ignoreAssets.Contains(connectedAsset.ID))
-                {
-                    continue;
-                }
-                int d = connectedAsset.DistanceToAsset(assetID, ignoreAssets.Concat(new List<int> { ID }));
+                if (next.Any(n => n.ID == assetID))
+                    return distance;
 
-                if (d > 0)
-                    paths.Add(d);
+                foreach (Asset n in next)
+                    visited.Add(n.ID);
+
+                next = next
+                    .SelectMany(n => n.ConnectedAssets)
+                    .DistinctBy(n => n.ID)
+                    .Where(n => !visited.Contains(n.ID))
+                    .ToList();
+
+                distance++;
             }
 
-            if (paths.Count > 0)
-                return (paths.Min() + 1);
             return -1;
         }
 
