@@ -304,7 +304,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IA = IR - IB - IC
                 missingSeries = IR.Add(IB.Negate()).Add(IC.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "AN", IR.SeriesInfo.Channel.AssetID);
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, IR.SeriesInfo.Channel.Asset, "Current", "AN", m_dataGroup.SamplesPerHour);
                 missingSeries.Calculated = true;
                 m_iaIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
@@ -313,7 +313,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IB = IR - IA - IC
                 missingSeries = IR.Add(IA.Negate()).Add(IC.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "BN", IR.SeriesInfo.Channel.AssetID);
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, IR.SeriesInfo.Channel.Asset, "Current", "BN", m_dataGroup.SamplesPerHour);
                 missingSeries.Calculated = true;
                 m_ibIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
@@ -322,7 +322,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IC = IR - IA - IB
                 missingSeries = IR.Add(IA.Negate()).Add(IB.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "CN", IR.SeriesInfo.Channel.AssetID);
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, IR.SeriesInfo.Channel.Asset, "Current", "CN", m_dataGroup.SamplesPerHour);
                 missingSeries.Calculated = true;
                 m_icIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
@@ -331,7 +331,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IR = IA + IB + IC
                 missingSeries = IA.Add(IB).Add(IC);
-                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Current", "RES", IA.SeriesInfo.Channel.AssetID);
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, IA.SeriesInfo.Channel.Asset, "Current", "RES", m_dataGroup.SamplesPerHour);
                 missingSeries.Calculated = true;
                 m_irIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
@@ -369,7 +369,7 @@ namespace FaultData.DataAnalysis
                 {
                     // Calculate VAB = VA - VB
                     missingSeries = VA.Add(VB.Negate());
-                    missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "AB", VA.SeriesInfo.Channel.AssetID);
+                    missingSeries.SeriesInfo = GetSeriesInfo(meter, VA.SeriesInfo.Channel.Asset, "Voltage", "AB", m_dataGroup.SamplesPerHour);
                     missingSeries.Calculated = true;
                     m_vIndices[i].Vab = m_dataGroup.DataSeries.Count;
                     m_dataGroup.Add(missingSeries);
@@ -379,7 +379,7 @@ namespace FaultData.DataAnalysis
                 {
                     // Calculate VBC = VB - VC
                     missingSeries = VB.Add(VC.Negate());
-                    missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "BC", VB.SeriesInfo.Channel.AssetID);
+                    missingSeries.SeriesInfo = GetSeriesInfo(meter, VB.SeriesInfo.Channel.Asset, "Voltage", "BC", m_dataGroup.SamplesPerHour);
                     missingSeries.Calculated = true;
                     m_vIndices[i].Vbc = m_dataGroup.DataSeries.Count;
                     m_dataGroup.Add(missingSeries);
@@ -389,7 +389,7 @@ namespace FaultData.DataAnalysis
                 {
                     // Calculate VCA = VC - VA
                     missingSeries = VC.Add(VA.Negate());
-                    missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "CA", VC.SeriesInfo.Channel.AssetID);
+                    missingSeries.SeriesInfo = GetSeriesInfo(meter, VC.SeriesInfo.Channel.Asset, "Voltage", "CA", m_dataGroup.SamplesPerHour);
                     missingSeries.Calculated = true;
                     m_vIndices[i].Vca = m_dataGroup.DataSeries.Count;
                     m_dataGroup.Add(missingSeries);
@@ -437,7 +437,7 @@ namespace FaultData.DataAnalysis
         #region [ Static ]
 
         // Static Methods
-        private static Series GetSeriesInfo(Meter meter, DataGroup dataGroup, string measurementTypeName, string phaseName, int assetID)
+        private static Series GetSeriesInfo(Meter meter, Asset asset, string measurementTypeName, string phaseName, double samplesPerHour)
         {
             string measurementCharacteristicName = "Instantaneous";
             string seriesTypeName = "Values";
@@ -446,7 +446,7 @@ namespace FaultData.DataAnalysis
             string phaseDesignation = (phaseName == "RES") ? "R" : phaseName.TrimEnd('N');
             string channelName = string.Concat(typeDesignation, phaseDesignation);
 
-            ChannelKey channelKey = new ChannelKey(assetID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
+            ChannelKey channelKey = new ChannelKey(asset.ID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
             SeriesKey seriesKey = new SeriesKey(channelKey, seriesTypeName);
 
             Channel dbChannel = (meter.ConnectionFactory is null)
@@ -458,14 +458,6 @@ namespace FaultData.DataAnalysis
 
             if (dbSeries is null)
             {
-                //need to get Asset based on the asset of the datagroup or the connected assets 
-                Asset asset = dataGroup.Asset;
-                if (asset.ID != assetID)
-                {
-                    List<Asset> connectedAssets = asset.ConnectedAssets.ToList();
-                    asset = connectedAssets.Find(item => item.ID == assetID);
-                }
-
                 if (dbChannel is null)
                 {
                     MeasurementType measurementType = new MeasurementType() { Name = measurementTypeName };
@@ -475,12 +467,12 @@ namespace FaultData.DataAnalysis
                     dbChannel = new Channel()
                     {
                         MeterID = meter.ID,
-                        AssetID = assetID,
+                        AssetID = asset.ID,
                         MeasurementTypeID = measurementType.ID,
                         MeasurementCharacteristicID = measurementCharacteristic.ID,
                         PhaseID = phase.ID,
                         Name = channelKey.Name,
-                        SamplesPerHour = dataGroup.SamplesPerHour,
+                        SamplesPerHour = samplesPerHour,
                         Description = string.Concat(measurementCharacteristicName, " ", measurementTypeName, " ", phaseName),
                         Enabled = true,
 
