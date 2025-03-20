@@ -235,7 +235,10 @@ namespace FaultData.DataOperations
 
                         if (trendingSummary == null) trendingSummary = new MeterDataQualitySummary() { ExpectedPoints = 0, GoodPoints = 0, LatchedPoints = 0, UnreasonablePoints = 0, NoncongruentPoints = 0 };
 
-                        if (dailyStatistic.Status == "Error") { } // already an error, do nothing
+                        if (dailyStatistic.Status == "Error") { 
+                            Log.Warn($"Failed to update daily statistic for {dailyStatistic.Meter} - a previous error was present");
+
+                        } // already an error, do nothing
                         else if (dailyStatistic.TotalUnsuccessfulFilesProcessed > errorLevel) {
                             dailyStatistic.Status = "Error";
                             dailyStatistic.BadDays++;
@@ -271,7 +274,9 @@ namespace FaultData.DataOperations
                             dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.NoncongruentPoints} non-congruent data points.  Exceeds error threshold of {errorLevel}.";
 
                         }
-                        else if (dailyStatistic.Status == "Warning") { } // already a warning, do nothing
+                        else if (dailyStatistic.Status == "Warning") {
+                            Log.Warn($"Failed to update daily statistic for {dailyStatistic.Meter} - a previous warning was present");
+                         } // already a warning, do nothing
                         else if (dailyStatistic.TotalUnsuccessfulFilesProcessed > warningLevel)
                         {
                             dailyStatistic.Status = "Warning";
