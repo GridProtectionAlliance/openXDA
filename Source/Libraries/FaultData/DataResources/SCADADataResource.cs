@@ -26,11 +26,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using FaultData.DataResources.eDNA;
+using FaultData.DataResources.OSIPI;
 using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
-using InStep.eDNA.EzDNAApiNet;
-using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
 
@@ -38,6 +38,23 @@ namespace FaultData.DataResources
 {
     public class SCADADataResource : DataResourceBase<MeterDataSet>
     {
+        #region [ Members ]
+
+        // Nested Types
+        public interface ISCADAHistorianResource
+        {
+            bool DidBreakerOpen(List<string> points, DateTime startTime, DateTime endTime, double breakerOpenValue);
+        }
+
+        public enum SCADASystem
+        {
+            None,
+            EDNA,
+            PI
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         [Category]
@@ -46,11 +63,12 @@ namespace FaultData.DataResources
             = new SystemSection();
 
         [Category]
-        [SettingName(EDNASection.CategoryName)]
-        public EDNASection EDNASettings { get; }
-            = new EDNASection();
+        [SettingName(SCADASection.CategoryName)]
+        public SCADASection SCADASettings { get; }
+            = new SCADASection();
 
         private Func<AdoDataConnection> ConnectionFactory { get; set; }
+        private ISCADAHistorianResource SCADAHistorianResource { get; set; }
 
         #endregion
 
@@ -58,7 +76,7 @@ namespace FaultData.DataResources
 
         public bool DidBreakerOpen(Asset line, DateTime approximateTime)
         {
-            string pointQuery = EDNASettings.PointQuery;
+            string pointQuery = SCADASettings.PointQuery;
             List<string> points;
 
             using (AdoDataConnection connection = ConnectionFactory())
@@ -78,79 +96,35 @@ namespace FaultData.DataResources
             DateTime utcClearingTime = TimeZoneInfo.ConvertTimeToUtc(approximateTime, SystemSettings.XDATimeZoneInfo);
             DateTime localClearingTime = utcClearingTime.ToLocalTime();
 
-            TimeSpan queryTolerance = EDNASettings.QueryToleranceSpan;
+            TimeSpan queryTolerance = SCADASettings.QueryToleranceSpan;
             DateTime startTime = localClearingTime - queryTolerance;
             DateTime endTime = localClearingTime + queryTolerance;
 
-            double breakerOpenValue = EDNASettings.BreakerOpenValue;
+            double breakerOpenValue = SCADASettings.BreakerOpenValue;
 
-            foreach (string point in points)
-            {
-                var previousPoint = new
-                {
-                    Value = default(double),
-                    Time = default(DateTime),
-                    Status = default(string),
-                    Valid = false
-                };
-
-                int[] expectedResults =
-                {
-                    (int)eDNAHistoryReturnStatus.END_OF_HISTORY,
-                    (int)eDNAHistoryReturnStatus.NO_HISTORY_FOR_TIME
-                };
-
-                int result = History.DnaGetHistRaw(point, startTime, endTime, out uint key);
-
-                while (result == 0)
-                {
-                    result = History.DnaGetNextHist(key, out double value, out DateTime time, out string status);
-
-                    if (result == 0)
-                    {
-                        // Verify that the data point represents a change
-                        // from closed to open within the queried time range
-                        bool trip =
-                            previousPoint.Valid &&
-                            previousPoint.Value != breakerOpenValue &&
-                            value == breakerOpenValue &&
-                            time >= startTime &&
-                            time <= endTime;
-
-                        if (trip)
-                            return true;
-
-                        previousPoint = new
-                        {
-                            Value = value,
-                            Time = time,
-                            Status = status,
-                            Valid = true
-                        };
-                    }
-                }
-
-                // Assume that unexpected return status indicates an error
-                // and therefore the analysis results should be trusted
-                if (!expectedResults.Contains(result))
-                {
-                    Log.Debug($"Unexpected eDNA return code: {result}");
-                    return true;
-                }
-            }
-
-            return false;
+            return SCADAHistorianResource.DidBreakerOpen(points, startTime, endTime, breakerOpenValue);
         }
 
-        public override void Initialize(MeterDataSet meterDataSet) =>
+        public override void Initialize(MeterDataSet meterDataSet)
+        {
             ConnectionFactory = meterDataSet.CreateDbConnection;
+            SCADAHistorianResource = GetSCADAHistorianResource(meterDataSet);
+        }
 
-        #endregion
+        private ISCADAHistorianResource GetSCADAHistorianResource(MeterDataSet meterDataSet)
+        {
+            switch (SCADASettings.Historian)
+            {
+                case SCADASection.SCADAHistorian.eDNA:
+                    return meterDataSet.GetResource<EDNADataResource>();
 
-        #region [ Static ]
+                case SCADASection.SCADAHistorian.OSIPI:
+                    return meterDataSet.GetResource<OSIPIDataResource>();
 
-        // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(SCADADataResource));
+                default:
+                    return null;
+            }
+        }
 
         #endregion
     }
