@@ -50,11 +50,12 @@
     <Compile Include="Edition\EditionChecker.cs" />
     <Compile Include="Edition\HttpEditionFilterAttribute.cs" />
     <Compile Include="GrafanaSection.cs" />
+    <Compile Include="OSIPISection.cs" />
+    <Compile Include="SCADASection.cs" />
     <Compile Include="SSAMSSection.cs" />
     <Compile Include="Subscription.cs" />
     <Compile Include="LSCVSSection.cs" />
     <Compile Include="COMTRADESection.cs" />
-    <Compile Include="EDNASection.cs" />
     <Compile Include="EmailSection.cs" />
     <Compile Include="EMAXSection.cs" />
     <Compile Include="EPRICapBankAnalyticSection.cs" />
