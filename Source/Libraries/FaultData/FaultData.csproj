@@ -78,6 +78,10 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\Dependencies\GSF\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="OSIsoft.AFSDK, Version=4.0.0.0, Culture=neutral, PublicKeyToken=6238be57836698e6, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\GSF\OSIsoft.AFSDK.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -144,6 +148,7 @@
     <Compile Include="DataReaders\PQube\PQubeReader.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />
     <Compile Include="DataResources\BreakerDataResource.cs" />
+    <Compile Include="DataResources\eDNA\EDNADataResource.cs" />
     <Compile Include="DataResources\FastRMSDataResource.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\EventClassificationResource.cs" />
@@ -156,6 +161,8 @@
     <Compile Include="DataResources\IDataResource.cs" />
     <Compile Include="DataResources\InterruptionDataResource.cs" />
     <Compile Include="DataResources\LightningDataResource.cs" />
+    <Compile Include="DataResources\OSIPI\OSIPIDataResource.cs" />
+    <Compile Include="DataResources\OSIPI\PIConnection.cs" />
     <Compile Include="DataResources\SagDataResource.cs" />
     <Compile Include="DataResources\SCADADataResource.cs" />
     <Compile Include="DataResources\SwellDataResource.cs" />

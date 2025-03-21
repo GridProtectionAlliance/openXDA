@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  EDNASection.cs - Gbtc
+//  SCADASection.cs - Gbtc
 //
-//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/09/2018 - Stephen C. Wills
+//  03/21/2025 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -27,20 +27,35 @@ using System.Configuration;
 
 namespace openXDA.Configuration
 {
-    public class EDNASection
+    public class SCADASection
     {
         #region [ Members ]
 
+        // Nested Types
+        public enum SCADAHistorian
+        {
+            None,
+            eDNA,
+            OSIPI
+        }
+
         // Constants
-        public const string CategoryName = "EDNA";
+        public const string CategoryName = "SCADA";
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets historian used by the SCADA system.
+        /// </summary>
+        [Setting]
+        [DefaultValue(SCADAHistorian.None)]
+        public SCADAHistorian Historian { get; set; }
+
+        /// <summary>
         /// Gets or sets the database query to get the list of
-        /// EDNA points that indicate breaker state for the line.
+        /// SCADA points that indicate breaker state for the line.
         /// </summary>
         [Setting]
         [DefaultValue("SELECT NULL AS Point WHERE 1 IS NULL")]
