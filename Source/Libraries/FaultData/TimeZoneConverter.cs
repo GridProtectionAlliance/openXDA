@@ -85,6 +85,9 @@ namespace FaultData
         public DateTime ToXDATimeZone(DateTime utc) =>
             TimeZoneInfo.ConvertTimeFromUtc(utc, XDATimeZoneInfo);
 
+        public DateTime ToUTCTimeZone(DateTime xda) =>
+            TimeZoneInfo.ConvertTimeToUtc(xda, XDATimeZoneInfo);
+
         #endregion
     }
 }
