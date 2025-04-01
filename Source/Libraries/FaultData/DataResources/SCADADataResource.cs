@@ -76,6 +76,11 @@ namespace FaultData.DataResources
 
         public bool DidBreakerOpen(Asset line, DateTime approximateTime)
         {
+            // If no SCADA historian is configured,
+            // trust the analysis results
+            if (SCADAHistorianResource is null)
+                return true;
+
             string pointQuery = SCADASettings.PointQuery;
             List<string> points;
 
