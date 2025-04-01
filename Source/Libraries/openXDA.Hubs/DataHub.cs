@@ -2882,19 +2882,19 @@ namespace openXDA.Hubs
                 CascadeDelete("Asset", $"ID = {id}");
             }
 
-            public int QueryLineBreakersCount(int lineID)
+            public int QueryLineBreakersCount(int breakerID)
             {
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    return new TableOperations<EDNAPoint>(connection).QueryRecordsWhere("LineID = {0}", lineID).ToList().Count();
+                    return new TableOperations<SCADAPoint>(connection).QueryRecordsWhere("BreakerID = {0}", breakerID).ToList().Count();
                 }
             }
 
-            public IEnumerable<EDNAPoint> QueryLineBreakers(int lineID)
+            public IEnumerable<SCADAPoint> QueryLineBreakers(int breakerID)
             {
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    return new TableOperations<EDNAPoint>(connection).QueryRecordsWhere("LineID = {0}", lineID).ToList();
+                    return new TableOperations<SCADAPoint>(connection).QueryRecordsWhere("BreakerID = {0}", breakerID).ToList();
                 }
             }
 
@@ -2902,16 +2902,16 @@ namespace openXDA.Hubs
             {
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    new TableOperations<EDNAPoint>(connection).DeleteRecord(new RecordRestriction("ID = {0}", id));
+                    new TableOperations<SCADAPoint>(connection).DeleteRecord(new RecordRestriction("ID = {0}", id));
                 }
             }
 
-            public EDNAPoint AddNewLineBreaker(EDNAPoint record)
+            public SCADAPoint AddNewLineBreaker(SCADAPoint record)
             {
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    new TableOperations<EDNAPoint>(connection).AddNewRecord(record);
-                    return new TableOperations<EDNAPoint>(connection).QueryRecordWhere("BreakerID = {0} AND Point = {1}", record.BreakerID, record.Point);
+                    new TableOperations<SCADAPoint>(connection).AddNewRecord(record);
+                    return new TableOperations<SCADAPoint>(connection).QueryRecordWhere("BreakerID = {0} AND Point = {1}", record.BreakerID, record.Point);
                 }
             }
 

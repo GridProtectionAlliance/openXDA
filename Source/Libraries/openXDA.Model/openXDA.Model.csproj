@@ -148,7 +148,7 @@
     <Compile Include="Links\AssetGroupAssetGroup.cs" />
     <Compile Include="Links\AssetConnection.cs" />
     <Compile Include="Links\PQViewSite.cs" />
-    <Compile Include="Links\EDNAPoint.cs" />
+    <Compile Include="Links\SCADAPoint.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="LSCVSAccount.cs" />
     <Compile Include="LSCVS\LSCVSRecord.cs" />
