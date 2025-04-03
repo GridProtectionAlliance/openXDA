@@ -54,82 +54,99 @@ namespace FaultData.DataResources.OSIPI
 
         public bool DidBreakerOpen(List<string> points, DateTime startTime, DateTime endTime, double breakerOpenValue)
         {
-            using (PIConnection connection = CreateConnection())
+            try
             {
-                connection.Open();
-
-                PIPointList pointList = new PIPointList();
-                bool encounteredTagLookupError = false;
-
-                foreach (string piTag in points)
+                using (PIConnection connection = CreateConnection())
                 {
-                    if (!PIPoint.TryFindPIPoint(connection.Server, piTag, out PIPoint point))
-                    {
-                        encounteredTagLookupError = true;
-                        Log.Error($"Unable to find PI point '{piTag}'.");
-
-                        // Even if an error occurs,
-                        // continue processing to log additional errors
-                        continue;
-                    }
-
-                    pointList.Add(point);
-                }
-
-                if (encounteredTagLookupError)
-                {
-                    Log.Error("Ignoring SCADA breaker status due to misconfiguration.");
-                    return true;
-                }
-
-                DateTime utcStartTime = XDATimeZoneConverter.ToUTCTimeZone(startTime);
-                DateTime utcEndTime = XDATimeZoneConverter.ToUTCTimeZone(endTime);
-                AFTimeRange timeRange = new AFTimeRange(utcStartTime, utcEndTime);
-                PIPagingConfiguration pagingConfiguration = new PIPagingConfiguration(PIPageType.EventCount, 100);
-
-                try
-                {
-                    IEnumerable<AFValue> afValues = pointList
-                        .RecordedValues(timeRange, AFBoundaryType.Outside, null, false, pagingConfiguration)
-                        .SelectMany(scanner => scanner);
-
-                    AFValue previousValue = null;
-
-                    foreach (AFValue afValue in afValues)
-                    {
-                        // Verify that the data point represents a change
-                        // from closed to open within the queried time range
-                        bool trip =
-                            !(previousValue is null) &&
-                            previousValue.ValueAsDouble() != breakerOpenValue &&
-                            afValue.ValueAsDouble() == breakerOpenValue &&
-                            afValue.Timestamp.UtcTime >= utcStartTime &&
-                            afValue.Timestamp.UtcTime <= utcEndTime;
-
-                        if (trip)
-                            return true;
-
-                        previousValue = afValue;
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    Exception ex = pagingConfiguration.Error;
-                    Log.Error($"Error while reading breaker state from OSI-PI: {ex.Message}", ex);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Error while reading breaker state from OSI-PI: {ex.Message}", ex);
-                    return true;
+                    connection.Open();
+                    return DidBreakerOpen(connection, points, startTime, endTime, breakerOpenValue);
                 }
             }
-
-            return false;
+            catch (Exception ex)
+            {
+                Log.Error($"Error while connecting to OSI-PI historian: {ex.Message}", ex);
+                return true;
+            }
         }
 
         public override void Initialize(MeterDataSet meterDataSet) =>
             XDATimeZoneConverter = new TimeZoneConverter(meterDataSet.Configure);
+
+        private bool DidBreakerOpen(PIConnection connection, List<string> points, DateTime startTime, DateTime endTime, double breakerOpenValue)
+        {
+            PIPointList pointList = new PIPointList();
+            DateTime utcStartTime = XDATimeZoneConverter.ToUTCTimeZone(startTime);
+            DateTime utcEndTime = XDATimeZoneConverter.ToUTCTimeZone(endTime);
+            AFTimeRange timeRange = new AFTimeRange(utcStartTime, utcEndTime);
+            PIPagingConfiguration pagingConfiguration = new PIPagingConfiguration(PIPageType.EventCount, 100);
+
+            if (!PopulatePointList(connection, points, pointList))
+            {
+                Log.Error("Ignoring SCADA breaker status due to misconfiguration.");
+                return true;
+            }
+
+            try
+            {
+                IEnumerable<AFValue> afValues = pointList
+                    .RecordedValues(timeRange, AFBoundaryType.Outside, null, false, pagingConfiguration)
+                    .SelectMany(scanner => scanner);
+
+                AFValue previousValue = null;
+
+                foreach (AFValue afValue in afValues)
+                {
+                    // Verify that the data point represents a change
+                    // from closed to open within the queried time range
+                    bool trip =
+                        !(previousValue is null) &&
+                        previousValue.ValueAsDouble() != breakerOpenValue &&
+                        afValue.ValueAsDouble() == breakerOpenValue &&
+                        afValue.Timestamp.UtcTime >= utcStartTime &&
+                        afValue.Timestamp.UtcTime <= utcEndTime;
+
+                    if (trip)
+                        return true;
+
+                    previousValue = afValue;
+                }
+
+                return false;
+            }
+            catch (OperationCanceledException)
+            {
+                Exception ex = pagingConfiguration.Error;
+                Log.Error($"Error while reading breaker state from OSI-PI: {ex.Message}", ex);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error while reading breaker state from OSI-PI: {ex.Message}", ex);
+                return true;
+            }
+        }
+
+        private bool PopulatePointList(PIConnection connection, List<string> points, PIPointList pointList)
+        {
+            bool encounteredError = false;
+
+            foreach (string piTag in points)
+            {
+                if (!PIPoint.TryFindPIPoint(connection.Server, piTag, out PIPoint point))
+                {
+                    encounteredError = true;
+                    Log.Error($"Unable to find PI point '{piTag}'.");
+
+                    // Even if an error occurs,
+                    // continue processing to log additional errors
+                    continue;
+                }
+
+                pointList.Add(point);
+            }
+
+            return !encounteredError;
+        }
 
         private PIConnection CreateConnection() => new PIConnection
         {
