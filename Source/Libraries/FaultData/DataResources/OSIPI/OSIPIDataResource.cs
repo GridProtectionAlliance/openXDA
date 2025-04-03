@@ -59,11 +59,27 @@ namespace FaultData.DataResources.OSIPI
                 connection.Open();
 
                 PIPointList pointList = new PIPointList();
+                bool encounteredTagLookupError = false;
 
                 foreach (string piTag in points)
                 {
-                    if (PIPoint.TryFindPIPoint(connection.Server, piTag, out PIPoint point))
-                        pointList.Add(point);
+                    if (!PIPoint.TryFindPIPoint(connection.Server, piTag, out PIPoint point))
+                    {
+                        encounteredTagLookupError = true;
+                        Log.Error($"Unable to find PI point '{piTag}'.");
+
+                        // Even if an error occurs,
+                        // continue processing to log additional errors
+                        continue;
+                    }
+
+                    pointList.Add(point);
+                }
+
+                if (encounteredTagLookupError)
+                {
+                    Log.Error("Ignoring SCADA breaker status due to misconfiguration.");
+                    return true;
                 }
 
                 DateTime utcStartTime = XDATimeZoneConverter.ToUTCTimeZone(startTime);
