@@ -33,6 +33,12 @@ namespace FaultData.DataResources.eDNA
 {
     public class EDNADataResource : DataResourceBase<MeterDataSet>, ISCADAHistorianResource
     {
+        #region [ Properties ]
+
+        private TimeZoneConverter XDATimeZoneConverter { get; set; }
+
+        #endregion
+
         #region [ Methods ]
 
         public bool DidBreakerOpen(List<string> points, DateTime startTime, DateTime endTime, double breakerOpenValue)
@@ -53,7 +59,9 @@ namespace FaultData.DataResources.eDNA
                     (int)eDNAHistoryReturnStatus.NO_HISTORY_FOR_TIME
                 };
 
-                int result = History.DnaGetHistRaw(point, startTime, endTime, out uint key);
+                DateTime localStartTime = XDATimeZoneConverter.ToUTCTimeZone(startTime).ToLocalTime();
+                DateTime localEndTime = XDATimeZoneConverter.ToUTCTimeZone(endTime).ToLocalTime();
+                int result = History.DnaGetHistRaw(point, localStartTime, localEndTime, out uint key);
 
                 while (result == 0)
                 {
@@ -67,8 +75,8 @@ namespace FaultData.DataResources.eDNA
                             previousPoint.Valid &&
                             previousPoint.Value != breakerOpenValue &&
                             value == breakerOpenValue &&
-                            time >= startTime &&
-                            time <= endTime;
+                            time >= localStartTime &&
+                            time <= localEndTime;
 
                         if (trip)
                             return true;
@@ -95,9 +103,8 @@ namespace FaultData.DataResources.eDNA
             return false;
         }
 
-        public override void Initialize(MeterDataSet dataSet)
-        {
-        }
+        public override void Initialize(MeterDataSet meterDataSet) =>
+            XDATimeZoneConverter = new TimeZoneConverter(meterDataSet.Configure);
 
         #endregion
 

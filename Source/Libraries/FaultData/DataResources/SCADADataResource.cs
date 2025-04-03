@@ -58,11 +58,6 @@ namespace FaultData.DataResources
         #region [ Properties ]
 
         [Category]
-        [SettingName(SystemSection.CategoryName)]
-        public SystemSection SystemSettings { get; }
-            = new SystemSection();
-
-        [Category]
         [SettingName(SCADASection.CategoryName)]
         public SCADASection SCADASettings { get; }
             = new SCADASection();
@@ -98,15 +93,10 @@ namespace FaultData.DataResources
             if (!points.Any())
                 return true;
 
-            DateTime utcClearingTime = TimeZoneInfo.ConvertTimeToUtc(approximateTime, SystemSettings.XDATimeZoneInfo);
-            DateTime localClearingTime = utcClearingTime.ToLocalTime();
-
             TimeSpan queryTolerance = SCADASettings.QueryToleranceSpan;
-            DateTime startTime = localClearingTime - queryTolerance;
-            DateTime endTime = localClearingTime + queryTolerance;
-
+            DateTime startTime = approximateTime - queryTolerance;
+            DateTime endTime = approximateTime + queryTolerance;
             double breakerOpenValue = SCADASettings.BreakerOpenValue;
-
             return SCADAHistorianResource.DidBreakerOpen(points, startTime, endTime, breakerOpenValue);
         }
 
