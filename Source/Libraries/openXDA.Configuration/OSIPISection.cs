@@ -47,12 +47,14 @@ namespace openXDA.Configuration
         /// Gets or sets user name for logging into PI historian server.
         /// </summary>
         [Setting]
+        [DefaultValue("")]
         public string UserName { get; set; }
 
         /// <summary>
         /// Gets or sets password for logging into PI historian server.
         /// </summary>
         [Setting]
+        [DefaultValue("")]
         public string Password { get; set; }
 
         /// <summary>
