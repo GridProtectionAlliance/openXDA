@@ -466,7 +466,6 @@
       <ComponentRef Id="openXDA.ArcGIS" />
       <ComponentRef Id="openXDA.Configuration" />
       <ComponentRef Id="openHistorian.XDALink" />
-      <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
 	  <ComponentRef Id="openXDA.APIMiddleware" />
 	  <ComponentRef Id="openXDA.APIAuthentication" />
@@ -647,9 +646,6 @@
       </Component>
       <Component Id="openXDA.Configuration">
         <File Id="openXDA.Configuration.dll" Name="$(var.openXDA.Configuration.TargetFileName)" Source="$(var.openXDA.Configuration.TargetPath)" />
-      </Component>
-      <Component Id="openXDA.Hubs">
-        <File Id="openXDA.Hubs.dll" Name="$(var.openXDA.Hubs.TargetFileName)" Source="$(var.openXDA.Hubs.TargetPath)" />
       </Component>
       <Component Id="openXDA.Model">
         <File Id="openXDA.Model.dll" Name="$(var.openXDA.Model.TargetFileName)" Source="$(var.openXDA.Model.TargetPath)" />
