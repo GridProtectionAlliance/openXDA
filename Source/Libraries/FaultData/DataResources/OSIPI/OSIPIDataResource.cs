@@ -96,6 +96,9 @@ namespace FaultData.DataResources.OSIPI
 
                 foreach (AFValue afValue in afValues)
                 {
+                    if (!afValue.IsGood)
+                        continue;
+
                     // Verify that the data point represents a change
                     // from closed to open within the queried time range
                     bool trip =
