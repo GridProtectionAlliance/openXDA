@@ -471,10 +471,6 @@
       <Project>{2528ec50-0be9-4a9f-8ac3-77fc42afe8ce}</Project>
       <Name>openXDA.HIDS</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\openXDA.Hubs\openXDA.Hubs.csproj">
-      <Project>{63e2953c-1c57-41c8-a51d-08e52780bf8a}</Project>
-      <Name>openXDA.Hubs</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.DataPusher\openXDA.DataPusher.csproj">
       <Project>{666eb8a6-fba9-454c-8537-9113c2ee68d4}</Project>
       <Name>openXDA.DataPusher</Name>
