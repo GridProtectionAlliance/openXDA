@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  EDNAPoint.cs - Gbtc
+//  SCADAPoint.cs - Gbtc
 //
 //  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -25,10 +25,11 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class EDNAPoint
+    public class SCADAPoint
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        [ParentKey(typeof(Breaker))]
         public int BreakerID { get; set; }
         public string Point { get; set; }
     }

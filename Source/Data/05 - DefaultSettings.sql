@@ -335,6 +335,18 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ResultsPath', 'Results', 'Results')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SCADA.Historian', 'None', 'None')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SCADA.PointQuery', 'SELECT NULL AS Point WHERE 1 IS NULL', 'SELECT NULL AS Point WHERE 1 IS NULL')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SCADA.QueryTolerance', '4.0', '4.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SCADA.BreakerOpenValue', '0.0', '0.0')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.Schedule', '* 0 * * *', '* 0 * * *')
 GO
 

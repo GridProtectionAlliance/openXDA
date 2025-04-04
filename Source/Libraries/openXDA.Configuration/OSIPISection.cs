@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  EDNASection.cs - Gbtc
+//  OSIPISection.cs - Gbtc
 //
-//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,63 +16,54 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/09/2018 - Stephen C. Wills
+//  03/21/2025 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
 using System.ComponentModel;
 using System.Configuration;
 
 namespace openXDA.Configuration
 {
-    public class EDNASection
+    public class OSIPISection
     {
         #region [ Members ]
 
         // Constants
-        public const string CategoryName = "EDNA";
+        public const string CategoryName = "OSIPI";
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the database query to get the list of
-        /// EDNA points that indicate breaker state for the line.
+        /// Gets or sets name of the PI historian server to connect to.
         /// </summary>
         [Setting]
-        [DefaultValue("SELECT NULL AS Point WHERE 1 IS NULL")]
-        public string PointQuery { get; set; }
+        public string ServerName { get; set; }
 
         /// <summary>
-        /// Gets or sets the tolerance, in seconds, that determines the
-        /// time range to be queried around the fault clearing point.
+        /// Gets or sets user name for logging into PI historian server.
         /// </summary>
         [Setting]
-        [DefaultValue(4.0D)]
-        public double QueryTolerance { get; set; }
+        [DefaultValue("")]
+        public string UserName { get; set; }
 
         /// <summary>
-        /// Gets or sets the value of the point representing
-        /// breaker state when the breaker is open.
+        /// Gets or sets password for logging into PI historian server.
         /// </summary>
         [Setting]
-        [DefaultValue(0.0D)]
-        public double BreakerOpenValue { get; set; }
+        [DefaultValue("")]
+        public string Password { get; set; }
 
         /// <summary>
-        /// Gets the tolerance that determines the time range
-        /// to be queried around the fault clearing point.
+        /// Gets or sets time to wait when establishing
+        /// connection to PI server before failing.
         /// </summary>
-        public TimeSpan QueryToleranceSpan
-        {
-            get
-            {
-                return TimeSpan.FromSeconds(QueryTolerance);
-            }
-        }
+        [Setting]
+        [DefaultValue(30000)]
+        public int ConnectTimeout { get; set; }
 
         #endregion
     }
