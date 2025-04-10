@@ -41,6 +41,7 @@ namespace openXDA.Configuration
         /// Gets or sets name of the PI historian server to connect to.
         /// </summary>
         [Setting]
+        [DefaultValue("")]
         public string ServerName { get; set; }
 
         /// <summary>
