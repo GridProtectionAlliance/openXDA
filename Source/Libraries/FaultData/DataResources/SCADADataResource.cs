@@ -44,6 +44,8 @@ namespace FaultData.DataResources
         public interface ISCADAHistorianResource
         {
             bool DidBreakerOpen(List<string> points, DateTime startTime, DateTime endTime, double breakerOpenValue);
+
+            IEnumerable<string> QuerySCADADataPoints(string pointTag, int take);
         }
 
         public enum SCADASystem
@@ -98,6 +100,14 @@ namespace FaultData.DataResources
             DateTime endTime = approximateTime + queryTolerance;
             double breakerOpenValue = SCADASettings.BreakerOpenValue;
             return SCADAHistorianResource.DidBreakerOpen(points, startTime, endTime, breakerOpenValue);
+        }
+
+        public IEnumerable<string> QuerySCADADataPoints(string pointTag, int take)
+        {
+            // If no resource, a search doesn't really make sense
+            if (SCADAHistorianResource is null)
+                throw new NullReferenceException("SCADA Historian resource is not defined. Check XDA SCADA.Historian setting.");
+            return SCADAHistorianResource.QuerySCADADataPoints(pointTag, take);
         }
 
         public override void Initialize(MeterDataSet meterDataSet)
