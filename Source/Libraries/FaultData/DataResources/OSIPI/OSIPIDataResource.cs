@@ -69,6 +69,28 @@ namespace FaultData.DataResources.OSIPI
             }
         }
 
+        public IEnumerable<string> QuerySCADADataPoints(string pointTag, int take)
+        {
+            try
+            {
+                using (PIConnection connection = CreateConnection())
+                {
+                    connection.Open();
+                    string searchText = $"*{pointTag}*";
+                    return PIPoint.FindPIPoints(connection.Server, searchText, null, new List<string> { PICommonPointAttributes.Tag })
+                        .Select(point => {
+                            point.LoadAttributes();
+                            return (string) point.GetAttribute(PICommonPointAttributes.Tag);
+                        }).Take(take);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error while connecting to OSI-PI historian: {ex.Message}", ex);
+                return new string[] { };
+            }
+        }
+
         public override void Initialize(MeterDataSet meterDataSet) =>
             XDATimeZoneConverter = new TimeZoneConverter(meterDataSet.Configure);
 
