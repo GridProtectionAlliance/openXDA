@@ -103,6 +103,36 @@ namespace FaultData.DataResources.eDNA
             return false;
         }
 
+        public IEnumerable<string> QuerySCADADataPoints(string pointTag, int take)
+        {
+            return new string[] { };
+            // Since we are not able to test at the moment, we leave this out,
+            // but this untested code may be useful to they who implement this.
+            // This requires additional conversation about how to do UI, since 
+            // The tag needed is SITE.SERVICE.IDENTIFIER, as per docs, but searching
+            // Would require us to split that...
+            /*
+            string[] parameters = pointTag.Split('.');
+            int result = InStep.eDNA.EzDNAApiNet.Configuration.EzFindPoints(
+                $"*{parameters[0]}*",
+                $"*{parameters[1]}*",
+                "*",
+                $"*{parameters[2]}*",
+                "*", "*", "*", "*", "*",
+                out int key
+            );
+            int tableSize = InStep.eDNA.EzDNAApiNet.Configuration.EzFindPointsSize(key);
+            int recordsReturned = take <= tableSize ? take : tableSize;
+            string[] tagArray = new string[recordsReturned];
+            tagArray.Select((_, index) =>
+            {
+                InStep.eDNA.EzDNAApiNet.Configuration.EzFindPointsRec(key, index, out string site, out string service, _, out string id);
+                return $"{site}.{service}.{id}";
+            });
+            return tagArray;
+            */
+        }
+
         public override void Initialize(MeterDataSet meterDataSet) =>
             XDATimeZoneConverter = new TimeZoneConverter(meterDataSet.Configure);
 

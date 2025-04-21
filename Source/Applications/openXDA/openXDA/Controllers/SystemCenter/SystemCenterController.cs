@@ -21,9 +21,15 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using FaultData.DataResources;
+using FaultData.DataSets;
+using GSF.Data;
 using log4net;
+using Newtonsoft.Json.Linq;
 using openXDA.Nodes;
 
 namespace openXDA.Controllers.Config
@@ -60,6 +66,50 @@ namespace openXDA.Controllers.Config
         public Task<string> QuerySystemHealth()
         {
             return ServiceConnection.Host.QueryEngineStatusAsync();
+        }
+
+        //Note: if we make a SCADA point model controller, we may want move this to that
+        [Route("SCADAPoint/SCADAPointSearch"), HttpPost]
+        public IHttpActionResult QuerySCADADataPoints([FromBody] JObject query, CancellationToken token)
+        {
+            try
+            {
+                MeterDataSet meterDataSet = new MeterDataSet();
+                Action<object> configurator = GetConfigurator();
+                meterDataSet.Configure = configurator;
+                SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
+                scadaDataResource.Initialize(meterDataSet);
+                if (!query.ContainsKey("TagSearch"))
+                {
+                    return BadRequest("Missing query parameter: StartTime");
+                }
+                string tagSearch = query.Value<string>("TagSearch");
+
+                int take;
+                if (query.ContainsKey("Take"))
+                {
+                    take = query.Value<int>("Take");
+                }
+                else take = 50;
+                return Ok(scadaDataResource.QuerySCADADataPoints(tagSearch, take));
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+        private Action<object> GetConfigurator()
+        {
+            ConfigurationLoader configurationLoader = new ConfigurationLoader(NodeHost.ID, CreateDbConnection);
+            return configurationLoader.Configure;
+        }
+
+        private AdoDataConnection CreateDbConnection()
+        {
+            AdoDataConnection connection = NodeHost.CreateDbConnection();
+            connection.DefaultTimeout = DataExtensions.DefaultTimeoutDuration;
+            return connection;
         }
 
         #endregion
