@@ -5137,25 +5137,48 @@ WHERE
 GO
 
 CREATE VIEW ActiveSubscription AS
-	SELECT 
-		UserAccountEmailType.ID AS UserAccountEmailID,
-		UserAccountEmailType.UserAccountID AS UserAccountID,
-		UserAccountEmailType.Approved AS Approved,
-		AssetGroup.Name AS AssetGroup,
-		EmailType.Name AS EmailName,
-		EmailCategory.Name AS Category,
-		EmailType.ID AS EmailTypeID,
-		SentEmail.Subject AS Subject,
-		SentEmail.TimeSent AS LastSent,
-        UserAccount.Name AS UserName,
-		UserAccount.Email AS Email,
-        EmailType.RequireApproval AS RequireApproval
-	FROM UserAccountEmailType LEFT JOIN
-		AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
-		EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID LEFT JOIN
-		EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
-		SentEmail ON SentEmail.EmailTypeID = EmailType.ID  LEFT JOIN
-		UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID
+    SELECT
+		UserAccountEmailID,
+        UserAccountID,
+        Approved,
+        AssetGroup,
+        EmailName,
+        Category,
+        EmailTypeID,
+        Subject,
+        LastSent,
+        UserName,
+        FirstName,
+		LastName,
+        Email,
+        RequireApproval
+	FROM (
+        SELECT 
+            UserAccountEmailType.ID AS UserAccountEmailID,
+            UserAccountEmailType.UserAccountID,
+            UserAccountEmailType.Approved,
+            AssetGroup.Name AS AssetGroup,
+            EmailType.Name AS EmailName,
+            EmailCategory.Name AS Category,
+            EmailType.ID AS EmailTypeID,
+            SentEmail.Subject AS Subject,
+            SentEmail.TimeSent AS LastSent,
+            UserAccount.Name AS UserName,
+            UserAccount.FirstName AS FirstName,
+			UserAccount.LastName AS LastName,
+            UserAccount.Email,
+            EmailType.RequireApproval,
+            ROW_NUMBER() OVER (
+                PARTITION BY UserAccountEmailType.ID
+                ORDER BY SentEmail.TimeSent DESC
+            ) AS rn
+        FROM UserAccountEmailType LEFT JOIN
+            AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
+            EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID LEFT JOIN
+            EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
+            SentEmail ON SentEmail.EmailTypeID = EmailType.ID LEFT JOIN
+            UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID
+    ) AS recent WHERE rn = 1
 GO
 
 CREATE VIEW ActiveScheduledSubscription AS
