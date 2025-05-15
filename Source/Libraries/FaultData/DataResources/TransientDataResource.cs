@@ -31,7 +31,7 @@ using GSF;
 using GSF.Configuration;
 using openXDA.Configuration;
 using Phase = GSF.PQDIF.Logical.Phase;
-
+using DataPoint = openXDA.Model.DataPoint;
 namespace FaultData.DataResources
 {
     public class TransientDataResource : DataResourceBase<MeterDataSet>

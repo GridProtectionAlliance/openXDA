@@ -38,6 +38,7 @@ using ChartSeries = System.Windows.Forms.DataVisualization.Charting.Series;
 using log4net;
 using GSF;
 using GSF.Data;
+using DataPoint = System.Windows.Forms.DataVisualization.Charting.DataPoint;
 
 namespace openXDA.Reports
 {

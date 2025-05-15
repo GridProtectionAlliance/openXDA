@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Net;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
@@ -37,17 +38,6 @@ namespace openXDA.Model
     [TableName("ChannelData")]
     public class ChannelData
     {
-        #region [ Members ]
-
-        // Nested Types
-        private class DataPoint
-        {
-            public DateTime Time;
-            public double Value;
-        }
-
-        #endregion
-
         #region [ Properties ]
 
         [PrimaryKey(true)]
@@ -217,7 +207,13 @@ namespace openXDA.Model
             connection.ExecuteNonQuery("DELETE FROM EventData WHERE ID = {0}", eventDataID);
         }
 
-        private static byte[] ToData(List<DataPoint> data, int seriesID)
+        /// <summary>
+        /// Turns a List of DataPoints into a blob to be saved in the database.
+        /// </summary>
+        /// <param name="data">The data as a <see cref="List{DataPoint}"/></param>
+        /// <param name="seriesID">The SeriesID to be encoded into the blob</param>
+        /// <returns></returns>
+        public static byte[] ToData(List<DataPoint> data, int seriesID)
         {
             //We can use Digital compression if the data changes no more than 10% of the time.
 
@@ -365,7 +361,13 @@ namespace openXDA.Model
             return returnArray;
         }
 
-        private static List<Tuple<int, List<DataPoint>>> Decompress(byte[] data)
+
+        /// <summary>
+        /// Decompresses a byte array into a List of DataPoints
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns>a List of Tuples of SeriesID and Datapoint </returns>
+        public static List<Tuple<int, List<DataPoint>>> Decompress(byte[] data)
         {
             List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
 
@@ -451,6 +453,7 @@ namespace openXDA.Model
             return result;
         }
 
+  
         private static List<Tuple<int, List<DataPoint>>> Decompress_Legacy(byte[] data)
         {
             List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
