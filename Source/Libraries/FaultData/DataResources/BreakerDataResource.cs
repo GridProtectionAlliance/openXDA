@@ -32,6 +32,7 @@ using GSF.Configuration;
 using GSF.NumericalAnalysis;
 using GSF.PQDIF.Logical;
 using openXDA.Configuration;
+using DataPoint = openXDA.Model.DataPoint;
 
 namespace FaultData.DataResources
 {

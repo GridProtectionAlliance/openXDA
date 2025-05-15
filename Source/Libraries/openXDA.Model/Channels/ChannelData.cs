@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Net;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
@@ -37,17 +38,6 @@ namespace openXDA.Model
     [TableName("ChannelData")]
     public class ChannelData
     {
-        #region [ Members ]
-
-        // Nested Types
-        private class DataPoint
-        {
-            public DateTime Time;
-            public double Value;
-        }
-
-        #endregion
- 
         #region [ Properties ]
 
         [PrimaryKey(true)]
@@ -217,11 +207,30 @@ namespace openXDA.Model
             connection.ExecuteNonQuery("DELETE FROM EventData WHERE ID = {0}", eventDataID);
         }
 
-        private static byte[] ToData(List<DataPoint> data, int seriesID)
+        /// <summary>
+        /// Turns a List of DataPoints into a blob to be saved in the database.
+        /// </summary>
+        /// <param name="data">The data as a <see cref="List{DataPoint}"/></param>
+        /// <param name="seriesID">The SeriesID to be encoded into the blob</param>
+        /// <returns></returns>
+        public static byte[] ToData(List<DataPoint> data, int seriesID)
         {
+            //We can use Digital compression if the data changes no more than 10% of the time.
+
+            int i = 0;
+            bool useDigitalCompression = data
+                .Skip(1)
+                .Zip(data, (p2, p1) => new { p1, p2 })
+                .Where(obj => obj.p1.Value != obj.p2.Value)
+                .Select((_, index) => index + 1)
+                .All(nChanges => nChanges <= 0.1 * data.Count);
+
+            if (useDigitalCompression)
+                return ToDigitalData(data, seriesID);
+
             var timeSeries = data.Select(dataPoint => new { Time = dataPoint.Time.Ticks, Compressed = false }).ToList();
 
-            for (int i = 1; i < timeSeries.Count; i++)
+            for (i = 1; i < timeSeries.Count; i++)
             {
                 long previousTimestamp = data[i - 1].Time.Ticks;
                 long timestamp = timeSeries[i].Time;
@@ -234,7 +243,7 @@ namespace openXDA.Model
             int timeSeriesByteLength = timeSeries.Sum(obj => obj.Compressed ? sizeof(ushort) : sizeof(int) + sizeof(long));
             int dataSeriesByteLength = sizeof(int) + (2 * sizeof(double)) + (data.Count * sizeof(ushort));
             int totalByteLength = sizeof(int) + timeSeriesByteLength + dataSeriesByteLength;
-           
+
             byte[] result = new byte[totalByteLength];
             int offset = 0;
 
@@ -246,7 +255,7 @@ namespace openXDA.Model
                 .Select(obj => obj.Index)
                 .ToList();
 
-            for (int i = 0; i < uncompressedIndexes.Count; i++)
+            for (i = 0; i < uncompressedIndexes.Count; i++)
             {
                 int index = uncompressedIndexes[i];
                 int nextIndex = (i + 1 < uncompressedIndexes.Count) ? uncompressedIndexes[i + 1] : timeSeries.Count;
@@ -289,7 +298,76 @@ namespace openXDA.Model
             return returnArray;
         }
 
-        private static List<Tuple<int, List<DataPoint>>> Decompress(byte[] data)
+        private static byte[] ToDigitalData(List<DataPoint> data, int seriesID)
+        {
+            int i;
+            IEnumerable<DataPoint> changeSeries = data.Where((point,index) => index == 0 || index == data.Count - 1 || point.Value != data[index-1].Value);
+
+            const ushort NaNValue = ushort.MaxValue;
+            const ushort MaxCompressedValue = ushort.MaxValue - 1;
+            double range = changeSeries.Select(item => item.Value).Max() - changeSeries.Select(item => item.Value).Min();
+            double decompressionOffset = changeSeries.Select(item => item.Value).Min();
+            double decompressionScale = range / MaxCompressedValue;
+            double compressionScale = (decompressionScale != 0.0D) ? 1.0D / decompressionScale : 0.0D;
+
+            long startTime = data.First().Time.Ticks;
+            long sampleRate = data[1].Time.Ticks -  startTime;
+
+            int totalByteLength = 2 * sizeof(int) + 2 * sizeof(long) + 2 * sizeof(double) + sizeof(int) + changeSeries.Count() * (sizeof(long) + sizeof(ushort));
+
+            byte[] result = new byte[totalByteLength];
+            int offset = 0;
+
+            offset += LittleEndian.CopyBytes(data.Count, result, offset);
+            offset += LittleEndian.CopyBytes(seriesID, result, offset);
+
+            offset += LittleEndian.CopyBytes(startTime, result, offset);
+            offset += LittleEndian.CopyBytes(sampleRate, result, offset);
+
+            offset += LittleEndian.CopyBytes(decompressionOffset, result, offset);
+            offset += LittleEndian.CopyBytes(decompressionScale, result, offset);
+
+            offset += LittleEndian.CopyBytes(data.Count, result, offset);
+
+            foreach (DataPoint dataPoint in changeSeries)
+            {
+                ushort compressedValue = (ushort)Math.Round((dataPoint.Value - decompressionOffset) * compressionScale);
+
+                if (compressedValue == NaNValue)
+                    compressedValue--;
+
+                if (double.IsNaN(dataPoint.Value))
+                    compressedValue = NaNValue;
+
+                long time = dataPoint.Time.Ticks - startTime;
+
+                offset += LittleEndian.CopyBytes(time, result, offset);
+                offset += LittleEndian.CopyBytes(compressedValue, result, offset);
+            }
+
+            byte[] returnArray = GZipStream.CompressBuffer(result);
+
+            if (changeSeries.Count() == 2 && changeSeries.First().Value == changeSeries.Last().Value)
+            {
+                returnArray[0] = constantDigitalHeader[0];
+                returnArray[1] = constantDigitalHeader[1];
+            }
+            else
+            {
+                returnArray[0] = digitalHeader[0];
+                returnArray[1] = digitalHeader[1];
+            }
+
+            return returnArray;
+        }
+
+
+        /// <summary>
+        /// Decompresses a byte array into a List of DataPoints
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns>a List of Tuples of SeriesID and Datapoint </returns>
+        public static List<Tuple<int, List<DataPoint>>> Decompress(byte[] data)
         {
             List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
 
@@ -297,14 +375,19 @@ namespace openXDA.Model
                 return result;
             // If the blob contains the GZip header,
             // use the legacy deserialization algorithm
-            if (data[0] == 0x1F && data[1] == 0x8B)
+            if (data[0] == legacyHeader[0] && data[1] == legacyHeader[1])
             {
                 return Decompress_Legacy(data);
             }
-
+            // If this blob uses digital decompression use that algorithm
+            if ((data[0] == digitalHeader[0] && data[1] == digitalHeader[1]) || (data[0] == constantDigitalHeader[0] && data[1] == constantDigitalHeader[1]))
+            {
+                return Decompress_Digital(data);
+            }
+          
             // Restore the GZip header before uncompressing
-            data[0] = 0x1F;
-            data[1] = 0x8B;
+            data[0] = legacyHeader[0];
+            data[1] = legacyHeader[1];
 
             byte[] uncompressedData;
             int offset;
@@ -362,14 +445,15 @@ namespace openXDA.Model
                         Value = decompressedValue
                     });
                 }
-               
 
-                    result.Add(new Tuple<int, List<DataPoint>>(seriesID, dataSeries));
+
+                result.Add(new Tuple<int, List<DataPoint>>(seriesID, dataSeries));
             }
 
             return result;
         }
 
+  
         private static List<Tuple<int, List<DataPoint>>> Decompress_Legacy(byte[] data)
         {
             List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
@@ -415,6 +499,106 @@ namespace openXDA.Model
             return result;
         }
 
+        /// <summary>
+        /// Decompresses a Digital stored as compresed series of changes
+        /// </summary>
+        /// <param name="data"> The compressed <see cref="byte[]"/></param>
+        /// <returns> a Dictionary mapping a SeriesID to a decopmressed <see cref="List{DataPoint}"/></returns>
+        private static List<Tuple<int, List<DataPoint>>> Decompress_Digital(byte[] data)
+        {
+            List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
+            byte[] uncompressedData;
+            int offset;
+            int m_samples;
+            DateTime startTime;
+            int seriesID;
+            long samplingrate;
+            List<DataPoint> points = new List<DataPoint>();
+            int m_points;
+
+            // Restore the GZip header before uncompressing
+            data[0] = legacyHeader[0];
+            data[1] = legacyHeader[1];
+
+            uncompressedData = GZipStream.UncompressBuffer(data);
+            offset = 0;
+
+            m_samples = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            if (m_samples < 2)
+                throw new InvalidOperationException("Digital Data must have the first and last point encoded.");
+
+            seriesID = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            startTime = new DateTime(LittleEndian.ToInt64(uncompressedData, offset));
+            offset += sizeof(long);
+
+            samplingrate = LittleEndian.ToInt64(uncompressedData, offset);
+            offset += sizeof(long);
+
+            double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
+            double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
+            offset += 2 * sizeof(double);
+
+            m_points = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            // Always have the first point available.
+            ulong time = LittleEndian.ToUInt64(uncompressedData, offset);
+            offset += sizeof(long);
+            ushort compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
+            offset += sizeof(ushort);
+
+            double decompressedValue = decompressionScale * compressedValue + decompressionOffset;
+
+            double lastValue = decompressedValue;
+            long lastTime = (long)time;
+
+            for (int i = 1; i < m_samples; i++)
+            {
+                time = LittleEndian.ToUInt64(uncompressedData, offset);
+                offset += sizeof(int);
+                compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
+                offset += sizeof(ushort);
+
+                decompressedValue = decompressionScale * compressedValue + decompressionOffset;
+                while (time > (ulong)(lastTime + samplingrate))
+                {
+                    lastTime += samplingrate;
+                    points.Add(new DataPoint()
+                    {
+                        Time = startTime.AddTicks(lastTime),
+                        Value = lastValue
+                    });
+                    
+                }
+
+                points.Add(new DataPoint()
+                {
+                    Time = startTime.AddTicks((long)time),
+                    Value = decompressedValue
+                });
+
+                lastTime = (long)time;
+                lastValue = decompressedValue;
+            }
+
+            while (points.Count < m_points)
+            {
+                    points.Add(new DataPoint()
+                    {
+                        Time = startTime.AddTicks(lastTime),
+                        Value = lastValue
+                    });
+                
+            }
+            result.Add(new Tuple<int, List<DataPoint>>(seriesID, points));
+
+            return result;
+        }
+
         private static HashSet<int> QueryChannelsWithData(AdoDataConnection connection, Event evt)
         {
             const string FilterQueryFormat =
@@ -450,6 +634,25 @@ namespace openXDA.Model
             }
         }
 
+        /// <summary>
+        /// The header of a datablob compressed as analog Data
+        /// </summary>
+        public static readonly byte[] analogHeader = { 0x11, 0x11 };
+
+        /// <summary>
+        /// The header of a datablob compressed as Digital State Changes
+        /// </summary>
+        public static readonly byte[] digitalHeader = { 0x22, 0x22 };
+
+        /// <summary>
+        /// The header of a datablob compressed as empty Digital State Changes
+        /// </summary>
+        public static readonly byte[] constantDigitalHeader = { 0x33, 0x33 };
+
+        /// <summary>
+        /// The header of a datablob compressed as Legacy Data
+        /// </summary>
+        public static readonly byte[] legacyHeader = { 0x1F, 0x8B };
         #endregion
     }
 }
