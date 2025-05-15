@@ -317,7 +317,7 @@ namespace openXDA.Model
             long startTime = data.First().Time.Ticks;
             long sampleRate = data[1].Time.Ticks -  startTime;
 
-            int totalByteLength = 2 * sizeof(int) + 2 * sizeof(long) + 2 * sizeof(double) + changeSeries.Count() * (sizeof(long) + sizeof(ushort));
+            int totalByteLength = 2 * sizeof(int) + 2 * sizeof(long) + 2 * sizeof(double) + sizeof(int) + changeSeries.Count() * (sizeof(long) + sizeof(ushort));
 
             byte[] result = new byte[totalByteLength];
             int offset = 0;
@@ -330,6 +330,8 @@ namespace openXDA.Model
 
             offset += LittleEndian.CopyBytes(decompressionOffset, result, offset);
             offset += LittleEndian.CopyBytes(decompressionScale, result, offset);
+
+            offset += LittleEndian.CopyBytes(data.Count, result, offset);
 
             foreach (DataPoint dataPoint in changeSeries)
             {
@@ -509,6 +511,7 @@ namespace openXDA.Model
             int seriesID;
             long samplingrate;
             List<DataPoint> points = new List<DataPoint>();
+            int m_points;
 
             // Restore the GZip header before uncompressing
             data[0] = legacyHeader[0];
@@ -535,6 +538,9 @@ namespace openXDA.Model
             double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
             double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
             offset += 2 * sizeof(double);
+
+            m_points = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
 
             // Always have the first point available.
             ulong time = LittleEndian.ToUInt64(uncompressedData, offset);
@@ -576,6 +582,15 @@ namespace openXDA.Model
                 lastValue = decompressedValue;
             }
 
+            while (points.Count < m_points)
+            {
+                    points.Add(new DataPoint()
+                    {
+                        Time = startTime.AddTicks(lastTime),
+                        Value = lastValue
+                    });
+                
+            }
             result.Add(new Tuple<int, List<DataPoint>>(seriesID, points));
 
             return result;
