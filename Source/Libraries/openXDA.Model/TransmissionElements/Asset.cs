@@ -388,7 +388,6 @@ namespace openXDA.Model
                 }
 
                 potentials = remoteAsset.GetConnectedChannel(connection, ignoredAssets, alowedLocations);
-                ignoredAssets.Pop();
 
                 foreach (Channel channel in potentials)
                 {
@@ -399,6 +398,8 @@ namespace openXDA.Model
                     }
                 }
             }
+
+            ignoredAssets.Pop();
 
             return result.Distinct(new ChannelComparer());
         }
