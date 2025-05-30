@@ -121,6 +121,7 @@ CREATE Table [ExternalDatabases] (
     LastDataUpdate DATETIME2 NULL DEFAULT(NULL),
     Constraint UC_ExternalDatabase UNIQUE(Name)
 )
+GO
 
 CREATE Table [extDBTables] (
 	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
