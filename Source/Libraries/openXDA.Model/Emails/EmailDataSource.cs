@@ -28,7 +28,7 @@ namespace openXDA.Model
 {
     [KnownType(typeof(ScheduledEmailDataSource))]
     [KnownType(typeof(TriggeredEmailDataSource))]
-    public abstract class EmailDataSource
+    public class EmailDataSource
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
