@@ -1039,8 +1039,13 @@ namespace FaultData.DataOperations
                     measurementCharacteristic = "Instantaneous";
                     measurementType = "Current";
                 }
+                else
+                {
+                    Log.Warn($"Unknown trigger channel type for channel {trendChannel.Name}. This channel will be skipped.");
+                    return;
+                }
 
-                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name ={0}", measurementCharacteristic);
+                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = {0}", measurementCharacteristic);
                 trendChannel.MeasurementCharacteristicID = trendChannel.MeasurementCharacteristic.ID;
 
                 trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = {0}", measurementType);
