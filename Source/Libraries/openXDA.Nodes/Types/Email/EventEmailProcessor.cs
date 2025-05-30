@@ -179,6 +179,8 @@ namespace openXDA.Nodes.Types.Email
 
             using (AdoDataConnection connection = ConnectionFactory())
             {
+                if (string.IsNullOrEmpty(m_emailModel.TriggerEmailSQL))
+                    return false;
                 return connection.ExecuteScalar<bool>(m_emailModel.TriggerEmailSQL, evt.ID);
             }
         }
