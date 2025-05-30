@@ -28,6 +28,7 @@ using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.Data;
+using openXDA.Model;
 
 namespace FaultData.DataOperations
 {

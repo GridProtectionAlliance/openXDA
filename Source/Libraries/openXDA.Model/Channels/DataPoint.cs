@@ -1,14 +1,14 @@
 ﻿//******************************************************************************************************
 //  DataPoint.cs - Gbtc
 //
-//  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
 //  not use this file except in compliance with the License. You may obtain a copy of the License at:
 //
-//      http://www.opensource.org/licenses/eclipse-1.0.php
+//      http://opensource.org/licenses/MIT
 //
 //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
@@ -16,21 +16,28 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/01/2014 - Stephen C. Wills
+//  05/15/2025 - C. Lackner
 //       Generated original version of source code.
-//  07/09/2019 - Christoph Lackner
-//       Added value comparison.
 //
 //******************************************************************************************************
 
 using System;
 
-namespace FaultData.DataAnalysis
+namespace openXDA.Model
 {
+    /// <summary>
+    /// Represents a single data point in a time series.
+    /// </summary>
     public class DataPoint
     {
-        public DateTime Time;
-        public double Value;
+        #region [ Properties ]
+
+        public DateTime Time { get; set; }
+        public double Value { get; set; }
+
+        #endregion
+
+        #region [ Methods ]
 
         public DataPoint Shift(TimeSpan timeShift)
         {
@@ -90,14 +97,16 @@ namespace FaultData.DataAnalysis
             };
         }
 
-        public Boolean LargerThan(double comparison)
+        public bool LargerThan(double comparison)
         {
-            return (Value > comparison);
+            return Value > comparison;
         }
 
-        public Boolean LargerThan(DataPoint point)
+        public bool LargerThan(DataPoint point)
         {
-            return (LargerThan(point.Value));
+            return LargerThan(point.Value);
         }
+
+        #endregion
     }
 }
