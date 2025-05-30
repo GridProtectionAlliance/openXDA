@@ -22,6 +22,13 @@
 //******************************************************************************************************
 
 
+using FaultData.DataAnalysis;
+using FaultData.DataResources;
+using FaultData.DataSets;
+using GSF.Data;
+using GSF.Data.Model;
+using log4net;
+using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -30,116 +37,18 @@ using System.Linq;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using System.Threading;
-using FaultData.DataAnalysis;
-using FaultData.DataResources;
-using FaultData.DataSets;
-using GSF.Data;
-using GSF.Data.Model;
-using log4net;
-using openXDA.Model;
 using SystemCenter.Model;
+using static FaultData.DataSets.CyclicHistogramDataSet;
 
 namespace FaultData.DataOperations
 {
-    public class DailyStatisticOperation : DataOperationBase<MeterDataSet>
+    public class DailyStatisticOperation
     {
-        private static Mutex s_mutex = new Mutex();
-        private static readonly ILog Log = LogManager.GetLogger(typeof(DailyStatisticOperation));
 
-        public override void Execute(MeterDataSet meterDataSet)
-        {
-            try
-            {
-                s_mutex.WaitOne();
-
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                {
-                    string timeZone = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'System.XDATimeZone'");
-                    DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZone));
-
-                    IEnumerable<OpenXDADailyStatistic> dailyStatistics = new TableOperations<OpenXDADailyStatistic>(connection).QueryRecordsWhere("Meter = {0}", meterDataSet.Meter.AssetKey);
-
-                    if (!dailyStatistics.Any())
-                    {
-
-                        OpenXDADailyStatistic dailyStatistic = new OpenXDADailyStatistic();
-                        dailyStatistic.ID = 0;
-                        dailyStatistic.Date = now.Date.ToString("MM/dd/yyyy");
-                        dailyStatistic.Meter = meterDataSet.Meter.AssetKey;
-
-                        dailyStatistic.LastSuccessfulFileProcessed = now;
-                        dailyStatistic.LastUnsuccessfulFileProcessed = null;
-                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = null;
-
-                        dailyStatistic.TotalFilesProcessed = 1;
-                        dailyStatistic.TotalSuccessfulFilesProcessed = 1;
-                        dailyStatistic.TotalUnsuccessfulFilesProcessed = 0;
-                        dailyStatistic.TotalEmailsSent = 0;
-
-                        dailyStatistic.AverageDownloadLatency = meterDataSet.FileGroup.DataFiles.First().LastWriteTime.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds;
-                        dailyStatistic.AverageProcessingStartLatency = meterDataSet.FileGroup.ProcessingStartTime.Subtract(meterDataSet.FileGroup.DataFiles.First().LastWriteTime).TotalSeconds;
-                        dailyStatistic.AverageProcessingEndLatency = now.Subtract(meterDataSet.FileGroup.ProcessingStartTime).TotalSeconds;
-                        dailyStatistic.AverageTotalProcessingLatency = now.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds;
-                        dailyStatistic.AverageTotalEmailLatency = 0;
-                        dailyStatistic.AverageEmailLatency = 0;
-
-                        new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
-
-                        return;
-                    }
-                    else
-                    {
-                        OpenXDADailyStatistic dailyStatistic = dailyStatistics.OrderBy(x => x.Date).Last();
-
-                        if (dailyStatistic.Date != now.Date.ToString("MM/dd/yyyy"))
-                        {
-                            dailyStatistic.ID = 0;
-                            dailyStatistic.Date = now.Date.ToString("MM/dd/yyyy");
-
-                            dailyStatistic.LastSuccessfulFileProcessed = now;
-
-                            dailyStatistic.TotalFilesProcessed = 1;
-                            dailyStatistic.TotalSuccessfulFilesProcessed = 1;
-                            dailyStatistic.TotalUnsuccessfulFilesProcessed = 0;
-                            dailyStatistic.TotalEmailsSent = 0;
-
-                            dailyStatistic.AverageDownloadLatency = meterDataSet.FileGroup.DataFiles.First().LastWriteTime.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds;
-                            dailyStatistic.AverageProcessingStartLatency = meterDataSet.FileGroup.ProcessingStartTime.Subtract(meterDataSet.FileGroup.DataFiles.First().LastWriteTime).TotalSeconds;
-                            dailyStatistic.AverageProcessingEndLatency = now.Subtract(meterDataSet.FileGroup.ProcessingStartTime).TotalSeconds;
-                            dailyStatistic.AverageTotalProcessingLatency = now.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds;
-                            dailyStatistic.AverageTotalEmailLatency = 0;
-                            dailyStatistic.AverageEmailLatency = 0;
-                        }
-                        else
-                        {
-                            dailyStatistic.LastSuccessfulFileProcessed = now;
-                            dailyStatistic.TotalSuccessfulFilesProcessed += 1;
-
-                            dailyStatistic.AverageDownloadLatency = (dailyStatistic.AverageDownloadLatency * dailyStatistic.TotalFilesProcessed + meterDataSet.FileGroup.DataFiles.First().LastWriteTime.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
-                            dailyStatistic.AverageProcessingStartLatency = (dailyStatistic.AverageProcessingStartLatency * dailyStatistic.TotalFilesProcessed + meterDataSet.FileGroup.ProcessingStartTime.Subtract(meterDataSet.FileGroup.DataFiles.First().LastWriteTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
-                            dailyStatistic.AverageProcessingEndLatency = (dailyStatistic.AverageProcessingEndLatency * dailyStatistic.TotalFilesProcessed + now.Subtract(meterDataSet.FileGroup.ProcessingStartTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
-                            dailyStatistic.AverageTotalProcessingLatency = (dailyStatistic.AverageTotalProcessingLatency * dailyStatistic.TotalFilesProcessed + now.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
-
-                            dailyStatistic.TotalFilesProcessed += 1;
-                        }
-
-                        new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
-
-                        return;
-
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Failed to create daily statistic for {meterDataSet.Meter.AssetKey} - {ex.Message}");
-            }
-            finally
-            {
-                s_mutex.ReleaseMutex();
-            }
-        }
-
+        /// <summary>
+        /// Update the <see cref="OpenXDADailyStatistic"/> for a list of <see cref="Event"/>s that have been included in an email.
+        /// </summary>
+        /// <param name="eventIDs"></param>
         public static void UpdateEmailProcessingStatistic(List<int> eventIDs)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -161,158 +70,25 @@ namespace FaultData.DataOperations
             {
                 s_mutex.WaitOne();
 
+
+                OpenXDADailyStatistic dailyStatistic = GetDailyStatistic(assetKey, out DateTime now);
+
+                if (dailyStatistic.AverageTotalEmailLatency > 0)
+                    dailyStatistic.AverageTotalEmailLatency = (dailyStatistic.AverageTotalEmailLatency * dailyStatistic.TotalEmailsSent + DateTime.Now.Subtract(fileGroup.DataStartTime).TotalSeconds) / (dailyStatistic.TotalEmailsSent + 1);
+                else
+                    dailyStatistic.AverageTotalEmailLatency = DateTime.Now.Subtract(fileGroup.DataStartTime).TotalSeconds;
+
+                if (dailyStatistic.AverageEmailLatency > 0)
+                    dailyStatistic.AverageEmailLatency = (dailyStatistic.AverageEmailLatency * dailyStatistic.TotalEmailsSent + now.Subtract(fileGroup.ProcessingEndTime).TotalSeconds) / (dailyStatistic.TotalEmailsSent + 1);
+                else
+                    dailyStatistic.AverageEmailLatency = now.Subtract(fileGroup.ProcessingEndTime).TotalSeconds;
+
+                dailyStatistic.TotalEmailsSent += 1;
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-
-                    string timeZone = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'System.XDATimeZone'");
-                    DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZone));
-
-                    IEnumerable<OpenXDADailyStatistic> dailyStatistics = new TableOperations<OpenXDADailyStatistic>(connection).QueryRecordsWhere("Meter = {0}", assetKey);
-
-                    if (!dailyStatistics.Any())
-                    {
-
-                        OpenXDADailyStatistic dailyStatistic = new OpenXDADailyStatistic();
-                        dailyStatistic.ID = 0;
-                        dailyStatistic.Date = now.Date.ToString("MM/dd/yyyy");
-                        dailyStatistic.Meter = assetKey;
-
-                        dailyStatistic.LastSuccessfulFileProcessed = null;
-                        dailyStatistic.LastUnsuccessfulFileProcessed = null;
-                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = null;
-
-                        dailyStatistic.TotalFilesProcessed = 0;
-                        dailyStatistic.TotalSuccessfulFilesProcessed = 0;
-                        dailyStatistic.TotalUnsuccessfulFilesProcessed = 0;
-                        dailyStatistic.TotalEmailsSent = 0;
-
-                        dailyStatistic.AverageDownloadLatency = 0;
-                        dailyStatistic.AverageProcessingStartLatency = 0;
-                        dailyStatistic.AverageProcessingEndLatency = 0;
-                        dailyStatistic.AverageTotalProcessingLatency = 0;
-                        dailyStatistic.AverageEmailLatency = now.Subtract(fileGroup.ProcessingEndTime).TotalSeconds;
-                        dailyStatistic.AverageTotalEmailLatency = now.Subtract(fileGroup.DataStartTime).TotalSeconds;
-                        dailyStatistic.BadDays = new TableOperations<OpenXDADailyStatistic>(connection).QueryRecords("[DATE] DESC", new RecordRestriction("Meter = {0}", assetKey)).FirstOrDefault()?.BadDays ?? 0;
-                        new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
-
-                        return;
-                    }
-                    else
-                    {
-                        OpenXDADailyStatistic dailyStatistic = dailyStatistics.OrderBy(x => x.Date).Last();
-
-
-                        if (dailyStatistic.Date != now.Date.ToString("MM/dd/yyyy"))
-                        {
-                            dailyStatistic.ID = 0;
-                            dailyStatistic.Date = now.Date.ToString("MM/dd/yyyy");
-
-                            dailyStatistic.LastSuccessfulFileProcessed = null;
-
-                            dailyStatistic.TotalFilesProcessed = 0;
-                            dailyStatistic.TotalSuccessfulFilesProcessed = 0;
-                            dailyStatistic.TotalUnsuccessfulFilesProcessed = 0;
-                            dailyStatistic.TotalEmailsSent = 0;
-
-                            dailyStatistic.AverageDownloadLatency = 0;
-                            dailyStatistic.AverageProcessingStartLatency = 0;
-                            dailyStatistic.AverageProcessingEndLatency = 0;
-                            dailyStatistic.AverageTotalProcessingLatency = 0;
-                            dailyStatistic.AverageEmailLatency = now.Subtract(fileGroup.ProcessingEndTime).TotalSeconds;
-                            dailyStatistic.AverageTotalEmailLatency = now.Subtract(fileGroup.DataStartTime).TotalSeconds;
-
-
-                        }
-                        else
-                        {
-                            dailyStatistic.AverageTotalEmailLatency = (dailyStatistic.AverageTotalEmailLatency * dailyStatistic.TotalEmailsSent + DateTime.Now.Subtract(fileGroup.DataStartTime).TotalSeconds) / (dailyStatistic.TotalEmailsSent + 1);
-                            dailyStatistic.TotalEmailsSent += 1;
-                        }
-
-                        MeterDataQualitySummary trendingSummary = new TableOperations<MeterDataQualitySummary>(connection).QueryRecordWhere("[Date] = {0} AND MeterID = (SELECT ID FROM Meter WHERE AssetKey = {1})", dailyStatistic.Date, assetKey);
-                        int warningLevel = int.Parse(new TableOperations<SystemCenter.Model.Setting>(connection).QueryRecordWhere("Name = 'OpenXDA.WarningLevel'")?.Value ?? "50");
-                        int errorLevel = int.Parse(new TableOperations<SystemCenter.Model.Setting>(connection).QueryRecordWhere("Name = 'OpenXDA.ErrorLevel'")?.Value ?? "100");
-
-                        if (trendingSummary == null) trendingSummary = new MeterDataQualitySummary() { ExpectedPoints = 0, GoodPoints = 0, LatchedPoints = 0, UnreasonablePoints = 0, NoncongruentPoints = 0 };
-
-                        if (dailyStatistic.Status == "Error") { 
-                            Log.Warn($"Failed to update daily statistic for {dailyStatistic.Meter} - a previous error was present");
-
-                        } // already an error, do nothing
-                        else if (dailyStatistic.TotalUnsuccessfulFilesProcessed > errorLevel) {
-                            dailyStatistic.Status = "Error";
-                            dailyStatistic.BadDays++;
-                        }
-                        else if ((trendingSummary.ExpectedPoints - trendingSummary.GoodPoints) > errorLevel)
-                        {
-                            dailyStatistic.Status = "Error";
-                            dailyStatistic.BadDays++;
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.GoodPoints} good data points.  Exceeds error threshold of {errorLevel}.";
-                        }
-                        else if (trendingSummary.LatchedPoints > errorLevel)
-                        {
-                            dailyStatistic.Status = "Error";
-                            dailyStatistic.BadDays++;
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.LatchedPoints} latched data points.  Exceeds error threshold of {errorLevel}.";
-
-                        }
-                        else if (trendingSummary.UnreasonablePoints > errorLevel)
-                        {
-                            dailyStatistic.Status = "Error";
-                            dailyStatistic.BadDays++;
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.UnreasonablePoints} unreasonable data points.  Exceeds error threshold of {errorLevel}.";
-
-                        }
-                        else if (trendingSummary.NoncongruentPoints > errorLevel)
-                        {
-                            dailyStatistic.Status = "Error";
-                            dailyStatistic.BadDays++;
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.NoncongruentPoints} non-congruent data points.  Exceeds error threshold of {errorLevel}.";
-
-                        }
-                        else if (dailyStatistic.Status == "Warning") {
-                            Log.Warn($"Failed to update daily statistic for {dailyStatistic.Meter} - a previous warning was present");
-                         } // already a warning, do nothing
-                        else if (dailyStatistic.TotalUnsuccessfulFilesProcessed > warningLevel)
-                        {
-                            dailyStatistic.Status = "Warning";
-                        }
-                        else if ((trendingSummary.ExpectedPoints - trendingSummary.GoodPoints) > warningLevel)
-                        {
-                            dailyStatistic.Status = "Warning";
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.GoodPoints} good data points.  Exceeds warning threshold of {warningLevel}.";
-                        }
-                        else if (trendingSummary.LatchedPoints > warningLevel)
-                        {
-                            dailyStatistic.Status = "Warning";
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.LatchedPoints} latched data points.  Exceeds warning threshold of {warningLevel}.";
-
-                        }
-                        else if (trendingSummary.UnreasonablePoints > warningLevel)
-                        {
-                            dailyStatistic.Status = "Warning";
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.UnreasonablePoints} unreasonable data points. Exceeds warning error threshold of {warningLevel}.";
-
-                        }
-                        else if (trendingSummary.NoncongruentPoints > warningLevel)
-                        {
-                            dailyStatistic.Status = "Warning";
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.NoncongruentPoints} non-congruent data points. Exceeds warning error threshold of {warningLevel}.";
-
-                        }
-
-                        new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
-                    }
+                    new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
                 }
-            }
+            }                    
             catch (Exception ex)
             {
                 Log.Error($"Failed to create daily statistic for {assetKey} - {ex.Message}");
@@ -321,87 +97,39 @@ namespace FaultData.DataOperations
             {
                 s_mutex.ReleaseMutex();
             }
-
         }
 
-        public static void UpdateFileProcessingStatistic(string assetKey, FileGroup fileGroup, string message)
+        /// <summary>
+        /// Updated the <see cref="OpenXDADailyStatistic"/> for a file group that failed to process."/>
+        /// </summary>
+        /// <param name="assetKey">the assetKey for the associated Meter</param>
+        /// <param name="fileGroup"></param>
+        /// <param name="message"></param>
+        public static void UpdateFailureFileProcessingStatistic(string assetKey, FileGroup fileGroup, string message)
         {
             try
             {
                 s_mutex.WaitOne();
 
+                OpenXDADailyStatistic dailyStatistic = GetDailyStatistic(assetKey, out DateTime now);
+
+                dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                dailyStatistic.LastUnsuccessfulFileProcessedExplanation = message;
+                dailyStatistic.TotalUnsuccessfulFilesProcessed += 1;
+
+                if (dailyStatistic.AverageDownloadLatency > 0)
+                    dailyStatistic.AverageDownloadLatency = (dailyStatistic.AverageDownloadLatency * dailyStatistic.TotalFilesProcessed + fileGroup.DataFiles.First().LastWriteTime.Subtract(fileGroup.DataStartTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
+                else
+                    dailyStatistic.AverageDownloadLatency = fileGroup.DataFiles.First().LastWriteTime.Subtract(fileGroup.DataStartTime).TotalSeconds;
+
+                if (dailyStatistic.AverageProcessingStartLatency > 0)
+                    dailyStatistic.AverageProcessingStartLatency = (dailyStatistic.AverageProcessingStartLatency * dailyStatistic.TotalFilesProcessed + fileGroup.ProcessingStartTime.Subtract(fileGroup.DataFiles.First().LastWriteTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
+                else
+                    dailyStatistic.AverageProcessingStartLatency = fileGroup.ProcessingStartTime.Subtract(fileGroup.DataFiles.First().LastWriteTime).TotalSeconds;
+
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    string timeZone = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'System.XDATimeZone'");
-                    DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZone));
-
-                    IEnumerable<OpenXDADailyStatistic> dailyStatistics = new TableOperations<OpenXDADailyStatistic>(connection).QueryRecordsWhere("Meter = {0}", assetKey);
-
-                    if (!dailyStatistics.Any())
-                    {
-
-                        OpenXDADailyStatistic dailyStatistic = new OpenXDADailyStatistic();
-                        dailyStatistic.ID = 0;
-                        dailyStatistic.Date = now.Date.ToString("MM/dd/yyyy");
-                        dailyStatistic.Meter = assetKey;
-
-                        dailyStatistic.LastSuccessfulFileProcessed = null;
-                        dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = message;
-
-                        dailyStatistic.TotalFilesProcessed = 1;
-                        dailyStatistic.TotalSuccessfulFilesProcessed = 0;
-                        dailyStatistic.TotalUnsuccessfulFilesProcessed = 1;
-                        dailyStatistic.TotalEmailsSent = 0;
-
-                        dailyStatistic.AverageDownloadLatency = fileGroup.DataFiles.First().LastWriteTime.Subtract(fileGroup.DataStartTime).TotalSeconds;
-                        dailyStatistic.AverageProcessingStartLatency = fileGroup.ProcessingStartTime.Subtract(fileGroup.DataFiles.First().LastWriteTime).TotalSeconds;
-                        dailyStatistic.AverageProcessingEndLatency = 0;
-                        dailyStatistic.AverageEmailLatency = 0;
-                        dailyStatistic.AverageTotalProcessingLatency = 0;
-                        dailyStatistic.AverageTotalEmailLatency = 0;
-                        new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
-                        return;
-                    }
-                    else
-                    {
-                        OpenXDADailyStatistic dailyStatistic = dailyStatistics.OrderBy(x => x.Date).Last();
-
-                        if (dailyStatistic.Date != now.Date.ToString("MM/dd/yyyy"))
-                        {
-                            dailyStatistic.ID = 0;
-                            dailyStatistic.Date = now.Date.ToString("MM/dd/yyyy");
-
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = message;
-
-                            dailyStatistic.TotalFilesProcessed = 1;
-                            dailyStatistic.TotalSuccessfulFilesProcessed = 0;
-                            dailyStatistic.TotalUnsuccessfulFilesProcessed = 1;
-                            dailyStatistic.TotalEmailsSent = 0;
-
-                            dailyStatistic.AverageDownloadLatency = fileGroup.DataFiles.First().LastWriteTime.Subtract(fileGroup.DataStartTime).TotalSeconds;
-                            dailyStatistic.AverageProcessingStartLatency = fileGroup.ProcessingStartTime.Subtract(fileGroup.DataFiles.First().LastWriteTime).TotalSeconds;
-                            dailyStatistic.AverageProcessingEndLatency = 0;
-                            dailyStatistic.AverageTotalProcessingLatency = 0;
-                            dailyStatistic.AverageTotalEmailLatency = 0;
-                            dailyStatistic.AverageEmailLatency = 0;
-
-                        }
-                        else
-                        {
-                            dailyStatistic.LastUnsuccessfulFileProcessed = now;
-                            dailyStatistic.LastUnsuccessfulFileProcessedExplanation = message;
-                            dailyStatistic.TotalUnsuccessfulFilesProcessed += 1;
-
-                            dailyStatistic.AverageDownloadLatency = (dailyStatistic.AverageDownloadLatency * dailyStatistic.TotalFilesProcessed + fileGroup.DataFiles.First().LastWriteTime.Subtract(fileGroup.DataStartTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
-                            dailyStatistic.AverageProcessingStartLatency = (dailyStatistic.AverageProcessingStartLatency * dailyStatistic.TotalFilesProcessed + fileGroup.ProcessingStartTime.Subtract(fileGroup.DataFiles.First().LastWriteTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
-
-                            dailyStatistic.TotalFilesProcessed += 1;
-                        }
-
-                        new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
-                    }
+                    new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
                 }
             }
             catch (Exception ex)
@@ -415,6 +143,184 @@ namespace FaultData.DataOperations
 
 
         }
+
+        /// <summary>
+        /// Updated the <see cref="OpenXDADailyStatistic"/> for a file group that successfully processed."/>
+        /// </summary>
+        public static void UpdateSuccessFileProcessingStatistic(MeterDataSet meterDataSet, FileGroup fileGroup)
+        {
+            try
+            {
+                s_mutex.WaitOne();
+
+                OpenXDADailyStatistic dailyStatistic = GetDailyStatistic(meterDataSet.Meter.AssetKey, out DateTime now);
+
+                if (dailyStatistic.AverageDownloadLatency > 0)
+                    dailyStatistic.AverageDownloadLatency = (dailyStatistic.AverageDownloadLatency * dailyStatistic.TotalFilesProcessed + meterDataSet.FileGroup.DataFiles.First().LastWriteTime.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
+                else
+                    dailyStatistic.AverageDownloadLatency = meterDataSet.FileGroup.DataFiles.First().LastWriteTime.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds;
+
+                if (dailyStatistic.AverageProcessingStartLatency > 0)
+                    dailyStatistic.AverageProcessingStartLatency = (dailyStatistic.AverageProcessingStartLatency * dailyStatistic.TotalFilesProcessed + meterDataSet.FileGroup.ProcessingStartTime.Subtract(meterDataSet.FileGroup.DataFiles.First().LastWriteTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
+                else
+                    dailyStatistic.AverageProcessingStartLatency = meterDataSet.FileGroup.ProcessingStartTime.Subtract(meterDataSet.FileGroup.DataFiles.First().LastWriteTime).TotalSeconds;
+
+                if (dailyStatistic.AverageProcessingEndLatency > 0)
+                    dailyStatistic.AverageProcessingEndLatency = (dailyStatistic.AverageProcessingEndLatency * dailyStatistic.TotalFilesProcessed + now.Subtract(meterDataSet.FileGroup.ProcessingStartTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
+                else
+                    dailyStatistic.AverageProcessingEndLatency = now.Subtract(meterDataSet.FileGroup.ProcessingStartTime).TotalSeconds;
+
+                if (dailyStatistic.AverageTotalProcessingLatency > 0)
+                    dailyStatistic.AverageTotalProcessingLatency = (dailyStatistic.AverageTotalProcessingLatency * dailyStatistic.TotalFilesProcessed + now.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds) / (dailyStatistic.TotalFilesProcessed + 1);
+                else
+                    dailyStatistic.AverageTotalProcessingLatency = now.Subtract(meterDataSet.FileGroup.DataStartTime).TotalSeconds;
+
+                dailyStatistic.TotalFilesProcessed += 1;
+                dailyStatistic.TotalSuccessfulFilesProcessed += 1;
+                dailyStatistic.LastSuccessfulFileProcessed = now;
+
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    MeterDataQualitySummary trendingSummary = new TableOperations<MeterDataQualitySummary>(connection).QueryRecordWhere("[Date] = {0} AND MeterID = (SELECT ID FROM Meter WHERE AssetKey = {1})", dailyStatistic.Date, meterDataSet.Meter.AssetKey);
+
+
+                    int warningLevel = int.Parse(new TableOperations<SystemCenter.Model.Setting>(connection).QueryRecordWhere("Name = 'OpenXDA.WarningLevel'")?.Value ?? "50");
+                    int errorLevel = int.Parse(new TableOperations<SystemCenter.Model.Setting>(connection).QueryRecordWhere("Name = 'OpenXDA.ErrorLevel'")?.Value ?? "100");
+
+
+                    if (trendingSummary == null) trendingSummary = new MeterDataQualitySummary() { ExpectedPoints = 0, GoodPoints = 0, LatchedPoints = 0, UnreasonablePoints = 0, NoncongruentPoints = 0 };
+
+                    if (dailyStatistic.Status == "Error")
+                    {
+                        Log.Warn($"Failed to update daily statistic for {dailyStatistic.Meter} - a previous error was present");
+
+                    } // already an error, do nothing
+                    else if (dailyStatistic.TotalUnsuccessfulFilesProcessed > errorLevel)
+                    {
+                        dailyStatistic.Status = "Error";
+                        dailyStatistic.BadDays++;
+                    }
+                    else if ((trendingSummary.ExpectedPoints - trendingSummary.GoodPoints) > errorLevel)
+                    {
+                        dailyStatistic.Status = "Error";
+                        dailyStatistic.BadDays++;
+                        dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.GoodPoints} good data points.  Exceeds error threshold of {errorLevel}.";
+                    }
+                    else if (trendingSummary.LatchedPoints > errorLevel)
+                    {
+                        dailyStatistic.Status = "Error";
+                        dailyStatistic.BadDays++;
+                        dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.LatchedPoints} latched data points.  Exceeds error threshold of {errorLevel}.";
+
+                    }
+                    else if (trendingSummary.UnreasonablePoints > errorLevel)
+                    {
+                        dailyStatistic.Status = "Error";
+                        dailyStatistic.BadDays++;
+                        dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.UnreasonablePoints} unreasonable data points.  Exceeds error threshold of {errorLevel}.";
+
+                    }
+                    else if (trendingSummary.NoncongruentPoints > errorLevel)
+                    {
+                        dailyStatistic.Status = "Error";
+                        dailyStatistic.BadDays++;
+                        dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.NoncongruentPoints} non-congruent data points.  Exceeds error threshold of {errorLevel}.";
+
+                    }
+                    else if (dailyStatistic.Status == "Warning")
+                    {
+                        Log.Warn($"Failed to update daily statistic for {dailyStatistic.Meter} - a previous warning was present");
+                    } // already a warning, do nothing
+                    else if (dailyStatistic.TotalUnsuccessfulFilesProcessed > warningLevel)
+                    {
+                        dailyStatistic.Status = "Warning";
+                    }
+                    else if ((trendingSummary.ExpectedPoints - trendingSummary.GoodPoints) > warningLevel)
+                    {
+                        dailyStatistic.Status = "Warning";
+                        dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.GoodPoints} good data points.  Exceeds warning threshold of {warningLevel}.";
+                    }
+                    else if (trendingSummary.LatchedPoints > warningLevel)
+                    {
+                        dailyStatistic.Status = "Warning";
+                        dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.LatchedPoints} latched data points.  Exceeds warning threshold of {warningLevel}.";
+
+                    }
+                    else if (trendingSummary.UnreasonablePoints > warningLevel)
+                    {
+                        dailyStatistic.Status = "Warning";
+                        dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but have {trendingSummary.UnreasonablePoints} unreasonable data points. Exceeds warning error threshold of {warningLevel}.";
+
+                    }
+                    else if (trendingSummary.NoncongruentPoints > warningLevel)
+                    {
+                        dailyStatistic.Status = "Warning";
+                        dailyStatistic.LastUnsuccessfulFileProcessed = now;
+                        dailyStatistic.LastUnsuccessfulFileProcessedExplanation = $"Expected {trendingSummary.ExpectedPoints} points but only have {trendingSummary.NoncongruentPoints} non-congruent data points. Exceeds warning error threshold of {warningLevel}.";
+
+                    }
+
+                    new TableOperations<OpenXDADailyStatistic>(connection).AddNewOrUpdateRecord(dailyStatistic);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to create daily statistic for {meterDataSet.Meter.AssetKey} - {ex.Message}");
+            }
+            finally
+            {
+                s_mutex.ReleaseMutex();
+            }
+            
+        }
+
+        private static OpenXDADailyStatistic GetDailyStatistic(string meterKey, out DateTime now)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                string timeZone = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'System.XDATimeZone'");
+                now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZone));
+
+                IEnumerable<OpenXDADailyStatistic> dailyStatistics = new TableOperations<OpenXDADailyStatistic>(connection).QueryRecordsWhere("Meter = {0} AND Date = {1}", meterKey, now.Date.ToString("MM/dd/yyyy"));
+
+                if (!dailyStatistics.Any())
+                    return new OpenXDADailyStatistic()
+                    {
+                        ID = 0,
+                        Date = now.Date.ToString("MM/dd/yyyy"),
+                        Meter = meterKey,
+
+                        LastSuccessfulFileProcessed = null,
+                        LastUnsuccessfulFileProcessed = null,
+                        LastUnsuccessfulFileProcessedExplanation = null,
+
+                        TotalFilesProcessed = 0,
+                        TotalSuccessfulFilesProcessed = 0,
+                        TotalUnsuccessfulFilesProcessed = 0,
+                        TotalEmailsSent = 0,
+
+                        AverageDownloadLatency = 0,
+                        AverageProcessingStartLatency = 0,
+                        AverageProcessingEndLatency = 0,
+                        AverageTotalProcessingLatency = 0,
+                        AverageTotalEmailLatency = 0,
+                        AverageEmailLatency = 0
+                    };
+
+                return dailyStatistics.First();
+            }
+        }
+
+        private static Mutex s_mutex = new Mutex();
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DailyStatisticOperation));
+
 
     }
 }
