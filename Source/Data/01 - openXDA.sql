@@ -241,6 +241,15 @@ CREATE TABLE DataOperationFailure
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_DataOperationFailure_DataOperationID
+ON DataOperationFailure(DataOperationID ASC)
+GO
+
+
+CREATE NONCLUSTERED INDEX IX_DataOperationFailure_FileGroupID
+ON DataOperationFailure(FileGroupID ASC)
+GO
+
 CREATE TABLE HostRegistration
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
