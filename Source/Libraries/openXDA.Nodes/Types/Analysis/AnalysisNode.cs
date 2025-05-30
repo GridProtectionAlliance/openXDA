@@ -165,6 +165,7 @@ namespace openXDA.Nodes.Types.Analysis
                 {
                     try
                     {
+                        ThreadContext.Properties["Meter"] = task.Meter.AssetKey;
                         Process(task);
                         taskProcessor.Dequeue(task);
                         _ = NotifyEventEmailNodeWhenIdle();
