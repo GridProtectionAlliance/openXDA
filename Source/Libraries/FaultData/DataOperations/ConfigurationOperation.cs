@@ -975,10 +975,15 @@ namespace FaultData.DataOperations
         /// Checks if the Trigger Trend Channels exist and adds them if necesarry.
         /// </summary>
         /// <param name="powChannel">The point on Wave Data Channel.</param>
-        /// <param name="triggerIndices">Source Indices of the existing Trigger Trend Channels.</param>
         /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
         private void AddTriggerChannel(Channel powChannel, MeterDataSet meterDataSet)
         {
+            if (powChannel is null)
+            {
+                Log.Warn("Attempted to add a trigger channel without corrsponding pow Channel. This channel will be skipped.");
+
+                return;
+            }
             //Create new RMS Channel and Series
             Channel trendChannel = new Channel()
             {
