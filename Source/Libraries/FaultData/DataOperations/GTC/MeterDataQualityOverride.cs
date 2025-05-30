@@ -31,7 +31,7 @@ using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Configuration;
 using openXDA.Configuration;
-using DataPoint = openXDA.Model.DataPoint;
+using openXDA.Model;
 
 namespace FaultData.DataOperations.GTC
 {

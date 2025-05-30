@@ -542,17 +542,14 @@ namespace FaultData.DataAnalysis
         
         public void FromData(List<byte[]> data)
         {
-
             FromData(null, data);
         }
 
         public void FromData(Meter meter, List<byte[]> dataList)
         {
+            var decompressed = dataList.SelectMany(d => ChannelData.Decompress(d));
 
-            var decompressed = dataList.SelectMany((d) => ChannelData.Decompress(d));
-
-
-            foreach (Tuple<int,List<DataPoint>> tuple in decompressed)
+            foreach (Tuple<int, List<DataPoint>> tuple in decompressed)
             {
                 DataSeries dataSeries = new DataSeries();
 
@@ -561,9 +558,9 @@ namespace FaultData.DataAnalysis
 
                 dataSeries.DataPoints = tuple.Item2;
 
-                 Add(dataSeries);
+                Add(dataSeries);
             }
-        }    
+        }
 
         private void Classify()
         {

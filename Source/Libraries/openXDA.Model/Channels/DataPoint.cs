@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  DataPoint.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -21,17 +21,7 @@
 //
 //******************************************************************************************************
 
-
 using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Net;
-using GSF;
-using GSF.Data;
-using GSF.Data.Model;
-using Ionic.Zlib;
 
 namespace openXDA.Model
 {
@@ -40,12 +30,15 @@ namespace openXDA.Model
     /// </summary>
     public class DataPoint
     {
-        #region [Properties]
-        public DateTime Time;
-        public double Value;
+        #region [ Properties ]
+
+        public DateTime Time { get; set; }
+        public double Value { get; set; }
+
         #endregion
 
-        #region [Methods]
+        #region [ Methods ]
+
         public DataPoint Shift(TimeSpan timeShift)
         {
             return new DataPoint()
@@ -106,13 +99,14 @@ namespace openXDA.Model
 
         public bool LargerThan(double comparison)
         {
-            return (Value > comparison);
+            return Value > comparison;
         }
 
         public bool LargerThan(DataPoint point)
         {
-            return (LargerThan(point.Value));
+            return LargerThan(point.Value);
         }
+
         #endregion
     }
 }

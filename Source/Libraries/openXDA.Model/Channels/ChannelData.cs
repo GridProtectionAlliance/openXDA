@@ -25,9 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Net;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
@@ -208,16 +206,14 @@ namespace openXDA.Model
         }
 
         /// <summary>
-        /// Turns a List of DataPoints into a blob to be saved in the database.
+        /// Turns a list of DataPoints into a blob to be saved in the database.
         /// </summary>
         /// <param name="data">The data as a <see cref="List{DataPoint}"/></param>
         /// <param name="seriesID">The SeriesID to be encoded into the blob</param>
-        /// <returns></returns>
+        /// <returns>The byte array to be saved as a blob in the database.</returns>
         public static byte[] ToData(List<DataPoint> data, int seriesID)
         {
-            //We can use Digital compression if the data changes no more than 10% of the time.
-
-            int i = 0;
+            // We can use Digital compression if the data changes no more than 10% of the time.
             bool useDigitalCompression = data
                 .Skip(1)
                 .Zip(data, (p2, p1) => new { p1, p2 })
@@ -230,7 +226,7 @@ namespace openXDA.Model
 
             var timeSeries = data.Select(dataPoint => new { Time = dataPoint.Time.Ticks, Compressed = false }).ToList();
 
-            for (i = 1; i < timeSeries.Count; i++)
+            for (int i = 1; i < timeSeries.Count; i++)
             {
                 long previousTimestamp = data[i - 1].Time.Ticks;
                 long timestamp = timeSeries[i].Time;
@@ -255,7 +251,7 @@ namespace openXDA.Model
                 .Select(obj => obj.Index)
                 .ToList();
 
-            for (i = 0; i < uncompressedIndexes.Count; i++)
+            for (int i = 0; i < uncompressedIndexes.Count; i++)
             {
                 int index = uncompressedIndexes[i];
                 int nextIndex = (i + 1 < uncompressedIndexes.Count) ? uncompressedIndexes[i + 1] : timeSeries.Count;
@@ -300,8 +296,7 @@ namespace openXDA.Model
 
         private static byte[] ToDigitalData(List<DataPoint> data, int seriesID)
         {
-            int i;
-            IEnumerable<DataPoint> changeSeries = data.Where((point,index) => index == 0 || index == data.Count - 1 || point.Value != data[index-1].Value);
+            IEnumerable<DataPoint> changeSeries = data.Where((point, index) => index == 0 || index == data.Count - 1 || point.Value != data[index - 1].Value);
 
             const ushort NaNValue = ushort.MaxValue;
             const ushort MaxCompressedValue = ushort.MaxValue - 1;
@@ -311,7 +306,7 @@ namespace openXDA.Model
             double compressionScale = (decompressionScale != 0.0D) ? 1.0D / decompressionScale : 0.0D;
 
             long startTime = data.First().Time.Ticks;
-            long sampleRate = data[1].Time.Ticks -  startTime;
+            long sampleRate = data[1].Time.Ticks - startTime;
 
             int totalByteLength = 2 * sizeof(int) + 2 * sizeof(long) + 2 * sizeof(double) + sizeof(int) + changeSeries.Count() * (sizeof(long) + sizeof(ushort));
 
@@ -349,24 +344,23 @@ namespace openXDA.Model
 
             if (changeSeries.Count() == 2 && changeSeries.First().Value == changeSeries.Last().Value)
             {
-                returnArray[0] = constantDigitalHeader[0];
-                returnArray[1] = constantDigitalHeader[1];
+                returnArray[0] = ConstantDigitalHeader[0];
+                returnArray[1] = ConstantDigitalHeader[1];
             }
             else
             {
-                returnArray[0] = digitalHeader[0];
-                returnArray[1] = digitalHeader[1];
+                returnArray[0] = DigitalHeader[0];
+                returnArray[1] = DigitalHeader[1];
             }
 
             return returnArray;
         }
 
-
         /// <summary>
         /// Decompresses a byte array into a List of DataPoints
         /// </summary>
-        /// <param name="data"></param>
-        /// <returns>a List of Tuples of SeriesID and Datapoint </returns>
+        /// <param name="data">The byte array filled with compressed data</param>
+        /// <returns>List of data series consisting of series ID and data points.</returns>
         public static List<Tuple<int, List<DataPoint>>> Decompress(byte[] data)
         {
             List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
@@ -375,19 +369,19 @@ namespace openXDA.Model
                 return result;
             // If the blob contains the GZip header,
             // use the legacy deserialization algorithm
-            if (data[0] == legacyHeader[0] && data[1] == legacyHeader[1])
+            if (data[0] == LegacyHeader[0] && data[1] == LegacyHeader[1])
             {
                 return Decompress_Legacy(data);
             }
             // If this blob uses digital decompression use that algorithm
-            if ((data[0] == digitalHeader[0] && data[1] == digitalHeader[1]) || (data[0] == constantDigitalHeader[0] && data[1] == constantDigitalHeader[1]))
+            if ((data[0] == DigitalHeader[0] && data[1] == DigitalHeader[1]) || (data[0] == ConstantDigitalHeader[0] && data[1] == ConstantDigitalHeader[1]))
             {
                 return Decompress_Digital(data);
             }
           
             // Restore the GZip header before uncompressing
-            data[0] = legacyHeader[0];
-            data[1] = legacyHeader[1];
+            data[0] = LegacyHeader[0];
+            data[1] = LegacyHeader[1];
 
             byte[] uncompressedData;
             int offset;
@@ -446,13 +440,11 @@ namespace openXDA.Model
                     });
                 }
 
-
                 result.Add(new Tuple<int, List<DataPoint>>(seriesID, dataSeries));
             }
 
             return result;
         }
-
   
         private static List<Tuple<int, List<DataPoint>>> Decompress_Legacy(byte[] data)
         {
@@ -517,8 +509,8 @@ namespace openXDA.Model
             int m_points;
 
             // Restore the GZip header before uncompressing
-            data[0] = legacyHeader[0];
-            data[1] = legacyHeader[1];
+            data[0] = LegacyHeader[0];
+            data[1] = LegacyHeader[1];
 
             uncompressedData = GZipStream.UncompressBuffer(data);
             offset = 0;
@@ -572,7 +564,6 @@ namespace openXDA.Model
                         Time = startTime.AddTicks(lastTime),
                         Value = lastValue
                     });
-                    
                 }
 
                 points.Add(new DataPoint()
@@ -587,12 +578,11 @@ namespace openXDA.Model
 
             while (points.Count < m_points)
             {
-                    points.Add(new DataPoint()
-                    {
-                        Time = startTime.AddTicks(lastTime),
-                        Value = lastValue
-                    });
-                
+                points.Add(new DataPoint()
+                {
+                    Time = startTime.AddTicks(lastTime),
+                    Value = lastValue
+                });
             }
             result.Add(new Tuple<int, List<DataPoint>>(seriesID, points));
 
@@ -637,22 +627,23 @@ namespace openXDA.Model
         /// <summary>
         /// The header of a datablob compressed as analog Data
         /// </summary>
-        public static readonly byte[] analogHeader = { 0x11, 0x11 };
+        public static readonly byte[] AnalogHeader = { 0x11, 0x11 };
 
         /// <summary>
         /// The header of a datablob compressed as Digital State Changes
         /// </summary>
-        public static readonly byte[] digitalHeader = { 0x22, 0x22 };
+        public static readonly byte[] DigitalHeader = { 0x22, 0x22 };
 
         /// <summary>
         /// The header of a datablob compressed as empty Digital State Changes
         /// </summary>
-        public static readonly byte[] constantDigitalHeader = { 0x33, 0x33 };
+        public static readonly byte[] ConstantDigitalHeader = { 0x33, 0x33 };
 
         /// <summary>
         /// The header of a datablob compressed as Legacy Data
         /// </summary>
-        public static readonly byte[] legacyHeader = { 0x1F, 0x8B };
+        public static readonly byte[] LegacyHeader = { 0x1F, 0x8B };
+
         #endregion
     }
 }

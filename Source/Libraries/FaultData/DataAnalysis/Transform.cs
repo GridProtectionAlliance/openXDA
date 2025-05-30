@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GSF.Collections;
 using GSF.NumericalAnalysis;
-using DataPoint = openXDA.Model.DataPoint;
+using openXDA.Model;
 
 namespace FaultData.DataAnalysis
 {
