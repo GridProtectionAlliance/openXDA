@@ -241,6 +241,14 @@ CREATE TABLE DataOperationFailure
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_DataOperationFailure_DataOperationID
+ON DataOperationFailure(DataOperationID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataOperationFailure_FileGroupID
+ON DataOperationFailure(FileGroupID ASC)
+GO
+
 CREATE TABLE HostRegistration
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2065,10 +2073,7 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.RelayEnergization', 13)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailyStatisticOperation', 14)
-GO
-
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.LSCVSDataOperation', 15)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.LSCVSDataOperation', 14)
 GO
 
 INSERT INTO AssetGroup(Name, DisplayDashboard, DisplayEmail) VALUES('AllAssets', 1, 1)

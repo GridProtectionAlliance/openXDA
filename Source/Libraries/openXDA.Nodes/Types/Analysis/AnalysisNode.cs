@@ -165,6 +165,7 @@ namespace openXDA.Nodes.Types.Analysis
                 {
                     try
                     {
+                        ThreadContext.Properties["Meter"] = task.Meter.AssetKey;
                         Process(task);
                         taskProcessor.Dequeue(task);
                         _ = NotifyEventEmailNodeWhenIdle();
@@ -189,8 +190,10 @@ namespace openXDA.Nodes.Types.Analysis
             try
             {
                 Meter meter = task.Meter;
-                Process(fileGroup, meter);
+                MeterDataSet meterDataset = Process(fileGroup, meter);
                 SaveMeterConfiguration(fileGroup, meter);
+                if (!(meterDataset is null))
+                    DailyStatisticOperation.UpdateSuccessFileProcessingStatistic(meterDataset);
             }
             catch (Exception ex)
             {
@@ -203,7 +206,7 @@ namespace openXDA.Nodes.Types.Analysis
                     fileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Failed;
                     UpdateFileGroup(fileGroup);
 
-                    DailyStatisticOperation.UpdateFileProcessingStatistic(task.Meter.AssetKey, task.FileGroup, message);
+                    DailyStatisticOperation.UpdateFailureFileProcessingStatistic(task.Meter.AssetKey, task.FileGroup, message);
                 }
                 catch (Exception e) {
                     Exception w = new Exception(message, e);
@@ -215,7 +218,7 @@ namespace openXDA.Nodes.Types.Analysis
             }
         }
 
-        private void Process(FileGroup fileGroup, Meter meter)
+        private MeterDataSet Process(FileGroup fileGroup, Meter meter)
         {
             DateTime startTime = DateTime.UtcNow;
             Action<object> configurator = GetConfigurator();
@@ -269,6 +272,8 @@ namespace openXDA.Nodes.Types.Analysis
             fileGroup.ProcessingEndTime = timeZoneConverter.ToXDATimeZone(endTime);
             fileGroup.ProcessingStatus = (int)processingStatus;
             UpdateFileGroup(fileGroup);
+
+            return meterDataSet;
         }
 
         private FileGroupProcessingStatus Process(MeterDataSet meterDataSet)

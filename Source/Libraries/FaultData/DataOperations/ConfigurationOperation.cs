@@ -975,7 +975,6 @@ namespace FaultData.DataOperations
         /// Checks if the Trigger Trend Channels exist and adds them if necesarry.
         /// </summary>
         /// <param name="powChannel">The point on Wave Data Channel.</param>
-        /// <param name="triggerIndices">Source Indices of the existing Trigger Trend Channels.</param>
         /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
         private void AddTriggerChannel(Channel powChannel, MeterDataSet meterDataSet)
         {
@@ -1034,8 +1033,13 @@ namespace FaultData.DataOperations
                     measurementCharacteristic = "Instantaneous";
                     measurementType = "Current";
                 }
+                else
+                {
+                    Log.Warn($"Unknown trigger channel type for channel {trendChannel.Name}. This channel will be skipped.");
+                    return;
+                }
 
-                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name ={0}", measurementCharacteristic);
+                trendChannel.MeasurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = {0}", measurementCharacteristic);
                 trendChannel.MeasurementCharacteristicID = trendChannel.MeasurementCharacteristic.ID;
 
                 trendChannel.MeasurementType = measurementTypeTable.QueryRecordWhere("Name = {0}", measurementType);
