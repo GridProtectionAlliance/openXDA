@@ -21,34 +21,25 @@
 //
 //******************************************************************************************************
 
-
-using FaultData.DataAnalysis;
-using FaultData.DataResources;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using FaultData.DataSets;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
 using openXDA.Model;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using System.Text.RegularExpressions;
-using System.Threading;
 using SystemCenter.Model;
-using static FaultData.DataSets.CyclicHistogramDataSet;
 
 namespace FaultData.DataOperations
 {
     public class DailyStatisticOperation
     {
-
         /// <summary>
         /// Update the <see cref="OpenXDADailyStatistic"/> for a list of <see cref="Event"/>s that have been included in an email.
         /// </summary>
-        /// <param name="eventIDs"></param>
+        /// <param name="eventIDs">The IDs of the events that were included in the email</param>
         public static void UpdateEmailProcessingStatistic(List<int> eventIDs)
         {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
@@ -69,7 +60,6 @@ namespace FaultData.DataOperations
             try
             {
                 s_mutex.WaitOne();
-
 
                 OpenXDADailyStatistic dailyStatistic = GetDailyStatistic(assetKey, out DateTime now);
 
@@ -100,11 +90,11 @@ namespace FaultData.DataOperations
         }
 
         /// <summary>
-        /// Updated the <see cref="OpenXDADailyStatistic"/> for a file group that failed to process."/>
+        /// Updated the <see cref="OpenXDADailyStatistic"/> for a file group that failed to process.
         /// </summary>
-        /// <param name="assetKey">the assetKey for the associated Meter</param>
-        /// <param name="fileGroup"></param>
-        /// <param name="message"></param>
+        /// <param name="assetKey">The asset key for the meter that produced the file group</param>
+        /// <param name="fileGroup">The file group that failed to process</param>
+        /// <param name="message">The error message that provides context for the failure</param>
         public static void UpdateFailureFileProcessingStatistic(string assetKey, FileGroup fileGroup, string message)
         {
             try
@@ -140,14 +130,12 @@ namespace FaultData.DataOperations
             {
                 s_mutex.ReleaseMutex();
             }
-
-
         }
 
         /// <summary>
         /// Updated the <see cref="OpenXDADailyStatistic"/> for a file group that successfully processed."/>
         /// </summary>
-        public static void UpdateSuccessFileProcessingStatistic(MeterDataSet meterDataSet, FileGroup fileGroup)
+        public static void UpdateSuccessFileProcessingStatistic(MeterDataSet meterDataSet)
         {
             try
             {
@@ -183,12 +171,11 @@ namespace FaultData.DataOperations
                 {
                     MeterDataQualitySummary trendingSummary = new TableOperations<MeterDataQualitySummary>(connection).QueryRecordWhere("[Date] = {0} AND MeterID = (SELECT ID FROM Meter WHERE AssetKey = {1})", dailyStatistic.Date, meterDataSet.Meter.AssetKey);
 
-
                     int warningLevel = int.Parse(new TableOperations<SystemCenter.Model.Setting>(connection).QueryRecordWhere("Name = 'OpenXDA.WarningLevel'")?.Value ?? "50");
                     int errorLevel = int.Parse(new TableOperations<SystemCenter.Model.Setting>(connection).QueryRecordWhere("Name = 'OpenXDA.ErrorLevel'")?.Value ?? "100");
 
-
-                    if (trendingSummary == null) trendingSummary = new MeterDataQualitySummary() { ExpectedPoints = 0, GoodPoints = 0, LatchedPoints = 0, UnreasonablePoints = 0, NoncongruentPoints = 0 };
+                    if (trendingSummary == null)
+                        trendingSummary = new MeterDataQualitySummary() { ExpectedPoints = 0, GoodPoints = 0, LatchedPoints = 0, UnreasonablePoints = 0, NoncongruentPoints = 0 };
 
                     if (dailyStatistic.Status == "Error")
                     {
@@ -278,7 +265,6 @@ namespace FaultData.DataOperations
             {
                 s_mutex.ReleaseMutex();
             }
-            
         }
 
         private static OpenXDADailyStatistic GetDailyStatistic(string meterKey, out DateTime now)
@@ -318,9 +304,7 @@ namespace FaultData.DataOperations
             }
         }
 
-        private static Mutex s_mutex = new Mutex();
+        private static readonly Mutex s_mutex = new Mutex();
         private static readonly ILog Log = LogManager.GetLogger(typeof(DailyStatisticOperation));
-
-
     }
 }

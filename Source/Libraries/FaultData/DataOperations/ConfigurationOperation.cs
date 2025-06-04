@@ -978,12 +978,6 @@ namespace FaultData.DataOperations
         /// <param name="meterDataSet"><see cref="MeterDataSet"/></param>
         private void AddTriggerChannel(Channel powChannel, MeterDataSet meterDataSet)
         {
-            if (powChannel is null)
-            {
-                Log.Warn("Attempted to add a trigger channel without corrsponding pow Channel. This channel will be skipped.");
-
-                return;
-            }
             //Create new RMS Channel and Series
             Channel trendChannel = new Channel()
             {

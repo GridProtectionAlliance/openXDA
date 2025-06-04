@@ -193,7 +193,7 @@ namespace openXDA.Nodes.Types.Analysis
                 MeterDataSet meterDataset = Process(fileGroup, meter);
                 SaveMeterConfiguration(fileGroup, meter);
                 if (!(meterDataset is null))
-                    DailyStatisticOperation.UpdateSuccessFileProcessingStatistic(meterDataset, task.FileGroup);
+                    DailyStatisticOperation.UpdateSuccessFileProcessingStatistic(meterDataset);
             }
             catch (Exception ex)
             {

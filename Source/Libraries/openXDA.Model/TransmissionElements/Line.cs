@@ -176,7 +176,7 @@ namespace openXDA.Model
                 }
             }
 
-            return result.Where(item => item.Value.Count > 0).Select( item => new TransmissionPath()
+            return result.Where(item => item.Value.Count > 0).Select(item => new TransmissionPath()
             {
                 Length = item.Value.Select(seg => seg.Length).Sum(),
                 X0 = item.Value.Select(seg => seg.X0).Sum(),
@@ -209,7 +209,7 @@ namespace openXDA.Model
                 if (stack.Contains(segment.ID))
                 {
                     if (stack.Peek() != segment.ID)
-                        Log.Error($"Line {this.AssetKey} has a looped linesegement ({segment.AssetKey}). This is causing issues in fault distance computations.");
+                        Log.Error($"Line {this.AssetKey} has a looped line segment ({segment.AssetKey}). This is causing issues in fault distance computations.");
                     continue;
                 }
                 stack.Push(start.ID);
@@ -222,7 +222,7 @@ namespace openXDA.Model
                 }
             }
 
-           return new List<LineSegment>();          
+           return new List<LineSegment>();
         }
 
         /// <summary>
@@ -241,6 +241,14 @@ namespace openXDA.Model
             });
         }
 
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Line));
+
+        // Static Methods
         public static Line DetailedLine(Asset asset, AdoDataConnection connection)
         {
             if (connection is null)
@@ -265,9 +273,8 @@ namespace openXDA.Model
                 return DetailedLine(asset, connection);
             }
         }
-        #endregion
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(Line));
+        #endregion
     }
 
 
