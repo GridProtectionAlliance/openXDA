@@ -23,13 +23,13 @@
 
 import  { SPCTools } from "../global";
 import * as React from 'react';
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from 'react-redux';
 import { openXDA } from "../global";
 import { SelectAffectedChannelByID } from "../store/WizardAffectedChannelSlice";
 import { SelectStatisticsFilter, SelectThresholdValues, selectAlarmGroup, SelectAlarmFactors, SelectStatisticsChannels, selectSeriesTypeID } from "./DynamicWizzardSlice";
 import _ from "lodash";
 import moment from "moment";
-import { SelectSeverities } from "../store/SeveritySlice";
+import { SelectSeverities, SelectSeverityStatus, FetchSeverities } from "../store/SeveritySlice";
 import { SelectAlarmDays } from "../store/AlarmDaySlice";
 import { Line, Plot } from '@gpa-gemstone/react-graph'
 import { TrashCan } from '@gpa-gemstone/gpa-symbols';
@@ -59,6 +59,8 @@ export const AlarmTrendingCard = (props: IProps) => {
             return (state) => null
     }, [props.ChannelID])
 
+    const dispatch = useDispatch();
+
     const allChannels = useSelector(SelectStatisticsChannels)
     const [chartData, setChartData] = React.useState<Array<SPCTools.ITrendSeries>>([]);
     const [threshhold, setThreshold] = React.useState<Array<SPCTools.ITrendSeries>>([]);
@@ -71,7 +73,9 @@ export const AlarmTrendingCard = (props: IProps) => {
     const seriesFilterId = useSelector(selectSeriesTypeID);
     const seriesTypes = useSelector(SelectSeriesTypes);
 
-    const severities = useSelector(SelectSeverities); 
+    const severities = useSelector(SelectSeverities);
+    const severitiesStatus = useSelector(SelectSeverityStatus);
+
     const alarmGroup = useSelector(selectAlarmGroup)
     const alarmFactors = useSelector(SelectAlarmFactors)
     const alarmDays = useSelector(SelectAlarmDays)
@@ -84,6 +88,11 @@ export const AlarmTrendingCard = (props: IProps) => {
 
     const [Width, SetWidth] = React.useState<number>(0);
     React.useLayoutEffect(() => { SetWidth((divref?.current?.offsetWidth ?? 25) - 25) });
+
+    React.useEffect(() => {
+        if (severitiesStatus === "unitiated" || severitiesStatus === "changed")
+            dispatch(FetchSeverities);
+    }, [chartData, alarmValueResults, severities, alarmGroup, alarmFactors]);
 
     React.useEffect(() => {
         setChartData([]);
