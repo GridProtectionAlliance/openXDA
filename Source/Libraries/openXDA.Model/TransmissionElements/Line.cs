@@ -31,6 +31,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
+using log4net;
 using Newtonsoft.Json;
 
 namespace openXDA.Model
@@ -143,7 +144,7 @@ namespace openXDA.Model
                         X1 = lineEnds[0].X1,
                         R1 = lineEnds[0].R1,
                         Line = this,
-                        Segments = new List<LineSegment>() {lineEnds[0]}
+                        Segments = lineEnds
                     }
                 };
 
@@ -171,27 +172,11 @@ namespace openXDA.Model
             {
                 for (int j = (i-1); j > -1; j--)
                 {
-                    result.Add(new Tuple<int, int>(lineEnds[i].ID, lineEnds[j].ID), new List<LineSegment>()); 
+                    result.Add(new Tuple<int, int>(lineEnds[i].ID, lineEnds[j].ID), WalkTheLine(lineEnds[i], lineEnds[j])); 
                 }
             }
 
-            for (int i = 1; i < lineEnds.Count; i++)
-            {
-                FollowPath(lineEnds[i]).ForEach(item =>
-                {
-                    Tuple<int, int> key = new Tuple<int, int>(item[0].ID, item.Last().ID);
-                    if (!result.Keys.Contains(key))
-                    {
-                        key = new Tuple<int, int>(key.Item2, key.Item1);
-                    }
-                    result[key] = item;
-                });
-            }
-
-            result = result.Where(item => item.Value.Count > 0).ToDictionary(item => item.Key, item=> item.Value);
-
-
-            return result.Select( item => new TransmissionPath()
+            return result.Where(item => item.Value.Count > 0).Select( item => new TransmissionPath()
             {
                 Length = item.Value.Select(seg => seg.Length).Sum(),
                 X0 = item.Value.Select(seg => seg.X0).Sum(),
@@ -203,58 +188,57 @@ namespace openXDA.Model
             }).OrderByDescending(item => item.Length).ToList();
         }
 
-        private List<List<LineSegment>> FollowPath (LineSegment start, LineSegment prev=null)
+        /// <summary>
+        /// Attempts to walk the Line from start to end.
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        private List<LineSegment> WalkTheLine(LineSegment start, LineSegment end, Stack<int> stack = null)
         {
-            List<List<LineSegment>> result = new List<List<LineSegment>>();
+            if (stack is null)
+                stack = new Stack<int>();
 
-            List<LineSegment> nextSegments = GetNextSegement(start, prev);
-
-            foreach( LineSegment next in nextSegments)
+            foreach (LineSegment segment in GetNextSegement(start))
             {
-                if (next.IsEnd)
-                { 
-                    result.Add(new List<LineSegment>() { start, next });
-                }
-                else
+                if (segment.ID == end.ID)
                 {
-                    foreach (List<LineSegment> path in FollowPath(next, start))
-                        result.Add((new List<LineSegment>() { start }).Concat(path).ToList());
+                    // we found the end, so we can return the path
+                    return new List<LineSegment>() { start, segment };
+                }
+                if (stack.Contains(segment.ID))
+                {
+                    if (stack.Peek() != segment.ID)
+                        Log.Error($"Line {this.AssetKey} has a looped linesegement ({segment.AssetKey}). This is causing issues in fault distance computations.");
+                    continue;
+                }
+                stack.Push(start.ID);
+                List<LineSegment> follow = WalkTheLine(segment, end, stack);
+                stack.Pop();
+                if (follow.Count > 0)
+                {
+                    follow.Insert(0, start);
+                    return follow;
                 }
             }
 
-            return result;
+           return new List<LineSegment>();          
         }
 
-        private List<LineSegment> GetNextSegement(LineSegment current, LineSegment previous)
+        /// <summary>
+        /// Gets a list of segments connected to the current segment.
+        /// </summary>
+        /// <param name="current"></param>
+        /// <returns></returns>
+        private IEnumerable<LineSegment> GetNextSegement(LineSegment current)
         {
-            List<LineSegment> result = new List<LineSegment>();
-
-            if (previous == null)
-                return current.connectedSegments.Select(item =>
-                {
-                    if (item.ChildSegment == current.ID)
-                        return item.Parent;
-                    else
-                        return item.Child;
-                }).ToList();
-            
-            foreach (LineSegmentConnections conn in current.connectedSegments)
+            return current.connectedSegments.Select(item =>
             {
-                if (conn.ChildSegment == current.ID && conn.ParentSegment != previous.ID)
-                    result.Add(conn.Parent);
-                if (conn.ParentSegment == current.ID && conn.ChildSegment != previous.ID)
-                    result.Add(conn.Child);
-            }
-
-            List<int> prevConnections = previous.connectedSegments.Select(item =>
-                {
-                    if (item.ChildSegment == previous.ID)
-                        return item.ParentSegment;
-                    else
-                        return item.ChildSegment;
-                }).ToList();
-            
-            return result.Where(item => !prevConnections.Contains(item.ID)).ToList();
+                if (item.ChildSegment == current.ID)
+                    return item.Parent;
+                else
+                    return item.Child;
+            });
         }
 
         public static Line DetailedLine(Asset asset, AdoDataConnection connection)
@@ -282,6 +266,8 @@ namespace openXDA.Model
             }
         }
         #endregion
+
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Line));
     }
 
 
