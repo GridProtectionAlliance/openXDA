@@ -82,7 +82,7 @@ export const SelectSeverityStatus = (state: Redux.StoreState) => state.Severity.
 function GetAlarmSeverities(): JQuery.jqXHR<SPCTools.ISeverity[]> {
     return $.ajax({
         type: "GET",
-        url: `${apiHomePath}api/SPCTools/AlarmSeverity`,
+        url: `${apiHomePath}api/AlarmSeverity`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         cache: false,
