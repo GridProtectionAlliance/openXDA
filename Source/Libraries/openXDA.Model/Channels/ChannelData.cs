@@ -36,6 +36,59 @@ namespace openXDA.Model
     [TableName("ChannelData")]
     public class ChannelData
     {
+        #region [ Members ]
+
+        private class DigitalSection
+        {
+            public DateTime Start { get; set; }
+            public DateTime End { get; set; }
+            public int NumPoints { get; set; }
+            public double Value { get; set; }
+            public static int Size => 2 * sizeof(long) + sizeof(ushort) + sizeof(int);
+
+            public void CopyBytes(byte[] byteArra, ref int offset, double compressionScale, double decompressionOffsety)
+            {
+                ushort compressedValue = (ushort)Math.Round((Value - decompressionOffset) * compressionScale);
+                const ushort NaNValue = ushort.MaxValue;
+
+                if (compressedValue == NaNValue)
+                    compressedValue--;
+
+                if (double.IsNaN(Value))
+                    compressedValue = NaNValue;
+
+                offset += LittleEndian.CopyBytes(Start.Ticks, byteArray, offset);
+                offset += LittleEndian.CopyBytes(End.Ticks, byteArray, offset);
+                offset += LittleEndian.CopyBytes(compressedValue, byteArray, offset);
+                offset += LittleEndian.CopyBytes(NumPoints, byteArray, offset);
+                return bytes;
+            }
+
+            public static DigitalSection FromBytes(byte[] bytes, ref int offset, double decompressionOffset, double compressionScale)
+            {
+                DigitalSection section = new DigitalSection();
+
+                section.Start = new DateTime(LittleEndian.ToUInt64(bytes, offset));
+                offset += sizeof(long);
+
+                section.End = new DateTime(LittleEndian.ToUInt64(bytes, offset));
+                offset += sizeof(long);
+                
+                ushort compressedValue = LittleEndian.ToUInt16(bytes, offset);
+                section.Value = decompressionScale * compressedValue + decompressionOffset; 
+
+                offset += sizeof(ushort);
+
+                section.NumPoints = LittleEndian.ToInt32(bytes, offset);
+                offset += sizeof(int);
+
+                return section;
+            }
+        }
+
+
+        #endregion
+
         #region [ Properties ]
 
         [PrimaryKey(true)]
@@ -296,62 +349,59 @@ namespace openXDA.Model
 
         private static byte[] ToDigitalData(List<DataPoint> data, int seriesID)
         {
-            IEnumerable<DataPoint> changeSeries = data.Where((point, index) => index == 0 || index == data.Count - 1 || point.Value != data[index - 1].Value);
+            List<DigitalSection> digitalData = new List<DigitalSection>();
+            DigitalSection? currentSection = null;
+            foreach (DataPoint dataPoint in data)
+            {
+                if (currentSection is null)
+                {
+                    currentSection = new DigitalSection()
+                    {
+                        Start = dataPoint.Time,
+                        End = dataPoint.Time,
+                        Value = dataPoint.Value,
+                        NumPoints = 1
+                    };
+                }
+                else if (currentSection.Value != dataPoint.Value)
+                {
+                    digitalData.Add(currentSection);
+                    currentSection = new DigitalSection()
+                    {
+                        Start = dataPoint.Time,
+                        End = dataPoint.Time,
+                        Value = dataPoint.Value,
+                        NumPoints = 1
+                    };
+                }
+                else
+                {
+                    currentSection.NumPoints++;
+                    currentSection.End = dataPoint.Time;
+                }
+            }
 
-            const ushort NaNValue = ushort.MaxValue;
-            const ushort MaxCompressedValue = ushort.MaxValue - 1;
-            double range = changeSeries.Select(item => item.Value).Max() - changeSeries.Select(item => item.Value).Min();
-            double decompressionOffset = changeSeries.Select(item => item.Value).Min();
-            double decompressionScale = range / MaxCompressedValue;
-            double compressionScale = (decompressionScale != 0.0D) ? 1.0D / decompressionScale : 0.0D;
-
-            long startTime = data.First().Time.Ticks;
-            long sampleRate = data[1].Time.Ticks - startTime;
-
-            int totalByteLength = 2 * sizeof(int) + 2 * sizeof(long) + 2 * sizeof(double) + sizeof(int) + changeSeries.Count() * (sizeof(long) + sizeof(ushort));
+            if (currentSection is not null)
+                digitalData.Add(currentSection);
+            
+            int totalByteLength = sizeof(int) + 2 * sizeof(double) + digitalData.Count() * (DigitalSection.Size);
 
             byte[] result = new byte[totalByteLength];
             int offset = 0;
 
-            offset += LittleEndian.CopyBytes(data.Count, result, offset);
             offset += LittleEndian.CopyBytes(seriesID, result, offset);
-
-            offset += LittleEndian.CopyBytes(startTime, result, offset);
-            offset += LittleEndian.CopyBytes(sampleRate, result, offset);
 
             offset += LittleEndian.CopyBytes(decompressionOffset, result, offset);
             offset += LittleEndian.CopyBytes(decompressionScale, result, offset);
 
-            offset += LittleEndian.CopyBytes(data.Count, result, offset);
-
-            foreach (DataPoint dataPoint in changeSeries)
-            {
-                ushort compressedValue = (ushort)Math.Round((dataPoint.Value - decompressionOffset) * compressionScale);
-
-                if (compressedValue == NaNValue)
-                    compressedValue--;
-
-                if (double.IsNaN(dataPoint.Value))
-                    compressedValue = NaNValue;
-
-                long time = dataPoint.Time.Ticks - startTime;
-
-                offset += LittleEndian.CopyBytes(time, result, offset);
-                offset += LittleEndian.CopyBytes(compressedValue, result, offset);
-            }
+            foreach (DigitalSection dataPoint in digitalData)
+                dataPoint.CopyBytes(result, ref offset, compressionScale, decompressionOffset);
+            
 
             byte[] returnArray = GZipStream.CompressBuffer(result);
 
-            if (changeSeries.Count() == 2 && changeSeries.First().Value == changeSeries.Last().Value)
-            {
-                returnArray[0] = ConstantDigitalHeader[0];
-                returnArray[1] = ConstantDigitalHeader[1];
-            }
-            else
-            {
-                returnArray[0] = DigitalHeader[0];
-                returnArray[1] = DigitalHeader[1];
-            }
+            returnArray[0] = DigitalHeader[0];
+            returnArray[1] = DigitalHeader[1];
 
             return returnArray;
         }
@@ -501,12 +551,8 @@ namespace openXDA.Model
             List<Tuple<int, List<DataPoint>>> result = new List<Tuple<int, List<DataPoint>>>();
             byte[] uncompressedData;
             int offset;
-            int m_samples;
-            DateTime startTime;
             int seriesID;
-            long samplingrate;
             List<DataPoint> points = new List<DataPoint>();
-            int m_points;
 
             // Restore the GZip header before uncompressing
             data[0] = LegacyHeader[0];
@@ -515,75 +561,48 @@ namespace openXDA.Model
             uncompressedData = GZipStream.UncompressBuffer(data);
             offset = 0;
 
-            m_samples = LittleEndian.ToInt32(uncompressedData, offset);
-            offset += sizeof(int);
-
-            if (m_samples < 2)
-                throw new InvalidOperationException("Digital Data must have the first and last point encoded.");
-
             seriesID = LittleEndian.ToInt32(uncompressedData, offset);
             offset += sizeof(int);
-
-            startTime = new DateTime(LittleEndian.ToInt64(uncompressedData, offset));
-            offset += sizeof(long);
-
-            samplingrate = LittleEndian.ToInt64(uncompressedData, offset);
-            offset += sizeof(long);
 
             double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
             double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
             offset += 2 * sizeof(double);
 
-            m_points = LittleEndian.ToInt32(uncompressedData, offset);
-            offset += sizeof(int);
-
-            // Always have the first point available.
-            ulong time = LittleEndian.ToUInt64(uncompressedData, offset);
-            offset += sizeof(long);
-            ushort compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
-            offset += sizeof(ushort);
-
-            double decompressedValue = decompressionScale * compressedValue + decompressionOffset;
-
-            double lastValue = decompressedValue;
-            long lastTime = (long)time;
-
-            for (int i = 1; i < m_samples; i++)
+            while(offset < uncompressedData.Length)
             {
-                time = LittleEndian.ToUInt64(uncompressedData, offset);
-                offset += sizeof(int);
-                compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
-                offset += sizeof(ushort);
+                DigitalSection section = DigitalSection.FromBytes(uncompressedData, ref offset, decompressionOffset, decompressionScale);
 
-                decompressedValue = decompressionScale * compressedValue + decompressionOffset;
-                while (time > (ulong)(lastTime + samplingrate))
+                points.Add(new DataPoint()
                 {
-                    lastTime += samplingrate;
+                    Time = section.Start,
+                    Value = section.Value
+                });
+
+
+                if (section.NumPoints == 1)
+                    continue;
+
+                long diff = (section.Start - section.End).Ticks / (section.NumPoints - 1);
+                long lastTime = section.Start.Ticks;
+
+                for (int i = 1; i < section.NumPoints-1; i++)
+                {
                     points.Add(new DataPoint()
                     {
-                        Time = startTime.AddTicks(lastTime),
-                        Value = lastValue
+                        Time = lastTime + diff,
+                        Value = section.Value
                     });
+                    lastTime += diff;
                 }
 
                 points.Add(new DataPoint()
                 {
-                    Time = startTime.AddTicks((long)time),
-                    Value = decompressedValue
+                    Time = section.End,
+                    Value = section.Value
                 });
-
-                lastTime = (long)time;
-                lastValue = decompressedValue;
+                
             }
-
-            while (points.Count < m_points)
-            {
-                points.Add(new DataPoint()
-                {
-                    Time = startTime.AddTicks(lastTime),
-                    Value = lastValue
-                });
-            }
+          
             result.Add(new Tuple<int, List<DataPoint>>(seriesID, points));
 
             return result;
@@ -633,11 +652,6 @@ namespace openXDA.Model
         /// The header of a datablob compressed as Digital State Changes
         /// </summary>
         public static readonly byte[] DigitalHeader = { 0x22, 0x22 };
-
-        /// <summary>
-        /// The header of a datablob compressed as empty Digital State Changes
-        /// </summary>
-        public static readonly byte[] ConstantDigitalHeader = { 0x33, 0x33 };
 
         /// <summary>
         /// The header of a datablob compressed as Legacy Data
