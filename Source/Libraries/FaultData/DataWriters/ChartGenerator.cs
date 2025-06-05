@@ -34,7 +34,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using log4net;
 using openXDA.Model;
-using DataPoint = FaultData.DataAnalysis.DataPoint;
+using DataPoint = openXDA.Model.DataPoint;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
 
 namespace FaultData.DataWriters

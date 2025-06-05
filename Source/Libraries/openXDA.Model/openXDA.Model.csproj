@@ -94,6 +94,7 @@
     <Compile Include="CapBankAnalytic\CBDataError.cs" />
     <Compile Include="CapBankAnalytic\CBStatus.cs" />
     <Compile Include="CapBankAnalytic\CBAnalyticResult.cs" />
+    <Compile Include="Channels\DataPoint.cs" />
     <Compile Include="Channels\ChannelData.cs" />
     <Compile Include="Channels\ChannelGroup.cs" />
     <Compile Include="Channels\ChannelGroupType.cs" />
