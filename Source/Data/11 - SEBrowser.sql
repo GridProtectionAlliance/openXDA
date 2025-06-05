@@ -2,11 +2,12 @@
 CREATE TABLE [SEBrowser.Setting]
 (
    	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	[Scope] [varchar](64) NULL,
+	[Scope] [varchar](64) NULL DEFAULT(N'app.setting'),
 	[Name] [varchar](64) NULL,
 	[Value] [varchar](512) NULL,
+    [DefaultValue] [varchar](512) NULL,
 	[ApplicationInstance] [bit] NOT NULL,
-	[Roles] [varchar](200) NULL,
+	[Roles] [varchar](200) NULL Default(N'Administrator'),
 )
 GO
 
@@ -110,21 +111,21 @@ GO
 
 
 
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationName', N'SEBrowser', 0, N'Administrator')
+INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationName', N'SEBrowser', N'SEBrowser', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationDescription', N'System Event Browser', 0, N'Administrator')
+INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationDescription', N'System Event Browser', N'System Event Browser', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationKeywords', N'open source, utility, browser, power quality, management', 0, N'Administrator')
+INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationKeywords', N'open source, utility, browser, power quality, management', N'open source, utility, browser, power quality, management', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'bootstrapTheme', N'~/Content/bootstrap-theme.css', 0, N'Administrator')
+INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'bootstrapTheme', N'~/Content/bootstrap-theme.css', N'~/Content/bootstrap-theme.css', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'XDAInstance', N'http://localhost:8989', 0, N'Administrator')
+INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'XDAInstance', N'http://localhost:8989', N'http://localhost:8989', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'SCInstance', N'http://localhost:8987', 0, N'Administrator')
+INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'SCInstance', N'http://localhost:8987', N'http://localhost:8987', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'OpenSEEInstance', N'http://localhost/OpenSEE', 0, N'Administrator')
+INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'OpenSEEInstance', N'http://localhost/OpenSEE', N'http://localhost/OpenSEE', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting]([Scope], [Name], [Value], [ApplicationInstance], [Roles]) VALUES (N'eventPreviewPane.widgetSetting', N'OpenSEEInstance', N'http://localhost/OpenSEE', 0, N'Administrator')
+INSERT [dbo].[SEBrowser.Setting]([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'eventPreviewPane.widgetSetting', N'OpenSEEInstance', N'http://localhost/OpenSEE', N'http://localhost/OpenSEE', 0, N'Administrator')
 GO
 
 
