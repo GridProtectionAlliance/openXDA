@@ -40,7 +40,4 @@ namespace openXDA.Controllers
 
     [RoutePrefix("api/SPCTools/MeterAlarmGroup")]
     public class MeterAlarmGroupController : ModelController<MeterAlarmGroup> {}
-
-    [RoutePrefix("api/SPCTools/AlarmSeverity")]
-    public class AlarmSeverityController : ModelController<AlarmSeverity> {}
 }
