@@ -183,7 +183,7 @@ namespace openXDA.Model
 
         public IEnumerable<AssetLocation> GetAssetLocations(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             TableOperations<AssetLocation> assetLocationTable = new TableOperations<AssetLocation>(connection);
@@ -201,7 +201,7 @@ namespace openXDA.Model
                     .ToList();
             }
 
-            if ((object)assetLocations != null)
+            if (!(assetLocations is null))
             {
                 foreach (AssetLocation assetLocation in assetLocations)
                 {
@@ -226,7 +226,7 @@ namespace openXDA.Model
                     .ToList();
             }
 
-            if ((object)meterAssets != null)
+            if (!(meterAssets is null))
             {
                 foreach (MeterAsset meterAsset in meterAssets)
                 {
@@ -244,12 +244,12 @@ namespace openXDA.Model
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                channels = GetChannel(connection)?
+                channels = GetChannels(connection)?
                     .Select(LazyContext.GetChannel)
                     .ToList();
             }
 
-            if ((object)channels != null)
+            if (!(channels is null))
             {
                 foreach (Channel channel in channels)
                 {
@@ -267,12 +267,12 @@ namespace openXDA.Model
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                channels = GetConnectedChannel(connection)?
+                channels = GetConnectedChannels(connection)?
                     .Select(LazyContext.GetChannel)
                     .ToList();
             }
 
-            if ((object)channels != null)
+            if (!(channels is null))
             {
                 foreach (Channel channel in channels)
                 {
@@ -289,12 +289,12 @@ namespace openXDA.Model
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                connections = GetConnection(connection)?
+                connections = GetConnections(connection)?
                     .Select(LazyContext.GetAssetConnection)
                     .ToList();
             }
 
-            if ((object)connections != null)
+            if (!(connections is null))
             {
                 foreach (AssetConnection connection in connections)
                 {
@@ -307,25 +307,25 @@ namespace openXDA.Model
 
         public IEnumerable<MeterAsset> GetMeterAssets(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             TableOperations<MeterAsset> meterAssetTable = new TableOperations<MeterAsset>(connection);
             return meterAssetTable.QueryRecordsWhere("AssetID = {0}", ID);
         }
 
-        public IEnumerable<Channel> GetChannel(AdoDataConnection connection)
+        public IEnumerable<Channel> GetChannels(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
             return channelTable.QueryRecordsWhere("AssetID = {0}", ID);
         }
 
-        public IEnumerable<AssetConnection> GetConnection(AdoDataConnection connection)
+        public IEnumerable<AssetConnection> GetConnections(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             TableOperations<AssetConnection> channelTable = new TableOperations<AssetConnection>(connection);
@@ -333,11 +333,10 @@ namespace openXDA.Model
         }
 
         // Logic for Channels across Asset Connections
-        public IEnumerable<Channel> GetConnectedChannel(AdoDataConnection connection, Stack<Asset> ignoredAssets = null, List<Location> alowedLocations = null)
+        public IEnumerable<Channel> GetConnectedChannels(AdoDataConnection connection, Stack<Asset> ignoredAssets = null, List<Location> allowedLocations = null)
         {
             ignoredAssets = ignoredAssets ?? new Stack<Asset>();
-            alowedLocations = alowedLocations ?? QueryAssetLocations().Select(item => item.Location).ToList();
-
+            allowedLocations = allowedLocations ?? AssetLocations.Select(item => item.Location).ToList();
 
             List<Channel> result = new List<Channel>();
 
@@ -356,7 +355,7 @@ namespace openXDA.Model
 
                 foreach (AssetLocation assetLocation in remoteAsset.AssetLocations)
                 {
-                    if (alowedLocations.Select(item =>item.ID).Contains(assetLocation.LocationID))
+                    if (allowedLocations.Select(item =>item.ID).Contains(assetLocation.LocationID))
                     {
                         locationAllowed = true;
                         break;
@@ -365,8 +364,7 @@ namespace openXDA.Model
                 if (locationAllowed == false)
                     continue;
                     
-                IEnumerable<Channel> potentials = remoteAsset.GetChannel(connection);
-               
+                IEnumerable<Channel> potentials = remoteAsset.GetChannels(connection);
 
                 TableOperations<AssetConnectionType> assetConnectionTypeTbl = new TableOperations<AssetConnectionType>(connection);
                 string jumpSQL = assetConnectionTypeTbl.QueryRecordWhere("ID = {0}",assetconnection.AssetRelationshipTypeID).JumpConnection;
@@ -387,7 +385,7 @@ namespace openXDA.Model
                     }
                 }
 
-                potentials = remoteAsset.GetConnectedChannel(connection, ignoredAssets, alowedLocations);
+                potentials = remoteAsset.GetConnectedChannels(connection, ignoredAssets, allowedLocations);
 
                 foreach (Channel channel in potentials)
                 {
@@ -452,6 +450,15 @@ namespace openXDA.Model
                     lazyConnection.Value.Dispose();
             }
         }
+
+        [Obsolete("Replaced by GetChannels")]
+        public IEnumerable<Channel> GetChannel(AdoDataConnection connection) => GetChannels(connection);
+
+        [Obsolete("Replaced by GetConnections")]
+        public IEnumerable<AssetConnection> GetConnection(AdoDataConnection connection) => GetConnections(connection);
+
+        [Obsolete("Replaced by GetConnectedChannels")]
+        public IEnumerable<Channel> GetConnectedChannel(AdoDataConnection connection, Stack<Asset> ignoredAssets = null, List<Location> allowedLocations = null) => GetConnectedChannels(connection, ignoredAssets, allowedLocations);
 
         #endregion
     }
