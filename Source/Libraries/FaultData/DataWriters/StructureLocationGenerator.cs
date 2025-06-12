@@ -151,8 +151,13 @@ namespace FaultData.DataWriters
 
                 CommonForm intermediateResult = queryResultType.Contains("csv") ? FromCsv(structureInfo, returnHeaders, returnHeaderNames) : new CommonForm();
 
-
-                return elementType == "table" ? ToTable(intermediateResult) : elementType == "span" ? ToSpan(intermediateResult, makeGoogleMapsLink) : element;
+                switch (elementType)
+                {
+                    case "table": return ToTable(intermediateResult);
+                    case "span": return ToSpan(intermediateResult, makeGoogleMapsLink);
+                    case "text": return ToText(intermediateResult);
+                    default: return element;
+                }
             }
             catch(Exception e)
             {
@@ -264,6 +269,11 @@ namespace FaultData.DataWriters
 
             returnElement.Value = html;
             return returnElement;
+        }
+
+        private static string ToText(CommonForm input)
+        {
+            return input.Body.FirstOrDefault()?.FirstOrDefault();
         }
 
         private static string ToFormat(CommonForm input, string headerFormat, string rowFormat)
