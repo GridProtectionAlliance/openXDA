@@ -34,7 +34,6 @@ namespace openXDA.Model
     [UseEscapedName]
     public class EmailType : EmailTypeBase
     {
-
         [ParentKey(typeof(EmailCategory))]
         public int EmailCategoryID { get; set; }
 
@@ -45,8 +44,6 @@ namespace openXDA.Model
         public double MinDelay { get; set; }
 
         public double MaxDelay { get; set; }
-
-        public bool SMS { get; set; }
 
         public bool ShowSubscription { get; set; }
 
