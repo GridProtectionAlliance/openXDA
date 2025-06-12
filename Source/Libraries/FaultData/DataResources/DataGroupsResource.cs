@@ -119,18 +119,12 @@ namespace FaultData.DataResources
             return null;
         }
 
-        private List<DataSeries> GetConnectedSeries(IEnumerable<DataSeries> groupedSeries, Asset asset)
+        private IEnumerable<DataSeries> GetConnectedSeries(IEnumerable<DataSeries> groupedSeries, Asset asset)
         {
-            List<DataSeries> result = new List<DataSeries>();
-            List<int> channelIDs = asset.ConnectedChannels.Select(item => item.ID).ToList();
-
-            foreach (DataSeries ds in groupedSeries)
-            {
-                if (channelIDs.Contains(ds.SeriesInfo.ChannelID))
-                    result.Add(ds);
-            }
-
-            return result;
+            return groupedSeries.Join(asset.ConnectedChannels,
+                dataSeries => dataSeries.SeriesInfo.ChannelID,
+                channel => channel.ID,
+                (dataSeries, _) => dataSeries);
         }
 
         private DataGroupKey GetKey(DataSeries dataSeries)
