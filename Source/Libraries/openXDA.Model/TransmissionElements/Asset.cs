@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 using GSF.Collections;
@@ -183,7 +184,7 @@ namespace openXDA.Model
 
         public IEnumerable<AssetLocation> GetAssetLocations(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             TableOperations<AssetLocation> assetLocationTable = new TableOperations<AssetLocation>(connection);
@@ -201,7 +202,7 @@ namespace openXDA.Model
                     .ToList();
             }
 
-            if ((object)assetLocations != null)
+            if (!(assetLocations is null))
             {
                 foreach (AssetLocation assetLocation in assetLocations)
                 {
@@ -226,7 +227,7 @@ namespace openXDA.Model
                     .ToList();
             }
 
-            if ((object)meterAssets != null)
+            if (!(meterAssets is null))
             {
                 foreach (MeterAsset meterAsset in meterAssets)
                 {
@@ -244,12 +245,12 @@ namespace openXDA.Model
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                channels = GetChannel(connection)?
+                channels = GetChannels(connection)?
                     .Select(LazyContext.GetChannel)
                     .ToList();
             }
 
-            if ((object)channels != null)
+            if (!(channels is null))
             {
                 foreach (Channel channel in channels)
                 {
@@ -267,12 +268,12 @@ namespace openXDA.Model
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                channels = GetConnectedChannel(connection)?
+                channels = GetConnectedChannels(connection)?
                     .Select(LazyContext.GetChannel)
                     .ToList();
             }
 
-            if ((object)channels != null)
+            if (!(channels is null))
             {
                 foreach (Channel channel in channels)
                 {
@@ -289,12 +290,12 @@ namespace openXDA.Model
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                connections = GetConnection(connection)?
+                connections = GetConnections(connection)?
                     .Select(LazyContext.GetAssetConnection)
                     .ToList();
             }
 
-            if ((object)connections != null)
+            if (!(connections is null))
             {
                 foreach (AssetConnection connection in connections)
                 {
@@ -307,25 +308,25 @@ namespace openXDA.Model
 
         public IEnumerable<MeterAsset> GetMeterAssets(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             TableOperations<MeterAsset> meterAssetTable = new TableOperations<MeterAsset>(connection);
             return meterAssetTable.QueryRecordsWhere("AssetID = {0}", ID);
         }
 
-        public IEnumerable<Channel> GetChannel(AdoDataConnection connection)
+        public IEnumerable<Channel> GetChannels(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
             return channelTable.QueryRecordsWhere("AssetID = {0}", ID);
         }
 
-        public IEnumerable<AssetConnection> GetConnection(AdoDataConnection connection)
+        public IEnumerable<AssetConnection> GetConnections(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             TableOperations<AssetConnection> channelTable = new TableOperations<AssetConnection>(connection);
@@ -333,75 +334,98 @@ namespace openXDA.Model
         }
 
         // Logic for Channels across Asset Connections
-        public IEnumerable<Channel> GetConnectedChannel(AdoDataConnection connection, Stack<Asset> ignoredAssets = null, List<Location> alowedLocations = null)
+        public IEnumerable<Channel> GetConnectedChannels(AdoDataConnection connection)
         {
-            ignoredAssets = ignoredAssets ?? new Stack<Asset>();
-            alowedLocations = alowedLocations ?? QueryAssetLocations().Select(item => item.Location).ToList();
+            return TraverseConnectedChannels(connection, ID, ID, new Stack<int>())
+                .Distinct(new ChannelComparer());
+        }
 
+        private IEnumerable<Channel> TraverseConnectedChannels(AdoDataConnection connection, int assetID, int visitedAssetID, Stack<int> visitedAssets)
+        {
+            const string TraversalQueryFormat =
+                "SELECT DISTINCT " +
+                "    ConnectedAsset.ID ConnectedAssetID, " +
+                "    AssetConnection.ParentID, " +
+                "    AssetConnection.ChildID, " +
+                "    AssetRelationshipType.JumpConnection JumpSQL, " +
+                "    AssetRelationshipType.PassThrough PassthroughSQL " +
+                "FROM " +
+                "    Asset JOIN " +
+                "    Asset VisitedAsset ON " +
+                "        Asset.ID = {0} AND " +
+                "        VisitedAsset.ID = {1} JOIN " +
+                "    AssetConnection ON VisitedAsset.ID IN (AssetConnection.ParentID, AssetConnection.ChildID) JOIN " +
+                "    Asset ConnectedAsset ON " +
+                "        ConnectedAsset.ID IN (AssetConnection.ParentID, AssetConnection.ChildID) AND " +
+                "        ConnectedAsset.ID <> VisitedAsset.ID JOIN " +
+                "    AssetRelationshipType ON AssetConnection.AssetRelationshipTypeID = AssetRelationshipType.ID JOIN " +
+                "    MeterAsset ON MeterAsset.AssetID = Asset.ID JOIN " +
+                "    MeterAsset ConnectedMeterAsset ON " +
+                "        ConnectedMeterAsset.MeterID = MeterAsset.MeterID AND " +
+                "        ConnectedMeterAsset.AssetID = ConnectedAsset.ID";
 
-            List<Channel> result = new List<Channel>();
+            const string QueryChannelsFormat =
+                "SELECT Channel.* " +
+                "FROM " +
+                "    Asset JOIN " +
+                "    Asset ConnectedAsset ON " +
+                "        Asset.ID = {0} AND " +
+                "        ConnectedAsset.ID = {1} JOIN " +
+                "    Channel ON Channel.AssetID = ConnectedAsset.ID JOIN " +
+                "    MeterAsset ON " +
+                "        MeterAsset.MeterID = Channel.MeterID AND " +
+                "        MeterAsset.AssetID = Asset.ID";
 
-            ignoredAssets.Push(this);
+            TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
 
-            foreach (AssetConnection assetconnection in QueryConnections())
+            visitedAssets.Push(visitedAssetID);
+
+            foreach (DataRow traversalRow in RetrieveRows(TraversalQueryFormat, assetID, visitedAssetID))
             {
-                Asset remoteAsset = assetconnection.Child;
-                if (assetconnection.ChildID == ID)
-                    remoteAsset = assetconnection.Parent;
+                int connectedAssetID = traversalRow.ConvertField<int>("ConnectedAssetID");
 
-                if (ignoredAssets.Select(item => item.ID).Contains(remoteAsset.ID))
+                if (visitedAssets.Contains(connectedAssetID))
                     continue;
 
-                bool locationAllowed = false;
+                int parentID = traversalRow.ConvertField<int>("ParentID");
+                int childID = traversalRow.ConvertField<int>("ChildID");
+                string jumpSQL = traversalRow.ConvertField<string>("JumpSQL");
+                string passthroughSQL = traversalRow.ConvertField<string>("PassthroughSQL");
 
-                foreach (AssetLocation assetLocation in remoteAsset.AssetLocations)
+                jumpSQL = Regex.Replace(jumpSQL, @"\{parentid\}", parentID.ToString(), RegexOptions.IgnoreCase);
+                jumpSQL = Regex.Replace(jumpSQL, @"\{childid\}", childID.ToString(), RegexOptions.IgnoreCase);
+
+                passthroughSQL = Regex.Replace(passthroughSQL, @"\{parentid\}", parentID.ToString(), RegexOptions.IgnoreCase);
+                passthroughSQL = Regex.Replace(passthroughSQL, @"\{childid\}", childID.ToString(), RegexOptions.IgnoreCase);
+
+                foreach (DataRow channelRow in RetrieveRows(QueryChannelsFormat, assetID, connectedAssetID))
                 {
-                    if (alowedLocations.Select(item =>item.ID).Contains(assetLocation.LocationID))
-                    {
-                        locationAllowed = true;
-                        break;
-                    }
-                }
-                if (locationAllowed == false)
-                    continue;
-                    
-                IEnumerable<Channel> potentials = remoteAsset.GetChannel(connection);
-               
+                    int channelID = channelRow.ConvertField<int>("ID");
+                    string parsedJumpSQL = Regex.Replace(jumpSQL, @"\{channelid\}", channelID.ToString(), RegexOptions.IgnoreCase);
 
-                TableOperations<AssetConnectionType> assetConnectionTypeTbl = new TableOperations<AssetConnectionType>(connection);
-                string jumpSQL = assetConnectionTypeTbl.QueryRecordWhere("ID = {0}",assetconnection.AssetRelationshipTypeID).JumpConnection;
-                string passThrough = assetConnectionTypeTbl.QueryRecordWhere("ID = {0}", assetconnection.AssetRelationshipTypeID).PassThrough;
-
-                jumpSQL = Regex.Replace(jumpSQL, @"\{parentid\}", assetconnection.ParentID.ToString(), RegexOptions.IgnoreCase);
-                jumpSQL = Regex.Replace(jumpSQL, @"\{childid\}", assetconnection.ChildID.ToString(), RegexOptions.IgnoreCase);
-
-                passThrough = Regex.Replace(passThrough, @"\{parentid\}", assetconnection.ParentID.ToString(), RegexOptions.IgnoreCase);
-                passThrough = Regex.Replace(passThrough, @"\{childid\}", assetconnection.ChildID.ToString(), RegexOptions.IgnoreCase);
-
-                foreach (Channel channel in potentials)
-                {
-                    string parsedJumpSQL = Regex.Replace(jumpSQL, @"\{channelid\}", channel.ID.ToString(), RegexOptions.IgnoreCase);
                     if (Convert.ToBoolean(connection.ExecuteScalar(parsedJumpSQL)))
-                    {
-                        result.Add(channel);
-                    }
+                        yield return channelTable.LoadRecord(channelRow);
                 }
 
-                potentials = remoteAsset.GetConnectedChannel(connection, ignoredAssets, alowedLocations);
-
-                foreach (Channel channel in potentials)
+                foreach (Channel channel in TraverseConnectedChannels(connection, assetID, connectedAssetID, visitedAssets))
                 {
-                    string parsedPassThrough = Regex.Replace(passThrough, @"\{channelid\}", channel.ID.ToString(), RegexOptions.IgnoreCase);
-                    if (Convert.ToBoolean(connection.ExecuteScalar(parsedPassThrough)))
-                    {
-                        result.Add(channel);
-                    }
+                    string parsedPassthroughSQL = Regex.Replace(passthroughSQL, @"\{channelid\}", channel.ID.ToString(), RegexOptions.IgnoreCase);
+
+                    if (Convert.ToBoolean(connection.ExecuteScalar(parsedPassthroughSQL)))
+                        yield return channel;
                 }
             }
 
-            ignoredAssets.Pop();
+            visitedAssets.Pop();
 
-            return result.Distinct(new ChannelComparer());
+            IEnumerable<DataRow> RetrieveRows(string query, params object[] args)
+            {
+                using (DataTable table = connection.RetrieveData(query, args))
+                {
+                    foreach (DataRow row in table.Rows)
+                        yield return row;
+                }
+            }
         }
 
         // Logic to find distance between two Assets
@@ -452,6 +476,15 @@ namespace openXDA.Model
                     lazyConnection.Value.Dispose();
             }
         }
+
+        [Obsolete("Replaced by GetChannels")]
+        public IEnumerable<Channel> GetChannel(AdoDataConnection connection) => GetChannels(connection);
+
+        [Obsolete("Replaced by GetConnections")]
+        public IEnumerable<AssetConnection> GetConnection(AdoDataConnection connection) => GetConnections(connection);
+
+        [Obsolete("Replaced by GetConnectedChannels")]
+        public IEnumerable<Channel> GetConnectedChannel(AdoDataConnection connection) => GetConnectedChannels(connection);
 
         #endregion
     }
