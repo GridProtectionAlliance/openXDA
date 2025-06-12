@@ -364,7 +364,12 @@ namespace openXDA
                 try
                 {
                     attachments = m_eventEmailService.ApplyChartTransform(htmlDocument);
-                    m_eventEmailService.SendEmail(recipients, htmlDocument, attachments);
+
+                    if (emailType.SMS)
+                        m_eventEmailService.SendEmailNoHTML(recipients, htmlDocument, attachments);
+                    else
+                        m_eventEmailService.SendEmail(recipients, htmlDocument, attachments);
+
                     m_eventEmailService.LoadSentEmail(recipients, htmlDocument, eventIDs);
                 }
                 finally

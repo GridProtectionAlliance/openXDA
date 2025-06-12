@@ -136,58 +136,12 @@ namespace FaultData.DataWriters
 
         public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
         {
-            EmailSettings emailSettings = GetEmailSettings();
-            string smtpServer = emailSettings.SMTPServer;
+            SendEmail(true, recipients, htmlDocument, attachments);
+        }
 
-            if (string.IsNullOrEmpty(smtpServer))
-                return;
-
-            string[] smtpServerParts = smtpServer.Split(':');
-            string host = smtpServerParts[0];
-            int port;
-
-            Func<SmtpClient> clientFactory = () => new SmtpClient(host);
-
-            if (smtpServerParts.Length > 1 && int.TryParse(smtpServerParts[1], out port))
-                clientFactory = () => new SmtpClient(host, port);
-
-            using (SmtpClient smtpClient = clientFactory())
-            using (MailMessage emailMessage = new MailMessage())
-            {
-                string username = emailSettings.Username;
-                SecureString password = emailSettings.SecurePassword;
-
-                if (!string.IsNullOrEmpty(username) && (object)password != null)
-                    smtpClient.Credentials = new NetworkCredential(username, password);
-
-                smtpClient.EnableSsl = emailSettings.EnableSSL;
-
-                string fromAddress = emailSettings.FromAddress;
-                emailMessage.From = new MailAddress(fromAddress);
-                emailMessage.Subject = GetSubject(htmlDocument);
-                emailMessage.Body = GetBody(htmlDocument);
-                emailMessage.IsBodyHtml = true;
-
-                string blindCopyAddress = emailSettings.BlindCopyAddress;
-                string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
-
-                if (string.IsNullOrEmpty(blindCopyAddress))
-                {
-                    emailMessage.To.Add(recipientList);
-                }
-                else
-                {
-                    emailMessage.To.Add(blindCopyAddress);
-                    emailMessage.Bcc.Add(recipientList);
-                }
-
-                // Create the image attachment for the email message
-                foreach (Attachment attachment in attachments)
-                    emailMessage.Attachments.Add(attachment);
-
-                // Send the email
-                smtpClient.Send(emailMessage);
-            }
+        public void SendEmailNoHTML(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
+        {
+            SendEmail(false, recipients, htmlDocument, attachments);
         }
 
         public void SendAdminEmail(string subject, string message, List<string> replyToRecipients)
@@ -234,6 +188,62 @@ namespace FaultData.DataWriters
             }
         }
 
+        private void SendEmail(bool useHTML, List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
+        {
+            EmailSettings emailSettings = GetEmailSettings();
+            string smtpServer = emailSettings.SMTPServer;
+
+            if (string.IsNullOrEmpty(smtpServer))
+                return;
+
+            string[] smtpServerParts = smtpServer.Split(':');
+            string host = smtpServerParts[0];
+            int port;
+
+            Func<SmtpClient> clientFactory = () => new SmtpClient(host);
+
+            if (smtpServerParts.Length > 1 && int.TryParse(smtpServerParts[1], out port))
+                clientFactory = () => new SmtpClient(host, port);
+
+            using (SmtpClient smtpClient = clientFactory())
+            using (MailMessage emailMessage = new MailMessage())
+            {
+                string username = emailSettings.Username;
+                SecureString password = emailSettings.SecurePassword;
+
+                if (!string.IsNullOrEmpty(username) && (object)password != null)
+                    smtpClient.Credentials = new NetworkCredential(username, password);
+
+                smtpClient.EnableSsl = emailSettings.EnableSSL;
+
+                string fromAddress = emailSettings.FromAddress;
+                emailMessage.From = new MailAddress(fromAddress);
+                emailMessage.Subject = GetSubject(htmlDocument);
+                emailMessage.Body = useHTML ? GetBody(htmlDocument) : GetBodyNoHTML(htmlDocument);
+                emailMessage.IsBodyHtml = useHTML;
+
+                string blindCopyAddress = emailSettings.BlindCopyAddress;
+                string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
+
+                if (string.IsNullOrEmpty(blindCopyAddress))
+                {
+                    emailMessage.To.Add(recipientList);
+                }
+                else
+                {
+                    emailMessage.To.Add(blindCopyAddress);
+                    emailMessage.Bcc.Add(recipientList);
+                }
+
+                // Create the image attachment for the email message
+                foreach (Attachment attachment in attachments)
+                    emailMessage.Attachments.Add(attachment);
+
+                // Send the email
+                smtpClient.Send(emailMessage);
+            }
+        }
+
         private string GetSubject(XDocument htmlDocument)
         {
             const string DefaultSubject = "Email sent by openXDA";
@@ -249,6 +259,18 @@ namespace FaultData.DataWriters
         {
             return htmlDocument
                 .ToString(SaveOptions.DisableFormatting)
+                .Replace("&amp;", "&")
+                .Replace("&lt;", "<")
+                .Replace("&gt;", ">");
+        }
+
+        private string GetBodyNoHTML(XDocument htmlDocument)
+        {
+            string body = (string)htmlDocument
+                .Descendants("body")
+                .FirstOrDefault();
+
+            return body
                 .Replace("&amp;", "&")
                 .Replace("&lt;", "<")
                 .Replace("&gt;", ">");

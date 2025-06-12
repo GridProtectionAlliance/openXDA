@@ -237,6 +237,20 @@ namespace FaultData.DataWriters
             m_emailService.SendEmail(recipients, htmlDocument, attachments);
         }
 
+        public void SendEmailNoHTML(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
+        {
+            if (!Enabled || Tripped)
+                return;
+
+            if (TripsMaxEmailThreshold())
+            {
+                TripAction?.Invoke();
+                return;
+            }
+
+            m_emailService.SendEmailNoHTML(recipients, htmlDocument, attachments);
+        }
+
         public void SendAdminEmail(string subject, string message, List<string> replyTo)
         {
             m_emailService.SendAdminEmail(subject, message, replyTo);
