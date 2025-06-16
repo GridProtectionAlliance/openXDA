@@ -1205,7 +1205,7 @@ namespace FaultData.DataOperations
 
         private static bool IsTHDTrigger(Channel channel)
         {
-            return Regex.IsMatch(channel.Description, @"\s-\s\S+\sTHD\s*$", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(channel.Description, @"\s-\sV\S+\sTHD\s*$", RegexOptions.IgnoreCase);
         }
 
         private static bool IsUnbalanceTrigger(Channel channel)
