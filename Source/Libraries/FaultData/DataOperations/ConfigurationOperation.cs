@@ -334,16 +334,23 @@ namespace FaultData.DataOperations
 
             Func<SourceIndex, bool> sourceIndexFilter = GetSourceIndexFilter(appDataType);
 
+            // It seems a little counterintuitive that we filter for event channels here,
+            // but the idea is we want to map event channels -> trend, if the event channel doesn't exist,
+            // we have nothing to map to. We also don't wanna generate trends channels for existing trends.
             Func<Channel, bool> channelFilter = new Func<APPDataType, Func<Channel, bool>>(dataType =>
             {
                 switch (dataType)
                 {
                     case APPDataType.RMS:
+                        return channel =>
+                            !channel.Trend &&
+                            (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") &&
+                            channel.MeasurementCharacteristic.Name == "Instantaneous";
                     case APPDataType.Flicker:
                     case APPDataType.Frequency:
                         return channel =>
                             !channel.Trend &&
-                            (channel.MeasurementType.Name == "Voltage" || channel.MeasurementType.Name == "Current") &&
+                            channel.MeasurementType.Name == "Voltage" &&
                             channel.MeasurementCharacteristic.Name == "Instantaneous";
 
                     case APPDataType.Trigger:
