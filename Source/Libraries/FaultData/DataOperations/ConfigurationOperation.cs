@@ -359,11 +359,8 @@ namespace FaultData.DataOperations
                             channel.MeasurementType.Name == "Digital" &&
                             channel.MeasurementCharacteristic.Name == "Instantaneous" &&
                             (
-                                IsRMSTrigger(channel) ||
-                                IsImpulseTrigger(channel) ||
                                 IsTHDTrigger(channel) ||
-                                IsUnbalanceTrigger(channel) ||
-                                IsCurrentTrigger(channel)
+                                IsUnbalanceTrigger(channel)
                             );
 
                     default:
