@@ -95,6 +95,7 @@ namespace openXDA.Controllers.Config
             }
             catch (Exception ex)
             {
+                Log.Error(ex.Message, ex);
                 return InternalServerError(ex);
             }
         }
