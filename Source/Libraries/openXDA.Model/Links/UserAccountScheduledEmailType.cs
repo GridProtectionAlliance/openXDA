@@ -36,5 +36,7 @@ namespace openXDA.Model.Links
         public int ScheduledEmailTypeID { get; set; }
 
         public int AssetGroupID { get; set; }
+
+        public bool Approved { get; set; }
     }
 }
