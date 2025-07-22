@@ -352,11 +352,11 @@ namespace FaultData.DataOperations
                             channel.MeasurementType.Name == "Digital" &&
                             channel.MeasurementCharacteristic.Name == "Instantaneous" &&
                             (
-                                IsRMSTrigger(channel) ||
-                                IsImpulseTrigger(channel) ||
-                                IsTHDTrigger(channel) ||
-                                IsUnbalanceTrigger(channel) ||
-                                IsCurrentTrigger(channel)
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerRMSMatch) ||
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerImpulseMatch) ||
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerTHDMatch) ||
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerUnbalanceMatch) ||
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerCurrentMatch)
                             );
 
                     default:
@@ -1008,27 +1008,27 @@ namespace FaultData.DataOperations
                 string measurementCharacteristic = "";
                 string measurementType = "";
 
-                if (IsRMSTrigger(trendChannel))
+                if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerRMSMatch))
                 {
                     measurementCharacteristic = "RMS";
                     measurementType = "Voltage";
                 }
-                else if (IsImpulseTrigger(trendChannel))
+                else if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerImpulseMatch))
                 {
                     measurementCharacteristic = "Instantaneous";
                     measurementType = "Voltage";
                 }
-                else if (IsTHDTrigger(trendChannel))
+                else if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerTHDMatch))
                 {
                     measurementCharacteristic = "TotalTHD";
                     measurementType = "Analog";
                 }
-                else if (IsUnbalanceTrigger(trendChannel))
+                else if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerUnbalanceMatch))
                 {
                     measurementCharacteristic = "Instantaneous";
                     measurementType = "Analog";
                 }
-                else if (IsCurrentTrigger(trendChannel))
+                else if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerCurrentMatch))
                 {
                     measurementCharacteristic = "Instantaneous";
                     measurementType = "Current";
@@ -1189,29 +1189,10 @@ namespace FaultData.DataOperations
                    channel.Phase.Name == "LineToLineAverage";
         }
 
-        private static bool IsRMSTrigger(Channel channel)
+        private static bool IsMatch(Channel channel, string regex)
         {
-            return Regex.IsMatch(channel.Description, @"\s-\sV\S*\sRMS\s*$", RegexOptions.IgnoreCase);
-        }
-
-        private static bool IsImpulseTrigger(Channel channel)
-        {
-            return Regex.IsMatch(channel.Description, @"\s-\sV\S*\sImpulse\s*$", RegexOptions.IgnoreCase);
-        }
-
-        private static bool IsTHDTrigger(Channel channel)
-        {
-            return Regex.IsMatch(channel.Description, @"\s-\s\S+\sTHD\s*$", RegexOptions.IgnoreCase);
-        }
-
-        private static bool IsUnbalanceTrigger(Channel channel)
-        {
-            return Regex.IsMatch(channel.Description, @"\s-\sUnbalance\s*$", RegexOptions.IgnoreCase);
-        }
-
-        private static bool IsCurrentTrigger(Channel channel)
-        {
-            return Regex.IsMatch(channel.Description, @"\s-\s\S*I\S*\s*$", RegexOptions.IgnoreCase);
+            if (channel.Description is null) return false;
+            return Regex.IsMatch(channel.Description, regex, RegexOptions.IgnoreCase);
         }
 
         public static double CalculateSamplesPerHour(DataSeries dataSeries)
