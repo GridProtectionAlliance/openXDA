@@ -37,6 +37,7 @@ using GSF.Data.Model;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
+using static openXDA.Configuration.TrendingDataSection;
 
 namespace FaultData.DataOperations
 {
@@ -334,6 +335,9 @@ namespace FaultData.DataOperations
 
             Func<SourceIndex, bool> sourceIndexFilter = GetSourceIndexFilter(appDataType);
 
+            // It seems a little counterintuitive that we filter for event channels here,
+            // but the idea is we want to map event channels -> trend, if the event channel doesn't exist,
+            // we have nothing to map to. We also don't wanna generate trends channels for existing trends.
             Func<Channel, bool> channelFilter = new Func<APPDataType, Func<Channel, bool>>(dataType =>
             {
                 switch (dataType)
@@ -364,6 +368,38 @@ namespace FaultData.DataOperations
                 }
             })(appDataType);
 
+            Func<Channel, bool> userSettingFilter = new Func<APPDataType, Func<Channel, bool>>(dataType =>
+            {
+                TrendMeasurementType type;
+                switch (dataType)
+                {
+                    case APPDataType.RMS:
+                        type = TrendingDataSettings.RMS.TrendMeasurementType;
+                        break;
+                    case APPDataType.Flicker:
+                        type = TrendingDataSettings.Flicker.TrendMeasurementType;
+                        break;
+                    case APPDataType.Frequency:
+                        type = TrendingDataSettings.Frequency.TrendMeasurementType;
+                        break;
+                    // Trigger measurement type event channels mapped will always be digital
+                    case APPDataType.Trigger:
+                        return channel => true;
+                    default:
+                        return channel => false;
+                }
+
+                switch (type)
+                {
+                    case TrendMeasurementType.Voltage:
+                        return channel => channel.MeasurementType.Name == "Voltage";
+                    case TrendMeasurementType.Current:
+                        return channel => channel.MeasurementType.Name == "Current";
+                    default: case TrendMeasurementType.Any:
+                        return channel => true;
+                }
+            })(appDataType);
+
             Action<Channel, MeterDataSet> addTrendChannel = new Func<APPDataType, Action<Channel, MeterDataSet>>(dataType =>
             {
                 switch (dataType)
@@ -387,6 +423,7 @@ namespace FaultData.DataOperations
 
             IEnumerable<Channel> unmappedChannels = meter.Channels
                 .Where(channelFilter)
+                .Where(userSettingFilter)
                 .GroupJoin(sourceIndexes, channel => channel.ID, sourceIndex => sourceIndex.ChannelIndex, (Channel, SourceIndexes) => new { Channel, SourceIndexes })
                 .Where(item => !item.SourceIndexes.Any())
                 .Select(item => item.Channel);
