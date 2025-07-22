@@ -407,6 +407,27 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Frequency.FolderPath', 'Tfrq[0-9]*\.dat', 'Tfrq[0-9]*\.dat')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Flicker.TrendMeasurementType', 'Voltage', 'Any')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Frequency.TrendMeasurementType', 'Voltage', 'Any')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.DescriptionTriggerRMSMatch', '(?!.*)', '\s-\sV\S*\sRMS\s*$')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.DescriptionTriggerImpulseMatch', '(?!.*)', '\s-\sV\S*\sImpulse\s*$')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.DescriptionTriggerTHDMatch', '\s-\sV\S+\sTHD\s*$', '\s-\sV\S+\sTHD\s*$')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.DescriptionTriggerUnbalanceMatch', '\s-\sUnbalance\s*$', '\s-\sUnbalance\s*$')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TrendingData.Trigger.DescriptionTriggerImpulseMatch', '(?!.*)', '\s-\s\S*I\S*\s*$')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.URL', 'http://localhost:53030', 'http://localhost:53030')
 GO
 
