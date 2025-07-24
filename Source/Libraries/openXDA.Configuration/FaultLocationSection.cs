@@ -84,6 +84,13 @@ namespace openXDA.Configuration
         [DefaultValue(true)]
         public bool UseDefaultFaultDetectionLogic { get; set; }
 
+        /// <summary>
+        /// Indicates whether to ignore line-specific fault detection logic.
+        /// </summary>
+        [Setting]
+        [DefaultValue(false)]
+        public bool IgnoreFaultDetectionLogic { get; set; }
+
         [Setting]
         [DefaultValue(0.8D)]
         public double FaultedVoltageThreshold { get; set; }

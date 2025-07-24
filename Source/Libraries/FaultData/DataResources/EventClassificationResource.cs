@@ -122,10 +122,10 @@ namespace FaultData.DataResources
 
             if ((object)faultGroup != null)
             {
-                if (faultGroup.FaultDetectionLogicResult ?? false)
+                if ((faultGroup.FaultDetectionLogicResult ?? false) && !FaultLocationSettings.IgnoreFaultDetectionLogic)
                     return EventClassification.Fault;
 
-                if (!faultGroup.FaultDetectionLogicResult.HasValue && FaultLocationSettings.UseDefaultFaultDetectionLogic)
+                if ((!faultGroup.FaultDetectionLogicResult.HasValue || FaultLocationSettings.IgnoreFaultDetectionLogic) && FaultLocationSettings.UseDefaultFaultDetectionLogic)
                 {
                     if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsSuppressed && !fault.IsReclose))
                         return EventClassification.Fault;
