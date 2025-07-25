@@ -236,6 +236,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.UseDefaultFaultDetectionLogic', 'True', 'True')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.IgnoreFaultDetectionLogic', 'False', 'False')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.WarnMissingDetectionLogic', 'False', 'False')
 GO
 
@@ -387,9 +390,6 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TaskProcessor.MeterFilter
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TaskProcessor.ProcessingThreadCount', '0', '0')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('UseDefaultFaultDetectionLogic', '1', '1')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('WorkbenchTimeRangeInSeconds', '60', '60')
