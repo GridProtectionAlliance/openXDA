@@ -368,34 +368,27 @@ namespace FaultData.DataOperations
                 }
             })(appDataType);
 
-            Func<Channel, bool> userSettingFilter = new Func<APPDataType, Func<Channel, bool>>(dataType =>
+            Func<Channel, bool> userMatchFilter = new Func<APPDataType, Func<Channel, bool>>(dataType =>
             {
-                TrendMeasurementType type;
                 switch (dataType)
                 {
                     case APPDataType.RMS:
-                        type = TrendingDataSettings.RMS.TrendMeasurementType;
-                        break;
+                        if (string.IsNullOrEmpty(TrendingDataSettings.RMS.DescriptionRegexMatchFilter))
+                            return channel => true;
+                        return channel => IsMatch(channel, TrendingDataSettings.RMS.DescriptionRegexMatchFilter);
                     case APPDataType.Flicker:
-                        type = TrendingDataSettings.Flicker.TrendMeasurementType;
-                        break;
+                        if (string.IsNullOrEmpty(TrendingDataSettings.Flicker.DescriptionRegexMatchFilter))
+                            return channel => true;
+                        return channel => IsMatch(channel, TrendingDataSettings.Flicker.DescriptionRegexMatchFilter);
                     case APPDataType.Frequency:
-                        type = TrendingDataSettings.Frequency.TrendMeasurementType;
-                        break;
-                    // Trigger measurement type event channels mapped will always be digital
+                        if (string.IsNullOrEmpty(TrendingDataSettings.Frequency.DescriptionRegexMatchFilter))
+                            return channel => true;
+                        return channel => IsMatch(channel, TrendingDataSettings.Frequency.DescriptionRegexMatchFilter);
                     case APPDataType.Trigger:
-                        return channel => true;
+                        if (string.IsNullOrEmpty(TrendingDataSettings.Trigger.DescriptionRegexMatchFilter))
+                            return channel => true;
+                        return channel => IsMatch(channel, TrendingDataSettings.Trigger.DescriptionRegexMatchFilter);
                     default:
-                        return channel => false;
-                }
-
-                switch (type)
-                {
-                    case TrendMeasurementType.Voltage:
-                        return channel => channel.MeasurementType.Name == "Voltage";
-                    case TrendMeasurementType.Current:
-                        return channel => channel.MeasurementType.Name == "Current";
-                    default: case TrendMeasurementType.Any:
                         return channel => true;
                 }
             })(appDataType);
@@ -423,7 +416,7 @@ namespace FaultData.DataOperations
 
             IEnumerable<Channel> unmappedChannels = meter.Channels
                 .Where(channelFilter)
-                .Where(userSettingFilter)
+                .Where(userMatchFilter)
                 .GroupJoin(sourceIndexes, channel => channel.ID, sourceIndex => sourceIndex.ChannelIndex, (Channel, SourceIndexes) => new { Channel, SourceIndexes })
                 .Where(item => !item.SourceIndexes.Any())
                 .Select(item => item.Channel);
