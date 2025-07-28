@@ -28,13 +28,6 @@ namespace openXDA.Configuration
 {
     public class TrendingDataSection
     {
-        public enum TrendMeasurementType
-        {
-            Any,
-            Current,
-            Voltage
-        }
-
         #region [ Members ]
 
         // Nested Types
@@ -44,8 +37,8 @@ namespace openXDA.Configuration
             [DefaultValue(@"Trms.dat")]
             public string FolderPath { get; set; }
             [Setting]
-            [DefaultValue(TrendMeasurementType.Any)]
-            public TrendMeasurementType TrendMeasurementType { get; set; }
+            [DefaultValue(null)]
+            public string DescriptionRegexMatchFilter { get; set; }
         }
 
         public class FlickerSubSection
@@ -54,8 +47,8 @@ namespace openXDA.Configuration
             [DefaultValue(@"FkrR[0-9]*\.dat")]
             public string FolderPath { get; set; }
             [Setting]
-            [DefaultValue(TrendMeasurementType.Any)]
-            public TrendMeasurementType TrendMeasurementType { get; set; }
+            [DefaultValue(null)]
+            public string DescriptionRegexMatchFilter { get; set; }
         }
 
         public class TriggerSubSection
@@ -78,6 +71,9 @@ namespace openXDA.Configuration
             [Setting]
             [DefaultValue(@"\s-\s\S*I\S*\s*$")]
             public string DescriptionTriggerCurrentMatch { get; set; }
+            [Setting]
+            [DefaultValue(null)]
+            public string DescriptionRegexMatchFilter { get; set; }
         }
 
         public class FrequencySubSection
@@ -86,8 +82,8 @@ namespace openXDA.Configuration
             [DefaultValue(@"Tfrq[0-9]*\.dat")]
             public string FolderPath { get; set; }
             [Setting]
-            [DefaultValue(TrendMeasurementType.Any)]
-            public TrendMeasurementType TrendMeasurementType { get; set; }
+            [DefaultValue(null)]
+            public string DescriptionRegexMatchFilter { get; set; }
         }
 
         // Constants
