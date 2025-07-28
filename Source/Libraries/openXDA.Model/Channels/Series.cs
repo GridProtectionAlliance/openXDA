@@ -22,9 +22,7 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
@@ -102,9 +100,11 @@ namespace openXDA.Model
 
         public override int GetHashCode()
         {
+            StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
+
             int hash = 1009;
             hash = 9176 * hash + ChannelKey.GetHashCode();
-            hash = 9176 * hash + SeriesType.GetHashCode();
+            hash = 9176 * hash + stringComparer.GetHashCode(SeriesType);
             return hash;
         }
 
@@ -118,9 +118,11 @@ namespace openXDA.Model
             if (other is null)
                 return false;
 
+            StringComparison stringComparison = StringComparison.OrdinalIgnoreCase;
+
             return
                 ChannelKey.Equals(other.ChannelKey) &&
-                SeriesType.Equals(other.SeriesType);
+                SeriesType.Equals(other.SeriesType, stringComparison);
         }
 
         #endregion

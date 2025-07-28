@@ -374,7 +374,6 @@ namespace FaultData.DataReaders
             channel.Phase = new openXDA.Model.Phase();
             channel.Name = channelDefinition.ChannelName;
             channel.HarmonicGroup = 0;
-            channel.Series.Add(series);
 
             if (seriesDefinition.HasElement(SeriesDefinition.SeriesNominalQuantityTag))
                 channel.PerUnitValue = seriesDefinition.SeriesNominalQuantity;

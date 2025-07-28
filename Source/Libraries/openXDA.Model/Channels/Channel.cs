@@ -110,13 +110,15 @@ namespace openXDA.Model
 
         public override int GetHashCode()
         {
+            StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
+
             int hash = 1009;
             hash = 9176 * hash + LineID.GetHashCode();
             hash = 9176 * hash + HarmonicGroup.GetHashCode();
-            hash = 9176 * hash + Name.GetHashCode();
-            hash = 9176 * hash + MeasurementType.GetHashCode();
-            hash = 9176 * hash + MeasurementCharacteristic.GetHashCode();
-            hash = 9176 * hash + Phase.GetHashCode();
+            hash = 9176 * hash + stringComparer.GetHashCode(Name);
+            hash = 9176 * hash + stringComparer.GetHashCode(MeasurementType);
+            hash = 9176 * hash + stringComparer.GetHashCode(MeasurementCharacteristic);
+            hash = 9176 * hash + stringComparer.GetHashCode(Phase);
             return hash;
         }
 
@@ -130,13 +132,15 @@ namespace openXDA.Model
             if (other is null)
                 return false;
 
+            StringComparison stringComparison = StringComparison.OrdinalIgnoreCase;
+
             return
                 LineID.Equals(other.LineID) &&
                 HarmonicGroup.Equals(other.HarmonicGroup) &&
-                Name.Equals(other.Name) &&
-                MeasurementType.Equals(other.MeasurementType) &&
-                MeasurementCharacteristic.Equals(other.MeasurementCharacteristic) &&
-                Phase.Equals(other.Phase);
+                Name.Equals(other.Name, stringComparison) &&
+                MeasurementType.Equals(other.MeasurementType, stringComparison) &&
+                MeasurementCharacteristic.Equals(other.MeasurementCharacteristic, stringComparison) &&
+                Phase.Equals(other.Phase, stringComparison);
         }
 
         #endregion
