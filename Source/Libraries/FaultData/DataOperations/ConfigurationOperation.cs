@@ -695,7 +695,7 @@ namespace FaultData.DataOperations
                     }, grouping => grouping.First());
 
                 List<Series> undefinedSeries = undefinedDataSeries
-                    .SelectMany(dataSeries => dataSeries.SeriesInfo.Channel.Series)
+                    .Select(dataSeries => dataSeries.SeriesInfo)
                     .GroupBy(series => new SeriesKey(series))
                     .Where(grouping => !seriesLookup.ContainsKey(grouping.Key))
                     .Select(grouping => grouping.First())
