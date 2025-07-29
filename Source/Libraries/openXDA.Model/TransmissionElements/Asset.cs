@@ -28,6 +28,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
+using GSF;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
@@ -364,17 +365,32 @@ namespace openXDA.Model
                 "        ConnectedMeterAsset.MeterID = MeterAsset.MeterID AND " +
                 "        ConnectedMeterAsset.AssetID = ConnectedAsset.ID";
 
-            const string QueryChannelsFormat =
+            const string JumpChannelsQueryFormat =
                 "SELECT Channel.* " +
                 "FROM " +
                 "    Asset JOIN " +
                 "    Asset ConnectedAsset ON " +
-                "        Asset.ID = {0} AND " +
-                "        ConnectedAsset.ID = {1} JOIN " +
+                "        Asset.ID = {{0}} AND " +
+                "        ConnectedAsset.ID = {{1}} JOIN " +
+                "    Asset ParentAsset ON ParentAsset.ID = {{2}} JOIN " +
+                "    Asset ChildAsset ON ParentAsset.ID = {{3}} JOIN " +
                 "    Channel ON Channel.AssetID = ConnectedAsset.ID JOIN " +
                 "    MeterAsset ON " +
                 "        MeterAsset.MeterID = Channel.MeterID AND " +
-                "        MeterAsset.AssetID = Asset.ID";
+                "        MeterAsset.AssetID = Asset.ID CROSS APPLY " +
+                "    ({JumpSQL}) Traverse(Jump) " +
+                "WHERE Traverse.Jump <> 0";
+
+            const string PassthroughChannelsQueryFormat =
+                "SELECT Channel.* " +
+                "FROM " +
+                "    Channel JOIN " +
+                "    Asset ParentAsset ON ParentAsset.ID = {{0}} JOIN " +
+                "    Asset ChildAsset ON ParentAsset.ID = {{1}} CROSS APPLY " +
+                "    ({PassthroughSQL}) Traverse(Passthrough) " +
+                "WHERE " +
+                "    Channel.ID IN ({DownstreamChannels}) " +
+                "    Traverse.Passthrough <> 0";
 
             TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
 
@@ -392,31 +408,47 @@ namespace openXDA.Model
                 string jumpSQL = traversalRow.ConvertField<string>("JumpSQL");
                 string passthroughSQL = traversalRow.ConvertField<string>("PassthroughSQL");
 
-                jumpSQL = Regex.Replace(jumpSQL, @"\{parentid\}", parentID.ToString(), RegexOptions.IgnoreCase);
-                jumpSQL = Regex.Replace(jumpSQL, @"\{childid\}", childID.ToString(), RegexOptions.IgnoreCase);
+                // lang=regex
+                const string Pattern = @"\{(?:parentid|childid|channelid)\}";
+                jumpSQL = Regex.Replace(jumpSQL, Pattern, ReplaceFormatParameter, RegexOptions.IgnoreCase);
+                passthroughSQL = Regex.Replace(passthroughSQL, Pattern, ReplaceFormatParameter, RegexOptions.IgnoreCase);
 
-                passthroughSQL = Regex.Replace(passthroughSQL, @"\{parentid\}", parentID.ToString(), RegexOptions.IgnoreCase);
-                passthroughSQL = Regex.Replace(passthroughSQL, @"\{childid\}", childID.ToString(), RegexOptions.IgnoreCase);
+                string jumpChannelsQuery = JumpChannelsQueryFormat.Interpolate(new { JumpSQL = jumpSQL });
 
-                foreach (DataRow channelRow in RetrieveRows(QueryChannelsFormat, assetID, connectedAssetID))
+                foreach (DataRow channelRow in RetrieveRows(jumpChannelsQuery, assetID, connectedAssetID, parentID, childID))
+                    yield return channelTable.LoadRecord(channelRow);
+
+                IEnumerable<int> downstreamChannelIDs = TraverseConnectedChannels(connection, assetID, connectedAssetID, visitedAssets)
+                    .Select(channel => channel.ID)
+                    .OrderBy(id => id);
+
+                string downstreamChannelList = string.Join(",", downstreamChannelIDs);
+
+                if (downstreamChannelList.Length > 0)
                 {
-                    int channelID = channelRow.ConvertField<int>("ID");
-                    string parsedJumpSQL = Regex.Replace(jumpSQL, @"\{channelid\}", channelID.ToString(), RegexOptions.IgnoreCase);
+                    string passthroughChannelsQuery = PassthroughChannelsQueryFormat.Interpolate(new
+                    {
+                        PassthroughSQL = passthroughSQL,
+                        DownstreamChannels = downstreamChannelList
+                    });
 
-                    if (Convert.ToBoolean(connection.ExecuteScalar(parsedJumpSQL)))
+                    foreach (DataRow channelRow in RetrieveRows(passthroughChannelsQuery, parentID, childID))
                         yield return channelTable.LoadRecord(channelRow);
-                }
-
-                foreach (Channel channel in TraverseConnectedChannels(connection, assetID, connectedAssetID, visitedAssets))
-                {
-                    string parsedPassthroughSQL = Regex.Replace(passthroughSQL, @"\{channelid\}", channel.ID.ToString(), RegexOptions.IgnoreCase);
-
-                    if (Convert.ToBoolean(connection.ExecuteScalar(parsedPassthroughSQL)))
-                        yield return channel;
                 }
             }
 
             visitedAssets.Pop();
+
+            string ReplaceFormatParameter(Match match)
+            {
+                switch (match.Value.ToLowerInvariant())
+                {
+                    case "{parentid}": return "ParentAsset.ID";
+                    case "{childid}": return "ChildAsset.ID";
+                    case "{channelid}": return "Channel.ID";
+                    default: return match.Value;
+                }
+            }
 
             IEnumerable<DataRow> RetrieveRows(string query, params object[] args)
             {
