@@ -58,7 +58,7 @@ namespace FaultData.DataResources
         {
             List<DataGroup> dataGroups = new List<DataGroup>();
 
-            foreach (IGrouping<DataGroupKey, DataSeries> dataGrouping in meterDataSet.DataSeries.GroupBy(GetKey))
+            foreach (IGrouping<DataGroupKey, DataSeries> dataGrouping in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(GetKey))
             {
                 HashSet<int> completedAsset = new HashSet<int>();
 
