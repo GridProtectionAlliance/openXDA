@@ -45,6 +45,29 @@ namespace openXDA.Model
     {
         #region [ Members ]
 
+        // Nested Types
+        private delegate List<Channel> ConnectedChannelLookup(int parentID, int childID, string traversalSQL);
+
+        private class TraversalContext
+        {
+            public AdoDataConnection Connection { get; }
+            public int LocationID { get; }
+
+            public ConnectedChannelLookup ConnectedChannelLookup { get; }
+            public HashSet<int> VisitedAssets { get; }
+            public HashSet<Channel> ConnectedChannels { get; }
+
+            public TraversalContext(AdoDataConnection connection, int locationID)
+            {
+                Connection = connection;
+                LocationID = locationID;
+
+                ConnectedChannelLookup = GetConnectedChannelLookup(connection, locationID);
+                VisitedAssets = new HashSet<int>();
+                ConnectedChannels = new HashSet<Channel>();
+            }
+        }
+
         // Fields
         private List<AssetLocation> m_assetLocations;
         private List<MeterAsset> m_meterAssets;
@@ -337,127 +360,131 @@ namespace openXDA.Model
         // Logic for Channels across Asset Connections
         public IEnumerable<Channel> GetConnectedChannels(AdoDataConnection connection)
         {
-            return TraverseConnectedChannels(connection, ID, ID, new Stack<int>())
+            return AssetLocations
+                .SelectMany(assetLocation => TraverseConnectedChannels(connection, assetLocation.LocationID, ID))
                 .Distinct(new ChannelComparer());
         }
 
-        private IEnumerable<Channel> TraverseConnectedChannels(AdoDataConnection connection, int assetID, int visitedAssetID, Stack<int> visitedAssets)
+        private IEnumerable<Channel> TraverseConnectedChannels(AdoDataConnection connection, int locationID, int assetID)
+        {
+            TraversalContext context = new TraversalContext(connection, locationID);
+            ConnectedChannelLookup channelLookup = context.ConnectedChannelLookup;
+            context.VisitedAssets.Add(assetID);
+
+            using (DataTable connectionTable = RetrieveConnectedAssets(connection, locationID, assetID))
+            {
+                foreach (DataRow traversalRow in connectionTable.AsEnumerable())
+                {
+                    int connectedAssetID = traversalRow.ConvertField<int>("ConnectedAssetID");
+                    string jumpSQL = traversalRow.ConvertField<string>("JumpSQL");
+
+                    IEnumerable<Channel> jumpChannels = channelLookup(connectedAssetID, assetID, jumpSQL)
+                        .Where(channel => channel.AssetID == connectedAssetID);
+
+                    context.ConnectedChannels.UnionWith(jumpChannels);
+                }
+
+                foreach (DataRow traversalRow in connectionTable.AsEnumerable())
+                {
+                    int connectedAssetID = traversalRow.ConvertField<int>("ConnectedAssetID");
+                    string passthroughSQL = traversalRow.ConvertField<string>("PassthroughSQL");
+
+                    List<Channel> pathChannels = channelLookup(connectedAssetID, assetID, passthroughSQL)
+                        .Where(channel => channel.AssetID != assetID)
+                        .Except(context.ConnectedChannels)
+                        .ToList();
+
+                    if (pathChannels.Count == 0)
+                        continue;
+
+                    TraverseConnectedChannels(context, pathChannels, connectedAssetID);
+                }
+            }
+
+            return context.ConnectedChannels;
+        }
+
+        private void TraverseConnectedChannels(TraversalContext context, List<Channel> pathChannels, int visitedAssetID)
+        {
+            AdoDataConnection connection = context.Connection;
+            ConnectedChannelLookup channelLookup = context.ConnectedChannelLookup;
+            int locationID = context.LocationID;
+
+            context.VisitedAssets.Add(visitedAssetID);
+
+            using (DataTable connectionTable = RetrieveConnectedAssets(connection, locationID, visitedAssetID))
+            {
+                foreach (DataRow traversalRow in connectionTable.AsEnumerable())
+                {
+                    int connectedAssetID = traversalRow.ConvertField<int>("ConnectedAssetID");
+
+                    if (context.VisitedAssets.Contains(connectedAssetID))
+                        continue;
+
+                    string jumpSQL = traversalRow.ConvertField<string>("JumpSQL");
+
+                    IEnumerable<Channel> jumpChannels = channelLookup(connectedAssetID, visitedAssetID, jumpSQL)
+                        .Where(channel => channel.AssetID == connectedAssetID)
+                        .Intersect(pathChannels);
+
+                    context.ConnectedChannels.UnionWith(jumpChannels);
+                }
+
+                HashSet<Channel> filteredPathChannels = new HashSet<Channel>(pathChannels);
+                filteredPathChannels.ExceptWith(context.ConnectedChannels);
+
+                foreach (DataRow traversalRow in connectionTable.AsEnumerable())
+                {
+                    if (filteredPathChannels.Count == 0)
+                        break;
+
+                    int connectedAssetID = traversalRow.ConvertField<int>("ConnectedAssetID");
+
+                    if (context.VisitedAssets.Contains(connectedAssetID))
+                        continue;
+
+                    string passthroughSQL = traversalRow.ConvertField<string>("PassthroughSQL");
+
+                    List<Channel> passthroughChannels = channelLookup(connectedAssetID, visitedAssetID, passthroughSQL)
+                        .Intersect(filteredPathChannels)
+                        .ToList();
+
+                    if (passthroughChannels.Count == 0)
+                        continue;
+
+                    int connectedCount = context.ConnectedChannels.Count;
+                    TraverseConnectedChannels(context, passthroughChannels, connectedAssetID);
+
+                    if (context.ConnectedChannels.Count != connectedCount)
+                        filteredPathChannels.ExceptWith(context.ConnectedChannels);
+                }
+            }
+
+            context.VisitedAssets.Remove(visitedAssetID);
+        }
+
+        private DataTable RetrieveConnectedAssets(AdoDataConnection connection, int locationID, int visitedAssetID)
         {
             const string TraversalQueryFormat =
                 "SELECT DISTINCT " +
                 "    ConnectedAsset.ID ConnectedAssetID, " +
-                "    AssetConnection.ParentID, " +
-                "    AssetConnection.ChildID, " +
                 "    AssetRelationshipType.JumpConnection JumpSQL, " +
                 "    AssetRelationshipType.PassThrough PassthroughSQL " +
                 "FROM " +
-                "    Asset JOIN " +
+                "    Location JOIN " +
                 "    Asset VisitedAsset ON " +
-                "        Asset.ID = {0} AND " +
+                "        Location.ID = {0} AND " +
                 "        VisitedAsset.ID = {1} JOIN " +
                 "    AssetConnection ON VisitedAsset.ID IN (AssetConnection.ParentID, AssetConnection.ChildID) JOIN " +
                 "    Asset ConnectedAsset ON " +
                 "        ConnectedAsset.ID IN (AssetConnection.ParentID, AssetConnection.ChildID) AND " +
                 "        ConnectedAsset.ID <> VisitedAsset.ID JOIN " +
                 "    AssetRelationshipType ON AssetConnection.AssetRelationshipTypeID = AssetRelationshipType.ID JOIN " +
-                "    MeterAsset ON MeterAsset.AssetID = Asset.ID JOIN " +
-                "    MeterAsset ConnectedMeterAsset ON " +
-                "        ConnectedMeterAsset.MeterID = MeterAsset.MeterID AND " +
-                "        ConnectedMeterAsset.AssetID = ConnectedAsset.ID";
+                "    AssetLocation ON " +
+                "        AssetLocation.AssetID = ConnectedAsset.ID AND " +
+                "        AssetLocation.LocationID = Location.ID";
 
-            const string JumpChannelsQueryFormat =
-                "SELECT Channel.* " +
-                "FROM " +
-                "    Asset JOIN " +
-                "    Asset ConnectedAsset ON " +
-                "        Asset.ID = {{0}} AND " +
-                "        ConnectedAsset.ID = {{1}} JOIN " +
-                "    Asset ParentAsset ON ParentAsset.ID = {{2}} JOIN " +
-                "    Asset ChildAsset ON ParentAsset.ID = {{3}} JOIN " +
-                "    Channel ON Channel.AssetID = ConnectedAsset.ID JOIN " +
-                "    MeterAsset ON " +
-                "        MeterAsset.MeterID = Channel.MeterID AND " +
-                "        MeterAsset.AssetID = Asset.ID CROSS APPLY " +
-                "    ({JumpSQL}) Traverse(Jump) " +
-                "WHERE Traverse.Jump <> 0";
-
-            const string PassthroughChannelsQueryFormat =
-                "SELECT Channel.* " +
-                "FROM " +
-                "    Channel JOIN " +
-                "    Asset ParentAsset ON ParentAsset.ID = {{0}} JOIN " +
-                "    Asset ChildAsset ON ParentAsset.ID = {{1}} CROSS APPLY " +
-                "    ({PassthroughSQL}) Traverse(Passthrough) " +
-                "WHERE " +
-                "    Channel.ID IN ({DownstreamChannels}) " +
-                "    Traverse.Passthrough <> 0";
-
-            TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
-
-            visitedAssets.Push(visitedAssetID);
-
-            foreach (DataRow traversalRow in RetrieveRows(TraversalQueryFormat, assetID, visitedAssetID))
-            {
-                int connectedAssetID = traversalRow.ConvertField<int>("ConnectedAssetID");
-
-                if (visitedAssets.Contains(connectedAssetID))
-                    continue;
-
-                int parentID = traversalRow.ConvertField<int>("ParentID");
-                int childID = traversalRow.ConvertField<int>("ChildID");
-                string jumpSQL = traversalRow.ConvertField<string>("JumpSQL");
-                string passthroughSQL = traversalRow.ConvertField<string>("PassthroughSQL");
-
-                // lang=regex
-                const string Pattern = @"\{(?:parentid|childid|channelid)\}";
-                jumpSQL = Regex.Replace(jumpSQL, Pattern, ReplaceFormatParameter, RegexOptions.IgnoreCase);
-                passthroughSQL = Regex.Replace(passthroughSQL, Pattern, ReplaceFormatParameter, RegexOptions.IgnoreCase);
-
-                string jumpChannelsQuery = JumpChannelsQueryFormat.Interpolate(new { JumpSQL = jumpSQL });
-
-                foreach (DataRow channelRow in RetrieveRows(jumpChannelsQuery, assetID, connectedAssetID, parentID, childID))
-                    yield return channelTable.LoadRecord(channelRow);
-
-                IEnumerable<int> downstreamChannelIDs = TraverseConnectedChannels(connection, assetID, connectedAssetID, visitedAssets)
-                    .Select(channel => channel.ID)
-                    .OrderBy(id => id);
-
-                string downstreamChannelList = string.Join(",", downstreamChannelIDs);
-
-                if (downstreamChannelList.Length > 0)
-                {
-                    string passthroughChannelsQuery = PassthroughChannelsQueryFormat.Interpolate(new
-                    {
-                        PassthroughSQL = passthroughSQL,
-                        DownstreamChannels = downstreamChannelList
-                    });
-
-                    foreach (DataRow channelRow in RetrieveRows(passthroughChannelsQuery, parentID, childID))
-                        yield return channelTable.LoadRecord(channelRow);
-                }
-            }
-
-            visitedAssets.Pop();
-
-            string ReplaceFormatParameter(Match match)
-            {
-                switch (match.Value.ToLowerInvariant())
-                {
-                    case "{parentid}": return "ParentAsset.ID";
-                    case "{childid}": return "ChildAsset.ID";
-                    case "{channelid}": return "Channel.ID";
-                    default: return match.Value;
-                }
-            }
-
-            IEnumerable<DataRow> RetrieveRows(string query, params object[] args)
-            {
-                using (DataTable table = connection.RetrieveData(query, args))
-                {
-                    foreach (DataRow row in table.Rows)
-                        yield return row;
-                }
-            }
+            return connection.RetrieveData(TraversalQueryFormat, locationID, visitedAssetID);
         }
 
         // Logic to find distance between two Assets
@@ -517,6 +544,78 @@ namespace openXDA.Model
 
         [Obsolete("Replaced by GetConnectedChannels")]
         public IEnumerable<Channel> GetConnectedChannel(AdoDataConnection connection) => GetConnectedChannels(connection);
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        private static ConnectedChannelLookup GetConnectedChannelLookup(AdoDataConnection connection, int locationID)
+        {
+            const string ChannelQueryFormat =
+                "SELECT Channel.* " +
+                "FROM " +
+                "    Channel JOIN " +
+                "    Meter ON " +
+                "        Channel.MeterID = Meter.ID AND " +
+                "        Meter.LocationID = {{0}} JOIN " +
+                "    Asset ParentAsset ON ParentAsset.ID = {{1}} JOIN " +
+                "    Asset ChildAsset ON ChildAsset.ID = {{2}} CROSS APPLY " +
+                "    ({TraversalSQL}) Traversal(Traverse) " +
+                "WHERE Traversal.Traverse <> 0";
+
+            Dictionary<int, Channel> channelLookup = new Dictionary<int, Channel>();
+
+            var connectedChannelLookup = Enumerable
+                .Empty<List<Channel>>()
+                .ToDictionary(_ => new { ParentID = 0, ChildID = 0, TraversalSQL = "" });
+
+            return (parentID, childID, traversalSQL) =>
+            {
+                var key = new { ParentID = parentID, ChildID = childID, TraversalSQL = traversalSQL };
+                return connectedChannelLookup.GetOrAdd(key, _ => RetrieveConnectedChannels(parentID, childID, traversalSQL));
+            };
+
+            List<Channel> RetrieveConnectedChannels(int parentID, int childID, string traversalSQL)
+            {
+                TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+
+                // lang=regex
+                const string Pattern = @"\{(?:parentid|childid|channelid)\}";
+                string replacedSQL = Regex.Replace(traversalSQL, Pattern, ReplaceFormatParameter, RegexOptions.IgnoreCase);
+
+                string channelQuery = ChannelQueryFormat
+                    .Interpolate(new { TraversalSQL = replacedSQL });
+
+                return RetrieveRows(channelQuery, locationID, parentID, childID)
+                    .Select(channelTable.LoadRecord)
+                    .Select(LookUpChannel)
+                    .ToList();
+            }
+
+            Channel LookUpChannel(Channel channel) =>
+                channelLookup.GetOrAdd(channel.ID, _ => channel);
+
+            string ReplaceFormatParameter(Match match)
+            {
+                switch (match.Value.ToLowerInvariant())
+                {
+                    case "{parentid}": return "ParentAsset.ID";
+                    case "{childid}": return "ChildAsset.ID";
+                    case "{channelid}": return "Channel.ID";
+                    default: return match.Value;
+                }
+            }
+
+            IEnumerable<DataRow> RetrieveRows(string query, params object[] args)
+            {
+                using (DataTable table = connection.RetrieveData(query, args))
+                {
+                    foreach (DataRow row in table.Rows)
+                        yield return row;
+                }
+            }
+        }
 
         #endregion
     }
