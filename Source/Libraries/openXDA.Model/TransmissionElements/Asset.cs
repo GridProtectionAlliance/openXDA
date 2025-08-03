@@ -555,9 +555,9 @@ namespace openXDA.Model
             const string ChannelQueryFormat =
                 "SELECT Channel.* " +
                 "FROM " +
-                "    Channel JOIN " +
+                "    Channel SourceChannel JOIN " +
                 "    Meter ON " +
-                "        Channel.MeterID = Meter.ID AND " +
+                "        SourceChannel.MeterID = Meter.ID AND " +
                 "        Meter.LocationID = {{0}} JOIN " +
                 "    Asset ParentAsset ON ParentAsset.ID = {{1}} JOIN " +
                 "    Asset ChildAsset ON ChildAsset.ID = {{2}} CROSS APPLY " +
@@ -602,7 +602,7 @@ namespace openXDA.Model
                 {
                     case "{parentid}": return "ParentAsset.ID";
                     case "{childid}": return "ChildAsset.ID";
-                    case "{channelid}": return "Channel.ID";
+                    case "{channelid}": return "SourceChannel.ID";
                     default: return match.Value;
                 }
             }
