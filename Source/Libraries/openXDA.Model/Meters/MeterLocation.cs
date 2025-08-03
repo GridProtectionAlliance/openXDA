@@ -27,7 +27,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Linq;
+using System.Text.RegularExpressions;
+using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
@@ -41,6 +44,25 @@ namespace openXDA.Model
     public class Location
     {
         #region [ Members ]
+
+        // Nested Types
+        private delegate void ChannelConnector(int assetID, IEnumerable<Channel> channels);
+
+        private class TraversalContext
+        {
+            public AdoDataConnection Connection { get; }
+            public ChannelConnector ConnectChannels { get; }
+            public HashSet<int> VisitedAssets { get; }
+            public int RootAssetID { get; }
+
+            public TraversalContext(AdoDataConnection connection, ChannelConnector connectChannels, HashSet<int> visitedAssets, int rootAssetID)
+            {
+                Connection = connection;
+                ConnectChannels = connectChannels;
+                VisitedAssets = visitedAssets;
+                RootAssetID = rootAssetID;
+            }
+        }
 
         // Fields
         private List<Meter> m_meters;
@@ -193,6 +215,200 @@ namespace openXDA.Model
             }
 
             return assetLocations;
+        }
+
+        public void ConnectAllChannels()
+        {
+            if (ConnectionFactory is null)
+                return;
+
+            Dictionary<int, HashSet<Channel>> connectedChannelLookup = new Dictionary<int, HashSet<Channel>>();
+            ChannelConnector connectChannels = CreateChannelConnector(connectedChannelLookup);
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                TraverseAssetConnections(connection, connectChannels);
+
+                TableOperations<Asset> assetTable = new TableOperations<Asset>(connection);
+
+                foreach (KeyValuePair<int, HashSet<Channel>> kvp in connectedChannelLookup)
+                {
+                    int assetID = kvp.Key;
+                    HashSet<Channel> connectedChannels = kvp.Value;
+                    Asset asset = assetTable.QueryRecordWhere("ID = {0}", assetID);
+                    asset = LazyContext.GetAsset(asset);
+                    asset.ConnectedChannels = connectedChannels.ToList();
+                }
+            }
+        }
+
+        private void TraverseAssetConnections(AdoDataConnection connection, ChannelConnector connectChannels)
+        {
+            IEnumerable<IGrouping<int, Channel>> groupings = RetrieveAllChannels(connection)
+                .GroupBy(channel => channel.AssetID);
+
+            foreach (IGrouping<int, Channel> grouping in groupings)
+            {
+                int rootAssetID = grouping.Key;
+
+                // Initialize an empty set of connected channels in case the root asset has no connected channels
+                connectChannels(rootAssetID, Enumerable.Empty<Channel>());
+
+                foreach (DataRow row in RetrieveJumpConnections(connection, rootAssetID))
+                {
+                    int connectedAssetID = row.ConvertField<int>("ConnectedAssetID");
+                    string jumpSQL = row.ConvertField<string>("ChannelFilter");
+
+                    List<Channel> jumpChannels = FilterChannels(connection, rootAssetID, rootAssetID, connectedAssetID, jumpSQL)
+                        .ToList();
+
+                    if (jumpChannels.Count == 0)
+                        continue;
+
+                    connectChannels(connectedAssetID, jumpChannels);
+
+                    HashSet<int> visitedAssets = new HashSet<int>() { rootAssetID };
+                    TraversalContext context = new TraversalContext(connection, connectChannels, visitedAssets, rootAssetID);
+                    TraverseAssetConnections(context, jumpChannels, connectedAssetID);
+                }
+            }
+        }
+
+        private void TraverseAssetConnections(TraversalContext context, List<Channel> connectedChannels, int visitedAssetID)
+        {
+            AdoDataConnection connection = context.Connection;
+            ChannelConnector connectChannels = context.ConnectChannels;
+            HashSet<int> visitedAssets = context.VisitedAssets;
+            int rootAssetID = context.RootAssetID;
+
+            visitedAssets.Add(visitedAssetID);
+
+            foreach (DataRow row in RetrievePassthroughConnections(connection, visitedAssetID))
+            {
+                int connectedAssetID = row.ConvertField<int>("ConnectedAssetID");
+
+                if (visitedAssets.Contains(connectedAssetID))
+                    continue;
+
+                string passthroughSQL = row.ConvertField<string>("ChannelFilter");
+
+                List<Channel> passthroughChannels = FilterChannels(connection, rootAssetID, visitedAssetID, connectedAssetID, passthroughSQL)
+                    .Intersect(connectedChannels)
+                    .ToList();
+
+                if (passthroughChannels.Count == 0)
+                    continue;
+
+                connectChannels(connectedAssetID, passthroughChannels);
+                TraverseAssetConnections(context, passthroughChannels, connectedAssetID);
+            }
+
+            visitedAssets.Remove(visitedAssetID);
+        }
+
+        private IEnumerable<Channel> RetrieveAllChannels(AdoDataConnection connection)
+        {
+            const string QueryFormat =
+                "SELECT Channel.* " +
+                "FROM " +
+                "    Channel JOIN " +
+                "    Meter ON Channel.MeterID = Meter.ID " +
+                "WHERE Meter.LocationID = {0}";
+
+            TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+
+            using (DataTable table = connection.RetrieveData(QueryFormat, ID))
+            {
+                foreach (DataRow row in table.AsEnumerable())
+                    yield return channelTable.LoadRecord(row);
+            }
+        }
+
+        private IEnumerable<Channel> FilterChannels(AdoDataConnection connection, int rootAssetID, int parentAssetID, int childAssetID, string filterSQL)
+        {
+            // lang=regex
+            const string Pattern = @"\{(?:parentid|childid|channelid)\}";
+            string replacedSQL = Regex.Replace(filterSQL, Pattern, ReplaceFormatParameter, RegexOptions.IgnoreCase);
+
+            string queryFormat =
+                $"SELECT SourceChannel.* " +
+                $"FROM " +
+                $"    Asset ParentAsset JOIN " +
+                $"    Asset ChildAsset ON " +
+                $"        ParentAsset.ID = {{0}} AND " +
+                $"        ChildAsset.ID = {{1}} JOIN " +
+                $"    Channel SourceChannel ON SourceChannel.AssetID = {{2}} CROSS APPLY " +
+                $"    ({replacedSQL}) Traversal(Traverse) " +
+                $"WHERE Traversal.Traverse <> 0";
+
+            TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+
+            using (DataTable table = connection.RetrieveData(queryFormat, parentAssetID, childAssetID, rootAssetID))
+            {
+                foreach (DataRow row in table.AsEnumerable())
+                {
+                    Channel channel = channelTable.LoadRecord(row);
+                    yield return LazyContext.GetChannel(channel);
+                }
+            }
+
+            string ReplaceFormatParameter(Match match)
+            {
+                switch (match.Value.ToLowerInvariant())
+                {
+                    case "{parentid}": return "ParentAsset.ID";
+                    case "{childid}": return "ChildAsset.ID";
+                    case "{channelid}": return "SourceChannel.ID";
+                    default: return match.Value;
+                }
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        private static IEnumerable<DataRow> RetrieveJumpConnections(AdoDataConnection connection, int assetID)
+        {
+            return RetrieveAssetConnections(connection, assetID, "JumpConnection");
+        }
+
+        private static IEnumerable<DataRow> RetrievePassthroughConnections(AdoDataConnection connection, int assetID)
+        {
+            return RetrieveAssetConnections(connection, assetID, "PassThrough");
+        }
+
+        private static IEnumerable<DataRow> RetrieveAssetConnections(AdoDataConnection connection, int assetID, string filterField)
+        {
+            string queryFormat =
+                $"SELECT " +
+                $"    ConnectedAsset.ID ConnectedAssetID, " +
+                $"    AssetRelationshipType.{filterField} ChannelFilter " +
+                $"FROM " +
+                $"    Asset JOIN " +
+                $"    AssetConnection ON " +
+                $"        Asset.ID = {{0}} AND " +
+                $"        Asset.ID IN (AssetConnection.ParentID, AssetConnection.ChildID) JOIN " +
+                $"    Asset ConnectedAsset ON " +
+                $"        ConnectedAsset.ID IN (AssetConnection.ParentID, AssetConnection.ChildID) AND " +
+                $"        ConnectedAsset.ID <> Asset.ID JOIN " +
+                $"    AssetRelationshipType ON AssetConnection.AssetRelationshipTypeID = AssetRelationshipType.ID";
+
+            using (DataTable table = connection.RetrieveData(queryFormat, assetID))
+            {
+                foreach (DataRow row in table.AsEnumerable())
+                    yield return row;
+            }
+        }
+
+        private static ChannelConnector CreateChannelConnector(Dictionary<int, HashSet<Channel>> connectedChannelLookup)
+        {
+            return (int assetID, IEnumerable<Channel> channels) =>
+            {
+                HashSet<Channel> connectedChannels = connectedChannelLookup.GetOrAdd(assetID, _ => new HashSet<Channel>());
+                connectedChannels.UnionWith(channels);
+            };
         }
 
         #endregion
