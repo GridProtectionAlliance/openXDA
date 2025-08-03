@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MeterLocation.cs - Gbtc
+//  Location.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -18,7 +18,6 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/29/2017 - Billy Ernest
 //       Generated original version of source code.
-//
 //  12/13/2019 - Christoph Lackner
 //       Updated MeterLocation to more Generic Location.
 //
