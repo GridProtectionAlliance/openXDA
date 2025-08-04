@@ -288,7 +288,7 @@
     <Compile Include="Links\MeterFacility.cs" />
     <Compile Include="Meters\AssetGroup.cs" />
     <Compile Include="Links\MeterLine.cs" />
-    <Compile Include="Meters\MeterLocation.cs" />
+    <Compile Include="Meters\Location.cs" />
     <Compile Include="Links\MeterLocationLine.cs" />
     <Compile Include="Links\MeterAssetGroup.cs" />
     <Compile Include="DataPush\MetersToDataPush.cs" />

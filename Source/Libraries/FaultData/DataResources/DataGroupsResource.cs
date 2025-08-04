@@ -57,6 +57,7 @@ namespace FaultData.DataResources
         public override void Initialize(MeterDataSet meterDataSet)
         {
             List<DataGroup> dataGroups = new List<DataGroup>();
+            meterDataSet.Meter.Location.ConnectAllChannels();
 
             foreach (IGrouping<DataGroupKey, DataSeries> dataGrouping in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(GetKey))
             {
