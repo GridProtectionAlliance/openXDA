@@ -150,6 +150,10 @@ CREATE TABLE Meter
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Meter_LocationID
+ON Meter(LocationID ASC)
+GO
+
 CREATE TABLE FileGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -441,6 +445,14 @@ CREATE TABLE CustomerMeter
     CustomerID INT NOT NULL FOREIGN KEY REFERENCES Customer(ID),
     MeterID INT NOT NULL FOREIGN KEY REFERENCES Meter(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_CustomerMeter_CustomerID
+ON CustomerMeter(CustomerID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CustomerMeter_MeterID
+ON CustomerMeter(MeterID ASC)
 GO
 
 CREATE TABLE CustomerAsset
@@ -1735,6 +1747,14 @@ CREATE TABLE AssetChannel
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_AssetChannel_AssetID
+ON AssetChannel(AssetID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetChannel_ChannelID
+ON AssetChannel(ChannelID ASC)
+GO
+
 CREATE TABLE SeriesType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -1765,6 +1785,14 @@ CREATE TABLE Series
     SeriesTypeID INT NOT NULL REFERENCES SeriesType(ID),
     SourceIndexes VARCHAR(200) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_Series_ChannelID
+ON Series(ChannelID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Series_SeriesTypeID
+ON Series(SeriesTypeID ASC)
 GO
 
 CREATE TABLE MeterConfiguration
@@ -1897,6 +1925,10 @@ CREATE TABLE MaintenanceWindow
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_MaintenanceWindow_MeterID
+ON MaintenanceWindow(MeterID ASC)
+GO
+
 CREATE TABLE DataRescueOperation
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -1970,6 +2002,10 @@ CREATE TABLE BreakerChannel
     ChannelID INT NOT NULL REFERENCES Channel(ID),
     BreakerNumber VARCHAR(120) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_BreakerChannel_ChannelID
+ON BreakerChannel(ChannelID ASC)
 GO
 
 CREATE TABLE AuditLog
@@ -2402,6 +2438,10 @@ CREATE TABLE FileBlob
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
+ON FileBlob(DataFileID ASC)
+GO
+
 CREATE TABLE ChannelTemplateFile
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -2412,10 +2452,6 @@ CREATE TABLE ChannelTemplateFile
     ShowEvents BIT NOT NULL DEFAULT(1),
     SortOrder INT NOT NULL DEFAULT(0)
 )
-GO
-
-CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
-ON FileBlob(DataFileID ASC)
 GO
 
 INSERT INTO EmailCategory(Name) VALUES('Daily')
@@ -2658,6 +2694,10 @@ CREATE NONCLUSTERED INDEX IX_BreakerRestrike_EventID
 ON BreakerRestrike(EventID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_BreakerRestrike_PhaseID
+ON BreakerRestrike(PhaseID ASC)
+GO
+
 CREATE TABLE VoltageEnvelope
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2780,6 +2820,14 @@ CREATE NONCLUSTERED INDEX IX_BreakerOperation_EventID
 ON BreakerOperation(EventID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_BreakerOperation_PhaseID
+ON BreakerOperation(PhaseID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_BreakerOperation_BreakerOperationTypeID
+ON BreakerOperation(BreakerOperationTypeID ASC)
+GO
+
 CREATE TABLE EventSentEmail
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2789,7 +2837,11 @@ CREATE TABLE EventSentEmail
 GO
 
 CREATE NONCLUSTERED INDEX IX_EventSentEmail_EventID
-ON EventSentEmail(ID ASC)
+ON EventSentEmail(EventID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventSentEmail_SentEmailID
+ON EventSentEmail(SentEmailID ASC)
 GO
 
 CREATE TABLE SnapshotHarmonics
@@ -2803,6 +2855,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_SnapshotHarmonics_EventID
 ON SnapshotHarmonics(EventID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_SnapshotHarmonics_ChannelID
+ON SnapshotHarmonics(ChannelID ASC)
 GO
 
 CREATE TABLE MATLABAnalytic
@@ -3321,6 +3377,10 @@ CREATE TABLE OutputChannel
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_OutputChannel_SeriesID
+ON OutputChannel(SeriesID ASC)
+GO
+
 CREATE TABLE SourceImpedance
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -3360,6 +3420,14 @@ CREATE TABLE FaultSegment
     StartSample INT NOT NULL,
     EndSample INT NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultSegment_EventID
+ON FaultSegment(EventID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultSegment_SegmentTypeID
+ON FaultSegment(SegmentTypeID ASC)
 GO
 
 CREATE TABLE MeterDependentAssetDesignation
@@ -3476,6 +3544,10 @@ CREATE NONCLUSTERED INDEX IX_FaultSummary_EventID
 ON FaultSummary(EventID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_FaultSummary_LineSegmentID
+ON FaultSummary(LineSegmentID ASC)
+GO
+
 CREATE NONCLUSTERED INDEX IX_FaultSummary_Inception
 ON FaultSummary(Inception ASC)
 GO
@@ -3505,6 +3577,14 @@ CREATE TABLE NearestStructure
     StructureID INT NOT NULL REFERENCES Structure(ID),
     Deviation FLOAT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_NearestStructure_FaultSummaryID
+ON NearestStructure(FaultSummaryID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_NearestStructure_StructureID
+ON NearestStructure(StructureID ASC)
 GO
 
 CREATE TABLE DoubleEndedFaultDistance
@@ -3590,6 +3670,10 @@ CREATE TABLE LightningStrike
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_LightningStrike_EventID
+ON LightningStrike(EventID ASC)
+GO
+
 CREATE TABLE VaisalaExtendedLightningData
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -3612,6 +3696,9 @@ CREATE TABLE VaisalaExtendedLightningData
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_VaisalaExtendedLightningData_LightningStrikeID
+ON VaisalaExtendedLightningData(LightningStrikeID ASC)
+GO
 
 -- -------- --
 -- Trending --
@@ -3875,6 +3962,18 @@ CREATE TABLE AlarmLog
     StartTime DATETIME NOT NULL,
     EndTime DATETIME NULL,
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmLog_AlarmID
+ON AlarmLog(AlarmID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmLog_AlarmFactorID
+ON AlarmLog(AlarmFactorID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmLog_SeverityID
+ON AlarmLog(SeverityID ASC)
 GO
 
 CREATE TABLE LatestAlarmLog
@@ -4453,6 +4552,17 @@ ALTER TABLE FileGroupLocalToRemote WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
 REFERENCES FileGroup(ID)
 GO
 
+CREATE NONCLUSTERED INDEX IX_FileGroupLocalToRemote_RemoteXDAInstanceID
+ON FileGroupLocalToRemote(RemoteXDAInstanceID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupLocalToRemote_LocalFileGroupID
+ON FileGroupLocalToRemote(LocalFileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupLocalToRemote_RemoteFileGroupID
+ON FileGroupLocalToRemote(RemoteFileGroupID ASC)
+GO
 
 -- ------------ --
 -- PQ Dashboard --
@@ -4586,6 +4696,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_MeterID 
 ON CompanyMeter(MeterID) 
+GO
+
+CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_CompanyID
+ON CompanyMeter(CompanyID) 
 GO
 
 CREATE TABLE PQMarkAggregate
@@ -4731,6 +4845,10 @@ CREATE TABLE Report
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Report_MeterID
+ON Report(MeterID ASC)
+GO
+
 CREATE TABLE EventStat
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -4762,6 +4880,10 @@ CREATE TABLE EventStat
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_EventStat_EventID
+ON EventStat(EventID ASC)
+GO
+
 CREATE TABLE RelayPerformance
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -4789,6 +4911,14 @@ CREATE TABLE RelayPerformance
     I2CB FLOAT NULL,
     I2CC FLOAT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_RelayPerformance_EventID
+ON RelayPerformance(EventID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_RelayPerformance_ChannelID
+ON RelayPerformance(ChannelID ASC)
 GO
 
 -- CapBank Analytics
@@ -4862,6 +4992,14 @@ CREATE TABLE CBAnalyticResult (
     )
 GO
 
+CREATE NONCLUSTERED INDEX IX_CBAnalyticResult_EventID
+ON CBAnalyticResult(EventID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CBAnalyticResult_PhaseID
+ON CBAnalyticResult(PhaseID ASC)
+GO
+
 CREATE TABLE CBRestrikeResult (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     CBResultID INT NOT NULL REFERENCES CBAnalyticResult(ID),
@@ -4875,6 +5013,14 @@ CREATE TABLE CBRestrikeResult (
     )
 GO
 
+CREATE NONCLUSTERED INDEX IX_CBRestrikeResult_CBResultID
+ON CBRestrikeResult(CBResultID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CBRestrikeResult_CBRestrikeTypeID
+ON CBRestrikeResult(CBRestrikeTypeID ASC)
+GO
+
 CREATE TABLE CBSwitchHealthAnalytic (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     CBResultID INT NOT NULL REFERENCES CBAnalyticResult(ID),
@@ -4884,6 +5030,14 @@ CREATE TABLE CBSwitchHealthAnalytic (
     Duration FLOAT NULL,
     I FLOAT NULL,
     )
+GO
+
+CREATE NONCLUSTERED INDEX IX_CBSwitchHealthAnalytic_CBResultID
+ON CBSwitchHealthAnalytic(CBResultID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CBSwitchHealthAnalytic_CBSwitchingConditionID
+ON CBSwitchHealthAnalytic(CBSwitchingConditionID ASC)
 GO
 
 CREATE TABLE CBBankHealth (
@@ -4912,6 +5066,18 @@ CREATE TABLE CBCapBankResult (
     VUIEC FLOAT NULL,
     VUIEEE FLOAT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_CBCapBankResult_CBResultID
+ON CBCapBankResult(CBResultID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CBCapBankResult_CBBankHealthID
+ON CBCapBankResult(CBBankHealthID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CBCapBankResult_CBOperationID
+ON CBCapBankResult(CBOperationID ASC)
 GO
 
 ----- FUNCTIONS -----
