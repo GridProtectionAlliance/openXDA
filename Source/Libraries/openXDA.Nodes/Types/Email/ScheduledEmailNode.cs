@@ -72,6 +72,13 @@ namespace openXDA.Nodes.Types.Email
                 response.Content = new StringContent(status);
                 return response;
             }
+
+            [HttpGet]
+            public IHttpActionResult Reconfigure()
+            {
+                Node.Reconfigure();
+                return Ok(1);
+            }
         }
 
         #endregion
