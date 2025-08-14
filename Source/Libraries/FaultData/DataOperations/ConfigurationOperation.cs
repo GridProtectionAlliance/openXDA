@@ -37,6 +37,7 @@ using GSF.Data.Model;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
+using static openXDA.Configuration.TrendingDataSection;
 
 namespace FaultData.DataOperations
 {
@@ -334,6 +335,9 @@ namespace FaultData.DataOperations
 
             Func<SourceIndex, bool> sourceIndexFilter = GetSourceIndexFilter(appDataType);
 
+            // It seems a little counterintuitive that we filter for event channels here,
+            // but the idea is we want to map event channels -> trend, if the event channel doesn't exist,
+            // we have nothing to map to. We also don't wanna generate trends channels for existing trends.
             Func<Channel, bool> channelFilter = new Func<APPDataType, Func<Channel, bool>>(dataType =>
             {
                 switch (dataType)
@@ -352,15 +356,40 @@ namespace FaultData.DataOperations
                             channel.MeasurementType.Name == "Digital" &&
                             channel.MeasurementCharacteristic.Name == "Instantaneous" &&
                             (
-                                IsRMSTrigger(channel) ||
-                                IsImpulseTrigger(channel) ||
-                                IsTHDTrigger(channel) ||
-                                IsUnbalanceTrigger(channel) ||
-                                IsCurrentTrigger(channel)
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerRMSMatch) ||
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerImpulseMatch) ||
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerTHDMatch) ||
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerUnbalanceMatch) ||
+                                IsMatch(channel, TrendingDataSettings.Trigger.DescriptionTriggerCurrentMatch)
                             );
 
                     default:
                         return channel => false;
+                }
+            })(appDataType);
+
+            Func<Channel, bool> userMatchFilter = new Func<APPDataType, Func<Channel, bool>>(dataType =>
+            {
+                switch (dataType)
+                {
+                    case APPDataType.RMS:
+                        if (string.IsNullOrEmpty(TrendingDataSettings.RMS.DescriptionRegexMatchFilter))
+                            return channel => true;
+                        return channel => IsMatch(channel, TrendingDataSettings.RMS.DescriptionRegexMatchFilter);
+                    case APPDataType.Flicker:
+                        if (string.IsNullOrEmpty(TrendingDataSettings.Flicker.DescriptionRegexMatchFilter))
+                            return channel => true;
+                        return channel => IsMatch(channel, TrendingDataSettings.Flicker.DescriptionRegexMatchFilter);
+                    case APPDataType.Frequency:
+                        if (string.IsNullOrEmpty(TrendingDataSettings.Frequency.DescriptionRegexMatchFilter))
+                            return channel => true;
+                        return channel => IsMatch(channel, TrendingDataSettings.Frequency.DescriptionRegexMatchFilter);
+                    case APPDataType.Trigger:
+                        if (string.IsNullOrEmpty(TrendingDataSettings.Trigger.DescriptionRegexMatchFilter))
+                            return channel => true;
+                        return channel => IsMatch(channel, TrendingDataSettings.Trigger.DescriptionRegexMatchFilter);
+                    default:
+                        return channel => true;
                 }
             })(appDataType);
 
@@ -387,6 +416,7 @@ namespace FaultData.DataOperations
 
             IEnumerable<Channel> unmappedChannels = meter.Channels
                 .Where(channelFilter)
+                .Where(userMatchFilter)
                 .GroupJoin(sourceIndexes, channel => channel.ID, sourceIndex => sourceIndex.ChannelIndex, (Channel, SourceIndexes) => new { Channel, SourceIndexes })
                 .Where(item => !item.SourceIndexes.Any())
                 .Select(item => item.Channel);
@@ -1008,27 +1038,27 @@ namespace FaultData.DataOperations
                 string measurementCharacteristic = "";
                 string measurementType = "";
 
-                if (IsRMSTrigger(trendChannel))
+                if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerRMSMatch))
                 {
                     measurementCharacteristic = "RMS";
                     measurementType = "Voltage";
                 }
-                else if (IsImpulseTrigger(trendChannel))
+                else if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerImpulseMatch))
                 {
                     measurementCharacteristic = "Instantaneous";
                     measurementType = "Voltage";
                 }
-                else if (IsTHDTrigger(trendChannel))
+                else if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerTHDMatch))
                 {
                     measurementCharacteristic = "TotalTHD";
                     measurementType = "Analog";
                 }
-                else if (IsUnbalanceTrigger(trendChannel))
+                else if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerUnbalanceMatch))
                 {
                     measurementCharacteristic = "Instantaneous";
                     measurementType = "Analog";
                 }
-                else if (IsCurrentTrigger(trendChannel))
+                else if (IsMatch(trendChannel, TrendingDataSettings.Trigger.DescriptionTriggerCurrentMatch))
                 {
                     measurementCharacteristic = "Instantaneous";
                     measurementType = "Current";
@@ -1189,29 +1219,10 @@ namespace FaultData.DataOperations
                    channel.Phase.Name == "LineToLineAverage";
         }
 
-        private static bool IsRMSTrigger(Channel channel)
+        private static bool IsMatch(Channel channel, string regex)
         {
-            return Regex.IsMatch(channel.Description, @"\s-\sV\S*\sRMS\s*$", RegexOptions.IgnoreCase);
-        }
-
-        private static bool IsImpulseTrigger(Channel channel)
-        {
-            return Regex.IsMatch(channel.Description, @"\s-\sV\S*\sImpulse\s*$", RegexOptions.IgnoreCase);
-        }
-
-        private static bool IsTHDTrigger(Channel channel)
-        {
-            return Regex.IsMatch(channel.Description, @"\s-\s\S+\sTHD\s*$", RegexOptions.IgnoreCase);
-        }
-
-        private static bool IsUnbalanceTrigger(Channel channel)
-        {
-            return Regex.IsMatch(channel.Description, @"\s-\sUnbalance\s*$", RegexOptions.IgnoreCase);
-        }
-
-        private static bool IsCurrentTrigger(Channel channel)
-        {
-            return Regex.IsMatch(channel.Description, @"\s-\s\S*I\S*\s*$", RegexOptions.IgnoreCase);
+            if (channel.Description is null) return false;
+            return Regex.IsMatch(channel.Description, regex, RegexOptions.IgnoreCase);
         }
 
         public static double CalculateSamplesPerHour(DataSeries dataSeries)
