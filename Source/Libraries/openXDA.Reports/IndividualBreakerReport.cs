@@ -209,7 +209,7 @@ namespace openXDA.Reports
 
                 TimingPoints = TimingDataTable.Select().Select(x => {
                     double r;
-                    bool s = double.TryParse(x["BreakerTiming"].ToString(), out r);
+                    bool s = double.TryParse(x["WaveformTiming"].ToString(), out r);
                     return new Point { Time = DateTime.Parse(x["Time"].ToString()), Value = (s ? (double?)r : null) };
                 }).OrderBy(x => x.Time).ToList();
 
