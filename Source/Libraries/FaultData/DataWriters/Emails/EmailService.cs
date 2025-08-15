@@ -90,7 +90,7 @@ namespace FaultData.DataWriters.Emails
         {
             string smtpServer = settings.SMTPServer;
 
-            email.Body = GetBody(htmlDocument);
+            email.Body = !emailType.SMS ? GetBody(htmlDocument) : GetBodyNoHTML(htmlDocument);
             email.Subject = GetSubject(htmlDocument, emailType);
 
             if (recipients.Count == 0)
@@ -117,7 +117,7 @@ namespace FaultData.DataWriters.Emails
                 emailMessage.From = new MailAddress(fromAddress);
                 emailMessage.Subject = email.Subject;
                 emailMessage.Body = email.Body;
-                emailMessage.IsBodyHtml = true;
+                emailMessage.IsBodyHtml = !emailType.SMS;
 
                 string blindCopyAddress = settings.BlindCopyAddress;
                 string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
@@ -296,6 +296,15 @@ namespace FaultData.DataWriters.Emails
         private string GetBody(XDocument htmlDocument) => htmlDocument
             .ToString(SaveOptions.DisableFormatting)
             .Replace("&amp;", "&");
+
+        private string GetBodyNoHTML(XDocument htmlDocument)
+        {
+            string body = (string)htmlDocument
+                .Descendants("body")
+                .FirstOrDefault();
+
+            return body.Replace("&amp;", "&");
+        }
 
         #endregion
 

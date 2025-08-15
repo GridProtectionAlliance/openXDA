@@ -35,5 +35,7 @@ namespace openXDA.Model
         public string Template { get; set; }
 
         public string FilePath { get; set; }
+
+        public bool SMS { get; set; }
     }
 }
