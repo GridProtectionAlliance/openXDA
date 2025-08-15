@@ -21,11 +21,15 @@
 //
 //******************************************************************************************************
 
+using System.Data;
+using GSF.Data;
 using GSF.Data.Model;
+using GSF.Reflection;
 
 namespace SEBrowser.Model
 {
     [TableName("Channel"),
+    SettingsCategory("systemSettings"),
     CustomView(@"
         SELECT
 	        DISTINCT Channel.ID,
@@ -68,5 +72,30 @@ namespace SEBrowser.Model
         public string ChannelGroup { get; set; }
         public string ChannelGroupType { get; set; }
         public string Unit { get; set; }
+
+        [NonRecordField]
+        public DataTable Series
+        {
+            get
+            {
+                return m_Series ?? getSeries();
+            }
+            set
+            {
+                m_Series = value;
+            }
+        }
+        private DataTable m_Series = null;
+
+        private DataTable getSeries()
+        {
+            if (!typeof(TrendChannel).TryGetAttribute(out SettingsCategoryAttribute attribute)) return new DataTable();
+            if (!typeof(DetailedSeries).TryGetAttribute(out CustomViewAttribute view)) return new DataTable();
+            using (AdoDataConnection connection = new AdoDataConnection(attribute.SettingsCategory))
+            {
+                string sql = $"{view.CustomView} WHERE ChannelID = {{0}}";
+                return connection.RetrieveData(sql, this.ID);
+            }
+        }
     }
 }
