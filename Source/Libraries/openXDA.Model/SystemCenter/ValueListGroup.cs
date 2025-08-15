@@ -133,7 +133,7 @@ namespace SystemCenter.Model
                     new Tuple<string, string>("Channel.AssetKey", "Asset Key"),
                     new Tuple<string, string>("Channel.Name", "Channel Label"),
                     new Tuple<string, string>("Channel.ChannelGroup", "Channel Group Name"),
-                    new Tuple<string, string>("Channel.MinMaxAvg_Special", "Channel Series")
+                    new Tuple<string, string>("Series.TypeName", "Channel Series")
                 }
             },
              new RestrictedValueList() {
@@ -149,7 +149,7 @@ namespace SystemCenter.Model
                     new Tuple<string, string>("Channel.Description", "Channel Description"),
                     new Tuple<string, string>("Channel.ChannelGroup", "Channel Group Name"),
                     new Tuple<string, string>("Channel.ChannelGroupType", "Channel Group Type"),
-                    new Tuple<string, string>("Series.SeriesType", "Channel Series"),
+                    new Tuple<string, string>("Series.TypeName", "Channel Series"),
                     new Tuple<string, string>("Channel.Unit", "Unit")
                 }
             }
