@@ -83,7 +83,7 @@ namespace SystemCenter.Model
                             if (item.GetType() == typeof(Tuple<string, string>))
                             {
                                 value = ((Tuple<string, string>)item).Item1;
-                                altValue = ((Tuple<string, string>)item).Item1;
+                                altValue = ((Tuple<string, string>)item).Item2;
                             }
                             else if (item.GetType() == typeof(string))
                             {
