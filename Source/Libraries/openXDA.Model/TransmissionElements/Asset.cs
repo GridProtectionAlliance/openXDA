@@ -360,6 +360,9 @@ namespace openXDA.Model
         // Logic for Channels across Asset Connections
         public IEnumerable<Channel> GetConnectedChannels(AdoDataConnection connection)
         {
+            if (connection is null)
+                return null;
+
             return AssetLocations
                 .SelectMany(assetLocation => TraverseConnectedChannels(connection, assetLocation.LocationID, ID))
                 .Distinct(new ChannelComparer());

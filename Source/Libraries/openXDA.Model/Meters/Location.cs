@@ -240,6 +240,10 @@ namespace openXDA.Model
                     asset.LazyContext = LazyContext;
                 }
             }
+
+            // Assign empty lists to any assets that were missed by the recursive search
+            foreach (Asset asset in AssetLocations.Select(al => al.Asset))
+                EnsureConnectedChannels(asset);
         }
 
         private void TraverseAssetConnections(AdoDataConnection connection, ChannelConnector connectChannels)
@@ -411,6 +415,23 @@ namespace openXDA.Model
                 HashSet<Channel> connectedChannels = connectedChannelLookup.GetOrAdd(assetID, _ => new HashSet<Channel>());
                 connectedChannels.UnionWith(channels);
             };
+        }
+
+        private static void EnsureConnectedChannels(Asset asset)
+        {
+            Func<AdoDataConnection> connectionFactory = asset.ConnectionFactory;
+
+            try
+            {
+                asset.ConnectionFactory = null;
+
+                if (asset.ConnectedChannels is null)
+                    asset.ConnectedChannels = new List<Channel>();
+            }
+            finally
+            {
+                asset.ConnectionFactory = connectionFactory;
+            }
         }
 
         #endregion
