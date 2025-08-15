@@ -553,7 +553,7 @@ namespace openXDA.Model
         private static ConnectedChannelLookup GetConnectedChannelLookup(AdoDataConnection connection, int locationID)
         {
             const string ChannelQueryFormat =
-                "SELECT Channel.* " +
+                "SELECT SourceChannel.* " +
                 "FROM " +
                 "    Channel SourceChannel JOIN " +
                 "    Meter ON " +
