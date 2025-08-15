@@ -178,15 +178,10 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
-        public List<Asset> ConnectedAssets
-        {
-            get
-            {
-                return Connections.Where(item => item.ChildID == ID).Select(item => item.Parent).Concat(
-                    Connections.Where(item => item.ParentID == ID).Select(item => item.Child)).ToList();
-            }
-            
-        }
+        public List<Asset> ConnectedAssets => Connections?
+            .SelectMany(connection => new[] { connection.Parent, connection.Child })
+            .Where(asset => asset.ID != ID)
+            .ToList();
 
         [JsonIgnore]
         [NonRecordField]
