@@ -178,15 +178,10 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
-        public List<Asset> ConnectedAssets
-        {
-            get
-            {
-                return Connections.Where(item => item.ChildID == ID).Select(item => item.Parent).Concat(
-                    Connections.Where(item => item.ParentID == ID).Select(item => item.Child)).ToList();
-            }
-            
-        }
+        public List<Asset> ConnectedAssets => Connections?
+            .SelectMany(connection => new[] { connection.Parent, connection.Child })
+            .Where(asset => asset.ID != ID)
+            .ToList();
 
         [JsonIgnore]
         [NonRecordField]
@@ -360,6 +355,9 @@ namespace openXDA.Model
         // Logic for Channels across Asset Connections
         public IEnumerable<Channel> GetConnectedChannels(AdoDataConnection connection)
         {
+            if (connection is null)
+                return null;
+
             return AssetLocations
                 .SelectMany(assetLocation => TraverseConnectedChannels(connection, assetLocation.LocationID, ID))
                 .Distinct(new ChannelComparer());
@@ -553,7 +551,7 @@ namespace openXDA.Model
         private static ConnectedChannelLookup GetConnectedChannelLookup(AdoDataConnection connection, int locationID)
         {
             const string ChannelQueryFormat =
-                "SELECT Channel.* " +
+                "SELECT SourceChannel.* " +
                 "FROM " +
                 "    Channel SourceChannel JOIN " +
                 "    Meter ON " +

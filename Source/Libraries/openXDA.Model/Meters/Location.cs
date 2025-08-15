@@ -237,8 +237,13 @@ namespace openXDA.Model
                     Asset asset = assetTable.QueryRecordWhere("ID = {0}", assetID);
                     asset = LazyContext.GetAsset(asset);
                     asset.ConnectedChannels = connectedChannels.ToList();
+                    asset.LazyContext = LazyContext;
                 }
             }
+
+            // Assign empty lists to any assets that were missed by the recursive search
+            foreach (Asset asset in AssetLocations.Select(al => al.Asset))
+                EnsureConnectedChannels(asset);
         }
 
         private void TraverseAssetConnections(AdoDataConnection connection, ChannelConnector connectChannels)
@@ -346,8 +351,10 @@ namespace openXDA.Model
             {
                 foreach (DataRow row in table.AsEnumerable())
                 {
-                    Channel channel = channelTable.LoadRecord(row);
-                    yield return LazyContext.GetChannel(channel);
+                    Channel loadedChannel = channelTable.LoadRecord(row);
+                    Channel lookedUpChannel = LazyContext.GetChannel(loadedChannel);
+                    lookedUpChannel.LazyContext = LazyContext;
+                    yield return lookedUpChannel;
                 }
             }
 
@@ -408,6 +415,23 @@ namespace openXDA.Model
                 HashSet<Channel> connectedChannels = connectedChannelLookup.GetOrAdd(assetID, _ => new HashSet<Channel>());
                 connectedChannels.UnionWith(channels);
             };
+        }
+
+        private static void EnsureConnectedChannels(Asset asset)
+        {
+            Func<AdoDataConnection> connectionFactory = asset.ConnectionFactory;
+
+            try
+            {
+                asset.ConnectionFactory = null;
+
+                if (asset.ConnectedChannels is null)
+                    asset.ConnectedChannels = new List<Channel>();
+            }
+            finally
+            {
+                asset.ConnectionFactory = connectionFactory;
+            }
         }
 
         #endregion
