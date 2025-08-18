@@ -37,6 +37,7 @@ namespace openXDA.Model
         
         public string Schedule { get; set; }
 
+        [ParentKey(typeof(EmailCategory))]
         public int EmailCategoryID { get; set; }
 
         public bool ShowSubscription { get; set; }
