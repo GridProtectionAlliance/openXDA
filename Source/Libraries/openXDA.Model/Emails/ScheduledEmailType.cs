@@ -33,16 +33,7 @@ namespace openXDA.Model
     [UseEscapedName]
     public class ScheduledEmailType : EmailTypeBase
     {
-        public string TriggerEmailSQL { get; set; }
-        
         public string Schedule { get; set; }
-
-        [ParentKey(typeof(EmailCategory))]
-        public int EmailCategoryID { get; set; }
-
-        public bool ShowSubscription { get; set; }
-
-        public bool RequireApproval { get; set; }
     }
 }
 

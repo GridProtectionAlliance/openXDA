@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -29,13 +30,15 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-
+        [ParentKey(typeof(EmailCategory))]
+        public int EmailCategoryID { get; set; }
+        [DefaultValue(false)]
+        public bool RequireApproval { get; set; }
+        public bool ShowSubscription { get; set; }
         public string Name { get; set; }
-
         public string Template { get; set; }
-
         public string FilePath { get; set; }
-
         public bool SMS { get; set; }
+        public string TriggerEmailSQL { get; set; }
     }
 }
