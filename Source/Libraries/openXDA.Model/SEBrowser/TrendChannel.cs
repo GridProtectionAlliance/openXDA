@@ -27,8 +27,9 @@ namespace SEBrowser.Model
 {
     [TableName("Channel"),
     CustomView(@"
-        SELECT
-	        DISTINCT Channel.ID,
+        SELECT DISTINCT 
+            CONCAT(Channel.ID, '_', ChannelGroupType.ID) as ID,
+            Channel.ID as ChannelID,
 	        Channel.Name,
 	        Channel.Description,
             Asset.ID as AssetID,
@@ -53,7 +54,8 @@ namespace SEBrowser.Model
     public class TrendChannel
     {
         [PrimaryKey(true)]
-        public int ID { get; set; }
+        public string ID { get; set; }
+        public int ChannelID { get; set; }
         [DefaultSortOrder]
         public string Name { get; set; }
         public string Description { get; set; }
