@@ -34,21 +34,12 @@ namespace openXDA.Model
     [UseEscapedName]
     public class EmailType : EmailTypeBase
     {
-        [ParentKey(typeof(EmailCategory))]
-        public int EmailCategoryID { get; set; }
-
-        public string TriggerEmailSQL { get; set; }
-
+        [DefaultValue("SELECT ID FROM Event WHERE ID = {0}")]
         public string CombineEventsSQL { get; set; }
-
+        [DefaultValue(10.0D)]
         public double MinDelay { get; set; }
-
+        [DefaultValue(60.0D)]
         public double MaxDelay { get; set; }
-
-        public bool ShowSubscription { get; set; }
-
-        [DefaultValue(false)]
-        public bool RequireApproval { get; set; }
     }
 
     [AllowSearch]
