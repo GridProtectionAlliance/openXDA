@@ -34,11 +34,13 @@ namespace openXDA.Model
         public int EmailCategoryID { get; set; }
         [DefaultValue(false)]
         public bool RequireApproval { get; set; }
+        [DefaultValue(true)]
         public bool ShowSubscription { get; set; }
         public string Name { get; set; }
         public string Template { get; set; }
         public string FilePath { get; set; }
         public bool SMS { get; set; }
+        [DefaultValue("SELECT 0")]
         public string TriggerEmailSQL { get; set; }
     }
 }

@@ -34,8 +34,11 @@ namespace openXDA.Model
     [UseEscapedName]
     public class EmailType : EmailTypeBase
     {
+        [DefaultValue("SELECT ID FROM Event WHERE ID = {0}")]
         public string CombineEventsSQL { get; set; }
+        [DefaultValue(10.0D)]
         public double MinDelay { get; set; }
+        [DefaultValue(60.0D)]
         public double MaxDelay { get; set; }
     }
 
