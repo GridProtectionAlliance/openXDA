@@ -378,18 +378,18 @@ namespace FaultData.DataAnalysis
         public DateTime ClearingTime { get; set; }
         public TimeSpan Duration { get; set; }
 
-        public double CurrentMagnitude { get; set; }
-        public double CurrentLag { get; set; }
-        public double PrefaultCurrent { get; set; }
-        public double PostfaultCurrent { get; set; }
-        public double ReactanceRatio { get; set; }
+        public double CurrentMagnitude { get; set; } = double.NaN;
+        public double CurrentLag { get; set; } = double.NaN;
+        public double PrefaultCurrent { get; set; } = double.NaN;
+        public double PostfaultCurrent { get; set; } = double.NaN;
+        public double ReactanceRatio { get; set; } = double.NaN;
 
-        public double TreeFaultResistance { get; set; }
-        public double LightningMilliseconds { get; set; }
-        public double InceptionDistanceFromPeak { get; set; }
-        public double PrefaultThirdHarmonic { get; set; }
-        public double GroundCurrentRatio { get; set; }
-        public double LowPrefaultCurrentRatio { get; set; }
+        public double TreeFaultResistance { get; set; } = double.NaN;
+        public double LightningMilliseconds { get; set; } = double.NaN;
+        public double InceptionDistanceFromPeak { get; set; } = double.NaN;
+        public double PrefaultThirdHarmonic { get; set; } = double.NaN;
+        public double GroundCurrentRatio { get; set; } = double.NaN;
+        public double LowPrefaultCurrentRatio { get; set; } = double.NaN;
 
         public bool IsSuppressed { get; set; }
         public bool IsReclose { get; set; }
