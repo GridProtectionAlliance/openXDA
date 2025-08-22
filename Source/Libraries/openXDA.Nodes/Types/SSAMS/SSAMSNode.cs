@@ -30,9 +30,7 @@ using System.Web.Http.Controllers;
 using GSF;
 using GSF.Configuration;
 using GSF.Data;
-using GSF.Data.Model;
 using GSF.Parsing;
-using GSF.Threading;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
@@ -60,11 +58,15 @@ namespace openXDA.Nodes.Types.SSAMS
 
             public SSAMSWebController(SSAMSNode node) =>
                 Node = node;
+
+            [HttpGet]
+            public void Reconfigure() =>
+                Node.Reconfigure();
         }
 
         #endregion
 
-        #region [ Constructors ]
+        private const string TaskName = "DatabaseOperation";
 
         public SSAMSNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
@@ -72,13 +74,6 @@ namespace openXDA.Nodes.Types.SSAMS
             Action<object> configurator = GetConfigurator();
             ScheduleDBSignal(configurator);
         }
-
-        #endregion
-
-        #region [ Properties ]
-        private Func<AdoDataConnection> ConnectionFactory { get; set; }
-
-        #endregion
 
         #region [ Methods ]
 
@@ -93,19 +88,22 @@ namespace openXDA.Nodes.Types.SSAMS
         private void ScheduleDBSignal(Action<object> configurator)
         {
             Settings settings = new Settings(configurator);
-            string name = nameof(DatabaseOperation);
             string schedule = settings.SSAMSSettings.Schedule;
-            ConnectionFactory = () => new AdoDataConnection(settings.SSAMSSettings.ConnectionString, settings.SSAMSSettings.DataProviderString);
-            Host.RegisterScheduledProcess(this, DatabaseOperation, name, schedule);
+            // We don't need to dispose this, its handled by host
+            Host.RegisterScheduledProcess(this, DatabaseOperation, TaskName, schedule);
         }
 
         private void DatabaseOperation()
         {
+            Log.Debug("Began scheduled SSAMS task.");
             Action<object> configurator = GetConfigurator();
             Settings settings = new Settings(configurator);
             if (settings.SSAMSSettings.DatabaseCommand is null)
+            {
+                Log.Warn("SSAMS task had no command specified, aborting...");
                 return;
-            using (AdoDataConnection connection = ConnectionFactory())
+            }
+            using (AdoDataConnection connection = new AdoDataConnection(settings.SSAMSSettings.ConnectionString, settings.SSAMSSettings.DataProviderString))
             {
                 List<object> parameters = new List<object>();
                 if (!(settings.SSAMSSettings.CommandParameters is null))
