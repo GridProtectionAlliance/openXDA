@@ -61,7 +61,8 @@ namespace openXDA.Nodes.Types.DatabaseMaintenance
             ScheduleAllInstances();
 
         private void ScheduleAllInstances()
-        {            
+        {
+            Log.Info($"Scheduled cleanup Tasks");
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 IEnumerable<DBCleanup> allInstances = new TableOperations<DBCleanup>(connection).QueryRecords();
@@ -75,14 +76,17 @@ namespace openXDA.Nodes.Types.DatabaseMaintenance
             }
         }
 
-        private Action CreateScheduleAction(DBCleanup instance) => () =>
+        private Action CreateScheduleAction(DBCleanup instance)
         {
-            using (AdoDataConnection connection = CreateDbConnection())
+            return () =>
             {
-                connection.ExecuteNonQuery(instance.SQLCommand);
-                Log.Info($"Ran cleanup Task: {instance.Name}");
-            }
-        };
+                using (AdoDataConnection connection = CreateDbConnection())
+                {
+                    connection.ExecuteNonQuery(instance.SQLCommand);
+                    Log.Info($"Ran cleanup Task: {instance.Name}");
+                }
+            };
+        }
 
         #endregion
 
