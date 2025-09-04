@@ -23,6 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Web.Http;
+using System.Web.Http.Controllers;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
@@ -32,23 +34,35 @@ namespace openXDA.Nodes.Types.DatabaseMaintenance
 {
     public class DatabaseMaintenanceNode : NodeBase
     {
-        #region [ Constructors ]
-
         public DatabaseMaintenanceNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
         {
             ScheduleAllInstances();
         }
 
-        #endregion
+        private class DatabaseMaintenanceWebController : ApiController
+        {
+            private DatabaseMaintenanceNode Node { get; }
+
+            public DatabaseMaintenanceWebController(DatabaseMaintenanceNode node) =>
+                Node = node;
+
+            [HttpGet]
+            public void Reconfigure() =>
+                Node.Reconfigure();
+        }
 
         #region [ Methods ]
+
+        public override IHttpController CreateWebController() =>
+            new DatabaseMaintenanceWebController(this);
 
         protected override void OnReconfigure(Action<object> configurator) =>
             ScheduleAllInstances();
 
         private void ScheduleAllInstances()
-        {            
+        {
+            Log.Info($"Scheduled cleanup Tasks");
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 IEnumerable<DBCleanup> allInstances = new TableOperations<DBCleanup>(connection).QueryRecords();
@@ -56,19 +70,23 @@ namespace openXDA.Nodes.Types.DatabaseMaintenance
                 foreach (DBCleanup instance in allInstances)
                 {
                     string name = $"DBCleanup_ID:{instance.ID}";
+                    // We don't need to dispose this, its handled by host
                     Host.RegisterScheduledProcess(this, CreateScheduleAction(instance), name, instance.Schedule);
                 }
             }
         }
 
-        private Action CreateScheduleAction(DBCleanup instance) => () =>
+        private Action CreateScheduleAction(DBCleanup instance)
         {
-            using (AdoDataConnection connection = CreateDbConnection())
+            return () =>
             {
-                connection.ExecuteNonQuery(instance.SQLCommand);
-                Log.Info($"Ran cleanup Task: {instance.Name}");
-            }
-        };
+                using (AdoDataConnection connection = CreateDbConnection())
+                {
+                    connection.ExecuteNonQuery(instance.SQLCommand);
+                    Log.Info($"Ran cleanup Task: {instance.Name}");
+                }
+            };
+        }
 
         #endregion
 

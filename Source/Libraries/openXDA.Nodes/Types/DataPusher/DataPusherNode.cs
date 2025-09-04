@@ -62,6 +62,10 @@ namespace openXDA.Nodes.Types.DataPusher
 
             public DataPusherWebController(DataPusherNode node) =>
                 Node = node;
+
+            [HttpGet]
+            public void Reconfigure() =>
+                Node.Reconfigure();
         }
 
         #endregion
@@ -103,6 +107,7 @@ namespace openXDA.Nodes.Types.DataPusher
                 foreach (RemoteXDAInstance instance in allInstances)
                 {
                     string name = $"{nameof(SyncInstance)}_ID:{instance.ID}";
+                    // We don't need to dispose this, its handled by host
                     Host.RegisterScheduledProcess(this, SyncInstance(instance), name, instance.Frequency);
                 }
             }
