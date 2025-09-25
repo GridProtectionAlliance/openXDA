@@ -397,6 +397,7 @@
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
     <Compile Include="Logging\FileSkippedExceptionFilter.cs" />
+    <Compile Include="Logging\RollingFileTraceListener.cs" />
     <Compile Include="ServiceConnection.cs" />
     <Compile Include="ServiceHub.cs" />
     <Compile Include="WebHosting\HostAuthenticationMiddleware.cs" />
