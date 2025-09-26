@@ -169,13 +169,15 @@ namespace FaultData.DataOperations
 
         private double? CalcMax(DataSeries rms) => rms?.DataPoints
             .Where(dataPoint => !double.IsNaN(dataPoint.Value))
+            .Select(dataPoint => (double?)dataPoint.Value)
             .DefaultIfEmpty(null)
-            .Max(dataPoint => dataPoint?.Value);
+            .Max();
 
         private double? CalcMin(DataSeries rms) => rms?.DataPoints
             .Where(dataPoint => !double.IsNaN(dataPoint.Value))
+            .Select(dataPoint => (double?)dataPoint.Value)
             .DefaultIfEmpty(null)
-            .Min(dataPoint => dataPoint?.Value);
+            .Min();
 
         private double? CalcI2t(DataAnalysis.FaultGroup faultGroup, DataSeries waveform)
         {

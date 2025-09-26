@@ -85,8 +85,8 @@ namespace FaultData.DataOperations
 
                 foreach (DataSeries dataSeries in lookup[adjustment.ChannelID])
                 {
-                    foreach (DataPoint dataPoint in dataSeries.DataPoints)
-                        dataPoint.Value = dataPoint.Value * multiplier + adder;
+                    DataSeries adjusted = dataSeries.ApplyLinearAdjustment(multiplier, adder);
+                    dataSeries.DataPoints = adjusted.DataPoints;
                 }
             }
         }
@@ -98,14 +98,14 @@ namespace FaultData.DataOperations
 
             foreach (DataSeries dataSeries in meterDataSet.DataSeries)
             {
-                foreach (DataPoint dataPoint in dataSeries.DataPoints)
-                    dataPoint.Time += shift;
+                DataSeries shifted = dataSeries.Shift(shift);
+                dataSeries.DataPoints = shifted.DataPoints;
             }
 
             foreach (DataSeries dataSeries in meterDataSet.Digitals)
             {
-                foreach (DataPoint dataPoint in dataSeries.DataPoints)
-                    dataPoint.Time += shift;
+                DataSeries shifted = dataSeries.Shift(shift);
+                dataSeries.DataPoints = shifted.DataPoints;
             }
 
             for (int i = 0; i < meterDataSet.ReportedDisturbances.Count; i++)

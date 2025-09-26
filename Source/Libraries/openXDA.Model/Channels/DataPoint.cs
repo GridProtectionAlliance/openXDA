@@ -28,84 +28,68 @@ namespace openXDA.Model
     /// <summary>
     /// Represents a single data point in a time series.
     /// </summary>
-    public class DataPoint
+    public readonly struct DataPoint
     {
         #region [ Properties ]
 
-        public DateTime Time { get; set; }
-        public double Value { get; set; }
+        public DateTime Time { get; init; }
+        public double Value { get; init; }
 
         #endregion
 
         #region [ Methods ]
 
-        public DataPoint Shift(TimeSpan timeShift)
+        public DataPoint NewTime(DateTime time) => new()
         {
-            return new DataPoint()
-            {
-                Time = Time.Add(timeShift),
-                Value = Value
-            };
-        }
+            Time = time,
+            Value = Value
+        };
 
-        public DataPoint Negate()
+        public DataPoint NewValue(double value) => new()
         {
-            return new DataPoint()
-            {
-                Time = Time,
-                Value = -Value
-            };
-        }
+            Time = Time,
+            Value = value
+        };
+
+        public DataPoint Shift(TimeSpan timeShift) =>
+            NewTime(Time + timeShift);
+
+        public DataPoint Negate() =>
+            NewValue(-Value);
 
         public DataPoint Add(DataPoint point)
         {
             if (Time != point.Time)
                 throw new InvalidOperationException("Cannot add datapoints with mismatched times");
 
-            return new DataPoint()
-            {
-                Time = Time,
-                Value = Value + point.Value
-            };
+            return NewValue(Value + point.Value);
         }
 
-        public DataPoint Subtract(DataPoint point)
-        {
-            return Add(point.Negate());
-        }
+        public DataPoint Subtract(DataPoint point) =>
+            Add(point.Negate());
 
-        public DataPoint Add(double value)
-        {
-            return new DataPoint()
-            {
-                Time = Time,
-                Value = Value + value
-            };
-        }
+        public DataPoint Add(double value) =>
+            NewValue(Value + value);
 
-        public DataPoint Subtract(double value)
-        {
-            return Add(-value);
-        }
+        public DataPoint Subtract(double value) =>
+            Add(-value);
 
-        public DataPoint Multiply(double value)
-        {
-            return new DataPoint()
-            {
-                Time = Time,
-                Value = Value * value
-            };
-        }
+        public DataPoint Multiply(double value) =>
+            NewValue(Value * value);
 
-        public bool LargerThan(double comparison)
-        {
-            return Value > comparison;
-        }
+        public bool IsLargerThan(double comparison) =>
+            Value > comparison;
 
-        public bool LargerThan(DataPoint point)
-        {
-            return LargerThan(point.Value);
-        }
+        public bool IsLargerThan(DataPoint point) =>
+            IsLargerThan(point.Value);
+
+        [Obsolete("Use IsLargerThan() instead")]
+        public bool LargerThan(double comparison) =>
+            IsLargerThan(comparison);
+
+        [Obsolete("Use IsLargerThan() instead")]
+        public bool LargerThan(DataPoint point) =>
+            IsLargerThan(point);
 
         #endregion
     }

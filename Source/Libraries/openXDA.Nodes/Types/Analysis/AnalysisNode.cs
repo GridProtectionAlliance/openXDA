@@ -408,16 +408,24 @@ namespace openXDA.Nodes.Types.Analysis
 
         private void ShiftTime(MeterDataSet meterDataSet, Func<DateTime, DateTime> toXDATime)
         {
+            DataPoint ToXDATime(DataPoint point)
+            {
+                DateTime xdaTime = toXDATime(point.Time);
+                return point.NewTime(xdaTime);
+            }
+
             foreach (DataSeries dataSeries in meterDataSet.DataSeries)
             {
-                foreach (DataPoint dataPoint in dataSeries.DataPoints)
-                    dataPoint.Time = toXDATime(dataPoint.Time);
+                dataSeries.DataPoints = dataSeries.DataPoints
+                    .Select(ToXDATime)
+                    .ToList();
             }
 
             foreach (DataSeries dataSeries in meterDataSet.Digitals)
             {
-                foreach (DataPoint dataPoint in dataSeries.DataPoints)
-                    dataPoint.Time = toXDATime(dataPoint.Time);
+                dataSeries.DataPoints = dataSeries.DataPoints
+                    .Select(ToXDATime)
+                    .ToList();
             }
 
             for (int i = 0; i < meterDataSet.ReportedDisturbances.Count; i++)
@@ -604,8 +612,8 @@ namespace openXDA.Nodes.Types.Analysis
 
             foreach (DataSeries analogSeries in meterDataSet.DataSeries)
             {
-                foreach (DataPoint point in analogSeries.DataPoints)
-                    point.Value *= adjustment;
+                DataSeries adjusted = analogSeries.Multiply(adjustment);
+                analogSeries.DataPoints = adjusted.DataPoints;
             }
         }
 

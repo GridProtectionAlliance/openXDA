@@ -475,9 +475,12 @@ namespace FaultData.DataAnalysis
 
         private bool IsDisturbed(Disturbance disturbance)
         {
-            DataPoint dataPoint = new DataPoint();
-            dataPoint.Time = disturbance.StartTime;
-            dataPoint.Value = disturbance.PerUnitMagnitude;
+            DataPoint dataPoint = new()
+            {
+                Time = disturbance.StartTime,
+                Value = disturbance.PerUnitMagnitude
+            };
+
             return m_isDisturbed(dataPoint);
         }
 

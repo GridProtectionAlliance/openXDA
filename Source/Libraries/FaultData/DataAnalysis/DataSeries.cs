@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using GSF;
+using GSF.Collections;
 using GSF.NumericalAnalysis;
 using Ionic.Zlib;
 using openXDA.Model;
@@ -335,6 +336,17 @@ namespace FaultData.DataAnalysis
             return shifted;
         }
 
+        public DataSeries ApplyLinearAdjustment(double multiplier, double adder)
+        {
+            DataSeries adjusted = new DataSeries();
+
+            adjusted.DataPoints = m_dataPoints
+                .Select(point => point.Multiply(multiplier).Add(adder))
+                .ToList();
+
+            return adjusted;
+        }
+
         public DataSeries Negate()
         {
             DataSeries negatedDataSeries = new DataSeries();
@@ -395,52 +407,27 @@ namespace FaultData.DataAnalysis
             // don't actually downsample, if it doesn't need it.
             if (DataPoints.Count <= maxSampleCount) return;
 
-            DateTime epoch = new DateTime(1970, 1, 1);
-            double startTime = StartTime.Subtract(epoch).TotalMilliseconds;
-            double endTime = EndTime.Subtract(epoch).TotalMilliseconds;
-            List<DataPoint> data = new List<DataPoint>();
+            DateTime epoch = StartTime;
+            double bucketSize = 2 * Duration / maxSampleCount;
+            int ToBucketIndex(DataPoint point) => (int)(point.Time.Subtract(epoch).TotalSeconds / bucketSize);
 
-            // milliseconds per returned sampled size
-            int step = (int)(Duration*1000) / maxSampleCount;
-            if (step < 1)
-                step = 1;
-
-            int index = 0;
-            for (double n = startTime * 1000; n <= endTime * 1000; n += 2 * step)
+            IEnumerable<DataPoint> GetMinAndMax(IEnumerable<DataPoint> bucket)
             {
-                DataPoint min = null;
-                DataPoint max = null;
+                DataPoint min = bucket.MinBy(point => point.Value);
+                DataPoint max = bucket.MaxBy(point => point.Value);
 
-                while (index < DataPoints.Count() && DataPoints[index].Time.Subtract(epoch).TotalMilliseconds * 1000 < n + 2 * step)
-                {
-                    if (min == null || min.Value > DataPoints[index].Value)
-                        min = DataPoints[index];
+                if (min.Time == max.Time)
+                    return [min];
 
-                    if (max == null || max.Value <= DataPoints[index].Value)
-                        max = DataPoints[index];
-
-                    ++index;
-                }
-
-                if (min != null)
-                {
-                    if (min.Time < max.Time)
-                    {
-                        data.Add(min);
-                        data.Add(max);
-                    }
-                    else if (min.Time > max.Time)
-                    {
-                        data.Add(max);
-                        data.Add(min);
-                    }
-                    else
-                    {
-                        data.Add(min);
-                    }
-                }
+                return min.Time < max.Time
+                    ? [min, max]
+                    : [max, min];
             }
-            DataPoints = data;
+
+            DataPoints = DataPoints
+                .GroupBy(ToBucketIndex)
+                .SelectMany(GetMinAndMax)
+                .ToList();
         }
 
         /// <summary>

@@ -579,15 +579,9 @@ namespace FaultData.DataOperations
                 double adder = series.SeriesInfo.Channel.Adder;
                 double multiplier = series.SeriesInfo.Channel.Multiplier;
 
-                DataSeries adderSeries = series.Copy();
-
-                foreach (DataPoint point in adderSeries.DataPoints)
-                    point.Value = adder;
-
-                definedSeries[i] = series
-                    .Multiply(multiplier)
-                    .Add(adderSeries);
-                definedSeries[i].SeriesInfo = series.SeriesInfo;
+                DataSeries adjusted = series.ApplyLinearAdjustment(multiplier, adder);
+                adjusted.SeriesInfo = series.SeriesInfo;
+                definedSeries[i] = adjusted;
             }
         }
 

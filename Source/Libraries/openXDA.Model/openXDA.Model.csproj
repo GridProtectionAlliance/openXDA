@@ -12,6 +12,7 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -146,6 +147,7 @@
     <Compile Include="Files\AnalysisTask.cs" />
     <Compile Include="Files\FileGroupField.cs" />
     <Compile Include="Files\FileGroupFieldValue.cs" />
+    <Compile Include="IsExternalInit.cs" Visible="false" />
     <Compile Include="LazyContext.cs" />
     <Compile Include="Links\UserAccountScheduledEmailType.cs" />
     <Compile Include="Links\LineSegmentConnections.cs" />

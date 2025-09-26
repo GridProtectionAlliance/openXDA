@@ -262,7 +262,11 @@ namespace FaultData.DataOperations
                     int endSample = startSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
 
                     for (int sample = fault.StartSample; sample <= endSample; sample++)
-                        series[sample].Value = fault.Curves[curveIndex].Series[sample - fault.StartSample].Value;
+                    {
+                        int offset = sample - fault.StartSample;
+                        Fault.Curve curve = fault.Curves[curveIndex];
+                        series.DataPoints[sample] = curve.Series[offset];
+                    }
                 }
 
                 return new FaultCurve()

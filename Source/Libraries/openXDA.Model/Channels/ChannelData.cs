@@ -115,10 +115,10 @@ namespace openXDA.Model
                 return;
 
             Tuple<int, List<DataPoint>> decompressed = Decompress(TimeDomainData)[0];
-            List<DataPoint> data = decompressed.Item2;
 
-            foreach (DataPoint dataPoint in data)
-                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+            List<DataPoint> data = decompressed.Item2
+                .Select(point => point.Shift(ticks))
+                .ToList();
 
             TimeDomainData = ToData(data, decompressed.Item1);
         }
