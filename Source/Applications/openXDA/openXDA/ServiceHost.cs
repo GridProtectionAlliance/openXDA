@@ -294,7 +294,7 @@ namespace openXDA
                 skippedFilesAppender.MaximumFileSize = logFileSize;
             }
 
-            if (!int.TryParse(logFileBackups, out int backups))
+            if (int.TryParse(logFileBackups, out int backups))
             {
                 debugLogAppender.MaxSizeRollBackups = backups;
                 skippedFilesAppender.MaxSizeRollBackups = backups;
