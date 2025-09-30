@@ -435,27 +435,29 @@ namespace FaultData.DataOperations
         private FaultCurve CreateFaultCurve(AdoDataConnection connection, IGrouping<int, MappingNode> grouping)
         {
             VICycleDataGroup viCycleDataGroup = GetCycleData(connection, grouping.Key);
-            DataGroup faultCurveGroup = new DataGroup();
-            DataGroup faultCurveAngleGroup = new DataGroup();
-
-            faultCurveGroup.Add(viCycleDataGroup.VA.RMS.Multiply(double.NaN));
-            faultCurveAngleGroup.Add(faultCurveGroup[0].Copy());
+            DataSeries faultDistanceCurve = viCycleDataGroup.VA.RMS.Multiply(double.NaN);
+            DataSeries faultAngleCurve = faultDistanceCurve.Copy();
 
             foreach (MappingNode node in grouping)
             {
                 for (int i = node.StartSample; node.DistanceCurve.HasData(i); i++)
                 {
-                    faultCurveGroup[0][i].Value = node.DistanceCurve[i].Value;
-                    faultCurveAngleGroup[0][i].Value = node.AngleCurve[i].Value;
+                    faultDistanceCurve.DataPoints[i] = node.DistanceCurve[i];
+                    faultAngleCurve.DataPoints[i] = node.AngleCurve[i];
                 }
             }
+
+            DataGroup faultDistanceGroup = new();
+            DataGroup faultAngleGroup = new();
+            faultDistanceGroup.Add(faultDistanceCurve);
+            faultAngleGroup.Add(faultAngleCurve);
 
             return new FaultCurve()
             {
                 EventID = grouping.Key,
                 Algorithm = "DoubleEnded",
-                Data = faultCurveGroup.ToData()[0],
-                AngleData = faultCurveAngleGroup.ToData()[0]
+                Data = faultDistanceGroup.ToData()[0],
+                AngleData = faultAngleGroup.ToData()[0]
             };
         }
 
