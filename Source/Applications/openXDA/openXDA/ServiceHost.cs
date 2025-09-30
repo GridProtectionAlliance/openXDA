@@ -285,6 +285,21 @@ namespace openXDA
             skippedFilesAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
             skippedFilesAppender.AddFilter(new FileSkippedExceptionFilter(false));
 
+            string logFileSize = Environment.GetEnvironmentVariable("openXDA_DebugLogFileSize");
+            string logFileBackups = Environment.GetEnvironmentVariable("openXDA_DebugLogFileBackups");
+
+            if (!string.IsNullOrEmpty(logFileSize))
+            {
+                debugLogAppender.MaximumFileSize = logFileSize;
+                skippedFilesAppender.MaximumFileSize = logFileSize;
+            }
+
+            if (!int.TryParse(logFileBackups, out int backups))
+            {
+                debugLogAppender.MaxSizeRollBackups = backups;
+                skippedFilesAppender.MaxSizeRollBackups = backups;
+            }
+
             try
             {
                 if (!Directory.Exists("Debug"))
