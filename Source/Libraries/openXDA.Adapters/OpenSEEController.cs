@@ -170,6 +170,7 @@ namespace openXDA.Adapters
 
                 string type = query["type"];
                 string dataType = query["dataType"];
+                query.TryGetValue("dataCharacteristic", out string characteristic);
 
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
                 DateTime endTime = (query.ContainsKey("endDate") ? DateTime.Parse(query["endDate"]) : evt.EndTime);
@@ -186,12 +187,12 @@ namespace openXDA.Adapters
                     if (dataType == "Time")
                     {
                         DataGroup dataGroup = QueryDataGroup(eventId, meter);
-                        temp = GetDataLookup(dataGroup, type);
+                        temp = GetDataLookup(dataGroup, type, characteristic);
                     }
                     else
                     {
                         VICycleDataGroup viCycleDataGroup = QueryVICycleDataGroup(eventId, meter);
-                        temp = GetFrequencyDataLookup(viCycleDataGroup, type);
+                        temp = GetFrequencyDataLookup(viCycleDataGroup, type, characteristic);
                     }
 
                     foreach (string key in temp.Keys)
@@ -225,14 +226,19 @@ namespace openXDA.Adapters
                 returnDict.CalculationEnd = calcTime + 1000 / systemFrequency;
 
                 return returnDict;
-
-
             }
         }
 
-        private Dictionary<string, FlotSeries> GetDataLookup(DataGroup dataGroup, string type)
+        private Dictionary<string, FlotSeries> GetDataLookup(DataGroup dataGroup, string type, string? characteristic, bool prioritizeNeutrals)
         {
-            Dictionary<string, FlotSeries> dataLookup = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name == type).ToDictionary(ds => GetChartLabel(ds.SeriesInfo.Channel), ds => new FlotSeries()
+            IEnumerable<DataSeries> series = dataGroup.DataSeries
+                .Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name == type);
+
+            if (characteristic is not null)
+                series = series.Where(ds => ds.SeriesInfo.Channel.MeasurementCharacteristic.Name == characteristic);
+
+
+            return series.ToDictionary(ds => GetChartLabel(ds.SeriesInfo.Channel), ds => new FlotSeries()
             {
                 ChannelID = ds.SeriesInfo.Channel.ID,
                 ChannelName = ds.SeriesInfo.Channel.Name,
@@ -245,15 +251,14 @@ namespace openXDA.Adapters
                 ChartLabel = GetChartLabel(ds.SeriesInfo.Channel)
 
             });
-
-            return dataLookup;
         }
 
-        private Dictionary<string, FlotSeries> GetFrequencyDataLookup(VICycleDataGroup vICycleDataGroup, string type)
+        private Dictionary<string, FlotSeries> GetFrequencyDataLookup(VICycleDataGroup vICycleDataGroup, string type, string? characteristic)
         {
-            IEnumerable<string> names = vICycleDataGroup.CycleDataGroups.Where(ds => ds.RMS.SeriesInfo.Channel.MeasurementType.Name == type).Select(ds => ds.RMS.SeriesInfo.Channel.Phase.Name);
             Dictionary<string, FlotSeries> dataLookup = new Dictionary<string, FlotSeries>();
-            foreach (CycleDataGroup cdg in vICycleDataGroup.CycleDataGroups.Where(ds => ds.RMS.SeriesInfo.Channel.MeasurementType.Name == type))
+            foreach (CycleDataGroup cdg in vICycleDataGroup.CycleDataGroups
+                .Where(ds => ds.RMS.SeriesInfo.Channel.MeasurementType.Name == type)
+                .Where(ds => characteristic is null ? true : ds.RMS.SeriesInfo.Channel.MeasurementCharacteristic.Name == characteristic))
             {
 
                 FlotSeries flotSeriesRMS = new FlotSeries
