@@ -40,12 +40,7 @@ namespace openXDA.APIAuthentication
         /// <summary>
         /// Tells users if the helper has been intialized or not.
         /// </summary>
-        public bool IsIntialized { 
-            get 
-            {
-                return !(SettingsRetriever is null);
-            } 
-        }
+        public bool IsIntialized { get; private set; }
 
         /// <summary>
         /// API Token used to access OpenXDA
@@ -71,19 +66,26 @@ namespace openXDA.APIAuthentication
 
         #region [ Methods ]
         /// <summary>
-        /// Function for setup of helper. This must be ran once and only once before using the helper.
+        /// Creates API object and registers retriever.
         /// </summary>
+        /// <remarks>
+        /// This will NOT intialize the object. You must successfully run <see cref="TryRefreshSettings"/> before using this.
+        /// </remarks>
         public XDAAPI(IAPICredentialRetriever retriever)
         {
             SettingsRetriever = retriever;
-            if (!SettingsRetriever.TryRefreshSettings())
-                throw new ArgumentException("Unable to load settings from retriever.");
         }
 
         /// <summary>
         /// Recalls the setup settings function from <see cref="IAPICredentialRetriever"/> to refetch settings.
         /// </summary>
-        public bool TryRefreshSettings() => SettingsRetriever.TryRefreshSettings();
+        public bool TryRefreshSettings()
+        {
+            bool success = SettingsRetriever.TryRefreshSettings();
+            if (success)
+                IsIntialized = true;
+            return success;
+        }
 
         /// <summary>
         /// Gets Response Task from XDA 
