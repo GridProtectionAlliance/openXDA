@@ -155,6 +155,7 @@ namespace openXDA.Adapters
         #region [ Methods ]
 
         #region [ Waveform Data ]
+
         [HttpGet]
         public JsonReturn GetData()
         {
@@ -171,6 +172,8 @@ namespace openXDA.Adapters
                 string type = query["type"];
                 string dataType = query["dataType"];
                 query.TryGetValue("dataCharacteristic", out string characteristic);
+                // Query settings returns only neutrals, in available, returns line to lines otherwise
+                bool prioritizeNeutrals = query.TryGetValue("prioritizeNeutrals", out string neutralsPrio) && neutralsPrio == "true";
 
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
                 DateTime endTime = (query.ContainsKey("endDate") ? DateTime.Parse(query["endDate"]) : evt.EndTime);
@@ -187,7 +190,7 @@ namespace openXDA.Adapters
                     if (dataType == "Time")
                     {
                         DataGroup dataGroup = QueryDataGroup(eventId, meter);
-                        temp = GetDataLookup(dataGroup, type, characteristic);
+                        temp = GetDataLookup(dataGroup, type, characteristic, prioritizeNeutrals);
                     }
                     else
                     {
@@ -237,6 +240,12 @@ namespace openXDA.Adapters
             if (characteristic is not null)
                 series = series.Where(ds => ds.SeriesInfo.Channel.MeasurementCharacteristic.Name == characteristic);
 
+            if (prioritizeNeutrals)
+            {
+                IEnumerable<DataSeries> filteredSeries = series.Where(ds => ds.SeriesInfo.Channel.Phase.Name.Contains("N"));
+                if (filteredSeries.Any())
+                    series = filteredSeries;
+            }
 
             return series.ToDictionary(ds => GetChartLabel(ds.SeriesInfo.Channel), ds => new FlotSeries()
             {
