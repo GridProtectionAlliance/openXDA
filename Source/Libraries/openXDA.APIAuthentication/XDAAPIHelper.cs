@@ -32,7 +32,7 @@ using Newtonsoft.Json;
 namespace openXDA.APIAuthentication
 {
     /// <summary>
-    /// Helper class that provides openXDA API Calls.
+    /// Wrapper class that turns <see cref="XDAAPI"/> into a static for easy use across an application.
     /// </summary>
     /// <remarks>
     /// Must be initialized with the <see cref="InitializeHelper"/> method to fetch settings.
@@ -46,29 +46,29 @@ namespace openXDA.APIAuthentication
         public static bool IsIntialized { 
             get 
             {
-                return !(SettingsRetriever is null);
+                return !(API is null);
             } 
         }
 
         /// <summary>
         /// API Token used to access OpenXDA
         /// </summary>
-        public static string Token => SettingsRetriever.Token;
+        public static string Token => API.Token;
 
         /// <summary>
         /// API Key used to access OpenXDA
         /// </summary>
-        public static string Key => SettingsRetriever.Key;
+        public static string Key => API.Key;
 
         /// <summary>
         /// API Key used to access OpenXDA
         /// </summary>
-        public static string Host => SettingsRetriever.Host;
+        public static string Host => API.Host;
 
         /// <summary>
         /// Object that retireves the token,key, and host of the helper.
         /// </summary>
-        private static IAPICredentialRetriever SettingsRetriever { get; set; }
+        private static XDAAPI API { get; set; }
 
         #endregion
 
@@ -78,15 +78,15 @@ namespace openXDA.APIAuthentication
         /// </summary>
         public static void InitializeHelper(IAPICredentialRetriever retriever)
         {
-            SettingsRetriever = retriever;
-            if (!SettingsRetriever.TryRefreshSettings())
+            API = new XDAAPI(retriever);
+            if (!API.TryRefreshSettings())
                 throw new ArgumentException("Unable to load settings from retriever.");
         }
 
         /// <summary>
         /// Recalls the setup settings function from <see cref="InitializeHelper"/> to refetch settings.
         /// </summary>
-        public static bool TryRefreshSettings() => SettingsRetriever.TryRefreshSettings();
+        public static bool TryRefreshSettings() => API.TryRefreshSettings();
 
         /// <summary>
         /// Gets Response Task from XDA 
@@ -94,93 +94,28 @@ namespace openXDA.APIAuthentication
         /// <param name="requestURI">Path to specific API request</param>
         /// <param name="content"> The <see cref="HttpContent"/> of the request </param>
         /// <returns> response as a <see cref="Stream"/></returns>
-        public static Task<HttpResponseMessage> GetResponseTask(string requestURI, HttpContent content = null)
-        {
-            if (!IsIntialized)
-                throw new InvalidOperationException("API helper has not been intialized.");
-
-            APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
-
-            void ConfigureRequest(HttpRequestMessage request)
-            {
-                if (content == null)
-                {
-                    request.Method = HttpMethod.Get;
-                    request.Headers.Accept.Clear();
-                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                }
-                else
-                {
-                    request.Method = HttpMethod.Post;
-                    request.Content = content;
-                }
-            }
-
-            return query.SendWebRequestAsync(ConfigureRequest, requestURI);
-        }
+        public static Task<HttpResponseMessage> GetResponseTask(string requestURI, HttpContent content = null) => API.GetResponseTask(requestURI, content);
 
         /// <summary>
         /// Makes a Get Request to OpenXDA to obtain a string
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
         /// <returns>string</returns>
-        public static async Task<string> GetAsync(string requestURI)
-        {
-            if (!IsIntialized)
-                throw new InvalidOperationException("API helper has not been intialized.");
-
-            APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
-
-            void ConfigureRequest(HttpRequestMessage request)
-            {
-                request.Method = HttpMethod.Get;
-                request.Headers.Accept.Clear();
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            }
-
-            HttpResponseMessage responseMessage = await query.SendWebRequestAsync(ConfigureRequest, requestURI).ConfigureAwait(false);
-            responseMessage.EnsureSuccessStatusCode();
-            return await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
-        }
+        public static async Task<string> GetAsync(string requestURI) => await API.GetAsync(requestURI).ConfigureAwait(false);
 
         /// <summary>
         /// Makes a Get Request to OpenXDA to obtain a stream
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
         /// <returns>stream</returns>
-        public static async Task<Stream> GetStreamAsync(string requestURI)
-        {
-            if (!IsIntialized)
-                throw new InvalidOperationException("API helper has not been intialized.");
-
-            APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
-
-            void ConfigureRequest(HttpRequestMessage request)
-            {
-                request.Method = HttpMethod.Get;
-                request.Headers.Accept.Clear();
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            }
-
-            HttpResponseMessage responseMessage = await query.SendWebRequestAsync(ConfigureRequest, requestURI).ConfigureAwait(false);
-            responseMessage.EnsureSuccessStatusCode();
-            return await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
-        }
+        public static async Task<Stream> GetStreamAsync(string requestURI) => await API.GetStreamAsync(requestURI).ConfigureAwait(false);
 
         /// <summary>
         /// Makes a Get Request to OpenXDA to obtain an object
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
         /// <returns> a <see cref="Task{T}"/> object</returns>
-        public static async Task<T> GetAsync<T>(string requestURI)
-        {
-            if (!IsIntialized)
-                throw new InvalidOperationException("API helper has not been intialized.");
-
-            string result = await GetAsync(requestURI).ConfigureAwait(false);
-            T resultObject = JsonConvert.DeserializeObject<T>(result);
-            return resultObject;
-        }
+        public static async Task<T> GetAsync<T>(string requestURI) => await API.GetAsync<T>(requestURI).ConfigureAwait(false);
 
         /// <summary>
         /// Makes Post request on OpenXDA
@@ -188,22 +123,7 @@ namespace openXDA.APIAuthentication
         /// <param name="requestURI">Path to specific API request</param>
         /// <param name="content"> The <see cref="HttpContent"/> of the request </param>
         /// <returns> response as a <see cref="string"/></returns>
-        public static async Task<string> PostAsync(string requestURI, HttpContent content)
-        {
-            if (!IsIntialized)
-                throw new InvalidOperationException("API helper has not been intialized.");
-
-            APIQuery query = new APIQuery(Key, Token, Host.Split(';'));
-
-            void ConfigureRequest(HttpRequestMessage request)
-            {
-                request.Method = HttpMethod.Post;
-                request.Content = content;
-            }
-
-            HttpResponseMessage responseMessage = await query.SendWebRequestAsync(ConfigureRequest, requestURI).ConfigureAwait(false);
-            return await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
-        }
+        public static async Task<string> PostAsync(string requestURI, HttpContent content) => await API.PostAsync(requestURI, content).ConfigureAwait(false);
 
         /// <summary>
         /// Makes Post request on OpenXDA
@@ -211,14 +131,14 @@ namespace openXDA.APIAuthentication
         /// <param name="endpoint">Path to specific API request</param>
         /// <param name="content"> The <see cref="HttpContent"/> of the request </param>
         /// <returns> response as a <see cref="string"/></returns>
-        public static async Task<string> PostAllAsync<T>(string endpoint, HttpContent content) => await PostAsync(endpoint, content).ConfigureAwait(false);
+        public static async Task<string> PostAllAsync<T>(string endpoint, HttpContent content) => await API.PostAllAsync<T>(endpoint, content).ConfigureAwait(false);
 
         /// <summary>
         /// Makes a Get Request to OpenXDA to obtain a <see cref="List{T}"/> objects
         /// </summary>
         /// <param name="requestURI">Path to specific API request</param>
         /// <returns> a <see cref="List{T}"/> object</returns>
-        public static async Task<List<T>> GetAllAsync<T>(string requestURI) => await GetAsync<List<T>>(requestURI).ConfigureAwait(false);
+        public static async Task<List<T>> GetAllAsync<T>(string requestURI) => await API.GetAllAsync<T>(requestURI).ConfigureAwait(false);
 
         #endregion
 
