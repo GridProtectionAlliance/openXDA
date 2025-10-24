@@ -82,10 +82,12 @@ using GSF;
 using GSF.Configuration;
 using GSF.Console;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.ServiceProcess;
 using log4net.Appender;
 using log4net.Config;
+using log4net.Core;
 using log4net.Layout;
 using openXDA.Logging;
 using openXDA.Nodes;
@@ -266,6 +268,7 @@ namespace openXDA
             ServiceHelperAppender serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
 
             RollingFileAppender debugLogAppender = new RollingFileAppender();
+            debugLogAppender.File = "openXDA.log";
             debugLogAppender.StaticLogFileName = false;
             debugLogAppender.AppendToFile = true;
             debugLogAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
@@ -276,6 +279,7 @@ namespace openXDA
             debugLogAppender.AddFilter(new FileSkippedExceptionFilter());
 
             RollingFileAppender skippedFilesAppender = new RollingFileAppender();
+            skippedFilesAppender.File = "SkippedFiles.log";
             skippedFilesAppender.StaticLogFileName = false;
             skippedFilesAppender.AppendToFile = true;
             skippedFilesAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
@@ -285,6 +289,16 @@ namespace openXDA
             skippedFilesAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
             skippedFilesAppender.AddFilter(new FileSkippedExceptionFilter(false));
 
+            RollingFileAppender gsfLogAppender = new RollingFileAppender();
+            gsfLogAppender.File = "gsf.log";
+            gsfLogAppender.StaticLogFileName = false;
+            gsfLogAppender.AppendToFile = true;
+            gsfLogAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
+            gsfLogAppender.MaxSizeRollBackups = 10;
+            gsfLogAppender.PreserveLogFileNameExtension = true;
+            gsfLogAppender.MaximumFileSize = "1MB";
+            gsfLogAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
+
             string logFileSize = Environment.GetEnvironmentVariable("openXDA_DebugLogFileSize");
             string logFileBackups = Environment.GetEnvironmentVariable("openXDA_DebugLogFileBackups");
 
@@ -292,32 +306,46 @@ namespace openXDA
             {
                 debugLogAppender.MaximumFileSize = logFileSize;
                 skippedFilesAppender.MaximumFileSize = logFileSize;
+                gsfLogAppender.MaximumFileSize = logFileSize;
             }
 
             if (int.TryParse(logFileBackups, out int backups))
             {
                 debugLogAppender.MaxSizeRollBackups = backups;
                 skippedFilesAppender.MaxSizeRollBackups = backups;
+                gsfLogAppender.MaxSizeRollBackups = backups;
             }
 
             try
             {
-                if (!Directory.Exists("Debug"))
-                    Directory.CreateDirectory("Debug");
+                void EnsureDirectory(string directory)
+                {
+                    if (!Directory.Exists(directory))
+                        Directory.CreateDirectory(directory);
+                }
 
-                debugLogAppender.File = @"Debug\openXDA.log";
-                skippedFilesAppender.File = @"Debug\SkippedFiles.log";
+                void AssignFilePath(RollingFileAppender appender, string filePath)
+                {
+                    string directory = Path.GetDirectoryName(filePath);
+                    EnsureDirectory(directory);
+                    appender.File = filePath;
+                }
+
+                AssignFilePath(debugLogAppender, @"Debug\openXDA\openXDA.log");
+                AssignFilePath(skippedFilesAppender, @"Debug\SkippedFiles\SkippedFiles.log");
+                AssignFilePath(gsfLogAppender, @"Debug\gsf\gsf.log");
             }
             catch (Exception ex)
             {
-                debugLogAppender.File = "openXDA.log";
-                skippedFilesAppender.File = "SkippedFiles.log";
                 m_serviceHelper.ErrorLogger.Log(ex);
             }
 
             debugLogAppender.ActivateOptions();
             skippedFilesAppender.ActivateOptions();
             BasicConfigurator.Configure(serviceHelperAppender, debugLogAppender, skippedFilesAppender);
+
+            gsfLogAppender.ActivateOptions();
+            SubscribeToGSFLogger(gsfLogAppender);
         }
 
         private async Task<Host> InitializeNodeHostAsync(Func<AdoDataConnection> connectionFactory, ICLIRegistry cliRegistry)
@@ -884,6 +912,76 @@ namespace openXDA
         }
 
         #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        private static IDisposable SubscribeToGSFLogger(IAppender appender)
+        {
+            LogSubscriber subscriber = Logger.CreateSubscriber(VerboseLevel.All);
+
+            Level ToLog4NetLevel(MessageLevel level)
+            {
+                switch (level)
+                {
+                    case MessageLevel.NA:
+                        return Level.Off;
+
+                    default:
+                    case MessageLevel.Debug:
+                        return Level.Debug;
+
+                    case MessageLevel.Info:
+                        return Level.Info;
+
+                    case MessageLevel.Warning:
+                        return Level.Warn;
+
+                    case MessageLevel.Error:
+                        return Level.Error;
+
+                    case MessageLevel.Critical:
+                        return Level.Critical;
+                }
+            }
+
+            subscriber.NewLogMessage += logMessage =>
+            {
+                if (logMessage.Level == MessageLevel.NA)
+                    return;
+
+                string className = logMessage.TypeName;
+                string methodName = string.Empty;
+                string fileName = string.Empty;
+                string lineNumber = string.Empty;
+                LogStackFrame firstStackFrame = logMessage.CurrentStackTrace.Frames.FirstOrDefault();
+
+                if (!(firstStackFrame is null))
+                {
+                    className = firstStackFrame.ClassName;
+                    methodName = firstStackFrame.MethodName;
+                    fileName = firstStackFrame.FileName;
+                    lineNumber = firstStackFrame.LineNumber.ToString();
+                }
+
+                LocationInfo locationInfo = new LocationInfo(className, methodName, fileName, lineNumber);
+
+                LoggingEventData loggingData = new LoggingEventData();
+                loggingData.LoggerName = logMessage.TypeName;
+                loggingData.TimeStampUtc = logMessage.UtcTime;
+                loggingData.Level = ToLog4NetLevel(logMessage.Level);
+                loggingData.Message = logMessage.Message;
+                loggingData.LocationInfo = locationInfo;
+                loggingData.ExceptionString = logMessage.ExceptionString;
+
+                LoggingEvent loggingEvent = new LoggingEvent(loggingData);
+                appender.DoAppend(loggingEvent);
+            };
+
+            return subscriber;
+        }
 
         #endregion
     }
