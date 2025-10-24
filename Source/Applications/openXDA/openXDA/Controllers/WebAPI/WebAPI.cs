@@ -168,6 +168,28 @@ namespace openXDA.Controllers.WebAPI
             }
         }
 
+        [Route("ByParentEvent/{eventID:int}/SearchableList"), HttpPost]
+        public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData, int eventID)
+        {
+            if (!GetAuthCheck() || !AllowSearch)
+            {
+                return Unauthorized();
+            }
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                if (evt is null)
+                    return Ok();
+
+                // Schema changed, assumption of MeterID being the ParentID of the model is no longer valid.
+                if (ParentKey != "MeterID")
+                    throw new InvalidOperationException("This endpoint is not operational, please contact your administrator.");
+
+                return GetSearchableList(postData, evt.MeterID.ToString());
+            }
+        }
+
         private string GetIDFilter(JArray idObjectList, string fieldName)
         {
             if (idObjectList is null) return null;
