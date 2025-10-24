@@ -386,6 +386,7 @@
     <Compile Include="Controllers\WebAPI\ControllerHelpers.cs" />
     <Compile Include="Controllers\WebAPI\Grafana.cs" />
     <Compile Include="Controllers\WebAPI\LSCVSController.cs" />
+    <Compile Include="Controllers\WebAPI\PQIController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\SystemCenter\SystemCenterController.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
@@ -487,6 +488,10 @@
     <ProjectReference Include="..\..\..\Libraries\OpenXDA.NotificationDataSources\openXDA.NotificationDataSources.csproj">
       <Project>{2813a92f-8cb5-4ec3-976c-8690c90c6dd0}</Project>
       <Name>openXDA.NotificationDataSources</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.PQI\openXDA.PQI.csproj">
+      <Project>{3DEC81F1-9A02-4BBF-8325-F332AC63393E}</Project>
+      <Name>openXDA.PQI</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.Reports\openXDA.Reports.csproj">
       <Project>{656f97d9-4fb6-4f65-a9a6-1a1dde3af634}</Project>
