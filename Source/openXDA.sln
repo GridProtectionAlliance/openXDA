@@ -54,7 +54,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{B554F6A4-C
 		Data\09 - SystemCenter.sql = Data\09 - SystemCenter.sql
 		Data\10 - MiMD.sql = Data\10 - MiMD.sql
 		Data\11 - SEBrowser.sql = Data\11 - SEBrowser.sql
-		12 - PQDigest.sql = 12 - PQDigest.sql
+		Data\12 - PQDigest.sql = Data\12 - PQDigest.sql
 		Data\Dockerfile = Data\Dockerfile
 		Data\startDocker.ps1 = Data\startDocker.ps1
 	EndProjectSection
