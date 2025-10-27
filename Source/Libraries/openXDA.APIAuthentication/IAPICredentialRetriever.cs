@@ -24,7 +24,7 @@
 namespace openXDA.APIAuthentication
 {
     /// <summary>
-    /// Interface of credential retriever object for XDA API helper.
+    /// Interface of credential retriever object for <see cref="XDAAPI"/>.
     /// </summary>
     public interface IAPICredentialRetriever
     {
