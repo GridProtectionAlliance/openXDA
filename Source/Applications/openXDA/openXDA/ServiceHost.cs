@@ -148,6 +148,7 @@ namespace openXDA
         private ServiceMonitors ServiceMonitors { get; set; }
         private Host NodeHost { get; set; }
         private XDAWebHost WebHost { get; set; }
+        private IDisposable LogSubscriber { get; set; }
 
         #endregion
 
@@ -229,6 +230,7 @@ namespace openXDA
             NodeHost?.Dispose();
             WebHost?.Dispose();
             components.Dispose();
+            LogSubscriber?.Dispose();
             Dispose();
         }
 
@@ -345,7 +347,7 @@ namespace openXDA
             BasicConfigurator.Configure(serviceHelperAppender, debugLogAppender, skippedFilesAppender);
 
             gsfLogAppender.ActivateOptions();
-            SubscribeToGSFLogger(gsfLogAppender);
+            LogSubscriber = SubscribeToGSFLogger(gsfLogAppender);
         }
 
         private async Task<Host> InitializeNodeHostAsync(Func<AdoDataConnection> connectionFactory, ICLIRegistry cliRegistry)
