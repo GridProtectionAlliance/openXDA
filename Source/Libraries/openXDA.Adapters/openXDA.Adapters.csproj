@@ -169,7 +169,6 @@
     <Compile Include="SpectralDataDisplayController.cs" />
     <Compile Include="JSONApiController.cs" />
     <Compile Include="OpenSTEController.cs" />
-    <Compile Include="OpenSEEController.cs" />
     <Compile Include="ReportController.cs" />
     <Compile Include="DataQualitySummaryController.cs" />
     <Compile Include="TrendingDataDisplayController.cs" />

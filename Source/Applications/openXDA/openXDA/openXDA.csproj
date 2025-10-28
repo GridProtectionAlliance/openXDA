@@ -389,6 +389,7 @@
     <Compile Include="Controllers\WebAPI\PQIController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\SystemCenter\SystemCenterController.cs" />
+    <Compile Include="Controllers\Widgets\OpenSEEController.cs" />
     <Compile Include="Controllers\Workbench\DataFileController.cs" />
     <Compile Include="DatabaseConnectionFactory.cs" />
     <Compile Include="DebugHost.cs">
