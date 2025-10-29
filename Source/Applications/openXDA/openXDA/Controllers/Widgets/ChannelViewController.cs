@@ -37,11 +37,11 @@ namespace openXDA.Controllers.Widgets
     public class ChannelViewController : ModelController<ChannelDetail>
     {
         /// <summary>
-        /// Endpoint that mimics ChannelView searching with a <see cref="ParentKeyAttribute"/>,
-        /// but replacing the normal <see cref="Meter"/> marked <see cref="ParentKeyAttribute"/> with <see cref="Event"/> .
+        /// Searches <see cref="ChannelDetail"/> records by constraining the search by a <see cref="ParentKeyAttribute"/> of the <see cref="Meter"/> 
+        /// assoicated with the <see cref="Event"/> ID supplied.
         /// </summary>
         /// <param name="postData">Filtering <see cref="FromBodyAttribute"/> information used to filter results.</param>
-        /// <param name="eventID"><see cref="Event"/> ID that is to be used as the <see cref="ParentKeyAttribute"/></param>
+        /// <param name="eventID">ID of the <see cref="Event"/> that is associated with the <see cref="Meter"/> used in the search.</param>
         [Route("ByParentEvent/{eventID:int}/SearchableList"), HttpPost]
         public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData, int eventID)
         {
