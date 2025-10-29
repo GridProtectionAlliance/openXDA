@@ -46,11 +46,9 @@ namespace openXDA.APIAuthentication
         string Host { get; }
 
         /// <summary>
-        /// Function for fetching or refreshing settings. 
+        /// Refreshes the settings from the original source.
         /// </summary>
-        /// <remarks>
-        /// This should refresh and update <see cref="Token"/>, <see cref="Key"/>, and <see cref="Host"/> settings.
-        /// </remarks>
+        /// <returns> A flag indicating if the operation was successful. </returns>
         bool TryRefreshSettings();
 
         #endregion

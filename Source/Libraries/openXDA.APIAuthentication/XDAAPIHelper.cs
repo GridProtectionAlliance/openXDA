@@ -79,8 +79,6 @@ namespace openXDA.APIAuthentication
         public static void InitializeHelper(IAPICredentialRetriever retriever)
         {
             API = new XDAAPI(retriever);
-            if (!API.TryRefreshSettings())
-                throw new ArgumentException("Unable to load settings from retriever.");
         }
 
         /// <summary>

@@ -68,12 +68,11 @@ namespace openXDA.APIAuthentication
         /// <summary>
         /// Creates API object and registers retriever.
         /// </summary>
-        /// <remarks>
-        /// This will NOT intialize the object. You must successfully run <see cref="TryRefreshSettings"/> before using this.
-        /// </remarks>
         public XDAAPI(IAPICredentialRetriever retriever)
         {
             SettingsRetriever = retriever;
+            if (!TryRefreshSettings())
+                throw new ArgumentException("Unable to load settings from retriever.");
         }
 
         /// <summary>
