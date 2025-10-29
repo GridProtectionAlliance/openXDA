@@ -29,9 +29,9 @@ using System.Web.Http;
 using GSF.Data;
 using openXDA.PQI;
 
-namespace openXDA.Controllers.WebAPI
+namespace openXDA.Controllers.Widgets
 {
-    [RoutePrefix("api/PQI")]
+    [RoutePrefix("api/Widgets/PQI")]
     public class PQIController : ApiController
     {
         const string SettingsCategory = "systemSettings";
