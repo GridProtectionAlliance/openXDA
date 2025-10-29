@@ -54,7 +54,6 @@ namespace openXDA.Controllers.Widgets
 
                 int eventId = int.Parse(query["eventId"]);
                 string type = query["type"];
-                string dataType = query["dataType"];
                 int pixels = (int)double.Parse(query["pixels"]);
 
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
@@ -66,8 +65,6 @@ namespace openXDA.Controllers.Widgets
 
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
                 DateTime endTime = (query.ContainsKey("endDate") ? DateTime.Parse(query["endDate"]) : evt.EndTime);
-                if (dataType == "Time")
-                {
                     DataGroup dataGroup;
                     dataGroup = QueryDataGroup(eventId, meter);
                     Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
@@ -110,9 +107,6 @@ namespace openXDA.Controllers.Widgets
 
                     return Ok(returnData);
                 }
-
-                return Ok();
-            }
         }
 
         private DataGroup QueryDataGroup(int eventID, Meter meter)
