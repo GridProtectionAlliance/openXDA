@@ -33,7 +33,6 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.IO;
 using GSF.Web.Model;
-using HIDS;
 using Newtonsoft.Json.Linq;
 using openXDA.APIMiddleware;
 using openXDA.Configuration;
@@ -117,8 +116,8 @@ namespace openXDA.Controllers.WebAPI
                 string assetFilter = GetIDFilter((JArray) postData["AssetList"], "Asset.ID");
                 string meterFilter = GetIDFilter((JArray) postData["MeterList"], "Meter.ID");
 
-                if (string.IsNullOrEmpty(phaseFilter) || 
-                    string.IsNullOrEmpty(channelGroupFilter) || 
+                if (string.IsNullOrEmpty(phaseFilter) ||
+                    string.IsNullOrEmpty(channelGroupFilter) ||
                     string.IsNullOrEmpty(meterFilter)) return new DataTable();
 
                 string filters =
@@ -165,28 +164,6 @@ namespace openXDA.Controllers.WebAPI
                 DataTable table = connection.RetrieveData(query);
 
                 return table;
-            }
-        }
-
-        [Route("ByParentEvent/{eventID:int}/SearchableList"), HttpPost]
-        public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData, int eventID)
-        {
-            if (!GetAuthCheck() || !AllowSearch)
-            {
-                return Unauthorized();
-            }
-
-            using (AdoDataConnection connection = ConnectionFactory())
-            {
-                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
-                if (evt is null)
-                    return Ok();
-
-                // Schema changed, assumption of MeterID being the ParentID of the model is no longer valid.
-                if (ParentKey != "MeterID")
-                    throw new InvalidOperationException("This endpoint is not operational, please contact your administrator.");
-
-                return GetSearchableList(postData, evt.MeterID.ToString());
             }
         }
 

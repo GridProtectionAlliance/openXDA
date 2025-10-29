@@ -386,7 +386,7 @@
     <Compile Include="Controllers\WebAPI\ControllerHelpers.cs" />
     <Compile Include="Controllers\WebAPI\Grafana.cs" />
     <Compile Include="Controllers\WebAPI\LSCVSController.cs" />
-    <Compile Include="Controllers\WebAPI\PQIController.cs" />
+    <Compile Include="Controllers\Widgets\ChannelViewController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\SystemCenter\SystemCenterController.cs" />
     <Compile Include="Controllers\Widgets\OpenSEEController.cs" />
