@@ -38,12 +38,25 @@ using System.Linq;
 
 namespace openXDA.Controllers.Widgets
 {
+    /// <summary>
+    /// Controller that handles fetching openSEE time event data for an openXDA <see cref="Event"/>s
+    /// </summary>
     [RoutePrefix("api/Widgets/OpenSEE")]
     public class OpenSEEController : ApiController
     {
         MemoryCache s_memoryCache = new MemoryCache("OpenXDA");
         protected string SettingsCategory => "systemSettings";
 
+        /// <summary>
+        /// Endpoint that handles fetching openSEE event chart data.
+        /// </summary>
+        /// <remarks>
+        /// This event relies on a query string with the following parameters:<br/>
+        /// eventID that is an <see cref="int"/> that represents the ID of the event in the XDA database.<br/>
+        /// pixels that is an <see cref="int"/> the width resolution of the graph, so that data may be downsampled.<br/>
+        /// type that is a <see cref="string"/> that represents the measurement type of the channels data is being pulled from.<br/>
+        /// Note: supported type values are "Voltage", "Current", and "TripCoilCurrent".
+        /// </remarks>
         [Route("GetData"), HttpGet]
         public IHttpActionResult GetOpenSEEData(int eventID)
         {

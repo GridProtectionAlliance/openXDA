@@ -28,9 +28,13 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using GSF.Data;
 using openXDA.PQI;
+using openXDA.Model;
 
 namespace openXDA.Controllers.Widgets
 {
+    /// <summary>
+    /// Controller that handles fetching PQI information for an openXDA <see cref="Event"/>s
+    /// </summary>
     [RoutePrefix("api/Widgets/PQI")]
     public class PQIController : ApiController
     {
@@ -88,6 +92,11 @@ namespace openXDA.Controllers.Widgets
             }
         }
 
+        /// <summary>
+        /// Retrieves a list of impacted <see cref="Equipment"/> based on an openXDA <see cref="Event"/> ID.
+        /// </summary>
+        /// <param name="eventID">ID of an openXDA <see cref="Event"/></param>
+        /// <returns>List of impacted <see cref="Equipment"/></returns>
         [Route("GetEquipment/{eventID:int}"), HttpGet]
         public async Task<IHttpActionResult> GetEquipment(int eventID)
         {
@@ -96,6 +105,14 @@ namespace openXDA.Controllers.Widgets
             return Ok(await pqiwsQueryHelper.GetAllImpactedEquipmentAsync(eventID));
         }
 
+        /// <summary>
+        /// Retrieves a list of test curves <see cref="Equipment"/> based on an openXDA <see cref="Event"/> ID.
+        /// </summary>
+        /// <param name="eventID">ID of an openXDA <see cref="Event"/></param>
+        /// <returns>
+        /// List of <see cref="List{T}"/> test curves, each one of which is a <see cref="Tuple{T1,T2}"/> of 
+        /// <see cref="TestCurve"/>s and a <see cref="List{T}"/> of <see cref="TestCurvePoint"/>s.
+        /// </returns>
         [Route("GetCurves/{eventID:int}"), HttpGet]
         public async Task<IHttpActionResult> GetCurves(int eventID)
         {
