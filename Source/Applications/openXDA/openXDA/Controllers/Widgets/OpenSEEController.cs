@@ -39,7 +39,7 @@ using System.Linq;
 namespace openXDA.Controllers.Widgets
 {
     /// <summary>
-    /// Controller that handles fetching openSEE time event data for an openXDA <see cref="Event"/>s
+    /// Controller that handles fetching openSEE time event data for an openXDA <see cref="Event"/>
     /// </summary>
     [RoutePrefix("api/Widgets/OpenSEE")]
     public class OpenSEEController : ApiController
