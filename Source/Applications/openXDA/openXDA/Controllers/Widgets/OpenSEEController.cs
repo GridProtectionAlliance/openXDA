@@ -38,12 +38,12 @@ using System.Linq;
 
 namespace openXDA.Controllers.Widgets
 {
-    [RoutePrefix("api/OpenSEE")]
+    [RoutePrefix("api/Widgets/OpenSEE")]
     public class OpenSEEController : ApiController
     {
         MemoryCache s_memoryCache = new MemoryCache("OpenXDA");
-
         protected string SettingsCategory => "systemSettings";
+
         [Route("GetData"), HttpGet]
         public IHttpActionResult GetOpenSEEData(int eventID)
         {
@@ -65,48 +65,48 @@ namespace openXDA.Controllers.Widgets
 
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
                 DateTime endTime = (query.ContainsKey("endDate") ? DateTime.Parse(query["endDate"]) : evt.EndTime);
-                    DataGroup dataGroup;
-                    dataGroup = QueryDataGroup(eventId, meter);
-                    Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
-                    bool hasVoltLN = dataGroup.DataSeries.Select(x => x.SeriesInfo.Channel.Phase.Name).Where(x => x.Contains("N")).Any();
-                    foreach (var series in dataGroup.DataSeries)
+                DataGroup dataGroup;
+                dataGroup = QueryDataGroup(eventId, meter);
+                Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
+                bool hasVoltLN = dataGroup.DataSeries.Select(x => x.SeriesInfo.Channel.Phase.Name).Where(x => x.Contains("N")).Any();
+                foreach (var series in dataGroup.DataSeries)
+                {
+                    List<double[]> data = series.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
+                    if (type == "Voltage")
                     {
-                        List<double[]> data = series.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
-                        if (type == "Voltage")
+                        if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && series.SeriesInfo.Channel.Phase.Name.Contains("N"))
                         {
-                            if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && series.SeriesInfo.Channel.Phase.Name.Contains("N"))
-                            {
-                                if (!returnData.ContainsKey("V" + series.SeriesInfo.Channel.Phase.Name))
-                                    returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
-                            }
-                            else if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && !hasVoltLN)
-                            {
-                                if (!returnData.ContainsKey("V" + series.SeriesInfo.Channel.Phase.Name))
-                                    returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
-                            }
-
+                            if (!returnData.ContainsKey("V" + series.SeriesInfo.Channel.Phase.Name))
+                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
                         }
-                        else if (type == "TripCoilCurrent")
+                        else if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && !hasVoltLN)
                         {
-                            if (series.SeriesInfo.Channel.MeasurementType.Name == "TripCoilCurrent" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
-                            {
-                                if (!returnData.ContainsKey("TCE" + series.SeriesInfo.Channel.Phase.Name))
-                                    returnData.Add("TCE" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
-                            }
-                        }
-                        else
-                        {
-                            if (series.SeriesInfo.Channel.MeasurementType.Name == "Current" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
-                            {
-                                if (!returnData.ContainsKey("I" + series.SeriesInfo.Channel.Phase.Name))
-                                    returnData.Add("I" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
-                            }
+                            if (!returnData.ContainsKey("V" + series.SeriesInfo.Channel.Phase.Name))
+                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
                         }
 
                     }
+                    else if (type == "TripCoilCurrent")
+                    {
+                        if (series.SeriesInfo.Channel.MeasurementType.Name == "TripCoilCurrent" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
+                        {
+                            if (!returnData.ContainsKey("TCE" + series.SeriesInfo.Channel.Phase.Name))
+                                returnData.Add("TCE" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
+                        }
+                    }
+                    else
+                    {
+                        if (series.SeriesInfo.Channel.MeasurementType.Name == "Current" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
+                        {
+                            if (!returnData.ContainsKey("I" + series.SeriesInfo.Channel.Phase.Name))
+                                returnData.Add("I" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
+                        }
+                    }
 
-                    return Ok(returnData);
                 }
+
+                return Ok(returnData);
+            }
         }
 
         private DataGroup QueryDataGroup(int eventID, Meter meter)
