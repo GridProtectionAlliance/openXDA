@@ -165,7 +165,6 @@
     <Compile Include="ControllerConfig.cs" />
     <Compile Include="HIDSController.cs" />
     <Compile Include="NodeController.cs" />
-    <Compile Include="OpenSEECSVDownload.ashx.cs" />
     <Compile Include="SpectralDataDisplayController.cs" />
     <Compile Include="JSONApiController.cs" />
     <Compile Include="OpenSTEController.cs" />
