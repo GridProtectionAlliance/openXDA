@@ -32,36 +32,42 @@ namespace openXDA.Controllers.Widgets
 {
     /// <summary>
     /// Controller that handles fetching and searching of the <see cref="ChannelDetail"/> model.
-    /// </summary>
+    /// </summary> 
     [RoutePrefix("api/Widgets/ChannelView")]
-    public class ChannelViewController : ModelController<ChannelDetail>
+    public class ChannelViewController : ApiController
     {
-        /// <summary>
-        /// Searches <see cref="ChannelDetail"/> records by constraining the search by a <see cref="ParentKeyAttribute"/> of the <see cref="Meter"/> 
-        /// assoicated with the <see cref="Event"/> ID supplied.
-        /// </summary>
-        /// <param name="postData">Filtering <see cref="FromBodyAttribute"/> information used to filter results.</param>
-        /// <param name="eventID">ID of the <see cref="Event"/> that is associated with the <see cref="Meter"/> used in the search.</param>
-        [Route("ByParentEvent/{eventID:int}/SearchableList"), HttpPost]
-        public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData, int eventID)
-        {
-            if (!GetAuthCheck() || !AllowSearch)
-            {
-                return Unauthorized();
-            }
+        Func<AdoDataConnection> m_connectionFactory;
 
-            using (AdoDataConnection connection = ConnectionFactory())
+        /// <summary>
+        /// Constructor to pull  a connection factory from the XDA controller activator.
+        /// </summary> 
+        public ChannelViewController(Func<AdoDataConnection> connectionFactory)
+        {
+            m_connectionFactory = connectionFactory;
+        }
+
+        /// <summary>
+        /// Searches <see cref="ChannelDetail"/> records for trend channels with an RMS <see cref="MeasurementCharacteristic"/>,
+        /// line to neutral <see cref="Phase"/>, and part of the <see cref="Meter"/> associated with the <see cref="Event"/> provided.
+        /// </summary>
+        /// <param name="eventID">ID of the <see cref="Event"/>.</param>
+        [Route("TrendChannels/{eventID:int}"), HttpGet]
+        public virtual IHttpActionResult SearchByEvent(int eventID)
+        {
+            using (AdoDataConnection connection = m_connectionFactory())
             {
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                 if (evt is null)
                     return Ok();
 
-                // Schema changed, assumption of MeterID being the ParentID of the model is no longer valid.
-                if (ParentKey != "MeterID")
-                    throw new InvalidOperationException("Underlying schema has changed. MeterID is no longer the parent key of channels." +
-                        "Method must be corrected in code to utilize the new parent key.");
+                string sql = @"
+	                Trend = {0} AND
+	                MeasurementCharacteristic = {1} AND
+	                Phase like {2} AND
+	                MeterID = (SELECT MeterID FROM [Event] WHERE [Event].ID = {3})
+                ";
 
-                return GetSearchableList(postData, evt.MeterID.ToString());
+                return Ok(new TableOperations<ChannelDetail>(connection).QueryRecordsWhere(sql, 1, "RMS", "%N", eventID));
             }
         }
     }
