@@ -58,10 +58,10 @@ namespace openXDA.Controllers.Widgets
             {
 
                 string sql = @"
-	                Trend = {0} AND
-	                MeasurementCharacteristic = {1} AND
-	                Phase like {2} AND
-	                MeterID = (SELECT MeterID FROM [Event] WHERE [Event].ID = {3})
+	                Trend = 1 AND
+	                MeasurementCharacteristic = \"RMS\" AND
+	                Phase like \"%N\" AND
+	                MeterID IN (SELECT MeterID FROM [Event] WHERE [Event].ID = {0})
                 ";
 
                 return Ok(new TableOperations<ChannelDetail>(connection).QueryRecordsWhere(sql, 1, "RMS", "%N", eventID));
