@@ -944,19 +944,8 @@
     </None>
     <Content Include="wwwroot\Images\Tiles\NotificationPages.png" />
     <Content Include="wwwroot\Images\Tiles\PQBrowser.png" />
+    <Content Include="wwwroot\Layout.cshtml" />
     <Content Include="wwwroot\Logout.cshtml" />
-    <None Include="wwwroot\OpenSEE.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\OpenSEEComtradeDownload.ashx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\OpenSEECSVDownload.ashx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\OpenSTE.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="wwwroot\RestoreEventEmail.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
