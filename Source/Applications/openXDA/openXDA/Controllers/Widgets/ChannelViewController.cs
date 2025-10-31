@@ -56,9 +56,6 @@ namespace openXDA.Controllers.Widgets
         {
             using (AdoDataConnection connection = m_connectionFactory())
             {
-                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
-                if (evt is null)
-                    return Ok();
 
                 string sql = @"
 	                Trend = {0} AND
