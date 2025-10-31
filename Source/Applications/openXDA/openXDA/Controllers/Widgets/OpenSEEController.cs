@@ -46,6 +46,7 @@ namespace openXDA.Controllers.Widgets
     {
         MemoryCache s_memoryCache = new MemoryCache("OpenXDA");
         protected string SettingsCategory => "systemSettings";
+        protected const int MAX_SAMPLE_COUNT = 1200;
 
         /// <summary>
         /// Endpoint that handles fetching openSEE event chart data.
@@ -53,23 +54,21 @@ namespace openXDA.Controllers.Widgets
         /// <remarks>
         /// This event relies on a query string with the following parameters:<br/>
         /// eventID that is an <see cref="int"/> that represents the ID of the event in the XDA database.<br/>
-        /// pixels that is an <see cref="int"/> the width resolution of the graph, so that data may be downsampled.<br/>
         /// type that is a <see cref="string"/> that represents the measurement type of the channels data is being pulled from.<br/>
         /// Note: supported type values are "Voltage", "Current", and "TripCoilCurrent".
         /// </remarks>
-        [Route("GetData"), HttpGet]
-        public IHttpActionResult GetOpenSEEData(int eventID)
+        [Route("GetData/{type}/{eventID:int}")]
+        public IHttpActionResult GetOpenSEEData(string type, int eventID)
         {
             using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
             {
                 Dictionary<string, string> query = Request.QueryParameters();
                 DateTime epoch = new DateTime(1970, 1, 1);
 
-                int eventId = int.Parse(query["eventId"]);
-                string type = query["type"];
-                int pixels = (int)double.Parse(query["pixels"]);
+                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                if (evt is null)
+                    throw new InvalidOperationException("Unable to find event with ID " + eventID);
 
-                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
                 meter.ConnectionFactory = () => new AdoDataConnection(SettingsCategory);
 
@@ -77,7 +76,7 @@ namespace openXDA.Controllers.Widgets
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
                 DateTime endTime = (query.ContainsKey("endDate") ? DateTime.Parse(query["endDate"]) : evt.EndTime);
                 DataGroup dataGroup;
-                dataGroup = QueryDataGroup(eventId, meter);
+                dataGroup = QueryDataGroup(eventID, meter);
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
                 bool hasVoltLN = dataGroup.DataSeries.Select(x => x.SeriesInfo.Channel.Phase.Name).Where(x => x.Contains("N")).Any();
                 foreach (var series in dataGroup.DataSeries)
@@ -88,12 +87,12 @@ namespace openXDA.Controllers.Widgets
                         if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && series.SeriesInfo.Channel.Phase.Name.Contains("N"))
                         {
                             if (!returnData.ContainsKey("V" + series.SeriesInfo.Channel.Phase.Name))
-                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
+                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data));
                         }
                         else if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && !hasVoltLN)
                         {
                             if (!returnData.ContainsKey("V" + series.SeriesInfo.Channel.Phase.Name))
-                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
+                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data));
                         }
 
                     }
@@ -102,7 +101,7 @@ namespace openXDA.Controllers.Widgets
                         if (series.SeriesInfo.Channel.MeasurementType.Name == "TripCoilCurrent" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
                         {
                             if (!returnData.ContainsKey("TCE" + series.SeriesInfo.Channel.Phase.Name))
-                                returnData.Add("TCE" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
+                                returnData.Add("TCE" + series.SeriesInfo.Channel.Phase.Name, Downsample(data));
                         }
                     }
                     else
@@ -110,7 +109,7 @@ namespace openXDA.Controllers.Widgets
                         if (series.SeriesInfo.Channel.MeasurementType.Name == "Current" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
                         {
                             if (!returnData.ContainsKey("I" + series.SeriesInfo.Channel.Phase.Name))
-                                returnData.Add("I" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
+                                returnData.Add("I" + series.SeriesInfo.Channel.Phase.Name, Downsample(data));
                         }
                     }
 
@@ -148,13 +147,13 @@ namespace openXDA.Controllers.Widgets
             return vIDataGroup.ToDataGroup();
         }
 
-        private List<double[]> Downsample(List<double[]> series, int maxSampleCount)
+        private List<double[]> Downsample(List<double[]> series)
         {
             List<double[]> data = new List<double[]>();
             DateTime epoch = new DateTime(1970, 1, 1);
             double startTime = series.First()[0];
             double endTime = series.Last()[0];
-            int step = (int)(endTime * 1000 - startTime * 1000) / maxSampleCount;
+            int step = (int)(endTime * 1000 - startTime * 1000) / MAX_SAMPLE_COUNT;
             if (step < 1)
                 step = 1;
 
