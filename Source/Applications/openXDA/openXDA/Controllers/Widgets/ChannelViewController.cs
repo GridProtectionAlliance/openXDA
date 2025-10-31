@@ -64,7 +64,7 @@ namespace openXDA.Controllers.Widgets
 	                MeterID IN (SELECT MeterID FROM [Event] WHERE [Event].ID = {0})
                 ";
 
-                return Ok(new TableOperations<ChannelDetail>(connection).QueryRecordsWhere(sql, 1, "RMS", "%N", eventID));
+                return Ok(new TableOperations<ChannelDetail>(connection).QueryRecordsWhere(sql, eventID));
             }
         }
     }
