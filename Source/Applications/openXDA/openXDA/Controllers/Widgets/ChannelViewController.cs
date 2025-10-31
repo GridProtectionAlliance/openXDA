@@ -59,8 +59,8 @@ namespace openXDA.Controllers.Widgets
 
                 string sql = @"
 	                Trend = 1 AND
-	                MeasurementCharacteristic = \"RMS\" AND
-	                Phase like \"%N\" AND
+	                MeasurementCharacteristic = 'RMS' AND
+	                Phase like '%N' AND
 	                MeterID IN (SELECT MeterID FROM [Event] WHERE [Event].ID = {0})
                 ";
 
