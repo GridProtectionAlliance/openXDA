@@ -51,12 +51,8 @@ namespace openXDA.Controllers.Widgets
         /// <summary>
         /// Endpoint that handles fetching openSEE event chart data.
         /// </summary>
-        /// <remarks>
-        /// This event relies on a query string with the following parameters:<br/>
-        /// eventID that is an <see cref="int"/> that represents the ID of the event in the XDA database.<br/>
-        /// type that is a <see cref="string"/> that represents the measurement type of the channels data is being pulled from.<br/>
-        /// Note: supported type values are "Voltage", "Current", and "TripCoilCurrent".
-        /// </remarks>
+        /// <param name="type"><see cref="string"/> that represents the measurement type of the channels data is being pulled from. ("Voltage", "Current", "TripCoilCurrent" are valid values)</param>
+        /// <param name="eventID"><see cref="int"/> that represents the ID of the event in the XDA database.</param>
         [Route("GetData/{type}/{eventID:int}")]
         public IHttpActionResult GetOpenSEEData(string type, int eventID)
         {
