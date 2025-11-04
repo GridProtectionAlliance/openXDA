@@ -526,7 +526,6 @@
       <ComponentRef Id="EzDNAServApiNet64" />
 
       <!-- Local NuGet Dependencies -->
-      <ComponentRef Id="MathNet.Filtering" />
       <ComponentRef Id="MathNet.Numerics" />
       <ComponentRef Id="HtmlAgilityPack" />
 
@@ -793,9 +792,6 @@
       </Component>
 
       <!-- Local NuGet Depedencies -->
-      <Component Id="MathNet.Filtering">
-        <File Id="MathNet.Filtering.dll" Name="MathNet.Filtering.dll" Source="$(var.openXDA.TargetDir)MathNet.Filtering.dll" />
-      </Component>
       <Component Id="MathNet.Numerics">
         <File Id="MathNet.Numerics.dll" Name="MathNet.Numerics.dll" Source="$(var.openXDA.TargetDir)MathNet.Numerics.dll" />
       </Component>

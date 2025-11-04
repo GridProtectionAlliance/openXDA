@@ -9,18 +9,6 @@
   <Component Id="wwwroot_Logout_cshtml">
     <File Id="wwwroot_._Logout.cshtml" Name="Logout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Logout.cshtml" />
   </Component>
-  <Component Id="wwwroot_OpenSEE_cshtml">
-    <File Id="wwwroot_._OpenSEE.cshtml" Name="OpenSEE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEE.cshtml" />
-  </Component>
-  <Component Id="wwwroot_OpenSEEComtradeDownload_ashx">
-    <File Id="wwwroot_._OpenSEEComtradeDownload.ashx" Name="OpenSEEComtradeDownload.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEEComtradeDownload.ashx" />
-  </Component>
-  <Component Id="wwwroot_OpenSEECSVDownload_ashx">
-    <File Id="wwwroot_._OpenSEECSVDownload.ashx" Name="OpenSEECSVDownload.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEECSVDownload.ashx" />
-  </Component>
-  <Component Id="wwwroot_OpenSTE_cshtml">
-    <File Id="wwwroot_._OpenSTE.cshtml" Name="OpenSTE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSTE.cshtml" />
-  </Component>
   <Component Id="wwwroot_README_md">
     <File Id="wwwroot_._README.md" Name="README.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\README.md" />
   </Component>

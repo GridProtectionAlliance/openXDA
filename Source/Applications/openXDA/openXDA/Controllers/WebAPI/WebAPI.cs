@@ -33,7 +33,6 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.IO;
 using GSF.Web.Model;
-using HIDS;
 using Newtonsoft.Json.Linq;
 using openXDA.APIMiddleware;
 using openXDA.Configuration;
@@ -117,8 +116,8 @@ namespace openXDA.Controllers.WebAPI
                 string assetFilter = GetIDFilter((JArray) postData["AssetList"], "Asset.ID");
                 string meterFilter = GetIDFilter((JArray) postData["MeterList"], "Meter.ID");
 
-                if (string.IsNullOrEmpty(phaseFilter) || 
-                    string.IsNullOrEmpty(channelGroupFilter) || 
+                if (string.IsNullOrEmpty(phaseFilter) ||
+                    string.IsNullOrEmpty(channelGroupFilter) ||
                     string.IsNullOrEmpty(meterFilter)) return new DataTable();
 
                 string filters =

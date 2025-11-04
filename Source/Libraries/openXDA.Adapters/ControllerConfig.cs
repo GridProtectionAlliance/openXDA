@@ -72,15 +72,6 @@ namespace openXDA.Adapters
             );
 
             config.Routes.MapHttpRoute(
-                name: "OpenSEE",
-                routeTemplate: "api/OpenSEE/{action}",
-                defaults: new
-                {
-                    controller = "OpenSEE"
-                }
-            );
-
-            config.Routes.MapHttpRoute(
                 name: "OpenSTE",
                 routeTemplate: "api/OpenSTE/{action}",
                 defaults: new
