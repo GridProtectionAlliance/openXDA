@@ -249,3 +249,28 @@ FROM
     [SEBrowser.Widget] Widget ON Widget.ID = [SEBrowser.WidgetWidgetCategory].WidgetID LEFT JOIN 
     [SEBrowser.WidgetCategory] Widgetcategory ON Widgetcategory.ID = [SEBrowser.WidgetWidgetCategory].CategoryID
 GO
+
+Create View [EventWidgets.EventView] AS
+	SELECT
+		Event.ID, 
+		Event.StartTime,
+		Event.EndTime,
+		Meter.ID as MeterID, 
+		Meter.Name as MeterName, 
+		EventType.ID as EventTypeID,
+		EventType.Name as EventType,
+		distTbl.PerUnitMagnitude,
+		distTbl.DurationSeconds,
+		distTbl.Phase
+	FROM
+		Event JOIN
+		Meter ON Meter.ID = Event.MeterID JOIN 
+		EventType ON Event.EventTypeID = EventType.ID JOIN
+		(
+			Select Disturbance.DurationSeconds, Disturbance.PerUnitMagnitude, Phase.Name as Phase, Disturbance.EventID
+			From Disturbance JOIN 
+			EventWorstDisturbance ON EventWorstDisturbance.WorstDisturbanceID = Disturbance.ID JOIN
+			Phase ON Phase.ID = Disturbance.PhaseID
+			Where Disturbance.Magnitude in (Select Max(Disturbance.Magnitude) From Disturbance Group By Disturbance.EventID)
+		) as distTbl ON distTbl.EventID = Event.ID
+GO
