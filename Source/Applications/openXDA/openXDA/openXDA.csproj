@@ -388,6 +388,7 @@
     <Compile Include="Controllers\WebAPI\LSCVSController.cs" />
     <Compile Include="Controllers\Widgets\StandardMagDurCurveController.cs" />
     <Compile Include="Controllers\Widgets\TrendController.cs" />
+    <Compile Include="Controllers\Widgets\MeterController.cs" />
     <Compile Include="Controllers\Widgets\PQIController.cs" />
     <Compile Include="Controllers\WebAPI\WebAPI.cs" />
     <Compile Include="Controllers\SystemCenter\SystemCenterController.cs" />
