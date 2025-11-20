@@ -274,3 +274,15 @@ Create View [EventWidgets.EventView] AS
 			Where Disturbance.Magnitude in (Select Max(Disturbance.Magnitude) From Disturbance Group By Disturbance.EventID)
 		) as distTbl ON distTbl.EventID = Event.ID
 GO
+
+Create View [EventWidgets.EventEventTagView] AS
+	SELECT
+		EventEventTag.ID,
+		EventEventTag.EventID,
+		EventEventTag.TagData,
+		EventEventTag.EventTagID,
+		EventTag.Name as TagName
+	FROM 
+		EventEventTag LEFT JOIN 
+		EventTag ON EventEventTag.EventTagID = EventTag.ID
+GO
