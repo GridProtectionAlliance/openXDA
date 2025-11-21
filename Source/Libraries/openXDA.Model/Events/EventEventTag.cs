@@ -30,11 +30,18 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-
+        [ParentKey(typeof(Event))]
         public int EventID { get; set; }
 
         public int EventTagID { get; set; }
 
         public string TagData { get; set; }
+    }
+
+    [TableName("EventWidgets.EventEventTagView")]
+    [AllowSearch, UseEscapedName]
+    public class EventEventTagView : EventEventTag
+    {
+        public string TagName { get; set; }
     }
 }

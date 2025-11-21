@@ -83,6 +83,28 @@ namespace openXDA.Model
         public List<Disturbance> Disturbances { get; set; } = new List<Disturbance>();
     }
 
+    [TableName("EventWidgets.EventView")]
+    [AllowSearch, UseEscapedName]
+    public class EventWidgetsEventView
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        [ParentKey(typeof(Meter))]
+        public int MeterID { get; set; }
+        public string MeterName { get; set; }
+
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime StartTime { get; set; }
+
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime EndTime { get; set; }
+        public string Phase { get; set; }
+        public int EventTypeID { get; set; }
+        public string EventType { get; set; }
+        public double PerUnitMagnitude { get; set; }
+        public double DurationSeconds { get; set; }
+    }
+
     [TableName("EventView")]
     public class EventForDate : EventView { }
 
