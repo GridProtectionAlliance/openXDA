@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  EventWidgetViewController.cs - Gbtc
+//  EventTagViewController.cs - Gbtc
 //
 //  Copyright � 2020, Grid Protection Alliance.  All Rights Reserved.
 //
