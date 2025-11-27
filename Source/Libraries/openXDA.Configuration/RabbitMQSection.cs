@@ -67,5 +67,13 @@ namespace openXDA.Configuration
         [Setting]
         [DefaultValue(false)]
         public bool Enabled { get; set; } = false;
+
+
+        /// <summary>
+        /// Defines the routing key used for outbound messages.
+        /// </summary>
+        [Setting]
+        [DefaultValue("analytic")]
+        public string OutboundRoutingKey { get; set; } = "analytic";
     }
 }

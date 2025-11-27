@@ -132,6 +132,7 @@
     <Compile Include="Types\Grafana\GrafanaAuthProxyController.cs" />
     <Compile Include="Types\Grafana\GrafanaHostingNode.cs" />
     <Compile Include="Types\Grafana\GrafanaQueryHelper.cs" />
+    <Compile Include="Types\RabbitMQ\EventDataMessage.cs" />
     <Compile Include="Types\RabbitMQ\EventTagMessage.cs" />
     <Compile Include="Types\RabbitMQ\RabbitMQNode.cs" />
     <Compile Include="Types\SSAMS\SSAMSNode.cs" />
@@ -155,7 +156,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Types\Grafana\custom.ini" />
   </ItemGroup>

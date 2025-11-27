@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using FaultData.DataAnalysis;
 using GSF;
 using GSF.Configuration;
 using GSF.Data;
@@ -37,6 +38,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -73,12 +75,20 @@ namespace openXDA.Nodes.Types.RabbitMQ
             [HttpGet]
             public void Reconfigure() =>
                 Node.Reconfigure();
+
+            [HttpPost]
+            public void Notify(int fileGroupID, int processingVersion) =>
+             Node.SendFileGroup(fileGroupID, processingVersion);
+
         }
 
         private bool m_disposed { get; set; }
 
-        private IConnection m_connection { get; set; }
-        private IChannel m_channel { get; set; }
+        private IConnection m_inboundConnection { get; set; }
+        private IChannel m_inboundChannel { get; set; }
+        private IConnection m_outboundConnection { get; set; }
+        private IChannel m_outboundChannel { get; set; }
+
         #endregion
 
         public RabbitMQNode(Host host, Node definition, NodeType type)
@@ -108,15 +118,26 @@ namespace openXDA.Nodes.Types.RabbitMQ
         {
             Settings settings = new Settings(Configure);
 
-            if (!(m_channel is null))
+            if (!(m_inboundChannel is null))
             {
-                m_channel.Dispose();
+                m_inboundChannel.Dispose();
 
             }
 
-            if (!(m_connection is null))
+            if (!(m_inboundConnection is null))
             {
-                m_connection.Dispose();
+                m_inboundConnection.Dispose();
+            }
+
+            if (!(m_outboundChannel is null))
+            {
+                m_outboundChannel.Dispose();
+
+            }
+
+            if (!(m_outboundConnection is null))
+            {
+                m_outboundConnection.Dispose();
             }
 
             if (!settings.RabbitMQSettings.Enabled)
@@ -128,17 +149,23 @@ namespace openXDA.Nodes.Types.RabbitMQ
             { 
                 var factory = new ConnectionFactory { HostName = settings.RabbitMQSettings.Hostname, Port = settings.RabbitMQSettings.Port, VirtualHost = "/", UserName = "guest" };
 
-                m_connection = await factory.CreateConnectionAsync().ConfigureAwait(false);
-                m_channel = await m_connection.CreateChannelAsync().ConfigureAwait(false);
-                await m_channel.ExchangeDeclareAsync(exchange: settings.RabbitMQSettings.ExchangeName, type: ExchangeType.Direct, durable: true).ConfigureAwait(false);
+                m_inboundConnection = await factory.CreateConnectionAsync().ConfigureAwait(false);
+                m_outboundConnection = await factory.CreateConnectionAsync().ConfigureAwait(false);
 
-                await m_channel.QueueDeclareAsync(queue: "hello", durable: true, exclusive: true, autoDelete: false, arguments: null);
+                m_inboundChannel = await m_inboundConnection.CreateChannelAsync().ConfigureAwait(false);
+                m_outboundChannel = await m_outboundConnection.CreateChannelAsync().ConfigureAwait(false);
+
+                await m_outboundChannel.ExchangeDeclareAsync(exchange: settings.RabbitMQSettings.ExchangeName, type: ExchangeType.Direct, durable: true).ConfigureAwait(false);
+                await m_inboundChannel.ExchangeDeclareAsync(exchange: settings.RabbitMQSettings.ExchangeName, type: ExchangeType.Direct, durable: true).ConfigureAwait(false);
+
+                await m_inboundChannel.QueueDeclareAsync(queue: "", durable: false, exclusive: true, autoDelete: false, arguments: null);
 
 
-                QueueDeclareOk queueDeclareResult = await m_channel.QueueDeclareAsync();
-                await m_channel.QueueBindAsync(queue: queueDeclareResult.QueueName, exchange: settings.RabbitMQSettings.ExchangeName, routingKey: settings.RabbitMQSettings.RoutingKey).ConfigureAwait(false);
+                QueueDeclareOk queueDeclareResult = await m_inboundChannel.QueueDeclareAsync();
 
-                var consumer = new AsyncEventingBasicConsumer(m_channel);
+                await m_inboundChannel.QueueBindAsync(queue: queueDeclareResult.QueueName, exchange: settings.RabbitMQSettings.ExchangeName, routingKey: settings.RabbitMQSettings.RoutingKey).ConfigureAwait(false);
+
+                var consumer = new AsyncEventingBasicConsumer(m_inboundChannel);
                 consumer.ReceivedAsync += (model, ea) =>
                 {
                     var body = ea.Body.ToArray();
@@ -147,7 +174,7 @@ namespace openXDA.Nodes.Types.RabbitMQ
                     return Task.CompletedTask;
                 };
 
-                Task.Run(() => m_channel.BasicConsumeAsync(queueDeclareResult.QueueName, autoAck: true, consumer: consumer));
+                Task.Run(() => m_inboundChannel.BasicConsumeAsync(queueDeclareResult.QueueName, autoAck: true, consumer: consumer));
             }
             catch (Exception ex)
             {
@@ -197,14 +224,86 @@ namespace openXDA.Nodes.Types.RabbitMQ
 
             try
             {
-                m_channel.Dispose();
-                m_connection.Dispose();
+                m_outboundChannel.Dispose();
+                m_inboundChannel.Dispose();
+                m_inboundConnection.Dispose();
+                m_outboundConnection.Dispose();
 
             }
             finally
             {
                 m_disposed = true;
             }
+        }
+
+        public void SendFileGroup(int fileGroupID, int processingVersion)
+        {
+            Settings settings = new Settings(Configure);
+            if (!settings.RabbitMQSettings.Enabled)
+                return;
+
+            if (m_outboundChannel is null)
+            {
+                Log.Error("Cannot send message to RabbitMQ server: No connection established.");
+                return;
+            }
+
+            // Find All Events
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                List<Event> events = new TableOperations<Event>(connection).QueryRecordsWhere("FileGroupID = {0}", fileGroupID).ToList();
+                TableOperations<EventType> eventTypeTable = new TableOperations<EventType>(connection);
+                foreach (Event evt in events)
+                {
+                    // Load Event Type
+                    EventType eventType = eventTypeTable.QueryRecordWhere("ID = {0}", evt.EventTypeID);
+                    
+                    VIDataGroup vIData = QueryVIDataGroup(evt.ID, evt.MeterID);
+
+                    if (vIData.DefinedNeutralVoltages == 0)
+                    {
+                        Log.Warn($"Event {evt.ID} does not have voltage data defined.  Skipping event.");
+                        continue;
+                    }
+
+                    EventDataMessage eventDataMessage = new EventDataMessage()
+                    {
+                        event_id = evt.ID,
+                        Va = vIData.VA?.DataPoints.Select(item => item.Value).ToArray() ?? Array.Empty<double>(),
+                        Vb = vIData.VB?.DataPoints.Select(item => item.Value).ToArray() ?? Array.Empty<double>(),
+                        Vc = vIData.VC?.DataPoints.Select(item => item.Value).ToArray() ?? Array.Empty<double>(),
+                        sample_rate = evt.SamplesPerCycle,
+                        sample_frequency = vIData.VA.SampleRate,
+                        event_start_idx = 0,
+                        event_type = eventType.Name
+                    };
+
+                    byte[] message = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventDataMessage));
+
+                    m_outboundChannel.BasicPublishAsync(exchange: settings.RabbitMQSettings.ExchangeName, routingKey: settings.RabbitMQSettings.OutboundRoutingKey, body: message);
+                }
+
+                Log.Info($"Sent {events.Count} Events from Filegroup {fileGroupID} to RabbitMQ Server.");
+
+            }
+        }
+
+        private VIDataGroup QueryVIDataGroup(int eventID, int meterId)
+        {
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                List<byte[]> data = ChannelData.DataFromEvent(eventID, CreateDbConnection);
+                Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", meterId);
+                meter.ConnectionFactory = CreateDbConnection;
+                return ToVIDataGroup(meter, data);
+            }
+        }
+
+        private static VIDataGroup ToVIDataGroup(Meter meter, List<byte[]> data)
+        {
+            DataGroup dataGroup = new DataGroup();
+            dataGroup.FromData(meter, data);
+            return new VIDataGroup(dataGroup);
         }
 
         #endregion
@@ -214,6 +313,7 @@ namespace openXDA.Nodes.Types.RabbitMQ
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(RabbitMQNode));
 
+      
         #endregion
     }
 }
