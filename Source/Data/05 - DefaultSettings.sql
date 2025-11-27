@@ -449,6 +449,24 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LSCVS.TypeThreshold', '0.95', '0.95')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('RabbitMQ.Enabled', 'false', 'false')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('RabbitMQ.ExchangeName', 'openxda', 'openxda')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('RabbitMQ.RoutingKey', 'openxda', 'openxda')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('RabbitMQ.Hostname', 'localhost', 'localhost')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('RabbitMQ.Port', '5672', '5672')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('RabbitMQ.OutboundRoutingKey', 'analytic', 'analytic')
+GO
+
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
 
