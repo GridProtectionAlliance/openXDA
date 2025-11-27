@@ -325,6 +325,9 @@ GO
 INSERT INTO NodeType VALUES('Grafana', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.Grafana.GrafanaHostingNode')
 GO
 
+INSERT INTO NodeType VALUES('RabbitMQ', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.RabbitMQ.RabbitMQNode')
+GO
+
 CREATE TABLE Node
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -361,6 +364,9 @@ INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes
 GO
 
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.DataPusher.DataPusherNode'), NULL, NULL, 'Data Pusher', 1)
+GO
+
+INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.RabbitMQ.RabbitMQNode'), NULL, NULL, 'RabbitMQ Listener', 1)
 GO
 
 CREATE TABLE NodeSetting
