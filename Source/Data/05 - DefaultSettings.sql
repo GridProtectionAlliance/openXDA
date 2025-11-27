@@ -464,6 +464,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('RabbitMQ.Port', '5672', '5672')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('RabbitMQ.OutboundRoutingKey', 'analytic', 'analytic')
+GO
+
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
 
