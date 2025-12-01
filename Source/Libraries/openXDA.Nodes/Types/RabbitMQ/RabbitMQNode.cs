@@ -21,36 +21,30 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web.Http;
+using System.Web.Http.Controllers;
 using FaultData.DataAnalysis;
-using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.IO;
-using GSF.Parsing;
 using log4net;
 using Newtonsoft.Json;
 using openXDA.Configuration;
 using openXDA.Model;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Controllers;
 
 namespace openXDA.Nodes.Types.RabbitMQ
 {
     public class RabbitMQNode : NodeBase, IDisposable
     {
         #region [ Members ]
-
 
         // Nested Types
         private class Settings
@@ -62,8 +56,6 @@ namespace openXDA.Nodes.Types.RabbitMQ
             [SettingName(RabbitMQSection.CategoryName)]
             public RabbitMQSection RabbitMQSettings { get; } = new RabbitMQSection();
         }
-
-        private Action<object> Configurator { get; set; }
 
         private class RabbitMQWebController : ApiController
         {
@@ -82,21 +74,31 @@ namespace openXDA.Nodes.Types.RabbitMQ
 
         }
 
-        private bool m_disposed { get; set; }
-
-        private IConnection m_inboundConnection { get; set; }
-        private IChannel m_inboundChannel { get; set; }
-        private IConnection m_outboundConnection { get; set; }
-        private IChannel m_outboundChannel { get; set; }
-
         #endregion
+
+        #region [ Constructors ]
 
         public RabbitMQNode(Host host, Node definition, NodeType type)
             : base(host, definition, type)
         {
             Configurator = GetConfigurator();
-            Connect();
+            ConnectAsync();
         }
+
+        #endregion
+
+        #region [ Properties ]
+
+        private Action<object> Configurator { get; set; }
+
+        private IConnection InboundConnection { get; set; }
+        private IChannel InboundChannel { get; set; }
+        private IConnection OutboundConnection { get; set; }
+        private IChannel OutboundChannel { get; set; }
+
+        private bool IsDisposed { get; set; }
+
+        #endregion
 
         #region [ Methods ]
 
@@ -108,64 +110,61 @@ namespace openXDA.Nodes.Types.RabbitMQ
         protected override void OnReconfigure(Action<object> configurator)
         {
             Configure(configurator);
-            Connect();
+            ConnectAsync();
         }
 
         /// <summary>
         /// Create a Connection to the RabbitMQServer
         /// </summary>
-        private async Task Connect()
+        private async Task ConnectAsync()
         {
             Settings settings = new Settings(Configure);
 
-            if (!(m_inboundChannel is null))
+            if (!(InboundChannel is null))
             {
-                m_inboundChannel.Dispose();
-
+                InboundChannel.Dispose();
             }
 
-            if (!(m_inboundConnection is null))
+            if (!(InboundConnection is null))
             {
-                m_inboundConnection.Dispose();
+                InboundConnection.Dispose();
             }
 
-            if (!(m_outboundChannel is null))
+            if (!(OutboundChannel is null))
             {
-                m_outboundChannel.Dispose();
-
+                OutboundChannel.Dispose();
             }
 
-            if (!(m_outboundConnection is null))
+            if (!(OutboundConnection is null))
             {
-                m_outboundConnection.Dispose();
+                OutboundConnection.Dispose();
             }
 
             if (!settings.RabbitMQSettings.Enabled)
                 return;
 
-
             Log.Debug("Creating Connection to RabbitMQ Server.");
+
             try 
             { 
                 var factory = new ConnectionFactory { HostName = settings.RabbitMQSettings.Hostname, Port = settings.RabbitMQSettings.Port, VirtualHost = "/", UserName = "guest" };
 
-                m_inboundConnection = await factory.CreateConnectionAsync().ConfigureAwait(false);
-                m_outboundConnection = await factory.CreateConnectionAsync().ConfigureAwait(false);
+                InboundConnection = await factory.CreateConnectionAsync().ConfigureAwait(false);
+                OutboundConnection = await factory.CreateConnectionAsync().ConfigureAwait(false);
 
-                m_inboundChannel = await m_inboundConnection.CreateChannelAsync().ConfigureAwait(false);
-                m_outboundChannel = await m_outboundConnection.CreateChannelAsync().ConfigureAwait(false);
+                InboundChannel = await InboundConnection.CreateChannelAsync().ConfigureAwait(false);
+                OutboundChannel = await OutboundConnection.CreateChannelAsync().ConfigureAwait(false);
 
-                await m_outboundChannel.ExchangeDeclareAsync(exchange: settings.RabbitMQSettings.ExchangeName, type: ExchangeType.Direct, durable: true).ConfigureAwait(false);
-                await m_inboundChannel.ExchangeDeclareAsync(exchange: settings.RabbitMQSettings.ExchangeName, type: ExchangeType.Direct, durable: true).ConfigureAwait(false);
+                await OutboundChannel.ExchangeDeclareAsync(exchange: settings.RabbitMQSettings.ExchangeName, type: ExchangeType.Direct, durable: true).ConfigureAwait(false);
+                await InboundChannel.ExchangeDeclareAsync(exchange: settings.RabbitMQSettings.ExchangeName, type: ExchangeType.Direct, durable: true).ConfigureAwait(false);
 
-                await m_inboundChannel.QueueDeclareAsync(queue: "", durable: false, exclusive: true, autoDelete: false, arguments: null);
+                await InboundChannel.QueueDeclareAsync(queue: "", durable: false, exclusive: true, autoDelete: false, arguments: null).ConfigureAwait(false);
 
+                QueueDeclareOk queueDeclareResult = await InboundChannel.QueueDeclareAsync().ConfigureAwait(false);
 
-                QueueDeclareOk queueDeclareResult = await m_inboundChannel.QueueDeclareAsync();
+                await InboundChannel.QueueBindAsync(queue: queueDeclareResult.QueueName, exchange: settings.RabbitMQSettings.ExchangeName, routingKey: settings.RabbitMQSettings.RoutingKey).ConfigureAwait(false);
 
-                await m_inboundChannel.QueueBindAsync(queue: queueDeclareResult.QueueName, exchange: settings.RabbitMQSettings.ExchangeName, routingKey: settings.RabbitMQSettings.RoutingKey).ConfigureAwait(false);
-
-                var consumer = new AsyncEventingBasicConsumer(m_inboundChannel);
+                var consumer = new AsyncEventingBasicConsumer(InboundChannel);
                 consumer.ReceivedAsync += (model, ea) =>
                 {
                     var body = ea.Body.ToArray();
@@ -174,13 +173,12 @@ namespace openXDA.Nodes.Types.RabbitMQ
                     return Task.CompletedTask;
                 };
 
-                Task.Run(() => m_inboundChannel.BasicConsumeAsync(queueDeclareResult.QueueName, autoAck: true, consumer: consumer));
+                Task.Run(() => InboundChannel.BasicConsumeAsync(queueDeclareResult.QueueName, autoAck: true, consumer: consumer));
             }
             catch (Exception ex)
             {
                 Log.Error("Unable to Connect to RabbitMQ Server", ex);
             }
-
         }
 
         private void MessageCallback(string message)
@@ -219,20 +217,19 @@ namespace openXDA.Nodes.Types.RabbitMQ
 
         public void Dispose()
         {
-            if (m_disposed)
+            if (IsDisposed)
                 return;
 
             try
             {
-                m_outboundChannel.Dispose();
-                m_inboundChannel.Dispose();
-                m_inboundConnection.Dispose();
-                m_outboundConnection.Dispose();
-
+                OutboundChannel.Dispose();
+                InboundChannel.Dispose();
+                InboundConnection.Dispose();
+                OutboundConnection.Dispose();
             }
             finally
             {
-                m_disposed = true;
+                IsDisposed = true;
             }
         }
 
@@ -242,7 +239,7 @@ namespace openXDA.Nodes.Types.RabbitMQ
             if (!settings.RabbitMQSettings.Enabled)
                 return;
 
-            if (m_outboundChannel is null)
+            if (OutboundChannel is null)
             {
                 Log.Error("Cannot send message to RabbitMQ server: No connection established.");
                 return;
@@ -280,11 +277,10 @@ namespace openXDA.Nodes.Types.RabbitMQ
 
                     byte[] message = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventDataMessage));
 
-                    m_outboundChannel.BasicPublishAsync(exchange: settings.RabbitMQSettings.ExchangeName, routingKey: settings.RabbitMQSettings.OutboundRoutingKey, body: message);
+                    OutboundChannel.BasicPublishAsync(exchange: settings.RabbitMQSettings.ExchangeName, routingKey: settings.RabbitMQSettings.OutboundRoutingKey, body: message);
                 }
 
                 Log.Info($"Sent {events.Count} Events from Filegroup {fileGroupID} to RabbitMQ Server.");
-
             }
         }
 
@@ -313,7 +309,6 @@ namespace openXDA.Nodes.Types.RabbitMQ
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(RabbitMQNode));
 
-      
         #endregion
     }
 }

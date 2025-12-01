@@ -21,30 +21,11 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.Parsing;
-using log4net;
 using Newtonsoft.Json.Linq;
-using openXDA.Configuration;
-using openXDA.Model;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Controllers;
 
 namespace openXDA.Nodes.Types.RabbitMQ
 {
-    public class EventTagMessage 
+    public class EventTagMessage
     {
         public int event_id { get; set; }
         public string event_type { get; set; }

@@ -21,17 +21,14 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.ComponentModel;
 using System.Configuration;
-using GSF.Configuration;
 
 namespace openXDA.Configuration
 {
     public class RabbitMQSection
     {
         public const string CategoryName = "RabbitMQ";
-
 
         /// <summary>
         /// The RabbbitMQ Server Hostname or IP Address.
