@@ -9,12 +9,12 @@ ENV sa_password="_" \
     onStartSQLFile=""
 
 ADD https://go.microsoft.com/fwlink/p/?linkid=2216019&clcid=0x409&culture=en-us&country=us c:/setup/
-RUN C:/setup/SQL2022-SSEI-Expr.exe /Q /Action=Install /IAcceptSQLServerLicenseTerms
+RUN C:/setup/SQL2025-SSEI-Expr.exe /Q /Action=Install /IAcceptSQLServerLicenseTerms
 
-RUN POWERSHELL Set-itemproperty -path ('HKLM:\software\microsoft\microsoft sql server\mssql16.SQLEXPRESS\mssqlserver\supersocketnetlib\tcp\ipall') -name tcpdynamicports -value '' ; \
-    Set-itemproperty -path ('HKLM:\software\microsoft\microsoft sql server\mssql16.SQLEXPRESS\mssqlserver\supersocketnetlib\tcp\ipall') -name tcpdynamicports -value '' ; \
-    Set-itemproperty -path ('HKLM:\software\microsoft\microsoft sql server\mssql16.SQLEXPRESS\mssqlserver\supersocketnetlib\tcp\ipall') -name tcpport -value 1433 ; \
-    Set-itemproperty -path ('HKLM:\software\microsoft\microsoft sql server\mssql16.SQLEXPRESS\mssqlserver') -name LoginMode -value 2; 
+RUN POWERSHELL Set-itemproperty -path ('HKLM:\software\microsoft\microsoft sql server\mssql17.SQLEXPRESS\mssqlserver\supersocketnetlib\tcp\ipall') -name tcpdynamicports -value '' ; \
+    Set-itemproperty -path ('HKLM:\software\microsoft\microsoft sql server\mssql17.SQLEXPRESS\mssqlserver\supersocketnetlib\tcp\ipall') -name tcpdynamicports -value '' ; \
+    Set-itemproperty -path ('HKLM:\software\microsoft\microsoft sql server\mssql17.SQLEXPRESS\mssqlserver\supersocketnetlib\tcp\ipall') -name tcpport -value 1433 ; \
+    Set-itemproperty -path ('HKLM:\software\microsoft\microsoft sql server\mssql17.SQLEXPRESS\mssqlserver') -name LoginMode -value 2;
 
 RUN POWERSHELL SQLPS.EXE
 RUN POWERSHELL Import-Module SQLPS; \
