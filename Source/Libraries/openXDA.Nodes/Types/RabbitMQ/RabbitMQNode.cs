@@ -110,7 +110,7 @@ namespace openXDA.Nodes.Types.RabbitMQ
         protected override void OnReconfigure(Action<object> configurator)
         {
             Configure(configurator);
-            ConnectAsync();
+            ConnectAsync().GetAwaiter().GetResult();
         }
 
         /// <summary>
