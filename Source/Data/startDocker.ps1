@@ -27,23 +27,23 @@ if($sa_password -ne "_")
 {
     Write-Host "Changing SA login credentials"
     $sqlcmd = "ALTER LOGIN sa with password=" +"'" + $sa_password + "'" + ";ALTER LOGIN sa ENABLE;"
-    sqlcmd -S "localhost\SQLEXPRESS" -Q $sqlcmd
+    sqlcmd -S "localhost\SQLEXPRESS" -C -Q $sqlcmd
 }
 
 Write-Host "Generating openXDA login credentials"
 $sqlcmd = "CREATE LOGIN " + $openXDAUser + " with password=" +"'" + $openXDAPassword + "'" + "; CREATE USER " + $openXDAUser + " FOR LOGIN " + $openXDAUser +";  "
-sqlcmd -S "localhost\SQLEXPRESS" -Q $sqlcmd
+sqlcmd -S "localhost\SQLEXPRESS" -C -Q $sqlcmd
 $sqlcmd = "Use openXDA; EXEC sp_AddUser '" + $openXDAUser + "', '" + $openXDAUser + "', 'db_owner';"
-sqlcmd -S "localhost\SQLEXPRESS" -Q $sqlcmd
+sqlcmd -S "localhost\SQLEXPRESS" -C -Q $sqlcmd
 
 if ($onStartSQL -ne "") {
     Write-Host "Running On Start SQL"
-    sqlcmd -S "localhost\SQLEXPRESS" -Q $onStartSQL
+    sqlcmd -S "localhost\SQLEXPRESS" -C -Q $onStartSQL
 }
 
 if ($onStartSQLFile -ne "") {
     Write-Host "Running File $onStartSQLFile" 
-    sqlcmd -S "localhost\SQLEXPRESS" -d openXDA -i "$onStartSQLFile"
+    sqlcmd -S "localhost\SQLEXPRESS" -C -d openXDA -i "$onStartSQLFile"
 }
 
 

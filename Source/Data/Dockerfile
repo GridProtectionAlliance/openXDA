@@ -29,11 +29,11 @@ COPY ./*.sql c:/scripts/sql/
 RUN POWERSHELL ls 'c:/scripts/sql/'
 # Generate openXDA Database
 RUN POWERSHELL Start-SERVICE -Name 'SQL Server (SQLEXPRESS)'; \
-    sqlcmd -S 'localhost\SQLEXPRESS' -Q 'CREATE DATABASE [openXDA]'
+    sqlcmd -S 'localhost\SQLEXPRESS' -C -Q 'CREATE DATABASE [openXDA]'
 
 RUN POWERSHELL Start-SERVICE -Name 'SQL Server (SQLEXPRESS)'; \
 foreach ($file in Get-ChildItem 'c:/scripts/sql/') { \
-    sqlcmd -S 'localhost\SQLEXPRESS' -d openXDA -i $file.FullName \
+    sqlcmd -S 'localhost\SQLEXPRESS' -C -d openXDA -i $file.FullName \
 }
 
 EXPOSE 1433/tcp
