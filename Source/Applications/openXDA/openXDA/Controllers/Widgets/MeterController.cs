@@ -31,5 +31,8 @@ namespace openXDA.Controllers.Widgets
     /// Controller that handles fetching and searching of the <see cref="DetailedMeter"/> model.
     /// </summary>
     [RoutePrefix("api/Widgets/DetailedMeter")]
-    public class DetailedWidgetMeterController : ModelController<DetailedMeter> { }
+    public class DetailedWidgetMeterController : ModelController<DetailedMeter> 
+    {
+        protected override bool ReturnPivots => true;
+    }
 }
