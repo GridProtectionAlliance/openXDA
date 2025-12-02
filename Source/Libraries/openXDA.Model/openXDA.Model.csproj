@@ -175,6 +175,8 @@
     <Compile Include="Nodes\Node.cs" />
     <Compile Include="Nodes\NodeSetting.cs" />
     <Compile Include="Note.cs" />
+    <Compile Include="PQDigest\HomeScreenWidget.cs" />
+    <Compile Include="PQDigest\Widget.cs" />
     <Compile Include="SEBrowser\D3DataSeries.cs" />
     <Compile Include="SEBrowser\DetailedSeries.cs" />
     <Compile Include="SEBrowser\TrendChannel.cs" />

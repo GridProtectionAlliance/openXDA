@@ -1,7 +1,7 @@
-//******************************************************************************************************
-//  EventWidgetViewController.cs - Gbtc
+﻿//******************************************************************************************************
+//  Widget.cs - Gbtc
 //
-//  Copyright � 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,23 +16,46 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  10/28/2025 - G. Santos
+//  08/10/2020 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-
-using System.Web.Http;
+using GSF;
+using GSF.Data.Model;
+using GSF.Web;
 using GSF.Web.Model;
-using SystemCenter.Model;
+using System;
+using System.Web;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
-namespace openXDA.Controllers.Widgets
+
+namespace PQDigest.Model
 {
     /// <summary>
-    /// Controller that handles fetching and searching of the <see cref="DetailedMeter"/> model.
+    /// Defines a widget used in PQDigest
     /// </summary>
-    [RoutePrefix("api/Widgets/DetailedMeter")]
-    public class DetailedWidgetMeterController : ModelController<DetailedMeter> 
+    [TableName("PQDigest.EventViewWidget"), UseEscapedName]
+    [PostRoles("Administrator")]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [AllowSearch]
+    public class Widget
     {
-        protected override bool ReturnPivots => true;
+        #region [ Properties ]
+
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        public string Name { get; set; }
+
+        public string Setting { get; set; }
+
+        public string Type { get; set; }
+
+        #endregion
     }
+
 }
