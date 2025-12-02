@@ -37,7 +37,7 @@ namespace PQDigest.Model
     /// <summary>
     /// Defines a widget used in PQDigest
     /// </summary>
-    [TableName("PQBrowser.EventViewWidget"), UseEscapedName]
+    [TableName("PQDigest.EventViewWidget"), UseEscapedName]
     [PostRoles("Administrator")]
     [DeleteRoles("Administrator")]
     [PatchRoles("Administrator")]

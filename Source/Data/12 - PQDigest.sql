@@ -19,7 +19,7 @@ GO
 INSERT INTO [PQDigest.Setting](Name, Value, DefaultValue) VALUES('XDA.APIToken', '', '')
 GO
 
-CREATE TABLE [PQBrowser.EventViewWidget] (
+CREATE TABLE [PQDigest.EventViewWidget] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name varchar(50) NOT NULL DEFAULT(1),
     Setting varchar(max) NOT NULL Default('{}'),
@@ -27,20 +27,20 @@ CREATE TABLE [PQBrowser.EventViewWidget] (
 )
 GO
 
-INSERT [PQBrowser.EventViewWidget] (Name, Type) VALUES ('OpenSEE','OpenSEE')
+INSERT [PQDigest.EventViewWidget] (Name, Type) VALUES ('OpenSEE','OpenSEE')
 GO
 
-INSERT [PQBrowser.EventViewWidget] (Name, Type) VALUES ('TrendGraph','TrendGraph')
+INSERT [PQDigest.EventViewWidget] (Name, Type) VALUES ('TrendGraph','TrendGraph')
 GO
 
-INSERT [PQBrowser.EventViewWidget] (Name, Type) VALUES ('PQICurves','PQICurves')
+INSERT [PQDigest.EventViewWidget] (Name, Type) VALUES ('PQICurves','PQICurves')
 GO
 
-INSERT [PQBrowser.EventViewWidget] (Name, Type) VALUES ('pqi','pqi')
+INSERT [PQDigest.EventViewWidget] (Name, Type) VALUES ('pqi','pqi')
 GO
 
 
-CREATE TABLE [PQBrowser.HomeScreenWidget] (
+CREATE TABLE [PQDigest.HomeScreenWidget] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name varchar(50) NOT NULL DEFAULT(1),
     Setting varchar(max) NOT NULL Default('{}'),
@@ -48,15 +48,15 @@ CREATE TABLE [PQBrowser.HomeScreenWidget] (
     TimeFrame INT NOT NULL Default(30)
 )
 
-INSERT [PQBrowser.HomeScreenWidget] (Name, Type, TimeFrame) VALUES ('EPRI PQ Health Index - Last 30 Days','PQHealthIndex', 30)
+INSERT [PQDigest.HomeScreenWidget] (Name, Type, TimeFrame) VALUES ('EPRI PQ Health Index - Last 30 Days','PQHealthIndex', 30)
 GO
 
-INSERT [PQBrowser.HomeScreenWidget] (Name, Type, TimeFrame) VALUES ('Historical Event Counts - Last 30 Days','EventCountChart', 30)
+INSERT [PQDigest.HomeScreenWidget] (Name, Type, TimeFrame) VALUES ('Historical Event Counts - Last 30 Days','EventCountChart', 30)
 GO
 
-INSERT [PQBrowser.HomeScreenWidget] (Name, Type, TimeFrame) VALUES ('Magnitude Duration Chart - Last 30 Days','MagDurChart', 30)
+INSERT [PQDigest.HomeScreenWidget] (Name, Type, TimeFrame) VALUES ('Magnitude Duration Chart - Last 30 Days','MagDurChart', 30)
 GO
 
-INSERT [PQBrowser.HomeScreenWidget] (Name, Type, TimeFrame) VALUES ('Meter Activity - Last 30 Days','EventCountTable', 30)
+INSERT [PQDigest.HomeScreenWidget] (Name, Type, TimeFrame) VALUES ('Meter Activity - Last 30 Days','EventCountTable', 30)
 GO
 
