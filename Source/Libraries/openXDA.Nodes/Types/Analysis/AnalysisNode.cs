@@ -349,6 +349,7 @@ namespace openXDA.Nodes.Types.Analysis
             TryLogDataOperationFailures(dataOperationFailures);
             _ = NotifyEventEmailNode(fileGroup.ID, fileGroup.ProcessingVersion);
             _ = NotifyEPRICapBankAnalysisNode(fileGroup.ID, fileGroup.ProcessingVersion);
+            _ = NotifyRabbitMQNode(fileGroup.ID, fileGroup.ProcessingVersion);
 
             return status;
         }
@@ -572,6 +573,46 @@ namespace openXDA.Nodes.Types.Analysis
 
                     string logMessage = new StringBuilder()
                         .AppendLine("EPRI Cap Bank Analysis notification failed.")
+                        .AppendLine($"Status: {response.StatusCode}")
+                        .AppendLine("Body:")
+                        .Append(body)
+                        .ToString();
+
+                    Log.Debug(logMessage);
+                }
+            }
+        }
+
+        private async Task NotifyRabbitMQNode(int fileGroupID, int processingVersion)
+        {
+            Type nodeType = typeof(RabbitMQ.RabbitMQNode);
+            string typeName = nodeType.FullName;
+            int? result = QueryNodeID(typeName);
+
+            if (result is null)
+                return;
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                int nodeID = result.GetValueOrDefault();
+                string action = "Notify";
+                NameValueCollection queryParameters = new NameValueCollection();
+                queryParameters.Add("fileGroupID", fileGroupID.ToString());
+                queryParameters.Add("processingVersion", processingVersion.ToString());
+
+                string url = Host.BuildURL(nodeID, action, queryParameters);
+                request.Method = HttpMethod.Post;
+                request.RequestUri = new Uri(url);
+            }
+
+            using (HttpResponseMessage response = await Host.SendWebRequestAsync(ConfigureRequest))
+            {
+                if (!response.IsSuccessStatusCode)
+                {
+                    string body = await response.Content.ReadAsStringAsync();
+
+                    string logMessage = new StringBuilder()
+                        .AppendLine("RabbitMQ notification failed.")
                         .AppendLine($"Status: {response.StatusCode}")
                         .AppendLine("Body:")
                         .Append(body)
