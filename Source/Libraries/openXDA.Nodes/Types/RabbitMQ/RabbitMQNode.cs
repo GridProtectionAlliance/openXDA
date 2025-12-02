@@ -82,7 +82,7 @@ namespace openXDA.Nodes.Types.RabbitMQ
             : base(host, definition, type)
         {
             Configurator = GetConfigurator();
-            ConnectAsync();
+            ConnectAsync().GetAwaiter().GetResult();
         }
 
         #endregion
