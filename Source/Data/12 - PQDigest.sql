@@ -22,7 +22,7 @@ GO
 CREATE TABLE [PQBrowser.EventViewWidget] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name varchar(50) NOT NULL DEFAULT(1),
-    Setting varchar(max) NOT NULL Default(''),
+    Setting varchar(max) NOT NULL Default('{}'),
     Type varchar(max) NOT NULL Default('OpenSEE')
 )
 GO
@@ -43,7 +43,7 @@ GO
 CREATE TABLE [PQBrowser.HomeScreenWidget] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name varchar(50) NOT NULL DEFAULT(1),
-    Setting varchar(max) NOT NULL Default(''),
+    Setting varchar(max) NOT NULL Default('{}'),
     Type varchar(max) NOT NULL Default('OpenSEE'),
     TimeFrame INT NOT NULL Default(30)
 )
