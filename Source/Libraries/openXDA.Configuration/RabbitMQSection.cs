@@ -72,5 +72,19 @@ namespace openXDA.Configuration
         [Setting]
         [DefaultValue("analytic")]
         public string OutboundRoutingKey { get; set; } = "analytic";
+
+        /// <summary>
+        /// Defines the username used for authenticating to the RabbitMQ service.
+        /// </summary>
+        [Setting]
+        [DefaultValue("guest")]
+        public string UserName { get; set; } = "guest";
+
+        /// <summary>
+        /// Defines the password used for authenticating to the RabbitMQ service.
+        /// </summary>
+        [Setting]
+        [DefaultValue("guest")]
+        public string Password { get; set; } = "guest";
     }
 }
