@@ -140,9 +140,9 @@ namespace openXDA.Nodes.Types.RabbitMQ
 
             Log.Debug("Creating Connection to RabbitMQ Server.");
 
-            try 
-            { 
-                var factory = new ConnectionFactory { HostName = settings.RabbitMQSettings.Hostname, Port = settings.RabbitMQSettings.Port, VirtualHost = "/", UserName = "guest" };
+            try
+            {
+                var factory = new ConnectionFactory { HostName = settings.RabbitMQSettings.Hostname, Port = settings.RabbitMQSettings.Port, VirtualHost = "/", UserName = settings.RabbitMQSettings.UserName, Password = settings.RabbitMQSettings.Password };
 
                 InboundConnection = await factory.CreateConnectionAsync().ConfigureAwait(false);
                 OutboundConnection = await factory.CreateConnectionAsync().ConfigureAwait(false);
