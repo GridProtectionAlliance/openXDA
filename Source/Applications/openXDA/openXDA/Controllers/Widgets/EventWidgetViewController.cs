@@ -115,34 +115,20 @@ namespace openXDA.Controllers.Widgets
 
                 string meterFilter = postData.MeterIDs.Any() ? $" AND Meter.ID IN ({string.Join(",", postData.MeterIDs)})" : "";
 
-                // Unit we aggregate in
-                string aggUnit = null;
-                // Extra unit for aggregation if we need finer grain
-                string extraAggUnit = null;
-                // Unit to return aggregation in, useful to sometimes be different from aggregation unit due to weeks being a headache to deal with
-                string aggReturnUnit = null;
-                // Timespan for breaking up total time
                 string timeSpan;
                 switch (postData.Granularity.ToUpper())
                 {
                     case "HOURLY":
-                        aggUnit = "DAYOFYEAR";
-                        extraAggUnit = "HOUR";
                         timeSpan = "HOUR";
+                        break;
+                    case "WEEKLY":
+                        timeSpan = "WEEK";
                         break;
                     default:
                     case "MONTHLY":
-                        aggUnit = "MONTH";
                         timeSpan = "MONTH";
                         break;
-                    // Special notes about weekly, the first week and last week of the year may be less than 7 days due to cutoffs
-                    case "WEEKLY":
-                        aggUnit = "WEEK";
-                        aggReturnUnit = "DAYOFYEAR";
-                        timeSpan = "WEEK";
-                        break;
                     case "DAILY":
-                        aggUnit = "DAYOFYEAR";
                         timeSpan = "DAY";
                         break;
                     case "YEARLY":
@@ -155,9 +141,7 @@ namespace openXDA.Controllers.Widgets
 	                    SELECT
 		                    COUNT(Event.ID) as Count,
 		                    EventType.Name as EventType,
-		                    {(aggUnit is null ? "" : $"DATEPART({aggUnit}, Event.StartTime) as AInt,")}
-		                    {(extraAggUnit is null ? "" : $"DATEPART({extraAggUnit}, Event.StartTime) as EInt,")}
-		                    DATEPART(YEAR, Event.StartTime) as YInt
+		                    DATETRUNC({timeSpan}, Event.StartTime) as aggTime
 	                    FROM
 		                    Event JOIN
 		                    EventType ON Event.EventTypeID = EventType.ID	
@@ -166,44 +150,32 @@ namespace openXDA.Controllers.Widgets
                             AND Event.StartTime BETWEEN {{0}} AND {{1}} 
                             {meterFilter}
 	                    GROUP BY
-		                    EventType.Name, 
-                            {(aggUnit is null ? "" : $"DATEPART({aggUnit}, Event.StartTime),")} 
-                            {(extraAggUnit is null ? "" : $"DATEPART({extraAggUnit}, Event.StartTime),")} 
-                            DATEPART(YEAR, Event.StartTime)
+		                    EventType.Name,
+		                    DATETRUNC({timeSpan}, Event.StartTime)
                     ),
 	                DateTally AS (
-	                SELECT CONVERT(DATETIME,{{0}}) Dt
+	                SELECT CONVERT(DATETIME2,{{0}}) Dt
 	                UNION ALL
 	                SELECT DATEADD({timeSpan},1,Dt) FROM DateTally WHERE Dt < CONVERT(DATETIME,{{1}})
 	                ), 
 	                DateTallyR AS(
 	                SELECT 
-		                {(aggUnit is null ? "" : $"DATEPART({aggUnit},Dt) as AInt,")} 
-		                {(aggReturnUnit is null ? "" : $"DATEPART({aggReturnUnit},Dt) as SInt,")} 
-		                {(extraAggUnit is null ? "" : $"DATEPART({extraAggUnit},Dt) as EInt,")} 
-                        DATEPART(YEAR,Dt) as YInt 
+		                DATETRUNC({timeSpan}, Dt) as aggTime
 	                FROM 
 		                DateTally 
 	                ),
 	                Joined AS(
 		                SELECT
-			                {(aggUnit is null || !(aggReturnUnit is null) ? "" : "DateTallyR.AInt as SInt,")}
-			                {(aggReturnUnit is null ? "" : "DateTallyR.Sint,")}
-			                {(extraAggUnit is null ? "" : "DateTallyR.Eint,")}
-			                DateTallyR.YInt,
+                            DateTallyR.aggTime,
 			                COALESCE(EventCTE.EventType, 'None') EventType,
 			                COALESCE(EventCTE.Count, 0) Count
 		                FROM
 			                DateTallyR LEFT JOIN
 			                EventCTE ON 
-                                {(aggUnit is null ? "" : "DateTallyR.AInt = EventCTE.AInt AND ")}
-                                {(extraAggUnit is null ? "" : "DateTallyR.EInt = EventCTE.EInt AND ")}
-                                DateTallyR.YInt = EventCTE.YInt
+                                DateTallyR.aggTime = EventCTE.aggTime
 	                )
                     SELECT
-                        YInt,
-	                    {(aggUnit is null ? "" : "SInt, ")}
-	                    {(extraAggUnit is null ? "" : "EInt, ")}
+                        aggTime,
                         {string.Join(",", types.Select(type => $"COALESCE({type},0) as {type}"))}
                     FROM
 	                    Joined
@@ -212,7 +184,7 @@ namespace openXDA.Controllers.Widgets
 	                    SUM(Count) FOR EventType
                         IN ({string.Join(",", types)})
                     ) pvt 
-                    ORDER BY YInt{(aggUnit is null ? "" : ", SInt")}{(extraAggUnit is null ? "" : ", EInt")}";
+                    ORDER BY aggTime ASC";
 
                 object[] paramsArray = new object[] { postData.StartTime, postData.EndTime }.Concat(types).ToArray();
                 DataTable table = connection.RetrieveData(sql, paramsArray);
