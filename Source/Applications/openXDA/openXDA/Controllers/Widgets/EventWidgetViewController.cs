@@ -104,7 +104,7 @@ namespace openXDA.Controllers.Widgets
         }
 
         [HttpPost, Route("EventCountAggregate")]
-        public IHttpActionResult EventCountByMonth([FromBody] JObject query)
+        public IHttpActionResult EventCountByAggregate([FromBody] JObject query)
         {
             AggregateCountQuery postData = query.ToObject<AggregateCountQuery>();
             using (AdoDataConnection connection = ConnectionFactory())
