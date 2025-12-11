@@ -153,26 +153,13 @@ namespace openXDA.Controllers.Widgets
 		                    EventType.Name,
 		                    DATETRUNC({timeSpan}, Event.StartTime)
                     ),
-	                DateTally AS (
-	                SELECT CONVERT(DATETIME2,{{0}}) Dt
-	                UNION ALL
-	                SELECT DATEADD({timeSpan},1,Dt) FROM DateTally WHERE Dt < CONVERT(DATETIME,{{1}})
-	                ), 
-	                DateTallyR AS(
-	                SELECT 
-		                DATETRUNC({timeSpan}, Dt) as aggTime
-	                FROM 
-		                DateTally 
-	                ),
 	                Joined AS(
 		                SELECT
-                            DateTallyR.aggTime,
+                            EventCTE.aggTime,
 			                COALESCE(EventCTE.EventType, 'None') EventType,
 			                COALESCE(EventCTE.Count, 0) Count
 		                FROM
-			                DateTallyR LEFT JOIN
-			                EventCTE ON 
-                                DateTallyR.aggTime = EventCTE.aggTime
+			                EventCTE
 	                )
                     SELECT
                         aggTime,
