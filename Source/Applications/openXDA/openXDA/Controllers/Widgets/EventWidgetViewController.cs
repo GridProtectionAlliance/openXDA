@@ -46,8 +46,11 @@ namespace openXDA.Controllers.Widgets
             public DateTime EndTime { get; set; }
             public IEnumerable<int> MeterIDs { get; set; }
         }
-        public class AggregateCountQuery : CountQuery
+        public class AggregateCountQuery
         {
+            public DateTime StartTime { get; set; }
+            public DateTime EndTime { get; set; }
+            public IEnumerable<int> MeterIDs { get; set; }
             public string Granularity { get; set; }
         }
 
