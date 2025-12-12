@@ -122,7 +122,6 @@ namespace openXDA.Controllers.Widgets
                     case "WEEKLY":
                         timeSpan = "WEEK";
                         break;
-                    default:
                     case "MONTHLY":
                         timeSpan = "MONTH";
                         break;
@@ -132,6 +131,8 @@ namespace openXDA.Controllers.Widgets
                     case "YEARLY":
                         timeSpan = "YEAR";
                         break;
+                    default:
+                        throw new ArgumentException($"Granularity value {postData.Granularity} is not an allowed value. Use HOURLY, WEEKLY, MONTHLY, DAILY, or YEARLY.");
                 }
 
                 string sql = $@"
