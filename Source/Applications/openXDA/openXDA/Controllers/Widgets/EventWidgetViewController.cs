@@ -55,9 +55,8 @@ namespace openXDA.Controllers.Widgets
         }
 
         [HttpPost, Route("EventCount")]
-        public IHttpActionResult EventCount([FromBody] JObject query)
+        public IHttpActionResult EventCount([FromBody] CountQuery postData)
         {
-            CountQuery postData = query.ToObject<CountQuery>();
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 IEnumerable<string> types = new TableOperations<EventType>(connection)
@@ -104,9 +103,8 @@ namespace openXDA.Controllers.Widgets
         }
 
         [HttpPost, Route("EventCountAggregate")]
-        public IHttpActionResult EventCountByAggregate([FromBody] JObject query)
+        public IHttpActionResult EventCountByAggregate([FromBody] AggregateCountQuery postData)
         {
-            AggregateCountQuery postData = query.ToObject<AggregateCountQuery>();
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 IEnumerable<string> types = new TableOperations<EventType>(connection)
