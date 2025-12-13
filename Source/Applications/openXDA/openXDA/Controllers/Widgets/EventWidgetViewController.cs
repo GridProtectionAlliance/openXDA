@@ -25,13 +25,11 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Security.Claims;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
-using openXDA.HIDS.APIExtensions;
 using openXDA.Model;
 
 namespace openXDA.Controllers.Widgets
@@ -48,11 +46,17 @@ namespace openXDA.Controllers.Widgets
             public DateTime EndTime { get; set; }
             public IEnumerable<int> MeterIDs { get; set; }
         }
+        public class AggregateCountQuery
+        {
+            public DateTime StartTime { get; set; }
+            public DateTime EndTime { get; set; }
+            public IEnumerable<int> MeterIDs { get; set; }
+            public string Granularity { get; set; }
+        }
 
         [HttpPost, Route("EventCount")]
-        public IHttpActionResult EventCount([FromBody] JObject query)
+        public IHttpActionResult EventCount([FromBody] CountQuery postData)
         {
-            CountQuery postData = query.ToObject<CountQuery>();
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 IEnumerable<string> types = new TableOperations<EventType>(connection)
@@ -98,10 +102,9 @@ namespace openXDA.Controllers.Widgets
             }
         }
 
-        [HttpPost, Route("EventCountByMonth")]
-        public IHttpActionResult EventCountByMonth([FromBody] JObject query)
+        [HttpPost, Route("EventCountAggregate")]
+        public IHttpActionResult EventCountByAggregate([FromBody] AggregateCountQuery postData)
         {
-            CountQuery postData = query.ToObject<CountQuery>();
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 IEnumerable<string> types = new TableOperations<EventType>(connection)
@@ -110,60 +113,65 @@ namespace openXDA.Controllers.Widgets
 
                 string meterFilter = postData.MeterIDs.Any() ? $" AND Meter.ID IN ({string.Join(",", postData.MeterIDs)})" : "";
 
+                string timeSpan;
+                switch (postData.Granularity.ToUpper())
+                {
+                    case "HOURLY":
+                        timeSpan = "HOUR";
+                        break;
+                    case "WEEKLY":
+                        timeSpan = "WEEK";
+                        break;
+                    case "MONTHLY":
+                        timeSpan = "MONTH";
+                        break;
+                    case "DAILY":
+                        timeSpan = "DAY";
+                        break;
+                    case "YEARLY":
+                        timeSpan = "YEAR";
+                        break;
+                    default:
+                        throw new ArgumentException($"Granularity value {postData.Granularity} is not an allowed value. Use HOURLY, WEEKLY, MONTHLY, DAILY, or YEARLY.");
+                }
+
                 string sql = $@"
                     WITH EventCTE AS (
 	                    SELECT
 		                    COUNT(Event.ID) as Count,
 		                    EventType.Name as EventType,
-		                    CONVERT(varchar(3), DATENAME(month,Cast(Event.StartTime as Date))) as Month,
-		                    Month(Event.StartTime) as MonthInt,
-		                    Year(Event.StartTime) as Year
+		                    DATETRUNC({timeSpan}, Event.StartTime) as aggTime
 	                    FROM
 		                    Event JOIN
 		                    EventType ON Event.EventTypeID = EventType.ID	
 	                    WHERE
 		                    EventType.Name IN ({string.Join(",", types.Select((_type, index) => $"{{{index + 2}}}"))})
-		                    AND Event.StartTime BETWEEN {{0}} AND {{1}} 
+                            AND Event.StartTime BETWEEN {{0}} AND {{1}} 
                             {meterFilter}
 	                    GROUP BY
-		                    CONVERT(varchar(3), DATENAME(month,Cast(Event.StartTime as Date))), EventType.Name, Month(Event.StartTime), Year(Event.StartTime)
+		                    EventType.Name,
+		                    DATETRUNC({timeSpan}, Event.StartTime)
                     ),
-					DateTally AS (
-					SELECT CONVERT(DATETIME,{{0}}) Dt
-					UNION ALL
-					SELECT DATEADD(MM,1,Dt) FROM DateTally WHERE Dt < CONVERT(DATETIME,{{1}})
-					), 
-					DateTallyR AS(
-					SELECT 
-					  Month(Dt) as MonthInt, LEFT(DATENAME(MM,Dt),3) as Month,CONVERT(VARCHAR,YEAR(Dt)) as Year 
-					FROM 
-					  DateTally 
-					),
-					Joined AS(
-						SELECT
-							DateTallyR.Month,
-							DateTallyR.Year,
-							COALESCE(EventCTE.EventType, 'None') EventType,
-							COALESCE(EventCTE.Count, 0) Count,
-							DateTallyR.MonthInt
-						FROM
-							DateTallyR LEFT JOIN
-							EventCTE ON DateTallyR.Month = EventCTE.Month AND DateTallyR.Year = EventCTE.Year
-					)
+	                Joined AS(
+		                SELECT
+                            EventCTE.aggTime,
+			                COALESCE(EventCTE.EventType, 'None') EventType,
+			                COALESCE(EventCTE.Count, 0) Count
+		                FROM
+			                EventCTE
+	                )
                     SELECT
-					 --*
-                        Year,
-	                    Month, 
+                        aggTime,
                         {string.Join(",", types.Select(type => $"COALESCE({type},0) as {type}"))}
                     FROM
 	                    Joined
                     PIVOT
                     (
 	                    SUM(Count) FOR EventType
-	                    IN ({string.Join(",", types)})
+                        IN ({string.Join(",", types)})
                     ) pvt 
-                    ORDER BY Year, MonthInt
-                ";
+                    ORDER BY aggTime ASC";
+
                 object[] paramsArray = new object[] { postData.StartTime, postData.EndTime }.Concat(types).ToArray();
                 DataTable table = connection.RetrieveData(sql, paramsArray);
 
