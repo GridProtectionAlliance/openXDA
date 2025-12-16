@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
-using System;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.Data.Model;
@@ -59,10 +59,24 @@ namespace SystemCenter.Model
                 return Unauthorized();
 
             using (AdoDataConnection connection = ConnectionFactory())
-                        {
+            {
                 return Ok(GetGroup(groupName, connection));
-                            }
-                            }
+            }
+        }
+
+        [Route("Count/{groupName}"), HttpGet]
+        public IHttpActionResult GetValueListForGroupWithCounts(string groupName)
+        {
+            if (!PatchAuthCheck())
+                return Unauthorized();
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                IEnumerable<ValueList> group = GetGroup(groupName, connection);
+                group.Select(item => new { item.ID, Count = GetCount(groupName, item.Value) });
+                return Ok(group.ToList());
+            }
+        }
 
         public override IHttpActionResult Patch([FromBody] ValueList newRecord)
         {
@@ -205,17 +219,17 @@ namespace SystemCenter.Model
         }
 
         private int GetCount(string groupName, string value, AdoDataConnection connection)
-            {
-                int nAddlFields = connection.ExecuteScalar<int>(@"SELECT COUNT(AFV.ID) FROM AdditionalFieldValue AFV WHERE 
+        {
+            int nAddlFields = connection.ExecuteScalar<int>(@"SELECT COUNT(AFV.ID) FROM AdditionalFieldValue AFV WHERE 
                         [Value] = {0} AND (SELECT TOP 1 AF.ID FROM AdditionalField AF WHERE Type = {1}) = AFV.AdditionalFieldID
                         ", value, groupName);
-                RestrictedValueList restriction = RestrictedValueList.List.Find((g) => g.Name == groupName);
-                int count = 0;
-                if (!(restriction?.CountSQL is null))
-                    count = connection.ExecuteScalar<int>(restriction.CountSQL, value);
+            RestrictedValueList restriction = RestrictedValueList.List.Find((g) => g.Name == groupName);
+            int count = 0;
+            if (!(restriction?.CountSQL is null))
+                count = connection.ExecuteScalar<int>(restriction.CountSQL, value);
 
             return nAddlFields + count;
-                }
-            }
-
         }
+    }
+
+}
