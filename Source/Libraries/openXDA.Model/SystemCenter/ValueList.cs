@@ -29,6 +29,7 @@ using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web.Model;
+using Newtonsoft.Json.Linq;
 
 namespace SystemCenter.Model
 {
@@ -65,16 +66,17 @@ namespace SystemCenter.Model
         }
 
         [Route("Count/{groupName}"), HttpGet]
-        public IHttpActionResult GetValueListForGroupWithCounts(string groupName)
+        public IHttpActionResult GetValueListCountDictionary(string groupName)
         {
             if (!PatchAuthCheck())
                 return Unauthorized();
 
             using (AdoDataConnection connection = ConnectionFactory())
             {
-                IEnumerable<ValueList> group = GetGroup(groupName, connection);
-                group.Select(item => new { item.ID, Count = GetCount(groupName, item.Value) });
-                return Ok(group.ToList());
+                JObject dictionary = new JObject();
+                foreach(ValueList item in GetGroup(groupName, connection))
+                    dictionary.Add(item.ID.ToString(), GetCount(groupName, item.Value, connection).ToString());
+                return Ok(dictionary);
             }
         }
 
