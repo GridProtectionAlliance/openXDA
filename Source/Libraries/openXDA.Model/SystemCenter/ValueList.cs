@@ -36,10 +36,9 @@ namespace SystemCenter.Model
     [PatchRoles("Administrator, Transmission SME")]
     [GetRoles("Administrator, Transmission SME")]
     [AllowSearch]
-    [ TableName("ValueList"), UseEscapedName, PrimaryLabel("Text"), SettingsCategory("systemSettings")]
+    [TableName("ValueList"), UseEscapedName, PrimaryLabel("Text"), SettingsCategory("systemSettings")]
     public class ValueList
     {
-
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -76,7 +75,7 @@ namespace SystemCenter.Model
             bool changeVal = false;
             ValueList oldRecord;
 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 oldRecord = new TableOperations<ValueList>(connection).QueryRecordWhere("ID = {0}", newRecord.ID);
                 changeVal = !(newRecord.Value == oldRecord.Value);
@@ -85,7 +84,7 @@ namespace SystemCenter.Model
             if (changeVal)
             {
                 ValueListGroup group;
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     group = new TableOperations<ValueListGroup>(connection).QueryRecordWhere("ID = {0}", newRecord.GroupID);
                     // Wrapping is needed here, since C# tries to use the wrong method signature otherwise
@@ -122,7 +121,7 @@ namespace SystemCenter.Model
             }
 
             ValueListGroup group;
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 group = new TableOperations<ValueListGroup>(connection).QueryRecordWhere("ID = {0}", record.GroupID);
                 RestrictedValueList restriction = RestrictedValueList.List.Find((g) => g.Name == group.Name);
