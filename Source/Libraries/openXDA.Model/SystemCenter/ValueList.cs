@@ -21,14 +21,15 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
-using System;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web.Model;
+using Newtonsoft.Json.Linq;
 
 namespace SystemCenter.Model
 {
@@ -36,10 +37,9 @@ namespace SystemCenter.Model
     [PatchRoles("Administrator, Transmission SME")]
     [GetRoles("Administrator, Transmission SME")]
     [AllowSearch]
-    [ TableName("ValueList"), UseEscapedName, PrimaryLabel("Text"), SettingsCategory("systemSettings")]
+    [TableName("ValueList"), UseEscapedName, PrimaryLabel("Text"), SettingsCategory("systemSettings")]
     public class ValueList
     {
-
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -48,7 +48,6 @@ namespace SystemCenter.Model
         public string Value { get; set; }
         public string AltValue { get; set; }
         public int SortOrder { get; set; }
-
     }
 
     public class ValueListController<T> : ModelController<T, ValueList>
@@ -57,57 +56,27 @@ namespace SystemCenter.Model
         [HttpGet, Route("Group/{groupName}")]
         public IHttpActionResult GetValueListForGroup(string groupName)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
-            {
-                TableOperations<ValueListGroup> groupTable = new TableOperations<ValueListGroup>(connection);
-                TableOperations<ValueList> valueTable = new TableOperations<ValueList>(connection);
-                List<int> groupIds = groupTable.QueryRecordsWhere("Name = {0}", groupName).Select(group => group.ID).ToList();
-                if (groupIds.Count() == 0)
-                {
-                    RestrictedValueList restriction = RestrictedValueList.List.Find((g) => g.Name == groupName);
-                    if (!(restriction is null))
-                    {
-                        groupTable.AddNewRecord(
-                            new ValueListGroup()
-                            {
-                                Description = "",
-                                Name = restriction.Name
-                            });
-                        groupIds.Add(connection.ExecuteScalar<int>("SELECT @@IDENTITY"));
+            if (!GetAuthCheck())
+                return Unauthorized();
 
-                        int sortOrder = 1;
-                        foreach (object item in restriction.DefaultItems)
-                        {
-                            string value;
-                            string altValue;
-                            if (item.GetType() == typeof(Tuple<string, string>))
-                            {
-                                value = ((Tuple<string, string>)item).Item1;
-                                altValue = ((Tuple<string, string>)item).Item2;
-                            }
-                            else if (item.GetType() == typeof(string))
-                            {
-                                value = (string)item;
-                                altValue = (string)item;
-                            }
-                            else
-                                throw new InvalidCastException($"Could not convert object in DefaultItems of value list {restriction.Name} to either tuple or string.");
-                            valueTable.AddNewRecord(
-                                new ValueList()
-                                {
-                                    GroupID = groupIds[0],
-                                    Value = value,
-                                    AltValue = altValue,
-                                    SortOrder = sortOrder
-                                });
-                            sortOrder++;
-                        }
-                    }
-                    else
-                        return Ok(new List<ValueList>());
-                }
-                IEnumerable<ValueList> records = valueTable.QueryRecordsWhere("GroupID in ({0})", string.Join(", ", groupIds)).OrderBy(v => v.SortOrder);
-                return Ok(records);
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                return Ok(GetGroup(groupName, connection));
+            }
+        }
+
+        [Route("Count/{groupName}"), HttpGet]
+        public IHttpActionResult GetValueListCountDictionary(string groupName)
+        {
+            if (!PatchAuthCheck())
+                return Unauthorized();
+
+            using (AdoDataConnection connection = ConnectionFactory())
+            {
+                JObject dictionary = new JObject();
+                foreach(ValueList item in GetGroup(groupName, connection))
+                    dictionary.Add(item.ID.ToString(), GetCount(groupName, item.Value, connection).ToString());
+                return Ok(dictionary);
             }
         }
 
@@ -122,7 +91,7 @@ namespace SystemCenter.Model
             bool changeVal = false;
             ValueList oldRecord;
 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 oldRecord = new TableOperations<ValueList>(connection).QueryRecordWhere("ID = {0}", newRecord.ID);
                 changeVal = !(newRecord.Value == oldRecord.Value);
@@ -131,7 +100,7 @@ namespace SystemCenter.Model
             if (changeVal)
             {
                 ValueListGroup group;
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
+                using (AdoDataConnection connection = ConnectionFactory())
                 {
                     group = new TableOperations<ValueListGroup>(connection).QueryRecordWhere("ID = {0}", newRecord.GroupID);
                     // Wrapping is needed here, since C# tries to use the wrong method signature otherwise
@@ -168,7 +137,7 @@ namespace SystemCenter.Model
             }
 
             ValueListGroup group;
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 group = new TableOperations<ValueListGroup>(connection).QueryRecordWhere("ID = {0}", record.GroupID);
                 RestrictedValueList restriction = RestrictedValueList.List.Find((g) => g.Name == group.Name);
@@ -192,22 +161,77 @@ namespace SystemCenter.Model
         [Route("Count/{groupName}/{value}"), HttpGet]
         public IHttpActionResult GetCount(string groupName, string value)
         {
-            if (!PatchAuthCheck())
+            if (!GetAuthCheck())
                 return Unauthorized();
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+
+            using (AdoDataConnection connection = ConnectionFactory())
+                return Ok(GetCount(groupName, value, connection));
+        }
+
+        private IEnumerable<ValueList> GetGroup(string groupName, AdoDataConnection connection)
+        {
+            TableOperations<ValueListGroup> groupTable = new TableOperations<ValueListGroup>(connection);
+            TableOperations<ValueList> valueTable = new TableOperations<ValueList>(connection);
+            List<int> groupIds = groupTable.QueryRecordsWhere("Name = {0}", groupName).Select(group => group.ID).ToList();
+            if (groupIds.Count() == 0)
             {
-                int nAddlFields = connection.ExecuteScalar<int>(@"SELECT COUNT(AFV.ID) FROM AdditionalFieldValue AFV WHERE 
+                RestrictedValueList restriction = RestrictedValueList.List.Find((g) => g.Name == groupName);
+                if (!(restriction is null))
+                {
+                    groupTable.AddNewRecord(
+                        new ValueListGroup()
+                        {
+                            Description = "",
+                            Name = restriction.Name
+                        });
+                    groupIds.Add(connection.ExecuteScalar<int>("SELECT @@IDENTITY"));
+
+                    int sortOrder = 1;
+                    foreach (object item in restriction.DefaultItems)
+                    {
+                        string value;
+                        string altValue;
+                        if (item.GetType() == typeof(Tuple<string, string>))
+                        {
+                            value = ((Tuple<string, string>)item).Item1;
+                            altValue = ((Tuple<string, string>)item).Item2;
+                        }
+                        else if (item.GetType() == typeof(string))
+                        {
+                            value = (string)item;
+                            altValue = (string)item;
+                        }
+                        else
+                            throw new InvalidCastException($"Could not convert object in DefaultItems of value list {restriction.Name} to either tuple or string.");
+                        valueTable.AddNewRecord(
+                            new ValueList()
+                            {
+                                GroupID = groupIds[0],
+                                Value = value,
+                                AltValue = altValue,
+                                SortOrder = sortOrder
+                            });
+                        sortOrder++;
+                    }
+                }
+                else
+                    return new List<ValueList>();
+            }
+            return valueTable.QueryRecordsWhere("GroupID in ({0})", string.Join(", ", groupIds)).OrderBy(v => v.SortOrder);
+        }
+
+        private int GetCount(string groupName, string value, AdoDataConnection connection)
+        {
+            int nAddlFields = connection.ExecuteScalar<int>(@"SELECT COUNT(AFV.ID) FROM AdditionalFieldValue AFV WHERE 
                         [Value] = {0} AND (SELECT TOP 1 AF.ID FROM AdditionalField AF WHERE Type = {1}) = AFV.AdditionalFieldID
                         ", value, groupName);
-                RestrictedValueList restriction = RestrictedValueList.List.Find((g) => g.Name == groupName);
-                int count = 0;
-                if (!(restriction?.CountSQL is null))
-                {
-                    count = connection.ExecuteScalar<int>(restriction.CountSQL, value);
-                }
-                return Ok(nAddlFields + count);
-            }
+            RestrictedValueList restriction = RestrictedValueList.List.Find((g) => g.Name == groupName);
+            int count = 0;
+            if (!(restriction?.CountSQL is null))
+                count = connection.ExecuteScalar<int>(restriction.CountSQL, value);
 
+            return nAddlFields + count;
         }
     }
+
 }
