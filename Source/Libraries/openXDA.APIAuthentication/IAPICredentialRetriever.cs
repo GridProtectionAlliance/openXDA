@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using System.Security.Claims;
+
 namespace openXDA.APIAuthentication
 {
     /// <summary>
@@ -50,6 +52,13 @@ namespace openXDA.APIAuthentication
         /// </summary>
         /// <returns> A flag indicating if the operation was successful. </returns>
         bool TryRefreshSettings();
+
+        /// <summary>
+        /// Retrieves <see href="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Libraries/openXDA.Model/SystemCenter/Customer.cs">customer</see> ID from a claims principle.
+        /// </summary>
+        /// <remarks>A value of -1 signifies the current user is authorized to view any object the controller may retrieve.</remarks>
+        /// <returns> A flag indicating if the operation was successful. </returns>
+        bool TryRetrieveCustomer(ClaimsPrincipal principal, out int CustomerID);
 
         #endregion
     }
