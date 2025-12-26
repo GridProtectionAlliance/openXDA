@@ -45,8 +45,16 @@ namespace openXDA.Controllers.Widgets
     public class OpenSEEController : ApiController
     {
         MemoryCache s_memoryCache = new MemoryCache("OpenXDA");
-        protected string SettingsCategory => "systemSettings";
         protected const int MAX_SAMPLE_COUNT = 1200;
+        Func<AdoDataConnection> m_connectionFactory;
+
+        /// <summary>
+        /// Constructor to pull  a connection factory from the XDA controller activator.
+        /// </summary> 
+        public OpenSEEController(Func<AdoDataConnection> connectionFactory)
+        {
+            m_connectionFactory = connectionFactory;
+        }
 
         /// <summary>
         /// Endpoint that handles fetching openSEE event chart data.
@@ -57,6 +65,7 @@ namespace openXDA.Controllers.Widgets
         public IHttpActionResult GetOpenSEEData(string type, int eventID)
         {
             using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+            using (AdoDataConnection connection = m_connectionFactory())
             {
                 Dictionary<string, string> query = Request.QueryParameters();
                 DateTime epoch = new DateTime(1970, 1, 1);
@@ -66,7 +75,7 @@ namespace openXDA.Controllers.Widgets
                     throw new InvalidOperationException("Unable to find event with ID " + eventID);
 
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                meter.ConnectionFactory = () => new AdoDataConnection(SettingsCategory);
+                meter.ConnectionFactory = () => m_connectionFactory();
 
 
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
@@ -121,7 +130,7 @@ namespace openXDA.Controllers.Widgets
 
             Task<DataGroup> dataGroupTask = new Task<DataGroup>(() =>
             {
-                List<byte[]> data = ChannelData.DataFromEvent(eventID, () => new AdoDataConnection(SettingsCategory));
+                List<byte[]> data = ChannelData.DataFromEvent(eventID, () => m_connectionFactory());
                 return ToDataGroup(meter, data);
 
             });
