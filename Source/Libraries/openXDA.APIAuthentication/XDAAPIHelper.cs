@@ -85,11 +85,11 @@ namespace openXDA.APIAuthentication
         public static bool TryRefreshSettings() => API.TryRefreshSettings();
 
         /// <summary>
-        /// Retrieves <see href="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Libraries/openXDA.Model/SystemCenter/Customer.cs">customer</see> ID from a claims principle.
+        /// Retrieves <see href="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Libraries/openXDA.Model/SystemCenter/Customer.cs">customer</see> key from the claims principle.
         /// </summary>
-        /// <remarks>A value of -1 signifies the current user is authorized to view any object the controller may retrieve.</remarks>
+        /// <remarks>A value of <see langword="null"/> signifies the current user is authorized to view any object the controller may retrieve.</remarks>
         /// <returns> A flag indicating if the operation was successful. </returns>
-        public static bool TryRetrieveCustomer(ClaimsPrincipal principal, out int CustomerID) => API.TryRetrieveCustomer(principal, out CustomerID);
+        public static bool TryRetrieveCustomer(ClaimsPrincipal principal, out string customerKey) => API.TryRetrieveCustomer(principal, out customerKey);
 
         /// <summary>
         /// Gets Response Task from XDA 
