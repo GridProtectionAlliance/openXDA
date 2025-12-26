@@ -103,30 +103,35 @@ namespace openXDA.Controllers.Widgets
         /// <summary>
         /// Retrieves a list of impacted <see cref="Equipment"/> based on an openXDA <see cref="Event"/> ID.
         /// </summary>
-        /// <param name="eventID">ID of an openXDA <see cref="Event"/></param>
+        /// <param name="postData"><see cref="EventPost"/> that contains query information.</param>
         /// <returns>List of impacted <see cref="Equipment"/></returns>
-        [Route("GetEquipment/{eventID:int}"), HttpGet]
-        public async Task<IHttpActionResult> GetEquipment(int eventID)
+        [Route("GetEquipment"), HttpPost]
+        public async Task<IHttpActionResult> GetEquipment([FromBody] EventPost postData)
         {
+            if (!postData.IsCustomerAuthorized(m_connectionFactory()))
+                return Unauthorized();
             PQIWSClient pqiwsClient = new PQIWSClient(BaseURL, FetchAccessToken);
             PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(() => m_connectionFactory(), pqiwsClient);
-            return Ok(await pqiwsQueryHelper.GetAllImpactedEquipmentAsync(eventID));
+            return Ok(await pqiwsQueryHelper.GetAllImpactedEquipmentAsync(postData.EventID));
         }
 
         /// <summary>
         /// Retrieves a list of test curves <see cref="Equipment"/> based on an openXDA <see cref="Event"/> ID.
         /// </summary>
-        /// <param name="eventID">ID of an openXDA <see cref="Event"/></param>
+        /// <param name="postData"><see cref="EventPost"/> that contains query information.</param>
         /// <returns>
         /// List of <see cref="List{T}"/> test curves, each one of which is a <see cref="Tuple{T1,T2}"/> of 
         /// <see cref="TestCurve"/>s and a <see cref="List{T}"/> of <see cref="TestCurvePoint"/>s.
         /// </returns>
-        [Route("GetCurves/{eventID:int}"), HttpGet]
-        public async Task<IHttpActionResult> GetCurves(int eventID)
+        [Route("GetCurves"), HttpPost]
+        public async Task<IHttpActionResult> GetCurves([FromBody] EventPost postData)
         {
+            if (!postData.IsCustomerAuthorized(m_connectionFactory()))
+                return Unauthorized();
+
             PQIWSClient pqiwsClient = new PQIWSClient(BaseURL, FetchAccessToken);
             PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(() => m_connectionFactory(), pqiwsClient);
-            List<Tuple<TestCurve, List<TestCurvePoint>>> r = await pqiwsQueryHelper.GetAllTestCurvesAsync(new List<int>() { eventID });
+            List<Tuple<TestCurve, List<TestCurvePoint>>> r = await pqiwsQueryHelper.GetAllTestCurvesAsync(new List<int>() { postData.EventID });
             return Ok(r);
         }
 
