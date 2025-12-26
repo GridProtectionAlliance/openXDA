@@ -387,6 +387,7 @@
     <Compile Include="Controllers\WebAPI\Grafana.cs" />
     <Compile Include="Controllers\WebAPI\LSCVSController.cs" />
     <Compile Include="Controllers\Widgets\EventTagViewController.cs" />
+    <Compile Include="Controllers\Widgets\EventPost.cs" />
     <Compile Include="Controllers\Widgets\StandardMagDurCurveController.cs" />
     <Compile Include="Controllers\Widgets\TrendController.cs" />
     <Compile Include="Controllers\Widgets\MeterController.cs" />
