@@ -60,19 +60,21 @@ namespace openXDA.Controllers.Widgets
         /// Endpoint that handles fetching openSEE event chart data.
         /// </summary>
         /// <param name="type"><see cref="string"/> that represents the measurement type of the channels data is being pulled from. ("Voltage", "Current", "TripCoilCurrent" are valid values)</param>
-        /// <param name="eventID"><see cref="int"/> that represents the ID of the event in the XDA database.</param>
-        [Route("GetData/{type}/{eventID:int}")]
-        public IHttpActionResult GetOpenSEEData(string type, int eventID)
+        /// <param name="postData"><see cref="EventPost"/> that contains query information.</param>
+        [Route("GetData/{type}"), HttpPost]
+        public IHttpActionResult GetOpenSEEData([FromBody] EventPost postData, string type)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+            if (!postData.IsCustomerAuthorized(m_connectionFactory()))
+                return Unauthorized();
+
             using (AdoDataConnection connection = m_connectionFactory())
             {
                 Dictionary<string, string> query = Request.QueryParameters();
                 DateTime epoch = new DateTime(1970, 1, 1);
 
-                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", postData.EventID);
                 if (evt is null)
-                    throw new InvalidOperationException("Unable to find event with ID " + eventID);
+                    throw new InvalidOperationException("Unable to find event with ID " + postData.EventID);
 
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
                 meter.ConnectionFactory = () => m_connectionFactory();
@@ -81,7 +83,7 @@ namespace openXDA.Controllers.Widgets
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
                 DateTime endTime = (query.ContainsKey("endDate") ? DateTime.Parse(query["endDate"]) : evt.EndTime);
                 DataGroup dataGroup;
-                dataGroup = QueryDataGroup(eventID, meter);
+                dataGroup = QueryDataGroup(postData.EventID, meter);
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
                 bool hasVoltLN = dataGroup.DataSeries.Select(x => x.SeriesInfo.Channel.Phase.Name).Where(x => x.Contains("N")).Any();
                 foreach (var series in dataGroup.DataSeries)
