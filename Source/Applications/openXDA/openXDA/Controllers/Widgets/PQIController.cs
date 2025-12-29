@@ -108,8 +108,10 @@ namespace openXDA.Controllers.Widgets
         [Route("GetEquipment"), HttpPost]
         public async Task<IHttpActionResult> GetEquipment([FromBody] EventPost postData)
         {
-            if (!postData.IsCustomerAuthorized(m_connectionFactory()))
-                return Unauthorized();
+            using (AdoDataConnection connection = m_connectionFactory())
+                if (!postData.IsCustomerAuthorized(connection))
+                    return Unauthorized();
+
             PQIWSClient pqiwsClient = new PQIWSClient(BaseURL, FetchAccessToken);
             PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(() => m_connectionFactory(), pqiwsClient);
             return Ok(await pqiwsQueryHelper.GetAllImpactedEquipmentAsync(postData.EventID));
@@ -126,8 +128,9 @@ namespace openXDA.Controllers.Widgets
         [Route("GetCurves"), HttpPost]
         public async Task<IHttpActionResult> GetCurves([FromBody] EventPost postData)
         {
-            if (!postData.IsCustomerAuthorized(m_connectionFactory()))
-                return Unauthorized();
+            using (AdoDataConnection connection = m_connectionFactory())
+                if (!postData.IsCustomerAuthorized(connection))
+                    return Unauthorized();
 
             PQIWSClient pqiwsClient = new PQIWSClient(BaseURL, FetchAccessToken);
             PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(() => m_connectionFactory(), pqiwsClient);
