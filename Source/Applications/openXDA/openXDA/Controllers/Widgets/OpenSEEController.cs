@@ -64,11 +64,11 @@ namespace openXDA.Controllers.Widgets
         [Route("GetData/{type}"), HttpPost]
         public IHttpActionResult GetOpenSEEData([FromBody] EventPost postData, string type)
         {
-            if (!postData.IsCustomerAuthorized(m_connectionFactory()))
-                return Unauthorized();
-
             using (AdoDataConnection connection = m_connectionFactory())
             {
+                if (!postData.IsCustomerAuthorized(connection))
+                    return Unauthorized();
+
                 Dictionary<string, string> query = Request.QueryParameters();
                 DateTime epoch = new DateTime(1970, 1, 1);
 
