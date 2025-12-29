@@ -50,12 +50,21 @@ namespace openXDA.Controllers.Widgets
     [RoutePrefix("api/Widgets/Trending")]
     public class TrendController : ApiController
     {
-        public class TrendPostData
+        /// <summary>
+        /// Defines a trend post data object as an extension of an event post object.
+        /// </summary>
+        public class TrendPostData : EventPost
         {
-            public int EventID { get; set; }
+            /// <summary>
+            /// Hours before an event to pull data from.
+            /// </summary>
             public int HoursBefore { get; set; }
+            /// <summary>
+            /// Hours after an event to pull data from.
+            /// </summary>
             public int HoursAfter { get; set; }
         }
+
         private class Settings
         {
             [Category]
