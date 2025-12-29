@@ -68,5 +68,27 @@ namespace openXDA.Controllers.Widgets
             ", customer.ID, EventID);
             return !(evt is null);
         }
+
+        /// <summary>
+        /// Tells if the <see cref="Customer"/> defined in this object is auhorized to view the <see cref="Event"/> defined in this object.
+        /// </summary>
+        /// <param name="factory">The <see cref="AdoDataConnection"/> that performs lookups.</param>
+        /// <returns>A <see langword="bool"/> that represents authorization success.</returns>
+        public RecordRestriction GetCustomerRestrictionOnChannels()
+        {
+            if (CustomerKey is null) return null;
+
+            return new RecordRestriction(
+                @"MeterID IN (
+                    SELECT MeterID FROM CustomerMeter WHERE CustomerID = 
+                        (SELECT ID FROM Customer WHERE CustomerKey = {0})
+                ) OR 
+                AssetID IN (
+                    SELECT MeterID FROM CustomerMeter WHERE CustomerID = 
+                        (SELECT ID FROM Customer WHERE CustomerKey = {0})
+                )",
+                CustomerKey
+            );
+        }
     }
 }
