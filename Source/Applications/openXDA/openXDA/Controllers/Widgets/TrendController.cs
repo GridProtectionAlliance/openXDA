@@ -125,6 +125,9 @@ namespace openXDA.Controllers.Widgets
                 builder.Range(startTime, stopTime);
             }
 
+            if (!channels.Any())
+                return await Ok("").ExecuteAsync(token).ConfigureAwait(false);
+
             MediaTypeHeaderValue contentType = new MediaTypeHeaderValue("text/plain");
             contentType.CharSet = "utf-8";
 
