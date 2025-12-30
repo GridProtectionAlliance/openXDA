@@ -43,7 +43,7 @@ namespace openXDA.Controllers.Widgets
         /// <summary>
         /// Tells if the <see cref="Customer"/> defined in this object is auhorized to view the <see cref="Event"/> defined in this object.
         /// </summary>
-        /// <param name="factory">The <see cref="AdoDataConnection"/> that performs lookups.</param>
+        /// <param name="connection">The <see cref="AdoDataConnection"/> that performs lookups.</param>
         /// <returns>A <see langword="bool"/> that represents authorization success.</returns>
         public bool IsCustomerAuthorized(AdoDataConnection connection)
         {
@@ -70,10 +70,9 @@ namespace openXDA.Controllers.Widgets
         }
 
         /// <summary>
-        /// Tells if the <see cref="Customer"/> defined in this object is auhorized to view the <see cref="Event"/> defined in this object.
+        /// Creates a <see cref="RecordRestriction"/> for a <see cref="Channel"/> table.
         /// </summary>
-        /// <param name="factory">The <see cref="AdoDataConnection"/> that performs lookups.</param>
-        /// <returns>A <see langword="bool"/> that represents authorization success.</returns>
+        /// <returns>A <see cref="RecordRestriction"/> that constrains to only records viewable by the <see cref="Customer"/> defined in this object.</returns>
         public RecordRestriction GetCustomerRestrictionOnChannels()
         {
             if (CustomerKey is null) return null;
