@@ -29,7 +29,6 @@ using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Web.Model;
-using Newtonsoft.Json.Linq;
 using openXDA.Model;
 
 namespace openXDA.Controllers.Widgets
@@ -44,14 +43,16 @@ namespace openXDA.Controllers.Widgets
         {
             public DateTime StartTime { get; set; }
             public DateTime EndTime { get; set; }
-            public IEnumerable<int> MeterIDs { get; set; }
+            public string CustomerKey { get; set; }
+            public IEnumerable<string> MeterIDs { get; set; }
         }
         public class AggregateCountQuery
         {
             public DateTime StartTime { get; set; }
             public DateTime EndTime { get; set; }
-            public IEnumerable<int> MeterIDs { get; set; }
             public string Granularity { get; set; }
+            public string CustomerKey { get; set; }
+            public IEnumerable<string> MeterIDs { get; set; }
         }
 
         [HttpPost, Route("EventCount")]
@@ -64,6 +65,7 @@ namespace openXDA.Controllers.Widgets
                     .Select(type => type.Name);
 
                 string meterFilter = postData.MeterIDs.Any() ? $" AND Meter.ID IN ({string.Join(",", postData.MeterIDs)})" : "";
+                string customerFilter = postData.CustomerKey is null ? "" : $" AND Event.MeterID in (SELECT MeterID FROM CustomerMeter WHERE CustomerID = (SELECT ID FROM Customer WHERE CustomerKey = '{postData.CustomerKey}'))";
 
                 string sql = $@"
                     WITH EventCTE AS (
@@ -79,6 +81,7 @@ namespace openXDA.Controllers.Widgets
 	                    WHERE
 		                    EventType.Name IN ({string.Join(",", types.Select((_type, index) => $"{{{index + 2}}}"))})
                             {meterFilter}
+                            {customerFilter}
 	                    GROUP BY
 		                    Meter.Name, EventType.Name, Meter.ID
                     )
@@ -112,6 +115,7 @@ namespace openXDA.Controllers.Widgets
                     .Select(type => type.Name);
 
                 string meterFilter = postData.MeterIDs.Any() ? $" AND Meter.ID IN ({string.Join(",", postData.MeterIDs)})" : "";
+                string customerFilter = postData.CustomerKey is null ? "" : $" AND Event.MeterID in (SELECT MeterID FROM CustomerMeter WHERE CustomerID = (SELECT ID FROM Customer WHERE CustomerKey = '{postData.CustomerKey}'))";
 
                 string timeSpan;
                 switch (postData.Granularity.ToUpper())
@@ -148,6 +152,7 @@ namespace openXDA.Controllers.Widgets
 		                    EventType.Name IN ({string.Join(",", types.Select((_type, index) => $"{{{index + 2}}}"))})
                             AND Event.StartTime BETWEEN {{0}} AND {{1}} 
                             {meterFilter}
+                            {customerFilter}
 	                    GROUP BY
 		                    EventType.Name,
 		                    DATETRUNC({timeSpan}, Event.StartTime)
