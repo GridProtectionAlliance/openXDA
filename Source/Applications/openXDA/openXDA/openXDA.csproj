@@ -380,6 +380,7 @@
     <Compile Include="Controllers\ModelController.cs" />
     <Compile Include="Controllers\SPCTools\Controllers.cs" />
     <Compile Include="Controllers\SPCTools\AssetGroupController.cs" />
+    <Compile Include="Controllers\WebAPI\LightningController.cs" />
     <Compile Include="Controllers\WebAPI\TrenDAPController.cs" />
     <Compile Include="Controllers\WebAPI\AlarmValueController.cs" />
     <Compile Include="Controllers\WebAPI\EmailController.cs" />
