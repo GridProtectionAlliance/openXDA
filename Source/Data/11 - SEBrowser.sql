@@ -255,6 +255,7 @@ Create View [EventWidgets.EventView] AS
 		Event.ID, 
 		Event.StartTime,
 		Event.EndTime,
+		Event.AssetID,
 		Meter.ID as MeterID, 
 		Meter.Name as MeterName, 
 		EventType.ID as EventTypeID,
