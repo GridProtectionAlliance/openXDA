@@ -53,7 +53,7 @@ namespace openXDA.Controllers.Widgets
         /// <summary>
         /// Defines a trend post data object as an extension of an event post object.
         /// </summary>
-        public class TrendPostData : EventPost
+        public class TrendPostData : CustomerEventRestriction
         {
             /// <summary>
             /// Hours before an event to pull data from.
@@ -89,7 +89,7 @@ namespace openXDA.Controllers.Widgets
         /// </summary>
         /// <param name="eventID">ID of the <see cref="Event"/>.</param>
         [Route("TrendChannels"), HttpPost]
-        public virtual IHttpActionResult TrendChannels([FromBody] EventPost postData)
+        public virtual IHttpActionResult TrendChannels([FromBody] CustomerEventRestriction postData)
         {
             using (AdoDataConnection connection = m_connectionFactory())
             {
@@ -155,7 +155,7 @@ namespace openXDA.Controllers.Widgets
             return response;
         }
 
-        private IEnumerable<ChannelDetail> GetTrendChannelsByEvent(EventPost postData, AdoDataConnection connection)
+        private IEnumerable<ChannelDetail> GetTrendChannelsByEvent(CustomerEventRestriction postData, AdoDataConnection connection)
         {
             RecordRestriction baseRestriction = new RecordRestriction(@"
 	            Trend = 1 AND

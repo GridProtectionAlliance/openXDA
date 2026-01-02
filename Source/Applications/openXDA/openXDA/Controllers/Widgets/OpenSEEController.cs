@@ -60,9 +60,9 @@ namespace openXDA.Controllers.Widgets
         /// Endpoint that handles fetching openSEE event chart data.
         /// </summary>
         /// <param name="type"><see cref="string"/> that represents the measurement type of the channels data is being pulled from. ("Voltage", "Current", "TripCoilCurrent" are valid values)</param>
-        /// <param name="postData"><see cref="EventPost"/> that contains query information.</param>
+        /// <param name="postData"><see cref="CustomerEventRestriction"/> that contains query information.</param>
         [Route("GetData/{type}"), HttpPost]
-        public IHttpActionResult GetOpenSEEData([FromBody] EventPost postData, string type)
+        public IHttpActionResult GetOpenSEEData([FromBody] CustomerEventRestriction postData, string type)
         {
             using (AdoDataConnection connection = m_connectionFactory())
             {

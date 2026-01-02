@@ -103,10 +103,10 @@ namespace openXDA.Controllers.Widgets
         /// <summary>
         /// Retrieves a list of impacted <see cref="Equipment"/> based on an openXDA <see cref="Event"/> ID.
         /// </summary>
-        /// <param name="postData"><see cref="EventPost"/> that contains query information.</param>
+        /// <param name="postData"><see cref="CustomerEventRestriction"/> that contains query information.</param>
         /// <returns>List of impacted <see cref="Equipment"/></returns>
         [Route("GetEquipment"), HttpPost]
-        public async Task<IHttpActionResult> GetEquipment([FromBody] EventPost postData)
+        public async Task<IHttpActionResult> GetEquipment([FromBody] CustomerEventRestriction postData)
         {
             using (AdoDataConnection connection = m_connectionFactory())
                 if (!postData.IsCustomerAuthorized(connection))
@@ -120,13 +120,13 @@ namespace openXDA.Controllers.Widgets
         /// <summary>
         /// Retrieves a list of test curves <see cref="Equipment"/> based on an openXDA <see cref="Event"/> ID.
         /// </summary>
-        /// <param name="postData"><see cref="EventPost"/> that contains query information.</param>
+        /// <param name="postData"><see cref="CustomerEventRestriction"/> that contains query information.</param>
         /// <returns>
         /// List of <see cref="List{T}"/> test curves, each one of which is a <see cref="Tuple{T1,T2}"/> of 
         /// <see cref="TestCurve"/>s and a <see cref="List{T}"/> of <see cref="TestCurvePoint"/>s.
         /// </returns>
         [Route("GetCurves"), HttpPost]
-        public async Task<IHttpActionResult> GetCurves([FromBody] EventPost postData)
+        public async Task<IHttpActionResult> GetCurves([FromBody] CustomerEventRestriction postData)
         {
             using (AdoDataConnection connection = m_connectionFactory())
                 if (!postData.IsCustomerAuthorized(connection))

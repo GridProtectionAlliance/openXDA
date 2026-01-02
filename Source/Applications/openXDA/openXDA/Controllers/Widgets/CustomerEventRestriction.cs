@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  EventPost.tsx - Gbtc
+//  CustomerEventRestriction.tsx - Gbtc
 //
 //  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -28,7 +28,7 @@ using Customer = SystemCenter.Model.Customer;
 
 namespace openXDA.Controllers.Widgets
 {
-    public class EventPost
+    public class CustomerEventRestriction
     {
         /// <summary>
         /// Represents the ID of an XDA <see cref="Event"/>.
