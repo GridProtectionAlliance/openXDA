@@ -89,6 +89,7 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        public int AssetID { get; set; }
         [ParentKey(typeof(Meter))]
         public int MeterID { get; set; }
         public string MeterName { get; set; }

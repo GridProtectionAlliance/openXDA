@@ -22,12 +22,10 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
-using System;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace openXDA.APIAuthentication
 {
@@ -66,7 +64,7 @@ namespace openXDA.APIAuthentication
         public static string Host => API.Host;
 
         /// <summary>
-        /// Object that retireves the token,key, and host of the helper.
+        /// Object that retireves the token, key, and host of the helper.
         /// </summary>
         private static XDAAPI API { get; set; }
 
@@ -74,7 +72,7 @@ namespace openXDA.APIAuthentication
 
         #region [ Methods ]
         /// <summary>
-        /// Function for setup of static helper. This must be ran once and only once before using the helper.
+        /// Function for setup of static helper. This must be ran once before using the helper.
         /// </summary>
         public static void InitializeHelper(IAPICredentialRetriever retriever)
         {
@@ -85,6 +83,13 @@ namespace openXDA.APIAuthentication
         /// Recalls the setup settings function from <see cref="InitializeHelper"/> to refetch settings.
         /// </summary>
         public static bool TryRefreshSettings() => API.TryRefreshSettings();
+
+        /// <summary>
+        /// Retrieves <see href="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Libraries/openXDA.Model/SystemCenter/Customer.cs">customer</see> key from the claims principle.
+        /// </summary>
+        /// <remarks>A value of <see langword="null"/> signifies the current user is authorized to view any object the controller may retrieve.</remarks>
+        /// <returns> A flag indicating if the operation was successful. </returns>
+        public static bool TryRetrieveCustomer(ClaimsPrincipal principal, out string customerKey) => API.TryRetrieveCustomer(principal, out customerKey);
 
         /// <summary>
         /// Gets Response Task from XDA 

@@ -50,12 +50,21 @@ namespace openXDA.Controllers.Widgets
     [RoutePrefix("api/Widgets/Trending")]
     public class TrendController : ApiController
     {
-        public class TrendPostData
+        /// <summary>
+        /// Defines a trend post data object as an extension of an event post object.
+        /// </summary>
+        public class TrendPostData : CustomerEventRestriction
         {
-            public int EventID { get; set; }
+            /// <summary>
+            /// Hours before an event to pull data from.
+            /// </summary>
             public int HoursBefore { get; set; }
+            /// <summary>
+            /// Hours after an event to pull data from.
+            /// </summary>
             public int HoursAfter { get; set; }
         }
+
         private class Settings
         {
             [Category]
@@ -79,12 +88,15 @@ namespace openXDA.Controllers.Widgets
         /// line to neutral <see cref="Phase"/>, and part of the <see cref="Meter"/> associated with the <see cref="Event"/> provided.
         /// </summary>
         /// <param name="eventID">ID of the <see cref="Event"/>.</param>
-        [Route("TrendChannels/{eventID:int}"), HttpGet]
-        public virtual IHttpActionResult TrendChannels(int eventID)
+        [Route("TrendChannels"), HttpPost]
+        public virtual IHttpActionResult TrendChannels([FromBody] CustomerEventRestriction postData)
         {
             using (AdoDataConnection connection = m_connectionFactory())
             {
-                return Ok(GetTrendChannelsByEvent(eventID, connection));
+                if (!postData.IsCustomerAuthorized(connection))
+                    return Unauthorized();
+
+                return Ok(GetTrendChannelsByEvent(postData, connection));
             }
         }
 
@@ -98,12 +110,15 @@ namespace openXDA.Controllers.Widgets
         [Route("QueryPoints"), HttpPost]
         public async virtual Task<HttpResponseMessage> QueryPoints([FromBody] TrendPostData postData, CancellationToken token)
         {
-            IEnumerable<Model.ChannelDetail> channels;
-            Model.Event evt;
+            IEnumerable<ChannelDetail> channels;
+            Event evt;
             using (AdoDataConnection connection = m_connectionFactory())
             {
-                channels = GetTrendChannelsByEvent(postData.EventID, connection);
-                evt = new TableOperations<Model.Event>(connection).QueryRecordWhere("ID={0}", postData.EventID);
+                if (!postData.IsCustomerAuthorized(connection))
+                    return await Unauthorized().ExecuteAsync(token).ConfigureAwait(false);
+
+                channels = GetTrendChannelsByEvent(postData, connection);
+                evt = new TableOperations<Event>(connection).QueryRecordWhere("ID={0}", postData.EventID);
             }
 
             if (evt is null)
@@ -125,6 +140,9 @@ namespace openXDA.Controllers.Widgets
                 builder.Range(startTime, stopTime);
             }
 
+            if (!channels.Any())
+                return await Ok("").ExecuteAsync(token).ConfigureAwait(false);
+
             MediaTypeHeaderValue contentType = new MediaTypeHeaderValue("text/plain");
             contentType.CharSet = "utf-8";
 
@@ -137,16 +155,18 @@ namespace openXDA.Controllers.Widgets
             return response;
         }
 
-        private IEnumerable<ChannelDetail> GetTrendChannelsByEvent(int eventID, AdoDataConnection connection)
+        private IEnumerable<ChannelDetail> GetTrendChannelsByEvent(CustomerEventRestriction postData, AdoDataConnection connection)
         {
-            string sql = @"
+            RecordRestriction baseRestriction = new RecordRestriction(@"
 	            Trend = 1 AND
 	            MeasurementCharacteristic = 'RMS' AND
 	            Phase like '%N' AND
 	            MeterID IN (SELECT MeterID FROM [Event] WHERE [Event].ID = {0})
-            ";
+            ", postData.EventID);
 
-            return new TableOperations<ChannelDetail>(connection).QueryRecordsWhere(sql, eventID);
+            RecordRestriction customerRestriction = postData.GetCustomerRestrictionOnChannels();
+
+            return new TableOperations<ChannelDetail>(connection).QueryRecords(baseRestriction+customerRestriction);
         }
 
         private async Task<API> CreateHIDSConnectionAsync()
