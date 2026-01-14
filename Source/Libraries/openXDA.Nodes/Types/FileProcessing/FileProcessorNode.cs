@@ -79,11 +79,11 @@ namespace openXDA.Nodes.Types.FileProcessing
             public FileProcessorWebController(FileProcessorNode node) =>
                 Node = node;
 
-            [HttpPost]
+            [HttpPost, HttpEditionFilter(Edition.Enterprise)]
             public void Enumerate() =>
                 Node.FileProcessor.EnumerateWatchDirectories();
 
-            [HttpPost]
+            [HttpPost, HttpEditionFilter(Edition.Enterprise)]
             public void FlushAndEnumerate()
             {
                 Node.FileProcessor.ResetIndexAndStatistics();
