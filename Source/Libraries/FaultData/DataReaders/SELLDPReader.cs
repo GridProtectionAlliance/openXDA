@@ -189,11 +189,12 @@ namespace FaultData.DataReaders
                         index = index + 2;
                         int day = ParseUInt16(record.Data, index);
                         index = index + 2;
-                        long milliseconds = ParseUInt32(record.Data, index);
+                        long ticks = ParseUInt32(record.Data, index) * TimeSpan.TicksPerMillisecond / 10L;
                         index = index + 4;
 
-                        TS = new DateTime(year, 1, 1);
-                        TS = TS + (new TimeSpan(day, 0, 0, 0)) + (new TimeSpan(milliseconds * GSF.Ticks.PerMillisecond / 10));
+                        TS = new DateTime(year, 1, 1)
+                            + TimeSpan.FromDays(day - 1) // Convert "Julian day" to zero-based days since Jan 1
+                            + TimeSpan.FromTicks(ticks);
 
                         for (int i = 0; i < channels.Count; i++)
                         {
