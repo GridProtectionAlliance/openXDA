@@ -47,15 +47,23 @@ namespace FaultData.DataWriters.Emails
             if (recipients.Count == 0 && string.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, recipients, true, out EmailResponse _, xdaNow);
+            SendEmail(email, recipients, true, true, out EmailResponse _, xdaNow);
 
             return true;
         }
 
+        /// <summary>
+        /// Function that sends an email to a custom list of recipents instead of the database configured list.
+        /// </summary>
+        /// <remarks>Ignores the <see cref="EmailSection.BlindCopyAddress"/> setting and only sends to the list provided by this method.</remarks>
+        /// <param name="email"><see cref="EmailType"/> email format to test.</param>
+        /// <param name="xdaNow"><see cref="DateTime"/> that represents the current time on the current node.</param>
+        /// <param name="recipients"><see cref="List{string}"/> list of recipents, either as emails or phone numbers.</param>
+        /// <param name="response">Object that holds information on the email sent.</param>
         public void SendEmail(ScheduledEmailType email, List<string> recipients, out EmailResponse response, DateTime xdaNow) =>
-            SendEmail(email, recipients, false, out response, xdaNow);
+            SendEmail(email, recipients, false, false, out response, xdaNow);
 
-        private void SendEmail(ScheduledEmailType email, List<string> recipients, bool saveToFile, out EmailResponse response, DateTime xdaNow)
+        private void SendEmail(ScheduledEmailType email, List<string> recipients, bool sendBcc, bool saveToFile, out EmailResponse response, DateTime xdaNow)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -64,13 +72,14 @@ namespace FaultData.DataWriters.Emails
             try
             {
                 EmailSection settings = QuerySettings();
+                if (!sendBcc)
+                    settings.BlindCopyAddress = null;
 
                 ScheduledDataSourceFactory factory = new ScheduledDataSourceFactory(ConnectionFactory);
                 List<ScheduledDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
                 IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, xdaNow));
                 response.DataSources.AddRange(dataSourceResponses);
 
-                double chartSampleRate = settings.MinimumChartSamplesPerCycle;
                 TemplateProcessor templateProcessor = new TemplateProcessor(ConnectionFactory);
                 XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
                 XDocument htmlDocument = templateProcessor.ApplyTemplate(email, templateData.ToString());
