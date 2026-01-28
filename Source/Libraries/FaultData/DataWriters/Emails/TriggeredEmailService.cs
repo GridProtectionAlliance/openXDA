@@ -51,15 +51,25 @@ namespace FaultData.DataWriters.Emails
             if (recipients.Count == 0 && String.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, evt, recipients, xdaNow, disallowedWindow, eventIDs, true, out EmailResponse _);
+            SendEmail(email, evt, recipients, xdaNow, disallowedWindow, eventIDs, true, true, out EmailResponse _);
 
             return true;
         }
 
+        /// <summary>
+        /// Function that sends an email to a custom list of recipents instead of the database configured list.
+        /// </summary>
+        /// <remarks>Ignores the <see cref="EmailSection.BlindCopyAddress"/> setting and only sends to the list provided by this method.</remarks>
+        /// <param name="email"><see cref="EmailType"/> email format to test.</param>
+        /// <param name="evt"><see cref="Event"/> event data to use when creating the email.</param>
+        /// <param name="xdaNow"><see cref="DateTime"/> that represents the current time on the current node.</param>
+        /// <param name="recipients"><see cref="List{string}"/> list of recipents, either as emails or phone numbers.</param>
+        /// <param name="saveToFile"><see cref="bool"/> flag that requests XDA save the email.</param>
+        /// <param name="response">Object that holds information on the email sent.</param>
         public void SendEmail(EmailType email, Event evt, DateTime xdaNow, List<string> recipients, bool saveToFile, out EmailResponse response) =>
-            SendEmail(email, evt, recipients, xdaNow, new TimeSpan(0), new List<int>(), saveToFile, out response);
+            SendEmail(email, evt, recipients, xdaNow, new TimeSpan(0), new List<int>(), false, saveToFile, out response);
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, bool saveToFile, out EmailResponse response)
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, bool sendBcc, bool saveToFile, out EmailResponse response)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -68,13 +78,14 @@ namespace FaultData.DataWriters.Emails
             try
             {
                 EmailSection settings = QuerySettings();
+                if (!sendBcc)
+                    settings.BlindCopyAddress = null;
 
                 TriggeredDataSourceFactory factory = new TriggeredDataSourceFactory(ConnectionFactory);
                 List<TriggeredDataSourceDefinition> definitions = factory.LoadDataSourceDefinitions(email);
                 IEnumerable<DataSourceResponse> dataSourceResponses = definitions.Select(definition => definition.CreateAndProcess(factory, evt));
                 response.DataSources.AddRange(dataSourceResponses);
 
-                double chartSampleRate = settings.MinimumChartSamplesPerCycle;
                 TemplateProcessor templateProcessor = new TemplateProcessor(ConnectionFactory);
                 XElement templateData = new XElement("data", response.DataSources.Select(r => r.Data));
                 XDocument htmlDocument = templateProcessor.ApplyTemplate(email, templateData.ToString());

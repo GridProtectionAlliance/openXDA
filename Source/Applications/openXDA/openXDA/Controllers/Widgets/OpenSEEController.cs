@@ -45,34 +45,46 @@ namespace openXDA.Controllers.Widgets
     public class OpenSEEController : ApiController
     {
         MemoryCache s_memoryCache = new MemoryCache("OpenXDA");
-        protected string SettingsCategory => "systemSettings";
         protected const int MAX_SAMPLE_COUNT = 1200;
+        Func<AdoDataConnection> m_connectionFactory;
+
+        /// <summary>
+        /// Constructor to pull  a connection factory from the XDA controller activator.
+        /// </summary> 
+        public OpenSEEController(Func<AdoDataConnection> connectionFactory)
+        {
+            m_connectionFactory = connectionFactory;
+        }
 
         /// <summary>
         /// Endpoint that handles fetching openSEE event chart data.
         /// </summary>
         /// <param name="type"><see cref="string"/> that represents the measurement type of the channels data is being pulled from. ("Voltage", "Current", "TripCoilCurrent" are valid values)</param>
-        /// <param name="eventID"><see cref="int"/> that represents the ID of the event in the XDA database.</param>
-        [Route("GetData/{type}/{eventID:int}")]
-        public IHttpActionResult GetOpenSEEData(string type, int eventID)
+        /// <param name="postData"><see cref="CustomerEventRestriction"/> that contains query information.</param>
+        [Route("GetData/{type}"), HttpPost]
+        public IHttpActionResult GetOpenSEEData([FromBody] CustomerEventRestriction postData, string type)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+            using (AdoDataConnection connection = m_connectionFactory())
             {
+                if (!postData.IsCustomerAuthorized(connection))
+                    return Unauthorized();
+
                 Dictionary<string, string> query = Request.QueryParameters();
                 DateTime epoch = new DateTime(1970, 1, 1);
 
-                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", postData.EventID);
                 if (evt is null)
-                    throw new InvalidOperationException("Unable to find event with ID " + eventID);
+                    throw new InvalidOperationException("Unable to find event with ID " + postData.EventID);
 
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                meter.ConnectionFactory = () => new AdoDataConnection(SettingsCategory);
-
+                meter.ConnectionFactory = () => m_connectionFactory();
 
                 DateTime startTime = (query.ContainsKey("startDate") ? DateTime.Parse(query["startDate"]) : evt.StartTime);
                 DateTime endTime = (query.ContainsKey("endDate") ? DateTime.Parse(query["endDate"]) : evt.EndTime);
                 DataGroup dataGroup;
-                dataGroup = QueryDataGroup(eventID, meter);
+
+                // No need to filter by customer: this is already constrained to a meter/asset on the event
+                dataGroup = QueryDataGroup(postData.EventID, meter);
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
                 bool hasVoltLN = dataGroup.DataSeries.Select(x => x.SeriesInfo.Channel.Phase.Name).Where(x => x.Contains("N")).Any();
                 foreach (var series in dataGroup.DataSeries)
@@ -121,7 +133,7 @@ namespace openXDA.Controllers.Widgets
 
             Task<DataGroup> dataGroupTask = new Task<DataGroup>(() =>
             {
-                List<byte[]> data = ChannelData.DataFromEvent(eventID, () => new AdoDataConnection(SettingsCategory));
+                List<byte[]> data = ChannelData.DataFromEvent(eventID, () => m_connectionFactory());
                 return ToDataGroup(meter, data);
 
             });

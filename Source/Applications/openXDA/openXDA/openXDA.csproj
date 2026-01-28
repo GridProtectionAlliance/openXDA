@@ -383,6 +383,7 @@
     <Compile Include="Controllers\ModelController.cs" />
     <Compile Include="Controllers\SPCTools\Controllers.cs" />
     <Compile Include="Controllers\SPCTools\AssetGroupController.cs" />
+    <Compile Include="Controllers\WebAPI\LightningController.cs" />
     <Compile Include="Controllers\WebAPI\TrenDAPController.cs" />
     <Compile Include="Controllers\WebAPI\AlarmValueController.cs" />
     <Compile Include="Controllers\WebAPI\EmailController.cs" />
@@ -390,6 +391,7 @@
     <Compile Include="Controllers\WebAPI\Grafana.cs" />
     <Compile Include="Controllers\WebAPI\LSCVSController.cs" />
     <Compile Include="Controllers\Widgets\EventTagViewController.cs" />
+    <Compile Include="Controllers\Widgets\CustomerEventRestriction.cs" />
     <Compile Include="Controllers\Widgets\StandardMagDurCurveController.cs" />
     <Compile Include="Controllers\Widgets\TrendController.cs" />
     <Compile Include="Controllers\Widgets\MeterController.cs" />

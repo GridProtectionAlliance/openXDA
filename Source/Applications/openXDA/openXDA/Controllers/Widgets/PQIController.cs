@@ -38,13 +38,21 @@ namespace openXDA.Controllers.Widgets
     [RoutePrefix("api/Widgets/PQI")]
     public class PQIController : ApiController
     {
-        const string SettingsCategory = "systemSettings";
+        Func<AdoDataConnection> m_connectionFactory;
+
+        /// <summary>
+        /// Constructor to pull  a connection factory from the XDA controller activator.
+        /// </summary> 
+        public PQIController(Func<AdoDataConnection> connectionFactory)
+        {
+            m_connectionFactory = connectionFactory;
+        }
 
         public string ClientID
         {
             get
             {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+                using (AdoDataConnection connection = m_connectionFactory())
                     return connection.ExecuteScalar<string>($"SELECT Value From Setting Where Name = 'PQI.ClientID'") ?? "";
             }
         }
@@ -53,7 +61,7 @@ namespace openXDA.Controllers.Widgets
         {
             get
             {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+                using (AdoDataConnection connection = m_connectionFactory())
                     return connection.ExecuteScalar<string>($"SELECT Value From Setting Where Name = 'PQI.ClientSecret'") ?? "";
             }
         }
@@ -62,7 +70,7 @@ namespace openXDA.Controllers.Widgets
         {
             get
             {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+                using (AdoDataConnection connection = m_connectionFactory())
                     return connection.ExecuteScalar<string>($"SELECT Value From Setting Where Name = 'PQI.Username'") ?? "";
             }
         }
@@ -71,7 +79,7 @@ namespace openXDA.Controllers.Widgets
         {
             get
             {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+                using (AdoDataConnection connection = m_connectionFactory())
                     return connection.ExecuteScalar<string>($"SELECT Value From Setting Where Name = 'PQI.Password'") ?? "";
             }
         }
@@ -79,7 +87,7 @@ namespace openXDA.Controllers.Widgets
         {
             get
             {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+                using (AdoDataConnection connection = m_connectionFactory())
                     return connection.ExecuteScalar<string>($"SELECT Value From Setting Where Name = 'PQI.PingURL'") ?? "";
             }
         }
@@ -87,7 +95,7 @@ namespace openXDA.Controllers.Widgets
         {
             get
             {
-                using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
+                using (AdoDataConnection connection = m_connectionFactory())
                     return connection.ExecuteScalar<string>($"SELECT Value From Setting Where Name = 'PQI.BaseURL'") ?? "";
             }
         }
@@ -95,30 +103,38 @@ namespace openXDA.Controllers.Widgets
         /// <summary>
         /// Retrieves a list of impacted <see cref="Equipment"/> based on an openXDA <see cref="Event"/> ID.
         /// </summary>
-        /// <param name="eventID">ID of an openXDA <see cref="Event"/></param>
+        /// <param name="postData"><see cref="CustomerEventRestriction"/> that contains query information.</param>
         /// <returns>List of impacted <see cref="Equipment"/></returns>
-        [Route("GetEquipment/{eventID:int}"), HttpGet]
-        public async Task<IHttpActionResult> GetEquipment(int eventID)
+        [Route("GetEquipment"), HttpPost]
+        public async Task<IHttpActionResult> GetEquipment([FromBody] CustomerEventRestriction postData)
         {
+            using (AdoDataConnection connection = m_connectionFactory())
+                if (!postData.IsCustomerAuthorized(connection))
+                    return Unauthorized();
+
             PQIWSClient pqiwsClient = new PQIWSClient(BaseURL, FetchAccessToken);
-            PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(() => new AdoDataConnection(SettingsCategory), pqiwsClient);
-            return Ok(await pqiwsQueryHelper.GetAllImpactedEquipmentAsync(eventID));
+            PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(() => m_connectionFactory(), pqiwsClient);
+            return Ok(await pqiwsQueryHelper.GetAllImpactedEquipmentAsync(postData.EventID));
         }
 
         /// <summary>
         /// Retrieves a list of test curves <see cref="Equipment"/> based on an openXDA <see cref="Event"/> ID.
         /// </summary>
-        /// <param name="eventID">ID of an openXDA <see cref="Event"/></param>
+        /// <param name="postData"><see cref="CustomerEventRestriction"/> that contains query information.</param>
         /// <returns>
         /// List of <see cref="List{T}"/> test curves, each one of which is a <see cref="Tuple{T1,T2}"/> of 
         /// <see cref="TestCurve"/>s and a <see cref="List{T}"/> of <see cref="TestCurvePoint"/>s.
         /// </returns>
-        [Route("GetCurves/{eventID:int}"), HttpGet]
-        public async Task<IHttpActionResult> GetCurves(int eventID)
+        [Route("GetCurves"), HttpPost]
+        public async Task<IHttpActionResult> GetCurves([FromBody] CustomerEventRestriction postData)
         {
+            using (AdoDataConnection connection = m_connectionFactory())
+                if (!postData.IsCustomerAuthorized(connection))
+                    return Unauthorized();
+
             PQIWSClient pqiwsClient = new PQIWSClient(BaseURL, FetchAccessToken);
-            PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(() => new AdoDataConnection(SettingsCategory), pqiwsClient);
-            List<Tuple<TestCurve, List<TestCurvePoint>>> r = await pqiwsQueryHelper.GetAllTestCurvesAsync(new List<int>() { eventID });
+            PQIWSQueryHelper pqiwsQueryHelper = new PQIWSQueryHelper(() => m_connectionFactory(), pqiwsClient);
+            List<Tuple<TestCurve, List<TestCurvePoint>>> r = await pqiwsQueryHelper.GetAllTestCurvesAsync(new List<int>() { postData.EventID });
             return Ok(r);
         }
 

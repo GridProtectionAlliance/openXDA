@@ -21,11 +21,12 @@
 //
 //******************************************************************************************************
 
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -85,6 +86,13 @@ namespace openXDA.APIAuthentication
                 IsIntialized = true;
             return success;
         }
+
+        /// <summary>
+        /// Retrieves <see href="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Libraries/openXDA.Model/SystemCenter/Customer.cs">customer</see> key from the claims principle.
+        /// </summary>
+        /// <remarks>A value of <see langword="null"/> signifies the current user is authorized to view any object the controller may retrieve.</remarks>
+        /// <returns> A flag indicating if the operation was successful. </returns>
+        public bool TryRetrieveCustomer(ClaimsPrincipal principal, out string customerKey) => SettingsRetriever.TryRetrieveCustomer(principal, out customerKey);
 
         /// <summary>
         /// Gets Response Task from XDA 
