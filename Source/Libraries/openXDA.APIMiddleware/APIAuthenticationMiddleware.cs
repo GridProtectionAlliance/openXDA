@@ -200,7 +200,12 @@ namespace openXDA.APIMiddleware
                 requestToken == hostToken;
         }
 
-        private string GetAPIToken(string registrationKey)
+        /// <summary>
+        /// Function that returns the API Token associated with a given API Key
+        /// </summary>
+        /// <param name="registrationKey"> The API Key</param>
+        /// <returns>The API Token associated with this Key</returns>
+        protected string GetAPIToken(string registrationKey)
         {
             if (registrationKey is null)
                 return null;
@@ -216,7 +221,12 @@ namespace openXDA.APIMiddleware
             }
         }
 
-        private bool UseImpersonation(AuthorizationHeader header)
+        /// <summary>
+        /// Returns a flag determinigng whether the Given AuthorizationHeader is allowed to impersonate a different user
+        /// </summary>
+        /// <param name="header"></param>
+        /// <returns> <see cref="true"/> if the request is allowed to impersonate a different user. </returns>
+        protected bool UseImpersonation(AuthorizationHeader header)
         {
             string registrationKey = header.APIKey;
 
