@@ -43,7 +43,7 @@ namespace openXDA.APIMiddleware
         #region [ Members ]
 
         // Nested Types
-        private class AuthorizationHeader
+        protected class AuthorizationHeader
         {
             private const string HeaderKey = "Authorization";
 
@@ -205,7 +205,7 @@ namespace openXDA.APIMiddleware
         /// </summary>
         /// <param name="registrationKey"> The API Key</param>
         /// <returns>The API Token associated with this Key</returns>
-        protected string GetAPIToken(string registrationKey)
+        protected virtual string GetAPIToken(string registrationKey)
         {
             if (registrationKey is null)
                 return null;
@@ -222,11 +222,11 @@ namespace openXDA.APIMiddleware
         }
 
         /// <summary>
-        /// Returns a flag determinigng whether the Given AuthorizationHeader is allowed to impersonate a different user
+        /// Returns a flag determining whether the Given AuthorizationHeader is allowed to impersonate a different user
         /// </summary>
-        /// <param name="header"></param>
-        /// <returns> <see cref="true"/> if the request is allowed to impersonate a different user. </returns>
-        protected bool UseImpersonation(AuthorizationHeader header)
+        /// <param name="header">The authorization header containing the API key and optional impersonation token.</param>
+        /// <returns>true if the request is allowed to impersonate a different user; otherwise, false.</returns>
+        protected virtual bool UseImpersonation(AuthorizationHeader header)
         {
             string registrationKey = header.APIKey;
 
