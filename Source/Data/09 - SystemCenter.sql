@@ -380,7 +380,7 @@ GO
 INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('maxFFTHarmonic', '50', '50')
 GO
 
-CREATE VIEW [openSee.FaultSpecifics] AS
+CREATE VIEW [OpenSEE.FaultSpecifics] AS
 	SELECT
 		Event.ID,
 		FaultSummary.FaultType,
