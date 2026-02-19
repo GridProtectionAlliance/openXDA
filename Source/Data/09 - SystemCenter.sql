@@ -379,3 +379,24 @@ INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('minSampleRate',
 GO
 INSERT INTO [OpenSEE.Setting](Name, Value, DefaultValue) VALUES('maxFFTHarmonic', '50', '50')
 GO
+
+CREATE VIEW [OpenSEE.FaultSpecifics] AS
+	SELECT
+		Event.ID,
+		FaultSummary.FaultType,
+		FaultSummary.Inception,
+		FaultSummary.DurationSeconds,
+		FaultSummary.DurationCycles,
+		FaultSummary.CurrentMagnitude,
+		FaultSummary.Algorithm,
+		FaultSummary.Distance,
+		DoubleEndedFaultSummary.Distance as DoubleFaultDistance,
+		DoubleEndedFaultSummary.Angle as DoubleFaultAngle,
+		Event.StartTime,
+		Meter.Name as MeterName
+	FROM
+		Event INNER JOIN
+		Meter ON Meter.ID = Event.MeterID INNER JOIN
+		FaultSummary ON FaultSummary.EventID = Event.ID AND FaultSummary.IsSelectedAlgorithm = 1 LEFT JOIN
+		DoubleEndedFaultSummary ON DoubleEndedFaultSummary.EventID = Event.ID AND DoubleEndedFaultSummary.IsSelectedAlgorithm = 1
+GO
