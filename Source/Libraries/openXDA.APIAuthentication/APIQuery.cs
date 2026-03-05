@@ -243,6 +243,11 @@ namespace openXDA.APIAuthentication
             }
             catch (HttpRequestException ex)
             {
+                // If there are no other hosts to try,
+                // then we can just throw the exception as-is
+                if (Hosts.Count == 1)
+                    throw;
+
                 if (IndicatesHostIsUnreachable(ex))
                     throw new HostUnreachableException();
 
