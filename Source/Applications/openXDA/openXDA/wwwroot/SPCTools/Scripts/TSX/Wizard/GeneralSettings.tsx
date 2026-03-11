@@ -25,7 +25,7 @@ import * as React from 'react';
 import { SearchBar, LoadingIcon } from '@gpa-gemstone/react-interactive'
 import { SPCTools, openXDA, Filter } from '../global';
 import { SelectTable, ReactTable } from '@gpa-gemstone/react-table';
-import { Input, Select, ArrayCheckBoxes } from '@gpa-gemstone/react-forms';
+import { Input, Select, ArrayCheckBoxes, CheckBox } from '@gpa-gemstone/react-forms';
 import { updateAlarmGroup, selectSelectedMeter, selectSelectedMeterASC, selectSelectedMeterSort, sortSelectedMeters, removeMeter, addMeter, selectMeasurmentTypeID, updateMeasurmentTypeID, selectAlarmGroup, selectSeriesTypeID, updateSeriesTypeID, updateAlarmDayGroupID, selectAlarmDayGroupID, SelectWizardType } from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 import { SelectMeasurmentTypes } from '../store/MeasurmentTypeSlice';
@@ -80,6 +80,11 @@ const GeneralSettings = () => {
                         Valid={() => (group.Name != undefined && group.Name.length > 0 ? true : false)} />
                 </div>
                 <div className="col" style={{ width: '50%' }}>
+                    <CheckBox<SPCTools.IAlarmGroup>
+                        Record={group}
+                        Field={'Enabled'}
+                        Setter={(r) => dispatch(updateAlarmGroup(r))}
+                        Label={'Enabled'} />
                 </div>
             </div>
             <div className="row" style={{ margin: 0 }}>

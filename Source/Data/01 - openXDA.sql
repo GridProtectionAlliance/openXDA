@@ -3887,7 +3887,8 @@ CREATE TABLE AlarmGroup
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NOT NULL,
     AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
-    SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID)
+    SeverityID INT NOT NULL REFERENCES AlarmSeverity(ID),
+    Enabled BIT NOT NULL DEFAULT(1)
 )
 GO
 
@@ -4088,7 +4089,8 @@ SELECT
     LastAlarm.EndTime LastAlarmEnd,
     LastAlarm.ChannelName LastChannel,
     LastAlarm.MeterName LastMeter,
-    AlarmType.Description AS AlarmType
+    AlarmType.Description AS AlarmType,
+    AlarmGroup.Enabled
 FROM 
     AlarmGroup LEFT JOIN
     AlarmSeverity ON AlarmGroup.SeverityID = AlarmSeverity.ID LEFT JOIN
@@ -4199,8 +4201,9 @@ SELECT
     AlarmFactor.Factor AS Value
 FROM
     (
-        SELECT ID, Factor, AlarmGroupID, SeverityID
-        FROM AlarmFactor
+        SELECT AF.ID, AF.Factor, AF.AlarmGroupID, AF.SeverityID
+        FROM AlarmFactor AF
+        INNER JOIN AlarmGroup AG ON AF.AlarmGroupID = AG.ID AND AG.Enabled = 1
         UNION
         SELECT
             NULL AS ID,
@@ -4208,6 +4211,7 @@ FROM
             AlarmGroup.ID AS AlarmGroupID,
             AlarmGroup.SeverityID
         FROM AlarmGroup
+        WHERE AlarmGroup.Enabled = 1
     ) AlarmFactor LEFT JOIN
     Alarm ON AlarmFactor.AlarmGroupID = alarm.AlarmGroupID LEFT JOIN
     AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID
