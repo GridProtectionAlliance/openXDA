@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
@@ -41,6 +42,9 @@ namespace openXDA.Model
         public int AlarmTypeID { get; set; }
 
         public int SeverityID { get; set; }
+
+        [DefaultValue(true)]
+        public bool Enabled { get; set; }
     }
 
     /// <summary>
@@ -60,6 +64,7 @@ namespace openXDA.Model
         public string LastChannel { get; set; }
         public string LastMeter { get; set; }
         public string AlarmType { get; set; }
+        public bool Enabled { get; set; }
     }
 
 }

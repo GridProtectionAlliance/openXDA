@@ -51,7 +51,8 @@ const AlarmGroupHome = (props: { loadAlarm: () => void }) => {
         { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
         { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: true },
         { label: 'Number of Channels', key: 'Channels', type: 'integer', isPivotField: true },
-        { label: 'Severity', key: 'AlarmSeverity', type: 'string', isPivotField: true }
+        { label: 'Severity', key: 'AlarmSeverity', type: 'string', isPivotField: true },
+        { label: 'Enabled', key: 'Enabled', type: 'boolean', isPivotField: false }
     ]
     const [search, setSearch] = React.useState<Array<Search.IFilter<SPCTools.IAlarmGroupView>>>([]);
 
@@ -155,6 +156,19 @@ const AlarmGroupHome = (props: { loadAlarm: () => void }) => {
                             RowStyle={{ width: 'auto' }}
                         >
                         Alarm Severity
+                        </ReactTable.Column> 
+                        <ReactTable.Column<SPCTools.IAlarmGroupView>
+                            Key={'Enabled'}
+                            AllowSort={true}
+                            Field={'Enabled'}
+                            RowStyle={{ width: 'auto' }}
+                            Content={({ item }) => (
+                                <span className={item.Enabled ? 'badge badge-success' : 'badge badge-secondary'}>
+                                    {item.Enabled ? 'Enabled' : 'Disabled'}
+                                </span>
+                            )}
+                        >
+                        Status
                         </ReactTable.Column> 
                         <ReactTable.Column<SPCTools.IAlarmGroupView>
                             Key={'LastAlarmEnd'}
