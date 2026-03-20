@@ -188,6 +188,7 @@
     <Compile Include="Settings\BreakerReportsSettings.cs" />
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
+    <Compile Include="SystemCenter\AppStatus.cs" />
     <Compile Include="SystemCenter\ChannelTemplateFile.cs" />
     <Compile Include="SystemCenter\ExternalDatabase.cs" />
     <Compile Include="System\DataOperationFailure.cs" />

@@ -33,6 +33,7 @@ using GSF.Configuration;
 using GSF.Data;
 using openXDA.Configuration;
 using openXDA.Model;
+using openXDA.Model.SystemCenter;
 
 namespace FaultData.DataResources
 {
@@ -46,6 +47,7 @@ namespace FaultData.DataResources
             bool DidBreakerOpen(List<string> points, DateTime startTime, DateTime endTime, double breakerOpenValue);
 
             IEnumerable<string> QuerySCADADataPoints(string pointTag, int take);
+            public AppStatus GetHealth();
         }
 
         public enum SCADASystem
@@ -102,6 +104,7 @@ namespace FaultData.DataResources
             return SCADAHistorianResource.DidBreakerOpen(points, startTime, endTime, breakerOpenValue);
         }
 
+
         public IEnumerable<string> QuerySCADADataPoints(string pointTag, int take)
         {
             // If no resource, a search doesn't really make sense
@@ -114,6 +117,11 @@ namespace FaultData.DataResources
         {
             ConnectionFactory = meterDataSet.CreateDbConnection;
             SCADAHistorianResource = GetSCADAHistorianResource(meterDataSet);
+        }
+
+        public AppStatus GetHistorianHealth()
+        {
+            return SCADAHistorianResource.GetHealth();
         }
 
         private ISCADAHistorianResource GetSCADAHistorianResource(MeterDataSet meterDataSet)
