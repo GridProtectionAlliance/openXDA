@@ -21,16 +21,16 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web.Http;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Data;
 using log4net;
 using Newtonsoft.Json.Linq;
 using openXDA.Nodes;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web.Http;
 
 namespace openXDA.Controllers.Config
 {
@@ -98,6 +98,17 @@ namespace openXDA.Controllers.Config
                 Log.Error(ex.Message, ex);
                 return InternalServerError(ex);
             }
+        }
+
+        [Route("SCADAPoint/Health"), HttpGet]
+        public IHttpActionResult GetSCADAPointHealth()
+        {
+            MeterDataSet meterDataSet = new MeterDataSet();
+            Action<object> configurator = GetConfigurator();
+            meterDataSet.Configure = configurator;
+            SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
+            scadaDataResource.Initialize(meterDataSet);
+            return Ok(scadaDataResource.GetHistorianHealth());
         }
 
         private Action<object> GetConfigurator()
