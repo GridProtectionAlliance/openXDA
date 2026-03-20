@@ -27,6 +27,7 @@ using System.Linq;
 using FaultData.DataSets;
 using InStep.eDNA.EzDNAApiNet;
 using log4net;
+using openXDA.Model.SystemCenter;
 using static FaultData.DataResources.SCADADataResource;
 
 namespace FaultData.DataResources.eDNA
@@ -131,6 +132,18 @@ namespace FaultData.DataResources.eDNA
             });
             return tagArray;
             */
+        }
+
+        public AppStatus GetHealth()
+        {
+            return new AppStatus() 
+            {
+                Status = "Success",
+                Details = [new StatusItem() {
+                    Status = "Success",
+                    Description = "Succesfully connected to EDNA Scada resource."
+                }]
+            };
         }
 
         public override void Initialize(MeterDataSet meterDataSet) =>

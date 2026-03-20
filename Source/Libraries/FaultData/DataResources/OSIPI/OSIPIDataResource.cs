@@ -33,6 +33,7 @@ using OSIsoft.AF.Asset;
 using OSIsoft.AF.Data;
 using OSIsoft.AF.PI;
 using OSIsoft.AF.Time;
+using openXDA.Model.SystemCenter;
 using static FaultData.DataResources.SCADADataResource;
 
 namespace FaultData.DataResources.OSIPI
@@ -93,6 +94,39 @@ namespace FaultData.DataResources.OSIPI
 
         public override void Initialize(MeterDataSet meterDataSet) =>
             XDATimeZoneConverter = new TimeZoneConverter(meterDataSet.Configure);
+
+        public AppStatus GetHealth()
+        {
+            AppStatus appStatus = new()
+            {
+                Status = "Success",
+                Details = [new StatusItem() {
+                        Status = "Success",
+                        Description = "Successfully connected to OSIPI Scada resource."
+                    }]
+            };
+
+            try
+            {
+                using (PIConnection connection = CreateConnection())
+                {
+                    connection.Open();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error while connecting to OSI-PI historian: {ex.Message}", ex);
+                appStatus.Status = "Error";
+                if (ex is InvalidOperationException)
+                {
+                    appStatus.Details = [new StatusItem() {
+                    Status = "Error",
+                    Description = ex.Message
+                }];
+                }
+            }
+            return appStatus;
+        }
 
         private bool DidBreakerOpen(PIConnection connection, List<string> points, DateTime startTime, DateTime endTime, double breakerOpenValue)
         {
