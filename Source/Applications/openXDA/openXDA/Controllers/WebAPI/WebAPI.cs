@@ -348,7 +348,7 @@ namespace openXDA.Controllers.WebAPI
                     Event.ID as eventID,
                     FaultSummary.Inception as event_datetime,
                     Location.ShortName as substation,
-                    try_parse(Asset.AssetKey as int) as lineID,
+                    Asset.AssetKey as lineID,
                     Asset.AssetName as line,
                     CASE WHEN FaultSummary.Distance = '-1E308'
                         THEN 'NaN'
