@@ -24,7 +24,7 @@
 import * as React from 'react';
 import GeneralSettings from './GeneralSettings';
 
-import { selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror, ResetWizzard } from './DynamicWizzardSlice'
+import { selectStatus, next, back, selectTab, selectErrors, SaveWizard, selectWizardEror, ResetWizzard, selectAlarmGroup } from './DynamicWizzardSlice'
 import { useSelector, useDispatch } from 'react-redux';
 
 import { ToolTip, ProgressBar, ServerErrorIcon, LoadingIcon } from '@gpa-gemstone/react-interactive';
@@ -47,8 +47,12 @@ const WizardHome = (props: IProps) => {
     const dispatch = useDispatch();
     const errors = useSelector(selectErrors);
     const wizardError = useSelector(selectWizardEror);
+    const alarmGroup = useSelector(selectAlarmGroup);
+
+    const isEditMode = alarmGroup != null && alarmGroup.ID != null && alarmGroup.ID !== -1;
 
     const [hover, setHover] = React.useState<boolean>(false);
+    const [hoverSave, setHoverSave] = React.useState<boolean>(false);
 
 
     // Define Step Numbers
@@ -116,6 +120,13 @@ const WizardHome = (props: IProps) => {
                     </div>
                 </div>
                 <div className="btn-group mr-2 " role="group">
+                    {isEditMode && tab !== 'test' ?
+                        <button type="button" className={"btn btn-success" + (errors.some(item => (item.complete == 'required')) ? ' disabled' : '')}
+                            onClick={() => { if (!errors.some(item => (item.complete == 'required'))) dispatch(SaveWizard()); }}
+                            data-tooltip='quickSaveTip' onMouseEnter={() => setHoverSave(true)} onMouseLeave={() => setHoverSave(false)}>
+                            {status != 'idle' ? <LoadingIcon Show={true} Size={40} /> : "Save"}
+                        </button>
+                    : null}
                     <button type="button" className={"btn btn-success" + (errors.some(item => (item.complete == 'required')) ? ' disabled' : '')}
                         onClick={() => Continue()} data-tooltip='registerTip' onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
                         {status != 'idle' ? <LoadingIcon Show={true} Size={40} /> : (tab == "test" ? "Save" : "Continue")}
@@ -124,6 +135,11 @@ const WizardHome = (props: IProps) => {
             </div>
             {tab != 'test' ?
                 <ToolTip Show={hover && errors.length > 0} Position={'left'} Theme={'dark'} Target={"registerTip"}>
+                    {errors.map((item, index) => <Requirements {...item} key={index} />)}
+                </ToolTip>
+                : null}
+            {isEditMode && tab !== 'test' ?
+                <ToolTip Show={hoverSave && errors.length > 0} Position={'left'} Theme={'dark'} Target={"quickSaveTip"}>
                     {errors.map((item, index) => <Requirements {...item} key={index} />)}
                 </ToolTip>
                 : null}
