@@ -103,6 +103,12 @@
     <Compile Include="Channels\ChannelAlarmGroup.cs" />
     <Compile Include="Channels\ChannelOverview.cs" />
     <Compile Include="Dashboard\ContourClasses.cs" />
+    <Compile Include="DataLoader\BusDescriptor.cs" />
+    <Compile Include="DataLoader\DataFileDescriptor.cs" />
+    <Compile Include="DataLoader\FileGroupDescriptor.cs" />
+    <Compile Include="DataLoader\LineDescriptor.cs" />
+    <Compile Include="DataLoader\LocationDescriptor.cs" />
+    <Compile Include="DataLoader\MeterDescriptor.cs" />
     <Compile Include="DataPush\AssetsToDataPush.cs" />
     <Compile Include="DataPush\FilesToDataPush.cs" />
     <Compile Include="DBCleanup.cs" />

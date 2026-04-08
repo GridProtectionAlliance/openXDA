@@ -161,7 +161,8 @@ namespace openXDA.Adapters
             const string QueryFormat =
                 "SELECT Node.ID " +
                 "FROM " +
-                "    Node JOIN " +
+                "    ActiveHost JOIN " +
+                "    Node ON Node.HostRegistrationID = ActiveHost.ID JOIN " +
                 "    NodeType ON Node.NodeTypeID = NodeType.ID " +
                 "WHERE NodeType.Name = {0}";
 

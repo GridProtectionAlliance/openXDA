@@ -103,6 +103,7 @@ namespace openXDA.APIMiddleware
                 : base(username, true, false, false)
             {
                 IsUserAuthenticated = true;
+                UserData.IsDefined = true;
                 UserData.Roles.Add("API");
             }
 
