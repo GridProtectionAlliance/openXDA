@@ -224,6 +224,9 @@ namespace openXDA.Controllers.DataLoader
                     ? UploadFileGroup(fileGroupTable, descriptor)
                     : fileGroupTable.QueryRecordWhere("ID = {0}", fileGroupID.GetValueOrDefault());
 
+                if (fileGroup.MeterID != descriptor.MeterID)
+                    return UnprocessableContent("Existing data files are associated with a meter");
+
                 DateTime now = XDANow;
 
                 for (int i = 0; i < dataFiles.Count; i++)
