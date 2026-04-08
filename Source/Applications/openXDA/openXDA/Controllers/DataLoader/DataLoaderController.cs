@@ -232,9 +232,12 @@ namespace openXDA.Controllers.DataLoader
                 for (int i = 0; i < dataFiles.Count; i++)
                 {
                     DataFileDescriptor dataFileDescriptor = descriptor.DataFiles[i];
+                    DataFile dataFile = dataFiles[i];
 
-                    DataFile dataFile = dataFiles[i]
-                        ?? UploadDataFile(dataFileTable, fileGroup, now, dataFileDescriptor);
+                    if (dataFile is null)
+                        dataFile = UploadDataFile(dataFileTable, fileGroup, now, dataFileDescriptor);
+                    else
+                        UpdateDataFile(dataFileTable, dataFile, now, dataFileDescriptor);
 
                     UploadFileBlob(fileBlobTable, dataFile, dataFileDescriptor);
                 }
@@ -469,6 +472,14 @@ namespace openXDA.Controllers.DataLoader
             string idQuery = $"SELECT @@IDENTITY";
             dataFile.ID = dataFileTable.Connection.ExecuteScalar<int>(idQuery);
             return dataFile;
+        }
+
+        private static void UpdateDataFile(TableOperations<DataFile> dataFileTable, DataFile dataFile, DateTime writeTime, DataFileDescriptor dataFileDescriptor)
+        {
+            dataFile.FileSize = dataFileDescriptor.FileData.Length;
+            dataFile.LastWriteTime = writeTime;
+            dataFile.LastAccessTime = writeTime;
+            dataFileTable.UpdateRecord(dataFile);
         }
 
         private static void UploadFileBlob(TableOperations<FileBlob> fileBlobTable, DataFile dataFile, DataFileDescriptor dataFileDescriptor)
