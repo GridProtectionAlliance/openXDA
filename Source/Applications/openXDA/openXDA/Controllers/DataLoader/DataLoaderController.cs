@@ -98,35 +98,59 @@ namespace openXDA.Controllers.DataLoader
         }
 
         [HttpPost, Route("UploadMeter")]
-        public Meter UploadMeter([FromBody] MeterDescriptor descriptor)
+        public IHttpActionResult UploadMeter([FromBody] MeterDescriptor descriptor)
         {
+            if (descriptor is null)
+                return BadRequest("Descriptor is required to upload a meter");
+
+            IEnumerable<BusDescriptor> busDescriptors = descriptor.Buses ?? Enumerable.Empty<BusDescriptor>();
+            IEnumerable<LineDescriptor> lineDescriptors = descriptor.Lines ?? Enumerable.Empty<LineDescriptor>();
+
+            if (descriptor.Location is null)
+                return UnprocessableContent("A meter descriptor must include location information");
+
+            if (string.IsNullOrEmpty(descriptor.AssetKey))
+                return UnprocessableContent("Asset key is required when uploading a meter");
+
+            if (string.IsNullOrEmpty(descriptor.Location.LocationKey))
+                return UnprocessableContent("Location key is required when uploading a meter");
+
+            if (busDescriptors.Select(bus => bus.AssetKey).Any(string.IsNullOrEmpty))
+                return UnprocessableContent("Buses must include an asset key when uploading a meter");
+
+            if (lineDescriptors.Select(line => line.AssetKey).Any(string.IsNullOrEmpty))
+                return UnprocessableContent("Lines must include an asset key when uploading a meter");
+
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
                 Location location = GetOrUploadLocation(connection, descriptor.Location);
                 Meter meter = UploadMeter(meterTable, location, descriptor);
 
-                foreach (BusDescriptor busDescriptor in descriptor.Buses)
+                foreach (BusDescriptor busDescriptor in busDescriptors)
                 {
                     Bus bus = GetOrUploadBus(connection, busDescriptor);
                     _ = GetOrUploadAssetLocation(connection, bus, meter.Location);
                     UploadMeterAsset(connection, meter, bus);
                 }
 
-                foreach (LineDescriptor lineDescriptor in descriptor.Lines)
+                foreach (LineDescriptor lineDescriptor in lineDescriptors)
                 {
                     Line line = GetOrUploadLine(connection, lineDescriptor);
                     _ = GetOrUploadAssetLocation(connection, line, meter.Location);
                     UploadMeterAsset(connection, meter, line);
                 }
 
-                return meter;
+                return Ok(meter);
             }
         }
 
         [HttpPost, Route("GetDataFile")]
         public IHttpActionResult GetDataFile([FromBody] string filePath)
         {
+            if (filePath is null)
+                return BadRequest("File path is required to retrieve data file info");
+
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
@@ -138,6 +162,9 @@ namespace openXDA.Controllers.DataLoader
         [HttpPost, Route("GetFileData")]
         public IHttpActionResult GetFileData([FromBody] string filePath)
         {
+            if (filePath is null)
+                return BadRequest("File path is required to retrieve data file info");
+
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
@@ -155,6 +182,18 @@ namespace openXDA.Controllers.DataLoader
         [HttpPost, Route("UploadFileGroup")]
         public async Task<IHttpActionResult> UploadFileGroup([FromBody] FileGroupDescriptor descriptor)
         {
+            if (descriptor is null)
+                return BadRequest("Descriptor is required to upload a file group");
+
+            if (descriptor.DataFiles is null || descriptor.DataFiles.Count == 0)
+                return UnprocessableContent("A file group must include at least one data file");
+
+            if (descriptor.DataFiles.Select(file => file.FilePath).Any(string.IsNullOrEmpty))
+                return UnprocessableContent("All files in file group must have a file path");
+
+            if (descriptor.DataFiles.Any(file => file.FileData is null))
+                return UnprocessableContent("All files in file group must have file data");
+
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
