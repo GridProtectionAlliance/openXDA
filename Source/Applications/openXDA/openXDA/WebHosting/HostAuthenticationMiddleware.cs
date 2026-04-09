@@ -81,6 +81,7 @@ namespace openXDA.WebHosting
                 : base(username, true, false, false)
             {
                 IsUserAuthenticated = true;
+                UserData.IsDefined = true;
                 UserData.Roles.Add("Host");
             }
 
