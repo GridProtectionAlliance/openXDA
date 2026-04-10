@@ -394,6 +394,9 @@ namespace openXDA.WebHosting
             TryLoadExternalWebControllers();
             httpConfig.MapHttpAttributeRoutes(new CustomDirectRouteProvider());
 
+            // Enable support for conversion between application/octet-stream and byte[]
+            httpConfig.Formatters.Insert(0, new OctetStreamMediaTypeFormatter());
+
             // Override controller selection
             XDAControllerSelector controllerSelector = new XDAControllerSelector(httpConfig, NodeHost);
             httpConfig.Services.Replace(typeof(IHttpControllerSelector), controllerSelector);
