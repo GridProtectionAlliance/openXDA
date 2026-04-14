@@ -121,6 +121,14 @@ namespace FaultData.DataResources
 
         public AppStatus GetHistorianHealth()
         {
+            if (SCADAHistorianResource == null)
+            {
+                return new AppStatus()
+                {
+                    Status = "N/A",
+                    Details = []
+                };
+            }
             return SCADAHistorianResource.GetHealth();
         }
 
