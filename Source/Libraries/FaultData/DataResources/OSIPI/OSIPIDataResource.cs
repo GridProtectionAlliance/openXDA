@@ -117,13 +117,11 @@ namespace FaultData.DataResources.OSIPI
             {
                 Log.Error($"Error while connecting to OSI-PI historian: {ex.Message}", ex);
                 appStatus.Status = "Error";
-                if (ex is InvalidOperationException)
-                {
                     appStatus.Details = [new StatusItem() {
                     Status = "Error",
                     Description = ex.Message
                 }];
-                }
+
             }
             return appStatus;
         }
