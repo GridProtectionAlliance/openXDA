@@ -103,7 +103,7 @@ export const DynamicWizzardSlice = createSlice({
             const dt = new Date();
 
             state.Step = 'general'
-            state.AlarmGroup = { AlarmTypeID: 1, SeverityID: 1, ID: -1, Name: "" }
+            state.AlarmGroup = { AlarmTypeID: 1, SeverityID: 1, ID: -1, Name: "", Enabled: true }
             state.Status = 'idle'
             state.SelectedMeter = []
             state.MeasurmentTypeID = 1
