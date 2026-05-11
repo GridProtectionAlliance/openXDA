@@ -265,82 +265,79 @@ namespace openXDA
             securityProvider.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
         }
 
-        private void InitializeLogging()
+        private RollingFileAppender InitializeRollingFileAppender(string settingsCategory, string defaultPath)
         {
-            ServiceHelperAppender serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
-
-            RollingFileAppender debugLogAppender = new RollingFileAppender();
-            debugLogAppender.File = "openXDA.log";
-            debugLogAppender.StaticLogFileName = false;
-            debugLogAppender.AppendToFile = true;
-            debugLogAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
-            debugLogAppender.MaxSizeRollBackups = 10;
-            debugLogAppender.PreserveLogFileNameExtension = true;
-            debugLogAppender.MaximumFileSize = "1MB";
-            debugLogAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
-            debugLogAppender.AddFilter(new FileSkippedExceptionFilter());
-
-            RollingFileAppender skippedFilesAppender = new RollingFileAppender();
-            skippedFilesAppender.File = "SkippedFiles.log";
-            skippedFilesAppender.StaticLogFileName = false;
-            skippedFilesAppender.AppendToFile = true;
-            skippedFilesAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
-            skippedFilesAppender.MaxSizeRollBackups = 10;
-            skippedFilesAppender.PreserveLogFileNameExtension = true;
-            skippedFilesAppender.MaximumFileSize = "1MB";
-            skippedFilesAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
-            skippedFilesAppender.AddFilter(new FileSkippedExceptionFilter(false));
-
-            RollingFileAppender gsfLogAppender = new RollingFileAppender();
-            gsfLogAppender.File = "gsf.log";
-            gsfLogAppender.StaticLogFileName = false;
-            gsfLogAppender.AppendToFile = true;
-            gsfLogAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
-            gsfLogAppender.MaxSizeRollBackups = 10;
-            gsfLogAppender.PreserveLogFileNameExtension = true;
-            gsfLogAppender.MaximumFileSize = "1MB";
-            gsfLogAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
-
-            string logFileSize = Environment.GetEnvironmentVariable("openXDA_DebugLogFileSize");
-            string logFileBackups = Environment.GetEnvironmentVariable("openXDA_DebugLogFileBackups");
-
-            if (!string.IsNullOrEmpty(logFileSize))
-            {
-                debugLogAppender.MaximumFileSize = logFileSize;
-                skippedFilesAppender.MaximumFileSize = logFileSize;
-                gsfLogAppender.MaximumFileSize = logFileSize;
-            }
-
-            if (int.TryParse(logFileBackups, out int backups))
-            {
-                debugLogAppender.MaxSizeRollBackups = backups;
-                skippedFilesAppender.MaxSizeRollBackups = backups;
-                gsfLogAppender.MaxSizeRollBackups = backups;
-            }
-
             try
             {
-                void EnsureDirectory(string directory)
-                {
-                    if (!Directory.Exists(directory))
-                        Directory.CreateDirectory(directory);
-                }
+                CategorizedSettingsSection categorizedSettings = ConfigurationFile.Settings;
+                CategorizedSettingsElementCollection logSettings = categorizedSettings[settingsCategory];
+                logSettings.Add("LogPath", defaultPath, "Path to the log files produced by this log category.");
+                logSettings.Add("MaxSizeRollBackups", 10, "The maximum number of log files produced per day.");
+                logSettings.Add("MaximumFileSize", "1MB", "The maximum size of each log file produced. (Allowed suffixes: KB, MB, GB)");
 
-                void AssignFilePath(RollingFileAppender appender, string filePath)
-                {
-                    string directory = Path.GetDirectoryName(filePath);
-                    EnsureDirectory(directory);
-                    appender.File = filePath;
-                }
+                string logPath = logSettings["LogPath"].ValueAs(defaultPath);
+                string directory = Path.GetDirectoryName(logPath);
+                EnsureDirectory(directory);
 
-                AssignFilePath(debugLogAppender, @"Debug\openXDA\openXDA.log");
-                AssignFilePath(skippedFilesAppender, @"Debug\SkippedFiles\SkippedFiles.log");
-                AssignFilePath(gsfLogAppender, @"Debug\gsf\gsf.log");
+                RollingFileAppender rollingFileAppender = new RollingFileAppender();
+                rollingFileAppender.File = logPath;
+                rollingFileAppender.StaticLogFileName = false;
+                rollingFileAppender.AppendToFile = true;
+                rollingFileAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
+                rollingFileAppender.MaxSizeRollBackups = logSettings["MaxSizeRollBackups"].ValueAs(10);
+                rollingFileAppender.PreserveLogFileNameExtension = true;
+                rollingFileAppender.MaximumFileSize = logSettings["MaximumFileSize"].ValueAs("1MB");
+                rollingFileAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
+                return rollingFileAppender;
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
+                string message = $"Error occurred during initialization of log file \"{settingsCategory}\": {ex.Message}";
+                Exception wrapper = new Exception(message, ex);
+                m_serviceHelper.ErrorLogger.Log(wrapper);
+
+                RollingFileAppender rollingFileAppender = new RollingFileAppender();
+                rollingFileAppender.File = Path.GetFileName(defaultPath);
+                rollingFileAppender.StaticLogFileName = false;
+                rollingFileAppender.AppendToFile = true;
+                rollingFileAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
+                rollingFileAppender.MaxSizeRollBackups = 10;
+                rollingFileAppender.PreserveLogFileNameExtension = true;
+                rollingFileAppender.MaximumFileSize = "1MB";
+                rollingFileAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
+
+                try
+                {
+                    string directory = Path.GetDirectoryName(defaultPath);
+                    EnsureDirectory(directory);
+                    rollingFileAppender.File = defaultPath;
+                }
+                catch
+                {
+#if DEBUG
+                    throw;
+#endif
+                }
+
+                return rollingFileAppender;
             }
+
+            void EnsureDirectory(string directory)
+            {
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+            }
+        }
+
+        private void InitializeLogging()
+        {
+            ServiceHelperAppender serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
+            RollingFileAppender debugLogAppender = InitializeRollingFileAppender("xdaDebugLog", @"Debug\openXDA\openXDA.log");
+            RollingFileAppender skippedFilesAppender = InitializeRollingFileAppender("skippedFilesLog", @"Debug\SkippedFiles\SkippedFiles.log");
+            RollingFileAppender gsfLogAppender = InitializeRollingFileAppender("gsfDebugLog", @"Debug\gsf\gsf.log");
+
+            debugLogAppender.AddFilter(new FileSkippedExceptionFilter());
+            skippedFilesAppender.AddFilter(new FileSkippedExceptionFilter(false));
 
             debugLogAppender.ActivateOptions();
             skippedFilesAppender.ActivateOptions();
