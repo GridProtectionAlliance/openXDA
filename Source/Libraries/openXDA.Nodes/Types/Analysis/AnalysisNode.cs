@@ -328,13 +328,15 @@ namespace openXDA.Nodes.Types.Analysis
                     Exception wrapper = new Exception(message, ex);
                     if (status == FileGroupProcessingStatus.Success) status = FileGroupProcessingStatus.PartialSuccess;
                     Log.Error(wrapper.Message, wrapper);
+                    Action<object> configurator = GetConfigurator();
+                    TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
                     dataOperationFailures.Add(new DataOperationFailure
                     {
                         DataOperationID = dataOperationDefinition.ID,
                         FileGroupID = meterDataSet.FileGroup.ID,
                         Log = message,
                         StackTrace = ex.StackTrace,
-                        TimeOfFailure = DateTime.UtcNow
+                        TimeOfFailure = timeZoneConverter.ToXDATimeZone(DateTime.UtcNow)
                     });
                     if (IsDisposed)
                     {
