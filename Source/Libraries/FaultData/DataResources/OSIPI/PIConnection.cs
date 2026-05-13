@@ -159,7 +159,7 @@ namespace FaultData.DataResources.OSIPI
                 if (Server is null)
                     throw new InvalidOperationException("Server not found in the PI servers collection.");
 
-                if (ConnectTimeout > 0)
+                if (Server.Collective is null && ConnectTimeout > 0)
                     Server.ConnectionInfo.ConnectionTimeOut = TimeSpan.FromMilliseconds(ConnectTimeout);
 
                 Server.ConnectChanged += PIConnection_ConnectChanged;
