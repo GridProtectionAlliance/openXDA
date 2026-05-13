@@ -23,20 +23,39 @@
 
 using FaultData.DataResources;
 using FaultData.DataSets;
+using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using log4net;
 using Newtonsoft.Json.Linq;
+using openXDA.Model;
+using openXDA.Model.SystemCenter;
 using openXDA.Nodes;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using static FaultData.DataOperations.TVA.StructureQueryOperation;
+using ConfigurationLoader = openXDA.Nodes.ConfigurationLoader;
 
 namespace openXDA.Controllers.Config
 {
     [RoutePrefix("api/SystemCenter")]
     public class SystemCenterController : ApiController
     {
+        #region [ Members ]
+        private class Settings
+        {
+            [Category]
+            [SettingName(StructureQuerySection.CategoryName)]
+            public StructureQuerySection StructureQuerySettings { get; } = new StructureQuerySection();
+        }
+        #endregion
+
         #region [ Constructors ]
 
         public SystemCenterController(Host nodeHost)
@@ -109,6 +128,63 @@ namespace openXDA.Controllers.Config
             SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
             scadaDataResource.Initialize(meterDataSet);
             return Ok(scadaDataResource.GetHistorianHealth());
+        }
+
+        [Route("MaximoStructureQuery/Health")]
+        public IHttpActionResult GetMaximoStructureQueryHealth()
+        {
+            Settings settings = new Settings();
+            GetConfigurator()(settings);
+
+            AppStatus maximoStructureQueryStatus = new AppStatus()
+            {
+                Status = "Error",
+                Details = new List<StatusItem>()
+            };
+
+            string stationKey;
+            string lineKey;
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+                Meter testMeter = meterTable.QueryRecord(new RecordRestriction("0 NOT LIKE {0}", "ID"));
+                stationKey = testMeter.LocationID.ToString();
+                lineKey = testMeter.AssetKey.ToString();
+            }
+
+            try
+            {
+                // we can pick any meter for their station key and asset key. distance i'm not sure about.
+                string url = string.Format(settings.StructureQuerySettings.URLFormat, stationKey, lineKey, "dummy");
+
+                ICredentials credentials = null;
+                if (settings.StructureQuerySettings.UserName != null && settings.StructureQuerySettings.Password != null && settings.StructureQuerySettings.Domain != null)
+                {
+                    NetworkCredential networkCredential = new NetworkCredential(settings.StructureQuerySettings.UserName, settings.StructureQuerySettings.Password, settings.StructureQuerySettings.Domain);
+                    CredentialCache cache = new CredentialCache();
+                    cache.Add(new Uri(url), "NTLM", networkCredential);
+                    credentials = cache;
+                }
+
+                GetStructureInfo(url, credentials);
+                maximoStructureQueryStatus.Status = "Success";
+                maximoStructureQueryStatus.Details.Add(new StatusItem() { Status = "Success", Description = "Successful response received from Maximo Structure Query." });
+            }
+            catch(Exception ex)
+            {
+                if (ex is HttpRequestException httpRequestException)
+                    maximoStructureQueryStatus.Details.Add(new StatusItem() { Status = "Error", Description = httpRequestException.Message });
+                else if (ex is UriFormatException uriFormatException)
+                    maximoStructureQueryStatus.Details.Add(new StatusItem() { Status = "Error", Description = "Url formatting failed. Check StructureQuery.URLFormat in openXDA settings." });
+                else
+                {
+                    Log.Error($"Unexpected exception thrown during Maximo Structure Query.", ex);
+                    maximoStructureQueryStatus.Details.Add(new StatusItem() { Status = "Error", Description = "Unexpected exception thrown after receiving Maximo Structure Query. Full exception message is available in openXDA logs." });
+                }
+            }
+
+            return Ok(maximoStructureQueryStatus);
         }
 
         private Action<object> GetConfigurator()
