@@ -35,7 +35,9 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using HtmlAgilityPack;
+using log4net;
 using openXDA.Model;
+using System.Net.Http;
 
 namespace FaultData.DataOperations.TVA
 {
@@ -55,6 +57,22 @@ namespace FaultData.DataOperations.TVA
             [Setting]
             [DefaultValue("StrNumber:AssetKey,Latitude:Latitude,Longitude:Longitude")]
             public string FieldMappings { get; set; }
+
+            [Setting]
+            [DefaultValue("")]
+            public string UserName { get; set; }
+
+            [Setting]
+            [DefaultValue("")]
+            public string Password { get; set; }
+
+            [Setting]
+            [DefaultValue("")]
+            public string Domain { get; set; }
+
+            [Setting]
+            [DefaultValue(false)]
+            public bool Enabled { get; set; } = false;
         }
 
         // Constants
@@ -94,6 +112,12 @@ namespace FaultData.DataOperations.TVA
 
         public override void Execute(MeterDataSet meterDataSet)
         {
+            if (!Settings.Enabled)
+            {
+                Log.Warn("Structure Query Operation is not enabled.");
+                return;
+            }
+
             FaultDataResource faultDataResource = meterDataSet.GetResource<FaultDataResource>();
             string stationKey = meterDataSet.Meter.Location.LocationKey;
 
@@ -121,7 +145,18 @@ namespace FaultData.DataOperations.TVA
                         return;
 
                     string url = string.Format(Settings.URLFormat, stationKey, lineKey, distance);
-                    string structureInfo = GetStructureInfo(url);
+
+                    ICredentials credentials = null;
+                    if (Settings.UserName != null && Settings.Password != null && Settings.Domain != null)
+                    {
+                        NetworkCredential networkCredential = new NetworkCredential(Settings.UserName, Settings.Password, Settings.Domain);
+                        CredentialCache cache = new CredentialCache();
+                        cache.Add(new Uri(url), "NTLM", networkCredential);
+                        credentials = cache;
+                    }
+
+                    string structureInfo = GetStructureInfo(url, credentials);
+
                     DataTable structureData = ToDataTable(structureInfo);
 
                     if (structureData.Rows.Count == 0)
@@ -178,19 +213,39 @@ namespace FaultData.DataOperations.TVA
                 }
             }
         }
-
-        private static string GetStructureInfo(string url)
+        public static string GetStructureInfo(string url, ICredentials credentials = null)
         {
-            bool HandlePreRequest(HttpWebRequest request)
-            {
-                request.UseDefaultCredentials = true;
-                return true;
+            HttpClientHandler handler;
+
+            if (credentials is null)
+                handler = new HttpClientHandler() { UseDefaultCredentials = true };
+            else
+                handler = new HttpClientHandler() { Credentials = credentials };
+
+            HttpClient client = new HttpClient(handler);
+            string html;
+            HttpResponseMessage response = client.GetAsync(url).GetAwaiter().GetResult();
+
+            if (response.StatusCode is HttpStatusCode.Forbidden)
+        {
+                string responseContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                Log.Error($"Structure query received 'Forbidden' response: {responseContent}");
+                throw new HttpRequestException($"Failed to authorize structured query. Check the StructureQuery.UserName and StructureQuery.Password in openXDA settings.");
             }
 
-            HtmlWeb webClient = new HtmlWeb();
-            webClient.PreRequest += HandlePreRequest;
-            HtmlDocument doc = webClient.Load(url);
-            return doc.DocumentNode.InnerText.Trim();
+            if (response.StatusCode is HttpStatusCode.InternalServerError)
+            {
+                string responseContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                Log.Error($"Structure query received 'InternalServerError' response: {responseContent}");
+                throw new HttpRequestException($"Structure query failed due to internal server error. Full error message is available in openXDA logs.");
+            }
+
+            html = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            string result = doc.DocumentNode.Descendants("html").FirstOrDefault().InnerText.Trim();
+            return result;
         }
 
         private DataTable ToDataTable(string csvInput)
@@ -223,6 +278,13 @@ namespace FaultData.DataOperations.TVA
             double.TryParse(csvValue, out double num)
                 ? num
                 : 0.0D;
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(StructureQueryOperation));
 
         #endregion
     }
