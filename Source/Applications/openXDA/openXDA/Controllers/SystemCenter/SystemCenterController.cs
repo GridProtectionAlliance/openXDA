@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using FaultData.DataOperations.TVA;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Configuration;
@@ -34,6 +35,8 @@ using openXDA.Nodes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.SqlClient;
+using System.IO;
 using System.Data;
 using System.Net;
 using System.Net.Http;
