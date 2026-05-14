@@ -130,13 +130,13 @@ namespace openXDA.Controllers.Config
             return Ok(scadaDataResource.GetHistorianHealth());
         }
 
-        [Route("MaximoStructureQuery/Health")]
-        public IHttpActionResult GetMaximoStructureQueryHealth()
+        [Route("StructureCrawler/Health")]
+        public IHttpActionResult GetStructureCrawlerHealth()
         {
             Settings settings = new Settings();
             GetConfigurator()(settings);
 
-            AppStatus maximoStructureQueryStatus = new AppStatus()
+            AppStatus status = new AppStatus()
             {
                 Status = "Error",
                 Details = new List<StatusItem>()
@@ -168,23 +168,23 @@ namespace openXDA.Controllers.Config
                 }
 
                 GetStructureInfo(url, credentials);
-                maximoStructureQueryStatus.Status = "Success";
-                maximoStructureQueryStatus.Details.Add(new StatusItem() { Status = "Success", Description = "Successful response received from Maximo Structure Query." });
+                status.Status = "Success";
+                status.Details.Add(new StatusItem() { Status = "Success", Description = "Successful response received from Structure Crawler." });
             }
             catch(Exception ex)
             {
                 if (ex is HttpRequestException httpRequestException)
-                    maximoStructureQueryStatus.Details.Add(new StatusItem() { Status = "Error", Description = httpRequestException.Message });
+                    status.Details.Add(new StatusItem() { Status = "Error", Description = httpRequestException.Message });
                 else if (ex is UriFormatException uriFormatException)
-                    maximoStructureQueryStatus.Details.Add(new StatusItem() { Status = "Error", Description = "Url formatting failed. Check StructureQuery.URLFormat in openXDA settings." });
+                    status.Details.Add(new StatusItem() { Status = "Error", Description = "Url formatting failed. Check StructureQuery.URLFormat in openXDA settings." });
                 else
                 {
-                    Log.Error($"Unexpected exception thrown during Maximo Structure Query.", ex);
-                    maximoStructureQueryStatus.Details.Add(new StatusItem() { Status = "Error", Description = "Unexpected exception thrown after receiving Maximo Structure Query. Full exception message is available in openXDA logs." });
+                    Log.Error($"Unexpected exception thrown during Structure Crawler Query.", ex);
+                    status.Details.Add(new StatusItem() { Status = "Error", Description = "Unexpected exception thrown during Structure Crawler query. Full exception message is available in openXDA logs." });
                 }
             }
 
-            return Ok(maximoStructureQueryStatus);
+            return Ok(status);
         }
 
         private Action<object> GetConfigurator()
