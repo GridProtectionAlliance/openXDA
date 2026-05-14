@@ -217,7 +217,7 @@ namespace SystemCenter.Model
                 else
                     return new List<ValueList>();
             }
-            return valueTable.QueryRecordsWhere("GroupID in ({0})", string.Join(", ", groupIds)).OrderBy(v => v.SortOrder);
+            return valueTable.QueryRecordsWhere($"GroupID in ({string.Join(",", groupIds)})").OrderBy(v => v.SortOrder);
         }
 
         private int GetCount(string groupName, string value, AdoDataConnection connection)
