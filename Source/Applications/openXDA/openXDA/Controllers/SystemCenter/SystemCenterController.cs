@@ -57,6 +57,12 @@ namespace openXDA.Controllers.Config
             [Category]
             [SettingName(StructureQuerySection.CategoryName)]
             public StructureQuerySection StructureQuerySettings { get; } = new StructureQuerySection();
+
+            [Category]
+            [SettingName(RealTimeLightningDataProviderSettings.CategoryName)]
+            public RealTimeLightningDataProviderSettings LightningDataSettings { get; }
+                = new RealTimeLightningDataProviderSettings();
+
         }
         #endregion
 
@@ -199,6 +205,50 @@ namespace openXDA.Controllers.Config
                     status.Details.Add(new StatusItem() { Status = "Error", Description = "Unexpected exception thrown during Structure Crawler query. Full exception message is available in openXDA logs." });
                 }
             }
+
+            return Ok(status);
+        }
+
+        [Route("LightningRealTimeData/Health")]
+        public IHttpActionResult GetLightningRealTimeDataHealth()
+        {
+            AppStatus status = new AppStatus() { Status = "Error"};
+
+            Settings settings = new Settings();
+            GetConfigurator()(settings);
+
+            string connectionString = settings.LightningDataSettings.RTLightningDatabaseConnectionString;
+
+            if (connectionString == null)
+            {
+                return Ok(new AppStatus() { Status="Error"});
+            }
+
+            Type connectionType = typeof(SqlConnection);
+            Type adapterType = typeof(SqlDataAdapter);
+
+            if (connectionString == "")
+                status.Status = "N/A";
+            else
+                status = GetConnectionStatus(new AdoDataConnection(connectionString, connectionType, adapterType));
+            return Ok(status);
+        }
+
+        [Route("LightningStructureData/Health")]
+        public IHttpActionResult GetLightningStructureDataHealth()
+        {
+            AppStatus status = new AppStatus() { Status = "Error" };
+
+            Settings settings = new Settings();
+            GetConfigurator()(settings);
+
+            string connectionString = settings.LightningDataSettings.MaximoConnectionString;
+            string dataProviderString = settings.LightningDataSettings.MaximoDataProviderString;
+
+            if (connectionString == "" || dataProviderString == "")
+                status.Status = "N/A";
+            else
+                status = GetConnectionStatus(new AdoDataConnection(connectionString, dataProviderString));
 
             return Ok(status);
         }
