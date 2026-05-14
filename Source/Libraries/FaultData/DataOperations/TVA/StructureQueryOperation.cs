@@ -230,7 +230,7 @@ namespace FaultData.DataOperations.TVA
         {
                 string responseContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 Log.Error($"Structure query received 'Forbidden' response: {responseContent}");
-                throw new HttpRequestException($"Failed to authorize structured query. Check the StructureQuery.UserName and StructureQuery.Password in openXDA settings.");
+                throw new HttpRequestException($"Failed to authorize structure query. Check the StructureQuery.UserName and StructureQuery.Password in openXDA settings.");
             }
 
             if (response.StatusCode is HttpStatusCode.InternalServerError)
