@@ -134,17 +134,17 @@ namespace openXDA.Controllers.Config
         [Route("StructureCrawler/Health")]
         public IHttpActionResult GetStructureCrawlerHealth()
         {
+
+            AppStatus status = new AppStatus()
+            {
+                Status = "N/A"
+            };
+
             Settings settings = new Settings();
             GetConfigurator()(settings);
 
             if (!settings.StructureQuerySettings.Enabled)
-                return Ok(new AppStatus() { Status = "N/A"});
-
-            AppStatus status = new AppStatus()
-            {
-                Status = "Error",
-                Details = new List<StatusItem>()
-            };
+                return Ok(status);
 
             int stationKey;
             string lineKey;
@@ -159,10 +159,13 @@ namespace openXDA.Controllers.Config
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 DataTable result = connection.RetrieveData(query);
+
+                if (result.Rows.Count == 0)
+                    return Ok(status);
+
                 stationKey = result.Rows[0].Field<int>("LocationID");
                 lineKey = result.Rows[0].Field<string>("AssetKey");
             }
-
             try
             {
                 string url = string.Format(settings.StructureQuerySettings.URLFormat, stationKey, lineKey, 1);
@@ -182,6 +185,7 @@ namespace openXDA.Controllers.Config
             }
             catch(Exception ex)
             {
+                status.Status = "Error";
                 if (ex is HttpRequestException httpRequestException)
                     status.Details.Add(new StatusItem() { Status = "Error", Description = httpRequestException.Message });
                 else if (ex is UriFormatException uriFormatException)
