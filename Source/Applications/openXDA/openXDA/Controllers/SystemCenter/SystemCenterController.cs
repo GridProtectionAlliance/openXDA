@@ -151,7 +151,7 @@ namespace openXDA.Controllers.Config
 
             string query = @"
                 SELECT TOP (1) *,
-                (SELECT assetLocation.LocationID FROM AssetLocation assetLocation WHERE assetLocation.AssetID = ID) AS LocationID
+                (SELECT assetLocation.LocationID FROM AssetLocation assetLocation WHERE assetLocation.AssetID = asset.ID) AS LocationID
                 FROM Asset asset
                     WHERE AssetTypeID = 1
             ";
@@ -163,7 +163,7 @@ namespace openXDA.Controllers.Config
                 if (result.Rows.Count == 0)
                     return Ok(status);
 
-                if (string.IsNullOrEmpty(result.Rows[0].Field<string>("LocationID")) || string.IsNullOrEmpty(result.Rows[0].Field<string>("AssetKey")))
+                if (result.Rows[0].IsNull("LocationID") || result.Rows[0].IsNull("AssetKey"))
                     return Ok(status);
 
                 stationKey = result.Rows[0].Field<int>("LocationID");
