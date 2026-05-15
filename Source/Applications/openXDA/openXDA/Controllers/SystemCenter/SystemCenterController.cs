@@ -163,6 +163,9 @@ namespace openXDA.Controllers.Config
                 if (result.Rows.Count == 0)
                     return Ok(status);
 
+                if (string.IsNullOrEmpty(result.Rows[0].Field<string>("LocationID")) || string.IsNullOrEmpty(result.Rows[0].Field<string>("AssetKey")))
+                    return Ok(status);
+
                 stationKey = result.Rows[0].Field<int>("LocationID");
                 lineKey = result.Rows[0].Field<string>("AssetKey");
             }
