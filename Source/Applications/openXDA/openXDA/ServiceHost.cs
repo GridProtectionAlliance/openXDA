@@ -182,10 +182,9 @@ namespace openXDA
             // Set current working directory to fix relative paths
             Directory.SetCurrentDirectory(FilePath.GetAbsolutePath(""));
 
-            InitializeLogging();
-
             ConfigurationFile = ConfigurationFile.Current;
             InitializeConfigurationFile();
+            InitializeLogging();
 
             DatabaseConnectionFactory = new DatabaseConnectionFactory(ConfigurationFile);
 
