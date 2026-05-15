@@ -34,6 +34,7 @@ using openXDA.Nodes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -136,27 +137,35 @@ namespace openXDA.Controllers.Config
             Settings settings = new Settings();
             GetConfigurator()(settings);
 
+            if (!settings.StructureQuerySettings.Enabled)
+                return Ok(new AppStatus() { Status = "N/A"});
+
             AppStatus status = new AppStatus()
             {
                 Status = "Error",
                 Details = new List<StatusItem>()
             };
 
-            string stationKey;
+            int stationKey;
             string lineKey;
+
+            string query = @"
+                SELECT TOP (1) *,
+                (SELECT assetLocation.LocationID FROM AssetLocation assetLocation WHERE assetLocation.AssetID = ID) AS LocationID
+                FROM Asset asset
+                    WHERE AssetTypeID = 1
+            ";
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
-                TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
-                Meter testMeter = meterTable.QueryRecord(new RecordRestriction("0 NOT LIKE {0}", "ID"));
-                stationKey = testMeter.LocationID.ToString();
-                lineKey = testMeter.AssetKey.ToString();
+                DataTable result = connection.RetrieveData(query);
+                stationKey = result.Rows[0].Field<int>("LocationID");
+                lineKey = result.Rows[0].Field<string>("AssetKey");
             }
 
             try
             {
-                // we can pick any meter for their station key and asset key. distance i'm not sure about.
-                string url = string.Format(settings.StructureQuerySettings.URLFormat, stationKey, lineKey, "dummy");
+                string url = string.Format(settings.StructureQuerySettings.URLFormat, stationKey, lineKey, 1);
 
                 ICredentials credentials = null;
                 if (settings.StructureQuerySettings.UserName != null && settings.StructureQuerySettings.Password != null && settings.StructureQuerySettings.Domain != null)
