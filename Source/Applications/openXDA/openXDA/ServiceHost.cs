@@ -85,6 +85,7 @@ using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.ServiceProcess;
+using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
@@ -273,11 +274,13 @@ namespace openXDA
                 logSettings.Add("LogPath", defaultPath, "Path to the log files produced by this log category.");
                 logSettings.Add("MaxSizeRollBackups", 10, "The maximum number of log files produced per day.");
                 logSettings.Add("MaximumFileSize", "1MB", "The maximum size of each log file produced. (Allowed suffixes: KB, MB, GB)");
+                logSettings.Add("Verbosity", "ALL", "The minimum level of verbosity. (ALL, VERBOSE, TRACE, DEBUG, INFO, NOTICE, WARN, ERROR, SEVERE, CRITICAL, ALERT, FATAL, EMERGENCY, OFF)");
 
                 string logPath = logSettings["LogPath"].ValueAs(defaultPath);
                 string directory = Path.GetDirectoryName(logPath);
                 EnsureDirectory(directory);
 
+                string verbosity = logSettings["Verbosity"].ValueAs("ALL");
                 RollingFileAppender rollingFileAppender = new RollingFileAppender();
                 rollingFileAppender.File = logPath;
                 rollingFileAppender.StaticLogFileName = false;
@@ -286,6 +289,7 @@ namespace openXDA
                 rollingFileAppender.MaxSizeRollBackups = logSettings["MaxSizeRollBackups"].ValueAs(10);
                 rollingFileAppender.PreserveLogFileNameExtension = true;
                 rollingFileAppender.MaximumFileSize = logSettings["MaximumFileSize"].ValueAs("1MB");
+                rollingFileAppender.Threshold = LogManager.GetRepository().LevelMap[verbosity] ?? Level.All;
                 rollingFileAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
                 return rollingFileAppender;
             }
@@ -303,6 +307,7 @@ namespace openXDA
                 rollingFileAppender.MaxSizeRollBackups = 10;
                 rollingFileAppender.PreserveLogFileNameExtension = true;
                 rollingFileAppender.MaximumFileSize = "1MB";
+                rollingFileAppender.Threshold = Level.All;
                 rollingFileAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
 
                 try
