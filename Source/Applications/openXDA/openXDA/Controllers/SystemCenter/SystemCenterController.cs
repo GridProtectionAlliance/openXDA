@@ -151,7 +151,7 @@ namespace openXDA.Controllers.Config
 
             string query = @"
                 SELECT TOP (1) *,
-                (SELECT assetLocation.LocationID FROM AssetLocation assetLocation WHERE assetLocation.AssetID = asset.ID) AS LocationID
+                (SELECT TOP (1) assetLocation.LocationID FROM AssetLocation assetLocation WHERE assetLocation.AssetID = asset.ID) AS LocationID
                 FROM Asset asset
                     WHERE AssetTypeID = 1
             ";
