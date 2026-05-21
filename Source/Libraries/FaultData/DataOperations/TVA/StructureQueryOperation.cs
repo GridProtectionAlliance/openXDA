@@ -229,16 +229,16 @@ namespace FaultData.DataOperations.TVA
             if (response.StatusCode is HttpStatusCode.Forbidden)
         {
                 string responseContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                Log.Error($"Structure query received 'Forbidden' response: {responseContent}");
-                throw new HttpRequestException($"Failed to authorize structure query. Check the StructureQuery.UserName and StructureQuery.Password in openXDA settings.");
+                throw new HttpRequestException($"Structure query received 'Forbidden' response: {responseContent}");
             }
 
             if (response.StatusCode is HttpStatusCode.InternalServerError)
             {
                 string responseContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                Log.Error($"Structure query received 'InternalServerError' response: {responseContent}");
-                throw new HttpRequestException($"Structure query failed due to internal server error. Full error message is available in openXDA logs.");
+                throw new HttpRequestException($"Structure query received 'InternalServerError' response: {responseContent}");
             }
+
+            response.EnsureSuccessStatusCode();
 
             html = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             HtmlDocument doc = new HtmlDocument();

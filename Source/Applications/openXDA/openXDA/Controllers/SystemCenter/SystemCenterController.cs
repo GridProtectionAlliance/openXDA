@@ -190,9 +190,11 @@ namespace openXDA.Controllers.Config
             {
                 status.Status = "Error";
                 if (ex is HttpRequestException httpRequestException)
-                    status.Details.Add(new StatusItem() { Status = "Error", Description = httpRequestException.Message });
+                    status.Details.Add(new StatusItem() { Status = "Error", Description = "Structure query received invalid response. Check the logs for full details." });
                 else if (ex is UriFormatException uriFormatException)
                     status.Details.Add(new StatusItem() { Status = "Error", Description = "Url formatting failed. Check StructureQuery.URLFormat in openXDA settings." });
+                else if (ex is UnauthorizedAccessException)
+                    status.Details.Add(new StatusItem() { Status = "Error", Description = "Failed to authorize structure query. Check the StructureQuery.UserName and StructureQuery.Password in openXDA settings." });
                 else
                 {
                     Log.Error($"Unexpected exception thrown during Structure Crawler Query.", ex);
