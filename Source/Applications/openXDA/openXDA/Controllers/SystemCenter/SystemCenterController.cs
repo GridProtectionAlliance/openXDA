@@ -149,27 +149,17 @@ namespace openXDA.Controllers.Config
             string stationKey;
             string lineKey;
 
-            string query = @"
-                SELECT TOP (1) *
-                FROM Asset asset
-	                INNER JOIN AssetLocation ON AssetLocation.AssetID = Asset.ID
-	                INNER JOIN Location ON AssetLocation.LocationID = Location.ID
-                    WHERE AssetTypeID = 1
-            ";
-
             using (AdoDataConnection connection = CreateDbConnection())
             {
-                DataTable result = connection.RetrieveData(query);
-
-                if (result.Rows.Count == 0)
-                    return Ok(status);
-
-                if (result.Rows[0].IsNull("LocationID") || result.Rows[0].IsNull("AssetKey"))
-                    return Ok(status);
-
-                stationKey = result.Rows[0].Field<string>("LocationKey");
-                lineKey = result.Rows[0].Field<string>("AssetKey");
+                int assetID = connection.ExecuteScalar<int>(@"SELECT TOP (1) ID FROM Asset WHERE AssetTypeID = 1");
+                int locationID = connection.ExecuteScalar<int>(@"SELECT TOP (1) LocationID From AssetLocation WHERE AssetID = {0}", assetID);
+                lineKey = connection.ExecuteScalar<string>(@"SELECT AssetKey FROM Asset WHERE ID = {0}", assetID);
+                stationKey = connection.ExecuteScalar<string>(@"SELECT LocationKey FROM Location WHERE ID = {0}", locationID);
             }
+
+            if (String.IsNullOrEmpty(lineKey) || String.IsNullOrEmpty(stationKey))
+                    return Ok(status);
+
             try
             {
                 string url = string.Format(settings.StructureQuerySettings.URLFormat, stationKey, lineKey, 1);
