@@ -151,10 +151,10 @@ namespace openXDA.Controllers.Config
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
-                int assetID = connection.ExecuteScalar<int>(@"SELECT TOP (1) ID FROM Asset WHERE AssetTypeID = 1");
-                int locationID = connection.ExecuteScalar<int>(@"SELECT TOP (1) LocationID From AssetLocation WHERE AssetID = {0}", assetID);
-                lineKey = connection.ExecuteScalar<string>(@"SELECT AssetKey FROM Asset WHERE ID = {0}", assetID);
-                stationKey = connection.ExecuteScalar<string>(@"SELECT LocationKey FROM Location WHERE ID = {0}", locationID);
+                int assetID = connection.ExecuteScalar<int>("SELECT TOP (1) ID FROM Asset WHERE AssetTypeID = 1");
+                int locationID = connection.ExecuteScalar<int>("SELECT TOP (1) LocationID From AssetLocation WHERE AssetID = {0}", assetID);
+                lineKey = connection.ExecuteScalar<string>("SELECT AssetKey FROM Asset WHERE ID = {0}", assetID);
+                stationKey = connection.ExecuteScalar<string>("SELECT LocationKey FROM Location WHERE ID = {0}", locationID);
             }
 
             if (String.IsNullOrEmpty(lineKey) || String.IsNullOrEmpty(stationKey))
