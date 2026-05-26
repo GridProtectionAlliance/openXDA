@@ -146,13 +146,14 @@ namespace openXDA.Controllers.Config
             if (!settings.StructureQuerySettings.Enabled)
                 return Ok(status);
 
-            int stationKey;
+            string stationKey;
             string lineKey;
 
             string query = @"
-                SELECT TOP (1) *,
-                (SELECT TOP (1) assetLocation.LocationID FROM AssetLocation assetLocation WHERE assetLocation.AssetID = asset.ID) AS LocationID
+                SELECT TOP (1) *
                 FROM Asset asset
+	                INNER JOIN AssetLocation ON AssetLocation.AssetID = Asset.ID
+	                INNER JOIN Location ON AssetLocation.LocationID = Location.ID
                     WHERE AssetTypeID = 1
             ";
 
@@ -166,7 +167,7 @@ namespace openXDA.Controllers.Config
                 if (result.Rows[0].IsNull("LocationID") || result.Rows[0].IsNull("AssetKey"))
                     return Ok(status);
 
-                stationKey = result.Rows[0].Field<int>("LocationID");
+                stationKey = result.Rows[0].Field<string>("LocationKey");
                 lineKey = result.Rows[0].Field<string>("AssetKey");
             }
             try
