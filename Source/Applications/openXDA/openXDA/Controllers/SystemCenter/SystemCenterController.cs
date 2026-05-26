@@ -198,7 +198,6 @@ namespace openXDA.Controllers.Config
                     status.Details.Add(new StatusItem() { Status = "Error", Description = "Failed to authorize structure query. Check the StructureQuery.UserName and StructureQuery.Password in openXDA settings." });
                 else
                 {
-                    Log.Error($"Unexpected exception thrown during Structure Crawler Query.", ex);
                     status.Details.Add(new StatusItem() { Status = "Error", Description = "Unexpected exception thrown during Structure Crawler query. Full exception message is available in openXDA logs." });
                 }
             }
