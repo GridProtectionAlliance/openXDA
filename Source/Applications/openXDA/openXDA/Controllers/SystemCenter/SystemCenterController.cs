@@ -23,20 +23,40 @@
 
 using FaultData.DataResources;
 using FaultData.DataSets;
+using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using log4net;
 using Newtonsoft.Json.Linq;
+using openXDA.Model;
+using openXDA.Model.SystemCenter;
 using openXDA.Nodes;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using static FaultData.DataOperations.TVA.StructureQueryOperation;
+using ConfigurationLoader = openXDA.Nodes.ConfigurationLoader;
 
 namespace openXDA.Controllers.Config
 {
     [RoutePrefix("api/SystemCenter")]
     public class SystemCenterController : ApiController
     {
+        #region [ Members ]
+        private class Settings
+        {
+            [Category]
+            [SettingName(StructureQuerySection.CategoryName)]
+            public StructureQuerySection StructureQuerySettings { get; } = new StructureQuerySection();
+        }
+        #endregion
+
         #region [ Constructors ]
 
         public SystemCenterController(Host nodeHost)
@@ -109,6 +129,70 @@ namespace openXDA.Controllers.Config
             SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
             scadaDataResource.Initialize(meterDataSet);
             return Ok(scadaDataResource.GetHistorianHealth());
+        }
+
+        [Route("StructureCrawler/Health")]
+        public IHttpActionResult GetStructureCrawlerHealth()
+        {
+
+            AppStatus status = new AppStatus()
+            {
+                Status = "N/A"
+            };
+
+            Settings settings = new Settings();
+            GetConfigurator()(settings);
+
+            if (!settings.StructureQuerySettings.Enabled)
+                return Ok(status);
+
+            string stationKey;
+            string lineKey;
+
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                int assetID = connection.ExecuteScalar<int>("SELECT TOP (1) ID FROM Asset WHERE AssetTypeID = 1");
+                int locationID = connection.ExecuteScalar<int>("SELECT TOP (1) LocationID From AssetLocation WHERE AssetID = {0}", assetID);
+                lineKey = connection.ExecuteScalar<string>("SELECT AssetKey FROM Asset WHERE ID = {0}", assetID);
+                stationKey = connection.ExecuteScalar<string>("SELECT LocationKey FROM Location WHERE ID = {0}", locationID);
+            }
+
+            if (String.IsNullOrEmpty(lineKey) || String.IsNullOrEmpty(stationKey))
+                    return Ok(status);
+
+            try
+            {
+                string url = string.Format(settings.StructureQuerySettings.URLFormat, stationKey, lineKey, 1);
+
+                ICredentials credentials = null;
+                if (settings.StructureQuerySettings.UserName != null && settings.StructureQuerySettings.Password != null && settings.StructureQuerySettings.Domain != null)
+                {
+                    NetworkCredential networkCredential = new NetworkCredential(settings.StructureQuerySettings.UserName, settings.StructureQuerySettings.Password, settings.StructureQuerySettings.Domain);
+                    CredentialCache cache = new CredentialCache();
+                    cache.Add(new Uri(url), "NTLM", networkCredential);
+                    credentials = cache;
+                }
+
+                GetStructureInfo(url, credentials);
+                status.Status = "Success";
+                status.Details.Add(new StatusItem() { Status = "Success", Description = "Successful response received from Structure Crawler." });
+            }
+            catch(Exception ex)
+            {
+                status.Status = "Error";
+                if (ex is HttpRequestException httpRequestException)
+                    status.Details.Add(new StatusItem() { Status = "Error", Description = "Structure query received invalid response. Check the logs for full details." });
+                else if (ex is UriFormatException uriFormatException)
+                    status.Details.Add(new StatusItem() { Status = "Error", Description = "Url formatting failed. Check StructureQuery.URLFormat in openXDA settings." });
+                else if (ex is UnauthorizedAccessException)
+                    status.Details.Add(new StatusItem() { Status = "Error", Description = "Failed to authorize structure query. Check the StructureQuery.UserName and StructureQuery.Password in openXDA settings." });
+                else
+                {
+                    status.Details.Add(new StatusItem() { Status = "Error", Description = "Unexpected exception thrown during Structure Crawler query. Full exception message is available in openXDA logs." });
+                }
+            }
+
+            return Ok(status);
         }
 
         private Action<object> GetConfigurator()
