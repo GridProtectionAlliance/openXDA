@@ -388,6 +388,16 @@ CREATE TABLE AnalysisTask
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_AnalysisTask_Poll
+ON AnalysisTask
+(
+    MeterID,
+    NodeID DESC,
+    Priority DESC,
+    ID
+)
+GO
+
 
 CREATE TABLE AssetType
 (
