@@ -147,11 +147,17 @@ namespace FaultData.DataResources.OSIPI
                     .SelectMany(scanner => scanner);
 
                 AFValue previousValue = null;
+                int totalValues = 0;
+                int goodValues = 0;
 
                 foreach (AFValue afValue in afValues)
                 {
+                    totalValues++;
+
                     if (!afValue.IsGood)
                         continue;
+
+                    goodValues++;
 
                     // Verify that the data point represents a change
                     // from closed to open within the queried time range
@@ -163,11 +169,15 @@ namespace FaultData.DataResources.OSIPI
                         afValue.Timestamp.UtcTime <= utcEndTime;
 
                     if (trip)
+                    {
+                        Log.Debug($"[OSI-PI] Breaker trip: yes, Good values: {goodValues}, Total values: {totalValues}");
                         return true;
+                    }
 
                     previousValue = afValue;
                 }
 
+                Log.Debug($"[OSI-PI] Breaker trip: no, Good values: {goodValues}, Total values: {totalValues}");
                 return false;
             }
             catch (OperationCanceledException)

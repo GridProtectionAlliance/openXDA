@@ -44,6 +44,8 @@ namespace FaultData.DataResources.eDNA
 
         public bool DidBreakerOpen(List<string> points, DateTime startTime, DateTime endTime, double breakerOpenValue)
         {
+            int count = 0;
+
             foreach (string point in points)
             {
                 var previousPoint = new
@@ -70,6 +72,8 @@ namespace FaultData.DataResources.eDNA
 
                     if (result == 0)
                     {
+                        count++;
+
                         // Verify that the data point represents a change
                         // from closed to open within the queried time range
                         bool trip =
@@ -80,7 +84,10 @@ namespace FaultData.DataResources.eDNA
                             time <= localEndTime;
 
                         if (trip)
+                        {
+                            Log.Debug($"[eDNA] Breaker trip: yes, Total values: {count}");
                             return true;
+                        }
 
                         previousPoint = new
                         {
@@ -101,6 +108,7 @@ namespace FaultData.DataResources.eDNA
                 }
             }
 
+            Log.Debug($"[eDNA] Breaker trip: no, Total values: {count}");
             return false;
         }
 
