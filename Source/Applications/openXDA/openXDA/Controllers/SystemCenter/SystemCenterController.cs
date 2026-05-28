@@ -137,7 +137,8 @@ namespace openXDA.Controllers.Config
 
             AppStatus status = new AppStatus()
             {
-                Status = "N/A"
+                Status = "N/A",
+                Details = new List<StatusItem>()
             };
 
             Settings settings = new Settings();
