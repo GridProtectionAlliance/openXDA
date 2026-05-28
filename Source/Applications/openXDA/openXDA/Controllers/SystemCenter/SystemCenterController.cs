@@ -137,7 +137,8 @@ namespace openXDA.Controllers.Config
 
             AppStatus status = new AppStatus()
             {
-                Status = "N/A"
+                Status = "N/A",
+                Details = new List<StatusItem>()
             };
 
             Settings settings = new Settings();
@@ -148,6 +149,7 @@ namespace openXDA.Controllers.Config
 
             string stationKey;
             string lineKey;
+            int halfLength;
 
             using (AdoDataConnection connection = CreateDbConnection())
             {
@@ -155,14 +157,17 @@ namespace openXDA.Controllers.Config
                 int locationID = connection.ExecuteScalar<int>("SELECT TOP (1) LocationID From AssetLocation WHERE AssetID = {0}", assetID);
                 lineKey = connection.ExecuteScalar<string>("SELECT AssetKey FROM Asset WHERE ID = {0}", assetID);
                 stationKey = connection.ExecuteScalar<string>("SELECT LocationKey FROM Location WHERE ID = {0}", locationID);
-            }
 
             if (String.IsNullOrEmpty(lineKey) || String.IsNullOrEmpty(stationKey))
                     return Ok(status);
 
+                int lineLength = connection.ExecuteScalar<int>("SELECT TOP (1) Length FROM LineView WHERE AssetKey = {0}", lineKey);
+                halfLength = lineLength / 2;
+            }
+
             try
             {
-                string url = string.Format(settings.StructureQuerySettings.URLFormat, stationKey, lineKey, 1);
+                string url = string.Format(settings.StructureQuerySettings.URLFormat, stationKey, lineKey, halfLength);
 
                 ICredentials credentials = null;
                 if (settings.StructureQuerySettings.UserName != null && settings.StructureQuerySettings.Password != null && settings.StructureQuerySettings.Domain != null)
