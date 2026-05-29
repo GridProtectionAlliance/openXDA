@@ -219,18 +219,29 @@ namespace openXDA.Controllers.Config
 
             string connectionString = settings.LightningDataSettings.RTLightningDatabaseConnectionString;
 
-            if (connectionString == null)
-            {
-                return Ok(new AppStatus() { Status="Error"});
-            }
-
             Type connectionType = typeof(SqlConnection);
             Type adapterType = typeof(SqlDataAdapter);
 
             if (connectionString == "")
                 status.Status = "N/A";
             else
-                status = GetConnectionStatus(new AdoDataConnection(connectionString, connectionType, adapterType));
+            {
+                try
+                {
+                    AdoDataConnection rtLightningConnection = new AdoDataConnection(connectionString, connectionType, adapterType);
+                    status = GetConnectionStatus(rtLightningConnection);
+                }
+                catch (InvalidOperationException ex) 
+                {
+                    status.Status = "Error";
+                    status.Details.Add(new StatusItem() 
+                        {
+                        Status = "Error",
+                        Description = "Failed to connect using Connection String from RTLightning.RTLightningDatabaseConnectionString."
+                        }
+                    );
+                }
+            }
             return Ok(status);
         }
 
@@ -248,7 +259,24 @@ namespace openXDA.Controllers.Config
             if (connectionString == "" || dataProviderString == "")
                 status.Status = "N/A";
             else
+            {
+                try
+                {
                 status = GetConnectionStatus(new AdoDataConnection(connectionString, dataProviderString));
+                }
+                catch (InvalidOperationException ex)
+                {
+
+                    status.Status = "Error";
+                    status.Details.Add(new StatusItem()
+                    {
+                        Status = "Error",
+                        Description = "Failed to connect using Connection String and Data Provider String from RTLightning.MaximoConnectionString and RTLightning.MaximoDataProviderSetting."
+                    }
+                    );
+                }
+
+            }
 
             return Ok(status);
         }
@@ -268,8 +296,6 @@ namespace openXDA.Controllers.Config
 
         private AppStatus GetConnectionStatus(AdoDataConnection connection)
         {
-
-
             AppStatus testDatabaseStatus = new AppStatus()
             {
                 Status = "Success",
