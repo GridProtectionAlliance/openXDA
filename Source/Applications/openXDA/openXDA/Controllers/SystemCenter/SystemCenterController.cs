@@ -212,7 +212,7 @@ namespace openXDA.Controllers.Config
         [Route("LightningRealTimeData/Health")]
         public IHttpActionResult GetLightningRealTimeDataHealth()
         {
-            AppStatus status = new AppStatus() { Status = "Error"};
+            AppStatus status = new AppStatus() { Status = "Error", Details = new List<StatusItem>()};
 
             Settings settings = new Settings();
             GetConfigurator()(settings);
@@ -237,7 +237,7 @@ namespace openXDA.Controllers.Config
         [Route("LightningStructureData/Health")]
         public IHttpActionResult GetLightningStructureDataHealth()
         {
-            AppStatus status = new AppStatus() { Status = "Error" };
+            AppStatus status = new AppStatus() { Status = "Error", Details = new List<StatusItem>() };
 
             Settings settings = new Settings();
             GetConfigurator()(settings);
@@ -272,7 +272,8 @@ namespace openXDA.Controllers.Config
 
             AppStatus testDatabaseStatus = new AppStatus()
             {
-                Status = "Success"
+                Status = "Success",
+                Details = new List<StatusItem>()
             };
             try
             {
