@@ -327,7 +327,6 @@ namespace openXDA.Controllers.Config
             }
             catch (InvalidOperationException e)
             {
-                Type innerExceptionType = e.InnerException.GetType();
                 testDatabaseStatus.Status = "Error";
                 if (e.InnerException is ArgumentException)
                 {
