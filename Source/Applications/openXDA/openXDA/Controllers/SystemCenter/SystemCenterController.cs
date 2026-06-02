@@ -222,7 +222,7 @@ namespace openXDA.Controllers.Config
             Type connectionType = typeof(SqlConnection);
             Type adapterType = typeof(SqlDataAdapter);
 
-            if (connectionString == "")
+            if (string.IsNullOrWhiteSpace(connectionString))
                 status.Status = "N/A";
             else
             {
