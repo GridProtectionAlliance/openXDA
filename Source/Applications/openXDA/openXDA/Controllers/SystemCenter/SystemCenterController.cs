@@ -212,7 +212,7 @@ namespace openXDA.Controllers.Config
         [Route("LightningRealTimeData/Health")]
         public IHttpActionResult GetLightningRealTimeDataHealth()
         {
-            AppStatus status = new AppStatus() { Status = "Error", Details = new List<StatusItem>()};
+            AppStatus status = new AppStatus() { Status = "N/A", Details = new List<StatusItem>()};
 
             Settings settings = new Settings();
             GetConfigurator()(settings);
@@ -222,9 +222,7 @@ namespace openXDA.Controllers.Config
             Type connectionType = typeof(SqlConnection);
             Type adapterType = typeof(SqlDataAdapter);
 
-            if (string.IsNullOrWhiteSpace(connectionString))
-                status.Status = "N/A";
-            else
+            if (!string.IsNullOrWhiteSpace(connectionString))
             {
                 try
                 {
@@ -248,7 +246,7 @@ namespace openXDA.Controllers.Config
         [Route("LightningStructureData/Health")]
         public IHttpActionResult GetLightningStructureDataHealth()
         {
-            AppStatus status = new AppStatus() { Status = "Error", Details = new List<StatusItem>() };
+            AppStatus status = new AppStatus() { Status = "N/A", Details = new List<StatusItem>() };
 
             Settings settings = new Settings();
             GetConfigurator()(settings);
@@ -256,9 +254,7 @@ namespace openXDA.Controllers.Config
             string connectionString = settings.LightningDataSettings.MaximoConnectionString;
             string dataProviderString = settings.LightningDataSettings.MaximoDataProviderString;
 
-            if (connectionString == "" || dataProviderString == "")
-                status.Status = "N/A";
-            else
+            if (!(String.IsNullOrWhiteSpace(connectionString) || String.IsNullOrWhiteSpace(dataProviderString)))
             {
                 try
                 {
