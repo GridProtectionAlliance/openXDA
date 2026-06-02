@@ -404,7 +404,7 @@ namespace openXDA.Controllers.Config
                         testDatabaseStatus.Details.Add(new StatusItem()
                         {
                             Status = "Success",
-                            Description = "Successfully reached SQL server."
+                            Description = "Successfully reached Oracle server."
                         });
                         testDatabaseStatus.Details.Add(new StatusItem()
                         {
