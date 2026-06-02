@@ -254,7 +254,7 @@ namespace openXDA.Controllers.Config
             string connectionString = settings.LightningDataSettings.MaximoConnectionString;
             string dataProviderString = settings.LightningDataSettings.MaximoDataProviderString;
 
-            if (!(String.IsNullOrWhiteSpace(connectionString) || String.IsNullOrWhiteSpace(dataProviderString)))
+            if (!(String.IsNullOrWhiteSpace(connectionString) && String.IsNullOrWhiteSpace(dataProviderString)))
             {
                 try
                 {
