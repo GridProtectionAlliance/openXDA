@@ -166,6 +166,7 @@ namespace openXDA.Nodes.Types.FileProcessing
 
         private string Filter { get; set; }
         private int ProcessingThreadCount { get; set; }
+        private string[] HighPriorityPaths { get; set; }
         private IEnumerable<FileShare> FileShares { get; set; }
 
         private FileProcessorIndex FileProcessorIndex
@@ -408,6 +409,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             Settings settings = new Settings(configurator);
             Filter = QueryFilter();
             ProcessingThreadCount = settings.FileProcessorSettings.ProcessingThreadCount;
+            HighPriorityPaths = settings.FileWatcherSettings.HighPriorityPathList;
             AuthenticateFileShares(settings);
             ConfigureFileProcessor(settings);
         }
@@ -463,6 +465,13 @@ namespace openXDA.Nodes.Types.FileProcessing
         {
             string[] filters = Filter.Split(Path.PathSeparator);
             return FilePath.IsFilePatternMatch(filters, filePath, true);
+        }
+
+        private int GetFileWatcherPriority(string filePath)
+        {
+            return FilePath.IsFilePatternMatch(HighPriorityPaths, filePath, true)
+                ? AnalysisTask.HighFileWatcherPriority
+                : AnalysisTask.NormalFileWatcherPriority;
         }
 
         private async Task NotifyAnalysisNodesAsync()
@@ -606,7 +615,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             }
 
             int priority = fileProcessorEventArgs.RaisedByFileWatcher
-                ? AnalysisTask.FileWatcherPriority
+                ? GetFileWatcherPriority(filePath)
                 : AnalysisTask.FileEnumerationPriority;
 
             WorkItem workItem = new WorkItem(fileGroupInfo, filePath, priority);

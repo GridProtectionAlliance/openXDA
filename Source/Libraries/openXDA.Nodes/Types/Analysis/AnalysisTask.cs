@@ -46,7 +46,8 @@ namespace openXDA.Nodes.Types.Analysis
         public int Priority { get; }
 
         public const int FileEnumerationPriority = 1;
-        public const int FileWatcherPriority = 2;
-        public const int RequeuePriority = 3;
+        public const int NormalFileWatcherPriority = 2;
+        public const int HighFileWatcherPriority = 3;
+        public const int RequeuePriority = 4;
     }
 }
