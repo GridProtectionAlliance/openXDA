@@ -847,7 +847,7 @@ namespace openXDA.XMLConfig
                     AssetID = assetID,
                     Name = channelNode.Attributes["Name"].Value,
                     Description = channelNode.Attributes["Description"]?.Value,
-                    Enabled = (channelNode.Attributes["Enabled"]?.Value ?? "1") == "1",
+                    Enabled = channelNode.Attributes["Enabled"]?.Value.ParseBoolean() ?? true,
                     SamplesPerHour = double.Parse(channelNode.Attributes["SamplesPerHour"]?.Value ?? "0.0"),
                     Adder = double.Parse(channelNode.Attributes["Adder"]?.Value ?? "0.0"),
                     Multiplier = double.Parse(channelNode.Attributes["Multiplier"]?.Value ?? "1.0"),
