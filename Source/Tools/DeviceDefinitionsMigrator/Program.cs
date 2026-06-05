@@ -34,6 +34,11 @@ using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Core;
+using log4net.Filter;
+using log4net.Layout;
 using openXDA.Model;
 using openXDA.XMLConfig;
 
@@ -41,8 +46,6 @@ namespace DeviceDefinitionsMigrator
 {
     class Program
     {
-        private static readonly ILog Logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         private class ProgressTracker
         {
             private int m_progress;
@@ -145,6 +148,8 @@ namespace DeviceDefinitionsMigrator
 
         static void Main(string[] args)
         {
+            InitializeLogging();
+
             if (args.Length != 3)
             {
                 PrintHelp();
@@ -183,6 +188,22 @@ namespace DeviceDefinitionsMigrator
                 Console.Error.WriteLine("--- ERROR ---");
                 Console.Error.WriteLine(ex.ToString());
             }
+        }
+
+        private static void InitializeLogging()
+        {
+            ConsoleAppender stdout = new ConsoleAppender();
+            stdout.Layout = new PatternLayout("%message%newline");
+            stdout.AddFilter(new LevelRangeFilter() { LevelMax = Level.Notice });
+            stdout.ActivateOptions();
+
+            ConsoleAppender stderr = new ConsoleAppender();
+            stderr.Layout = new PatternLayout("%-5level %message%newline%exception");
+            stderr.Target = "Console.Error";
+            stderr.AddFilter(new LevelRangeFilter() { LevelMin = Level.Warn });
+            stderr.ActivateOptions();
+
+            BasicConfigurator.Configure(stdout, stderr);
         }
 
         private static void PrintHelp() {
