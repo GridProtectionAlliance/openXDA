@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
+using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
@@ -317,8 +318,8 @@ namespace openXDA.XMLConfig
             {
                 AssetKey = assetNode.Attributes["AssetKey"].Value,
                 AssetName = assetNode.Attributes["AssetName"].Value,
-                VoltageKV = float.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0"),
-                Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1",
+                VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0"),
+                Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false,
                 Description = assetNode.Attributes["Description"]?.Value
             };
 
@@ -351,8 +352,8 @@ namespace openXDA.XMLConfig
             {
                 AssetKey = assetNode.Attributes["AssetKey"].Value,
                 AssetName = assetNode.Attributes["AssetName"].Value,
-                VoltageKV = float.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0"),
-                Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1",
+                VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0"),
+                Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false,
                 Description = assetNode.Attributes["Description"]?.Value
             };
 
@@ -385,8 +386,8 @@ namespace openXDA.XMLConfig
             {
                 AssetKey = assetNode.Attributes["AssetKey"].Value,
                 AssetName = assetNode.Attributes["AssetName"].Value,
-                VoltageKV = float.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0"),
-                Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1",
+                VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0"),
+                Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false,
                 Description = assetNode.Attributes["Description"]?.Value
             };
 
@@ -418,8 +419,8 @@ namespace openXDA.XMLConfig
             {
                 AssetKey = assetNode.Attributes["AssetKey"].Value,
                 AssetName = assetNode.Attributes["AssetName"].Value,
-                VoltageKV = float.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0"),
-                Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1",
+                VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0"),
+                Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false,
                 Description = assetNode.Attributes["Description"]?.Value
             };
 
@@ -465,8 +466,8 @@ namespace openXDA.XMLConfig
                 }
 
                 record.AssetName = assetNode.Attributes["AssetName"].Value;
-                record.VoltageKV = double.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0");
-                record.Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1";
+                record.VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0");
+                record.Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false;
                 record.Description = assetNode.Attributes["Description"]?.Value;
 
                 record.ThermalRating = double.Parse(assetNode.Attributes["ThermalRating"]?.Value ?? "0.0");
@@ -500,12 +501,12 @@ namespace openXDA.XMLConfig
                 }
 
                 record.AssetName = assetNode.Attributes["AssetName"].Value;
-                record.VoltageKV = double.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0");
-                record.Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1";
+                record.VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0");
+                record.Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false;
                 record.Description = assetNode.Attributes["Description"]?.Value;
 
                 record.NumberOfBanks = int.Parse(assetNode.Attributes["NumberOfBanks"]?.Value ?? "0");
-                record.CapacitancePerBank = double.Parse(assetNode.Attributes["Speed"]?.Value ?? "0.0");
+                record.CapacitancePerBank = double.Parse(assetNode.Attributes["CapacitancePerBank"]?.Value ?? "0.0");
                 record.CktSwitcher = assetNode.Attributes["CktSwitcher"]?.Value ?? "";
                 record.MaxKV = double.Parse(assetNode.Attributes["MaxKV"]?.Value ?? "0.0");
                 record.UnitKV = double.Parse(assetNode.Attributes["UnitKV"]?.Value ?? "0.0");
@@ -561,8 +562,8 @@ namespace openXDA.XMLConfig
                 }
 
                 record.AssetName = assetNode.Attributes["AssetName"].Value;
-                record.VoltageKV = double.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0");
-                record.Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1";
+                record.VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0");
+                record.Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false;
                 record.Description = assetNode.Attributes["Description"]?.Value;
 
                 record.R0 = double.Parse(assetNode.Attributes["R0"]?.Value ?? "0.0");
@@ -603,8 +604,8 @@ namespace openXDA.XMLConfig
                 }
 
                 record.AssetName = assetNode.Attributes["AssetName"].Value;
-                record.VoltageKV = double.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0");
-                record.Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1";
+                record.VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0");
+                record.Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false;
                 record.Description = assetNode.Attributes["Description"]?.Value;
 
                 record.OnVoltageThreshhold = double.Parse(assetNode.Attributes["OnVoltageThreshhold"]?.Value ?? "0.0");
@@ -635,8 +636,8 @@ namespace openXDA.XMLConfig
                 }
 
                 record.AssetName = assetNode.Attributes["AssetName"].Value;
-                record.VoltageKV = double.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0");
-                record.Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1";
+                record.VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0");
+                record.Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false;
                 record.Description = assetNode.Attributes["Description"]?.Value;
 
                 record.VoltageLevel = assetNode.Attributes["VoltageLevel"]?.Value ?? "Low";
@@ -667,12 +668,15 @@ namespace openXDA.XMLConfig
                 }
 
                 record.AssetName = assetNode.Attributes["AssetName"].Value;
-                record.VoltageKV = double.Parse(assetNode.Attributes["Make"]?.Value ?? "0.0");
-                record.Spare = (assetNode.Attributes["Model"]?.Value ?? "0") == "1";
+                record.VoltageKV = double.Parse(assetNode.Attributes["VoltageKV"]?.Value ?? "0.0");
+                record.Spare = assetNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false;
                 record.Description = assetNode.Attributes["Description"]?.Value;
 
-                record.MaxFaultDistance = double.Parse(assetNode.Attributes["MaxFaultDistance"]?.Value ?? "0.0");
-                record.MinFaultDistance = double.Parse(assetNode.Attributes["MinFaultDistance"]?.Value ?? "0.0");
+                if (!(assetNode.Attributes["MaxFaultDistance"] is null))
+                    record.MaxFaultDistance = double.Parse(assetNode.Attributes["MaxFaultDistance"].Value);
+
+                if (!(assetNode.Attributes["MinFaultDistance"] is null))
+                    record.MinFaultDistance = double.Parse(assetNode.Attributes["MinFaultDistance"].Value);
 
                 new TableOperations<Line>(connection).AddNewOrUpdateRecord(record);
                 Log.Info($"Loaded Line {record.AssetKey}");
@@ -699,17 +703,17 @@ namespace openXDA.XMLConfig
                 }
 
                 record.AssetName = lineSegmentNode.Attributes["AssetName"].Value;
-                record.VoltageKV = double.Parse(lineSegmentNode.Attributes["Make"]?.Value ?? "0.0");
-                record.Spare = (lineSegmentNode.Attributes["Model"]?.Value ?? "0") == "1";
+                record.VoltageKV = double.Parse(lineSegmentNode.Attributes["VoltageKV"]?.Value ?? "0.0");
+                record.Spare = lineSegmentNode.Attributes["Spare"]?.Value.ParseBoolean() ?? false;
                 record.Description = lineSegmentNode.Attributes["Description"]?.Value;
 
                 record.R0 = double.Parse(lineSegmentNode.Attributes["R0"]?.Value ?? "0.0");
                 record.X0 = double.Parse(lineSegmentNode.Attributes["X0"]?.Value ?? "0.0");
-                record.R1 = int.Parse(lineSegmentNode.Attributes["R1"]?.Value ?? "0");
-                record.X1 = int.Parse(lineSegmentNode.Attributes["X1"]?.Value ?? "0");
+                record.R1 = double.Parse(lineSegmentNode.Attributes["R1"]?.Value ?? "0");
+                record.X1 = double.Parse(lineSegmentNode.Attributes["X1"]?.Value ?? "0");
                 record.ThermalRating = double.Parse(lineSegmentNode.Attributes["ThermalRating"]?.Value ?? "0.0");
                 record.Length = double.Parse(lineSegmentNode.Attributes["Length"]?.Value ?? "0.0");
-                record.IsEnd = XmlConvert.ToBoolean(lineSegmentNode.Attributes["IsEnd"]?.Value ?? "false");
+                record.IsEnd = lineSegmentNode.Attributes["IsEnd"]?.Value.ParseBoolean() ?? false;
 
                 new TableOperations<LineSegment>(connection).AddNewOrUpdateRecord(record);
             }
