@@ -91,7 +91,7 @@ namespace FaultData.DataAnalysis
 
             void CaptureCycle(int cycleIndex)
             {
-                DateTime startTime = dataSeries.DataPoints[0].Time;
+                DateTime startTime = dataSeries.DataPoints[cycleIndex].Time;
 
                 for (int i = 0; i < samplesPerCycle; i++)
                 {
