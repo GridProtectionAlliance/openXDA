@@ -256,6 +256,24 @@ namespace openXDA.Configuration
         private List<FileShare> _FileShareList { get; set; }
 
         /// <summary>
+        /// Gets or sets a semicolon-separated list of patterns for
+        /// matching file paths which should be given higher priority.
+        /// </summary>
+        [Setting]
+        [DefaultValue("")]
+        public string HighPriorityPaths { get; set; }
+
+        /// <summary>
+        /// Gets a list of patterns for matching file paths which should be given higher priority.
+        /// </summary>
+        public string[] HighPriorityPathList => HighPriorityPaths
+            .ToNonNullString()
+            .Split(Path.PathSeparator)
+            .Select(path => path.Trim())
+            .Where(path => !string.IsNullOrEmpty(path))
+            .ToArray();
+
+        /// <summary>
         /// Gets or sets the number of threads used
         /// internally to the file processor.
         /// </summary>
