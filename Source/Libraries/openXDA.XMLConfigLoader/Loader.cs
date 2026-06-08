@@ -195,7 +195,7 @@ namespace openXDA.XMLConfig
                                 }
                                 // Load Line Sements links
                                 foreach (XmlNode lineSegmentNode in assetNode.SelectNodes("Segment"))
-                                    foreach (XmlNode childSegmentNode in assetNode.SelectNodes("ChildSegment"))
+                                    foreach (XmlNode childSegmentNode in lineSegmentNode.SelectNodes("ChildSegment"))
                                         LinkLineSegments(lineSegmentNode, childSegmentNode);
                                 break;
 
