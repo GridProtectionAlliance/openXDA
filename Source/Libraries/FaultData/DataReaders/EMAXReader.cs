@@ -26,11 +26,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
-using GSF.COMTRADE;
 using GSF.Configuration;
 using GSF.EMAX;
 using log4net;
@@ -41,143 +39,6 @@ namespace FaultData.DataReaders
 {
     public class EMAXReader : IDataReader
     {
-        #region [ Members ]
-
-        // Nested Types
-        private class COMTRADEExporter
-        {
-            public string ExportDirectory { get; set; }
-
-            public MeterDataSet MeterDataSet { get; set; }
-            public string FilePath { get; set; }
-            public string MeterKey { get; set; }
-            public string IdentityString { get; set; }
-
-            public ControlFile ControlFile { get; set; }
-            public List<ANLG_CHNL_NEW> AnalogChannels { get; set; }
-            public List<EVNT_CHNL_NEW> DigitalChannels { get; set; }
-
-            public void ExportToCOMTRADE()
-            {
-                string rootFileName = GSF.IO.FilePath.GetFileNameWithoutExtension(FilePath);
-                string directoryPath = Path.Combine(ExportDirectory, MeterKey);
-                string schemaFilePath = Path.Combine(directoryPath, $"{rootFileName}.cfg");
-                string dataFilePath = Path.Combine(directoryPath, $"{rootFileName}.dat");
-                Schema comtradeSchema = new Schema();
-
-                if (File.Exists(dataFilePath))
-                    return;
-
-                comtradeSchema.StationName = Regex.Replace(IdentityString, @"[\r\n]", "");
-                comtradeSchema.Version = 2013;
-                comtradeSchema.AnalogChannels = new AnalogChannel[ControlFile.AnalogChannelCount];
-                comtradeSchema.DigitalChannels = new DigitalChannel[ControlFile.EventChannelSettings.Count];
-                comtradeSchema.SampleRates = new SampleRate[1];
-                comtradeSchema.SampleRates[0].Rate = ControlFile.SystemParameters.samples_per_second;
-                comtradeSchema.SampleRates[0].EndSample = ControlFile.SystemParameters.rcd_sample_count - 1;
-                comtradeSchema.StartTime = new Timestamp() { Value = MeterDataSet.DataSeries[1][0].Time };
-
-                int triggerIndex = ControlFile.SystemParameters.start_offset_samples + ControlFile.SystemParameters.prefault_samples;
-                comtradeSchema.TriggerTime = new Timestamp() { Value = MeterDataSet.DataSeries[1][triggerIndex].Time };
-
-                for (int i = 0; i < AnalogChannels.Count; i++)
-                {
-                    ANLG_CHNL_NEW analogChannel = AnalogChannels[i];
-                    AnalogChannel comtradeAnalog = new AnalogChannel();
-                    DataSeries channelData = MeterDataSet.DataSeries[i + 1];
-
-                    double unitMultiplier = 1.0D;
-                    double max = channelData.Maximum;
-                    double min = channelData.Minimum;
-                    double num;
-
-                    comtradeAnalog.Index = i + 1;
-                    comtradeAnalog.CircuitComponent = analogChannel.title;
-                    comtradeAnalog.Name = "A" + (i + 1);
-
-                    comtradeAnalog.Units = new Func<string, string>(type =>
-                    {
-                        switch (type)
-                        {
-                            case "V": return "kVAC";
-                            case "A": return "kAAC";
-                            case "v": return " VDC";
-                            default: return type;
-                        }
-                    })(analogChannel.type);
-
-                    if (analogChannel.type.All(char.IsUpper))
-                    {
-                        unitMultiplier = 0.001D;
-                        max *= unitMultiplier;
-                        min *= unitMultiplier;
-                    }
-
-                    comtradeAnalog.Multiplier = (max - min) / (2 * short.MaxValue);
-                    comtradeAnalog.Adder = (max + min) / 2.0D;
-                    // Setting Secondary to 1 and adjusting primary accordingly (for human readability)
-                    double basePrimary = double.TryParse(analogChannel.primary, out num) ? num * unitMultiplier : 0.0D;
-                    double inverseSecondaryMultiplier = double.TryParse(analogChannel.secondary, out num) ? num * unitMultiplier : 0.0D;
-                    if (inverseSecondaryMultiplier != 0.0D)
-                    {
-                        comtradeAnalog.PrimaryRatio = basePrimary / inverseSecondaryMultiplier;
-                        comtradeAnalog.SecondaryRatio = 1.0D;
-                    }
-                    else
-                    {
-                        comtradeAnalog.PrimaryRatio = basePrimary;
-                        comtradeAnalog.SecondaryRatio = 0.0D;
-                    }
-
-                    comtradeSchema.AnalogChannels[i] = comtradeAnalog;
-                }
-
-                for (int i = 0; i < DigitalChannels.Count; i++)
-                {
-                    EVNT_CHNL_NEW digitalChannel = DigitalChannels[i];
-                    DigitalChannel comtradeDigital = new DigitalChannel();
-                    comtradeDigital.Index = i + 1;
-                    comtradeDigital.CircuitComponent = digitalChannel.e_title;
-                    comtradeDigital.ChannelName = "E" + (i + 1);
-                    comtradeDigital.PhaseID = "?";
-                    comtradeSchema.DigitalChannels[i] = comtradeDigital;
-                }
-
-                Directory.CreateDirectory(directoryPath);
-                File.WriteAllText(schemaFilePath, comtradeSchema.FileImage, Encoding.ASCII);
-
-                using (FileStream stream = File.OpenWrite(dataFilePath))
-                {
-                    const int DigitalSize = sizeof(ushort) * 8;
-
-                    IEnumerable<DataSeries> digitalWords = MeterDataSet.Digitals.Skip(1)
-                        .Select((dataSeries, index) => dataSeries.Multiply(Math.Pow(2.0D, DigitalSize - (index % DigitalSize) - 1)))
-                        .Select((DataSeries, Index) => new { DataSeries, Index })
-                        .GroupBy(obj => obj.Index / DigitalSize)
-                        .Select(grouping => grouping.Select(obj => obj.DataSeries))
-                        .Select(grouping => grouping.Aggregate((sum, series) => sum.Add(series)));
-
-                    List<DataSeries> allChannels = MeterDataSet.DataSeries.Skip(1)
-                        .Select((dataSeries, index) => AnalogChannels[index].type.All(char.IsUpper) ? dataSeries.Multiply(0.001D) : dataSeries)
-                        .Concat(digitalWords)
-                        .ToList();
-
-                    for (int i = 0; i < MeterDataSet.DataSeries[1].DataPoints.Count; i++)
-                    {
-                        DateTime timestamp = MeterDataSet.DataSeries[1][i].Time;
-
-                        double[] values = allChannels
-                            .Select(dataSeries => dataSeries[i].Value)
-                            .ToArray();
-
-                        Writer.WriteNextRecordBinary(stream, comtradeSchema, timestamp, values, (uint)i, false);
-                    }
-                }
-            }
-        }
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>
@@ -363,37 +224,7 @@ namespace FaultData.DataReaders
                 }
             }
 
-            try
-            {
-                if (!string.IsNullOrEmpty(EMAXSettings.COMTRADEExportDirectory))
-                {
-                    string filePath = parser.FileName;
-
-                    string meterKey = GetMeterKey(filePath, FileProcessorSettings.FilePattern)
-                        ?? ThreadContext.Properties["Meter"].ToString();
-
-                    COMTRADEExporter exporter = new COMTRADEExporter()
-                    {
-                        ExportDirectory = EMAXSettings.COMTRADEExportDirectory,
-
-                        MeterDataSet = meterDataSet,
-                        FilePath = filePath,
-                        MeterKey = meterKey,
-                        IdentityString = identityString,
-
-                        ControlFile = controlFile,
-                        AnalogChannels = analogChannels,
-                        DigitalChannels = digitalChannels
-                    };
-
-                    exporter.ExportToCOMTRADE();
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex.Message, ex);
-            }
-
+            meterDataSet.EMAXConversionDataSet = new(controlFile, meterDataSet);
             return meterDataSet;
         }
 
