@@ -119,6 +119,7 @@
     <Compile Include="DataAnalysis\VIDataGroup.cs" />
     <Compile Include="DataOperations\BreakerRestrikeOperation.cs" />
     <Compile Include="DataOperations\BreakerTimingOperation.cs" />
+    <Compile Include="DataOperations\EMAXConversionOperation.cs" />
     <Compile Include="DataOperations\LSCVSDataOperation.cs" />
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
     <Compile Include="DataOperations\DataOperationBase.cs" />
@@ -171,6 +172,7 @@
     <Compile Include="DataResources\TransientDataResource.cs" />
     <Compile Include="DataSets\AnalysisDataSet.cs" />
     <Compile Include="DataSets\CyclicHistogramDataSet.cs" />
+    <Compile Include="DataSets\EMAXConversionDataSet.cs" />
     <Compile Include="DataSets\GTC\BreakerRestrikeDataSet.cs" />
     <Compile Include="DataSets\IDataSet.cs" />
     <Compile Include="DataResources\TrendingDataSummaryResource.cs" />
