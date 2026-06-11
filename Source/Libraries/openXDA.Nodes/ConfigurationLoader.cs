@@ -128,9 +128,9 @@ namespace openXDA.Nodes
                 return Enumerable.Empty<string[]>();
 
             TableOperations<HostSetting> settingTable = new TableOperations<HostSetting>(connection);
-            List<HostSetting> settingList = settingTable.QueryRecordsWhere("ID = {0}", HostID).ToList();
+            List<HostSetting> settingList = settingTable.QueryRecordsWhere("HostRegistrationID = {0}", HostID).ToList();
 
-            foreach (IGrouping<string, Setting> grouping in settingList.GroupBy(setting => setting.Name))
+            foreach (IGrouping<string, HostSetting> grouping in settingList.GroupBy(setting => setting.Name))
             {
                 if (grouping.Count() > 1)
                     Log.Warn($"Duplicate record for setting {grouping.Key} detected.");
@@ -145,9 +145,9 @@ namespace openXDA.Nodes
                 return Enumerable.Empty<string[]>();
 
             TableOperations<NodeSetting> settingTable = new TableOperations<NodeSetting>(connection);
-            List<NodeSetting> settingList = settingTable.QueryRecordsWhere("ID = {0}", NodeID).ToList();
+            List<NodeSetting> settingList = settingTable.QueryRecordsWhere("NodeID = {0}", NodeID).ToList();
 
-            foreach (IGrouping<string, Setting> grouping in settingList.GroupBy(setting => setting.Name))
+            foreach (IGrouping<string, NodeSetting> grouping in settingList.GroupBy(setting => setting.Name))
             {
                 if (grouping.Count() > 1)
                     Log.Warn($"Duplicate record for setting {grouping.Key} detected.");
