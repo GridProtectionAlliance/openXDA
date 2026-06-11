@@ -4211,9 +4211,15 @@ SELECT
     AlarmFactor.Factor AS Value
 FROM
     (
-        SELECT AF.ID, AF.Factor, AF.AlarmGroupID, AF.SeverityID
-        FROM AlarmFactor AF
-        INNER JOIN AlarmGroup AG ON AF.AlarmGroupID = AG.ID AND AG.Enabled = 1
+        SELECT
+            AlarmFactor.ID,
+            AlarmFactor.Factor,
+            AlarmFactor.AlarmGroupID,
+            AlarmFactor.SeverityID
+        FROM
+            AlarmFactor JOIN
+            AlarmGroup ON AlarmFactor.AlarmGroupID = AlarmGroup.ID
+        WHERE AlarmGroup.Enabled <> 0
         UNION
         SELECT
             NULL AS ID,
@@ -4221,7 +4227,7 @@ FROM
             AlarmGroup.ID AS AlarmGroupID,
             AlarmGroup.SeverityID
         FROM AlarmGroup
-        WHERE AlarmGroup.Enabled = 1
+        WHERE AlarmGroup.Enabled <> 0
     ) AlarmFactor LEFT JOIN
     Alarm ON AlarmFactor.AlarmGroupID = alarm.AlarmGroupID LEFT JOIN
     AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID
