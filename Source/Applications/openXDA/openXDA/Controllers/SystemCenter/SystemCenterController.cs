@@ -279,6 +279,11 @@ namespace openXDA.Controllers.Config
             return Ok(status);
         }
 
+        [Route("AnalysisQueueLength"), HttpGet]
+        public IHttpActionResult GetAnalysisQueueLength()
+        {
+            return Ok(ServiceConnection.Host.QueryAnalysisQueueStatus());
+        }
         private Action<object> GetConfigurator()
         {
             ConfigurationLoader configurationLoader = new ConfigurationLoader(NodeHost.ID, CreateDbConnection);
@@ -465,6 +470,7 @@ namespace openXDA.Controllers.Config
 
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataFileController));
+
 
         #endregion
     }
