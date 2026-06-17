@@ -44,6 +44,8 @@ namespace openXDA.Model
         public int ValidCount { get; set; }
 
         public int InvalidCount { get; set; }
+
+        public DateTime? LastRecieved { get; set; }
     }
 
     public static partial class TableOperationsExtensions
@@ -52,7 +54,7 @@ namespace openXDA.Model
         {
             const string UpsertQuery =
                 "MERGE INTO DailyTrendingSummary WITH (TABLOCK) AS Target " +
-                "USING (VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6})) AS Source([ChannelID], [Date], [Minimum], [Maximum], [Average], [ValidCount], [InvalidCount]) " +
+                "USING (VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})) AS Source([ChannelID], [Date], [Minimum], [Maximum], [Average], [ValidCount], [InvalidCount], [LastRecieved]) " +
                 "ON Source.ChannelID = Target.ChannelID AND Source.Date = Target.Date " +
                 "WHEN MATCHED THEN " +
                 "    UPDATE SET " +
@@ -61,9 +63,10 @@ namespace openXDA.Model
                 "        Average = Source.Average, " +
                 "        ValidCount = Source.ValidCount, " +
                 "        InvalidCount = Source.InvalidCount " +
+                "        LastRecieved = Source.LastRecieved " +
                 "WHEN NOT MATCHED THEN " +
-                "    INSERT (ChannelID, Date, Maximum, Minimum, Average, ValidCount, InvalidCount) " +
-                "    VALUES (Source.ChannelID, Source.Date, Source.Maximum, Source.Minimum, Source.Average, Source.ValidCount, Source.InvalidCount);";
+                "    INSERT (ChannelID, Date, Maximum, Minimum, Average, ValidCount, InvalidCount, LastRecieved) " +
+                "    VALUES (Source.ChannelID, Source.Date, Source.Maximum, Source.Minimum, Source.Average, Source.ValidCount, Source.InvalidCount, Source.LastRecieved);";
 
             int channelID = dailyTrendingSummary.ChannelID;
             DateTime date = dailyTrendingSummary.Date;
@@ -72,8 +75,9 @@ namespace openXDA.Model
             double average = dailyTrendingSummary.Average;
             int validCount = dailyTrendingSummary.ValidCount;
             int invalidCount = dailyTrendingSummary.InvalidCount;
+            DateTime? lastRecieved = dailyTrendingSummary.LastRecieved;
 
-            dailyTrendingSummaryTable.Connection.ExecuteNonQuery(UpsertQuery, channelID, date, minimum, maximum, average, validCount, invalidCount);
+            dailyTrendingSummaryTable.Connection.ExecuteNonQuery(UpsertQuery, channelID, date, minimum, maximum, average, validCount, invalidCount, lastRecieved);
         }
     }
 

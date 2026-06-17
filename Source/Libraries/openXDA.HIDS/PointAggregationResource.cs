@@ -54,6 +54,8 @@ namespace openXDA.HIDS
         public int UnreasonablePoints { get; set; }
         public int LatchedPoints { get; set; }
         public int NoncongruentPoints { get; set; }
+
+        public DateTime? LastRecieved { get; set; }
     }
 
     public class PointAggregationResource : DataResourceBase<MeterDataSet>
@@ -120,7 +122,8 @@ namespace openXDA.HIDS
                 {
                     Channel = channel,
                     Date = date,
-                    ExpectedPoints = expectedPoints
+                    ExpectedPoints = expectedPoints,
+                    LastRecieved = null
                 };
 
                 var key = new { ChannelID = channelID, Date = date };
@@ -128,6 +131,7 @@ namespace openXDA.HIDS
                 UpdateValueAggregates(aggregate, point);
                 UpdateSummaryCounts(aggregate, point);
                 UpdateQualityCounts(aggregate, point);
+                UpdateLastRecieved(aggregate, point);
             }
 
             return aggregateLookup.Values.ToList();
@@ -142,6 +146,12 @@ namespace openXDA.HIDS
                 aggregate.Minimum = point.Minimum;
 
             aggregate.TotalAverage += point.Average;
+        }
+
+        private void UpdateLastRecieved(PointAggregate aggregate, Point point)
+        {
+            if (aggregate.LastRecieved is null || point.Timestamp > aggregate.LastRecieved)
+                aggregate.LastRecieved = point.Timestamp;
         }
 
         private void UpdateSummaryCounts(PointAggregate aggregate, Point point)
