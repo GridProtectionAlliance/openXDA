@@ -3764,6 +3764,10 @@ CREATE NONCLUSTERED INDEX IX_DailyTrendingSummary_Date
 ON DailyTrendingSummary(Date ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_DailyTrendingSummary_ChannelID_Date
+ON DailyTrendingSummary(ChannelID ASC, Date ASC)
+GO
+
 CREATE TABLE ChannelNormal
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
