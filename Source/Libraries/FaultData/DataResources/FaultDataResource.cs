@@ -309,6 +309,8 @@ namespace FaultData.DataResources
                 VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
                 VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
 
+                Log.Debug($"Beginning fault location analysis for event on asset {dataGroup.Asset.AssetKey}.");
+
                 // Defined channel checks
                 Log.Debug("Checking defined channels...");
 
@@ -320,7 +322,7 @@ namespace FaultData.DataResources
 
                 if (viDataGroup.DefinedCurrents < 3 && viDataGroup.IR == null)
                 {
-                    Log.Debug($"Not enough current channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
+                    Log.Debug($"Not enough current channels for fault analysis: {viDataGroup.DefinedCurrents}.");
                     continue;
                 }
 
