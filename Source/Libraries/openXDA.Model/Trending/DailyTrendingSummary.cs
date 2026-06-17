@@ -62,7 +62,7 @@ namespace openXDA.Model
                 "        Minimum = Source.Minimum, " +
                 "        Average = Source.Average, " +
                 "        ValidCount = Source.ValidCount, " +
-                "        InvalidCount = Source.InvalidCount " +
+                "        InvalidCount = Source.InvalidCount, " +
                 "        LastRecieved = Source.LastRecieved " +
                 "WHEN NOT MATCHED THEN " +
                 "    INSERT (ChannelID, Date, Maximum, Minimum, Average, ValidCount, InvalidCount, LastRecieved) " +
