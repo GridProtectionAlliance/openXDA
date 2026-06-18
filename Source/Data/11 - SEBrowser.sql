@@ -21,38 +21,39 @@ GO
 */
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchEventView] AS
-	SELECT
-		Event.ID AS EventID,
-		FORMAT(Event.StartTime,'MM/dd/yyyy <br> HH:mm:ss.fffffff') AS Time,
-		Meter.AssetKey AS [Meter Key],
-		Meter.Name AS [Meter],
-		Meter.Alias AS [Meter Alias],
-		Meter.ShortName AS [Meter ShortName],
-		Meter.Make AS [Meter Make],
-		Meter.Model AS [Meter Model],
-		Meter.TimeZone AS [Meter TimeZone],
-		Meter.Description AS [Meter Desc],
-		--Meter Sector
---Meter Firmware Version
---Meter Template Version
---Meter Connection Type
-		Location.Name AS [Station],
-		Location.LocationKey AS [Station Key],
-		Location.ShortName AS [Station ShortName],
-		Location.Alias AS [Station Alias],
-		Location.Description AS [Station Desc],
---TSC
-		Asset.AssetName AS [Asset Name],
-		AssetType.Name AS [Asset Type],
-		Asset.VoltageKV AS [Nom Voltage (kV)],
-		Asset.Description AS [Asset Desc]
---Asset Manufacturer
---Asset Model
-	FROM Event LEFT JOIN
-		Meter ON Meter.ID = Event.MeterID LEFT JOIN 
-		Location ON Meter.LocationID = Location.ID LEFT JOIN
-		Asset ON Asset.ID = Event.AssetID LEFT JOIN
-		AssetType ON Asset.AssetTypeID = AssetType.ID
+SELECT
+    Event.ID AS EventID,
+    FORMAT(Event.StartTime,'MM/dd/yyyy <br> HH:mm:ss.fffffff') AS Time,
+    Meter.AssetKey AS [Meter Key],
+    Meter.Name AS [Meter],
+    Meter.Alias AS [Meter Alias],
+    Meter.ShortName AS [Meter ShortName],
+    Meter.Make AS [Meter Make],
+    Meter.Model AS [Meter Model],
+    Meter.TimeZone AS [Meter TimeZone],
+    Meter.Description AS [Meter Desc],
+    --Meter Sector
+    --Meter Firmware Version
+    --Meter Template Version
+    --Meter Connection Type
+    Location.Name AS [Station],
+    Location.LocationKey AS [Station Key],
+    Location.ShortName AS [Station ShortName],
+    Location.Alias AS [Station Alias],
+    Location.Description AS [Station Desc],
+    --TSC
+    Asset.AssetName AS [Asset Name],
+    AssetType.Name AS [Asset Type],
+    Asset.VoltageKV AS [Nom Voltage (kV)],
+    Asset.Description AS [Asset Desc]
+    --Asset Manufacturer
+    --Asset Model
+FROM
+    Event JOIN
+    Meter ON Event.MeterID = Meter.ID JOIN 
+    Location ON Meter.LocationID = Location.ID JOIN
+    Asset ON Event.AssetID = Asset.ID JOIN
+    AssetType ON Asset.AssetTypeID = AssetType.ID
 GO
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchDetailsView] AS
