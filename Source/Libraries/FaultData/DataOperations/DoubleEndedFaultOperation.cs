@@ -224,6 +224,7 @@ namespace FaultData.DataOperations
         public override void Execute(MeterDataSet meterDataSet)
         {
             // Get a time range for querying each system event that contains events in this meter data set
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             SystemEventResource systemEventResource = meterDataSet.GetResource<SystemEventResource>();
             List<SystemEventResource.SystemEvent> systemEvents = systemEventResource.SystemEvents;
 
@@ -232,14 +233,17 @@ namespace FaultData.DataOperations
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                TableOperations<openXDA.Model.Line> lineTable = new TableOperations<openXDA.Model.Line>(connection);
-                TableOperations<AssetLocation> meterLocationLineTable = new TableOperations<AssetLocation>(connection);
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 TableOperations<DoubleEndedFaultDistance> doubleEndedFaultDistanceTable = new TableOperations<DoubleEndedFaultDistance>(connection);
                 TableOperations<FaultCurve> faultCurveTable = new TableOperations<FaultCurve>(connection);
 
                 List<MappingNode> processedMappingNodes = new List<MappingNode>();
                 double timeTolerance = DataAnalysisSettings.TimeTolerance;
+
+                Dictionary<int, Asset> lineLookup = cycleDataResource.DataGroups
+                    .Select(dataGroup => dataGroup.Asset)
+                    .Where(asset => asset.AssetTypeID == (int)AssetType.Line)
+                    .ToDictionary(asset => asset.ID);
 
                 foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
                 {
@@ -248,43 +252,30 @@ namespace FaultData.DataOperations
 
                     foreach (IGrouping<int, Event> lineGrouping in dbSystemEvent.GroupBy(evt => evt.AssetID))
                     {
-                        // Make sure this line connects two known meter locations
-                        int meterLocationCount = meterLocationLineTable.QueryRecordCountWhere("AssetID = {0}", lineGrouping.Key);
-
-                        if (meterLocationCount != 2)
+                        if (!lineLookup.TryGetValue(lineGrouping.Key, out Asset lineAsset))
                             continue;
 
-                        // Determine the length of the line
-                        double lineLength = lineTable
-                            .QueryRecordsWhere("ID = {0}", lineGrouping.Key)
-                            .Select(line =>
-                            {
-                                line.ConnectionFactory = meterDataSet.CreateDbConnection;
+                        HashSet<int> localEvents = [.. lineGrouping
+                            .Where(evt => evt.MeterID == meterDataSet.Meter.ID)
+                            .Select(evt => evt.ID)];
 
-                                return line.Path[0].Length;
-                            })
-                            .DefaultIfEmpty(double.NaN)
-                            .First();
-
-                        if (double.IsNaN(lineLength))
+                        if (localEvents.Count == 0)
                             continue;
 
-                        // Determine the nominal impedance of the line
-                        ComplexNumber nominalImpedance = new ComplexNumber(
-                            lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line =>
-                            {
-                                line.ConnectionFactory = meterDataSet.CreateDbConnection;
-                                return line.Path[0].R1;
-                            }).FirstOrDefault(),
-                            lineTable.QueryRecordsWhere("ID = {0}", lineGrouping.Key).Select(line =>
-                            {
-                                line.ConnectionFactory = meterDataSet.CreateDbConnection;
-                                return line.Path[0].X1;
-                            }).FirstOrDefault());
+                        openXDA.Model.Line line = lineAsset.QueryAs<openXDA.Model.Line>(connection);
 
-                           
-                        if (!nominalImpedance.AllAssigned)
+                        if (line is null)
                             continue;
+
+                        // Attempt to correlate events with line segments so that later we can
+                        // identify which transmission path should be used given a pair of events
+                        ILookup<int, int> segmentLookup = lineAsset.DirectChannels
+                            .Select(channel => channel.Meter)
+                            .Distinct()
+                            .Join(lineGrouping, meter => meter.ID, evt => evt.MeterID, (Meter, Evt) => (Evt, Meter))
+                            .SelectMany(tuple => tuple.Meter.Location.AssetLocations, (tuple, location) => (tuple.Evt, location.AssetID))
+                            .Join(line.Segments, tuple => tuple.AssetID, segment => segment.ID, (tuple, _) => tuple)
+                            .ToLookup(tuple => tuple.Evt.ID, tuple => tuple.AssetID);
 
                         int leftEventID = 0;
                         int rightEventID = 0;
@@ -293,13 +284,48 @@ namespace FaultData.DataOperations
 
                         // Attempt to match faults during this system event that occurred
                         // on one end of the line with faults that occurred during this
-                        // system even on the other end of the line
+                        // system event on the other end of the line
                         List<Mapping> mappings = GetMappings(connection, lineGrouping);
 
                         foreach (Mapping mapping in mappings)
                         {
                             if (mapping.Left.FaultType == FaultType.None || mapping.Right.FaultType == FaultType.None)
                                 continue;
+
+                            // The meterDataSet updated the timeline for meterDataSet.Meter so we should only need
+                            // to compute double-ended fault location for pairs of events that include that meter
+                            if (!localEvents.Contains(mapping.Left.Fault.EventID) && !localEvents.Contains(mapping.Right.Fault.EventID))
+                                continue;
+
+                            // Sort tuples to perform unordered comparisons
+                            static (int, int) SortTuple((int a, int b) tuple) =>
+                                tuple.a < tuple.b ? tuple : (tuple.b, tuple.a);
+
+                            IEnumerable<int> leftSegmentIDs = segmentLookup[mapping.Left.Fault.EventID];
+                            IEnumerable<int> rightSegmentIDs = segmentLookup[mapping.Right.Fault.EventID];
+
+                            HashSet<(int, int)> pathMatchLookup = [.. leftSegmentIDs
+                                .SelectMany(_ => rightSegmentIDs, (left, right) => (left, right))
+                                .Select(SortTuple)];
+
+                            TransmissionPath path = line.Path
+                                .Where(path =>
+                                {
+                                    (int, int) tuple = (path.Start.ID, path.End.ID);
+                                    (int, int) key = SortTuple(tuple);
+                                    return pathMatchLookup.Contains(key);
+                                })
+                                // If an exact match does not exist,
+                                // default to the longest path
+                                .DefaultIfEmpty(line.Path[0])
+                                .First();
+
+                            // No segments means no length or impedance
+                            if (path.Segments.Count == 0)
+                                continue;
+
+                            double lineLength = path.Length;
+                            ComplexNumber nominalImpedance = new(path.R1, path.X1);
 
                             // Get the cycle data for each of the two mapped faults
                             if (mapping.Left.Fault.EventID != leftEventID)

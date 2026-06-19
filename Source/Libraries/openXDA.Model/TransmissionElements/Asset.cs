@@ -517,21 +517,58 @@ namespace openXDA.Model
             if (this is T typedAsset)
                 return typedAsset;
 
+            typedAsset = FindAs<T>();
+
+            if (typedAsset is not null)
+                return typedAsset;
+
             if (connection is null && ConnectionFactory is null)
                 throw new ArgumentNullException(nameof(connection));
 
-            Lazy<AdoDataConnection> lazyConnection = new Lazy<AdoDataConnection>(ConnectionFactory);
+            Lazy<AdoDataConnection> lazyConnection = new(ConnectionFactory);
 
             try
             {
-                TableOperations<T> table = new TableOperations<T>(connection ?? lazyConnection.Value);
-                return table.QueryRecordWhere("ID = {0}", ID);
+                TableOperations<T> table = new(connection ?? lazyConnection.Value);
+                typedAsset = table.QueryRecordWhere("ID = {0}", ID);
+                CacheAs(typedAsset);
+                return typedAsset;
             }
             finally
             {
                 if (lazyConnection.IsValueCreated)
                     lazyConnection.Value.Dispose();
             }
+        }
+
+        private T FindAs<T>() where T : Asset
+        {
+            Type type = typeof(T);
+
+            if (type == typeof(Line))
+                return LazyContext?.GetLine(ID) as T;
+
+            if (type == typeof(LineSegment))
+                return LazyContext?.GetLineSegment(ID) as T;
+
+            if (type == typeof(CapBankRelay))
+                return LazyContext?.GetRelay(ID) as T;
+
+            return null;
+        }
+
+        private void CacheAs<T>(T asset) where T : Asset
+        {
+            if (asset is Line line)
+                _ = LazyContext?.GetLine(line);
+
+            if (asset is LineSegment segment)
+                _ = LazyContext?.GetLineSegment(segment);
+
+            if (asset is CapBankRelay relay)
+                _ = LazyContext?.GetRelay(relay);
+
+            asset.LazyContext = LazyContext;
         }
 
         [Obsolete("Replaced by GetChannels")]
