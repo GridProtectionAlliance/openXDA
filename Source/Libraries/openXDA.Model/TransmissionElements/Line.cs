@@ -286,8 +286,9 @@ namespace openXDA.Model
         public double X1;
         public double R1;
 
+        public Line Line;
         public List<LineSegment> Segments;
-        public Line Line; 
+        public LineSegment Start => Segments?.FirstOrDefault();
+        public LineSegment End => Segments?.LastOrDefault();
     }
-
 }
