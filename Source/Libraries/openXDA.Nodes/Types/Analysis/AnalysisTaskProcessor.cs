@@ -136,7 +136,8 @@ namespace openXDA.Nodes.Types.Analysis
                 Meter meter = QueryMeter(connection, meterID);
                 meter.ConnectionFactory = ConnectionFactory;
 
-                AnalysisTask task = new AnalysisTask(id, fileGroup, meter, priority);
+                DateTime timeQueued = QueryMinTimeQueued(connection, fileGroupID, meterID, priority);
+                AnalysisTask task = new AnalysisTask(id, fileGroup, meter, timeQueued, priority);
                 PruneDuplicateTasks(connection, task);
                 return task;
             }
@@ -171,6 +172,19 @@ namespace openXDA.Nodes.Types.Analysis
                     Thread.Sleep(10000);
                 }
             }
+        }
+
+        private DateTime QueryMinTimeQueued(AdoDataConnection connection, int fileGroupID, int meterID, int priority)
+        {
+            const string Query =
+                "SELECT MIN(TimeQueued) " +
+                "FROM AnalysisTask " +
+                "WHERE " +
+                "    FileGroupID = {0} AND " +
+                "    MeterID = {1} AND " +
+                "    Priority = {2}";
+
+            return connection.ExecuteScalar<DateTime>(Query, fileGroupID, meterID, priority);
         }
 
         private void PruneDuplicateTasks(AdoDataConnection connection, AnalysisTask task)

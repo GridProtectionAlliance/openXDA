@@ -186,14 +186,14 @@ namespace openXDA.Nodes.Types.Analysis
 
         private void Process(AnalysisTask task)
         {
+            Meter meter = task.Meter;
             FileGroup fileGroup = task.FileGroup;
+            MeterDataSet meterDataset = null;
+
             try
             {
-                Meter meter = task.Meter;
-                MeterDataSet meterDataset = Process(fileGroup, meter);
-                SaveMeterConfiguration(fileGroup, meter);
-                if (!(meterDataset is null))
-                    DailyStatisticOperation.UpdateSuccessFileProcessingStatistic(meterDataset);
+                FileGroupAnalysisJob analysisJob = CreateAnalysisJob(task, fileGroup);
+                meterDataset = Process(analysisJob, meter);
             }
             catch (Exception ex)
             {
@@ -208,25 +208,47 @@ namespace openXDA.Nodes.Types.Analysis
 
                     DailyStatisticOperation.UpdateFailureFileProcessingStatistic(task.Meter.AssetKey, task.FileGroup, message);
                 }
-                catch (Exception e) {
-                    Exception w = new Exception(message, e);
-                    Log.Error(w.Message, w);
+                catch (Exception statusUpdateException)
+                {
+                    string statusUpdateMessage = $"An error occurred while updating file group processing status for \"{filePath}\": {statusUpdateException.Message}";
+                    Exception statusUpdateWrapper = new Exception(statusUpdateMessage, statusUpdateException);
+                    Log.Error(statusUpdateMessage, statusUpdateWrapper);
                 }
 
                 Exception wrapper = new Exception(message, ex);
                 Log.Error(wrapper.Message, wrapper);
             }
+
+            try
+            {
+                if (!(meterDataset is null))
+                    DailyStatisticOperation.UpdateSuccessFileProcessingStatistic(meterDataset);
+            }
+            catch (Exception ex)
+            {
+                DataFile dataFile = task.FileGroup.DataFiles.First();
+                string filePath = Path.ChangeExtension(dataFile.FilePath, "*");
+                string message = $"An error occurred while updating processing statistics for \"{filePath}\": {ex.Message}";
+                Exception wrapper = new Exception(message, ex);
+                Log.Error(wrapper.Message, wrapper);
+            }
         }
 
-        private MeterDataSet Process(FileGroup fileGroup, Meter meter)
+        private MeterDataSet Process(FileGroupAnalysisJob analysisJob, Meter meter)
         {
-            DateTime startTime = DateTime.UtcNow;
+            DateTime utcStartTime = DateTime.UtcNow;
             Action<object> configurator = GetConfigurator();
             TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
-            fileGroup.ProcessingStartTime = timeZoneConverter.ToXDATimeZone(startTime);
-            fileGroup.ProcessingVersion++;
+            DateTime xdaStartTime = timeZoneConverter.ToXDATimeZone(utcStartTime);
+
+            FileGroup fileGroup = analysisJob.FileGroup;
+            int processingVersion = fileGroup.ProcessingVersion + 1;
+            analysisJob.ProcessingStartTime = xdaStartTime;
+            fileGroup.ProcessingStartTime = xdaStartTime;
+            fileGroup.ProcessingEndTime = default;
+            fileGroup.ProcessingVersion = processingVersion;
             fileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Processing;
-            UpdateFileGroup(fileGroup);
+            UpdateAnalysisJob(analysisJob);
 
             DataFile dataFile = fileGroup.DataFiles.First();
             string fileGroupPath = Path.ChangeExtension(dataFile.FilePath, "*");
@@ -237,7 +259,7 @@ namespace openXDA.Nodes.Types.Analysis
             configurator(reader);
 
             MeterDataSet meterDataSet = reader.Parse(fileGroup);
-            FileGroupProcessingStatus processingStatus;
+            FileGroupProcessingStatus processingStatus = FileGroupProcessingStatus.Success;
 
             if (!(meterDataSet is null))
             {
@@ -263,20 +285,32 @@ namespace openXDA.Nodes.Types.Analysis
                 UpdateFileGroup(fileGroup);
 
                 Log.Info($"Processing file group \"{fileGroupPath}\"...");
-                processingStatus = Process(meterDataSet);
+                processingStatus = Process(analysisJob, meterDataSet);
                 Log.Info($"Finished processing file group \"{fileGroupPath}\".");
             }
-            else processingStatus = FileGroupProcessingStatus.Success;
 
-            DateTime endTime = DateTime.UtcNow;
-            fileGroup.ProcessingEndTime = timeZoneConverter.ToXDATimeZone(endTime);
+            DateTime utcEndTime = DateTime.UtcNow;
+            DateTime xdaEndTime = timeZoneConverter.ToXDATimeZone(utcEndTime);
+            analysisJob.ProcessingEndTime = xdaEndTime;
+            fileGroup.ProcessingEndTime = xdaEndTime;
             fileGroup.ProcessingStatus = (int)processingStatus;
-            UpdateFileGroup(fileGroup);
+            UpdateAnalysisJob(analysisJob);
+
+            try
+            {
+                SaveMeterConfiguration(analysisJob, meter);
+            }
+            catch (Exception ex)
+            {
+                string message = $"An error occurred while saving meter configuration for \"{meter.AssetKey}\": {ex.Message}";
+                Exception wrapper = new Exception(message, ex);
+                Log.Error(wrapper.Message, wrapper);
+            }
 
             return meterDataSet;
         }
 
-        private FileGroupProcessingStatus Process(MeterDataSet meterDataSet)
+        private FileGroupProcessingStatus Process(FileGroupAnalysisJob analysisJob, MeterDataSet meterDataSet)
         {
             FileGroup fileGroup = meterDataSet.FileGroup;
             List<DataOperation> dataOperationDefinitions;
@@ -284,7 +318,6 @@ namespace openXDA.Nodes.Types.Analysis
             using (AdoDataConnection connection = CreateDbConnection())
             {
                 TableOperations<DataOperation> dataOperationTable = new TableOperations<DataOperation>(connection);
-                new TableOperations<DataOperationFailure>(connection).DeleteRecordWhere("FileGroupID={0}", fileGroup.ID);
 
                 // Load the data operations from the database
                 dataOperationDefinitions = dataOperationTable
@@ -326,18 +359,24 @@ namespace openXDA.Nodes.Types.Analysis
                     // Log the error and skip to the next data operation
                     string message = $"An error occurred while executing data operation of type '{dataOperationDefinition.TypeName}' on data from meter '{meterDataSet.Meter.AssetKey}': {ex.Message}";
                     Exception wrapper = new Exception(message, ex);
-                    if (status == FileGroupProcessingStatus.Success) status = FileGroupProcessingStatus.PartialSuccess;
+
+                    if (status == FileGroupProcessingStatus.Success)
+                        status = FileGroupProcessingStatus.PartialSuccess;
+
                     Log.Error(wrapper.Message, wrapper);
-                    Action<object> configurator = GetConfigurator();
-                    TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
+
+                    TimeZoneConverter timeZoneConverter = new TimeZoneConverter(meterDataSet.Configure);
+                    DateTime xdaNow = timeZoneConverter.ToXDATimeZone(DateTime.UtcNow);
+
                     dataOperationFailures.Add(new DataOperationFailure
                     {
                         DataOperationID = dataOperationDefinition.ID,
-                        FileGroupID = meterDataSet.FileGroup.ID,
+                        FileGroupAnalysisJobID = analysisJob.ID,
                         Log = message,
                         StackTrace = ex.StackTrace,
-                        TimeOfFailure = timeZoneConverter.ToXDATimeZone(DateTime.UtcNow)
+                        TimeOfFailure = xdaNow
                     });
+
                     if (IsDisposed)
                     {
                         TryLogDataOperationFailures(dataOperationFailures);
@@ -373,7 +412,24 @@ namespace openXDA.Nodes.Types.Analysis
             }
         }
 
-        private void SaveMeterConfiguration(FileGroup fileGroup, Meter meter)
+        private FileGroupAnalysisJob CreateAnalysisJob(AnalysisTask task, FileGroup fileGroup)
+        {
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                TableOperations<FileGroupAnalysisJob> fileGroupAnalysisJobTable = new TableOperations<FileGroupAnalysisJob>(connection);
+                FileGroupAnalysisJob analysisJob = fileGroupAnalysisJobTable.NewRecord();
+                analysisJob.FileGroupID = fileGroup.ID;
+                analysisJob.TaskQueuedTime = task.TimeQueued;
+                analysisJob.TaskPriority = task.Priority;
+                fileGroupAnalysisJobTable.AddNewRecord(analysisJob);
+
+                analysisJob.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                analysisJob.FileGroup = fileGroup;
+                return analysisJob;
+            }
+        }
+
+        private void SaveMeterConfiguration(FileGroupAnalysisJob analysisJob, Meter meter)
         {
             MeterSettingsSheet meterSettingsSheet = new MeterSettingsSheet(meter);
 
@@ -389,8 +445,7 @@ namespace openXDA.Nodes.Types.Analysis
                     new RecordRestriction("DiffID IS NULL");
 
                 MeterConfiguration currentConfiguration = meterConfigurationTable.QueryRecord("ID DESC", queryRestriction);
-                connection.ExecuteNonQuery("DELETE FROM FileGroupMeterConfiguration WHERE FileGroupID = {0} AND MeterConfigurationID IN (SELECT ID FROM MeterConfiguration WHERE ConfigKey = {1})", fileGroup.ID, ConfigKey);
-                connection.ExecuteNonQuery("INSERT INTO FileGroupMeterConfiguration VALUES({0}, {1})", fileGroup.ID, currentConfiguration.ID);
+                connection.ExecuteNonQuery("INSERT INTO FileGroupAnalysisJobMeterConfiguration VALUES({0}, {1})", analysisJob.ID, currentConfiguration.ID);
             }
         }
 
@@ -445,6 +500,17 @@ namespace openXDA.Nodes.Types.Analysis
             {
                 TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
                 fileGroupTable.UpdateRecord(fileGroup);
+            }
+        }
+
+        private void UpdateAnalysisJob(FileGroupAnalysisJob analysisJob)
+        {
+            using (AdoDataConnection connection = CreateDbConnection())
+            {
+                TableOperations<FileGroupAnalysisJob> fileGroupAnalysisJobTable = new TableOperations<FileGroupAnalysisJob>(connection);
+                TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
+                fileGroupAnalysisJobTable.UpdateRecord(analysisJob);
+                fileGroupTable.UpdateRecord(analysisJob.FileGroup);
             }
         }
 

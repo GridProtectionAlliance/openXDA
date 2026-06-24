@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using System;
+using GSF.Data;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -32,6 +34,8 @@ namespace openXDA.Model
         public int FileGroupID { get; set; }
         public int MeterID { get; set; }
         public int? NodeID { get; set; }
+        [FieldDataType(System.Data.DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime TimeQueued { get; set; }
         public int Priority { get; set; }
     }
 }
