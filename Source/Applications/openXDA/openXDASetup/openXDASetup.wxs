@@ -634,7 +634,7 @@
         <File Id="FaultData.dll" Name="$(var.FaultData.TargetFileName)" Source="$(var.FaultData.TargetPath)" />
       </Component>
       <Component Id="Reports">
-        <File Id="Reports.dll" Name="Reports.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\Report.NET.0.09.06\lib\net46\Reports.dll" />
+        <File Id="Reports.dll" Name="Reports.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\Report.NET.0.9.8\lib\net48\Reports.dll" />
       </Component>
 
       <Component Id="openXDA.Adapters">

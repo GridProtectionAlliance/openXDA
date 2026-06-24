@@ -40,10 +40,13 @@
     <Reference Include="log4net, Version=3.1.0.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\log4net.3.1.0\lib\net462\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Reports, Version=0.9.5821.33856, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\Report.NET.0.09.06\lib\net46\Reports.dll</HintPath>
+    <Reference Include="Reports, Version=0.9.7114.24558, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\Report.NET.0.9.8\lib\net48\Reports.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
