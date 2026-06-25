@@ -74,7 +74,8 @@ namespace openXDA.HIDS
                     Minimum = pointAggregate.Minimum,
                     Average = pointAggregate.TotalAverage / pointAggregate.ReceivedPoints,
                     ValidCount = pointAggregate.ValidPoints,
-                    InvalidCount = pointAggregate.ReceivedPoints - pointAggregate.ValidPoints
+                    InvalidCount = pointAggregate.ReceivedPoints - pointAggregate.ValidPoints,
+                    LastReceived = pointAggregate.LastReceived
                 };
 
                 dailyTrendingSummaryTable.Upsert(summary);

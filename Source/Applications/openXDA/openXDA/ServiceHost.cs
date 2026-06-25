@@ -67,6 +67,7 @@
 //*********************************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -122,6 +123,12 @@ namespace openXDA
                 ServiceHelper.RemoveScheduledProcess(name);
         }
 
+        public class AnalysisQueueState
+        {
+            public DateTime Time { get; set; }
+            public Tuple<int, int>[] QueueLengthByPriority { get; set; }
+        }
+
         #endregion
 
         #region [ Constructors ]
@@ -151,6 +158,8 @@ namespace openXDA
         private XDAWebHost WebHost { get; set; }
         private IDisposable LogSubscriber { get; set; }
 
+        private static ConcurrentQueue<AnalysisQueueState> s_analysisQueueLength = new ConcurrentQueue<AnalysisQueueState>();
+
         #endregion
 
         #region [ Methods ]
@@ -176,6 +185,11 @@ namespace openXDA
             }
         }
 
+        public AnalysisQueueState[] QueryAnalysisQueueStatus()
+        {
+            return s_analysisQueueLength.ToArray();
+        }
+
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
@@ -193,6 +207,7 @@ namespace openXDA
             m_serviceHelper.AddProcess(UpdateConfigurationHandler, "UpdateConfiguration");
             m_serviceHelper.AddProcess(ScanFilesHandler, "ScanFiles");
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
+            m_serviceHelper.AddScheduledProcess(AnalysisQueueStateHandler, "AnalysisQueueState", "*/10 * * * *");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Reconfigure", "Force host to reconfigure on demand", ReconfigureHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadWebHost", "Reloads web host with latest configuration", ReloadWebHostHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about file/analysis nodes", EngineStatusHandler));
@@ -452,6 +467,36 @@ namespace openXDA
                     // Handle each service monitor's exceptions individually
                     HandleException(ex);
                 }
+            }
+        }
+
+        private void AnalysisQueueStateHandler(string s, object[] args)
+        {
+            try
+            {
+                using (AdoDataConnection connection = DatabaseConnectionFactory.CreateDbConnection())
+                {
+                    const string Query =
+                        "SELECT " +
+                        "    Priority, " +
+                        "    COUNT(*) QueueLength " +
+                        "FROM AnalysisTask " +
+                        "GROUP BY Priority";
+
+                    DataTable result = connection.RetrieveData(Query);
+
+                    s_analysisQueueLength.Enqueue(new AnalysisQueueState
+                    {
+                        Time = DateTime.UtcNow,
+                        QueueLengthByPriority = result.AsEnumerable().Select(row => new Tuple<int, int>(
+                            row.ConvertField<int>("Priority"),
+                            row.ConvertField<int>("QueueLength"))).ToArray()
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
             }
         }
 
