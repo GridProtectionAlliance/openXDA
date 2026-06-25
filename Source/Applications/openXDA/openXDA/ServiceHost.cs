@@ -67,6 +67,7 @@
 //*********************************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -157,7 +158,7 @@ namespace openXDA
         private XDAWebHost WebHost { get; set; }
         private IDisposable LogSubscriber { get; set; }
 
-        private static Queue<AnalysisQueueState> s_analysisQueueLength = new Queue<AnalysisQueueState>(24);
+        private static ConcurrentQueue<AnalysisQueueState> s_analysisQueueLength = new ConcurrentQueue<AnalysisQueueState>();
 
         #endregion
 
@@ -481,6 +482,7 @@ namespace openXDA
                         "    COUNT(*) QueueLength " +
                         "FROM AnalysisTask " +
                         "GROUP BY Priority";
+
                     DataTable result = connection.RetrieveData(Query);
 
                     s_analysisQueueLength.Enqueue(new AnalysisQueueState
@@ -494,11 +496,10 @@ namespace openXDA
             }
             catch (Exception ex)
             {
-                // Handle each service monitor's exceptions individually
                 HandleException(ex);
             }
-            
         }
+
         // Force the host to reconfigure on demand.
         private void ReconfigureHandler(ClientRequestInfo requestInfo)
         {

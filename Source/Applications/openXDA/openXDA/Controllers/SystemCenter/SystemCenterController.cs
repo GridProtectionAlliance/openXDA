@@ -21,28 +21,25 @@
 //
 //******************************************************************************************************
 
-using FaultData.DataOperations.TVA;
-using FaultData.DataResources;
-using FaultData.DataSets;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.Data.Model;
-using log4net;
-using Newtonsoft.Json.Linq;
-using openXDA.Model;
-using openXDA.Model.SystemCenter;
-using openXDA.Nodes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
 using System.IO;
-using System.Data;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using FaultData.DataOperations.TVA;
+using FaultData.DataResources;
+using FaultData.DataSets;
+using GSF.Configuration;
+using GSF.Data;
+using log4net;
+using Newtonsoft.Json.Linq;
+using openXDA.Model.SystemCenter;
+using openXDA.Nodes;
 using static FaultData.DataOperations.TVA.StructureQueryOperation;
 using ConfigurationLoader = openXDA.Nodes.ConfigurationLoader;
 
@@ -284,6 +281,7 @@ namespace openXDA.Controllers.Config
         {
             return Ok(ServiceConnection.Host.QueryAnalysisQueueStatus());
         }
+
         private Action<object> GetConfigurator()
         {
             ConfigurationLoader configurationLoader = new ConfigurationLoader(NodeHost.ID, CreateDbConnection);
@@ -470,7 +468,6 @@ namespace openXDA.Controllers.Config
 
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataFileController));
-
 
         #endregion
     }

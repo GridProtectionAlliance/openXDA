@@ -3753,7 +3753,7 @@ CREATE TABLE DailyTrendingSummary
     Average FLOAT NOT NULL,
     ValidCount INT NOT NULL,
     InvalidCount INT NOT NULL,
-    LastRecieved Datetime NULL
+    LastReceived DATETIME NULL
 )
 GO
 
