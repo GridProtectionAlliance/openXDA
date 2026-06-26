@@ -304,7 +304,7 @@ namespace openXDA.Controllers.Config
                 status.Details.Add(new StatusItem()
                 {
                     Status = "Error",
-                    Description = $"Failed to connect using Settings category ${SOECategory}. Verify that the settings exist in the configuration file."
+                    Description = $"Failed to connect using Settings category {SOECategory}. Verify that the settings exist in the configuration file."
                 }
                 );
             }
@@ -333,7 +333,7 @@ namespace openXDA.Controllers.Config
                 status.Details.Add(new StatusItem()
                 {
                     Status = "Error",
-                    Description = $"Failed to connect using Settings category ${ITOACategory}. Verify that the settings exist in the configuration file."
+                    Description = $"Failed to connect using Settings category {ITOACategory}. Verify that the settings exist in the configuration file."
                 }
                 );
             }
