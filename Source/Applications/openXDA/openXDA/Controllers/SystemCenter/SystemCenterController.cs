@@ -308,6 +308,31 @@ namespace openXDA.Controllers.Config
                 return status;
             }
 
+            if (configSettings["ConnectionString"] == null)
+            {
+
+                status.Status = "Error";
+                status.Details.Add(new StatusItem()
+                {
+                    Status = "Error",
+                    Description = $"No ConnectionString defined in {settingsCategory}."
+                });
+
+                return status;
+            }
+            if (configSettings["DataProviderString"] == null)
+            {
+
+                status.Status = "Error";
+                status.Details.Add(new StatusItem()
+                {
+                    Status = "Error",
+                    Description = $"No DataProviderString defined in {settingsCategory}."
+                });
+
+                return status;
+            }
+
             connectionString = configSettings["ConnectionString"].Value;
             dataProviderString = configSettings["DataProviderString"].Value;
 
