@@ -40,11 +40,11 @@ namespace openXDA.Nodes.Types.Analysis
             using (AdoDataConnection connection = ConnectionFactory())
             {
                 const string QueueQuery =
-                    "INSERT INTO AnalysisTask(FileGroupID, MeterID, Priority) " +
-                    "VALUES({0}, {1}, {2})";
+                    "INSERT INTO AnalysisTask(FileGroupID, MeterID, TimeQueued, Priority) " +
+                    "VALUES({0}, {1}, {2}, {3})";
 
                 Upload(connection, task.FileGroup);
-                connection.ExecuteNonQuery(QueueQuery, task.FileGroup.ID, task.Meter.ID, task.Priority);
+                connection.ExecuteNonQuery(QueueQuery, task.FileGroup.ID, task.Meter.ID, task.TimeQueued, task.Priority);
             }
         }
 

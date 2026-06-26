@@ -107,7 +107,8 @@ namespace openXDA.Nodes.Types.FileProcessing
                 string filePattern = Settings.FileProcessorSettings.FilePattern;
                 Meter meter = GetMeter(connection, FilePath, filePattern);
                 FileGroup fileGroup = ToFileGroup(meter.ID);
-                AnalysisTask analysisTask = new AnalysisTask(fileGroup, meter, Priority);
+                DateTime xdaNow = TimeZoneConverter.ToXDATimeZone(DateTime.UtcNow);
+                AnalysisTask analysisTask = new AnalysisTask(fileGroup, meter, xdaNow, Priority);
                 AnalysisTaskPublisher taskPublisher = new AnalysisTaskPublisher(ConnectionFactory);
                 taskPublisher.Publish(analysisTask);
             }

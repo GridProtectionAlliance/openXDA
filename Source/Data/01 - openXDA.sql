@@ -209,6 +209,34 @@ CREATE NONCLUSTERED INDEX IX_DataFile_FilePathHash
 ON DataFile(FilePathHash ASC)
 GO
 
+CREATE TABLE FileGroupAnalysisJob
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    TaskQueuedTime DATETIME2 NOT NULL,
+    TaskPriority INT NOT NULL,
+    ProcessingStartTime DATETIME2 NOT NULL,
+    ProcessingEndTime DATETIME2 NOT NULL,
+    ProcessingVersion INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupAnalysisJob_FileGroupID
+ON FileGroupAnalysisJob(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupAnalysisJob_TaskQueuedTime
+ON FileGroupAnalysisJob(TaskQueuedTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupAnalysisJob_ProcessingStartTime
+ON FileGroupAnalysisJob(ProcessingStartTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupAnalysisJob_ProcessingEndTime
+ON FileGroupAnalysisJob(ProcessingEndTime ASC)
+GO
+
 CREATE TABLE FileGroupField
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -238,7 +266,7 @@ CREATE TABLE DataOperationFailure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     DataOperationID INT NOT NULL REFERENCES DataOperation(ID),
-    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    FileGroupAnalysisJobID INT NOT NULL REFERENCES FileGroupAnalysisJob(ID),
     [Log] VARCHAR(1000) NOT NULL,
     StackTrace VARCHAR(MAX) NOT NULL,
     TimeOfFailure DATETIME NOT NULL
@@ -249,8 +277,8 @@ CREATE NONCLUSTERED INDEX IX_DataOperationFailure_DataOperationID
 ON DataOperationFailure(DataOperationID ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_DataOperationFailure_FileGroupID
-ON DataOperationFailure(FileGroupID ASC)
+CREATE NONCLUSTERED INDEX IX_DataOperationFailure_FileGroupAnalysisJobID
+ON DataOperationFailure(FileGroupAnalysisJobID ASC)
 GO
 
 CREATE TABLE HostRegistration
@@ -384,6 +412,7 @@ CREATE TABLE AnalysisTask
     FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
     MeterID INT NOT NULL REFERENCES Meter(ID),
     NodeID INT NULL REFERENCES Node(ID),
+    TimeQueued DATETIME2 NOT NULL,
     Priority INT NOT NULL
 )
 GO
@@ -1832,20 +1861,20 @@ CREATE NONCLUSTERED INDEX IX_MeterConfiguration_DiffID
 ON MeterConfiguration(DiffID)
 GO
 
-CREATE TABLE FileGroupMeterConfiguration
+CREATE TABLE FileGroupAnalysisJobMeterConfiguration
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    FileGroupAnalysisJobID INT NOT NULL REFERENCES FileGroupAnalysisJob(ID),
     MeterConfigurationID INT NOT NULL REFERENCES MeterConfiguration(ID)
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_FileGroupMeterConfiguration_FileGroupID
-ON FileGroupMeterConfiguration(FileGroupID)
+CREATE NONCLUSTERED INDEX IX_FileGroupAnalysisJobMeterConfiguration_FileGroupAnalysisJobID
+ON FileGroupAnalysisJobMeterConfiguration(FileGroupAnalysisJobID)
 GO
 
-CREATE NONCLUSTERED INDEX IX_FileGroupMeterConfiguration_MeterConfigurationID
-ON FileGroupMeterConfiguration(MeterConfigurationID)
+CREATE NONCLUSTERED INDEX IX_FileGroupAnalysisJobMeterConfiguration_MeterConfigurationID
+ON FileGroupAnalysisJobMeterConfiguration(MeterConfigurationID)
 GO
 
 CREATE TABLE AssetGroup

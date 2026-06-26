@@ -37,8 +37,8 @@ namespace openXDA.Model
 
         public int DataOperationID { get; set; }
 
-        [ParentKey(typeof(FileGroup))]
-        public int FileGroupID { get; set; }
+        [ParentKey(typeof(FileGroupAnalysisJob))]
+        public int FileGroupAnalysisJobID { get; set; }
 
         public string Log { get; set; }
 

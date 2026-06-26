@@ -34,6 +34,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
+using FaultData;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
@@ -642,12 +643,15 @@ namespace openXDA.Nodes.Types.FileProcessing
                 void SkipToAnalysis()
                 {
                     const string InsertQueryFormat =
-                        "INSERT INTO AnalysisTask(FileGroupID, MeterID, Priority) " +
-                        "SELECT ID, MeterID, {1} " +
+                        "INSERT INTO AnalysisTask(FileGroupID, MeterID, TimeQueued, Priority) " +
+                        "SELECT ID, MeterID, {1} TimeQueued, {2} Priority " +
                         "FROM FileGroup " +
                         "WHERE ID = {0}";
 
-                    connection.ExecuteNonQuery(InsertQueryFormat, fileGroupID, AnalysisTask.RequeuePriority);
+                    Action<object> configurator = GetConfigurator();
+                    TimeZoneConverter timeZoneConverter = new TimeZoneConverter(configurator);
+                    DateTime xdaNow = timeZoneConverter.ToXDATimeZone(DateTime.UtcNow);
+                    connection.ExecuteNonQuery(InsertQueryFormat, fileGroupID, xdaNow, AnalysisTask.RequeuePriority);
                     NotifyOperation.RunOnceAsync();
                 }
 

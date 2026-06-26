@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  AnalysisTask.cs - Gbtc
+//  FileGroupAnalysisJob.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2026, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,41 +16,38 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  12/15/2020 - Stephen C. Wills
+//  06/24/2026 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
-using openXDA.Model;
+using GSF.Data;
+using GSF.Data.Model;
 
-namespace openXDA.Nodes.Types.Analysis
+namespace openXDA.Model
 {
-    internal class AnalysisTask
+    public class FileGroupAnalysisJob
     {
-        public AnalysisTask(FileGroup fileGroup, Meter meter, DateTime timeQueued, int priority)
-            : this(default, fileGroup, meter, timeQueued, priority)
-        {
-        }
+        [PrimaryKey(true)]
+        public int ID { get; set; }
 
-        public AnalysisTask(int id, FileGroup fileGroup, Meter meter, DateTime timeQueued, int priority)
-        {
-            ID = id;
-            FileGroup = fileGroup;
-            Meter = meter;
-            TimeQueued = timeQueued;
-            Priority = priority;
-        }
+        public int FileGroupID { get; set; }
 
-        public int ID { get; }
-        public FileGroup FileGroup { get; }
-        public Meter Meter { get; }
-        public DateTime TimeQueued { get; }
-        public int Priority { get; }
+        [FieldDataType(System.Data.DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime TaskQueuedTime { get; set; }
 
-        public const int FileEnumerationPriority = 1;
-        public const int NormalFileWatcherPriority = 2;
-        public const int HighFileWatcherPriority = 3;
-        public const int RequeuePriority = 4;
+        public int TaskPriority { get; set; }
+
+        [FieldDataType(System.Data.DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime ProcessingStartTime { get; set; }
+
+        [FieldDataType(System.Data.DbType.DateTime2, DatabaseType.SQLServer)]
+        public DateTime ProcessingEndTime { get; set; }
+
+        public int ProcessingVersion { get; set; }
+
+        [NonRecordField]
+        public FileGroup FileGroup { get; set; }
     }
 }
