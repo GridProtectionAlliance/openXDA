@@ -59,7 +59,6 @@ namespace openXDA.Controllers.Config
             [SettingName(RealTimeLightningDataProviderSettings.CategoryName)]
             public RealTimeLightningDataProviderSettings LightningDataSettings { get; }
                 = new RealTimeLightningDataProviderSettings();
-
         }
         #endregion
 
@@ -285,23 +284,61 @@ namespace openXDA.Controllers.Config
         [Route("SOE/Health")]
         public IHttpActionResult GetSOEHealth()
         {
-            AppStatus appStatus = new AppStatus()
+
+            AppStatus status = new AppStatus() { Status = "N/A", Details = new List<StatusItem>() };
+
+            Settings settings = new Settings();
+            GetConfigurator()(settings);
+
+
+            string SOECategory = "dbSOE";
+            
+            try
             {
-                Status = "N/A",
-                Details = new List<StatusItem>()
-            };
-            return Ok(appStatus);
+                status = GetConnectionStatus(new AdoDataConnection(SOECategory));
+            }
+            catch (Exception ex)
+            {
+
+                status.Status = "Error";
+                status.Details.Add(new StatusItem()
+                {
+                    Status = "Error",
+                    Description = $"Failed to connect using Settings category ${SOECategory}. Verify that the settings exist in the configuration file."
+                }
+                );
+            }
+
+            return Ok(status);
         }
 
         [Route("ITOA/Health")]
         public IHttpActionResult GetITOAHealth()
         {
-            AppStatus appStatus = new AppStatus()
+            AppStatus status = new AppStatus() { Status = "N/A", Details = new List<StatusItem>() };
+
+            Settings settings = new Settings();
+            GetConfigurator()(settings);
+
+            string ITOACategory = "dbITOA";
+
+            try
             {
-                Status = "N/A",
-                Details = new List<StatusItem>()
-            };
-            return Ok(appStatus);
+                status = GetConnectionStatus(new AdoDataConnection(ITOACategory));
+            }
+            catch (Exception ex)
+            {
+
+                status.Status = "Error";
+                status.Details.Add(new StatusItem()
+                {
+                    Status = "Error",
+                    Description = $"Failed to connect using Settings category ${ITOACategory}. Verify that the settings exist in the configuration file."
+                }
+                );
+            }
+
+            return Ok(status);
         }
 
         private Action<object> GetConfigurator()
