@@ -303,6 +303,11 @@ namespace openXDA.Controllers.Config
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection configSettings = config.Settings[settingsCategory];
 
+            if (configSettings.Count == 0)
+            {
+                return status;
+            }
+
             connectionString = configSettings["ConnectionString"].Value;
             dataProviderString = configSettings["DataProviderString"].Value;
 
