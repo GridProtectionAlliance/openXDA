@@ -311,6 +311,17 @@ namespace openXDA.Controllers.Config
             connectionString = configSettings["ConnectionString"].Value;
             dataProviderString = configSettings["DataProviderString"].Value;
 
+            return GetConnectionStatus(connectionString, dataProviderString);
+        }
+               
+        private AppStatus GetConnectionStatus(string connectionString, string dataProviderString)
+        {
+            AppStatus status = new AppStatus()
+            {
+                Status = "Error",
+                Details = new List<StatusItem>()
+            };
+
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 status.Status = "Error";
@@ -333,35 +344,21 @@ namespace openXDA.Controllers.Config
                 return status;
             }
 
-            return GetConnectionStatus(connectionString, dataProviderString);
-        }
-               
-        private AppStatus GetConnectionStatus(string connectionString, string dataProviderString)
-        {
-            AppStatus status = new AppStatus()
+            try
             {
-                Status = "Error",
-                Details = new List<StatusItem>()
-            };
-            bool missingString = String.IsNullOrWhiteSpace(connectionString) || String.IsNullOrWhiteSpace(dataProviderString);
-
-            if (!missingString)
-            {
-                try
-                {
-                    status = GetConnectionStatus(new AdoDataConnection(connectionString, dataProviderString));
-                }
-                catch (InvalidOperationException ex)
-                {
-                    status.Status = "Error";
-                    status.Details.Add(new StatusItem()
-                    {
-                        Status = "Error",
-                        Description = "Failed to connect using Connection String and Data Provider String."
-                    }
-                    );
-                }
+                status = GetConnectionStatus(new AdoDataConnection(connectionString, dataProviderString));
             }
+            catch (InvalidOperationException ex)
+            {
+                status.Status = "Error";
+                status.Details.Add(new StatusItem()
+                {
+                    Status = "Error",
+                    Description = "Failed to connect using Connection String and Data Provider String."
+                }
+                );
+            }
+            
             return status;
         }
 
