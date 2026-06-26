@@ -250,29 +250,7 @@ namespace openXDA.Controllers.Config
             string connectionString = settings.LightningDataSettings.MaximoConnectionString;
             string dataProviderString = settings.LightningDataSettings.MaximoDataProviderString;
 
-            bool missingString = String.IsNullOrWhiteSpace(connectionString) || String.IsNullOrWhiteSpace(dataProviderString);
-
-            if (!missingString)
-            {
-                try
-                {
-                status = GetConnectionStatus(new AdoDataConnection(connectionString, dataProviderString));
-                }
-                catch (InvalidOperationException ex)
-                {
-
-                    status.Status = "Error";
-                    status.Details.Add(new StatusItem()
-                    {
-                        Status = "Error",
-                        Description = "Failed to connect using Connection String and Data Provider String from RTLightning.MaximoConnectionString and RTLightning.MaximoDataProviderSetting."
-                    }
-                    );
-                }
-
-            }
-
-            return Ok(status);
+            return Ok(GetConnectionStatus(connectionString, dataProviderString));
         }
 
         [Route("AnalysisQueueLength"), HttpGet]
@@ -284,61 +262,13 @@ namespace openXDA.Controllers.Config
         [Route("SOE/Health")]
         public IHttpActionResult GetSOEHealth()
         {
-
-            AppStatus status = new AppStatus() { Status = "N/A", Details = new List<StatusItem>() };
-
-            Settings settings = new Settings();
-            GetConfigurator()(settings);
-
-
-            string SOECategory = "dbSOE";
-            
-            try
-            {
-                status = GetConnectionStatus(new AdoDataConnection(SOECategory));
-            }
-            catch (Exception ex)
-            {
-
-                status.Status = "Error";
-                status.Details.Add(new StatusItem()
-                {
-                    Status = "Error",
-                    Description = $"Failed to connect using Settings category {SOECategory}. Verify that the settings exist in the configuration file."
-                }
-                );
-            }
-
-            return Ok(status);
+            return Ok(GetConnectionStatus("dbSOE"));
         }
 
         [Route("ITOA/Health")]
         public IHttpActionResult GetITOAHealth()
         {
-            AppStatus status = new AppStatus() { Status = "N/A", Details = new List<StatusItem>() };
-
-            Settings settings = new Settings();
-            GetConfigurator()(settings);
-
-            string ITOACategory = "dbITOA";
-
-            try
-            {
-                status = GetConnectionStatus(new AdoDataConnection(ITOACategory));
-            }
-            catch (Exception ex)
-            {
-
-                status.Status = "Error";
-                status.Details.Add(new StatusItem()
-                {
-                    Status = "Error",
-                    Description = $"Failed to connect using Settings category {ITOACategory}. Verify that the settings exist in the configuration file."
-                }
-                );
-            }
-
-            return Ok(status);
+            return Ok(GetConnectionStatus("dbITOA"));
         }
 
         private Action<object> GetConfigurator()
@@ -352,6 +282,82 @@ namespace openXDA.Controllers.Config
             AdoDataConnection connection = NodeHost.CreateDbConnection();
             connection.DefaultTimeout = DataExtensions.DefaultTimeoutDuration;
             return connection;
+        }
+
+        private AppStatus GetConnectionStatus(string settingsCategory)
+        {
+            AppStatus status = new AppStatus()
+            {
+                Status = "N/A",
+                Details = new List<StatusItem>()
+            };
+            if (string.IsNullOrWhiteSpace(settingsCategory))
+            {
+                return status;
+            }
+
+            // Only need to establish data types and load settings once per defined section since they are being loaded from config file
+            string connectionString, dataProviderString;
+
+            // Load connection settings from the system settings category				
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection configSettings = config.Settings[settingsCategory];
+
+            connectionString = configSettings["ConnectionString"].Value;
+            dataProviderString = configSettings["DataProviderString"].Value;
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                status.Status = "Error";
+                status.Details.Add(new StatusItem()
+                {
+                    Status = "Error",
+                    Description = "ConnectionString setting is not defined in the configuration file."
+                });
+                return status;
+            }
+
+            if (string.IsNullOrWhiteSpace(dataProviderString))
+            {
+                status.Status = "Error";
+                status.Details.Add(new StatusItem()
+                {
+                    Status = "Error",
+                    Description = "DataProvider setting is not defined in the configuration file."
+                });
+                return status;
+            }
+
+            return GetConnectionStatus(connectionString, dataProviderString);
+        }
+               
+        private AppStatus GetConnectionStatus(string connectionString, string dataProviderString)
+        {
+            AppStatus status = new AppStatus()
+            {
+                Status = "Error",
+                Details = new List<StatusItem>()
+            };
+            bool missingString = String.IsNullOrWhiteSpace(connectionString) || String.IsNullOrWhiteSpace(dataProviderString);
+
+            if (!missingString)
+            {
+                try
+                {
+                    status = GetConnectionStatus(new AdoDataConnection(connectionString, dataProviderString));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    status.Status = "Error";
+                    status.Details.Add(new StatusItem()
+                    {
+                        Status = "Error",
+                        Description = "Failed to connect using Connection String and Data Provider String."
+                    }
+                    );
+                }
+            }
+            return status;
         }
 
         private AppStatus GetConnectionStatus(AdoDataConnection connection)
