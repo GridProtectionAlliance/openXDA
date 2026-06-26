@@ -32,6 +32,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [ParentKey(typeof(FileGroup))]
         public int FileGroupID { get; set; }
 
         [FieldDataType(System.Data.DbType.DateTime2, DatabaseType.SQLServer)]
