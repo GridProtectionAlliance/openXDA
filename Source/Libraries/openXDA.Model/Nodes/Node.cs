@@ -25,6 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
     public class Node
     {
         [PrimaryKey(true)]
