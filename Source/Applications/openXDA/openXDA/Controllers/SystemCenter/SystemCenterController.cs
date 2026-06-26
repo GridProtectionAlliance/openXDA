@@ -282,6 +282,28 @@ namespace openXDA.Controllers.Config
             return Ok(ServiceConnection.Host.QueryAnalysisQueueStatus());
         }
 
+        [Route("SOE/Health")]
+        public IHttpActionResult GetSOEHealth()
+        {
+            AppStatus appStatus = new AppStatus()
+            {
+                Status = "N/A",
+                Details = new List<StatusItem>()
+            };
+            return Ok(appStatus);
+        }
+
+        [Route("ITOA/Health")]
+        public IHttpActionResult GetITOAHealth()
+        {
+            AppStatus appStatus = new AppStatus()
+            {
+                Status = "N/A",
+                Details = new List<StatusItem>()
+            };
+            return Ok(appStatus);
+        }
+
         private Action<object> GetConfigurator()
         {
             ConfigurationLoader configurationLoader = new ConfigurationLoader(NodeHost.ID, CreateDbConnection);
