@@ -59,7 +59,6 @@ namespace openXDA.Controllers.Config
             [SettingName(RealTimeLightningDataProviderSettings.CategoryName)]
             public RealTimeLightningDataProviderSettings LightningDataSettings { get; }
                 = new RealTimeLightningDataProviderSettings();
-
         }
         #endregion
 
@@ -216,27 +215,10 @@ namespace openXDA.Controllers.Config
 
             string connectionString = settings.LightningDataSettings.RTLightningDatabaseConnectionString;
 
-            Type connectionType = typeof(SqlConnection);
-            Type adapterType = typeof(SqlDataAdapter);
-
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
-                try
-                {
-                    AdoDataConnection rtLightningConnection = new AdoDataConnection(connectionString, connectionType, adapterType);
-                    status = GetConnectionStatus(rtLightningConnection);
-                }
-                catch (InvalidOperationException ex) 
-                {
-                    status.Status = "Error";
-                    status.Details.Add(new StatusItem() 
-                        {
-                        Status = "Error",
-                        Description = "Failed to connect using Connection String from RTLightning.RTLightningDatabaseConnectionString."
-                        }
-                    );
-                }
-            }
+                using (AdoDataConnection rtLightningConnection = new AdoDataConnection(connectionString))
+                   status = GetConnectionStatus(rtLightningConnection);            }
             return Ok(status);
         }
 
@@ -251,35 +233,25 @@ namespace openXDA.Controllers.Config
             string connectionString = settings.LightningDataSettings.MaximoConnectionString;
             string dataProviderString = settings.LightningDataSettings.MaximoDataProviderString;
 
-            bool missingString = String.IsNullOrWhiteSpace(connectionString) || String.IsNullOrWhiteSpace(dataProviderString);
-
-            if (!missingString)
-            {
-                try
-                {
-                status = GetConnectionStatus(new AdoDataConnection(connectionString, dataProviderString));
-                }
-                catch (InvalidOperationException ex)
-                {
-
-                    status.Status = "Error";
-                    status.Details.Add(new StatusItem()
-                    {
-                        Status = "Error",
-                        Description = "Failed to connect using Connection String and Data Provider String from RTLightning.MaximoConnectionString and RTLightning.MaximoDataProviderSetting."
-                    }
-                    );
-                }
-
-            }
-
-            return Ok(status);
+            return Ok(GetConnectionStatus(connectionString, dataProviderString));
         }
 
         [Route("AnalysisQueueLength"), HttpGet]
         public IHttpActionResult GetAnalysisQueueLength()
         {
             return Ok(ServiceConnection.Host.QueryAnalysisQueueStatus());
+        }
+
+        [Route("SOE/Health")]
+        public IHttpActionResult GetSOEHealth()
+        {
+            return Ok(GetConnectionStatus("dbSOE"));
+        }
+
+        [Route("ITOA/Health")]
+        public IHttpActionResult GetITOAHealth()
+        {
+            return Ok(GetConnectionStatus("dbITOA"));
         }
 
         private Action<object> GetConfigurator()
@@ -295,6 +267,73 @@ namespace openXDA.Controllers.Config
             return connection;
         }
 
+        private AppStatus GetConnectionStatus(string settingsCategory)
+        {
+            AppStatus status = new AppStatus()
+            {
+                Status = "N/A",
+                Details = new List<StatusItem>()
+            };
+
+            if (string.IsNullOrWhiteSpace(settingsCategory))
+                return status;
+            
+
+            // Only need to establish data types and load settings once per defined section since they are being loaded from config file
+            string connectionString, dataProviderString;
+
+            // Load connection settings from the system settings category				
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection configSettings = config.Settings[settingsCategory];
+
+            if (configSettings.Count == 0)
+            {
+                return status;
+            }
+
+
+            connectionString = configSettings["ConnectionString"]?.Value ?? "";
+            dataProviderString = configSettings["DataProviderString"]?.Value ?? "";
+
+            return GetConnectionStatus(connectionString, dataProviderString);
+        }
+               
+        private AppStatus GetConnectionStatus(string connectionString, string dataProviderString)
+        {
+            AppStatus status = new AppStatus()
+            {
+                Status = "Error",
+                Details = new List<StatusItem>()
+            };
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                status.Status = "Error";
+                status.Details.Add(new StatusItem()
+                {
+                    Status = "Error",
+                    Description = "ConnectionString setting is not defined in the configuration."
+                });
+                return status;
+            }
+
+            if (string.IsNullOrWhiteSpace(dataProviderString))
+            {
+                status.Status = "Error";
+                status.Details.Add(new StatusItem()
+                {
+                    Status = "Error",
+                    Description = "DataProvider setting is not defined in the configuration."
+                });
+                return status;
+            }
+
+            using(AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
+                status = GetConnectionStatus(connection);
+           
+            return status;
+        }
+
         private AppStatus GetConnectionStatus(AdoDataConnection connection)
         {
             AppStatus testDatabaseStatus = new AppStatus()
@@ -304,31 +343,30 @@ namespace openXDA.Controllers.Config
             };
             try
             {
-                using (AdoDataConnection extConn = connection)
+                
+                string query;
+
+                if (connection.IsOracle)
+                    query = "SELECT 0 FROM dual"; // oracle adds the semicolon for you as a way to keep you from delimiting multiple statements.
+                else
+                    query = "SELECT 0;";
+
+                int result = connection.ExecuteScalar<int>(query);
+
+                if (result == 0)
                 {
-                    string query;
-
-                    if (extConn.IsOracle)
-                        query = "SELECT 0 FROM dual"; // oracle adds the semicolon for you as a way to keep you from delimiting multiple statements.
-                    else
-                        query = "SELECT 0;";
-
-                    int result = extConn.ExecuteScalar<int>(query);
-
-                    if (result == 0)
+                    testDatabaseStatus.Details.Add(new StatusItem()
                     {
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Success",
-                            Description = "Successfully connected to database."
-                        });
-                    }
-
-                    else
-                    {
-                        testDatabaseStatus.Status = "Warning";
-                    }
+                        Status = "Success",
+                        Description = "Successfully connected to database."
+                    });
                 }
+
+                else
+                {
+                    testDatabaseStatus.Status = "Warning";
+                }
+                
             }
             catch (InvalidOperationException e)
             {
@@ -353,7 +391,7 @@ namespace openXDA.Controllers.Config
                     testDatabaseStatus.Details.Add(new StatusItem()
                     {
                         Status = "Error",
-                        Description = "Could not load connection settings from configuration file."
+                        Description = "Could not load connection settings."
                     });
                 }
                 if (e.InnerException is SqlException s)
