@@ -214,10 +214,12 @@ namespace openXDA.Controllers.Config
             GetConfigurator()(settings);
 
             string connectionString = settings.LightningDataSettings.RTLightningDatabaseConnectionString;
+            Type connectionType = typeof(SqlConnection);
+            Type adapterType = typeof(SqlDataAdapter);
 
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
-                using (AdoDataConnection rtLightningConnection = new AdoDataConnection(connectionString))
+                using (AdoDataConnection rtLightningConnection = new AdoDataConnection(connectionString, connectionType, adapterType))
                    status = GetConnectionStatus(rtLightningConnection);            }
             return Ok(status);
         }
