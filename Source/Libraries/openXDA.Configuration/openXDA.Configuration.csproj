@@ -74,6 +74,7 @@
     <Compile Include="SystemSection.cs" />
     <Compile Include="TaskProcessorSection.cs" />
     <Compile Include="TrendingDataSection.cs" />
+    <Compile Include="WatchDirectoryBalancerSection.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">

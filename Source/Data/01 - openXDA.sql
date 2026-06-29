@@ -335,6 +335,9 @@ GO
 INSERT INTO NodeType VALUES('FilePruner', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.FilePruning.FilePrunerNode')
 GO
 
+INSERT INTO NodeType VALUES('WatchDirectoryBalancer', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.WatchDirectoryBalancing.WatchDirectoryBalancerNode')
+GO
+
 INSERT INTO NodeType VALUES('EPRICapBankAnalysis', 'openXDA.Nodes.dll', 'openXDA.Nodes.Types.EPRICapBankAnalysis.EPRICapBankAnalysisNode')
 GO
 
