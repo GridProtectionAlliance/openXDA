@@ -286,6 +286,10 @@ namespace openXDA.Controllers.Config
             string connectionString = settings.LightningDataSettings.RTLightningDatabaseConnectionString;
             Type connectionType = typeof(SqlConnection);
             Type adapterType = typeof(SqlDataAdapter);
+
+            if (string.IsNullOrEmpty(connectionString))
+                return status;
+
             return AppStatus.CheckConnectivity(connectionString, connectionType, adapterType);
         }
 
