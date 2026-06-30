@@ -88,7 +88,7 @@ namespace openXDA.Model.SystemCenter
                 status.Details.Add(new StatusItem()
                 {
                     Status = "Error",
-                    Description = "ConnectionString setting is not defined in the configuration."
+                    Description = "Connection string is not defined."
                 });
                 return status;
             }
@@ -99,7 +99,7 @@ namespace openXDA.Model.SystemCenter
                 status.Details.Add(new StatusItem()
                 {
                     Status = "Error",
-                    Description = "DataProvider setting is not defined in the configuration."
+                    Description = "Data provider is not defined."
                 });
                 return status;
             }
@@ -117,7 +117,7 @@ namespace openXDA.Model.SystemCenter
                     status.Details.Add(new StatusItem()
                     {
                         Status = "Error",
-                        Description = "Could not parse the Data Provider String."
+                        Description = "Could not parse the data provider string."
                     });
                 }
 
@@ -161,7 +161,7 @@ namespace openXDA.Model.SystemCenter
                 status.Details.Add(new StatusItem()
                 {
                     Status = "Error",
-                    Description = "ConnectionString setting is not defined in the configuration."
+                    Description = "Connection string is not defined."
                 });
                 return status;
             }
@@ -179,7 +179,7 @@ namespace openXDA.Model.SystemCenter
                     status.Details.Add(new StatusItem()
                     {
                         Status = "Error",
-                        Description = "Could not parse the Data Provider String."
+                        Description = "Could not parse the data provider string."
                     });
                 }
 
@@ -262,7 +262,7 @@ namespace openXDA.Model.SystemCenter
                 items.Add(new StatusItem()
                 {
                     Status = "Error",
-                    Description = "ConnectionString contains errors."
+                    Description = "Connection string contains errors."
                 });
             }
             if (e.InnerException is FileNotFoundException)

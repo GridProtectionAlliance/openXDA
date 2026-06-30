@@ -86,12 +86,12 @@ namespace openXDA.Nodes.Types.DatabaseMaintenance
                     using (AdoDataConnection connection = CreateDbConnection())
                     {
                         connection.ExecuteNonQuery(instance.SQLCommand);
-                        Log.Info($"Ran cleanup Task: {instance.Name}");
+                        Log.Info($"Ran cleanup task: {instance.Name}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Error running cleanup Task: {instance.Name}", ex);
+                    Log.Error($"Error running cleanup task: {instance.Name}", ex);
                 }
 
             };
