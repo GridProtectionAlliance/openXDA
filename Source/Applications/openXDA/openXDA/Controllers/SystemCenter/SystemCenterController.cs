@@ -93,6 +93,62 @@ namespace openXDA.Controllers.Config
             return ServiceConnection.Host.QueryEngineStatusAsync();
         }
 
+        [Route("Connections/Health"), HttpGet]
+        public IHttpActionResult GetAllConnectionsHealth()
+        {
+            List<NamedAppStatus> connections = new List<NamedAppStatus>();
+
+            AppStatus scada = GetSCADAStatus();
+            connections.Add(new NamedAppStatus()
+            {
+                Name = "SCADA",
+                Details = scada.Details,
+                Status = scada.Status
+            });
+
+            AppStatus structureCrawler = GetStructureCrawlerStatus();
+            connections.Add(new NamedAppStatus()
+            {
+                Name = "Structure Crawler",
+                Details = structureCrawler.Details,
+                Status= structureCrawler.Status
+            });
+
+            AppStatus lightningRealTimeData = GetLightningRealTimeDataStatus();
+            connections.Add(new NamedAppStatus()
+            {
+                Name = "Lightning Real-Time Data",
+                Details = lightningRealTimeData.Details,
+                Status = lightningRealTimeData.Status
+            });
+
+            AppStatus lightningStructureData = GetLightningStructureDataStatus();
+            connections.Add(new NamedAppStatus()
+            {
+                Name = "Lightning Structure Data",
+                Details = lightningStructureData.Details,
+                Status = lightningStructureData.Status
+            });
+
+            AppStatus soeStatus = AppStatus.CheckConnectivity("dbSOE");
+            connections.Add(new NamedAppStatus()
+            {
+                Status = soeStatus.Status,
+                Details = soeStatus.Details,
+                Name = "SOE"
+            });
+
+            AppStatus itoaStatus = AppStatus.CheckConnectivity("dbITOA");
+            connections.Add(new NamedAppStatus()
+            {
+                Status = itoaStatus.Status,
+                Details = itoaStatus.Details,
+                Name = "ITOA"
+            });
+
+            return Ok(connections);
+        }
+
         //Note: if we make a SCADA point model controller, we may want move this to that
         [Route("SCADAPoint/SCADAPointSearch"), HttpPost]
         public IHttpActionResult QuerySCADADataPoints([FromBody] JObject query, CancellationToken token)
@@ -128,18 +184,27 @@ namespace openXDA.Controllers.Config
         [Route("SCADAPoint/Health"), HttpGet]
         public IHttpActionResult GetSCADAPointHealth()
         {
+            return Ok(GetSCADAStatus());
+        }
+
+        private AppStatus GetSCADAStatus()
+        {
             MeterDataSet meterDataSet = new MeterDataSet();
             Action<object> configurator = GetConfigurator();
             meterDataSet.Configure = configurator;
             SCADADataResource scadaDataResource = meterDataSet.GetResource<SCADADataResource>();
             scadaDataResource.Initialize(meterDataSet);
-            return Ok(scadaDataResource.GetHistorianHealth());
+            return scadaDataResource.GetHistorianHealth();
         }
 
         [Route("StructureCrawler/Health")]
         public IHttpActionResult GetStructureCrawlerHealth()
         {
+            return Ok(GetStructureCrawlerStatus());
+        }
 
+        private AppStatus GetStructureCrawlerStatus()
+        {
             AppStatus status = new AppStatus()
             {
                 Status = "N/A",
@@ -150,7 +215,7 @@ namespace openXDA.Controllers.Config
             GetConfigurator()(settings);
 
             if (!settings.StructureQuerySettings.Enabled)
-                return Ok(status);
+                return status;
 
             string stationKey;
             string lineKey;
@@ -163,8 +228,8 @@ namespace openXDA.Controllers.Config
                 lineKey = connection.ExecuteScalar<string>("SELECT AssetKey FROM Asset WHERE ID = {0}", assetID);
                 stationKey = connection.ExecuteScalar<string>("SELECT LocationKey FROM Location WHERE ID = {0}", locationID);
 
-            if (String.IsNullOrEmpty(lineKey) || String.IsNullOrEmpty(stationKey))
-                    return Ok(status);
+                if (String.IsNullOrEmpty(lineKey) || String.IsNullOrEmpty(stationKey))
+                    return status;
 
                 int lineLength = connection.ExecuteScalar<int>("SELECT TOP (1) Length FROM LineView WHERE AssetKey = {0}", lineKey);
                 halfLength = lineLength / 2;
@@ -187,7 +252,7 @@ namespace openXDA.Controllers.Config
                 status.Status = "Success";
                 status.Details.Add(new StatusItem() { Status = "Success", Description = "Successful response received from Structure Crawler." });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 status.Status = "Error";
                 if (ex is HttpRequestException httpRequestException)
@@ -201,29 +266,40 @@ namespace openXDA.Controllers.Config
                     status.Details.Add(new StatusItem() { Status = "Error", Description = "Unexpected exception thrown during Structure Crawler query. Full exception message is available in openXDA logs." });
                 }
             }
-
-            return Ok(status);
+            return status;
         }
 
         [Route("LightningRealTimeData/Health")]
         public IHttpActionResult GetLightningRealTimeDataHealth()
         {
-            AppStatus status = new AppStatus() { Status = "N/A", Details = new List<StatusItem>()};
+            return Ok(GetLightningRealTimeDataStatus());
+        }
+
+        private AppStatus GetLightningRealTimeDataStatus()
+        {
+
+            AppStatus status = new AppStatus() { Status = "N/A", Details = new List<StatusItem>() };
 
             Settings settings = new Settings();
             GetConfigurator()(settings);
 
             string connectionString = settings.LightningDataSettings.RTLightningDatabaseConnectionString;
+            Type connectionType = typeof(SqlConnection);
+            Type adapterType = typeof(SqlDataAdapter);
 
-            if (!string.IsNullOrWhiteSpace(connectionString))
-            {
-                using (AdoDataConnection rtLightningConnection = new AdoDataConnection(connectionString))
-                   status = GetConnectionStatus(rtLightningConnection);            }
-            return Ok(status);
+            if (string.IsNullOrEmpty(connectionString))
+                return status;
+
+            return AppStatus.CheckConnectivity(connectionString, connectionType, adapterType);
         }
 
         [Route("LightningStructureData/Health")]
         public IHttpActionResult GetLightningStructureDataHealth()
+        {
+            return Ok(GetLightningStructureDataStatus());
+        }
+
+        private AppStatus GetLightningStructureDataStatus()
         {
             AppStatus status = new AppStatus() { Status = "N/A", Details = new List<StatusItem>() };
 
@@ -233,7 +309,7 @@ namespace openXDA.Controllers.Config
             string connectionString = settings.LightningDataSettings.MaximoConnectionString;
             string dataProviderString = settings.LightningDataSettings.MaximoDataProviderString;
 
-            return Ok(GetConnectionStatus(connectionString, dataProviderString));
+            return AppStatus.CheckConnectivity(connectionString, dataProviderString);
         }
 
         [Route("AnalysisQueueLength"), HttpGet]
@@ -245,13 +321,13 @@ namespace openXDA.Controllers.Config
         [Route("SOE/Health")]
         public IHttpActionResult GetSOEHealth()
         {
-            return Ok(GetConnectionStatus("dbSOE"));
+            return Ok(AppStatus.CheckConnectivity("dbSOE"));
         }
 
         [Route("ITOA/Health")]
         public IHttpActionResult GetITOAHealth()
         {
-            return Ok(GetConnectionStatus("dbITOA"));
+            return Ok(AppStatus.CheckConnectivity("dbITOA"));
         }
 
         private Action<object> GetConfigurator()
@@ -265,239 +341,6 @@ namespace openXDA.Controllers.Config
             AdoDataConnection connection = NodeHost.CreateDbConnection();
             connection.DefaultTimeout = DataExtensions.DefaultTimeoutDuration;
             return connection;
-        }
-
-        private AppStatus GetConnectionStatus(string settingsCategory)
-        {
-            AppStatus status = new AppStatus()
-            {
-                Status = "N/A",
-                Details = new List<StatusItem>()
-            };
-
-            if (string.IsNullOrWhiteSpace(settingsCategory))
-                return status;
-            
-
-            // Only need to establish data types and load settings once per defined section since they are being loaded from config file
-            string connectionString, dataProviderString;
-
-            // Load connection settings from the system settings category				
-            ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection configSettings = config.Settings[settingsCategory];
-
-            if (configSettings.Count == 0)
-            {
-                return status;
-            }
-
-
-            connectionString = configSettings["ConnectionString"]?.Value ?? "";
-            dataProviderString = configSettings["DataProviderString"]?.Value ?? "";
-
-            return GetConnectionStatus(connectionString, dataProviderString);
-        }
-               
-        private AppStatus GetConnectionStatus(string connectionString, string dataProviderString)
-        {
-            AppStatus status = new AppStatus()
-            {
-                Status = "Error",
-                Details = new List<StatusItem>()
-            };
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                status.Status = "Error";
-                status.Details.Add(new StatusItem()
-                {
-                    Status = "Error",
-                    Description = "ConnectionString setting is not defined in the configuration."
-                });
-                return status;
-            }
-
-            if (string.IsNullOrWhiteSpace(dataProviderString))
-            {
-                status.Status = "Error";
-                status.Details.Add(new StatusItem()
-                {
-                    Status = "Error",
-                    Description = "DataProvider setting is not defined in the configuration."
-                });
-                return status;
-            }
-
-            using(AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
-                status = GetConnectionStatus(connection);
-           
-            return status;
-        }
-
-        private AppStatus GetConnectionStatus(AdoDataConnection connection)
-        {
-            AppStatus testDatabaseStatus = new AppStatus()
-            {
-                Status = "Success",
-                Details = new List<StatusItem>()
-            };
-            try
-            {
-                
-                string query;
-
-                if (connection.IsOracle)
-                    query = "SELECT 0 FROM dual"; // oracle adds the semicolon for you as a way to keep you from delimiting multiple statements.
-                else
-                    query = "SELECT 0;";
-
-                int result = connection.ExecuteScalar<int>(query);
-
-                if (result == 0)
-                {
-                    testDatabaseStatus.Details.Add(new StatusItem()
-                    {
-                        Status = "Success",
-                        Description = "Successfully connected to database."
-                    });
-                }
-
-                else
-                {
-                    testDatabaseStatus.Status = "Warning";
-                }
-                
-            }
-            catch (InvalidOperationException e)
-            {
-                testDatabaseStatus.Status = "Error";
-                if (e.InnerException is ArgumentException)
-                {
-                    testDatabaseStatus.Details.Add(new StatusItem() { 
-                        Status = "Error",
-                        Description = "ConnectionString contains errors."
-                    });
-                }
-                if (e.InnerException is FileNotFoundException)
-                {
-                    testDatabaseStatus.Details.Add(new StatusItem()
-                    {
-                        Status = "Error",
-                        Description = "Missing file or dependency."
-                    });
-                }
-                if (e.InnerException is NullReferenceException)
-                {
-                    testDatabaseStatus.Details.Add(new StatusItem()
-                    {
-                        Status = "Error",
-                        Description = "Could not load connection settings."
-                    });
-                }
-                if (e.InnerException is SqlException s)
-                {
-                    int number = s.Number;
-
-                    // data provider string
-                    if (number == 4060)
-                    {
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Success",
-                            Description = "Successfully reached SQL server."
-                        });
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Error",
-                            Description = "Failed to open database."
-                        });
-                    }
-
-                    // failed to open an ADO connection - "a network-related or instance-specific error"
-                    if (number == 53)
-                    {
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Error",
-                            Description = "Failed to reach the server. Check that the connection string is correct and the server is accessible over network."
-                        });
-                    }
-
-                    // failed for user permissions.
-                    if (number == 18456)
-                    {
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Success",
-                            Description = "Successfully reached server."
-                        });
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Error",
-                            Description = "Failed to authenticate."
-                        });
-                    }
-                }
-                if (e.InnerException is Oracle.ManagedDataAccess.Client.OracleException o)
-                {
-                    // authentication error
-                    if (o.Number == 1017)
-                    {
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Success",
-                            Description = "Successfully reached Oracle server."
-                        });
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Error",
-                            Description = "Could not authenticate with the database. Please check username and password."
-                        });
-                    }
-
-                    // no listener - port 
-                    if (o.Number == 12541)
-                    {
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Error",
-                            Description = "Found no listener on given port."
-                        });
-                    }
-
-                    // cannot resolve hostname
-                    if (o.Number == 12545)
-                    {
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Error",
-                            Description = "Could not resolve hostname."
-                        });
-                    }
-
-                    // failed to connect to server or parse connection string
-                    if (o.Number == -6001)
-                    {
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Error",
-                            Description = "Failed to connect to server or parse connection string."
-                        });
-                    }
-
-                    // invalid transport address (like 'TCAP')
-                    if (o.Number == 12533)
-                    {
-                        testDatabaseStatus.Details.Add(new StatusItem()
-                        {
-                            Status = "Error",
-                            Description = "Invalid transport address syntax."
-                        });
-                    }
-                }
-                
-            }
-            return testDatabaseStatus;
         }
 
         #endregion
