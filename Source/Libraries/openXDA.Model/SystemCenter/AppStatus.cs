@@ -112,7 +112,7 @@ namespace openXDA.Model.SystemCenter
             catch (Exception e)
             {
                 status.Status = "Error";
-                if (e.InnerException is KeyNotFoundException knf) 
+                if (e.InnerException is KeyNotFoundException) 
                 {
                     status.Details.Add(new StatusItem()
                     {
@@ -121,7 +121,7 @@ namespace openXDA.Model.SystemCenter
                     });
                 }
 
-                if (e.InnerException is FileNotFoundException fnf)
+                if (e.InnerException is FileNotFoundException)
                 {
                     status.Details.Add(new StatusItem()
                     {
@@ -130,10 +130,11 @@ namespace openXDA.Model.SystemCenter
                     });
                 }
 
-                if (e is System.IO.FileLoadException fle)
+                if (e is System.IO.FileLoadException)
                 {
                     status.Details.Add(new StatusItem()
                     {
+                        Status = "Error",
                         Description = "Mismatched file or dependency."
                     });
                 }
@@ -173,9 +174,9 @@ namespace openXDA.Model.SystemCenter
             }
             catch (Exception e)
             {
-                if (e.InnerException is KeyNotFoundException knf)
+                status.Status = "Error";
+                if (e.InnerException is KeyNotFoundException)
                 {
-                    status.Status = "Error";
                     status.Details.Add(new StatusItem()
                     {
                         Status = "Error",
@@ -183,9 +184,8 @@ namespace openXDA.Model.SystemCenter
                     });
                 }
 
-                if (e.InnerException is FileNotFoundException fnf)
+                if (e.InnerException is FileNotFoundException)
                 {
-                    status.Status = "Error";
                     status.Details.Add(new StatusItem()
                     {
                         Status = "Error",
@@ -193,9 +193,8 @@ namespace openXDA.Model.SystemCenter
                     });
                 }
 
-                if (e is System.IO.FileLoadException fle)
+                if (e is System.IO.FileLoadException)
                 {
-                    status.Status = "Error";
                     status.Details.Add(new StatusItem()
                     {
                         Status = "Error",
