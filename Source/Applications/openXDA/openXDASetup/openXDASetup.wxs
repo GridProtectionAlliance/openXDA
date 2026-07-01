@@ -526,56 +526,66 @@
       <ComponentRef Id="EzDNAServApiNet64" />
 
       <!-- Local NuGet Dependencies -->
-      <ComponentRef Id="MathNet.Numerics" />
       <ComponentRef Id="HtmlAgilityPack" />
+      <ComponentRef Id="MathNet.Numerics" />
+      <ComponentRef Id="Oracle.ManagedDataAccess" />
+      <ComponentRef Id="System.Formats.Asn1"/>
+      <ComponentRef Id="System.Security.AccessControl"/>
+      <ComponentRef Id="System.Security.Permissions"/>
+      <ComponentRef Id="System.Security.Principal.Windows"/>
 
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (provided via GSF.Web) -->
       <ComponentRef Id="Microsoft.AspNet.SignalR.Core" />
-      <ComponentRef Id="System.Web.Cors" />
-      <ComponentRef Id="System.Web.Http" />
-      <ComponentRef Id="System.Web.Http.Cors" />
-      <ComponentRef Id="System.Web.Http.Owin" />
       <ComponentRef Id="Microsoft.Owin" />
       <ComponentRef Id="Microsoft.Owin.Cors" />
       <ComponentRef Id="Microsoft.Owin.Diagnostics" />
       <ComponentRef Id="Microsoft.Owin.Host.HttpListener" />
       <ComponentRef Id="Microsoft.Owin.Hosting" />
       <ComponentRef Id="Microsoft.Owin.Security" />
+      <ComponentRef Id="Microsoft.Web.Infrastructure" />
       <ComponentRef Id="Newtonsoft.Json" />
       <ComponentRef Id="NUglify" />
       <ComponentRef Id="Owin" />
       <ComponentRef Id="RazorEngine" />
-      <ComponentRef Id="System.Web.Razor" />
       <ComponentRef Id="System.Net.Http.Formatting" />
+      <ComponentRef Id="System.Web.Cors" />
       <ComponentRef Id="System.Web.Helpers" />
+      <ComponentRef Id="System.Web.Http" />
+      <ComponentRef Id="System.Web.Http.Cors" />
+      <ComponentRef Id="System.Web.Http.Owin" />
       <ComponentRef Id="System.Web.Mvc" />
+      <ComponentRef Id="System.Web.Razor" />
       <ComponentRef Id="System.Web.WebPages.Deployment" />
       <ComponentRef Id="System.Web.WebPages" />
       <ComponentRef Id="System.Web.WebPages.Razor" />
-      <ComponentRef Id="System.Security.AccessControl"/>
-      <ComponentRef Id="System.Security.Permissions"/>
-      <ComponentRef Id="System.Security.Principal.Windows"/>
 
       <!-- HIDS Dependencies -->
-      <ComponentRef Id="HIDS" />
       <ComponentRef Id="openXDA.HIDS" />
-      <ComponentRef Id="System.Threading.Tasks.Extensions" />
-      <ComponentRef Id="Microsoft.Bcl.AsyncInterfaces" />
-      <ComponentRef Id="System.Linq.Async" />
+      <ComponentRef Id="HIDS" />
+      <ComponentRef Id="CSVHelper" />
       <ComponentRef Id="InfluxDB.Client" />
       <ComponentRef Id="InfluxDB.Client.Core" />
-      <ComponentRef Id="RestSharp" />
-      <ComponentRef Id="System.Runtime.CompilerServices.Unsafe" />
+      <ComponentRef Id="Microsoft.Bcl.AsyncInterfaces" />
+      <ComponentRef Id="Microsoft.Bcl.HashCode" />
       <ComponentRef Id="NodaTime" />
       <ComponentRef Id="NodaTime.Serialization.JsonNet" />
-      <ComponentRef Id="CSVHelper" />
+      <ComponentRef Id="RestSharp" />
       <ComponentRef Id="System.Buffers"/>
       <ComponentRef Id="System.Collections.Immutable"/>
       <ComponentRef Id="System.Configuration.ConfigurationManager"/>
+      <ComponentRef Id="System.Linq.Async" />
       <ComponentRef Id="System.Memory"/>
       <ComponentRef Id="System.Numerics.Vectors"/>
       <ComponentRef Id="System.Reactive"/>
+      <ComponentRef Id="System.Runtime.CompilerServices.Unsafe" />
+      <ComponentRef Id="System.Threading.Tasks.Extensions" />
       <ComponentRef Id="System.ValueTuple"/>
+
+	  <!-- RabbitMQ Dependencies -->
+      <ComponentRef Id="RabbitMQ.Client" />
+      <ComponentRef Id="System.IO.Pipelines" />
+      <ComponentRef Id="System.Threading.Channels" />
+      <ComponentRef Id="System.Threading.RateLimiting" />
 
       <!-- SPCTools Dependencies -->
       <ComponentRef Id="SPCTools" />
@@ -791,12 +801,18 @@
         <File Id="EzDNAServApiNet64.dll" Name="EzDNAServApiNet64.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EzDNAServApiNet64.dll" />
       </Component>
 
-      <!-- Local NuGet Depedencies -->
+      <!-- Local NuGet Dependencies -->
+      <Component Id="HtmlAgilityPack">
+        <File Id="HtmlAgilityPack.dll" Name="HtmlAgilityPack.dll" Source="$(var.openXDA.TargetDir)HtmlAgilityPack.dll" />
+      </Component>
       <Component Id="MathNet.Numerics">
         <File Id="MathNet.Numerics.dll" Name="MathNet.Numerics.dll" Source="$(var.openXDA.TargetDir)MathNet.Numerics.dll" />
       </Component>
-      <Component Id="HtmlAgilityPack">
-        <File Id="HtmlAgilityPack.dll" Name="HtmlAgilityPack.dll" Source="$(var.openXDA.TargetDir)HtmlAgilityPack.dll" />
+      <Component Id="Oracle.ManagedDataAccess">
+        <File Id="Oracle.ManagedDataAccess.dll" Name="Oracle.ManagedDataAccess.dll" Source="$(var.openXDA.TargetDir)Oracle.ManagedDataAccess.dll" />
+      </Component>
+      <Component Id="System.Formats.Asn1">
+        <File Id="System.Formats.Asn1.dll" Name="System.Formats.Asn1.dll" Source="$(var.openXDA.TargetDir)System.Formats.Asn1.dll" />
       </Component>
       <Component Id="System.Security.AccessControl">
         <File Id="System.Security.AccessControl.dll" Name="System.Security.AccessControl.dll" Source="$(var.openXDA.TargetDir)System.Security.AccessControl.dll" />
@@ -808,22 +824,15 @@
         <File Id="System.Security.Principal.Windows.dll" Name="System.Security.Principal.Windows.dll" Source="$(var.openXDA.TargetDir)System.Security.Principal.Windows.dll" />
       </Component>
 
-
       <!-- HIDS Dependencies -->
-      <Component Id="HIDS">
-        <File Id="HIDS.dll" Name="HIDS.dll"  Source="$(var.openXDA.TargetDir)HIDS.dll" />
-      </Component>
       <Component Id="openXDA.HIDS">
         <File Id="openXDA.HIDS.dll" Name="$(var.openXDA.HIDS.TargetFileName)" Source="$(var.openXDA.HIDS.TargetPath)" />
       </Component>
-      <Component Id="System.Threading.Tasks.Extensions">
-        <File Id="System.Threading.Tasks.Extensions.dll" Name="System.Threading.Tasks.Extensions.dll"  Source="$(var.openXDA.TargetDir)System.Threading.Tasks.Extensions.dll" />
+      <Component Id="HIDS">
+        <File Id="HIDS.dll" Name="HIDS.dll"  Source="$(var.openXDA.TargetDir)HIDS.dll" />
       </Component>
-      <Component Id="Microsoft.Bcl.AsyncInterfaces">
-        <File Id="Microsoft.Bcl.AsyncInterfaces.dll" Name="Microsoft.Bcl.AsyncInterfaces.dll" Source="$(var.openXDA.TargetDir)Microsoft.Bcl.AsyncInterfaces.dll" />
-      </Component>
-      <Component Id="System.Linq.Async">
-        <File Id="System.Linq.Async.dll" Name="System.Linq.Async.dll" Source="$(var.openXDA.TargetDir)System.Linq.Async.dll" />
+      <Component Id="CSVHelper">
+        <File Id="CsvHelper.dll" Name="CsvHelper.dll" Source="$(var.openXDA.TargetDir)CsvHelper.dll" />
       </Component>
       <Component Id="InfluxDB.Client">
         <File Id="InfluxDB.Client.dll" Name="InfluxDB.Client.dll" Source="$(var.openXDA.TargetDir)InfluxDB.Client.dll" />
@@ -834,17 +843,17 @@
       <Component Id="RestSharp">
         <File Id="RestSharp.dll" Name="RestSharp.dll" Source="$(var.openXDA.TargetDir)RestSharp.dll" />
       </Component>
-      <Component Id="System.Runtime.CompilerServices.Unsafe">
-        <File Id="System.Runtime.CompilerServices.Unsafe.dll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.openXDA.TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
+      <Component Id="Microsoft.Bcl.AsyncInterfaces">
+        <File Id="Microsoft.Bcl.AsyncInterfaces.dll" Name="Microsoft.Bcl.AsyncInterfaces.dll" Source="$(var.openXDA.TargetDir)Microsoft.Bcl.AsyncInterfaces.dll" />
+      </Component>
+      <Component Id="Microsoft.Bcl.HashCode">
+        <File Id="Microsoft.Bcl.HashCode.dll" Name="Microsoft.Bcl.HashCode.dll" Source="$(var.openXDA.TargetDir)Microsoft.Bcl.HashCode.dll" />
       </Component>
       <Component Id="NodaTime">
         <File Id="NodaTime.dll" Name="NodaTime.dll" Source="$(var.openXDA.TargetDir)NodaTime.dll" />
       </Component>
       <Component Id="NodaTime.Serialization.JsonNet">
         <File Id="NodaTime.Serialization.JsonNet.dll" Name="NodaTime.Serialization.JsonNet.dll" Source="$(var.openXDA.TargetDir)NodaTime.Serialization.JsonNet.dll" />
-      </Component>
-      <Component Id="CSVHelper">
-        <File Id="CsvHelper.dll" Name="CsvHelper.dll" Source="$(var.openXDA.TargetDir)CsvHelper.dll" />
       </Component>
       <Component Id="System.Buffers">
         <File Id="System.Buffers.dll" Name="System.Buffers.dll" Source="$(var.openXDA.TargetDir)System.Buffers.dll" />
@@ -855,6 +864,9 @@
       <Component Id="System.Configuration.ConfigurationManager">
         <File Id="System.Configuration.ConfigurationManager.dll" Name="System.Configuration.ConfigurationManager.dll" Source="$(var.openXDA.TargetDir)System.Configuration.ConfigurationManager.dll" />
       </Component>
+      <Component Id="System.Linq.Async">
+        <File Id="System.Linq.Async.dll" Name="System.Linq.Async.dll" Source="$(var.openXDA.TargetDir)System.Linq.Async.dll" />
+      </Component>
       <Component Id="System.Memory">
         <File Id="System.Memory.dll" Name="System.Memory.dll" Source="$(var.openXDA.TargetDir)System.Memory.dll" />
       </Component>
@@ -864,8 +876,28 @@
       <Component Id="System.Reactive">
         <File Id="System.Reactive.dll" Name="System.Reactive.dll" Source="$(var.openXDA.TargetDir)System.Reactive.dll" />
       </Component>
+      <Component Id="System.Runtime.CompilerServices.Unsafe">
+        <File Id="System.Runtime.CompilerServices.Unsafe.dll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.openXDA.TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
+      </Component>
+      <Component Id="System.Threading.Tasks.Extensions">
+        <File Id="System.Threading.Tasks.Extensions.dll" Name="System.Threading.Tasks.Extensions.dll"  Source="$(var.openXDA.TargetDir)System.Threading.Tasks.Extensions.dll" />
+      </Component>
       <Component Id="System.ValueTuple">
         <File Id="System.ValueTuple.dll" Name="System.ValueTuple.dll" Source="$(var.openXDA.TargetDir)System.ValueTuple.dll" />
+      </Component>
+
+	  <!-- RabbitMQ Dependencies -->
+      <Component Id="RabbitMQ.Client">
+        <File Id="RabbitMQ.Client.dll" Name="RabbitMQ.Client.dll" Source="$(var.openXDA.TargetDir)RabbitMQ.Client.dll" />
+      </Component>
+      <Component Id="System.IO.Pipelines">
+        <File Id="System.IO.Pipelines.dll" Name="System.IO.Pipelines.dll" Source="$(var.openXDA.TargetDir)System.IO.Pipelines.dll" />
+      </Component>
+      <Component Id="System.Threading.Channels">
+        <File Id="System.Threading.Channels.dll" Name="System.Threading.Channels.dll" Source="$(var.openXDA.TargetDir)System.Threading.Channels.dll" />
+      </Component>
+      <Component Id="System.Threading.RateLimiting">
+        <File Id="System.Threading.RateLimiting.dll" Name="System.Threading.RateLimiting.dll" Source="$(var.openXDA.TargetDir)System.Threading.RateLimiting.dll" />
       </Component>
 
       <!--SPC Tools Dependencies -->
@@ -883,23 +915,11 @@
       </Component>
 
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (these are managed as NuGet dependencies to GSF.Web) -->
+      <Component Id="JsonSubTypes">
+        <File Id="JsonSubTypes.dll" Name="JsonSubTypes.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\JsonSubTypes.1.8.0\lib\net47\JsonSubTypes.dll" />
+      </Component>
       <Component Id="Microsoft.AspNet.SignalR.Core">
         <File Id="Microsoft.AspNet.SignalR.Core.dll" Name="Microsoft.AspNet.SignalR.Core.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Microsoft.AspNet.SignalR.Core.dll" />
-      </Component>
-      <Component Id="System.Net.Http.Formatting">
-        <File Id="System.Net.Http.Formatting.dll" Name="System.Net.Http.Formatting.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Net.Http.Formatting.dll" />
-      </Component>
-      <Component Id="System.Web.Http.Cors">
-        <File Id="System.Web.Http.Cors.dll" Name="System.Web.Http.Cors.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Http.Cors.dll" />
-      </Component>
-      <Component Id="System.Web.Mvc">
-        <File Id="System.Web.Mvc.dll" Name="System.Web.Mvc.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Mvc.dll" />
-      </Component>
-      <Component Id="System.Web.Http">
-        <File Id="System.Web.Http.dll" Name="System.Web.Http.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Http.dll" />
-      </Component>
-      <Component Id="System.Web.Http.Owin">
-        <File Id="System.Web.Http.Owin.dll" Name="System.Web.Http.Owin.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Http.Owin.dll" />
       </Component>
       <Component Id="Microsoft.Owin">
         <File Id="Microsoft.Owin.dll" Name="Microsoft.Owin.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Microsoft.Owin.dll" />
@@ -919,30 +939,44 @@
       <Component Id="Microsoft.Owin.Security">
         <File Id="Microsoft.Owin.Security.dll" Name="Microsoft.Owin.Security.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Microsoft.Owin.Security.dll" />
       </Component>
+      <Component Id="Microsoft.Web.Infrastructure">
+        <File Id="Microsoft.Web.Infrastructure.dll" Name="Microsoft.Web.Infrastructure.dll" Source="$(var.openXDA.TargetDir)Microsoft.Web.Infrastructure.dll" />
+      </Component>
       <Component Id="Newtonsoft.Json">
         <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Newtonsoft.Json.dll" />
       </Component>
       <Component Id="NUglify">
         <File Id="NUglify.dll" Name="NUglify.dll" Source="$(var.SolutionDir)\Dependencies\GSF\NUglify.dll" />
       </Component>
-      <Component Id="JsonSubTypes">
-        <File Id="JsonSubTypes.dll" Name="JsonSubTypes.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\JsonSubTypes.1.8.0\lib\net47\JsonSubTypes.dll" />
-      </Component>
-
       <Component Id="Owin">
         <File Id="Owin.dll" Name="Owin.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Owin.dll" />
       </Component>
       <Component Id="RazorEngine">
         <File Id="RazorEngine.dll" Name="RazorEngine.dll" Source="$(var.SolutionDir)\Dependencies\GSF\RazorEngine.dll" />
       </Component>
-      <Component Id="System.Web.Razor">
-        <File Id="System.Web.Razor.dll" Name="System.Web.Razor.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Razor.dll" />
+      <Component Id="System.Net.Http.Formatting">
+        <File Id="System.Net.Http.Formatting.dll" Name="System.Net.Http.Formatting.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Net.Http.Formatting.dll" />
       </Component>
       <Component Id="System.Web.Cors">
         <File Id="System.Web.Cors.dll" Name="System.Web.Cors.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Cors.dll" />
       </Component>
       <Component Id="System.Web.Helpers">
         <File Id="System.Web.Helpers.dll" Name="System.Web.Helpers.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Helpers.dll" />
+      </Component>
+      <Component Id="System.Web.Http">
+        <File Id="System.Web.Http.dll" Name="System.Web.Http.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Http.dll" />
+      </Component>
+      <Component Id="System.Web.Http.Cors">
+        <File Id="System.Web.Http.Cors.dll" Name="System.Web.Http.Cors.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Http.Cors.dll" />
+      </Component>
+      <Component Id="System.Web.Http.Owin">
+        <File Id="System.Web.Http.Owin.dll" Name="System.Web.Http.Owin.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Http.Owin.dll" />
+      </Component>
+      <Component Id="System.Web.Mvc">
+        <File Id="System.Web.Mvc.dll" Name="System.Web.Mvc.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Mvc.dll" />
+      </Component>
+      <Component Id="System.Web.Razor">
+        <File Id="System.Web.Razor.dll" Name="System.Web.Razor.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.Razor.dll" />
       </Component>
       <Component Id="System.Web.WebPages">
         <File Id="System.Web.WebPages.dll" Name="System.Web.WebPages.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.WebPages.dll" />
