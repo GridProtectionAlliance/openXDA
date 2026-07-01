@@ -107,6 +107,10 @@ namespace openXDA.Nodes.Types.FileProcessing
             [HttpPost]
             public void Reprocess(int fileGroupID) =>
                 Node.ReuploadAndProcess(fileGroupID);
+
+            [HttpPost]
+            public void ReconfigureWatchDirectories() =>
+                Node.ReconfigureWatchDirectories();
         }
 
         private class WorkItem
@@ -389,6 +393,13 @@ namespace openXDA.Nodes.Types.FileProcessing
             }
         }
 
+        private void ReconfigureWatchDirectories()
+        {
+            Action<object> configurator = GetConfigurator();
+            Settings settings = new Settings(configurator);
+            ConfigureWatchDirectories(settings);
+        }
+
         private void Configure(Action<object> configurator)
         {
             string QueryFilter()
@@ -438,15 +449,25 @@ namespace openXDA.Nodes.Types.FileProcessing
             FileProcessor.MaxThreadCount = settings.FileWatcherSettings.InternalThreadCount;
             FileProcessor.TrackChanges = true;
 
+            ConfigureWatchDirectories(settings);
+        }
+
+        private void ConfigureWatchDirectories(Settings settings)
+        {
             IReadOnlyCollection<string> watchDirectories = settings.FileWatcherSettings.WatchDirectoryList;
 
-            foreach (string path in FileProcessor.TrackedDirectories.ToList())
-            {
-                if (!watchDirectories.Contains(path, StringComparer.OrdinalIgnoreCase))
-                    FileProcessor.RemoveTrackedDirectory(path);
-            }
+            List<string> staleDirectories = FileProcessor.TrackedDirectories
+                .Except(watchDirectories, StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
-            foreach (string path in watchDirectories)
+            foreach (string path in staleDirectories)
+                FileProcessor.RemoveTrackedDirectory(path);
+
+            List<string> newDirectories = watchDirectories
+                .Except(FileProcessor.TrackedDirectories)
+                .ToList();
+
+            foreach (string path in newDirectories)
             {
                 try
                 {

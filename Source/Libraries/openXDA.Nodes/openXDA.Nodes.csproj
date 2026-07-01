@@ -136,6 +136,7 @@
     <Compile Include="Types\RabbitMQ\EventTagMessage.cs" />
     <Compile Include="Types\RabbitMQ\RabbitMQNode.cs" />
     <Compile Include="Types\SSAMS\SSAMSNode.cs" />
+    <Compile Include="Types\WatchDirectoryBalancing\WatchDirectoryBalancerNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FaultData\FaultData.csproj">

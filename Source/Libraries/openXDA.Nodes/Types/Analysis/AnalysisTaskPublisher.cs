@@ -43,6 +43,7 @@ namespace openXDA.Nodes.Types.Analysis
                     "INSERT INTO AnalysisTask(FileGroupID, MeterID, TimeQueued, Priority) " +
                     "VALUES({0}, {1}, {2}, {3})";
 
+                task.FileGroup.ProcessingStatus = (int)FileGroupProcessingStatus.Queued;
                 Upload(connection, task.FileGroup);
                 connection.ExecuteNonQuery(QueueQuery, task.FileGroup.ID, task.Meter.ID, task.TimeQueued, task.Priority);
             }
@@ -77,7 +78,6 @@ namespace openXDA.Nodes.Types.Analysis
                 fileGroup.ProcessingEndTime = dbFileGroup.ProcessingEndTime;
                 fileGroup.DataStartTime = dbFileGroup.DataStartTime;
                 fileGroup.DataEndTime = dbFileGroup.DataEndTime;
-                fileGroup.ProcessingStatus = dbFileGroup.ProcessingStatus;
             }
 
             fileGroupTable.AddNewOrUpdateRecord(fileGroup);
