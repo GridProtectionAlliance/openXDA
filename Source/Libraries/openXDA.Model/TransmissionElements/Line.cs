@@ -129,9 +129,13 @@ namespace openXDA.Model
 
         private List<TransmissionPath> QueryPath()
         {
-            
-            //Start by finding all the ends
-            List<LineSegment> lineEnds = Segments.Where(item => item.IsEnd).ToList();
+            // Start by finding all the ends
+            bool IsEnd(LineSegment segment) =>
+                segment.IsEnd ||
+                segment.ConnectedSegments.Count <= 1 ||
+                IsForkedEnd(segment);
+
+            List<LineSegment> lineEnds = [.. Segments.Where(IsEnd)];
 
             if (lineEnds.Count == 1)
                 return new List<TransmissionPath>()
@@ -189,40 +193,62 @@ namespace openXDA.Model
         }
 
         /// <summary>
-        /// Attempts to walk the Line from start to end.
+        /// Determines if all pairs of segments connected to the given segment are connected to each other.
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        /// <returns></returns>
+        private bool IsForkedEnd(LineSegment segment)
+        {
+            bool AreDirectConnected(LineSegment s1, LineSegment s2) => s1.ConnectedSegments
+                .Any(connection => connection.ParentSegment == s2.ID || connection.ChildSegment == s2.ID);
+
+            List<LineSegment> nextSegments = [.. GetNextSegments(segment)];
+
+            return nextSegments
+                .SelectMany(_ => nextSegments, (S1, S2) => (S1, S2))
+                .Where(tuple => tuple.S1.ID < tuple.S2.ID)
+                .All(tuple => AreDirectConnected(tuple.S1, tuple.S2));
+        }
+
+        /// <summary>
+        /// Attempts to walk the line from start to end.
+        /// </summary>
         private List<LineSegment> WalkTheLine(LineSegment start, LineSegment end, Stack<int> stack = null)
         {
-            if (stack is null)
-                stack = new Stack<int>();
+            stack ??= new Stack<int>([start.ID]);
 
-            foreach (LineSegment segment in GetNextSegement(start))
+            List<LineSegment> nextSegments = [.. GetNextSegments(start)
+                .Where(next => !stack.Contains(next.ID))];
+
+            // Don't treat taps as bridges; if start, F1, and F2 are all connected
+            // to each other, do not allow the F1 path to visit F2 or vice-versa
+            foreach (LineSegment next in nextSegments)
+                stack.Push(next.ID);
+
+            try
             {
-                if (segment.ID == end.ID)
+                foreach (LineSegment next in nextSegments)
                 {
-                    // we found the end, so we can return the path
-                    return new List<LineSegment>() { start, segment };
+                    if (next.ID == end.ID)
+                        return [start, next];
                 }
-                if (stack.Contains(segment.ID))
+
+                foreach (LineSegment next in nextSegments)
                 {
-                    if (stack.Peek() != segment.ID)
-                        Log.Error($"Line {this.AssetKey} has a looped line segment ({segment.AssetKey}). This is causing issues in fault distance computations.");
-                    continue;
-                }
-                stack.Push(start.ID);
-                List<LineSegment> follow = WalkTheLine(segment, end, stack);
-                stack.Pop();
-                if (follow.Count > 0)
-                {
+                    List<LineSegment> follow = WalkTheLine(next, end, stack);
+
+                    if (follow.Count == 0)
+                        continue;
+
                     follow.Insert(0, start);
                     return follow;
                 }
-            }
 
-           return new List<LineSegment>();
+                return [];
+            }
+            finally
+            {
+                for (int i = 0; i < nextSegments.Count; i++)
+                    stack.Pop();
+            }
         }
 
         /// <summary>
@@ -230,9 +256,9 @@ namespace openXDA.Model
         /// </summary>
         /// <param name="current"></param>
         /// <returns></returns>
-        private IEnumerable<LineSegment> GetNextSegement(LineSegment current)
+        private IEnumerable<LineSegment> GetNextSegments(LineSegment current)
         {
-            return current.connectedSegments.Select(item =>
+            return current.ConnectedSegments.Select(item =>
             {
                 if (item.ChildSegment == current.ID)
                     return item.Parent;
