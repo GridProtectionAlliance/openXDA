@@ -118,6 +118,36 @@ namespace openXDA.Controllers.Widgets
         }
 
         /// <summary>
+        /// Determines whether an <see cref="Event"/> has PQI facility data.
+        /// </summary>
+        /// <param name="postData"><see cref="CustomerEventRestriction"/> that contains query information.</param>
+        /// <returns><c>true</c> when PQI facility data exists for the event; otherwise, <c>false</c>.</returns>
+        [Route("HasPQIData"), HttpPost]
+        public IHttpActionResult HasPQIData([FromBody] CustomerEventRestriction postData)
+        {
+            using (AdoDataConnection connection = m_connectionFactory())
+            {
+                if (!postData.IsCustomerAuthorized(connection))
+                    return Unauthorized();
+
+                bool hasPQIData = connection.ExecuteScalar<bool>(@"
+                    SELECT CAST(CASE WHEN EXISTS (
+                        SELECT 1
+                        FROM Disturbance LEFT JOIN
+                            Event ON Event.ID = Disturbance.EventID LEFT JOIN
+                            CustomerMeter ON CustomerMeter.MeterID = Event.MeterID LEFT JOIN
+                            Customer AS MeterCustomer ON MeterCustomer.ID = CustomerMeter.CustomerID LEFT JOIN
+                            CustomerAsset ON CustomerAsset.AssetID = Event.AssetID LEFT JOIN
+                            Customer AS AssetCustomer ON AssetCustomer.ID = CustomerAsset.CustomerID
+                        WHERE Disturbance.EventID = {0} AND
+                            (MeterCustomer.PQIFacilityID IS NOT NULL OR AssetCustomer.PQIFacilityID IS NOT NULL)
+                    ) THEN 1 ELSE 0 END AS BIT)", postData.EventID);
+
+                return Ok(hasPQIData);
+            }
+        }
+
+        /// <summary>
         /// Retrieves a list of test curves <see cref="Equipment"/> based on an openXDA <see cref="Event"/> ID.
         /// </summary>
         /// <param name="postData"><see cref="CustomerEventRestriction"/> that contains query information.</param>
