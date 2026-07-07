@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using GSF.Data;
@@ -71,7 +72,7 @@ namespace openXDA.Model
 
         [JsonIgnore]
         [NonRecordField]
-        public List<LineSegmentConnections> connectedSegments
+        public List<LineSegmentConnections> ConnectedSegments
         {
             get => m_connectedSegements ?? (m_connectedSegements = QueryConnectedSegements());
             set => m_connectedSegements = value;
@@ -170,6 +171,20 @@ namespace openXDA.Model
             }
 
             return connections;
+        }
+
+        #endregion
+
+        #region [ Obsolete ]
+
+        [JsonIgnore]
+        [NonRecordField]
+        [Obsolete("Deprecated due to incorrect casing; use ConnectedSegments instead")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public List<LineSegmentConnections> connectedSegments
+        {
+            get => ConnectedSegments;
+            set => ConnectedSegments = value;
         }
 
         #endregion
