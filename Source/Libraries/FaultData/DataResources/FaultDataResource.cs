@@ -71,51 +71,53 @@ namespace FaultData.DataResources
 
             public bool TryExtractImpedances()
             {
-                if (Line.Segments != null)
-                {
-                    SourceImpedance localImpedance = Line.AssetLocations
-                        .Where(link => link.Location == Meter.Location)
-                        .Where(link => link.SourceImpedance != null)
-                        .Select(link => link.SourceImpedance)
-                        .FirstOrDefault();
+                if (Line.Segments is null)
+                    return false;
 
-                    List<SourceImpedance> remoteImpedances = Line.AssetLocations
-                        .Where(link => link.Location != Meter.Location)
-                        .Where(link => link.SourceImpedance != null)
-                        .Select(link => link.SourceImpedance)
-                        .ToList();
+                LineSegment localSegment = Line.Segments.FirstOrDefault(ConnectsToMeterLocation);
 
-                    if (localImpedance != null)
-                        FaultLocationDataSet.ZSrc = new ComplexNumber(localImpedance.RSrc, localImpedance.XSrc);
+                SourceImpedance localImpedance = Line.AssetLocations
+                    .Where(link => link.Location == Meter.Location)
+                    .Where(link => link.SourceImpedance != null)
+                    .Select(link => link.SourceImpedance)
+                    .FirstOrDefault();
 
-                    if (remoteImpedances.Count == 1)
-                        FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
+                List<SourceImpedance> remoteImpedances = Line.AssetLocations
+                    .Where(link => link.Location != Meter.Location)
+                    .Where(link => link.SourceImpedance != null)
+                    .Select(link => link.SourceImpedance)
+                    .ToList();
 
-                    FaultLocationDataSet.FaultPaths = Line.Path
-                        .Select((path, index) => new FaultLocationDataSet.LinePath()
+                if (localImpedance != null)
+                    FaultLocationDataSet.ZSrc = new ComplexNumber(localImpedance.RSrc, localImpedance.XSrc);
+
+                if (remoteImpedances.Count == 1)
+                    FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
+
+                FaultLocationDataSet.FaultPaths = Line.Path
+                    .Where(path => localSegment is null || path.Segments[0] == localSegment || path.Segments.Last() == localSegment)
+                    .Select((path, index) => new FaultLocationDataSet.LinePath()
+                    {
+                        PathNumber = index,
+                        TraverseForward = localSegment is null || path.Segments[0] == localSegment,
+                        Path = path.Segments.Select(segment => new FaultLocationDataSet.LineSegment()
                         {
-                            PathNumber = index,
-                            // TODO: This has an implicit assumption of forward traversing. This might be undesirable
-                            TraverseForward =
-                                path.Segments.Count <= 1 ||
-                                !path.Segments.Last().AssetLocations.Any(assetLocation => assetLocation.LocationID == Meter.LocationID),
-                            Path = path.Segments.Select(segment => new FaultLocationDataSet.LineSegment()
-                            {
-                                ID = segment.ID,
-                                Length = segment.Length,
-                                R0 = segment.R0,
-                                X0 = segment.X0,
-                                R1 = segment.R1,
-                                X1 = segment.X1
-                            }).ToList()
-                        })
-                        .Where(path => path.CalculateValues()).ToList();
+                            ID = segment.ID,
+                            Length = segment.Length,
+                            R0 = segment.R0,
+                            X0 = segment.X0,
+                            R1 = segment.R1,
+                            X1 = segment.X1
+                        }).ToList()
+                    })
+                    .Where(path => path.CalculateValues())
+                    .ToList();
 
-                    return FaultLocationDataSet.FaultPaths.Count() > 0;
-                }
-
-                return false;
+                return FaultLocationDataSet.FaultPaths.Count() > 0;
             }
+
+            private bool ConnectsToMeterLocation(LineSegment segment) =>
+                segment.AssetLocations.Any(assetLocation => assetLocation.LocationID == Meter.LocationID);
 
             #endregion
         }
