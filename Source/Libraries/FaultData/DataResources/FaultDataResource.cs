@@ -1085,21 +1085,27 @@ namespace FaultData.DataResources
                 if (fault.Summaries.Any(s => !s.IsValid))
                     fault.IsSuppressed |= fault.CurrentLag < 0;
 
-                List<Fault.Summary> validSummaries = fault.Summaries
-                    .Where(s => s.IsValid)
-                    .OrderBy(s => s.Distance)
-                    .ToList();
+                List<Fault.Summary> candidateSummaries = [.. fault.Summaries
+                    .Where(summary => summary.IsValid)
+                    .GroupBy(summary => summary.PathNumber)
+                    .OrderBy(grouping => grouping.Key)
+                    .Take(1)
+                    .SelectMany(grouping => grouping)
+                    .OrderBy(summary => summary.Distance)];
 
-                if (!validSummaries.Any())
+                if (!candidateSummaries.Any())
                 {
-                    validSummaries = fault.Summaries
-                        .Where(s => !double.IsNaN(s.Distance))
-                        .OrderBy(s => s.Distance)
-                        .ToList();
+                    candidateSummaries = [.. fault.Summaries
+                        .Where(summary => !double.IsNaN(summary.Distance))
+                        .GroupBy(summary => summary.PathNumber)
+                        .OrderBy(grouping => grouping.Key)
+                        .Take(1)
+                        .SelectMany(grouping => grouping)
+                        .OrderBy(summary => summary.Distance)];
                 }
 
-                if (validSummaries.Any())
-                    validSummaries[validSummaries.Count / 2].IsSelectedAlgorithm = true;
+                if (candidateSummaries.Any())
+                    candidateSummaries[candidateSummaries.Count / 2].IsSelectedAlgorithm = true;
             }
             else
             {
