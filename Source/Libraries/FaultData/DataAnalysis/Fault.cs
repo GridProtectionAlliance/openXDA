@@ -41,6 +41,7 @@ namespace FaultData.DataAnalysis
 
             // Fields
             private int m_linePathNumber;
+            private int m_pathEndSegmentID;
             private int m_lineSegmentID;
             private string m_distanceAlgorithm;
             private double m_distance;
@@ -62,6 +63,18 @@ namespace FaultData.DataAnalysis
                 set
                 {
                     m_linePathNumber = value;
+                }
+            }
+
+            public int PathEndSegmentID
+            {
+                get
+                {
+                    return m_pathEndSegmentID;
+                }
+                set
+                {
+                    m_pathEndSegmentID = value;
                 }
             }
 

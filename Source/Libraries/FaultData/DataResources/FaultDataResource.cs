@@ -1072,6 +1072,10 @@ namespace FaultData.DataResources
                     }
                     summary.PathNumber = faultPath.PathNumber;
 
+                    summary.PathEndSegmentID = faultPath.TraverseForward
+                        ? faultPath.Path[faultPath.Path.Count - 1].ID
+                        : faultPath.Path[0].ID;
+
                     summary.IsValid = IsValid(line, summary.Distance, summary.PathNumber);
                     fault.Summaries.Add(summary);
                 }
