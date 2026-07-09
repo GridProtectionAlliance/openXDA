@@ -24,13 +24,18 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json.Linq;
 using openXDA.Model;
+using openXDA.PQI;
 
 namespace openXDA.NotificationDataSources.FaultTraceTool
 {
@@ -97,6 +102,11 @@ namespace openXDA.NotificationDataSources.FaultTraceTool
                 .Concat(records.Select(GetQueryString))
                 .Where(queryPart => !string.IsNullOrEmpty(queryPart));
 
+            if (!string.IsNullOrEmpty(FTTOptions.TokenURL))
+            {
+                queryParts.Append($"token={GetToken()}");
+            }
+
             return string.Join("&", queryParts);
         }
 
@@ -107,6 +117,11 @@ namespace openXDA.NotificationDataSources.FaultTraceTool
             IEnumerable<string> queryParts = new[] { builder.Query.TrimStart('?'), $"totalLine={records.Count()}" }
                 .Concat(records.Select(GetQueryString))
                 .Where(queryPart => !string.IsNullOrEmpty(queryPart));
+
+            if (!string.IsNullOrEmpty(FTTOptions.TokenURL))
+            {
+                queryParts.Append($"token={GetToken()}");
+            }
 
             builder.Query = string.Join("&", queryParts);
 
@@ -144,6 +159,55 @@ namespace openXDA.NotificationDataSources.FaultTraceTool
             }
         }
 
+        /// <summary>
+        /// Gets the Token using the TokenURl, User and Password
+        /// </summary>
+        /// <returns></returns>
+        private async Task<string> GetToken()
+        {
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri(FTTOptions.TokenURL);
+                request.Method = HttpMethod.Post;
+
+                List<KeyValuePair<string, string>> body = new List<KeyValuePair<string, string>>();
+                body.Add(new KeyValuePair<string, string>("username", FTTOptions.TokenUser));
+                body.Add(new KeyValuePair<string, string>("password", FTTOptions.TokenPassword));
+                body.Add(new KeyValuePair<string, string>("client", "referer"));
+                body.Add(new KeyValuePair<string, string>("ip", ""));
+                body.Add(new KeyValuePair<string, string>("referer", "https://gisdu.tva.gov/openftt/"));
+                body.Add(new KeyValuePair<string, string>("expiration", "60"));
+                body.Add(new KeyValuePair<string, string>("f", "json"));
+                request.Content = new FormUrlEncodedContent(body);
+            }
+
+            using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest).ConfigureAwait(false))
+            {
+                response.EnsureSuccessStatusCode();
+
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                JObject content = JObject.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                int expiration = content["expires"].Value<int>();
+                string accessToken = content["token"].Value<string>();
+                return accessToken;
+            }
+        }
+
+        private static HttpClient HttpClient =>
+            HttpClientProvider.GetClient();
+
         #endregion
+    }
+
+    internal static class HttpClientExtensions
+    {
+        public static async Task<HttpResponseMessage> SendRequestAsync(this HttpClient client, Action<HttpRequestMessage> configure)
+        {
+            using (HttpRequestMessage request = new HttpRequestMessage())
+            {
+                configure(request);
+                return await client.SendAsync(request).ConfigureAwait(false);
+            }
+        }
     }
 }

@@ -84,5 +84,17 @@ namespace openXDA.NotificationDataSources.FaultTraceTool
         [Setting]
         [DefaultValue("")]
         public string BrowserArguments { get; set; }
+
+        [Setting]
+        [DefaultValue("")]
+        public string TokenURL { get; set; }
+
+        [Setting]
+        [DefaultValue("")]
+        public string TokenUser { get; set; }
+
+        [Setting]
+        [DefaultValue("")]
+        public string TokenPassword { get; set; }
     }
 }
