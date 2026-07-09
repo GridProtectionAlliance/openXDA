@@ -200,6 +200,7 @@ namespace FaultData.DataOperations
             {
                 meter.Location.LocationKey,
                 LocationName = meter.Location.Name,
+                LocationShortName = meter.Location.ShortName,
 
                 meter.AssetKey,
                 meter.Name,
