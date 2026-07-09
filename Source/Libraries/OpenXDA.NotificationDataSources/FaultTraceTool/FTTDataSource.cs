@@ -21,13 +21,6 @@
 //
 //******************************************************************************************************
 
-using Azure.Core;
-using GSF;
-using GSF.Data;
-using GSF.Data.Model;
-using Newtonsoft.Json.Linq;
-using openXDA.Model;
-using openXDA.PQI;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -35,10 +28,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using GSF;
+using GSF.Data;
+using GSF.Data.Model;
+using Newtonsoft.Json.Linq;
+using openXDA.Model;
+using openXDA.PQI;
 
 namespace openXDA.NotificationDataSources.FaultTraceTool
 {
@@ -182,7 +179,6 @@ namespace openXDA.NotificationDataSources.FaultTraceTool
                 body.Add(new KeyValuePair<string, string>("expiration", "60"));
                 body.Add(new KeyValuePair<string, string>("f", "json"));
                 request.Content = new FormUrlEncodedContent(body);
-
             }
 
             using (HttpResponseMessage response = await HttpClient.SendRequestAsync(ConfigureRequest).ConfigureAwait(false))
@@ -195,13 +191,11 @@ namespace openXDA.NotificationDataSources.FaultTraceTool
                 string accessToken = content["token"].Value<string>();
                 return accessToken;
             }
-
         }
-
-
 
         private static HttpClient HttpClient =>
             HttpClientProvider.GetClient();
+
         #endregion
     }
 
