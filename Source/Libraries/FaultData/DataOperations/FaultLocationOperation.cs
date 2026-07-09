@@ -216,6 +216,7 @@ namespace FaultData.DataOperations
                         CalculationCycle = fault.CalculationCycle,
                         Distance = ToDbFloat(summary.Distance),
                         PathNumber = summary.PathNumber,
+                        PathEndSegmentID = summary.PathEndSegmentID,
                         LineSegmentID = summary.LineSegmentID,
                         LineSegmentDistance = ToDbFloat(summary.LineSegmentDistance),
                         CurrentMagnitude = ToDbFloat(fault.CurrentMagnitude),
