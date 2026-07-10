@@ -78,7 +78,7 @@ namespace openXDA.Controllers.Widgets
                 ", eventID);
 
                 if (dataTable.Rows.Count == 0)
-                    return Ok();
+                    return Ok(new List<Dictionary<string, object>>());
 
                 DataRow row = dataTable.Rows[0];
                 List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
