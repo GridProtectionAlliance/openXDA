@@ -188,7 +188,7 @@ namespace openXDA.Controllers.Config
             {
                 List<Task> reprocessTasks = new List<Task>();
 
-                foreach (int fileGroupID in fileGroupIDs)
+                foreach (int fileGroupID in fileGroupIDs.Distinct())
                 {
                     CascadeDelete(connection, "Event", $"FileGroupID = {fileGroupID}");
                     CascadeDelete(connection, "EventData", $"FileGroupID = {fileGroupID}");
