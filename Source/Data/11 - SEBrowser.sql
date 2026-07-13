@@ -288,3 +288,82 @@ Create View [EventWidgets.EventEventTagView] AS
 		EventEventTag LEFT JOIN 
 		EventTag ON EventEventTag.EventTagID = EventTag.ID
 GO
+
+CREATE VIEW [DetailedMeter] AS
+	SELECT
+		DISTINCT
+		Meter.ID,
+		Meter.AssetKey,
+		Meter.Name,
+		Meter.Make,
+		Meter.Model,
+		Location.Name as Location,
+		COUNT(DISTINCT MeterAsset.AssetID) as MappedAssets
+	FROM
+		Meter LEFT JOIN
+		Location ON Meter.LocationID = Location.ID LEFT JOIN
+		MeterAsset ON Meter.ID = MeterAsset.MeterID LEFT JOIN
+		Asset ON MeterAsset.AssetID = Asset.ID LEFT JOIN
+		Note ON Note.NoteTypeID = (SELECT ID FROM NoteType WHERE Name = 'Meter') AND Note.ReferenceTableID = Meter.ID
+	GROUP BY
+		Meter.ID,
+		Meter.AssetKey,
+		Meter.Name,
+		Meter.Make,
+		Meter.Model,
+		Location.Name
+GO
+
+CREATE VIEW [DetailedAsset] AS
+	SELECT
+		DISTINCT
+		Asset.ID,
+		Asset.AssetKey,
+		Asset.AssetName,
+		Asset.VoltageKV,
+		AssetType.Name as AssetType,
+		COUNT(DISTINCT Meter.ID) as Meters,
+		COUNT(DISTINCT Location.ID) as Locations
+	FROM
+		Asset JOIN
+		AssetType ON Asset.AssetTypeID = AssetType.ID LEFT JOIN
+		MeterAsset ON MeterAsset.AssetID = Asset.ID LEFT JOIN
+		Meter ON MeterAsset.MeterID = Meter.ID LEFT JOIN
+		AssetLocation ON AssetLocation.AssetID = Asset.ID LEFT JOIN
+		Location ON AssetLocation.LocationID = Location.ID
+	GROUP BY
+		Asset.ID,
+		Asset.AssetKey,
+		Asset.AssetName,
+		Asset.VoltageKV,
+		AssetType.Name
+GO
+
+CREATE VIEW [DetailedLocation] AS
+	SELECT
+		DISTINCT
+		l.ID,
+		l.LocationKey,
+		l.Name,
+		l.Alias,
+		l.ShortName,
+		l.Latitude,
+		l.Longitude,
+		l.Description,
+		COUNT(DISTINCT m.ID) as Meters,
+		COUNT(DISTINCT al.AssetID) as Assets
+	FROM
+		Location as l LEFT JOIN
+		Meter as m ON l.ID = m.LocationID LEFT JOIN
+		AssetLocation as al ON l.ID = al.LocationID LEFT JOIN
+		Asset as a ON al.AssetID = a.ID
+	GROUP BY
+		l.ID,
+		l.LocationKey,
+		l.Name,
+		l.Alias,
+		l.ShortName,
+		l.Latitude,
+		l.Longitude,
+		l.Description
+GO
