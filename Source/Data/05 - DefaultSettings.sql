@@ -130,10 +130,10 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Grafana.ServerPath', 'Grafana\bin\grafana-server.exe', 'Grafana\bin\grafana-server.exe')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.ConfirmSubject', 'OpenXDA Confirm Email', 'OpenXDA Confirm Email')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.ConfirmSubject', 'openXDA Confirm Email', 'openXDA Confirm Email')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.ConfirmTemplate', 'Please click the following Link to confirm your email address \n http://localhost/SystemCenterNotification/ConfirmEmail', 'Please click the following Link to confirm your email address \n http://localhost/SystemCenterNotification/ConfirmEmail')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.ConfirmTemplate', 'Please click the following link, to confirm your email address \n http://localhost/SystemCenterNotification/ConfirmEmail/{0}', 'Please click the following link, to confirm your email address \n http://localhost/SystemCenterNotification/ConfirmEmail/{0}')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Subscription.RequireConfirmation', 'true', 'true')

@@ -43,14 +43,14 @@ namespace openXDA.Configuration
         /// Gets or sets the Subject Line used when sending the confirmation email
         /// </summary>
         [Setting]
-        [DefaultValue("OpenXDA Confirm Email")]
+        [DefaultValue("openXDA Confirm Email")]
         public string ConfirmSubject { get; set; }
 
         /// <summary>
         /// Gets or sets the Template used when generating the Confirmation Email
         /// </summary>
         [Setting]
-        [DefaultValue("Please click the following Link to confirm your email address \n http://localhost/SystemCenterNotification/ConfirmEmail")]
+        [DefaultValue("Please click the following link, to confirm your email address \n http://localhost/SystemCenterNotification/ConfirmEmail/{0}")]
         public string ConfirmTemplate { get; set; }
 
 
