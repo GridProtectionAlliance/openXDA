@@ -35,6 +35,8 @@ namespace openXDA.Nodes.Types.FileProcessing
             .Where(fileInfo => fileInfo.Exists)
             .ToArray();
 
+        public DateTime LastQueuedAtWatcherPriority { get; set; }
+
         private Func<FileInfo[]> FileGroupFunc { get; }
 
         internal FileGroupInfo(string fileGroupPath, Func<FileInfo[]> fileGroupFunc)

@@ -274,6 +274,25 @@ namespace openXDA.Configuration
             .ToArray();
 
         /// <summary>
+        /// Gets or sets a threshold, in hours, for the amount of time a given file group will
+        /// be deprioritized by the file watcher after having been queued at normal priority.
+        /// </summary>
+        [Setting]
+        [SettingName(nameof(DeprioritizationThreshold))]
+        [DefaultValue(0.0D)]
+        public double DeprioritizationThresholdHours
+        {
+            get => DeprioritizationThreshold.TotalHours;
+            set => DeprioritizationThreshold = TimeSpan.FromHours(value);
+        }
+
+        /// <summary>
+        /// Gets or sets a threshold for the amount of time a given file group will be
+        /// deprioritized by the file watcher after having been queued at normal priority.
+        /// </summary>
+        public TimeSpan DeprioritizationThreshold { get; set; }
+
+        /// <summary>
         /// Gets or sets the number of threads used
         /// internally to the file processor.
         /// </summary>
