@@ -172,6 +172,7 @@ namespace openXDA.Nodes.Types.FileProcessing
         private string Filter { get; set; }
         private int ProcessingThreadCount { get; set; }
         private string[] HighPriorityPaths { get; set; }
+        private TimeSpan DeprioritizationThreshold { get; set; }
         private IEnumerable<FileShare> FileShares { get; set; }
 
         private FileProcessorIndex FileProcessorIndex
@@ -422,6 +423,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             Filter = QueryFilter();
             ProcessingThreadCount = settings.FileProcessorSettings.ProcessingThreadCount;
             HighPriorityPaths = settings.FileWatcherSettings.HighPriorityPathList;
+            DeprioritizationThreshold = settings.FileWatcherSettings.DeprioritizationThreshold;
             AuthenticateFileShares(settings);
             ConfigureFileProcessor(settings);
         }
@@ -625,6 +627,7 @@ namespace openXDA.Nodes.Types.FileProcessing
             if (IsDisposed)
                 return;
 
+            DateTime now = DateTime.UtcNow;
             Interlocked.Increment(ref m_scannedFileCount);
 
             string filePath = fileProcessorEventArgs.FullPath;
@@ -636,13 +639,22 @@ namespace openXDA.Nodes.Types.FileProcessing
                 return;
             }
 
-            int priority = fileProcessorEventArgs.RaisedByFileWatcher
+            DateTime deprioritizationThreshold = now - DeprioritizationThreshold;
+
+            bool queueAtWatcherPriority =
+                fileProcessorEventArgs.RaisedByFileWatcher &&
+                fileGroupInfo.LastQueuedAtWatcherPriority < deprioritizationThreshold;
+
+            int priority = queueAtWatcherPriority
                 ? GetFileWatcherPriority(filePath)
                 : AnalysisTask.FileEnumerationPriority;
 
             WorkItem workItem = new WorkItem(fileGroupInfo, filePath, priority);
             WorkQueue.Enqueue(workItem);
             PollOperation.RunOnceAsync();
+
+            if (queueAtWatcherPriority)
+                fileGroupInfo.LastQueuedAtWatcherPriority = now;
         }
 
         private void FileProcessor_Error(object sender, ErrorEventArgs args)

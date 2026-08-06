@@ -272,6 +272,12 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.BufferSize', '65536', '65536')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.DeprioritizationThreshold', '0.0', '0.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.HighPriorityPaths', '', '')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcher.InternalThreadCount', '0', '0')
 GO
 
