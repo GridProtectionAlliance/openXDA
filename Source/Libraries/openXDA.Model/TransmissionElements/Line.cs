@@ -130,10 +130,9 @@ namespace openXDA.Model
         private List<TransmissionPath> QueryPath()
         {
             // Start by finding all the ends
-            bool IsEnd(LineSegment segment) =>
+            static bool IsEnd(LineSegment segment) =>
                 segment.IsEnd ||
-                segment.ConnectedSegments.Count <= 1 ||
-                IsForkedEnd(segment);
+                segment.ConnectedSegments.Count == 0;
 
             List<LineSegment> lineEnds = [.. Segments.Where(IsEnd)];
 
@@ -190,22 +189,6 @@ namespace openXDA.Model
                 Line = this,
                 Segments = item.Value
             }).OrderByDescending(item => item.Length).ToList();
-        }
-
-        /// <summary>
-        /// Determines if all pairs of segments connected to the given segment are connected to each other.
-        /// </summary>
-        private bool IsForkedEnd(LineSegment segment)
-        {
-            bool AreDirectConnected(LineSegment s1, LineSegment s2) => s1.ConnectedSegments
-                .Any(connection => connection.ParentSegment == s2.ID || connection.ChildSegment == s2.ID);
-
-            List<LineSegment> nextSegments = [.. GetNextSegments(segment)];
-
-            return nextSegments
-                .SelectMany(_ => nextSegments, (S1, S2) => (S1, S2))
-                .Where(tuple => tuple.S1.ID < tuple.S2.ID)
-                .All(tuple => AreDirectConnected(tuple.S1, tuple.S2));
         }
 
         /// <summary>
