@@ -21,10 +21,11 @@
 //
 //******************************************************************************************************
 
+using GSF.Data;
 using System;
+using System.Configuration;
 using System.Data;
 using System.Web.Http;
-using GSF.Data;
 
 namespace openXDA.Controllers.Widgets
 {
@@ -34,6 +35,17 @@ namespace openXDA.Controllers.Widgets
     [RoutePrefix("api/Widgets/SOE")]
     public class SOEController : ApiController
     {
+        public class Settings
+        {
+            public Settings(Action<object> configure)
+            {
+                configure(this);
+            }
+
+            [Setting]
+            public string SQLCommand { get; set; }
+        }
+
         private const string SOECategory = "dbSOE";
         private readonly Func<AdoDataConnection> m_connectionFactory;
 
@@ -45,27 +57,38 @@ namespace openXDA.Controllers.Widgets
             m_connectionFactory = connectionFactory;
         }
 
-        [Route("{eventID:int}/{timeWindow:int}"), HttpGet]
-        public IHttpActionResult Get(int eventID, int timeWindow)
+        [Route("{eventID:int}/{timeWindow:int}/{widgetID:int}"), HttpGet]
+        public IHttpActionResult Get(int eventID, int timeWindow, int widgetID)
         {
             DateTime eventTime;
 
             using (AdoDataConnection connection = m_connectionFactory())
                 eventTime = connection.ExecuteScalar<DateTime>("SELECT StartTime FROM Event WHERE ID = {0}", eventID);
 
+            Settings settings = new Settings(new WidgetConfigurationLoader(CreateDbConnection, widgetID).Configure);
+
             using (AdoDataConnection connection = CreateConnection(SOECategory))
             {
-                DataTable table = connection.RetrieveData(@"
-                    SELECT
-                        alarmdatetime as Time,
-                        stationname + ' ' + alarmpoint as Alarm,
-                        alarmstatus as Status
-                    FROM soealarmdetails
-                    WHERE alarmdatetime between {0} and {1}
-                ", eventTime.AddSeconds(-1 * timeWindow), eventTime.AddSeconds(timeWindow));
+                string sql = settings.SQLCommand;
+                if (string.IsNullOrEmpty(sql))
+                    sql = @"
+                        SELECT
+                            alarmdatetime as Time,
+                            stationname + ' ' + alarmpoint as Alarm,
+                            alarmstatus as Status
+                        FROM soealarmdetails
+                        WHERE alarmdatetime between {0} and {1}
+                    ";
+
+                DataTable table = connection.RetrieveData(sql, eventTime.AddSeconds(-1 * timeWindow), eventTime.AddSeconds(timeWindow));
 
                 return Ok(table);
             }
+        }
+
+        private AdoDataConnection CreateDbConnection()
+        {
+            return m_connectionFactory();
         }
 
         private static AdoDataConnection CreateConnection(string settingsCategory)
