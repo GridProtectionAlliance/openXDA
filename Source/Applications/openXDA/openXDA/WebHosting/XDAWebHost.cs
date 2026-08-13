@@ -346,6 +346,7 @@ namespace openXDA.WebHosting
             app.Use(async (context, next) =>
             {
                 context.Request.Environment["AuthenticationOptions"] = AuthenticationOptions.Readonly;
+                context.Response.Headers.Add("Content-Security-Policy", new[] { "frame-ancestors 'none'" });
                 await next.Invoke();
                 context.Response.Headers.Remove("Server");
             });
