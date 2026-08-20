@@ -42,6 +42,7 @@ using GSF.Web.Security;
 using log4net;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Json;
+using Microsoft.Owin;
 using Microsoft.Owin.Cors;
 using Microsoft.Owin.Extensions;
 using Newtonsoft.Json;
@@ -345,8 +346,10 @@ namespace openXDA.WebHosting
         {
             app.Use(async (context, next) =>
             {
+                PathString loginPath = new PathString(AuthenticationOptions.GetFullLoginPath(""));
+                string frameAncestor = context.Request.Path.Equals(loginPath) ? "self" : "none";
                 context.Request.Environment["AuthenticationOptions"] = AuthenticationOptions.Readonly;
-                //context.Response.Headers.Add("Content-Security-Policy", new[] { "frame-ancestors 'none'" });
+                context.Response.Headers.Add("Content-Security-Policy", new[] { $"frame-ancestors '{frameAncestor}'" });
                 await next.Invoke();
                 context.Response.Headers.Remove("Server");
             });
