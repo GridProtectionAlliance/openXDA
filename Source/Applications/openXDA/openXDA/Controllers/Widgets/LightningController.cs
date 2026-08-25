@@ -31,7 +31,7 @@ namespace openXDA.Controllers.Widgets
     /// Controller that handles fetching lightning strike counts for an openXDA event.
     /// </summary>
     [RoutePrefix("api/Widgets/Lightning")]
-    public class LightningController : ApiController
+    public class WidgetLightningController : ApiController
     {
         private const string SettingsCategory = "dbLightning";
         private readonly Func<AdoDataConnection> m_connectionFactory;
@@ -39,7 +39,7 @@ namespace openXDA.Controllers.Widgets
         /// <summary>
         /// Constructor to pull a connection factory from the XDA controller activator.
         /// </summary>
-        public LightningController(Func<AdoDataConnection> connectionFactory)
+        public WidgetLightningController(Func<AdoDataConnection> connectionFactory)
         {
             m_connectionFactory = connectionFactory;
         }
