@@ -86,7 +86,7 @@ namespace openXDA.Controllers.Widgets
                 foreach (DataColumn col in dataTable.Columns)
                 {
                     string key = col.ColumnName;
-                    object value = row[col];
+                    object value = row.IsNull(col) ? null : row[col];
                     object formattedValue;
 
                     switch (key)
