@@ -243,6 +243,7 @@ namespace FaultData.DataOperations
                 Dictionary<int, Asset> lineLookup = cycleDataResource.DataGroups
                     .Select(dataGroup => dataGroup.Asset)
                     .Where(asset => asset.AssetTypeID == (int)AssetType.Line)
+                    .Distinct()
                     .ToDictionary(asset => asset.ID);
 
                 foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
