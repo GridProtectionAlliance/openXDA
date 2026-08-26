@@ -33,13 +33,14 @@ using Newtonsoft.Json;
 namespace openXDA.Model
 {
     [MetadataType(typeof(Asset))]
-    public class LineSegment: Asset
+    public class LineSegment : Asset
     {
         #region [ Members ]
 
         // Fields
         private Line m_line;
         private List<LineSegmentConnections> m_connectedSegements;
+
         #endregion
 
         #region [ Properties ]
@@ -66,7 +67,7 @@ namespace openXDA.Model
         [NonRecordField]
         public Line Line
         {
-            get => m_line ?? (m_line = QueryLine());
+            get => m_line ??= QueryLine();
             set => m_line = value;
         }
 
@@ -74,7 +75,7 @@ namespace openXDA.Model
         [NonRecordField]
         public List<LineSegmentConnections> ConnectedSegments
         {
-            get => m_connectedSegements ?? (m_connectedSegements = QueryConnectedSegements());
+            get => m_connectedSegements ??= QueryConnectedSegements();
             set => m_connectedSegements = value;
         }
 
@@ -82,46 +83,24 @@ namespace openXDA.Model
 
         #region [ Methods ]
 
-        public static LineSegment DetailedLineSegment(Asset asset, AdoDataConnection connection)
+        public Line GetLine(AdoDataConnection connection, List<Asset> remoteAssets)
         {
-            if ((object)connection == null)
-                return null;
-
-            TableOperations<LineSegment> lineTable = new TableOperations<LineSegment>(connection);
-            LineSegment line = lineTable.QueryRecordWhere("ID = {0}", asset.ID);
-            line.LazyContext = asset.LazyContext;
-            line.ConnectionFactory = asset.ConnectionFactory;
-
-            return line;
-        }
-
-        public static LineSegment DetailedLineSegment(Asset asset)
-        {
-            return DetailedLineSegment(asset,asset.ConnectionFactory.Invoke());
-        }
-
-        public Line GetLine(AdoDataConnection connection)
-        {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
             int id = -1;
 
-            foreach (AssetConnection assetConnection in Connections)
+            foreach (Asset remoteAsset in remoteAssets)
             {
-                Asset remoteAsset = assetConnection.Child;
-                if (assetConnection.ChildID == ID)
-                    remoteAsset = assetConnection.Parent;
-
                 if (remoteAsset.AssetTypeID == (int)AssetType.Line)
                 {
                     id = remoteAsset.ID;
                 }
             }
 
-            TableOperations<Line> lineTable = new TableOperations<Line>(connection);
+            TableOperations<Line> lineTable = new(connection);
             Line line = lineTable.QueryRecordWhere("AssetID = {0}", id);
-            if (line != null)
+            if (line is not null)
                 line.LazyContext = LazyContext;
 
             return line;
@@ -130,13 +109,14 @@ namespace openXDA.Model
         private Line QueryLine()
         {
             Line line;
+            List<Asset> remoteAssets = RemoteAssets;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                line = GetLine(connection);
+                line = GetLine(connection, remoteAssets);
             }
 
-            if ((object)line != null)
+            if (line is not null)
                 line.LazyContext = LazyContext;
 
             return LazyContext.GetLine(line);
@@ -144,10 +124,10 @@ namespace openXDA.Model
 
         public IEnumerable<LineSegmentConnections> GetConnectedSegments(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<LineSegmentConnections> connectionTable = new TableOperations<LineSegmentConnections>(connection);
+            TableOperations<LineSegmentConnections> connectionTable = new(connection);
             return connectionTable.QueryRecordsWhere("ParentSegment = {0} OR ChildSegment = {1}", ID, ID);
         }
 
@@ -162,7 +142,7 @@ namespace openXDA.Model
                     .ToList();
             }
 
-            if ((object)connections != null)
+            if (connections is not null)
             {
                 foreach (LineSegmentConnections connection in connections)
                 {
@@ -171,6 +151,29 @@ namespace openXDA.Model
             }
 
             return connections;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        public static LineSegment DetailedLineSegment(Asset asset, AdoDataConnection connection)
+        {
+            if (connection is null)
+                return null;
+
+            TableOperations<LineSegment> lineTable = new(connection);
+            LineSegment line = lineTable.QueryRecordWhere("ID = {0}", asset.ID);
+            line.LazyContext = asset.LazyContext;
+            return line;
+        }
+
+        public static LineSegment DetailedLineSegment(Asset asset)
+        {
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedLineSegment(asset, connection);
         }
 
         #endregion

@@ -21,47 +21,33 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
-using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     [MetadataType(typeof(Asset))]
-    public class Bus: Asset
+    public class Bus : Asset
     {
-        #region [ Members ]
-       
-        #endregion
-
-        #region [ Properties ]
-       
-        #endregion
-
-        #region [ Methods ]
-
         public static Bus DetailedBus(Asset asset, AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<Bus> busTable = new TableOperations<Bus>(connection);
+            TableOperations<Bus> busTable = new(connection);
             Bus bus = busTable.QueryRecordWhere("ID = {0}", asset.ID);
+            if (bus is null)
+                return null;
 
-            if (bus != null)
-                bus.LazyContext = asset.LazyContext;
-
+            bus.LazyContext = asset.LazyContext;
             return bus;
         }
 
         public static Bus DetailedBus(Asset asset)
         {
-            return DetailedBus(asset, asset.ConnectionFactory.Invoke());
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedBus(asset, connection);
         }
-        #endregion
     }
 }

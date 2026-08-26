@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -32,7 +31,6 @@ using Newtonsoft.Json;
 /// <summary>
 /// Relay:
 ///     34, 35 compensated
-///     
 /// </summary>
 namespace openXDA.Model
 {
@@ -44,7 +42,7 @@ namespace openXDA.Model
     /// 33
     /// </summary>
     [MetadataType(typeof(Asset))]
-    public class CapBank: Asset
+    public class CapBank : Asset
     {
         #region [ Members ]
 
@@ -219,15 +217,8 @@ namespace openXDA.Model
         [NonRecordField]
         public List<CapBankRelay> ConnectedRelays
         {
-            get
-            {
-                return m_relays ?? (m_relays = QueryRelays());
-            }
-            set
-            {
-                m_relays = value;
-            }
-
+            get => m_relays ??= QueryRelays();
+            set => m_relays = value;
         }
 
         #endregion
@@ -245,7 +236,7 @@ namespace openXDA.Model
                     .ToList();
             }
 
-            if ((object)connectedRelays != null)
+            if (connectedRelays is not null)
             {
                 foreach (CapBankRelay relay in connectedRelays)
                 {
@@ -256,39 +247,42 @@ namespace openXDA.Model
             return connectedRelays;
         }
 
-
-        public static CapBank DetailedCapBank (Asset asset, AdoDataConnection connection)
-        {
-            if ((object)connection == null)
-                return null;
-
-            TableOperations<CapBank> capBankTable = new TableOperations<CapBank>(connection);
-            CapBank capBank = capBankTable.QueryRecordWhere("ID = {0}", asset.ID);
-            capBank.LazyContext = asset.LazyContext;
-            capBank.ConnectionFactory = asset.ConnectionFactory;
-
-            return capBank;
-        }
-
         public IEnumerable<CapBankRelay> GetRelays(AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<CapBankRelay> relayTable = new TableOperations<CapBankRelay>(connection);
+            TableOperations<CapBankRelay> relayTable = new(connection);
             return relayTable.QueryRecordsWhere(@" ID in (
                 (SELECT ChildID FROM AssetConnection LEFT JOIN Asset ON AssetConnection.ChildID = Asset.ID WHERE Asset.AssetTypeID = (SELECT ID FROM AssetType WHERE Name = 'CapacitorBankRelay') 
                     AND AssetConnection.ParentID = {0} )
                 UNION 
                 (SELECT ParentID FROM AssetConnection LEFT JOIN Asset ON AssetConnection.ParentID = Asset.ID WHERE Asset.AssetTypeID = (SELECT ID FROM AssetType WHERE Name = 'CapacitorBankRelay')
                     AND AssetConnection.ChildID = {0} ) )
-           ", ID, ID);
+            ", ID);
         }
 
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        public static CapBank DetailedCapBank(Asset asset, AdoDataConnection connection)
+        {
+            if (connection is null)
+                return null;
+
+            TableOperations<CapBank> capBankTable = new(connection);
+            CapBank capBank = capBankTable.QueryRecordWhere("ID = {0}", asset.ID);
+            capBank.LazyContext = asset.LazyContext;
+            return capBank;
+        }
 
         public static CapBank DetailedCapBank(Asset asset)
         {
-            return DetailedCapBank(asset, asset.ConnectionFactory.Invoke());
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedCapBank(asset, connection);
         }
 
         #endregion

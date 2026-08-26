@@ -21,23 +21,15 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
-using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     [MetadataType(typeof(Asset))]
-    public class Breaker: Asset
+    public class Breaker : Asset
     {
-        #region [ Members ]
-       
-        #endregion
-
         #region [ Properties ]
         
         public double ThermalRating { get; set; }
@@ -54,28 +46,30 @@ namespace openXDA.Model
 
         #endregion
 
-        #region [ Methods ]
+        #region [ Static ]
+
+        // Static Methods
 
         public static Breaker DetailedBreaker(Asset asset, AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<Breaker> breakerTable = new TableOperations<Breaker>(connection);
+            TableOperations<Breaker> breakerTable = new(connection);
             Breaker breaker = breakerTable.QueryRecordWhere("ID = {0}", asset.ID);
-            if (breaker == null)
+            if (breaker is null)
                 return null;
 
             breaker.LazyContext = asset.LazyContext;
-            breaker.ConnectionFactory = asset.ConnectionFactory;
-
             return breaker;
         }
 
         public static Breaker DetailedBreaker(Asset asset)
         {
-            return DetailedBreaker(asset, asset.ConnectionFactory.Invoke());
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedBreaker(asset, connection);
         }
-            #endregion
-        }
+
+        #endregion
+    }
 }

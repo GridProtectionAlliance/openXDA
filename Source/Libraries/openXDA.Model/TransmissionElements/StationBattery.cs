@@ -21,47 +21,34 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
-using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     [MetadataType(typeof(Asset))]
     public class StationBattery : Asset
     {
-        #region [ Members ]
-
-        #endregion
-
-        #region [ Properties ]
-
-        #endregion
-
-        #region [ Methods ]
-
         public static StationBattery DetailedBattery(Asset asset, AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<StationBattery> batteryTable = new TableOperations<StationBattery>(connection);
+            TableOperations<StationBattery> batteryTable = new(connection);
             StationBattery battery = batteryTable.QueryRecordWhere("ID = {0}", asset.ID);
 
-            if (battery != null)
-                battery.LazyContext = asset.LazyContext;
+            if (battery is null)
+                return null;
 
+            battery.LazyContext = asset.LazyContext;
             return battery;
         }
 
         public static StationBattery DetailedBattery(Asset asset)
         {
-            return DetailedBattery(asset, asset.ConnectionFactory.Invoke());
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedBattery(asset, connection);
         }
-        #endregion
     }
 }

@@ -84,19 +84,15 @@ namespace openXDA.Model
 
         #region [ Methods ]
 
-        public IEnumerable<LineSegment> GetSegments(AdoDataConnection connection)
+        public IEnumerable<LineSegment> GetSegments(AdoDataConnection connection, List<Asset> remoteAssets)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            List<LineSegment> result = new List<LineSegment>();
+            List<LineSegment> result = [];
 
-            foreach (AssetConnection assetConnection in Connections)
+            foreach (Asset remoteAsset in remoteAssets)
             {
-                Asset remoteAsset = assetConnection.Child;
-                if (assetConnection.ChildID == ID)
-                    remoteAsset = assetConnection.Parent;
-
                 if (remoteAsset.AssetTypeID == (int)AssetType.LineSegement)
                     result.Add(LineSegment.DetailedLineSegment(remoteAsset, connection));
             }
@@ -106,25 +102,26 @@ namespace openXDA.Model
 
         private List<LineSegment> QuerySegments()
         {
-            List<LineSegment> lineSegements;
+            List<LineSegment> lineSegments;
+            List<Asset> remoteAssets = RemoteAssets;
 
             using (AdoDataConnection connection = ConnectionFactory?.Invoke())
             {
-                lineSegements = GetSegments(connection)?
+                lineSegments = GetSegments(connection, remoteAssets)?
                     .Select(LazyContext.GetLineSegment)
                     .ToList();
             }
 
-            if ((object)lineSegements != null)
+            if (lineSegments is not null)
             {
-                foreach (LineSegment segment in lineSegements)
+                foreach (LineSegment segment in lineSegments)
                 {
                     segment.Line = this;
                     segment.LazyContext = LazyContext;
                 }
             }
 
-            return lineSegements;
+            return lineSegments;
         }
 
         private List<TransmissionPath> QueryPath()

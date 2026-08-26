@@ -21,47 +21,33 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
-using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     [MetadataType(typeof(Asset))]
     public class StationAux : Asset
     {
-        #region [ Members ]
-
-        #endregion
-
-        #region [ Properties ]
-
-        #endregion
-
-        #region [ Methods ]
-
         public static StationAux DetailedAux(Asset asset, AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<StationAux> auxTable = new TableOperations<StationAux>(connection);
+            TableOperations<StationAux> auxTable = new(connection);
             StationAux aux = auxTable.QueryRecordWhere("ID = {0}", asset.ID);
+            if (aux is null)
+                return null;
 
-            if (aux != null)
-                aux.LazyContext = asset.LazyContext;
-
+            aux.LazyContext = asset.LazyContext;
             return aux;
         }
 
         public static StationAux DetailedAux(Asset asset)
         {
-            return DetailedAux(asset, asset.ConnectionFactory.Invoke());
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedAux(asset, connection);
         }
-        #endregion
     }
 }

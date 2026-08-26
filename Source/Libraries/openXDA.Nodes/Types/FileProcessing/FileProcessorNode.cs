@@ -536,11 +536,12 @@ namespace openXDA.Nodes.Types.FileProcessing
 
             Type analysisNodeType = typeof(AnalysisNode);
             string analysisNodeTypeName = analysisNodeType.FullName;
+            List<Task> notifyTasks;
 
             using (AdoDataConnection connection = CreateDbConnection())
             using (DataTable result = connection.RetrieveData(QueryFormat, analysisNodeTypeName))
             {
-                List<Task> notifyTasks = result
+                notifyTasks = result
                     .AsEnumerable()
                     .Select(row =>
                     {
@@ -549,15 +550,15 @@ namespace openXDA.Nodes.Types.FileProcessing
                         return NotifyAsync(url);
                     })
                     .ToList();
-
-                try { await Task.WhenAll(notifyTasks); }
-                catch (Exception ex) { Log.Error(ex.Message, ex); }
-
-                // This method runs as the action of a synchronized operation
-                // so this limits notifications to at most every 5 seconds
-                TimeSpan delay = TimeSpan.FromSeconds(5);
-                await Task.Delay(delay);
             }
+
+            try { await Task.WhenAll(notifyTasks); }
+            catch (Exception ex) { Log.Error(ex.Message, ex); }
+
+            // This method runs as the action of a synchronized operation
+            // so this limits notifications to at most every 5 seconds
+            TimeSpan delay = TimeSpan.FromSeconds(5);
+            await Task.Delay(delay);
         }
 
         private string GetStatus()

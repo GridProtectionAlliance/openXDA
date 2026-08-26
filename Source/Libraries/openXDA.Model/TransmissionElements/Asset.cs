@@ -197,6 +197,26 @@ namespace openXDA.Model
             }
         }
 
+        protected List<Asset> RemoteAssets
+        {
+            get
+            {
+                List<Asset> remoteAssets = [];
+
+                foreach (AssetConnection assetConnection in Connections)
+                {
+                    Asset remoteAsset = assetConnection.Child;
+
+                    if (assetConnection.ChildID == ID)
+                        remoteAsset = assetConnection.Parent;
+
+                    remoteAssets.Add(remoteAsset);
+                }
+
+                return remoteAssets;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
