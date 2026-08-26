@@ -61,11 +61,11 @@ namespace FaultData.Configuration
 
         private XDocument ToSheet(Meter meter)
         {
-            XDocument sheet = new XDocument();
-            XElement rootElement = new XElement("meterSettingsSheet");
+            XDocument sheet = new();
+            XElement rootElement = new("meterSettingsSheet");
             sheet.Add(rootElement);
 
-            XElement meterElement = new XElement("meter");
+            XElement meterElement = new("meter");
             meterElement.Add(new XElement(nameof(meter.ID), meter.ID));
             meterElement.Add(new XElement(nameof(meter.AssetKey), meter.AssetKey));
             meterElement.Add(new XElement(nameof(meter.LocationID), meter.LocationID));
@@ -78,7 +78,7 @@ namespace FaultData.Configuration
             meterElement.Add(new XElement(nameof(meter.Description), meter.Description));
             rootElement.Add(meterElement);
 
-            XElement locationElement = new XElement("location");
+            XElement locationElement = new("location");
             locationElement.Add(new XElement(nameof(meter.Location.ID), meter.Location.ID));
             locationElement.Add(new XElement(nameof(meter.Location.LocationKey), meter.Location.LocationKey));
             locationElement.Add(new XElement(nameof(meter.Location.Name), meter.Location.Name));
@@ -94,19 +94,19 @@ namespace FaultData.Configuration
                 .Select(meterLine => meterLine.Asset)
                 .OrderBy(asset => asset.ID);
 
-            //Save individual Assets (Except LineSegments)
-            List<LineSegment> lineSegments = new List<LineSegment>();
-            List<AssetConnection> assetConnections = new List<AssetConnection>();
+            // Save individual Assets (Except LineSegments)
+            List<LineSegment> lineSegments = [];
+            List<AssetConnection> assetConnections = [];
 
             foreach (Asset asset in assets)
             {
-                XElement assetElement = new XElement("asset"); ;
+                XElement assetElement = new("asset");
                
                 switch (asset.AssetTypeID)
                 {
                     case ((int)AssetType.Breaker):
                         assetElement = new XElement("breaker");
-                        Breaker breaker = Breaker.DetailedBreaker(asset, asset.ConnectionFactory?.Invoke());
+                        Breaker breaker = Breaker.DetailedBreaker(asset);
                         assetElement.Add(new XElement(nameof(breaker.VoltageKV), breaker.VoltageKV));
                         assetElement.Add(new XElement(nameof(breaker.ThermalRating), breaker.ThermalRating));
                         assetElement.Add(new XElement(nameof(breaker.Speed), breaker.Speed));
@@ -118,7 +118,7 @@ namespace FaultData.Configuration
 
                     case ((int)AssetType.Bus):
                         assetElement = new XElement("bus");
-                        Bus bus = Bus.DetailedBus(asset, asset.ConnectionFactory?.Invoke());
+                        Bus bus = Bus.DetailedBus(asset);
                         assetElement.Add(new XElement(nameof(bus.VoltageKV), bus.VoltageKV));
                         assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
                         assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
@@ -127,7 +127,7 @@ namespace FaultData.Configuration
                         break;
                     case ((int)AssetType.Generation):
                         assetElement = new XElement("generation");
-                        Generation gen = Generation.DetailedGen(asset, asset.ConnectionFactory?.Invoke());
+                        Generation gen = Generation.DetailedGen(asset);
                         assetElement.Add(new XElement(nameof(gen.VoltageKV), gen.VoltageKV));
                         assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
                         assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
@@ -136,7 +136,7 @@ namespace FaultData.Configuration
                         break;
                     case ((int)AssetType.StationAux):
                         assetElement = new XElement("stationAux");
-                        StationAux aux = StationAux.DetailedAux(asset, asset.ConnectionFactory?.Invoke());
+                        StationAux aux = StationAux.DetailedAux(asset);
                         assetElement.Add(new XElement(nameof(aux.VoltageKV), aux.VoltageKV));
                         assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
                         assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
@@ -145,7 +145,7 @@ namespace FaultData.Configuration
                         break;
                     case ((int)AssetType.StationBattery):
                         assetElement = new XElement("stationBattery");
-                        StationBattery battery = StationBattery.DetailedBattery(asset, asset.ConnectionFactory?.Invoke());
+                        StationBattery battery = StationBattery.DetailedBattery(asset);
                         assetElement.Add(new XElement(nameof(battery.VoltageKV), battery.VoltageKV));
                         assetElement.Add(new XElement(nameof(asset.ID), asset.ID));
                         assetElement.Add(new XElement(nameof(asset.AssetKey), asset.AssetKey));
@@ -154,7 +154,7 @@ namespace FaultData.Configuration
                         break;
                     case ((int)AssetType.CapacitorBank):
                         assetElement = new XElement("capacitorBank");
-                        CapBank capBank = CapBank.DetailedCapBank(asset, asset.ConnectionFactory?.Invoke());
+                        CapBank capBank = CapBank.DetailedCapBank(asset);
                         assetElement.Add(new XElement(nameof(capBank.VoltageKV), capBank.VoltageKV));
                         //assetElement.Add(new XElement(nameof(capBank.NumberOfBanks), capBank.NumberOfBanks));
                         //assetElement.Add(new XElement(nameof(capBank.CansPerBank), capBank.CansPerBank));
@@ -166,7 +166,7 @@ namespace FaultData.Configuration
                         break;
                     case ((int)AssetType.Transformer):
                         assetElement = new XElement("transformer");
-                        Transformer xfr = Transformer.DetailedTransformer(asset, asset.ConnectionFactory?.Invoke());
+                        Transformer xfr = Transformer.DetailedTransformer(asset);
                         assetElement.Add(new XElement(nameof(xfr.ThermalRating), xfr.ThermalRating));
                         assetElement.Add(new XElement(nameof(xfr.SecondaryVoltageKV), xfr.SecondaryVoltageKV));
                         assetElement.Add(new XElement(nameof(xfr.PrimaryVoltageKV), xfr.PrimaryVoltageKV));
@@ -193,7 +193,7 @@ namespace FaultData.Configuration
                         lineSegments.AddRange(line.Segments);
                         break;
                     case ((int)AssetType.LineSegement):
-                        lineSegments.Add(LineSegment.DetailedLineSegment(asset, asset.ConnectionFactory?.Invoke()));
+                        lineSegments.Add(LineSegment.DetailedLineSegment(asset));
                         break;
                     default:
                         assetElement = new XElement("asset");

@@ -21,47 +21,33 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
-using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     [MetadataType(typeof(Asset))]
     public class Generation : Asset
     {
-        #region [ Members ]
-
-        #endregion
-
-        #region [ Properties ]
-
-        #endregion
-
-        #region [ Methods ]
-
         public static Generation DetailedGen(Asset asset, AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<Generation> genTable = new TableOperations<Generation>(connection);
+            TableOperations<Generation> genTable = new(connection);
             Generation gen = genTable.QueryRecordWhere("ID = {0}", asset.ID);
+            if (gen is null)
+                return null;
 
-            if (gen != null)
-                gen.LazyContext = asset.LazyContext;
-
+            gen.LazyContext = asset.LazyContext;
             return gen;
         }
 
         public static Generation DetailedGen(Asset asset)
         {
-            return DetailedGen(asset, asset.ConnectionFactory.Invoke());
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedGen(asset, connection);
         }
-        #endregion
     }
 }

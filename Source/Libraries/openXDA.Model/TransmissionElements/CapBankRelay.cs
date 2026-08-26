@@ -37,12 +37,7 @@ namespace openXDA.Model
     [MetadataType(typeof(Asset))]
     public class CapBankRelay : Asset
     {
-        #region [ Members ]
-
-        #endregion
-
         #region [ Properties ]
-
 
         /// <summary>
         /// Line 35
@@ -50,26 +45,28 @@ namespace openXDA.Model
         public double OnVoltageThreshhold { get; set; }
 
         public int CapBankNumber { get; set; }
+
         #endregion
 
-        #region [ Methods ]
+        #region [ Static ]
+
+        // Static Methods
 
         public static CapBankRelay DetailedCapBankRelay(Asset asset, AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<CapBankRelay> capBankTable = new TableOperations<CapBankRelay>(connection);
+            TableOperations<CapBankRelay> capBankTable = new(connection);
             CapBankRelay capBank = capBankTable.QueryRecordWhere("ID = {0}", asset.ID);
             capBank.LazyContext = asset.LazyContext;
-            capBank.ConnectionFactory = asset.ConnectionFactory;
-
             return capBank;
         }
 
         public static CapBankRelay DetailedCapBankRelay(Asset asset)
         {
-            return DetailedCapBankRelay(asset, asset.ConnectionFactory.Invoke());
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedCapBankRelay(asset, connection);
         }
 
         #endregion

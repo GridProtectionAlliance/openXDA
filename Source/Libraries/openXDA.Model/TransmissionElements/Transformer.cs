@@ -21,10 +21,7 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
@@ -34,13 +31,7 @@ namespace openXDA.Model
     [MetadataType(typeof(Asset))]
     public class Transformer: Asset
     {
-        #region [ Members ]
-       
-        #endregion
-
         #region [ Properties ]
-       
-
 
         [Required]
         public double PrimaryVoltageKV { get; set; }
@@ -68,34 +59,32 @@ namespace openXDA.Model
 
         public double X1 { get; set; }
 
-
-
         #endregion
 
-        #region [ Methods ]
+        #region [ Static ]
 
+        // Static Methods
 
         public static Transformer DetailedTransformer(Asset asset, AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<Transformer> xfTable = new TableOperations<Transformer>(connection);
+            TableOperations<Transformer> xfTable = new(connection);
             Transformer xf = xfTable.QueryRecordWhere("ID = {0}", asset.ID);
-
-            if (xf == null)
+            if (xf is null)
                 return null;
 
             xf.LazyContext = asset.LazyContext;
-            xf.ConnectionFactory = asset.ConnectionFactory;
-
             return xf;
         }
 
         public static Transformer DetailedTransformer(Asset asset)
         {
-            return DetailedTransformer(asset, asset.ConnectionFactory.Invoke());
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedTransformer(asset, connection);
         }
+
         #endregion
     }
 }

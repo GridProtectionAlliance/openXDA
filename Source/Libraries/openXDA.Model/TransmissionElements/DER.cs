@@ -21,21 +21,15 @@
 //
 //******************************************************************************************************
 
-
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
-using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     [MetadataType(typeof(Asset))]
     public class DER : Asset
     {
-
         #region [ Properties ]
         
         public double FullRatedOutputCurrent { get; set; }
@@ -44,28 +38,30 @@ namespace openXDA.Model
 
         #endregion
 
-        #region [ Methods ]
+        #region [ Static ]
+
+        // Static Methods
 
         public static DER DetailedDER(Asset asset, AdoDataConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return null;
 
-            TableOperations<DER> table = new TableOperations<DER>(connection);
+            TableOperations<DER> table = new(connection);
             DER record = table.QueryRecordWhere("ID = {0}", asset.ID);
-            if (record == null)
+            if (record is null)
                 return null;
 
             record.LazyContext = asset.LazyContext;
-            record.ConnectionFactory = asset.ConnectionFactory;
-
             return record;
         }
 
         public static DER DetailedDER(Asset asset)
         {
-            return DetailedDER(asset, asset.ConnectionFactory.Invoke());
+            using AdoDataConnection connection = asset.ConnectionFactory?.Invoke();
+            return DetailedDER(asset, connection);
         }
+
         #endregion
     }
 }
