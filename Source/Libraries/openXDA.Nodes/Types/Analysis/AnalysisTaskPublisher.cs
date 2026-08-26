@@ -76,6 +76,7 @@ namespace openXDA.Nodes.Types.Analysis
                 FileGroup dbFileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", fileGroup.ID);
                 fileGroup.ProcessingStartTime = dbFileGroup.ProcessingStartTime;
                 fileGroup.ProcessingEndTime = dbFileGroup.ProcessingEndTime;
+                fileGroup.ProcessingVersion = dbFileGroup.ProcessingVersion;
                 fileGroup.DataStartTime = dbFileGroup.DataStartTime;
                 fileGroup.DataEndTime = dbFileGroup.DataEndTime;
             }

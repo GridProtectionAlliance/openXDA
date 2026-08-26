@@ -244,6 +244,7 @@ namespace openXDA.Nodes.Types.Analysis
             FileGroup fileGroup = analysisJob.FileGroup;
             int processingVersion = fileGroup.ProcessingVersion + 1;
             analysisJob.ProcessingStartTime = xdaStartTime;
+            analysisJob.ProcessingVersion = processingVersion;
             fileGroup.ProcessingStartTime = xdaStartTime;
             fileGroup.ProcessingEndTime = default;
             fileGroup.ProcessingVersion = processingVersion;
