@@ -190,6 +190,12 @@ namespace openXDA.Nodes.Types.Analysis
             FileGroup fileGroup = task.FileGroup;
             MeterDataSet meterDataset = null;
 
+            if (fileGroup.DataFiles.Count == 0)
+            {
+                Log.Error($"An attempt was made to process an empty file group ({fileGroup.ID}) from meter {meter.AssetKey}");
+                return;
+            }
+
             try
             {
                 FileGroupAnalysisJob analysisJob = CreateAnalysisJob(task, fileGroup);
