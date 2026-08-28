@@ -202,15 +202,13 @@ namespace FaultData.DataWriters.Emails
             string query =
                 $"SELECT DISTINCT AssetGroup.* " +
                 $"FROM " +
-                $"    AssetGroup LEFT OUTER JOIN " +
-                $"    MeterAssetGroup ON MeterAssetGroup.AssetGroupID = AssetGroup.ID LEFT OUTER JOIN " +
-                $"    AssetAssetGroup ON AssetAssetGroup.AssetGroupID = AssetGroup.ID JOIN " +
-                $"    Event ON " +
-                $"        Event.ID IN ({string.Join(",", eventIDs)}) AND " +
-                $"        (" +
-                $"            Event.MeterID = MeterAssetGroup.MeterID OR " +
-                $"            Event.AssetID = AssetAssetGroup.AssetID " +
-                $"        )";
+                $"    Event LEFT OUTER JOIN " +
+                $"    MeterAssetGroup ON Event.MeterID = MeterAssetGroup.MeterID LEFT OUTER JOIN " +
+                $"    AssetAssetGroup ON Event.AssetID = AssetAssetGroup.AssetID JOIN " +
+                $"    AssetGroup ON " +
+                $"        MeterAssetGroup.AssetGroupID = AssetGroup.ID OR " +
+                $"        AssetAssetGroup.AssetGroupID = AssetGroup.ID " +
+                $"WHERE Event.ID IN ({string.Join(",", eventIDs)})";
 
             using (AdoDataConnection connection = ConnectionFactory())
             using (DataTable table = connection.RetrieveData(query))
