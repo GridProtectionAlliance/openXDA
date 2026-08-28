@@ -71,6 +71,25 @@ namespace openXDA.Controllers.Widgets
             }
         }
 
+        [Route("SubstationLocation/{eventID:int}"), HttpGet]
+        public IHttpActionResult GetSubstationLocation(int eventID)
+        {
+            using (AdoDataConnection connection = m_connectionFactory())
+            {
+                return Ok(connection.RetrieveData(@"
+                    SELECT
+                        Location.Latitude,
+                        Location.Longitude
+                    FROM
+                        Event JOIN
+                        Meter ON Event.MeterID = Meter.ID JOIN
+                        Location ON Meter.LocationID = Location.ID
+                    WHERE
+                        Event.ID = {0}
+                ", eventID));
+            }
+        }
+
         [Route("NearestStructure/{station}/{line}"), HttpGet]
         public IHttpActionResult GetNearestStructure(string station, string line, string mileage)
         {
