@@ -6535,15 +6535,17 @@ BEGIN
 
     CREATE TABLE #DeleteCascade
     (
+        LoadOrder INT IDENTITY(1, 1) PRIMARY KEY,
         DeleteSQL NVARCHAR(900)
     )
 
-    INSERT INTO #DeleteCascade
+    INSERT INTO #DeleteCascade(DeleteSQL)
     EXEC usp_delete_cascade @tableName, @baseCriteria
 
     DECLARE DeleteCursor CURSOR FOR
-    SELECT *
+    SELECT DeleteSQL
     FROM #DeleteCascade
+    ORDER BY LoadOrder
 
     OPEN DeleteCursor
 
