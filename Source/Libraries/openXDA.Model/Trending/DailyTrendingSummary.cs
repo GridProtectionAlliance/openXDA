@@ -53,7 +53,7 @@ namespace openXDA.Model
         public static void Upsert(this TableOperations<DailyTrendingSummary> dailyTrendingSummaryTable, DailyTrendingSummary dailyTrendingSummary)
         {
             const string UpsertQuery =
-                "MERGE INTO DailyTrendingSummary WITH (TABLOCK) AS Target " +
+                "MERGE INTO DailyTrendingSummary WITH (HOLDLOCK) AS Target " +
                 "USING (VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})) AS Source([ChannelID], [Date], [Minimum], [Maximum], [Average], [ValidCount], [InvalidCount], [LastReceived]) " +
                 "ON Source.ChannelID = Target.ChannelID AND Source.Date = Target.Date " +
                 "WHEN MATCHED THEN " +
