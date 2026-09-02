@@ -5066,6 +5066,18 @@ CREATE NONCLUSTERED INDEX IX_CBAnalyticResult_PhaseID
 ON CBAnalyticResult(PhaseID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_CBAnalyticResult_CBStatusID
+ON CBAnalyticResult(CBStatusID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CBAnalyticResult_DataErrorID
+ON CBAnalyticResult(DataErrorID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CBAnalyticResult_CBOperationID
+ON CBAnalyticResult(CBOperationID ASC)
+GO
+
 CREATE TABLE CBRestrikeResult (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     CBResultID INT NOT NULL REFERENCES CBAnalyticResult(ID),
