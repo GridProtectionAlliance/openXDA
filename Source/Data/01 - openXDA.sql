@@ -55,6 +55,10 @@ CREATE TABLE [ValueList](
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ValueList_ValueListGroupID
+ON ValueList(GroupID ASC)
+GO
+
 CREATE TABLE PQApplicationsCategory
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -74,6 +78,9 @@ CREATE TABLE PQApplications
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_PQApplications_CategoryID
+ON PQApplications(CategoryID ASC)
+GO
 
 
 CREATE TABLE ConfigurationLoader
@@ -311,6 +318,10 @@ CREATE TABLE HostSetting
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_HostSetting_HostRegistrationID
+ON HostSetting(HostRegistrationID ASC)
+GO
+
 CREATE TABLE NodeType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -370,6 +381,18 @@ CREATE TABLE Node
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Node_NodeTypeID
+ON Node(NodeTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Node_HostRegistrationID
+ON Node(HostRegistrationID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Node_AssignedHostRegistrationID
+ON Node(AssignedHostRegistrationID ASC)
+GO
+
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.FileProcessing.FileProcessorNode'), NULL, NULL, 'File Processor', 1)
 GO
 
@@ -407,6 +430,10 @@ CREATE TABLE NodeSetting
     Name VARCHAR(50) NOT NULL,
     Value VARCHAR(MAX) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_NodeSetting_NodeID
+ON NodeSetting(NodeID ASC)
 GO
 
 CREATE TABLE AnalysisTask
@@ -451,12 +478,24 @@ CREATE TABLE Asset
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Asset_AssetTypeID
+ON Asset(AssetTypeID ASC)
+GO
+
 CREATE TABLE AssetSpare
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT UNIQUE NOT NULL REFERENCES Asset(ID),
     SpareAssetID INT NOT NULL REFERENCES Asset(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetSpare_AssetID
+ON AssetSpare(AssetID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetSpare_SpareAssetID
+ON AssetSpare(SpareAssetID ASC)
 GO
 
 CREATE VIEW AssetSpareView AS
@@ -511,7 +550,14 @@ CREATE TABLE CustomerAsset
 )
 GO
 
-Create View CustomerAssetDetail AS
+CREATE NONCLUSTERED INDEX IX_CustomerAsset_CustomerID
+ON CustomerAsset(CustomerID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CustomerAsset_AssetID
+ON CustomerAsset(AssetID ASC)
+GO
+
 SELECT 
     CustomerAsset.ID AS ID,
     Customer.CustomerKey AS CustomerKey,
@@ -547,6 +593,14 @@ CREATE TABLE AssetRelationshipTypeAssetType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_AssetRelationshipTypeAssetType_AssetRelationshipTypeID
+ON AssetRelationshipTypeAssetType(AssetRelationshipTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetRelationshipTypeAssetType_AssetTypeID
+ON AssetRelationshipTypeAssetType(AssetTypeID ASC)
+GO
+
 CREATE TABLE AssetRelationship
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -554,6 +608,18 @@ CREATE TABLE AssetRelationship
     ParentID INT NOT NULL REFERENCES Asset(ID),
     ChildID INT NOT NULL REFERENCES Asset(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetRelationship_AssetRelationshipTypeID
+ON AssetRelationship(AssetRelationshipTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetRelationship_ParentID
+ON AssetRelationship(ParentID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetRelationship_ChildID
+ON AssetRelationship(ChildID ASC)
 GO
 
 -- View with Procedures Due To Spare Logic --
@@ -616,11 +682,19 @@ CREATE TABLE BusAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_BusAttributes_AssetID
+ON BusAttributes(AssetID ASC)
+GO
+
 CREATE TABLE GenerationAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_GenerationAttributes_AssetID
+ON GenerationAttributes(AssetID ASC)
 GO
 
 CREATE TABLE StationAuxAttributes
@@ -629,12 +703,19 @@ CREATE TABLE StationAuxAttributes
     AssetID INT NOT NULL REFERENCES Asset(ID),
 )
 GO
+CREATE NONCLUSTERED INDEX IX_StationAuxAttributes_AssetID
+ON StationAuxAttributes(AssetID ASC)
+GO
 
 CREATE TABLE StationBatteryAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_StationBatteryAttributes_AssetID
+ON StationBatteryAttributes(AssetID ASC)
 GO
 
 CREATE TABLE BreakerAttributes
@@ -648,6 +729,10 @@ CREATE TABLE BreakerAttributes
     TripCoilCondition FLOAT NOT NULL DEFAULT(0),
     AirGapResistor BIT NOT NULL DEFAULT(0)
     )
+GO
+
+CREATE NONCLUSTERED INDEX IX_BreakerAttributes_AssetID
+ON BreakerAttributes(AssetID ASC)
 GO
 
 CREATE TABLE CapacitorBankAttributes
@@ -689,6 +774,10 @@ CREATE TABLE CapacitorBankAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_CapacitorBankAttributes_AssetID
+ON CapacitorBankAttributes(AssetID ASC)
+GO
+
 CREATE TABLE CapacitorBankRelayAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -698,6 +787,9 @@ CREATE TABLE CapacitorBankRelayAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_CapacitorBankRelayAttributes_AssetID
+ON CapacitorBankRelayAttributes(AssetID ASC)
+GO
 
 CREATE TABLE LineAttributes
 (
@@ -706,6 +798,10 @@ CREATE TABLE LineAttributes
     MaxFaultDistance FLOAT NULL,
     MinFaultDistance FLOAT NULL,
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_LineAttributes_AssetID
+ON LineAttributes(AssetID ASC)
 GO
 
 CREATE TABLE LineSegmentAttributes
@@ -724,12 +820,24 @@ CREATE TABLE LineSegmentAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_LineSegmentAttributes_AssetID
+ON LineSegmentAttributes(AssetID ASC)
+GO
+
 CREATE TABLE LineSegmentConnections
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     ParentSegment INT REFERENCES Asset(ID),
     ChildSegment INT REFERENCES Asset(ID),
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_LineSegmentConnections_ParentSegment
+ON LineSegmentConnections(ParentSegment ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_LineSegmentConnections_ChildSegment
+ON LineSegmentConnections(ChildSegment ASC)
 GO
 
 CREATE TABLE TransformerAttributes
@@ -752,12 +860,20 @@ CREATE TABLE TransformerAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_TransformerAttributes_AssetID
+ON TransformerAttributes(AssetID ASC)
+GO
+
 CREATE TABLE DERAttributes (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
     FullRatedOutputCurrent FLOAT NOT NULL,
     VoltageLevel VARCHAR(6) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_DERAttributes_AssetID
+ON DERAttributes(AssetID ASC)
 GO
 
 -- Correspoding Views and Trigger 
@@ -1664,12 +1780,24 @@ CREATE TABLE Structure
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Structure_AssetID
+ON Structure(AssetID ASC)
+GO
+
 CREATE TABLE MeterAsset
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
     AssetID INT NOT NULL REFERENCES Asset(ID),
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAsset_MeterID
+ON MeterAsset(MeterID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAsset_AssetID
+ON MeterAsset(AssetID ASC)
 GO
 
 CREATE TABLE AssetLocation
@@ -1679,6 +1807,14 @@ CREATE TABLE AssetLocation
     AssetID INT NOT NULL REFERENCES Asset(ID),
     CONSTRAINT UC_AssetLocation UNIQUE(AssetID, LocationID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetLocation_LocationID
+ON AssetLocation(LocationID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetLocation_AssetID
+ON AssetLocation(AssetID ASC)
 GO
 
 CREATE TABLE MeasurementType
@@ -1750,6 +1886,10 @@ CREATE NONCLUSTERED INDEX IX_Channel_MeterID
 ON Channel(MeterID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_Channel_AssetID
+ON Channel(AssetID ASC)
+GO
+
 CREATE NONCLUSTERED INDEX IX_Channel_MeasurementTypeID
 ON Channel(MeasurementTypeID ASC)
 GO
@@ -1764,6 +1904,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_Channel_MeterID_MeasurementTypeID_MeasurementCharacteristicID_PhaseID_HarmonicGroup
 ON Channel(MeterID ASC, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Channel_AssetID_MeasurementTypeID_MeasurementCharacteristicID_PhaseID_HarmonicGroup
+ON Channel(AssetID ASC, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup)
 GO
 
 -- Channel Group and Type
@@ -1786,6 +1930,17 @@ CREATE TABLE ChannelGroupType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ChannelGroupType_ChannelGroupID
+ON ChannelGroupType(ChannelGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelGroupType_MeasurementTypeID
+ON ChannelGroupType(MeasurementTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelGroupType_MeasurementCharacteristicID
+ON ChannelGroupType(MeasurementCharacteristicID ASC)
+GO
 
 CREATE TABLE AssetChannel
 (
@@ -2089,6 +2244,9 @@ CREATE TABLE SCADAPoint
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_SCADAPoint_BreakerID
+ON SCADAPoint(BreakerID ASC)
+GO
 
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.dat', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
 GO
@@ -2238,12 +2396,28 @@ CREATE TABLE ApplicationRoleSecurityGroup
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ApplicationRoleSecurityGroup_ApplicationRoleID
+ON ApplicationRoleSecurityGroup(ApplicationRoleID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ApplicationRoleSecurityGroup_SecurityGroupID
+ON ApplicationRoleSecurityGroup(SecurityGroupID ASC)
+GO
+
 CREATE TABLE ApplicationRoleUserAccount
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     ApplicationRoleID UNIQUEIDENTIFIER NOT NULL REFERENCES ApplicationRole(ID),
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_ApplicationRoleUserAccount_ApplicationRoleID
+ON ApplicationRoleUserAccount(ApplicationRoleID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ApplicationRoleUserAccount_UserAccountID
+ON ApplicationRoleUserAccount(UserAccountID ASC)
 GO
 
 CREATE TABLE SecurityGroupUserAccount
@@ -2254,12 +2428,28 @@ CREATE TABLE SecurityGroupUserAccount
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_SecurityGroupUserAccount_SecurityGroupID
+ON SecurityGroupUserAccount(SecurityGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_SecurityGroupUserAccount_UserAccountID
+ON SecurityGroupUserAccount(UserAccountID ASC)
+GO
+
 CREATE TABLE UserAccountAssetGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountAssetGroup_UserAccountID
+ON UserAccountAssetGroup(UserAccountID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountAssetGroup_AssetGroupID
+ON UserAccountAssetGroup(AssetGroupID ASC)
 GO
 
 CREATE TRIGGER UserAccount_AugmentAllAssetsGroup
@@ -2338,6 +2528,10 @@ CREATE TABLE EmailType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_EmailType_EmailCategoryID
+ON EmailType(EmailCategoryID ASC)
+GO
+
 CREATE TABLE ScheduledEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2353,6 +2547,10 @@ CREATE TABLE ScheduledEmailType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ScheduledEmailType_EmailCategoryID
+ON ScheduledEmailType(EmailCategoryID ASC)
+GO
+
 CREATE TABLE UserAccountEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2361,6 +2559,18 @@ CREATE TABLE UserAccountEmailType
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
     Approved BIT NOT NULL DEFAULT 0
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_UserAccountID
+ON UserAccountEmailType(UserAccountID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_EmailTypeID
+ON UserAccountEmailType(EmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_AssetGroupID
+ON UserAccountEmailType(AssetGroupID ASC)
 GO
 
 CREATE VIEW SubscribeEmails
@@ -2388,6 +2598,18 @@ CREATE TABLE UserAccountScheduledEmailType
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
     Approved BIT NOT NULL DEFAULT 0
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_UserAccountID
+ON UserAccountScheduledEmailType(UserAccountID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_ScheduledEmailTypeID
+ON UserAccountScheduledEmailType(ScheduledEmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_AssetGroupID
+ON UserAccountScheduledEmailType(AssetGroupID ASC)
 GO
 
 CREATE TABLE TriggeredEmailDataSource
@@ -2425,6 +2647,14 @@ CREATE TABLE TriggeredEmailDataSourceEmailType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_TriggeredEmailDataSourceEmailType_EmailTypeID
+ON TriggeredEmailDataSourceEmailType(EmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_TriggeredEmailDataSourceEmailType_TriggeredEmailDataSourceID
+ON TriggeredEmailDataSourceEmailType(TriggeredEmailDataSourceID ASC)
+GO
+
 CREATE TABLE ScheduledEmailDataSource
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2443,6 +2673,14 @@ CREATE TABLE ScheduledEmailDataSourceEmailType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ScheduledEmailDataSourceEmailType_ScheduledEmailTypeID
+ON ScheduledEmailDataSourceEmailType(ScheduledEmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ScheduledEmailDataSourceEmailType_ScheduledEmailDataSourceID
+ON ScheduledEmailDataSourceEmailType(ScheduledEmailDataSourceID ASC)
+GO
+
 CREATE TABLE TriggeredEmailDataSourceSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2452,6 +2690,10 @@ CREATE TABLE TriggeredEmailDataSourceSetting
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_TriggeredEmailDataSourceSetting_TriggeredEmailDataSourceEmailTypeID
+ON TriggeredEmailDataSourceSetting(TriggeredEmailDataSourceEmailTypeID ASC)
+GO
+
 CREATE TABLE ScheduledEmailDataSourceSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2459,6 +2701,10 @@ CREATE TABLE ScheduledEmailDataSourceSetting
     Name VARCHAR(200) NOT NULL,
     Value VARCHAR(MAX) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_ScheduledEmailDataSourceSetting_ScheduledEmailDataSourceEmailTypeID
+ON ScheduledEmailDataSourceSetting(ScheduledEmailDataSourceEmailTypeID ASC)
 GO
 
 CREATE TABLE SentEmail
@@ -2519,6 +2765,14 @@ CREATE TABLE UserAccountCarrier
     CarrierID INT NOT NULL REFERENCES CellCarrier(ID),
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountCarrier_CarrierID
+ON UserAccountCarrier(CarrierID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountCarrier_UserAccountID
+ON UserAccountCarrier(UserAccountID ASC)
 GO
 
 -- ------ --
@@ -2596,6 +2850,14 @@ CREATE TABLE EventTypeAssetType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_EventTypeAssetType_EventTypeID
+ON EventTypeAssetType(EventTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventTypeAssetType_AssetTypeID
+ON EventTypeAssetType(AssetTypeID ASC)
+GO
+
 CREATE TABLE Event
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2643,10 +2905,17 @@ CREATE NONCLUSTERED INDEX IX_Event_EndTime
 ON Event(EndTime ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_Event_MeterID_StartTime_ID_EventID_PhaseID
+CREATE NONCLUSTERED INDEX IX_Event_MeterID_StartTime
 ON Event ( MeterID ASC, StartTime ASC ) INCLUDE ( EventTypeID)
 GO
 
+CREATE NONCLUSTERED INDEX IX_Event_AssetID
+ON Event(AssetID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Event_AssetID_StartTime
+ON Event ( AssetID ASC, StartTime ASC ) INCLUDE (EventTypeID)
+GO
 
 CREATE TABLE Disturbance
 (
@@ -2773,6 +3042,10 @@ CREATE TABLE VoltageCurvePoint
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_VoltageCurvePoint_VoltageCurveID
+ON VoltageCurvePoint(VoltageCurveID ASC)
+GO
+
 CREATE TABLE WorkbenchVoltageCurve
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2791,6 +3064,9 @@ CREATE TABLE WorkbenchVoltageCurvePoint
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_WorkbenchVoltageCurvePoint_VoltageCurveID
+ON WorkbenchVoltageCurvePoint(VoltageCurveID ASC)
+GO
 
 CREATE TABLE VoltageEnvelopeCurve
 (
@@ -2798,6 +3074,14 @@ CREATE TABLE VoltageEnvelopeCurve
     VoltageEnvelopeID INT NOT NULL REFERENCES VoltageEnvelope(ID),
     VoltageCurveID INT NOT NULL REFERENCES VoltageCurve(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_VoltageEnvelopeCurve_VoltageEnvelopeID
+ON VoltageEnvelopeCurve(VoltageEnvelopeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_VoltageEnvelopeCurve_VoltageCurveID
+ON VoltageEnvelopeCurve(VoltageCurveID ASC)
 GO
 
 CREATE TABLE WorkbenchFilter
@@ -2929,12 +3213,28 @@ CREATE TABLE MATLABAnalyticAssetType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_MATLABAnalyticAssetType_MATLABAnalyticID
+ON MATLABAnalyticAssetType(MATLABAnalyticID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MATLABAnalyticAssetType_AssetTypeID
+ON MATLABAnalyticAssetType(AssetTypeID ASC)
+GO
+
 CREATE TABLE MATLABAnalyticEventType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MATLABAnalyticID INT NOT NULL REFERENCES MATLABAnalytic(ID),
     EventTypeID INT NOT NULL REFERENCES EventType(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_MATLABAnalyticEventType_MATLABAnalyticID
+ON MATLABAnalyticEventType(MATLABAnalyticID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MATLABAnalyticEventType_EventTypeID
+ON MATLABAnalyticEventType(EventTypeID ASC)
 GO
 
 CREATE TABLE EventTag
@@ -2953,6 +3253,14 @@ CREATE TABLE EventEventTag
     EventTagID INT NOT NULL REFERENCES EventTag(ID),
     TagData VARCHAR(MAX) NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventEventTag_EventID
+ON EventEventTag(EventID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventEventTag_EventTagID
+ON EventEventTag(EventTagID ASC)
 GO
 
 INSERT INTO EventType(Name, Description) VALUES ('Fault', 'Fault')
@@ -3440,6 +3748,10 @@ CREATE TABLE SourceImpedance
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_SourceImpedance_AssetLocationID
+ON SourceImpedance(AssetLocationID ASC)
+GO
+
 CREATE TABLE LineImpedance
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -3451,6 +3763,9 @@ CREATE TABLE LineImpedance
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_LineImpedance_LineID
+ON LineImpedance(LineID ASC)
+GO
 
 CREATE TABLE SegmentType
 (
@@ -3601,6 +3916,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_FaultSummary_Inception
 ON FaultSummary(Inception ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultSummary_PathEndSegmentID
+ON FaultSummary(PathEndSegmentID ASC)
 GO
 
 CREATE TABLE FaultCauseMetrics
@@ -4544,6 +4863,18 @@ CREATE TABLE [Note] (
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Note_NoteApplicationID
+ON Note(NoteApplicationID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Note_NoteTagID
+ON Note(NoteTagID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Note_NoteTypeID
+ON Note(NoteTypeID ASC)
+GO
+
 CREATE NONCLUSTERED INDEX IX_Note_NoteTypeID_ReferenceTableID  
 ON Note(NoteTypeID, ReferenceTableID)
 GO
@@ -4591,6 +4922,10 @@ CREATE TABLE MetersToDataPush
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_MetersToDataPush_RemoteXDAInstanceID
+ON MetersToDataPush(RemoteXDAInstanceID ASC)
+GO
+
 CREATE TABLE AssetsToDataPush
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -4603,6 +4938,10 @@ CREATE TABLE AssetsToDataPush
     Synced bit NOT NULL,
     CONSTRAINT UC_AssetsToDataPush_RemoteXDAInstanceID_LocalXDAAssetID UNIQUE(RemoteXDAInstanceID, LocalXDAAssetID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetsToDataPush_RemoteXDAInstanceID
+ON AssetsToDataPush(RemoteXDAInstanceID ASC)
 GO
 
 CREATE TABLE FileGroupLocalToRemote
@@ -4687,6 +5026,22 @@ CREATE TABLE ContourChannelType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ContourChannelType_ContourColorScaleID
+ON ContourChannelType(ContourColorScaleID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourChannelType_MeasurementTypeID
+ON ContourChannelType(MeasurementTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourChannelType_MeasurementCharacteristicID
+ON ContourChannelType(MeasurementCharacteristicID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourChannelType_PhaseID
+ON ContourChannelType(PhaseID ASC)
+GO
+
 CREATE TABLE ContourColorScalePoint
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -4695,6 +5050,10 @@ CREATE TABLE ContourColorScalePoint
     Color INT NOT NULL,
     OrderID INT NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourColorScalePoint_ContourColorScaleID
+ON ContourColorScalePoint(ContourColorScaleID ASC)
 GO
 
 CREATE TABLE ContourAnimation
@@ -4743,6 +5102,10 @@ CREATE TABLE Company
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Company_CompanyTypeID
+ON Company(CompanyTypeID ASC)
+GO
+
 CREATE TABLE CompanyMeter
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -4753,6 +5116,14 @@ CREATE TABLE CompanyMeter
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_CompanyMeter_MeterID 
+ON CompanyMeter(MeterID) 
+GO
+
+CREATE NONCLUSTERED INDEX IX_CompanyMeter_CompanyID
+ON CompanyMeter(CompanyID) 
+GO
+
 CREATE TABLE [dbo].[PQMarkCompanyCustomer](
     [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [PQMarkCompanyID] [int] NOT NULL FOREIGN KEY REFERENCES Company(ID),
@@ -4760,12 +5131,8 @@ CREATE TABLE [dbo].[PQMarkCompanyCustomer](
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_MeterID 
-ON CompanyMeter(MeterID) 
-GO
-
-CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_CompanyID
-ON CompanyMeter(CompanyID) 
+CREATE NONCLUSTERED INDEX IX_PQMarkCompanyCustomer_PQMarkCompanyID 
+ON PQMarkCompanyCustomer(PQMarkCompanyID) 
 GO
 
 CREATE TABLE PQMarkAggregate
