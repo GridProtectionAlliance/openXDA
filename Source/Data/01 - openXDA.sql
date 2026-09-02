@@ -54,7 +54,7 @@ CREATE TABLE [ValueList](
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_ValueList_ValueListGroupID
+CREATE NONCLUSTERED INDEX IX_ValueList_GroupID
 ON ValueList(GroupID ASC)
 GO
 
@@ -1107,7 +1107,7 @@ END
 GO
 -- END Generation Model Triggers
 
--- Station Auxilary Model
+-- Station Auxiliary Model
 CREATE VIEW StationAux AS
     SELECT
         AssetID AS ID,
@@ -5016,7 +5016,7 @@ CREATE TABLE StandardMagDurCurve(
     ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
     Name varchar(200) NOT NULL,
     Area Geometry NULL,
-    Color varchar(255) NOT NULL,
+    Color varchar(255) NOT NULL
 )
 GO
 
