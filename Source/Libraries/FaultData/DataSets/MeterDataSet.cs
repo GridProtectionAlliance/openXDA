@@ -86,6 +86,7 @@ namespace FaultData.DataSets
         public List<string> Triggers { get; set; }
 
         private Dictionary<Type, object> Resources { get; set; }
+        public ConfigurationDataSet ConfigurationDataSet { get; set; }
         public EMAXConversionDataSet EMAXConversionDataSet { get; set; }
         public BreakerRestrikeDataSet BreakerRestrikeDataSet { get; set; }
         public AnalysisDataSet AnalysisDataSet { get; set; }

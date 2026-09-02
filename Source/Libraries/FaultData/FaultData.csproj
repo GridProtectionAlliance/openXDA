@@ -171,6 +171,7 @@
     <Compile Include="DataResources\SnapshotDataResource.cs" />
     <Compile Include="DataResources\TransientDataResource.cs" />
     <Compile Include="DataSets\AnalysisDataSet.cs" />
+    <Compile Include="DataSets\ConfigurationDataSet.cs" />
     <Compile Include="DataSets\CyclicHistogramDataSet.cs" />
     <Compile Include="DataSets\EMAXConversionDataSet.cs" />
     <Compile Include="DataSets\GTC\BreakerRestrikeDataSet.cs" />

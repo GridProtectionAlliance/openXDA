@@ -246,6 +246,7 @@ namespace FaultData.DataOperations
                 RemoveUndefinedChannels(meterDataSet);
 
                 FixUpdatedChannelInfo(meterDataSet, parsedMeter);
+                UpdateLineConfiguration(meterDataSet);
             }
 
             ApplySeriesAdjustments(meterDataSet.DataSeries);
@@ -1173,6 +1174,65 @@ namespace FaultData.DataOperations
                 seriesTable.AddNewRecord(minSeries);
                 seriesTable.AddNewRecord(maxSeries);
             }
+        }
+
+        private void UpdateLineConfiguration(MeterDataSet meterDataSet)
+        {
+            if (meterDataSet.ConfigurationDataSet is null)
+                return;
+
+            bool updateLineLength = meterDataSet.ConfigurationDataSet.LineLength.HasValue;
+
+            bool updateLineImpedance =
+                meterDataSet.ConfigurationDataSet.R1.HasValue &&
+                meterDataSet.ConfigurationDataSet.X1.HasValue &&
+                meterDataSet.ConfigurationDataSet.R0.HasValue &&
+                meterDataSet.ConfigurationDataSet.X0.HasValue;
+
+            if (!updateLineLength && !updateLineImpedance)
+                return;
+
+            const string Subquery =
+                """
+                SELECT
+                    CASE Asset.ID
+                        WHEN AssetRelationship.ParentID THEN AssetRelationship.ChildID
+                        WHEN AssetRelationship.ChildID THEN AssetRelationship.ParentID
+                    END LineSegmentID
+                FROM
+                    MeterAsset JOIN
+                    Asset ON MeterAsset.AssetID = Asset.ID JOIN
+                    AssetType ON
+                        Asset.AssetTypeID = AssetType.ID AND
+                        AssetType.Name = 'Line' JOIN
+                    AssetRelationship ON Asset.ID IN (AssetRelationship.ParentID, AssetRelationship.ChildID) JOIN
+                    AssetRelationshipType ON
+                        AssetRelationship.AssetRelationshipTypeID = AssetRelationshipType.ID AND
+                        AssetRelationshipType.Name = 'Line-LineSegment'
+                WHERE MeterAsset.MeterID = {0}
+                """;
+
+            using AdoDataConnection connection = meterDataSet.CreateDbConnection();
+            TableOperations<LineSegment> lineSegmentTable = new(connection);
+            List<LineSegment> lineSegments = [.. lineSegmentTable.QueryRecordsWhere($"ID IN ({Subquery})", meterDataSet.Meter.ID).Take(2)];
+
+            if (lineSegments.Count != 1)
+                return;
+
+            LineSegment lineSegment = lineSegments[0];
+
+            if (updateLineLength)
+                lineSegment.Length = meterDataSet.ConfigurationDataSet.LineLength.GetValueOrDefault();
+
+            if (updateLineImpedance)
+            {
+                lineSegment.R0 = meterDataSet.ConfigurationDataSet.R0.GetValueOrDefault();
+                lineSegment.X0 = meterDataSet.ConfigurationDataSet.X0.GetValueOrDefault();
+                lineSegment.R1 = meterDataSet.ConfigurationDataSet.R1.GetValueOrDefault();
+                lineSegment.X1 = meterDataSet.ConfigurationDataSet.X1.GetValueOrDefault();
+            }
+
+            lineSegmentTable.UpdateRecord(lineSegment);
         }
 
         #endregion
