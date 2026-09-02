@@ -50,6 +50,11 @@ namespace FaultData.DataReaders
         public DataAnalysisSection DataAnalysisSettings { get; }
             = new DataAnalysisSection();
 
+        [Category]
+        [SettingName(SELEVESection.CategoryName)]
+        public SELEVESection SELEVESettings { get; }
+            = new SELEVESection();
+
         #endregion
 
         #region [ Methods ]
@@ -184,7 +189,7 @@ namespace FaultData.DataReaders
                 if (double.TryParse(report.GetGroupSettings("Z0ANG"), out groupSetting))
                     z0.Angle = Angle.FromDegrees(groupSetting);
 
-                if (z1 != z0)
+                if (SELEVESettings.LoadLineConfiguration && z1 != z0)
                 {
                     meterDataSet.ConfigurationDataSet = new ConfigurationDataSet();
                     meterDataSet.ConfigurationDataSet.R1 = z1.Real;

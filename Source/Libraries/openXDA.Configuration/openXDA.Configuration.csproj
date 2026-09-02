@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BreakerSection.cs" />
+    <Compile Include="SELEVESection.cs" />
     <Compile Include="Edition\EditionChecker.cs" />
     <Compile Include="Edition\HttpEditionFilterAttribute.cs" />
     <Compile Include="GrafanaSection.cs" />
