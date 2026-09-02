@@ -356,6 +356,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SCADA.BreakerOpenValue', '0.0', '0.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SELEVE.LoadLineConfiguration', 'True', 'True')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SSAMS.Schedule', '* 0 * * *', '* 0 * * *')
 GO
 

@@ -50,6 +50,11 @@ namespace FaultData.DataReaders
         public DataAnalysisSection DataAnalysisSettings { get; }
             = new DataAnalysisSection();
 
+        [Category]
+        [SettingName(SELEVESection.CategoryName)]
+        public SELEVESection SELEVESettings { get; }
+            = new SELEVESection();
+
         #endregion
 
         #region [ Methods ]
@@ -184,7 +189,17 @@ namespace FaultData.DataReaders
                 if (double.TryParse(report.GetGroupSettings("Z0ANG"), out groupSetting))
                     z0.Angle = Angle.FromDegrees(groupSetting);
 
+                if (SELEVESettings.LoadLineConfiguration && z1 != z0)
+                {
+                    meterDataSet.ConfigurationDataSet = new ConfigurationDataSet();
+                    meterDataSet.ConfigurationDataSet.R1 = z1.Real;
+                    meterDataSet.ConfigurationDataSet.X1 = z1.Imaginary;
+                    meterDataSet.ConfigurationDataSet.R0 = z0.Real;
+                    meterDataSet.ConfigurationDataSet.X0 = z0.Imaginary;
 
+                    if (double.TryParse(report.GetGroupSettings("LL"), out groupSetting))
+                        meterDataSet.ConfigurationDataSet.LineLength = groupSetting;
+                }
             }
 
             foreach (CommaSeparatedEventReport report in eventFile.CommaSeparatedEventReports)
