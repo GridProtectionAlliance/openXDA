@@ -1,4 +1,3 @@
-
 -- The following commented statements are used to create a database
 -- from scratch and create a new user with access to the database.
 --
@@ -44,7 +43,7 @@ CREATE TABLE [ValueListGroup](
     [Name] [varchar](200) NULL,
     [Description] [varchar](max) NULL,
 )
-
+GO
 
 CREATE TABLE [ValueList](
     [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -53,6 +52,10 @@ CREATE TABLE [ValueList](
     [AltValue] [varchar](200) NULL,
     [SortOrder] [int] NULL,
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_ValueList_GroupID
+ON ValueList(GroupID ASC)
 GO
 
 CREATE TABLE PQApplicationsCategory
@@ -74,7 +77,46 @@ CREATE TABLE PQApplications
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_PQApplications_CategoryID
+ON PQApplications(CategoryID ASC)
+GO
 
+INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES ('Configure',1)
+GO
+
+INSERT INTO PQApplicationsCategory (Name, SortOrder) VALUES ('Visualize',3)
+GO
+
+INSERT INTO PQApplicationsCategory (Name, SortOrder) VALUES ('Interval Data',4)
+GO
+
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('System Center', 'http://localhost:8987','./Images/Tiles/SystemCenter.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),0)
+GO
+
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Dashboard', 'http://localhost/PQDashboard','./Images/Tiles/PQDashboard.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),1)
+GO
+
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Browser', 'http://localhost/PQBrowser','./Images/Tiles/PQBrowser.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),2)
+GO
+
+INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('SPCTools', 'SPCTools/index.cshtml','./Images/Tiles/SPCTools.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Interval Data'),0)
+GO
+
+-- The following are separate apps (only to be added if the apps are installed) --
+
+--INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES 
+--('Collection',2),
+--('Report',5)
+--GO
+
+--INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES 
+--('LSCVS', 'http://localhost/LSCVS','./Images/Tiles/LSCVS.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Report'),0),
+--('miMD', 'http://localhost:8986','./Images/Tiles/miMD.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),2),
+--('openMIC', 'http://localhost:8089','./Images/Tiles/openMIC.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Collection'),0),
+--('PQDigest', 'http://localhost/PQDigest','./Images/Tiles/PQDigest.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),3),
+--('TrenDAP', 'http://localhost/TrenDAP','./Images/Tiles/TrenDAP.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Interval Data'),1),
+--('Notification Pages', 'http://localhost/NotificationPages','./Images/Tiles/NotificationPages.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),1)
+--GO
 
 CREATE TABLE ConfigurationLoader
 (
@@ -111,7 +153,6 @@ CREATE TABLE WebControllerExtension
     LoadOrder INT NOT NULL
 )
 GO
-
 
 CREATE TABLE DataWriter
 (
@@ -186,7 +227,6 @@ GO
 CREATE NONCLUSTERED INDEX IX_FileGroup_MeterID
 ON FileGroup(MeterID ASC)
 GO
-
 
 CREATE TABLE DataFile
 (
@@ -301,7 +341,6 @@ CREATE TABLE APIAccessKey
 )
 GO
 
-
 CREATE TABLE HostSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -309,6 +348,10 @@ CREATE TABLE HostSetting
     Name VARCHAR(50) NOT NULL,
     Value VARCHAR(MAX) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_HostSetting_HostRegistrationID
+ON HostSetting(HostRegistrationID ASC)
 GO
 
 CREATE TABLE NodeType
@@ -370,6 +413,18 @@ CREATE TABLE Node
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Node_NodeTypeID
+ON Node(NodeTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Node_HostRegistrationID
+ON Node(HostRegistrationID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Node_AssignedHostRegistrationID
+ON Node(AssignedHostRegistrationID ASC)
+GO
+
 INSERT INTO Node VALUES((SELECT ID FROM NodeType WHERE TypeName = 'openXDA.Nodes.Types.FileProcessing.FileProcessorNode'), NULL, NULL, 'File Processor', 1)
 GO
 
@@ -409,6 +464,10 @@ CREATE TABLE NodeSetting
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_NodeSetting_NodeID
+ON NodeSetting(NodeID ASC)
+GO
+
 CREATE TABLE AnalysisTask
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -430,7 +489,6 @@ ON AnalysisTask
 )
 GO
 
-
 CREATE TABLE AssetType
 (
     ID INT NOT NULL PRIMARY KEY,
@@ -451,12 +509,24 @@ CREATE TABLE Asset
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Asset_AssetTypeID
+ON Asset(AssetTypeID ASC)
+GO
+
 CREATE TABLE AssetSpare
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT UNIQUE NOT NULL REFERENCES Asset(ID),
     SpareAssetID INT NOT NULL REFERENCES Asset(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetSpare_AssetID
+ON AssetSpare(AssetID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetSpare_SpareAssetID
+ON AssetSpare(SpareAssetID ASC)
 GO
 
 CREATE VIEW AssetSpareView AS
@@ -511,7 +581,15 @@ CREATE TABLE CustomerAsset
 )
 GO
 
-Create View CustomerAssetDetail AS
+CREATE NONCLUSTERED INDEX IX_CustomerAsset_CustomerID
+ON CustomerAsset(CustomerID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_CustomerAsset_AssetID
+ON CustomerAsset(AssetID ASC)
+GO
+
+CREATE VIEW CustomerAssetDetail AS
 SELECT 
     CustomerAsset.ID AS ID,
     Customer.CustomerKey AS CustomerKey,
@@ -526,7 +604,6 @@ FROM
     Customer ON Customer.ID = CustomerAsset.CustomerID LEFT JOIN
     AssetType ON Asset.AssetTypeID = AssetType.ID
 GO
-
 
 CREATE TABLE AssetRelationshipType
 (
@@ -547,6 +624,14 @@ CREATE TABLE AssetRelationshipTypeAssetType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_AssetRelationshipTypeAssetType_AssetRelationshipTypeID
+ON AssetRelationshipTypeAssetType(AssetRelationshipTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetRelationshipTypeAssetType_AssetTypeID
+ON AssetRelationshipTypeAssetType(AssetTypeID ASC)
+GO
+
 CREATE TABLE AssetRelationship
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -554,6 +639,18 @@ CREATE TABLE AssetRelationship
     ParentID INT NOT NULL REFERENCES Asset(ID),
     ChildID INT NOT NULL REFERENCES Asset(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetRelationship_AssetRelationshipTypeID
+ON AssetRelationship(AssetRelationshipTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetRelationship_ParentID
+ON AssetRelationship(ParentID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetRelationship_ChildID
+ON AssetRelationship(ChildID ASC)
 GO
 
 -- View with Procedures Due To Spare Logic --
@@ -616,11 +713,19 @@ CREATE TABLE BusAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_BusAttributes_AssetID
+ON BusAttributes(AssetID ASC)
+GO
+
 CREATE TABLE GenerationAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_GenerationAttributes_AssetID
+ON GenerationAttributes(AssetID ASC)
 GO
 
 CREATE TABLE StationAuxAttributes
@@ -629,12 +734,19 @@ CREATE TABLE StationAuxAttributes
     AssetID INT NOT NULL REFERENCES Asset(ID),
 )
 GO
+CREATE NONCLUSTERED INDEX IX_StationAuxAttributes_AssetID
+ON StationAuxAttributes(AssetID ASC)
+GO
 
 CREATE TABLE StationBatteryAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_StationBatteryAttributes_AssetID
+ON StationBatteryAttributes(AssetID ASC)
 GO
 
 CREATE TABLE BreakerAttributes
@@ -648,6 +760,10 @@ CREATE TABLE BreakerAttributes
     TripCoilCondition FLOAT NOT NULL DEFAULT(0),
     AirGapResistor BIT NOT NULL DEFAULT(0)
     )
+GO
+
+CREATE NONCLUSTERED INDEX IX_BreakerAttributes_AssetID
+ON BreakerAttributes(AssetID ASC)
 GO
 
 CREATE TABLE CapacitorBankAttributes
@@ -689,6 +805,10 @@ CREATE TABLE CapacitorBankAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_CapacitorBankAttributes_AssetID
+ON CapacitorBankAttributes(AssetID ASC)
+GO
+
 CREATE TABLE CapacitorBankRelayAttributes
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -698,6 +818,9 @@ CREATE TABLE CapacitorBankRelayAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_CapacitorBankRelayAttributes_AssetID
+ON CapacitorBankRelayAttributes(AssetID ASC)
+GO
 
 CREATE TABLE LineAttributes
 (
@@ -706,6 +829,10 @@ CREATE TABLE LineAttributes
     MaxFaultDistance FLOAT NULL,
     MinFaultDistance FLOAT NULL,
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_LineAttributes_AssetID
+ON LineAttributes(AssetID ASC)
 GO
 
 CREATE TABLE LineSegmentAttributes
@@ -724,12 +851,24 @@ CREATE TABLE LineSegmentAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_LineSegmentAttributes_AssetID
+ON LineSegmentAttributes(AssetID ASC)
+GO
+
 CREATE TABLE LineSegmentConnections
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     ParentSegment INT REFERENCES Asset(ID),
     ChildSegment INT REFERENCES Asset(ID),
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_LineSegmentConnections_ParentSegment
+ON LineSegmentConnections(ParentSegment ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_LineSegmentConnections_ChildSegment
+ON LineSegmentConnections(ChildSegment ASC)
 GO
 
 CREATE TABLE TransformerAttributes
@@ -752,6 +891,10 @@ CREATE TABLE TransformerAttributes
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_TransformerAttributes_AssetID
+ON TransformerAttributes(AssetID ASC)
+GO
+
 CREATE TABLE DERAttributes (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     AssetID INT NOT NULL REFERENCES Asset(ID),
@@ -760,7 +903,26 @@ CREATE TABLE DERAttributes (
 )
 GO
 
--- Correspoding Views and Trigger 
+CREATE NONCLUSTERED INDEX IX_DERAttributes_AssetID
+ON DERAttributes(AssetID ASC)
+GO
+
+-- Corresponding Views and Trigger
+
+CREATE VIEW AssetView AS
+    SELECT
+        Asset.ID AS ID,
+        AssetKey,
+        VoltageKV,
+        Asset.Description,
+        AssetName,
+        AssetType.Name AS AssetType,
+        AssetTypeID,
+        Spare
+    FROM Asset JOIN	AssetType ON AssetType.ID = Asset.AssetTypeID WHERE AssetType.ID != 5
+GO
+
+-- Line Model
 CREATE VIEW Line AS
     SELECT 
         AssetID AS ID,
@@ -775,26 +937,11 @@ CREATE VIEW Line AS
     FROM Asset JOIN LineAttributes ON Asset.ID = LineAttributes.AssetID
 GO
 
-CREATE VIEW AssetView AS
-    SELECT 
-        Asset.ID AS ID,
-        AssetKey,
-        VoltageKV,
-        Asset.Description,
-        AssetName,
-        AssetType.Name AS AssetType,
-        AssetTypeID,
-        Spare
-    FROM Asset JOIN	AssetType ON AssetType.ID = Asset.AssetTypeID WHERE AssetType.ID != 5  
-
-
-GO
-
 CREATE TRIGGER TR_INSERT_Line ON Line
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName,VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'Line') AS AssetTypeID,
             Description AS Description,
@@ -826,10 +973,10 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
     UPDATE LineAttributes
@@ -837,18 +984,18 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
             LineAttributes.MaxFaultDistance = INSERTED.MaxFaultDistance,
             LineAttributes.MinFaultDistance = INSERTED.MinFaultDistance
         FROM
-            LineAttributes 
+            LineAttributes
     INNER JOIN
         INSERTED
-    ON 
+    ON
         INSERTED.ID = LineAttributes.AssetID;
 END
 GO
+-- END Line Model Triggers
 
--- END Line Model Triggers 
 -- Bus Model 
 CREATE VIEW Bus AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         AssetKey,
         VoltageKV,
@@ -860,10 +1007,10 @@ CREATE VIEW Bus AS
 GO
 
 CREATE TRIGGER TR_INSERT_Bus ON BUS
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'Bus') AS AssetTypeID,
             Description AS Description,
@@ -873,7 +1020,7 @@ BEGIN
     FROM INSERTED
 
     INSERT INTO BusAttributes (AssetID)
-        SELECT 
+        SELECT
             (SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID
     FROM INSERTED
 
@@ -893,19 +1040,19 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
 END
 GO
+-- END Bus Model Triggers
 
--- END Bus Model Triggers 
 -- Generation Model
 CREATE VIEW Generation AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         AssetKey,
         VoltageKV,
@@ -917,10 +1064,10 @@ CREATE VIEW Generation AS
 GO
 
 CREATE TRIGGER TR_INSERT_Generation ON GENERATION
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'Generation') AS AssetTypeID,
             Description AS Description,
@@ -950,19 +1097,19 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
 END
 GO
+-- END Generation Model Triggers
 
--- END Generation Model Triggers 
--- Station Auxilary Model
+-- Station Auxiliary Model
 CREATE VIEW StationAux AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         AssetKey,
         VoltageKV,
@@ -974,10 +1121,10 @@ CREATE VIEW StationAux AS
 GO
 
 CREATE TRIGGER TR_INSERT_Aux ON STATIONAUX
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'StationAux') AS AssetTypeID,
             Description AS Description,
@@ -987,7 +1134,7 @@ BEGIN
     FROM INSERTED
 
     INSERT INTO StationAuxAttributes (AssetID)
-        SELECT 
+        SELECT
             (SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID
     FROM INSERTED
 
@@ -1007,19 +1154,19 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
 END
 GO
+-- END Station Auxilary Model Triggers
 
--- END Station Auxilary Model Triggers 
 -- Station Battery Model
 CREATE VIEW StationBattery AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         AssetKey,
         VoltageKV,
@@ -1031,10 +1178,10 @@ CREATE VIEW StationBattery AS
 GO
 
 CREATE TRIGGER TR_INSERT_Battery ON STATIONBATTERY
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'StationBattery') AS AssetTypeID,
             Description AS Description,
@@ -1044,7 +1191,7 @@ BEGIN
     FROM INSERTED
 
     INSERT INTO StationBatteryAttributes (AssetID)
-        SELECT 
+        SELECT
             (SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID
     FROM INSERTED
 
@@ -1064,19 +1211,19 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
 END
 GO
+-- END Station Battery Model Triggers
 
--- END Station Bettery Model Triggers
--- Breaker Model 
+-- Breaker Model
 CREATE VIEW Breaker AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         AssetKey,
         VoltageKV,
@@ -1094,10 +1241,10 @@ CREATE VIEW Breaker AS
 GO
 
 CREATE TRIGGER TR_INSERT_Breaker ON Breaker
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, VoltageKV, AssetName, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'Breaker') AS AssetTypeID,
             Description AS Description,
@@ -1107,7 +1254,7 @@ BEGIN
     FROM INSERTED
 
     INSERT INTO BreakerAttributes (AssetID, ThermalRating, Speed, TripTime, PickupTime, TripCoilCondition, AirGapResistor)
-        SELECT 
+        SELECT
             (SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
             ThermalRating AS ThermalRating,
             Speed AS Speed,
@@ -1133,10 +1280,10 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
     UPDATE BreakerAttributes
@@ -1148,17 +1295,18 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE (Vol
             BreakerAttributes.TripCoilCondition = INSERTED.TripCoilCondition,
             BreakerAttributes.AirGapResistor = INSERTED.AirGapResistor
         FROM
-            BreakerAttributes 
+            BreakerAttributes
     INNER JOIN
         INSERTED
-    ON 
+    ON
         INSERTED.ID = BreakerAttributes.AssetID;
 END
 GO
+--END Breaker Model Triggers
 
 -- Capacitor Bank Relay Model 
 CREATE VIEW CapBankRelay AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         AssetKey,
         VoltageKV,
@@ -1172,10 +1320,10 @@ CREATE VIEW CapBankRelay AS
 GO
 
 CREATE TRIGGER TR_INSERT_CapBankRelay ON CapBankRelay
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'CapacitorBankRelay') AS AssetTypeID,
             Description AS Description,
@@ -1185,7 +1333,7 @@ BEGIN
     FROM INSERTED
 
     INSERT INTO CapacitorBankRelayAttributes (AssetID, OnVoltageThreshhold, CapBankNumber )
-        SELECT 
+        SELECT
             (SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
             OnVoltageThreshhold AS OnVoltageThreshhold,
             CapBankNumber as CapBankNumber
@@ -1197,7 +1345,7 @@ GO
 CREATE TRIGGER TR_UPDATE_CapBankRelay ON CapBankRelay
 INSTEAD OF UPDATE AS
 BEGIN
-IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR Update(Spare) )
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR Update(Spare))
     BEGIN
         UPDATE Asset
         SET
@@ -1207,10 +1355,10 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
     UPDATE CapBankRelay
@@ -1218,18 +1366,18 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             CapBankRelay.OnVoltageThreshhold = INSERTED.OnVoltageThreshhold,
             CapBankrelay.CapBankNumber = INSERTED.CapBankNumber
         FROM
-            CapBankRelay 
+            CapBankRelay
     INNER JOIN
         INSERTED
-    ON 
+    ON
         INSERTED.ID = CapBankRelay.ID;
 END
 GO
+--END Capacitor Bank Relay Model Triggers
 
-
--- Capacitor Bank Model 
+-- Capacitor Bank Model
 CREATE VIEW CapBank AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         AssetKey,
         VoltageKV,
@@ -1273,10 +1421,10 @@ CREATE VIEW CapBank AS
 GO
 
 CREATE TRIGGER TR_INSERT_CapBank ON CapBank
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'CapacitorBank') AS AssetTypeID,
             Description AS Description,
@@ -1289,7 +1437,7 @@ BEGIN
         PosReactanceTol, Nparalell, Nseries, NSeriesGroup, NParalellGroup, Fused, VTratioBus, NumberLVCaps, NumberLVUnits, LVKVAr,
         LVKV, LVNegReactanceTol, LVPosReactanceTol, LowerXFRRatio, Nshorted, BlownFuses, BlownGroups,
         RelayPTRatioPrimary, RelayPTRatioSecondary,Rv, Rh, Compensated, NLowerGroups, ShortedGroups,Sh)
-        SELECT 
+        SELECT
             (SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
             CapacitancePerBank AS CapacitancePerBank,
             NumberOfBanks AS NumberOfBanks,
@@ -1324,13 +1472,14 @@ BEGIN
             ShortedGroups AS ShortedGroups,
             Sh AS Sh
         FROM INSERTED
+
 END
 GO
 
 CREATE TRIGGER TR_UPDATE_CapBank ON CapBank
 INSTEAD OF UPDATE AS
 BEGIN
-IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR Update(Spare) )
+IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(VoltageKV) OR Update(Spare))
     BEGIN
         UPDATE Asset
         SET
@@ -1340,10 +1489,10 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
     UPDATE CapacitorBankAttributes
@@ -1381,18 +1530,18 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             CapacitorBankAttributes.ShortedGroups = INSERTED.ShortedGroups,
             CapacitorBankAttributes.Sh = INSERTED.Sh
         FROM
-            CapacitorBankAttributes 
+            CapacitorBankAttributes
     INNER JOIN
         INSERTED
-    ON 
+    ON
         INSERTED.ID = CapacitorBankAttributes.AssetID;
 END
 GO
+--END Capacitor Bank Model Triggers
 
-
--- Line Segment Model 
+-- Line Segment Model
 CREATE VIEW LineSegment AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         AssetKey,
         Length,
@@ -1413,10 +1562,10 @@ CREATE VIEW LineSegment AS
 GO
 
 CREATE TRIGGER TR_INSERT_LineSegment ON LineSegment
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'LineSegment') AS AssetTypeID,
             Description AS Description,
@@ -1426,7 +1575,7 @@ BEGIN
     FROM INSERTED
 
     INSERT INTO LineSegmentAttributes (AssetID, Length, R0, X0, R1, X1, ThermalRating, IsEnd, FromBus, ToBus)
-        SELECT 
+        SELECT
             (SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
             Length AS Length,
             R0 AS R0,
@@ -1455,10 +1604,10 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             Asset.VoltageKV  = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
     UPDATE LineSegmentAttributes
@@ -1473,18 +1622,18 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             LineSegmentAttributes.FromBus = INSERTED.FromBus,
             LineSegmentAttributes.ToBus = INSERTED.ToBus
         FROM
-            LineSegmentAttributes 
+            LineSegmentAttributes
     INNER JOIN
         INSERTED
-    ON 
+    ON
         INSERTED.ID = LineSegmentAttributes.AssetID;
 END
 GO
+--END Line Segment Model Triggers
 
-
--- Transformers 
+-- Transformer Model
 CREATE VIEW Transformer AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         AssetKey,
         R0,
@@ -1508,10 +1657,10 @@ CREATE VIEW Transformer AS
 GO
 
 CREATE TRIGGER TR_INSERT_Tranformer ON Transformer
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'Transformer') AS AssetTypeID,
             Description AS Description,
@@ -1521,7 +1670,7 @@ BEGIN
     FROM INSERTED
 
     INSERT INTO TransformerAttributes (AssetID, R0, X0, R1, X1, ThermalRating, SecondaryVoltageKV, PrimaryVoltageKV, Tap, TertiaryVoltageKV, SecondaryWinding, PrimaryWinding, TertiaryWinding )
-        SELECT 
+        SELECT
             (SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
             R0 AS R0,
             X0 AS X0,
@@ -1553,10 +1702,10 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
     UPDATE TransformerAttributes
@@ -1574,16 +1723,18 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             TransformerAttributes.PrimaryWinding = INSERTED.PrimaryWinding,
             TransformerAttributes.TertiaryWinding = INSERTED.TertiaryWinding
         FROM
-            TransformerAttributes 
+            TransformerAttributes
     INNER JOIN
         INSERTED
-    ON 
+    ON
         INSERTED.ID = TransformerAttributes.AssetID;
 END
 GO
+--END Transformer Model Triggers
 
+-- Distributed Energy Resource Model
 CREATE VIEW DER AS
-    SELECT 
+    SELECT
         AssetID AS ID,
         VoltageLevel,
         FullRatedOutputCurrent,
@@ -1596,12 +1747,11 @@ CREATE VIEW DER AS
     FROM Asset JOIN DERAttributes ON Asset.ID = DERAttributes.AssetID
 GO
 
-
 CREATE TRIGGER TR_INSERT_DER ON DER
-INSTEAD OF INSERT AS 
+INSTEAD OF INSERT AS
 BEGIN
     INSERT INTO Asset (AssetKey, AssetTypeID, Description, AssetName, VoltageKV, Spare)
-        SELECT 
+        SELECT
             AssetKey AS AssetKey,
             (SELECT ID FROM AssetType WHERE Name = 'DER') AS AssetTypeID,
             Description AS Description,
@@ -1610,8 +1760,8 @@ BEGIN
             Spare AS Spare
     FROM INSERTED
 
-    INSERT INTO DERAttributes (AssetID, FullRatedOutputCurrent, VoltageLevel )
-        SELECT 
+    INSERT INTO DERAttributes (AssetID, FullRatedOutputCurrent, VoltageLevel)
+        SELECT
             (SELECT ID FROM Asset WHERE AssetKey = INSERTED.AssetKey) AS AssetID,
             FullRatedOutputCurrent AS FullRatedOutputCurrent,
             VoltageLevel AS VoltageLevel
@@ -1633,10 +1783,10 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             Asset.VoltageKV = INSERTED.VoltageKV,
             Asset.Spare = INSERTED.Spare
         FROM
-            ASSET 
+            ASSET
         INNER JOIN
             INSERTED
-        ON 
+        ON
             INSERTED.ID = ASSET.ID;
     END
     UPDATE DERAttributes
@@ -1644,13 +1794,14 @@ IF (UPDATE(AssetKey) OR UPDATE(Description) OR UPDATE (AssetName) OR UPDATE(Volt
             DERAttributes.FullRatedOutputCurrent = INSERTED.FullRatedOutputCurrent,
             DERAttributes.VoltageLevel = INSERTED.VoltageLevel
         FROM
-            DERAttributes 
+            DERAttributes
     INNER JOIN
         INSERTED
-    ON 
+    ON
         INSERTED.ID = DERAttributes.AssetID;
 END
 GO
+--END Distributed Energy Resource Model Triggers
 
 --*************** End Model Section *********
 
@@ -1664,12 +1815,24 @@ CREATE TABLE Structure
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Structure_AssetID
+ON Structure(AssetID ASC)
+GO
+
 CREATE TABLE MeterAsset
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
     AssetID INT NOT NULL REFERENCES Asset(ID),
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAsset_MeterID
+ON MeterAsset(MeterID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAsset_AssetID
+ON MeterAsset(AssetID ASC)
 GO
 
 CREATE TABLE AssetLocation
@@ -1679,6 +1842,14 @@ CREATE TABLE AssetLocation
     AssetID INT NOT NULL REFERENCES Asset(ID),
     CONSTRAINT UC_AssetLocation UNIQUE(AssetID, LocationID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetLocation_LocationID
+ON AssetLocation(LocationID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetLocation_AssetID
+ON AssetLocation(AssetID ASC)
 GO
 
 CREATE TABLE MeasurementType
@@ -1750,6 +1921,10 @@ CREATE NONCLUSTERED INDEX IX_Channel_MeterID
 ON Channel(MeterID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_Channel_AssetID
+ON Channel(AssetID ASC)
+GO
+
 CREATE NONCLUSTERED INDEX IX_Channel_MeasurementTypeID
 ON Channel(MeasurementTypeID ASC)
 GO
@@ -1764,6 +1939,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_Channel_MeterID_MeasurementTypeID_MeasurementCharacteristicID_PhaseID_HarmonicGroup
 ON Channel(MeterID ASC, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Channel_AssetID_MeasurementTypeID_MeasurementCharacteristicID_PhaseID_HarmonicGroup
+ON Channel(AssetID ASC, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup)
 GO
 
 -- Channel Group and Type
@@ -1786,6 +1965,17 @@ CREATE TABLE ChannelGroupType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ChannelGroupType_ChannelGroupID
+ON ChannelGroupType(ChannelGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelGroupType_MeasurementTypeID
+ON ChannelGroupType(MeasurementTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelGroupType_MeasurementCharacteristicID
+ON ChannelGroupType(MeasurementCharacteristicID ASC)
+GO
 
 CREATE TABLE AssetChannel
 (
@@ -2089,6 +2279,9 @@ CREATE TABLE SCADAPoint
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_SCADAPoint_BreakerID
+ON SCADAPoint(BreakerID ASC)
+GO
 
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.dat', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
 GO
@@ -2116,7 +2309,6 @@ GO
 
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.txt', 'FaultData.dll', 'FaultData.DataReaders.SELLDPReader', 1)
 GO
-
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.ConfigurationOperation', 1)
 GO
@@ -2238,12 +2430,28 @@ CREATE TABLE ApplicationRoleSecurityGroup
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ApplicationRoleSecurityGroup_ApplicationRoleID
+ON ApplicationRoleSecurityGroup(ApplicationRoleID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ApplicationRoleSecurityGroup_SecurityGroupID
+ON ApplicationRoleSecurityGroup(SecurityGroupID ASC)
+GO
+
 CREATE TABLE ApplicationRoleUserAccount
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     ApplicationRoleID UNIQUEIDENTIFIER NOT NULL REFERENCES ApplicationRole(ID),
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_ApplicationRoleUserAccount_ApplicationRoleID
+ON ApplicationRoleUserAccount(ApplicationRoleID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ApplicationRoleUserAccount_UserAccountID
+ON ApplicationRoleUserAccount(UserAccountID ASC)
 GO
 
 CREATE TABLE SecurityGroupUserAccount
@@ -2254,12 +2462,28 @@ CREATE TABLE SecurityGroupUserAccount
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_SecurityGroupUserAccount_SecurityGroupID
+ON SecurityGroupUserAccount(SecurityGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_SecurityGroupUserAccount_UserAccountID
+ON SecurityGroupUserAccount(UserAccountID ASC)
+GO
+
 CREATE TABLE UserAccountAssetGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountAssetGroup_UserAccountID
+ON UserAccountAssetGroup(UserAccountID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountAssetGroup_AssetGroupID
+ON UserAccountAssetGroup(AssetGroupID ASC)
 GO
 
 CREATE TRIGGER UserAccount_AugmentAllAssetsGroup
@@ -2307,8 +2531,6 @@ GO
 INSERT INTO ApplicationRole(Name, Description) VALUES('DataPusher', 'Data Pusher Role')
 GO
 
-
-
 -- ----- --
 -- Email --
 -- ----- --
@@ -2338,6 +2560,10 @@ CREATE TABLE EmailType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_EmailType_EmailCategoryID
+ON EmailType(EmailCategoryID ASC)
+GO
+
 CREATE TABLE ScheduledEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2353,6 +2579,10 @@ CREATE TABLE ScheduledEmailType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ScheduledEmailType_EmailCategoryID
+ON ScheduledEmailType(EmailCategoryID ASC)
+GO
+
 CREATE TABLE UserAccountEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2361,6 +2591,18 @@ CREATE TABLE UserAccountEmailType
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
     Approved BIT NOT NULL DEFAULT 0
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_UserAccountID
+ON UserAccountEmailType(UserAccountID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_EmailTypeID
+ON UserAccountEmailType(EmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_AssetGroupID
+ON UserAccountEmailType(AssetGroupID ASC)
 GO
 
 CREATE VIEW SubscribeEmails
@@ -2388,6 +2630,18 @@ CREATE TABLE UserAccountScheduledEmailType
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
     Approved BIT NOT NULL DEFAULT 0
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_UserAccountID
+ON UserAccountScheduledEmailType(UserAccountID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_ScheduledEmailTypeID
+ON UserAccountScheduledEmailType(ScheduledEmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_AssetGroupID
+ON UserAccountScheduledEmailType(AssetGroupID ASC)
 GO
 
 CREATE TABLE TriggeredEmailDataSource
@@ -2425,6 +2679,14 @@ CREATE TABLE TriggeredEmailDataSourceEmailType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_TriggeredEmailDataSourceEmailType_EmailTypeID
+ON TriggeredEmailDataSourceEmailType(EmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_TriggeredEmailDataSourceEmailType_TriggeredEmailDataSourceID
+ON TriggeredEmailDataSourceEmailType(TriggeredEmailDataSourceID ASC)
+GO
+
 CREATE TABLE ScheduledEmailDataSource
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2443,6 +2705,14 @@ CREATE TABLE ScheduledEmailDataSourceEmailType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ScheduledEmailDataSourceEmailType_ScheduledEmailTypeID
+ON ScheduledEmailDataSourceEmailType(ScheduledEmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ScheduledEmailDataSourceEmailType_ScheduledEmailDataSourceID
+ON ScheduledEmailDataSourceEmailType(ScheduledEmailDataSourceID ASC)
+GO
+
 CREATE TABLE TriggeredEmailDataSourceSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2452,6 +2722,10 @@ CREATE TABLE TriggeredEmailDataSourceSetting
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_TriggeredEmailDataSourceSetting_TriggeredEmailDataSourceEmailTypeID
+ON TriggeredEmailDataSourceSetting(TriggeredEmailDataSourceEmailTypeID ASC)
+GO
+
 CREATE TABLE ScheduledEmailDataSourceSetting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2459,6 +2733,10 @@ CREATE TABLE ScheduledEmailDataSourceSetting
     Name VARCHAR(200) NOT NULL,
     Value VARCHAR(MAX) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_ScheduledEmailDataSourceSetting_ScheduledEmailDataSourceEmailTypeID
+ON ScheduledEmailDataSourceSetting(ScheduledEmailDataSourceEmailTypeID ASC)
 GO
 
 CREATE TABLE SentEmail
@@ -2521,6 +2799,14 @@ CREATE TABLE UserAccountCarrier
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_UserAccountCarrier_CarrierID
+ON UserAccountCarrier(CarrierID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountCarrier_UserAccountID
+ON UserAccountCarrier(UserAccountID ASC)
+GO
+
 -- ------ --
 -- Events --
 -- ------ --
@@ -2551,7 +2837,6 @@ GO
 CREATE NONCLUSTERED INDEX IX_EventData_MarkedForDeletion
 ON EventData(MarkedForDeletion ASC)
 GO
-
 
 -- ChannelData references the IDs in other tables,
 -- but no foreign key constraints are defined.
@@ -2594,6 +2879,14 @@ CREATE TABLE EventTypeAssetType
     AssetTypeID INT NOT NULL REFERENCES AssetType(ID),
     CONSTRAINT UC_EventTypeAssetType UNIQUE(EventTypeID, AssetTypeID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventTypeAssetType_EventTypeID
+ON EventTypeAssetType(EventTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventTypeAssetType_AssetTypeID
+ON EventTypeAssetType(AssetTypeID ASC)
 GO
 
 CREATE TABLE Event
@@ -2643,10 +2936,17 @@ CREATE NONCLUSTERED INDEX IX_Event_EndTime
 ON Event(EndTime ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_Event_MeterID_StartTime_ID_EventID_PhaseID
+CREATE NONCLUSTERED INDEX IX_Event_MeterID_StartTime
 ON Event ( MeterID ASC, StartTime ASC ) INCLUDE ( EventTypeID)
 GO
 
+CREATE NONCLUSTERED INDEX IX_Event_AssetID
+ON Event(AssetID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Event_AssetID_StartTime
+ON Event ( AssetID ASC, StartTime ASC ) INCLUDE (EventTypeID)
+GO
 
 CREATE TABLE Disturbance
 (
@@ -2715,8 +3015,6 @@ CREATE NONCLUSTERED INDEX IX_EventWorstDisturbance_WorstLNDisturbanceID
 ON EventWorstDisturbance(WorstLNDisturbanceID)
 GO
 
-
-
 CREATE TABLE BreakerRestrike (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
@@ -2773,6 +3071,10 @@ CREATE TABLE VoltageCurvePoint
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_VoltageCurvePoint_VoltageCurveID
+ON VoltageCurvePoint(VoltageCurveID ASC)
+GO
+
 CREATE TABLE WorkbenchVoltageCurve
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2791,6 +3093,9 @@ CREATE TABLE WorkbenchVoltageCurvePoint
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_WorkbenchVoltageCurvePoint_VoltageCurveID
+ON WorkbenchVoltageCurvePoint(VoltageCurveID ASC)
+GO
 
 CREATE TABLE VoltageEnvelopeCurve
 (
@@ -2798,6 +3103,14 @@ CREATE TABLE VoltageEnvelopeCurve
     VoltageEnvelopeID INT NOT NULL REFERENCES VoltageEnvelope(ID),
     VoltageCurveID INT NOT NULL REFERENCES VoltageCurve(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_VoltageEnvelopeCurve_VoltageEnvelopeID
+ON VoltageEnvelopeCurve(VoltageEnvelopeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_VoltageEnvelopeCurve_VoltageCurveID
+ON VoltageEnvelopeCurve(VoltageCurveID ASC)
 GO
 
 CREATE TABLE WorkbenchFilter
@@ -2929,12 +3242,28 @@ CREATE TABLE MATLABAnalyticAssetType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_MATLABAnalyticAssetType_MATLABAnalyticID
+ON MATLABAnalyticAssetType(MATLABAnalyticID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MATLABAnalyticAssetType_AssetTypeID
+ON MATLABAnalyticAssetType(AssetTypeID ASC)
+GO
+
 CREATE TABLE MATLABAnalyticEventType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MATLABAnalyticID INT NOT NULL REFERENCES MATLABAnalytic(ID),
     EventTypeID INT NOT NULL REFERENCES EventType(ID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_MATLABAnalyticEventType_MATLABAnalyticID
+ON MATLABAnalyticEventType(MATLABAnalyticID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MATLABAnalyticEventType_EventTypeID
+ON MATLABAnalyticEventType(EventTypeID ASC)
 GO
 
 CREATE TABLE EventTag
@@ -2953,6 +3282,14 @@ CREATE TABLE EventEventTag
     EventTagID INT NOT NULL REFERENCES EventTag(ID),
     TagData VARCHAR(MAX) NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventEventTag_EventID
+ON EventEventTag(EventID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventEventTag_EventTagID
+ON EventEventTag(EventTagID ASC)
 GO
 
 INSERT INTO EventType(Name, Description) VALUES ('Fault', 'Fault')
@@ -3440,6 +3777,10 @@ CREATE TABLE SourceImpedance
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_SourceImpedance_AssetLocationID
+ON SourceImpedance(AssetLocationID ASC)
+GO
+
 CREATE TABLE LineImpedance
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -3451,6 +3792,9 @@ CREATE TABLE LineImpedance
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_LineImpedance_LineID
+ON LineImpedance(LineID ASC)
+GO
 
 CREATE TABLE SegmentType
 (
@@ -3601,6 +3945,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_FaultSummary_Inception
 ON FaultSummary(Inception ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultSummary_PathEndSegmentID
+ON FaultSummary(PathEndSegmentID ASC)
 GO
 
 CREATE TABLE FaultCauseMetrics
@@ -3909,7 +4257,6 @@ CREATE NONCLUSTERED INDEX IX_ChannelDataQualitySummary_ChannelID_Date
 ON ChannelDataQualitySummary(ChannelID ASC, Date ASC)
 GO
 
-
 -- ------ --
 -- Alarms --
 -- ------ --
@@ -4112,8 +4459,8 @@ GO
 
 CREATE TABLE AlarmDayGroupAlarmDay (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    AlarmDayID INT NULL References AlarmDay(ID),
-    AlarmDayGroupID INT NOT NULL References AlarmDayGroup(ID)
+    AlarmDayID INT NULL REFERENCES AlarmDay(ID),
+    AlarmDayGroupID INT NOT NULL REFERENCES AlarmDayGroup(ID)
 )
 GO
 
@@ -4198,7 +4545,6 @@ SELECT
     Channel.ID as ChannelID,
     Meter.ID as MeterID,
     'N/A' as TimeInAlarm
-     
 FROM 
     Alarm LEFT JOIN
     AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
@@ -4216,7 +4562,6 @@ SELECT
     Meter.ID as MeterID,
     COUNT(Channel.ID) AS Channel,
     'N/A' as TimeInAlarm
-     
 FROM 
     Alarm LEFT JOIN
     AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID LEFT JOIN
@@ -4270,6 +4615,7 @@ FROM
     Alarm ON AlarmFactor.AlarmGroupID = alarm.AlarmGroupID LEFT JOIN
     AlarmGroup ON Alarm.AlarmGroupID = AlarmGroup.ID
 GO
+
 -- Defaults --
 
 INSERT INTO AlarmType(Name, Description) VALUES ('Upper Limit', 'Triggered when setpoint is exceeded')
@@ -4280,10 +4626,13 @@ GO
 
 INSERT INTO AlarmSeverity(Name, Color) VALUES ('Severe', '#ED1C16')
 GO
+
 INSERT INTO AlarmSeverity(Name, Color) VALUES ('Alert', '#F65314')
 GO
+
 INSERT INTO AlarmSeverity(Name, Color) VALUES ('Warning', '#FFBB00')
 GO
+
 INSERT INTO AlarmSeverity(Name, Color) VALUES ('Info', '#3B5998')
 GO
 
@@ -4317,6 +4666,7 @@ INSERT INTO AlarmDayGroupAlarmDay (AlarmDayID, AlarmDayGroupID) VALUES
 ((SELECT ID FROM AlarmDay WHERE Name = 'Saturday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly')), 
 ((SELECT ID FROM AlarmDay WHERE Name = 'Sunday'), (SELECT ID FROM AlarmDayGroup WHERE Description = 'Weekly'))
 GO
+
 -- Old Alarm Structure (pre SPC Tool) --
 CREATE TABLE DefaultAlarmRangeLimit
 (
@@ -4446,8 +4796,6 @@ CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_ChannelID_Date
 ON ChannelAlarmSummary(ChannelID ASC, Date ASC)
 GO
 
-
-
 /* ----End Alarm Structure ---- */
 
 CREATE TABLE FaultNote
@@ -4487,14 +4835,19 @@ GO
 
 INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Meter', 'Meter', 'Meter')
 GO
+
 INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Event', 'Event', 'Event')
 GO
+
 INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Asset', 'Asset', 'Asset')
 GO
+
 INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Location', 'Location', 'Substation')
 GO
+
 INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('Customer', 'Customer', 'Customer')
 GO
+
 INSERT INTO NoteType(Name, ReferenceTableName, Label) VALUES ('User', 'UserAccount', 'User')
 GO
 
@@ -4506,16 +4859,22 @@ GO
 
 INSERT INTO [NoteApplication] (Name) VALUES ('OpenMIC')
 GO
+
 INSERT INTO [NoteApplication] (Name) VALUES ('OpenXDA')
 GO
+
 INSERT INTO [NoteApplication] (Name) VALUES ('MiMD')
 GO
+
 INSERT INTO [NoteApplication] (Name) VALUES ('SystemCenter')
 GO
+
 INSERT INTO [NoteApplication] (Name) VALUES ('OpenHistorian')
 GO
+
 INSERT INTO [NoteApplication] (Name) VALUES ('SEbrowser')
 GO
+
 INSERT INTO [NoteApplication] (Name) VALUES ('All')
 GO
 
@@ -4527,8 +4886,10 @@ GO
 
 INSERT INTO [NoteTag] (Name) VALUES ('General')
 GO
+
 INSERT INTO [NoteTag] (Name) VALUES ('Configuration')
 GO
+
 INSERT INTO [NoteTag] (Name) VALUES ('Diagnostic')
 GO
 
@@ -4542,6 +4903,18 @@ CREATE TABLE [Note] (
     UserAccount VARCHAR(MAX) NOT NULL DEFAULT SUSER_NAME(),
     Timestamp DATETIME NOT NULL DEFAULT GETUTCDATE(),
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_Note_NoteApplicationID
+ON Note(NoteApplicationID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Note_NoteTagID
+ON Note(NoteTagID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Note_NoteTypeID
+ON Note(NoteTypeID ASC)
 GO
 
 CREATE NONCLUSTERED INDEX IX_Note_NoteTypeID_ReferenceTableID  
@@ -4591,6 +4964,10 @@ CREATE TABLE MetersToDataPush
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_MetersToDataPush_RemoteXDAInstanceID
+ON MetersToDataPush(RemoteXDAInstanceID ASC)
+GO
+
 CREATE TABLE AssetsToDataPush
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -4603,6 +4980,10 @@ CREATE TABLE AssetsToDataPush
     Synced bit NOT NULL,
     CONSTRAINT UC_AssetsToDataPush_RemoteXDAInstanceID_LocalXDAAssetID UNIQUE(RemoteXDAInstanceID, LocalXDAAssetID)
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetsToDataPush_RemoteXDAInstanceID
+ON AssetsToDataPush(RemoteXDAInstanceID ASC)
 GO
 
 CREATE TABLE FileGroupLocalToRemote
@@ -4628,6 +5009,15 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_FileGroupLocalToRemote_RemoteFileGroupID
 ON FileGroupLocalToRemote(RemoteFileGroupID ASC)
+GO
+
+-- Magnitude Duration Charts for PQDashboard and SEBrowser --
+CREATE TABLE StandardMagDurCurve(
+    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name varchar(200) NOT NULL,
+    Area Geometry NULL,
+    Color varchar(255) NOT NULL
+)
 GO
 
 -- ------------ --
@@ -4687,6 +5077,22 @@ CREATE TABLE ContourChannelType
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_ContourChannelType_ContourColorScaleID
+ON ContourChannelType(ContourColorScaleID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourChannelType_MeasurementTypeID
+ON ContourChannelType(MeasurementTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourChannelType_MeasurementCharacteristicID
+ON ContourChannelType(MeasurementCharacteristicID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourChannelType_PhaseID
+ON ContourChannelType(PhaseID ASC)
+GO
+
 CREATE TABLE ContourColorScalePoint
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -4695,6 +5101,10 @@ CREATE TABLE ContourColorScalePoint
     Color INT NOT NULL,
     OrderID INT NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourColorScalePoint_ContourColorScaleID
+ON ContourColorScalePoint(ContourColorScaleID ASC)
 GO
 
 CREATE TABLE ContourAnimation
@@ -4743,6 +5153,10 @@ CREATE TABLE Company
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Company_CompanyTypeID
+ON Company(CompanyTypeID ASC)
+GO
+
 CREATE TABLE CompanyMeter
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -4753,6 +5167,14 @@ CREATE TABLE CompanyMeter
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_CompanyMeter_MeterID 
+ON CompanyMeter(MeterID) 
+GO
+
+CREATE NONCLUSTERED INDEX IX_CompanyMeter_CompanyID
+ON CompanyMeter(CompanyID) 
+GO
+
 CREATE TABLE [dbo].[PQMarkCompanyCustomer](
     [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [PQMarkCompanyID] [int] NOT NULL FOREIGN KEY REFERENCES Company(ID),
@@ -4760,12 +5182,8 @@ CREATE TABLE [dbo].[PQMarkCompanyCustomer](
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_MeterID 
-ON CompanyMeter(MeterID) 
-GO
-
-CREATE NONCLUSTERED INDEX IX_PQMarkCompanyMeter_CompanyID
-ON CompanyMeter(CompanyID) 
+CREATE NONCLUSTERED INDEX IX_PQMarkCompanyCustomer_PQMarkCompanyID 
+ON PQMarkCompanyCustomer(PQMarkCompanyID) 
 GO
 
 CREATE TABLE PQMarkAggregate
@@ -5007,7 +5425,6 @@ CREATE TABLE CBStatus (
 )
 GO
 
-
 CREATE TABLE CBRestrikeType (
     ID INT NOT NULL PRIMARY KEY,
     Description VARCHAR(200) NOT NULL
@@ -5019,7 +5436,6 @@ CREATE TABLE CBSwitchingCondition (
     Description VARCHAR(200) NOT NULL
 )
 GO
-
 
 CREATE TABLE CBAnalyticResult (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -5374,7 +5790,6 @@ AS BEGIN
 END
 GO
 
-
 ----- VIEWS -----
 
 CREATE VIEW ActiveHost AS
@@ -5563,9 +5978,6 @@ SELECT  Breaker.ID AS BreakerID,
             Event ON Event.ID = RelayPerformance.EventID
 GO
 
-
-
-
 CREATE VIEW MeterDetail
 AS
 SELECT  Meter.ID,
@@ -5587,7 +5999,6 @@ SELECT  Meter.ID,
 FROM    Meter INNER JOIN
         Location ON Meter.LocationID = Location.ID LEFT OUTER JOIN
         Setting ON Setting.Name = 'DefaultMeterTimeZone'
-
 GO
 
 CREATE VIEW LineView
@@ -5635,7 +6046,6 @@ SELECT	Line.ID,
             WHERE AssetRelationship.ChildID = Line.ID AND AssetRelationship.AssetRelationshipTypeID = (SELECT ID FROM AssetRelationShipType WHERE Name = 'Line-LineSegment')),0)
         AS X1
     FROM LINE
-
 GO
 
 CREATE VIEW MeterAssetDetail AS
@@ -5670,7 +6080,6 @@ FROM
     AssetRelationshipType ON AssetRelationship.AssetRelationshipTypeID = AssetRelationshipType.ID
 GO
 
-
 CREATE VIEW ChannelDetail
 AS
 SELECT
@@ -5701,7 +6110,6 @@ SELECT
      SeriesType ON dbo.Series.SeriesTypeID = dbo.SeriesType.ID
 GO
 
-
 CREATE VIEW DefaultAlarmRangeLimitView
 AS
 SELECT
@@ -5724,38 +6132,38 @@ FROM
     MeasurementType ON DefaultAlarmRangeLimit.MeasurementTypeID = MeasurementType.ID
 GO
 
- CREATE VIEW AlarmRangeLimitView
- AS
- SELECT
-     AlarmRangeLimit.ID,
-     AlarmRangeLimit.ChannelID,
-     Channel.MeterID,
-     Channel.AssetID,
-     Channel.Name,
-     AlarmRangeLimit.AlarmTypeID,
-     AlarmRangeLimit.Severity,
-     AlarmRangeLimit.High,
-     AlarmRangeLimit.Low,
-     AlarmRangeLimit.RangeInclusive,
-     AlarmRangeLimit.PerUnit,
-     AlarmRangeLimit.Enabled,
-     MeasurementType.Name AS MeasurementType,
-     MeasurementCharacteristic.Name AS MeasurementCharacteristic,
-     Phase.Name AS Phase,
-     Channel.HarmonicGroup,
-     Channel.MeasurementTypeID,
-     Channel.MeasurementCharacteristicID,
-     Channel.PhaseID,
-     AlarmRangeLimit.IsDefault,
-     Meter.Name AS MeterName
- FROM
-     AlarmRangeLimit JOIN
-     Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
-     MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
-     MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
-     Phase ON Channel.PhaseID = Phase.ID JOIN
-     Meter ON Channel.MeterID = Meter.ID
- GO
+CREATE VIEW AlarmRangeLimitView
+AS
+SELECT
+    AlarmRangeLimit.ID,
+    AlarmRangeLimit.ChannelID,
+    Channel.MeterID,
+    Channel.AssetID,
+    Channel.Name,
+    AlarmRangeLimit.AlarmTypeID,
+    AlarmRangeLimit.Severity,
+    AlarmRangeLimit.High,
+    AlarmRangeLimit.Low,
+    AlarmRangeLimit.RangeInclusive,
+    AlarmRangeLimit.PerUnit,
+    AlarmRangeLimit.Enabled,
+    MeasurementType.Name AS MeasurementType,
+    MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+    Phase.Name AS Phase,
+    Channel.HarmonicGroup,
+    Channel.MeasurementTypeID,
+    Channel.MeasurementCharacteristicID,
+    Channel.PhaseID,
+    AlarmRangeLimit.IsDefault,
+    Meter.Name AS MeterName
+FROM
+    AlarmRangeLimit JOIN
+    Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
+    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+    Phase ON Channel.PhaseID = Phase.ID JOIN
+    Meter ON Channel.MeterID = Meter.ID
+GO
 
 CREATE VIEW MeterAssetGroupView
 AS
@@ -5774,39 +6182,38 @@ FROM
     Location ON Meter.LocationID = Location.ID
 GO
 
- CREATE VIEW AssetAssetGroupView
- AS
- SELECT
-    AssetAssetGroup.ID,
-    Asset.AssetKey AS AssetName,
-    Asset.AssetName AS LongAssetName,
-    Asset.ID AS AssetID,
-    AssetType.Name AS AssetType,
-    (SELECT Top 1 LocationKey FROM Location WHERE Location.ID IN (SELECT LocationID FROM AssetLocation WHERE AssetLocation.AssetID = Asset.ID)) AS AssetLocation,
-    AssetGroupID,
-    AssetGroup.Name,
-    AssetGroup.DisplayDashboard
- FROM
-    AssetAssetGroup JOIN
-    Asset ON AssetAssetGroup.AssetID = Asset.ID LEFT JOIN
-    AssetGroup ON AssetAssetGroup.AssetGroupID = AssetGroup.ID JOIN
-    AssetType ON Asset.AssetTypeID = AssetType.ID
+CREATE VIEW AssetAssetGroupView
+AS
+SELECT
+   AssetAssetGroup.ID,
+   Asset.AssetKey AS AssetName,
+   Asset.AssetName AS LongAssetName,
+   Asset.ID AS AssetID,
+   AssetType.Name AS AssetType,
+   (SELECT Top 1 LocationKey FROM Location WHERE Location.ID IN (SELECT LocationID FROM AssetLocation WHERE AssetLocation.AssetID = Asset.ID)) AS AssetLocation,
+   AssetGroupID,
+   AssetGroup.Name,
+   AssetGroup.DisplayDashboard
+FROM
+   AssetAssetGroup JOIN
+   Asset ON AssetAssetGroup.AssetID = Asset.ID LEFT JOIN
+   AssetGroup ON AssetAssetGroup.AssetGroupID = AssetGroup.ID JOIN
+   AssetType ON Asset.AssetTypeID = AssetType.ID
 GO
 
- CREATE VIEW AssetGroupAssetGroupView
- AS
- SELECT
-     AssetGroupAssetGroup.ID,
-     AssetGroupAssetGroup.ParentAssetGroupID,
-     AssetGroupAssetGroup.ChildAssetGroupID,
-     Parent.Name as ParentAssetGroupName,
-     Child.Name as ChildAssetGroupName
- FROM
-     AssetGroupAssetGroup JOIN
-     AssetGroup as Parent ON AssetGroupAssetGroup.ParentAssetGroupID = Parent.ID JOIN
-     AssetGroup as Child ON AssetGroupAssetGroup.ChildAssetGroupID = Child.ID
- GO
-
+CREATE VIEW AssetGroupAssetGroupView
+AS
+SELECT
+    AssetGroupAssetGroup.ID,
+    AssetGroupAssetGroup.ParentAssetGroupID,
+    AssetGroupAssetGroup.ChildAssetGroupID,
+    Parent.Name as ParentAssetGroupName,
+    Child.Name as ChildAssetGroupName
+FROM
+    AssetGroupAssetGroup JOIN
+    AssetGroup as Parent ON AssetGroupAssetGroup.ParentAssetGroupID = Parent.ID JOIN
+    AssetGroup as Child ON AssetGroupAssetGroup.ChildAssetGroupID = Child.ID
+GO
 
 CREATE VIEW UserAccountAssetGroupView
 AS
@@ -5862,38 +6269,38 @@ FROM
         Channel.HarmonicGroup = ContourChannelType.HarmonicGroup
 GO
 
- CREATE VIEW EventView
- AS
- SELECT
-     Event.ID,
-     Event.FileGroupID,
-     Event.MeterID,
-     Event.AssetID,
-     Event.EventTypeID,
-     Event.EventDataID,
-     Event.Name,
-     Event.Alias,
-     Event.ShortName,
-     Event.StartTime,
-     Event.EndTime,
-     Event.Samples,
-     Event.TimeZoneOffset,
-     Event.SamplesPerSecond,
-     Event.SamplesPerCycle,
-     Event.Description,
-     Event.FileVersion,
-     Event.UpdatedBy,
-     Asset.AssetName,
-     Meter.Name AS MeterName,
-     Location.Name AS StationName,
-     EventType.Name AS EventTypeName
- FROM
-     Event JOIN
-     Meter ON Event.MeterID = Meter.ID JOIN
-     Location ON Meter.LocationID = Location.ID JOIN
-     Asset ON Event.AssetID = Asset.ID JOIN
-     MeterAsset ON MeterAsset.MeterID = Meter.ID AND MeterAsset.AssetID = Asset.ID JOIN
-     EventType ON Event.EventTypeID = EventType.ID
+CREATE VIEW EventView
+AS
+SELECT
+    Event.ID,
+    Event.FileGroupID,
+    Event.MeterID,
+    Event.AssetID,
+    Event.EventTypeID,
+    Event.EventDataID,
+    Event.Name,
+    Event.Alias,
+    Event.ShortName,
+    Event.StartTime,
+    Event.EndTime,
+    Event.Samples,
+    Event.TimeZoneOffset,
+    Event.SamplesPerSecond,
+    Event.SamplesPerCycle,
+    Event.Description,
+    Event.FileVersion,
+    Event.UpdatedBy,
+    Asset.AssetName,
+    Meter.Name AS MeterName,
+    Location.Name AS StationName,
+    EventType.Name AS EventTypeName
+FROM
+    Event JOIN
+    Meter ON Event.MeterID = Meter.ID JOIN
+    Location ON Meter.LocationID = Location.ID JOIN
+    Asset ON Event.AssetID = Asset.ID JOIN
+    MeterAsset ON MeterAsset.MeterID = Meter.ID AND MeterAsset.AssetID = Asset.ID JOIN
+    EventType ON Event.EventTypeID = EventType.ID
 GO
 
 CREATE VIEW TriggeredEmailDataSourceEmailTypeView 
@@ -6016,8 +6423,6 @@ SELECT
  WHERE
      EventType.Name = 'Fault'
  GO
-
-
 
 CREATE VIEW WorkbenchVoltageCurveView
 AS
@@ -6340,7 +6745,6 @@ FROM
      ) Sag
  GO
 
-
 CREATE FUNCTION RecursiveMeterSearch(@assetGroupID int)
 RETURNS TABLE
 AS
@@ -6371,7 +6775,6 @@ RETURN
         MeterAssetGroup.AssetGroupID = @assetGroupID OR
         MeterAssetGroup.AssetGroupID IN (SELECT ChildAssetGroupID FROM AssetGroupHierarchy)
 GO
-
 
 ----- PROCEDURES -----
 
@@ -6669,37 +7072,6 @@ BEGIN
 END
 GO
 
------ Standard PQ Apps -----
-INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES ('Configure',1)
-GO
-INSERT INTO PQApplicationsCategory (Name, SortOrder) VALUES ('Visualize',3)
-GO
-INSERT INTO PQApplicationsCategory (Name, SortOrder) VALUES ('Interval Data',4)
-GO
-
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('System Center', 'http://localhost:8987','./Images/Tiles/SystemCenter.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),0)
-GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Dashboard', 'http://localhost/PQDashboard','./Images/Tiles/PQDashboard.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),1)
-GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('PQ Browser', 'http://localhost/PQBrowser','./Images/Tiles/PQBrowser.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),2)
-GO
-INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES ('SPCTools', 'SPCTools/index.cshtml','./Images/Tiles/SPCTools.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Interval Data'),0)
-GO
--- The Following are separate Apps (only to be added if the Apps are installed) --
---INSERT INTO PQApplicationsCategory (Name,SortOrder) VALUES 
---('Collection',2),
---('Report',5)
---GO
-
---INSERT INTO PQApplications (Name,URL,Image,CategoryID,SortOrder) VALUES 
---('LSCVS', 'http://localhost/LSCVS','./Images/Tiles/LSCVS.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Report'),0),
---('miMD', 'http://localhost:8986','./Images/Tiles/miMD.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),2),
---('openMIC', 'http://localhost:8089','./Images/Tiles/openMIC.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Collection'),0),
---('PQDigest', 'http://localhost/PQDigest','./Images/Tiles/PQDigest.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Visualize'),3),
---('TrenDAP', 'http://localhost/TrenDAP','./Images/Tiles/TrenDAP.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Interval Data'),1),
---('Notification Pages', 'http://localhost/NotificationPages','./Images/Tiles/NotificationPages.png',(SELECT ID FROM PQApplicationsCategory WHERE NAME='Configure'),1)
---GO
-
 ----- PQInvestigator Integration -----
 
 -- The following commented statements are used to create a link to the PQInvestigator database server.
@@ -6711,13 +7083,4 @@ GO
 --EXEC sp_addlinkedsrvlogin PQInvestigator, 'FALSE', [LocalLogin], [PQIAdmin], [PQIPassword]
 --GO
 
-
 -- Note PQMark might not work properly with this schema --
--- Magnitude Duraation Charts for PQDashboard and SEBrowser --
-CREATE TABLE StandardMagDurCurve(
-    ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Name varchar(200) NOT NULL,
-    Area Geometry NULL,
-    Color varchar(255) NOT NULL,
-)
-GO
