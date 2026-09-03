@@ -1,13 +1,13 @@
 ﻿---------------- SEBrowser TableSpace -------------
-CREATE TABLE [SEBrowser.Setting]
+CREATE TABLE [dbo].[SEBrowser.Setting]
 (
-   	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	[Scope] [varchar](64) NULL DEFAULT(N'app.setting'),
-	[Name] [varchar](64) NULL,
-	[Value] [varchar](512) NULL,
-    [DefaultValue] [varchar](512) NULL,
-	[ApplicationInstance] [bit] NOT NULL DEFAULT(0),
-	[Roles] [varchar](200) NULL Default(N'Administrator'),
+   	ID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Scope varchar(64) NULL DEFAULT(N'app.setting'),
+	Name varchar(64) NULL,
+	Value varchar(512) NULL,
+    DefaultValue varchar(512) NULL,
+	ApplicationInstance bit NOT NULL DEFAULT(0),
+	Roles varchar(200) NULL Default(N'Administrator'),
 )
 GO
 
@@ -65,11 +65,11 @@ GO
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchLongestDisturbanceView] AS
 SELECT
- Disturbance.ID AS DisturbanceID,
- FORMAT(Disturbance.DurationCycles, 'F2') AS [Longest Duration (cycles)],
- FORMAT(Disturbance.DurationSeconds * 1000, 'F3') AS [Longest Duration (ms)]
+	Disturbance.ID AS DisturbanceID,
+	FORMAT(Disturbance.DurationCycles, 'F2') AS [Longest Duration (cycles)],
+	FORMAT(Disturbance.DurationSeconds * 1000, 'F3') AS [Longest Duration (ms)]
 FROM
- Disturbance 
+	Disturbance 
 GO
 
 /*
@@ -82,11 +82,11 @@ GO
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchShortestDisturbanceView] AS
 SELECT
- Disturbance.ID AS DisturbanceID,
- FORMAT(Disturbance.DurationCycles, 'F2') AS [Shortest Duration (cycles)],
- FORMAT(Disturbance.DurationSeconds * 1000, 'F3') AS [Shortest Duration (ms)]
+	Disturbance.ID AS DisturbanceID,
+	FORMAT(Disturbance.DurationCycles, 'F2') AS [Shortest Duration (cycles)],
+	FORMAT(Disturbance.DurationSeconds * 1000, 'F3') AS [Shortest Duration (ms)]
 FROM
- Disturbance 
+	Disturbance 
 GO
 
 /*
@@ -99,11 +99,11 @@ GO
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchSmallestDisturbanceView] AS
 SELECT
- Disturbance.ID AS DisturbanceID,
- FORMAT(Disturbance.PerUnitMagnitude * 100, 'F0') AS [Smallest Magnitude (%)],
- FORMAT(Disturbance.Magnitude / 1000, 'F3') AS [Smallest Magnitude (kV)]
+	Disturbance.ID AS DisturbanceID,
+	FORMAT(Disturbance.PerUnitMagnitude * 100, 'F0') AS [Smallest Magnitude (%)],
+	FORMAT(Disturbance.Magnitude / 1000, 'F3') AS [Smallest Magnitude (kV)]
 FROM
- Disturbance 
+	Disturbance 
 GO
 
 /*
@@ -116,11 +116,11 @@ GO
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchLargestDisturbanceView] AS
 SELECT
- Disturbance.ID AS DisturbanceID,
- FORMAT(Disturbance.PerUnitMagnitude * 100, 'F0') AS [Largest Magnitude (%)],
- FORMAT(Disturbance.Magnitude / 1000, 'F3') AS [Largest Magnitude (kV)]
+	Disturbance.ID AS DisturbanceID,
+	FORMAT(Disturbance.PerUnitMagnitude * 100, 'F0') AS [Largest Magnitude (%)],
+	FORMAT(Disturbance.Magnitude / 1000, 'F3') AS [Largest Magnitude (kV)]
 FROM
- Disturbance 
+	Disturbance 
 GO
 
 /*
@@ -133,64 +133,64 @@ GO
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchFaultView] AS
 SELECT
- FaultSummary.FaultNumber AS FaultID,
- FaultSummary.EventID AS EventID,
- FaultSummary.Algorithm AS [Fault Dist Alg],
- FORMAT(FaultSummary.Distance, 'F2') AS [Fault Dist],
- FORMAT(FaultSummary.CurrentMagnitude, 'F0') AS [Fault Current Mag],
- FORMAT(FaultSummary.Inception,'HH:mm:ss.fffffff') AS [Fault Inception]
+	FaultSummary.FaultNumber AS FaultID,
+	FaultSummary.EventID AS EventID,
+	FaultSummary.Algorithm AS [Fault Dist Alg],
+	FORMAT(FaultSummary.Distance, 'F2') AS [Fault Dist],
+	FORMAT(FaultSummary.CurrentMagnitude, 'F0') AS [Fault Current Mag],
+	FORMAT(FaultSummary.Inception,'HH:mm:ss.fffffff') AS [Fault Inception]
 FROM
- FaultSummary 
+	FaultSummary 
 WHERE 
- FaultSummary.IsSelectedAlgorithm <> 0 AND
- FaultSummary.IsValid <> 0 AND
- FaultSummary.IsSuppressed = 0
+	FaultSummary.IsSelectedAlgorithm <> 0 AND
+	FaultSummary.IsValid <> 0 AND
+	FaultSummary.IsSuppressed = 0
 GO
 
 
 
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationName', N'SEBrowser', N'SEBrowser', 0, N'Administrator')
+INSERT INTO [SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationName', N'SEBrowser', N'SEBrowser', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationDescription', N'System Event Browser', N'System Event Browser', 0, N'Administrator')
+INSERT INTO [SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationDescription', N'System Event Browser', N'System Event Browser', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationKeywords', N'open source, utility, browser, power quality, management', N'open source, utility, browser, power quality, management', 0, N'Administrator')
+INSERT INTO [SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationKeywords', N'open source, utility, browser, power quality, management', N'open source, utility, browser, power quality, management', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'bootstrapTheme', N'~/Content/bootstrap-theme.css', N'~/Content/bootstrap-theme.css', 0, N'Administrator')
+INSERT INTO [SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'bootstrapTheme', N'~/Content/bootstrap-theme.css', N'~/Content/bootstrap-theme.css', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'XDAInstance', N'http://localhost:8989', N'http://localhost:8989', 0, N'Administrator')
+INSERT INTO [SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'XDAInstance', N'http://localhost:8989', N'http://localhost:8989', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'SCInstance', N'http://localhost:8987', N'http://localhost:8987', 0, N'Administrator')
+INSERT INTO [SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'SCInstance', N'http://localhost:8987', N'http://localhost:8987', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'OpenSEEInstance', N'http://localhost/OpenSEE', N'http://localhost/OpenSEE', 0, N'Administrator')
+INSERT INTO [SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'OpenSEEInstance', N'http://localhost/OpenSEE', N'http://localhost/OpenSEE', 0, N'Administrator')
 GO
-INSERT [dbo].[SEBrowser.Setting]([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'eventPreviewPane.widgetSetting', N'OpenSEEInstance', N'http://localhost/OpenSEE', N'http://localhost/OpenSEE', 0, N'Administrator')
-GO
-
-
-Insert into ValueListGroup (Name, Description) VALUES('CustomReports', 'Custom Reports to list on the SEBrowser nav bar')
-GO
-Insert into ValueList (GroupID, Value, AltValue, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'CustomReports'), 'Breaker Report', 'breakerreport',1)
-GO
-Insert into ValueList (GroupID, Value, AltValue, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'CustomReports'), 'TripCoil Report', 'relayreport',2)
-GO
-Insert into ValueList (GroupID, Value, AltValue, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'CustomReports'), 'CapBank Report', 'capbankreport',3)
+INSERT INTO [SEBrowser.Setting]([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'eventPreviewPane.widgetSetting', N'OpenSEEInstance', N'http://localhost/OpenSEE', N'http://localhost/OpenSEE', 0, N'Administrator')
 GO
 
-CREATE TABLE [SEBrowser.WidgetCategory] (
+
+INSERT INTO ValueListGroup (Name, Description) VALUES('CustomReports', 'Custom Reports to list on the SEBrowser nav bar')
+GO
+INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'CustomReports'), 'Breaker Report', 'breakerreport',1)
+GO
+INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'CustomReports'), 'TripCoil Report', 'relayreport',2)
+GO
+INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'CustomReports'), 'CapBank Report', 'capbankreport',3)
+GO
+
+CREATE TABLE [dbo].[SEBrowser.WidgetCategory] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name varchar(50) NOT NULL,
     OrderBy INT NOT NULL
 )
 GO
 
-INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Waveform Analysis', 1)
+INSERT INTO [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Waveform Analysis', 1)
 GO
-INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Fault', 2)
+INSERT INTO [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Fault', 2)
 GO
-INSERT [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Configuration', 3)
+INSERT INTO [SEBrowser.WidgetCategory] (Name, OrderBy) VALUES ('Configuration', 3)
 GO
 
-CREATE TABLE [SEBrowser.Widget] (
+CREATE TABLE [dbo].[SEBrowser.Widget] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name varchar(50) NOT NULL DEFAULT(1),
     Setting varchar(max) NOT NULL Default(''),
@@ -198,19 +198,19 @@ CREATE TABLE [SEBrowser.Widget] (
 )
 GO
 
-INSERT [SEBrowser.Widget] (Name, Type) VALUES ('OpenSEE','OpenSEE')
+INSERT INTO [SEBrowser.Widget] (Name, Type) VALUES ('OpenSEE','OpenSEE')
 GO
-INSERT [SEBrowser.Widget] (Name, Type) VALUES ('VoltageDisturbances','VoltageDisturbances')
+INSERT INTO [SEBrowser.Widget] (Name, Type) VALUES ('VoltageDisturbances','VoltageDisturbances')
 GO
-INSERT [SEBrowser.Widget] (Name, Type) VALUES ('AssetHistoryTable', 'AssetHistoryTable')
+INSERT INTO [SEBrowser.Widget] (Name, Type) VALUES ('AssetHistoryTable', 'AssetHistoryTable')
 GO
-INSERT [SEBrowser.Widget] (Name, Type) VALUES ('AssetHistoryStats','AssetHistoryStats')
+INSERT INTO [SEBrowser.Widget] (Name, Type) VALUES ('AssetHistoryStats','AssetHistoryStats')
 GO
-INSERT [SEBrowser.Widget] (Name, Type) VALUES ('FileInfo','FileInfo')
+INSERT INTO [SEBrowser.Widget] (Name, Type) VALUES ('FileInfo','FileInfo')
 GO
 
 
-CREATE TABLE [SEBrowser.WidgetWidgetCategory] (
+CREATE TABLE [dbo].[SEBrowser.WidgetWidgetCategory] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     WidgetID INT NOT NULL REFERENCES [SEBrowser.Widget](ID),
     CategoryID INT NOT NULL REFERENCES [SEBrowser.WidgetCategory](ID),
@@ -218,18 +218,18 @@ CREATE TABLE [SEBrowser.WidgetWidgetCategory] (
 )
 GO
 
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (1, 1)
+INSERT INTO [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (1, 1)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (2, 1)
+INSERT INTO [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (2, 1)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (3, 2)
+INSERT INTO [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (3, 2)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (4, 2)
+INSERT INTO [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (4, 2)
 GO
-INSERT [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (5, 3)
+INSERT INTO [SEBrowser.WidgetWidgetCategory] (WidgetID, CategoryID) VALUES (5, 3)
 GO
 
-CREATE VIEW [SEBrowser.WidgetView] AS
+CREATE VIEW [dbo].[SEBrowser.WidgetView] AS
 	SELECT 
 	Widget.*,
     Widgetcategory.ID AS CategoryID
@@ -239,7 +239,7 @@ FROM
     [SEBrowser.WidgetCategory] Widgetcategory ON Widgetcategory.ID = [SEBrowser.WidgetWidgetCategory].CategoryID
 GO
 
-Create View [EventWidgets.EventView] AS
+CREATE VIEW [dbo].[EventWidgets.EventView] AS
 	SELECT
 		Event.ID, 
 		Event.StartTime,
@@ -265,7 +265,7 @@ Create View [EventWidgets.EventView] AS
 		) as distTbl ON distTbl.EventID = Event.ID
 GO
 
-Create View [EventWidgets.EventEventTagView] AS
+CREATE VIEW [dbo].[EventWidgets.EventEventTagView] AS
 	SELECT
 		EventEventTag.ID,
 		EventEventTag.EventID,
@@ -277,7 +277,7 @@ Create View [EventWidgets.EventEventTagView] AS
 		EventTag ON EventEventTag.EventTagID = EventTag.ID
 GO
 
-CREATE VIEW [DetailedMeter] AS
+CREATE VIEW [dbo].[DetailedMeter] AS
 	SELECT
 		DISTINCT
 		Meter.ID,
@@ -302,7 +302,7 @@ CREATE VIEW [DetailedMeter] AS
 		Location.Name
 GO
 
-CREATE VIEW [DetailedAsset] AS
+CREATE VIEW [dbo].[DetailedAsset] AS
 	SELECT
 		DISTINCT
 		Asset.ID,
@@ -327,7 +327,7 @@ CREATE VIEW [DetailedAsset] AS
 		AssetType.Name
 GO
 
-CREATE VIEW [DetailedLocation] AS
+CREATE VIEW [dbo].[DetailedLocation] AS
 	SELECT
 		DISTINCT
 		l.ID,
