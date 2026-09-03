@@ -12,12 +12,11 @@ CREATE TABLE [SEBrowser.Setting]
 GO
 
 /*
+	Contains event attributes, such as meter, asset, or substation attributes, and event start time
 	Required Fields are:
 		EventID for matching,
-		DisturbanceID for matching
-		Time for showing the Time of the Event,
-		Asset
-	Everything else can be customized to appear in the UI.
+		Time for showing the Time of the Event
+	Anything else can be customized to appear in the UI.
 */
 
 CREATE VIEW [dbo].[SEBrowser.EventSearchEventView] AS
@@ -56,58 +55,96 @@ FROM
     AssetType ON Asset.AssetTypeID = AssetType.ID
 GO
 
-CREATE VIEW [dbo].[SEBrowser.EventSearchDetailsView] AS
+/*
+	Contains attributes for the longest disturbance
+	Required Fields are:
+		EventID for matching,
+		DisturbanceID for matching
+	Anything else can be customized to appear in the UI.
+*/
+
+CREATE VIEW [dbo].[SEBrowser.EventSearchLongestDisturbanceView] AS
 SELECT
-    Event.ID EventID,
-    FaultSummary.FaultNumber FaultID,
-    WorstDisturbance.ID DisturbanceID,
-    DisturbancePhase.Name Phase,
-    FORMAT(COALESCE(WorstDisturbance.DurationCycles, FaultSummary.DurationCycles), 'F2') [Duration (cycles)],
-    FORMAT(COALESCE(WorstDisturbance.DurationSeconds, FaultSummary.DurationSeconds), 'F4') [Duration (sec)],
-    WorstDisturbance.PerUnitMagnitude MagDurMagnitude,
-    WorstDisturbance.DurationSeconds MagDurDuration,
-    CASE WHEN WorstLLDisturbance.PerUnitMagnitude <> -1E308
-        THEN FORMAT(WorstLLDisturbance.PerUnitMagnitude * 100.0, 'F2')
-        ELSE 'NaN'
-    END [Worst LL Magnitude (%nominal)],
-    CASE WHEN WorstLNDisturbance.PerUnitMagnitude <> -1E308
-        THEN FORMAT(WorstLNDisturbance.PerUnitMagnitude * 100.0, 'F2')
-        ELSE 'NaN'
-    END [Worst LN Magnitude (%nominal)],
-    EventType.Name [Event Type],
-    FaultSummary.Algorithm [Fault Dist Alg],
-    FORMAT(FaultSummary.Distance, 'F2') [Fault Dist],
-    FORMAT(FaultSummary.CurrentMagnitude, 'F0') [Fault Current Mag],
-    FORMAT(FaultSummary.Inception,'HH:mm:ss.fffffff') [Fault Inception]
+ Disturbance.ID AS DisturbanceID,
+ FORMAT(Disturbance.DurationCycles, 'F2') AS [Longest Duration (cycles)],
+ FORMAT(Disturbance.DurationSeconds * 1000, 'F3') AS [Longest Duration (ms)]
 FROM
-    Event JOIN
-    EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
-    EventWorstDisturbance ON
-        EventWorstDisturbance.EventID = Event.ID AND
-        EventType.Name IN ('Sag', 'Swell', 'Interruption', 'Transient') LEFT OUTER JOIN
-    Disturbance WorstDisturbance ON EventWorstDisturbance.WorstDisturbanceID = WorstDisturbance.ID LEFT OUTER JOIN
-    Disturbance WorstLLDisturbance ON EventWorstDisturbance.WorstLLDisturbanceID = WorstLLDisturbance.ID LEFT OUTER JOIN
-    Disturbance WorstLNDisturbance ON EventWorstDisturbance.WorstLNDisturbanceID = WorstLNDisturbance.ID LEFT OUTER JOIN
-    Phase DisturbancePhase ON WorstDisturbance.PhaseID = DisturbancePhase.ID LEFT OUTER JOIN
-    EventType DisturbanceType ON WorstDisturbance.EventTypeID = DisturbanceType.ID LEFT OUTER JOIN
-    FaultGroup ON
-        FaultGroup.EventID = Event.ID AND
-        COALESCE(FaultGroup.FaultDetectionLogicResult, 0) <> 0 LEFT OUTER JOIN
-    FaultSummary ON
-        FaultSummary.EventID = Event.ID AND
-        FaultSummary.IsSelectedAlgorithm <> 0 AND
-        (
-            FaultGroup.ID IS NOT NULL OR
-            (
-                FaultSummary.IsValid <> 0 AND
-                FaultSummary.IsSuppressed = 0
-            )
-        ) AND
-        EventType.Name IN ('Fault', 'RecloseIntoFault')
-WHERE
-    EventWorstDisturbance.ID IS NOT NULL OR
-    FaultSummary.ID IS NOT NULL OR
-    EventType.Name IN ('BreakerOpen', 'Other')
+ Disturbance 
+GO
+
+/*
+	Contains attributes for the shortest disturbance
+	Required Fields are:
+		EventID for matching,
+		DisturbanceID for matching
+	Anything else can be customized to appear in the UI.
+*/
+
+CREATE VIEW [dbo].[SEBrowser.EventSearchShortestDisturbanceView] AS
+SELECT
+ Disturbance.ID AS DisturbanceID,
+ FORMAT(Disturbance.DurationCycles, 'F2') AS [Shortest Duration (cycles)],
+ FORMAT(Disturbance.DurationSeconds * 1000, 'F3') AS [Shortest Duration (ms)]
+FROM
+ Disturbance 
+GO
+
+/*
+	Contains attributes for the smallest magnitude (distance from nominal) disturbance
+	Required Fields are:
+		EventID for matching,
+		DisturbanceID for matching
+	Anything else can be customized to appear in the UI.
+*/
+
+CREATE VIEW [dbo].[SEBrowser.EventSearchSmallestDisturbanceView] AS
+SELECT
+ Disturbance.ID AS DisturbanceID,
+ FORMAT(Disturbance.PerUnitMagnitude * 100, 'F0') AS [Smallest Magnitude (%)],
+ FORMAT(Disturbance.Magnitude / 1000, 'F3') AS [Smallest Magnitude (kV)]
+FROM
+ Disturbance 
+GO
+
+/*
+	Contains attributes for the largest magnitude (distance from nominal) disturbance
+	Required Fields are:
+		EventID for matching,
+		DisturbanceID for matching
+	Anything else can be customized to appear in the UI.
+*/
+
+CREATE VIEW [dbo].[SEBrowser.EventSearchLargestDisturbanceView] AS
+SELECT
+ Disturbance.ID AS DisturbanceID,
+ FORMAT(Disturbance.PerUnitMagnitude * 100, 'F0') AS [Largest Magnitude (%)],
+ FORMAT(Disturbance.Magnitude / 1000, 'F3') AS [Largest Magnitude (kV)]
+FROM
+ Disturbance 
+GO
+
+/*
+	Contains fault attributes
+	Required Fields are:
+		EventID for matching,
+		FaultID for matching
+	Anything else can be customized to appear in the UI.
+*/
+
+CREATE VIEW [dbo].[SEBrowser.EventSearchFaultView] AS
+SELECT
+ FaultSummary.FaultNumber AS FaultID,
+ FaultSummary.EventID AS EventID,
+ FaultSummary.Algorithm AS [Fault Dist Alg],
+ FORMAT(FaultSummary.Distance, 'F2') AS [Fault Dist],
+ FORMAT(FaultSummary.CurrentMagnitude, 'F0') AS [Fault Current Mag],
+ FORMAT(FaultSummary.Inception,'HH:mm:ss.fffffff') AS [Fault Inception]
+FROM
+ FaultSummary 
+WHERE 
+ FaultSummary.IsSelectedAlgorithm <> 0 AND
+ FaultSummary.IsValid <> 0 AND
+ FaultSummary.IsSuppressed = 0
 GO
 
 
