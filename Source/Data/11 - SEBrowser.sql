@@ -6,7 +6,7 @@ CREATE TABLE [SEBrowser.Setting]
 	[Name] [varchar](64) NULL,
 	[Value] [varchar](512) NULL,
     [DefaultValue] [varchar](512) NULL,
-	[ApplicationInstance] [bit] NOT NULL,
+	[ApplicationInstance] [bit] NOT NULL DEFAULT(0),
 	[Roles] [varchar](200) NULL Default(N'Administrator'),
 )
 GO
