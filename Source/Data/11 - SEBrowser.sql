@@ -58,7 +58,6 @@ GO
 /*
 	Contains attributes for the longest disturbance
 	Required Fields are:
-		EventID for matching,
 		DisturbanceID for matching
 	Anything else can be customized to appear in the UI.
 */
@@ -75,7 +74,6 @@ GO
 /*
 	Contains attributes for the shortest disturbance
 	Required Fields are:
-		EventID for matching,
 		DisturbanceID for matching
 	Anything else can be customized to appear in the UI.
 */
@@ -92,7 +90,6 @@ GO
 /*
 	Contains attributes for the smallest magnitude (distance from nominal) disturbance
 	Required Fields are:
-		EventID for matching,
 		DisturbanceID for matching
 	Anything else can be customized to appear in the UI.
 */
@@ -109,7 +106,6 @@ GO
 /*
 	Contains attributes for the largest magnitude (distance from nominal) disturbance
 	Required Fields are:
-		EventID for matching,
 		DisturbanceID for matching
 	Anything else can be customized to appear in the UI.
 */
