@@ -143,8 +143,6 @@ WHERE
 	FaultSummary.IsSuppressed = 0
 GO
 
-
-
 INSERT INTO [SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationName', N'SEBrowser', N'SEBrowser', 0, N'Administrator')
 GO
 INSERT INTO [SEBrowser.Setting] ([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'app.setting', N'applicationDescription', N'System Event Browser', N'System Event Browser', 0, N'Administrator')
@@ -162,8 +160,21 @@ GO
 INSERT INTO [SEBrowser.Setting]([Scope], [Name], [Value], [DefaultValue], [ApplicationInstance], [Roles]) VALUES (N'eventPreviewPane.widgetSetting', N'OpenSEEInstance', N'http://localhost/OpenSEE', N'http://localhost/OpenSEE', 0, N'Administrator')
 GO
 
+CREATE TABLE [SEBrowser.Links] (
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name varchar(100) NOT NULL UNIQUE,
+	Display varchar(100) NOT NULL,
+	Value varchar(max) NOT NULL
+)
+GO
 
-INSERT INTO ValueListGroup (Name, Description) VALUES('CustomReports', 'Custom Reports to list on the SEBrowser nav bar')
+INSERT INTO [SEBrowser.Links] (Name, Display,Value) VALUES
+	('Breaker Report',0,'breakerreport'),
+	('TCE  Report',0,'relayreport'),
+	('CapBank Report',0,'capbankreport')
+GO
+
+INSERT INTO ValueListGroup (Name, Description) VALUES('CustomReports', 'Custom Reports to list in the PQ Browser nav bar')
 GO
 INSERT INTO ValueList (GroupID, Value, AltValue, SortOrder) VALUES((SELECT ID FROM ValueListGroup WHERE name = 'CustomReports'), 'Breaker Report', 'breakerreport',1)
 GO
