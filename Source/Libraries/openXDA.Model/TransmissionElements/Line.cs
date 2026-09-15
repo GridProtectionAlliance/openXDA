@@ -196,7 +196,10 @@ namespace openXDA.Model
                 if (p1.Length != p2.Length)
                     return p2.Length.CompareTo(p1.Length);
 
-                return p1.Segments[0].ID.CompareTo(p2.Segments[0].ID);
+                if (p1.Segments[0].ID != p2.Segments[0].ID)
+                    return p1.Segments[0].ID.CompareTo(p2.Segments[0].ID);
+
+                return p1.Segments.Last().ID.CompareTo(p2.Segments.Last().ID);
             });
 
             return result;
