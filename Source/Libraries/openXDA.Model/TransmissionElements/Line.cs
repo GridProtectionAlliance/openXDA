@@ -131,7 +131,9 @@ namespace openXDA.Model
                 segment.IsEnd ||
                 segment.ConnectedSegments.Count == 0;
 
-            List<LineSegment> lineEnds = [.. Segments.Where(IsEnd)];
+            List<LineSegment> lineEnds = [.. Segments
+                .OrderBy(segment => segment.ID)
+                .Where(IsEnd)];
 
             if (lineEnds.Count == 1)
                 return new List<TransmissionPath>()
@@ -163,29 +165,41 @@ namespace openXDA.Model
                     }
                 };
 
-
-            Dictionary<Tuple<int, int>, List<LineSegment>> result = new Dictionary<Tuple<int, int>, List<LineSegment>>();
+            List<TransmissionPath> result = [];
 
             // start by creating all potential combinations
 
-            for (int i = 1; i < lineEnds.Count; i++)
+            for (int i = 0; i < lineEnds.Count; i++)
             {
-                for (int j = (i-1); j > -1; j--)
+                for (int j = i + 1; j < lineEnds.Count; j++)
                 {
-                    result.Add(new Tuple<int, int>(lineEnds[i].ID, lineEnds[j].ID), WalkTheLine(lineEnds[i], lineEnds[j])); 
+                    LineSegment start = lineEnds[i];
+                    LineSegment end = lineEnds[j];
+                    List<LineSegment> path = WalkTheLine(start, end);
+                    if (path.Count == 0) continue;
+
+                    result.Add(new TransmissionPath()
+                    {
+                        Length = path.Select(seg => seg.Length).Sum(),
+                        X0 = path.Select(seg => seg.X0).Sum(),
+                        R0 = path.Select(seg => seg.R0).Sum(),
+                        X1 = path.Select(seg => seg.X1).Sum(),
+                        R1 = path.Select(seg => seg.R1).Sum(),
+                        Line = this,
+                        Segments = path
+                    });
                 }
             }
 
-            return result.Where(item => item.Value.Count > 0).Select(item => new TransmissionPath()
+            result.Sort((p1, p2) =>
             {
-                Length = item.Value.Select(seg => seg.Length).Sum(),
-                X0 = item.Value.Select(seg => seg.X0).Sum(),
-                R0 = item.Value.Select(seg => seg.R0).Sum(),
-                X1 = item.Value.Select(seg => seg.X1).Sum(),
-                R1 = item.Value.Select(seg => seg.R1).Sum(),
-                Line = this,
-                Segments = item.Value
-            }).OrderByDescending(item => item.Length).ToList();
+                if (p1.Length != p2.Length)
+                    return p2.Length.CompareTo(p1.Length);
+
+                return p1.Segments[0].ID.CompareTo(p2.Segments[0].ID);
+            });
+
+            return result;
         }
 
         /// <summary>
@@ -196,7 +210,8 @@ namespace openXDA.Model
             stack ??= new Stack<int>([start.ID]);
 
             List<LineSegment> nextSegments = [.. GetNextSegments(start)
-                .Where(next => !stack.Contains(next.ID))];
+                .Where(next => !stack.Contains(next.ID))
+                .OrderBy(next => next.ID)];
 
             // Don't treat taps as bridges; if start, F1, and F2 are all connected
             // to each other, do not allow the F1 path to visit F2 or vice-versa
