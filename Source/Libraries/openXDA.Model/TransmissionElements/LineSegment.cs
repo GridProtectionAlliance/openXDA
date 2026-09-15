@@ -164,10 +164,20 @@ namespace openXDA.Model
             if (connection is null)
                 return null;
 
-            TableOperations<LineSegment> lineTable = new(connection);
-            LineSegment line = lineTable.QueryRecordWhere("ID = {0}", asset.ID);
-            line.LazyContext = asset.LazyContext;
-            return line;
+            LineSegment lineSegment = asset.LazyContext.GetLineSegment(asset.ID);
+
+            if (lineSegment is not null)
+                return lineSegment;
+
+            TableOperations<LineSegment> lineSegmentTable = new(connection);
+            lineSegment = lineSegmentTable.QueryRecordWhere("ID = {0}", asset.ID);
+
+            if (lineSegment is null)
+                return null;
+
+            lineSegment = asset.LazyContext.GetLineSegment(lineSegment);
+            lineSegment.LazyContext = asset.LazyContext;
+            return lineSegment;
         }
 
         public static LineSegment DetailedLineSegment(Asset asset)
