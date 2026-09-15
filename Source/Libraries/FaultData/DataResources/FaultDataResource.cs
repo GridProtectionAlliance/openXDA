@@ -95,12 +95,13 @@ namespace FaultData.DataResources
                     FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
 
                 FaultLocationDataSet.FaultPaths = Line.Path
-                    .Where(path => localSegment is null || path.Segments[0] == localSegment || path.Segments.Last() == localSegment)
-                    .Select((path, index) => new FaultLocationDataSet.LinePath()
+                    .Select((Path, Index) => new { Path, Index })
+                    .Where(map => localSegment is null || map.Path.Segments[0] == localSegment || map.Path.Segments.Last() == localSegment)
+                    .Select(map => new FaultLocationDataSet.LinePath()
                     {
-                        PathNumber = index,
-                        TraverseForward = localSegment is null || path.Segments[0] == localSegment,
-                        Path = path.Segments.Select(segment => new FaultLocationDataSet.LineSegment()
+                        PathNumber = map.Index,
+                        TraverseForward = localSegment is null || map.Path.Segments[0] == localSegment,
+                        Path = map.Path.Segments.Select(segment => new FaultLocationDataSet.LineSegment()
                         {
                             ID = segment.ID,
                             Length = segment.Length,
