@@ -57,8 +57,18 @@ namespace openXDA.Model
             if (connection is null)
                 return null;
 
+            CapBankRelay capBank = asset.LazyContext?.GetRelay(asset.ID);
+
+            if (capBank is not null)
+                return capBank;
+
             TableOperations<CapBankRelay> capBankTable = new(connection);
-            CapBankRelay capBank = capBankTable.QueryRecordWhere("ID = {0}", asset.ID);
+            capBank = capBankTable.QueryRecordWhere("ID = {0}", asset.ID);
+
+            if (capBank is null)
+                return null;
+
+            capBank = asset.LazyContext.GetRelay(capBank);
             capBank.LazyContext = asset.LazyContext;
             return capBank;
         }

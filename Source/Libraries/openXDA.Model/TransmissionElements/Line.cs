@@ -275,12 +275,18 @@ namespace openXDA.Model
             if (connection is null)
                 return null;
 
-            TableOperations<Line> lineTable = new TableOperations<Line>(connection);
-            Line line = lineTable.QueryRecordWhere("ID = {0}", asset.ID);
+            Line line = asset.LazyContext.GetLine(asset.ID);
 
-            if (line == null)
+            if (line is not null)
+                return line;
+
+            TableOperations<Line> lineTable = new(connection);
+            line = lineTable.QueryRecordWhere("ID = {0}", asset.ID);
+
+            if (line is null)
                 return null;
 
+            line = asset.LazyContext.GetLine(line);
             line.LazyContext = asset.LazyContext;
             line.ConnectionFactory = asset.ConnectionFactory;
 
@@ -289,10 +295,8 @@ namespace openXDA.Model
 
         public static Line DetailedLine(Asset asset)
         {
-            using (AdoDataConnection connection = asset.ConnectionFactory())
-            {
-                return DetailedLine(asset, connection);
-            }
+            using AdoDataConnection connection = asset.ConnectionFactory();
+            return DetailedLine(asset, connection);
         }
 
         #endregion
