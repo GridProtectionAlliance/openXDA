@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -37,74 +38,24 @@ namespace XDAUpgradeValidation
 
         static void ValidateDependentAssemblies()
         {
-            const string runtimeSection =
-                @"<runtime>" +
-                @"  <assemblyBinding xmlns=""urn:schemas-microsoft-com:asm.v1"">" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""Microsoft.Owin"" publicKeyToken=""31bf3856ad364e35"" culture=""neutral"" />" +
-                @"      <bindingRedirect oldVersion=""0.0.0.0-2.1.0.0"" newVersion=""2.1.0.0"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""Microsoft.Owin.Security"" publicKeyToken=""31bf3856ad364e35"" culture=""neutral"" />" +
-                @"      <bindingRedirect oldVersion=""0.0.0.0-2.1.0.0"" newVersion=""2.1.0.0"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""System.Net.Http.Formatting"" publicKeyToken=""31bf3856ad364e35"" culture=""neutral"" />" +
-                @"      <bindingRedirect oldVersion=""0.0.0.0-5.2.3.0"" newVersion=""5.2.3.0"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""System.Net.Http"" publicKeyToken=""b03f5f7f11d50a3a"" culture=""neutral"" />" +
-                @"      <bindingRedirect oldVersion=""0.0.0.0-4.0.0.0"" newVersion=""4.0.0.0"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""Newtonsoft.Json"" culture=""neutral"" publicKeyToken=""30ad4fe6b2a6aeed"" />" +
-                @"      <bindingRedirect oldVersion=""0.0.0.0-6.0.0.0"" newVersion=""6.0.0.0"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""System.Web.Optimization"" publicKeyToken=""31bf3856ad364e35"" />" +
-                @"      <bindingRedirect oldVersion=""1.0.0.0-1.1.0.0"" newVersion=""1.1.0.0"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""WebGrease"" publicKeyToken=""31bf3856ad364e35"" />" +
-                @"      <bindingRedirect oldVersion=""0.0.0.0-1.6.5135.21930"" newVersion=""1.6.5135.21930"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""System.Web.Helpers"" publicKeyToken=""31bf3856ad364e35"" />" +
-                @"      <bindingRedirect oldVersion=""1.0.0.0-3.0.0.0"" newVersion=""3.0.0.0"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""System.Web.Mvc"" publicKeyToken=""31bf3856ad364e35"" />" +
-                @"      <bindingRedirect oldVersion=""1.0.0.0-5.2.3.0"" newVersion=""5.2.3.0"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""System.Web.WebPages"" publicKeyToken=""31bf3856ad364e35"" />" +
-                @"      <bindingRedirect oldVersion=""1.0.0.0-3.0.0.0"" newVersion=""3.0.0.0"" />" +
-                @"    </dependentAssembly>" +
-                @"    <dependentAssembly>" +
-                @"      <assemblyIdentity name=""Antlr3.Runtime"" publicKeyToken=""eb42632606e9261f"" culture=""neutral"" />" +
-                @"      <bindingRedirect oldVersion=""0.0.0.0-3.5.0.2"" newVersion=""3.5.0.2"" />" +
-                @"    </dependentAssembly>" +
-                @"  </assemblyBinding>" +
-                @"</runtime>";
-
             string configFilePath = FilePath.GetAbsolutePath("openXDA.exe.config");
+            string defaultConfigFilePath = $"{configFilePath}.default";
+            File.Copy(configFilePath, $"{configFilePath}.prev", true);
+
+            XNamespace ns = "urn:schemas-microsoft-com:asm.v1";
+            XName assemblyBindingSection = ns + "assemblyBinding";
+            XDocument defaultDoc = XDocument.Load(defaultConfigFilePath);
+            IEnumerable<XElement> defaultBindings = defaultDoc.Descendants(assemblyBindingSection);
+
             XDocument doc = XDocument.Load(configFilePath);
-            XElement runtime = XElement.Parse(runtimeSection);
+            XElement root = doc.Root;
 
-            if (!doc.Descendants("runtime").Any())
-            {
-                doc.Element("configuration").Add(runtime);
-                doc.Save(configFilePath);
-                return;
-            }
+            if (!root.Elements("runtime").Any())
+                root.Add(new XElement("runtime"));
 
-            XElement assemblyBinding = runtime.Elements().Single();
-
-            if (!doc.Descendants(assemblyBinding.Name).Any())
-            {
-                doc.Descendants("runtime").First().Add(assemblyBinding);
-                doc.Save(configFilePath);
-            }
+            root.Descendants(assemblyBindingSection).Remove();
+            root.Element("runtime").Add(defaultBindings);
+            doc.Save(configFilePath);
         }
     }
 }
