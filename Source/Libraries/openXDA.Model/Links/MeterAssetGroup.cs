@@ -26,6 +26,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [AllowSearch]
     public class MeterAssetGroup
     {
         [PrimaryKey(true)]
