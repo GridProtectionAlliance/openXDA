@@ -292,21 +292,29 @@ CREATE VIEW [dbo].[DetailedMeter] AS
 		Meter.Name,
 		Meter.Make,
 		Meter.Model,
+		Meter.Description,
 		Location.Name as Location,
-		COUNT(DISTINCT MeterAsset.AssetID) as MappedAssets
+		COUNT(DISTINCT MeterAsset.AssetID) as MappedAssets,
+		CustomerMeter.Names as Customers,
+		MeterAssetGroup.Names as AssetGroups
 	FROM
 		Meter LEFT JOIN
 		Location ON Meter.LocationID = Location.ID LEFT JOIN
 		MeterAsset ON Meter.ID = MeterAsset.MeterID LEFT JOIN
 		Asset ON MeterAsset.AssetID = Asset.ID LEFT JOIN
-		Note ON Note.NoteTypeID = (SELECT ID FROM NoteType WHERE Name = 'Meter') AND Note.ReferenceTableID = Meter.ID
+		Note ON Note.NoteTypeID = (SELECT ID FROM NoteType WHERE Name = 'Meter') AND Note.ReferenceTableID = Meter.ID OUTER APPLY
+		(SELECT STRING_AGG(Customer.Name, ', ') WITHIN GROUP (ORDER BY Customer.Name) FROM CustomerMeter JOIN Customer ON CustomerMeter.CustomerID = Customer.ID WHERE CustomerMeter.MeterID = Meter.ID) CustomerMeter(Names) OUTER APPLY
+		(SELECT STRING_AGG(AssetGroup.Name, ', ') WITHIN GROUP (ORDER BY AssetGroup.Name) FROM MeterAssetGroup JOIN AssetGroup ON MeterAssetGroup.AssetGroupID = AssetGroup.ID WHERE MeterAssetGroup.MeterID = Meter.ID) MeterAssetGroup(Names)
 	GROUP BY
 		Meter.ID,
 		Meter.AssetKey,
 		Meter.Name,
 		Meter.Make,
 		Meter.Model,
-		Location.Name
+		Meter.Description,
+		Location.Name,
+		CustomerMeter.Names,
+		MeterAssetGroup.Names
 GO
 
 CREATE VIEW [dbo].[DetailedAsset] AS
@@ -316,22 +324,30 @@ CREATE VIEW [dbo].[DetailedAsset] AS
 		Asset.AssetKey,
 		Asset.AssetName,
 		Asset.VoltageKV,
+		Asset.Description,
 		AssetType.Name as AssetType,
 		COUNT(DISTINCT Meter.ID) as Meters,
-		COUNT(DISTINCT Location.ID) as Locations
+		COUNT(DISTINCT Location.ID) as Locations,
+		CustomerAsset.Names as Customers,
+		AssetAssetGroup.Names as AssetGroups
 	FROM
 		Asset JOIN
 		AssetType ON Asset.AssetTypeID = AssetType.ID LEFT JOIN
 		MeterAsset ON MeterAsset.AssetID = Asset.ID LEFT JOIN
 		Meter ON MeterAsset.MeterID = Meter.ID LEFT JOIN
 		AssetLocation ON AssetLocation.AssetID = Asset.ID LEFT JOIN
-		Location ON AssetLocation.LocationID = Location.ID
+		Location ON AssetLocation.LocationID = Location.ID OUTER APPLY
+		(SELECT STRING_AGG(Customer.Name, ', ') WITHIN GROUP (ORDER BY Customer.Name) FROM CustomerAsset JOIN Customer ON CustomerAsset.CustomerID = Customer.ID WHERE CustomerAsset.AssetID = Asset.ID) CustomerAsset(Names) OUTER APPLY
+		(SELECT STRING_AGG(AssetGroup.Name, ', ') WITHIN GROUP (ORDER BY AssetGroup.Name) FROM AssetAssetGroup JOIN AssetGroup ON AssetAssetGroup.AssetGroupID = AssetGroup.ID WHERE AssetAssetGroup.AssetID = Asset.ID) AssetAssetGroup(Names)
 	GROUP BY
 		Asset.ID,
 		Asset.AssetKey,
 		Asset.AssetName,
 		Asset.VoltageKV,
-		AssetType.Name
+		Asset.Description,
+		AssetType.Name,
+		CustomerAsset.Names,
+		AssetAssetGroup.Names
 GO
 
 CREATE VIEW [dbo].[DetailedLocation] AS
