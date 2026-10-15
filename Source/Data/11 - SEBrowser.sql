@@ -221,6 +221,7 @@ CREATE TABLE [dbo].[SEBrowser.WidgetWidgetCategory] (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     WidgetID INT NOT NULL REFERENCES [SEBrowser.Widget](ID),
     CategoryID INT NOT NULL REFERENCES [SEBrowser.WidgetCategory](ID),
+    SortOrder INT NOT NULL DEFAULT(0),
     CONSTRAINT UC_WidgetWidgetCategory UNIQUE(WidgetID, CategoryID)
 )
 GO
@@ -239,7 +240,8 @@ GO
 CREATE VIEW [dbo].[SEBrowser.WidgetView] AS
 	SELECT 
 	Widget.*,
-    Widgetcategory.ID AS CategoryID
+    Widgetcategory.ID AS CategoryID,
+    [SEBrowser.WidgetWidgetCategory].SortOrder
 FROM
 	[SEBrowser.WidgetWidgetCategory] LEFT JOIN 
     [SEBrowser.Widget] Widget ON Widget.ID = [SEBrowser.WidgetWidgetCategory].WidgetID LEFT JOIN 
