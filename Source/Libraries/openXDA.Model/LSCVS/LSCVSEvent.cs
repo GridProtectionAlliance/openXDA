@@ -46,6 +46,8 @@ namespace LSCVS.Model
         public DateTime EventStart { get; set; }
         public double Duration { get; set; }
         public double Magnitude { get; set; }
+        public double? MagnitudeLL { get; set; }
+        public double? MagnitudeLN { get; set; }
         public int MeterID { get; set; }
         public int CustomerID { get; set; }
         public int EventType { get; set; }

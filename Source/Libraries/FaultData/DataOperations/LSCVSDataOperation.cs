@@ -84,6 +84,7 @@ namespace FaultData.DataOperations
                 TableOperations<EventStat> eventStatTable = new TableOperations<EventStat>(connection);
                 TableOperations<Customer> customerTable = new TableOperations<Customer>(connection);
                 TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
+                TableOperations<EventWorstDisturbance> eventWorstDisturbanceTable = new TableOperations<EventWorstDisturbance>(connection);
 
                 IEnumerable<Event> fileGroupEvents = eventTable.QueryRecordsWhere("FileGroupID={0}", meterDataSet.FileGroup.ID);
                 IEnumerable<EventType> allowedEventTypes = new TableOperations<EventType>(connection).QueryRecordsWhere("Name={0}", "Sag");
@@ -115,8 +116,7 @@ namespace FaultData.DataOperations
                         continue;
                     }
 
-                    IEnumerable<DbDisturbance> worstDisturbances = disturbanceTable.QueryRecordsWhere("ID in " +
-                        $"(Select wd.WorstDisturbanceID from EventWorstDisturbance wd where wd.EventID = {evt.ID})");
+                    IEnumerable<EventWorstDisturbance> eventWorstDisturbances = eventWorstDisturbanceTable.QueryRecordsWhere("EventID = {0}", evt.ID);
 
                     if (evtSt.VAMin is null || evtSt.VBMin is null || evtSt.VCMin is null)
                     {
@@ -134,10 +134,16 @@ namespace FaultData.DataOperations
                     int curveStandard = 3;
                     if ((lineToNeutralVoltages.Min() / lineToNeutralVoltages.Median()) < LSCVSSettings.TypeThreshold) curveStandard = 1;
 
-                    foreach (DbDisturbance worstDisturbance in worstDisturbances)
+                    foreach (EventWorstDisturbance eventWorstDisturbance in eventWorstDisturbances)
                     {
+                        DbDisturbance worstDisturbance = disturbanceTable.QueryRecordWhere("ID = {0}", eventWorstDisturbance.WorstDisturbanceID);
+
                         // Skip non-sag events
                         if (!allowedEventTypes.Any(type => type.ID == worstDisturbance.EventTypeID)) continue;
+
+                        // Worst line-to-line and line-to-neutral magnitudes, so LSCVS can filter on either
+                        double? magnitudeLL = GetPerUnitMagnitude(disturbanceTable, eventWorstDisturbance.WorstLLDisturbanceID);
+                        double? magnitudeLN = GetPerUnitMagnitude(disturbanceTable, eventWorstDisturbance.WorstLNDisturbanceID);
 
                         foreach (Customer customer in lscvsCustomers)
                         {
@@ -146,6 +152,8 @@ namespace FaultData.DataOperations
                                 MeterID = evt.MeterID,
                                 EventStart = worstDisturbance.StartTime,
                                 Magnitude = worstDisturbance.PerUnitMagnitude,
+                                MagnitudeLL = magnitudeLL,
+                                MagnitudeLN = magnitudeLN,
                                 Duration = worstDisturbance.DurationSeconds * 1000,
                                 EventType = curveStandard,
                                 IntialMW = (double)evtSt.InitialMW, // Should be a safe cast, null is checked for above
@@ -200,6 +208,14 @@ namespace FaultData.DataOperations
                 }
                 
             }
+        }
+
+        private static double? GetPerUnitMagnitude(TableOperations<DbDisturbance> disturbanceTable, int? disturbanceID)
+        {
+            if (disturbanceID is null)
+                return null;
+
+            return disturbanceTable.QueryRecordWhere("ID = {0}", disturbanceID)?.PerUnitMagnitude;
         }
 
         #endregion
