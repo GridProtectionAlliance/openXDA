@@ -5825,11 +5825,11 @@ CREATE VIEW ActiveSubscription AS
             EmailType.Name AS EmailName,
             EmailCategory.Name AS Category,
             EmailType.ID AS EmailTypeID,
-            SentEmail.Subject AS Subject,
+            SentEmail.Subject,
             SentEmail.TimeSent AS LastSent,
             UserAccount.Name AS UserName,
-            UserAccount.FirstName AS FirstName,
-            UserAccount.LastName AS LastName,
+            UserAccount.FirstName,
+            UserAccount.LastName,
             UserAccount.Email,
             EmailType.RequireApproval,
             ROW_NUMBER() OVER (
@@ -5840,8 +5840,10 @@ CREATE VIEW ActiveSubscription AS
             AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
             EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID LEFT JOIN
             EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
-            SentEmail ON SentEmail.EmailTypeID = EmailType.ID LEFT JOIN
-            UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID
+            UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID LEFT JOIN
+            SentEmail ON SentEmail.EmailTypeID = EmailType.ID
+				AND SentEmail.ToLine LIKE '%' + UserAccount.Email + '%'
+				AND EmailType.ID IN (SELECT SentEmailID FROM EventSentEmail)
     ) AS recent WHERE rn = 1
 GO
 
