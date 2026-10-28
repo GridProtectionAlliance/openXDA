@@ -5843,7 +5843,7 @@ CREATE VIEW ActiveSubscription AS
             UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID LEFT JOIN
             SentEmail ON SentEmail.EmailTypeID = EmailType.ID
 				AND SentEmail.ToLine LIKE '%' + UserAccount.Email + '%'
-				AND EmailType.ID IN (SELECT SentEmailID FROM EventSentEmail)
+				AND SentEmail.ID IN (SELECT SentEmailID FROM EventSentEmail)
     ) AS recent WHERE rn = 1
 GO
 
@@ -5890,7 +5890,7 @@ CREATE VIEW ActiveScheduledSubscription AS
         UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID LEFT JOIN
 		SentEmail ON SentEmail.EmailTypeID = ScheduledEmailType.ID
 			AND SentEmail.ToLine LIKE '%' + UserAccount.Email + '%'
-			AND ScheduledEmailType.ID NOT IN (SELECT SentEmailID FROM EventSentEmail)
+			AND SentEmail.ID NOT IN (SELECT SentEmailID FROM EventSentEmail)
 	) AS recent WHERE rn = 1
 GO
 
