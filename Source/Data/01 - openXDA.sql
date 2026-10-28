@@ -5890,7 +5890,7 @@ CREATE VIEW ActiveScheduledSubscription AS
         UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID LEFT JOIN
 		SentEmail ON SentEmail.EmailTypeID = ScheduledEmailType.ID
 			AND SentEmail.ToLine LIKE '%' + UserAccount.Email + '%'
-			AND ID NOT IN (SELECT SentEmailID FROM EventSentEmail)
+			AND ScheduledEmailType.ID NOT IN (SELECT SentEmailID FROM EventSentEmail)
 	) AS recent WHERE rn = 1
 GO
 
