@@ -5848,20 +5848,50 @@ CREATE VIEW ActiveSubscription AS
 GO
 
 CREATE VIEW ActiveScheduledSubscription AS
-    SELECT 
-        UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailID,
-        UserAccountScheduledEmailType.UserAccountID AS UserAccountID,
-        AssetGroup.Name AS AssetGroup,
-        ScheduledEmailType.Name AS EmailName,
-        EmailCategory.Name AS Category,
-        ScheduledEmailType.ID AS ScheduledEmailTypeID,
-        UserAccount.Name AS UserName,
-        UserAccount.Email AS Email
+    SELECT
+		UserAccountScheduledEmailID,
+		UserAccountID,
+		Approved,
+		AssetGroup,
+		EmailName,
+		Category,
+		ScheduledEmailTypeID,
+		Subject,
+		LastSent,
+		UserName,
+		FirstName,
+		LastName,
+		Email,
+		RequireApproval
+	FROM (
+		SELECT
+			UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailID,
+			UserAccountScheduledEmailType.UserAccountID,
+			UserAccountScheduledEmailType.Approved,
+			AssetGroup.Name AS AssetGroup,
+			ScheduledEmailType.Name AS EmailName,
+			EmailCategory.Name AS Category,
+			ScheduledEmailType.ID AS ScheduledEmailTypeID,
+			SentEmail.Subject,
+			SentEmail.TimeSent AS LastSent,
+			UserAccount.Name AS UserName,
+			UserAccount.FirstName,
+			UserAccount.LastName,
+			UserAccount.Email AS Email,
+			ScheduledEmailType.RequireApproval,
+			ROW_NUMBER() OVER (
+				PARTITION BY UserAccountScheduledEmailType.ID
+				ORDER BY SentEmail.TimeSent DESC
+			) AS rn
     FROM UserAccountScheduledEmailType LEFT JOIN
         AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID LEFT JOIN
         ScheduledEmailType ON UserAccountScheduledEmailType.ScheduledEmailTypeID = ScheduledEmailType.ID LEFT JOIN
         EmailCategory ON EmailCategory.ID = ScheduledEmailType.EmailCategoryID LEFT JOIN
-        UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID
+        UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID LEFT JOIN
+		SentEmail ON SentEmail.EmailTypeID = ScheduledEmailType.ID
+			AND SentEmail.ToLine LIKE '%' + UserAccount.Email + '%'
+			AND ID NOT IN (SELECT SentEmailID FROM EventSentEmail)
+	) AS recent WHERE rn = 1
 GO
 
 CREATE VIEW CBReportEventTable AS
