@@ -66,10 +66,11 @@ namespace FaultData.DataWriters.Emails
         /// <param name="recipients"><see cref="List{string}"/> list of recipents, either as emails or phone numbers.</param>
         /// <param name="saveToFile"><see cref="bool"/> flag that requests XDA save the email.</param>
         /// <param name="response">Object that holds information on the email sent.</param>
-        public void SendEmail(EmailType email, Event evt, DateTime xdaNow, List<string> recipients, bool saveToFile, out EmailResponse response) =>
-            SendEmail(email, evt, recipients, xdaNow, new TimeSpan(0), new List<int>(), false, saveToFile, out response);
+        /// <param name="isTest"><see cref="bool"/> flag to mark the sent email record as having been initiated by a test.</param>
+        public void SendEmail(EmailType email, Event evt, DateTime xdaNow, List<string> recipients, bool saveToFile, out EmailResponse response, bool isTest) =>
+            SendEmail(email, evt, recipients, xdaNow, new TimeSpan(0), new List<int>(), false, saveToFile, out response, isTest);
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, bool sendBcc, bool saveToFile, out EmailResponse response)
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, bool sendBcc, bool saveToFile, out EmailResponse response, bool isTest = false)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -92,7 +93,7 @@ namespace FaultData.DataWriters.Emails
                 templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.MinimumChartSamplesPerCycle);
                 templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
 
-                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
+                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument, isTest ? Initiator.Test : Initiator.Event);
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     // Find duplicate email messages within the time frame specified, if any exist, don't send email

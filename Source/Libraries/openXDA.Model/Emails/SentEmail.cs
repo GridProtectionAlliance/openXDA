@@ -26,6 +26,13 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    public enum Initiator
+    {
+        Test = 0,
+        Event = 1,
+        Schedule = 2
+    }
+
     public class SentEmail
     {
         [PrimaryKey(true)]
@@ -41,5 +48,7 @@ namespace openXDA.Model
         public string Subject { get; set; }
 
         public string Message { get; set; }
+
+        public int Initiator { get; set; }
     }
 }

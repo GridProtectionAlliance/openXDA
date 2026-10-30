@@ -60,10 +60,12 @@ namespace FaultData.DataWriters.Emails
         /// <param name="xdaNow"><see cref="DateTime"/> that represents the current time on the current node.</param>
         /// <param name="recipients"><see cref="List{string}"/> list of recipents, either as emails or phone numbers.</param>
         /// <param name="response">Object that holds information on the email sent.</param>
-        public void SendEmail(ScheduledEmailType email, List<string> recipients, out EmailResponse response, DateTime xdaNow) =>
-            SendEmail(email, recipients, false, false, out response, xdaNow);
+        /// <param name="isTest"><see cref="bool"/> flag to mark the sent email record as having been initiated by a test.</param>
 
-        private void SendEmail(ScheduledEmailType email, List<string> recipients, bool sendBcc, bool saveToFile, out EmailResponse response, DateTime xdaNow)
+        public void SendEmail(ScheduledEmailType email, List<string> recipients, out EmailResponse response, DateTime xdaNow, bool isTest) =>
+            SendEmail(email, recipients, false, false, out response, xdaNow, isTest);
+
+        private void SendEmail(ScheduledEmailType email, List<string> recipients, bool sendBcc, bool saveToFile, out EmailResponse response, DateTime xdaNow, bool isTest = false)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -88,7 +90,7 @@ namespace FaultData.DataWriters.Emails
 
                 SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
 
-                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
+                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument, isTest ? Initiator.Test : Initiator.Schedule);
                 using (AdoDataConnection connection = ConnectionFactory())
                     LoadSentEmail(sentEmailRecord, connection);
             }
