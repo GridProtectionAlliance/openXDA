@@ -238,7 +238,7 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        protected SentEmail CreateSentEmailRecord(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument)
+        protected SentEmail CreateSentEmailRecord(EmailTypeBase email, DateTime now, List<string> recipients, XDocument htmlDocument, string initiator)
         {
             SentEmail sentEmail = new SentEmail();
             sentEmail.EmailTypeID = email.ID;
@@ -246,6 +246,7 @@ namespace FaultData.DataWriters.Emails
             sentEmail.ToLine = string.Join(";", recipients.Select(recipient => recipient.Trim()));
             sentEmail.Subject = GetSubject(htmlDocument, email);
             sentEmail.Message = GetBody(htmlDocument);
+            sentEmail.Initiator = initiator;
             return sentEmail;
         }
 
