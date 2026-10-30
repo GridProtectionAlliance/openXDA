@@ -88,7 +88,7 @@ namespace FaultData.DataWriters.Emails
 
                 SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
 
-                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
+                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument, "Schedule");
                 using (AdoDataConnection connection = ConnectionFactory())
                     LoadSentEmail(sentEmailRecord, connection);
             }

@@ -92,7 +92,7 @@ namespace FaultData.DataWriters.Emails
                 templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.MinimumChartSamplesPerCycle);
                 templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
 
-                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
+                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument, "Event");
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     // Find duplicate email messages within the time frame specified, if any exist, don't send email

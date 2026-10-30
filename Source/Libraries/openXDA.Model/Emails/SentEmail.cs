@@ -41,5 +41,7 @@ namespace openXDA.Model
         public string Subject { get; set; }
 
         public string Message { get; set; }
+
+        public string Initiator { get; set; } // "Event", "Schedule", or "Test"?
     }
 }
