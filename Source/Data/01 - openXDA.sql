@@ -2589,7 +2589,8 @@ CREATE TABLE UserAccountEmailType
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
     EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
-    Approved BIT NOT NULL DEFAULT 0
+    Approved BIT NOT NULL DEFAULT 0,
+    LastSentEmailID INT NULL REFERENCES SentEmail(ID)
 )
 GO
 
@@ -2603,6 +2604,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_AssetGroupID
 ON UserAccountEmailType(AssetGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_LastSentEmailID
+ON UserAccountEmailType(LastSentEmailID ASC)
 GO
 
 CREATE VIEW SubscribeEmails
@@ -2628,7 +2633,8 @@ CREATE TABLE UserAccountScheduledEmailType
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
     ScheduledEmailTypeID INT NOT NULL REFERENCES ScheduledEmailType(ID),
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
-    Approved BIT NOT NULL DEFAULT 0
+    Approved BIT NOT NULL DEFAULT 0,
+    LastSentEmailID INT NULL REFERENCES SentEmail(ID)
 )
 GO
 
@@ -2642,6 +2648,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_AssetGroupID
 ON UserAccountScheduledEmailType(AssetGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_LastSentEmailID
+ON UserAccountScheduledEmailType(LastSentEmailID ASC)
 GO
 
 CREATE TABLE TriggeredEmailDataSource
