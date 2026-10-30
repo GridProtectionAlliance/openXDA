@@ -5812,96 +5812,50 @@ GO
 
 CREATE VIEW ActiveSubscription AS
     SELECT
-        UserAccountEmailID,
-        UserAccountID,
-        Approved,
-        AssetGroup,
-        EmailName,
-        Category,
-        EmailTypeID,
-        Subject,
-        LastSent,
-        UserName,
-        FirstName,
-        LastName,
-        Email,
-        RequireApproval
-    FROM (
-        SELECT 
-            UserAccountEmailType.ID AS UserAccountEmailID,
-            UserAccountEmailType.UserAccountID,
-            UserAccountEmailType.Approved,
-            AssetGroup.Name AS AssetGroup,
-            EmailType.Name AS EmailName,
-            EmailCategory.Name AS Category,
-            EmailType.ID AS EmailTypeID,
-            SentEmail.Subject,
-            SentEmail.TimeSent AS LastSent,
-            UserAccount.Name AS UserName,
-            UserAccount.FirstName,
-            UserAccount.LastName,
-            UserAccount.Email,
-            EmailType.RequireApproval,
-            ROW_NUMBER() OVER (
-                PARTITION BY UserAccountEmailType.ID
-                ORDER BY SentEmail.TimeSent DESC
-            ) AS rn
-        FROM UserAccountEmailType LEFT JOIN
-            AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
-            EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID LEFT JOIN
-            EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
-            UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID LEFT JOIN
-            SentEmail ON SentEmail.EmailTypeID = EmailType.ID
-				AND SentEmail.ToLine LIKE '%' + UserAccount.Email + '%'
-				AND SentEmail.ID IN (SELECT SentEmailID FROM EventSentEmail)
-    ) AS recent WHERE rn = 1
+	    UserAccountEmailType.ID AS UserAccountEmailTypeID,
+	    UserAccountEmailType.UserAccountID,
+	    UserAccountEmailType.Approved,
+	    AssetGroup.Name AS AssetGroup,
+	    EmailType.Name AS EmailName,
+	    EmailCategory.Name AS Category,
+	    EmailType.ID AS EmailTypeID,
+	    SentEmail.Subject,
+	    SentEmail.TimeSent AS LastSent,
+	    UserAccount.Name AS UserName,
+	    UserAccount.FirstName,
+	    UserAccount.LastName,
+	    UserAccount.Email,
+	    EmailType.RequireApproval
+    FROM UserAccountEmailType LEFT JOIN
+	    SentEmail ON SentEmail.ID = UserAccountEmailType.LastSentEmailID LEFT JOIN
+	    AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
+	    EmailType ON EmailType.ID = UserAccountEmailType.EmailTypeID LEFT JOIN
+	    EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
+	    UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID
 GO
 
 CREATE VIEW ActiveScheduledSubscription AS
-    SELECT
-		UserAccountScheduledEmailID,
-		UserAccountID,
-		Approved,
-		AssetGroup,
-		EmailName,
-		Category,
-		ScheduledEmailTypeID,
-		Subject,
-		LastSent,
-		UserName,
-		FirstName,
-		LastName,
-		Email,
-		RequireApproval
-	FROM (
-		SELECT
-			UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailID,
-			UserAccountScheduledEmailType.UserAccountID,
-			UserAccountScheduledEmailType.Approved,
-			AssetGroup.Name AS AssetGroup,
-			ScheduledEmailType.Name AS EmailName,
-			EmailCategory.Name AS Category,
-			ScheduledEmailType.ID AS ScheduledEmailTypeID,
-			SentEmail.Subject,
-			SentEmail.TimeSent AS LastSent,
-			UserAccount.Name AS UserName,
-			UserAccount.FirstName,
-			UserAccount.LastName,
-			UserAccount.Email AS Email,
-			ScheduledEmailType.RequireApproval,
-			ROW_NUMBER() OVER (
-				PARTITION BY UserAccountScheduledEmailType.ID
-				ORDER BY SentEmail.TimeSent DESC
-			) AS rn
-    FROM UserAccountScheduledEmailType LEFT JOIN
-        AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID LEFT JOIN
-        ScheduledEmailType ON UserAccountScheduledEmailType.ScheduledEmailTypeID = ScheduledEmailType.ID LEFT JOIN
-        EmailCategory ON EmailCategory.ID = ScheduledEmailType.EmailCategoryID LEFT JOIN
-        UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID LEFT JOIN
-		SentEmail ON SentEmail.EmailTypeID = ScheduledEmailType.ID
-			AND SentEmail.ToLine LIKE '%' + UserAccount.Email + '%'
-			AND SentEmail.ID NOT IN (SELECT SentEmailID FROM EventSentEmail)
-	) AS recent WHERE rn = 1
+SELECT
+	UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailTypeID,
+	UserAccountScheduledEmailType.UserAccountID,
+	UserAccountScheduledEmailType.Approved,
+	AssetGroup.Name AS AssetGroup,
+	EmailType.Name AS EmailName,
+	EmailCategory.Name AS Category,
+	EmailType.ID AS EmailTypeID,
+	SentEmail.Subject,
+	SentEmail.TimeSent AS LastSent,
+	UserAccount.Name AS UserName,
+	UserAccount.FirstName,
+	UserAccount.LastName,
+	UserAccount.Email,
+	EmailType.RequireApproval
+FROM UserAccountScheduledEmailType LEFT JOIN
+	SentEmail ON SentEmail.ID = UserAccountScheduledEmailType.LastSentEmailID LEFT JOIN
+	AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID LEFT JOIN
+	EmailType ON EmailType.ID = UserAccountScheduledEmailType.ScheduledEmailTypeID LEFT JOIN
+	EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
+	UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID
 GO
 
 CREATE VIEW CBReportEventTable AS
