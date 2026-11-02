@@ -5840,21 +5840,21 @@ SELECT
 	UserAccountScheduledEmailType.UserAccountID,
 	UserAccountScheduledEmailType.Approved,
 	AssetGroup.Name AS AssetGroup,
-	EmailType.Name AS EmailName,
+	ScheduledEmailType.Name AS EmailName,
 	EmailCategory.Name AS Category,
-	EmailType.ID AS EmailTypeID,
+	ScheduledEmailType.ID AS EmailTypeID,
 	SentEmail.Subject,
 	SentEmail.TimeSent AS LastSent,
 	UserAccount.Name AS UserName,
 	UserAccount.FirstName,
 	UserAccount.LastName,
 	UserAccount.Email,
-	EmailType.RequireApproval
+	ScheduledEmailType.RequireApproval
 FROM UserAccountScheduledEmailType LEFT JOIN
 	SentEmail ON SentEmail.ID = UserAccountScheduledEmailType.LastSentEmailID LEFT JOIN
 	AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID LEFT JOIN
-	EmailType ON EmailType.ID = UserAccountScheduledEmailType.ScheduledEmailTypeID LEFT JOIN
-	EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
+	ScheduledEmailType ON ScheduledEmailType.ID = UserAccountScheduledEmailType.ScheduledEmailTypeID LEFT JOIN
+	EmailCategory ON EmailCategory.ID = ScheduledEmailType.EmailCategoryID LEFT JOIN
 	UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID
 GO
 
