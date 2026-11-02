@@ -5812,7 +5812,7 @@ GO
 
 CREATE VIEW ActiveSubscription AS
     SELECT
-	    UserAccountEmailType.ID AS UserAccountEmailTypeID,
+	    UserAccountEmailType.ID AS UserAccountEmailID,
 	    UserAccountEmailType.UserAccountID,
 	    UserAccountEmailType.Approved,
 	    AssetGroup.Name AS AssetGroup,
@@ -5836,13 +5836,13 @@ GO
 
 CREATE VIEW ActiveScheduledSubscription AS
 SELECT
-	UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailTypeID,
+	UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailID,
 	UserAccountScheduledEmailType.UserAccountID,
 	UserAccountScheduledEmailType.Approved,
 	AssetGroup.Name AS AssetGroup,
 	ScheduledEmailType.Name AS EmailName,
 	EmailCategory.Name AS Category,
-	ScheduledEmailType.ID AS EmailTypeID,
+	ScheduledEmailType.ID AS ScheduledEmailTypeID,
 	SentEmail.Subject,
 	SentEmail.TimeSent AS LastSent,
 	UserAccount.Name AS UserName,
