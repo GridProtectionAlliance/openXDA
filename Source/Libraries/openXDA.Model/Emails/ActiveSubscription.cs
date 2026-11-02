@@ -30,7 +30,7 @@ namespace openXDA.Model
     [AllowSearch]
     public class ActiveSubscription
     {
-        public int UserAccountEmailTypeID { get; set; }
+        public int UserAccountEmailID { get; set; }
 
         [ParentKey(typeof(ConfirmableUserAccount))]
         public Guid UserAccountID { get; set; }

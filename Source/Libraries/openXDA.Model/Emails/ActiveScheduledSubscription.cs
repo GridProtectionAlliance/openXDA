@@ -29,12 +29,13 @@ namespace openXDA.Model
     [AllowSearch]
     public class ActiveScheduledSubscription
     {
-        public int UserAccountScheduledEmailTypeID { get; set; }
+        public int UserAccountScheduledEmailID { get; set; }
 
         [ParentKey(typeof(ConfirmableUserAccount))]
         public Guid UserAccountID { get; set; }
+        public bool Approved { get; set; }
         public string AssetGroup { get; set; }
-        public string ScheduledEmailName { get; set; }
+        public string EmailName { get; set; }
         public string Category { get; set; }
         public int ScheduledEmailTypeID { get; set; }
         public string Email { get; set; }
