@@ -46,31 +46,48 @@ namespace FaultData.DataWriters.Emails
             if (eventIDs.Count == 0)
                 return false;
 
-            List<string> recipients = GetRecipients(email, eventIDs);
+            DataTable recipientInformation = GetRecipients(email, eventIDs);
+
+            Func<DataRow, string> processor;
+
+            if (email.SMS)
+                processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
+            else
+                processor = row => row.ConvertField<string>("Email");
+
+            List<string> recipients = recipientInformation
+                    .Select()
+                    .Select(processor)
+                    .Distinct()
+                    .ToList();
+
+            List<int> subscriptionIDs = recipientInformation
+                .Select()
+                .Select(row => row.ConvertField<int>("SubscriptionID"))
+                .ToList();
 
             if (recipients.Count == 0 && String.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, evt, recipients, xdaNow, disallowedWindow, eventIDs, true, true, out EmailResponse _);
+            SendEmail(email, evt, recipients, xdaNow, disallowedWindow, eventIDs, subscriptionIDs, true, true, out EmailResponse _);
 
             return true;
         }
 
         /// <summary>
-        /// Function that sends an email to a custom list of recipents instead of the database configured list.
+        /// Function that sends an email to a custom list of recipients instead of the database configured list.
         /// </summary>
         /// <remarks>Ignores the <see cref="EmailSection.BlindCopyAddress"/> setting and only sends to the list provided by this method.</remarks>
         /// <param name="email"><see cref="EmailType"/> email format to test.</param>
         /// <param name="evt"><see cref="Event"/> event data to use when creating the email.</param>
         /// <param name="xdaNow"><see cref="DateTime"/> that represents the current time on the current node.</param>
-        /// <param name="recipients"><see cref="List{string}"/> list of recipents, either as emails or phone numbers.</param>
+        /// <param name="recipients"><see cref="List{string}"/> list of recipients, either as emails or phone numbers.</param>
         /// <param name="saveToFile"><see cref="bool"/> flag that requests XDA save the email.</param>
         /// <param name="response">Object that holds information on the email sent.</param>
-        /// <param name="isTest"><see cref="bool"/> flag to mark the sent email record as having been initiated by a test.</param>
-        public void SendEmail(EmailType email, Event evt, DateTime xdaNow, List<string> recipients, bool saveToFile, out EmailResponse response, bool isTest) =>
-            SendEmail(email, evt, recipients, xdaNow, new TimeSpan(0), new List<int>(), false, saveToFile, out response, isTest);
+        public void SendEmail(EmailType email, Event evt, DateTime xdaNow, List<string> recipients, bool saveToFile, out EmailResponse response) =>
+            SendEmail(email, evt, recipients, xdaNow, new TimeSpan(0), new List<int>(), new List<int>(), false, saveToFile, out response);
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, bool sendBcc, bool saveToFile, out EmailResponse response, bool isTest = false)
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, List<int> subscriptionIDs, bool sendBcc, bool saveToFile, out EmailResponse response)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -93,7 +110,7 @@ namespace FaultData.DataWriters.Emails
                 templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.MinimumChartSamplesPerCycle);
                 templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
 
-                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument, isTest ? Initiator.Test : Initiator.Event);
+                SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
                 using (AdoDataConnection connection = ConnectionFactory())
                 {
                     // Find duplicate email messages within the time frame specified, if any exist, don't send email
@@ -106,7 +123,7 @@ namespace FaultData.DataWriters.Emails
                     if (duplicateEmailCount == 0)
                     {
                         SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
-                        LoadSentEmail(sentEmailRecord, eventIDs, connection);
+                        LoadSentEmail(sentEmailRecord, eventIDs, subscriptionIDs, connection);
                     }
                 }
             }
@@ -116,9 +133,14 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void LoadSentEmail(SentEmail sentEmail, List<int> eventIDs, AdoDataConnection connection)
+        private void LoadSentEmail(SentEmail sentEmail, List<int> eventIDs, List<int> subscriptionIDs, AdoDataConnection connection)
         {
             int sentEmailId = LoadSentEmail(sentEmail, connection);
+
+            if (subscriptionIDs.Count > 0)
+            {
+                connection.ExecuteNonQuery($"UPDATE UserAccountEmailType SET LastSentEmailID = {{0}} WHERE ID IN ({string.Join(",", subscriptionIDs)})", sentEmailId);
+            }
 
             if (eventIDs.Count == 0)
                 return;
@@ -137,25 +159,24 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public List<string> GetRecipients(EmailType emailType, List<int> eventIDs)
+        public DataTable GetRecipients(EmailType emailType, List<int> eventIDs)
         {
             List<int> assetGroups = GetAssetGroups(eventIDs)
                 .Select(item => item.ID)
                 .ToList();
 
             if (assetGroups.Count == 0)
-                return new List<string>();
+                return new DataTable();
 
             string assetGroupFilter = string.Join(",", assetGroups);
 
             string emailAddressQuery;
-            Func<DataRow, string> processor;
 
             if (!emailType.SMS)
             {
 
                 emailAddressQuery =
-                    $"SELECT DISTINCT UserAccount.Email AS Email " +
+                    $"SELECT UserAccountEmailType.ID AS SubscriptionID, UserAccount.Email AS Email " +
                     $"FROM " +
                     $"    UserAccountEmailType JOIN " +
                     $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
@@ -164,13 +185,11 @@ namespace FaultData.DataWriters.Emails
                     $"    UserAccount.EmailConfirmed <> 0 AND " +
                     $"    UserAccount.Approved <> 0 AND " +
                     $"    UserAccountEmailType.AssetGroupID IN ({assetGroupFilter})";
-
-                processor = row => row.ConvertField<string>("Email");
             }
             else
             {
                 emailAddressQuery =
-                     $"SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
+                     $"SELECT UserAccountEmailType.ID AS SubscriptionID, UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
                      $"FROM " +
                      $"    UserAccountEmailType JOIN " +
                      $"    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID LEFT JOIN " +
@@ -181,18 +200,10 @@ namespace FaultData.DataWriters.Emails
                      $"    UserAccount.PhoneConfirmed <> 0 AND " +
                      $"    UserAccount.Approved <> 0 AND " +
                      $"    UserAccountEmailType.AssetGroupID IN ({assetGroupFilter})";
-
-                processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
             }
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID))
-            {
-                return emailAddressTable
-                    .Select()
-                    .Select(processor)
-                    .ToList();
-            }
+                return connection.RetrieveData(emailAddressQuery, emailType.ID);
         }
 
         private List<AssetGroup> GetAssetGroups(List<int> eventIDs)
@@ -222,5 +233,7 @@ namespace FaultData.DataWriters.Emails
                     .ToList();
             }
         }
+
+
     }
 }

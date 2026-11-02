@@ -184,7 +184,7 @@ namespace openXDA.Controllers.WebAPI
 
                 try
                 {
-                    emailService.SendEmail(email, evt, XDANow, new List<string>() { account.Email }, false, out EmailResponse resultEmail, true);
+                    emailService.SendEmail(email, evt, XDANow, new List<string>() { account.Email }, false, out EmailResponse resultEmail);
                     response.DataSourceResponses = resultEmail.DataSources;
                     return Ok(response);
                 }
@@ -220,7 +220,7 @@ namespace openXDA.Controllers.WebAPI
 
                     try
                     {
-                        emailService.SendEmail(email, evt, XDANow, new List<string>() { }, save, out EmailResponse emailResponse, true);
+                        emailService.SendEmail(email, evt, XDANow, new List<string>() { }, save, out EmailResponse emailResponse);
                         subject = emailResponse.Subject;
                         return Ok(emailResponse.Body);
                     }
@@ -270,7 +270,7 @@ namespace openXDA.Controllers.WebAPI
                     if (!DateTime.TryParse(current, out DateTime xdaNow))
                         xdaNow = DateTime.UtcNow;
                     
-                    emailService.SendEmail(report, new List<string>() { account.Email }, out EmailResponse emailResponse, xdaNow, true);
+                    emailService.SendEmail(report, new List<string>() { account.Email }, out EmailResponse emailResponse, xdaNow);
                     response.DataSourceResponses = emailResponse.DataSources;
                     return Ok(response);
                 }
