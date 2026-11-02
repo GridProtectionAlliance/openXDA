@@ -2583,6 +2583,25 @@ CREATE NONCLUSTERED INDEX IX_ScheduledEmailType_EmailCategoryID
 ON ScheduledEmailType(EmailCategoryID ASC)
 GO
 
+CREATE TABLE SentEmail
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailTypeID INT NOT NULL,
+    TimeSent DATETIME NOT NULL,
+    ToLine VARCHAR(MAX) NOT NULL,
+    Subject VARCHAR(500) NOT NULL,
+    Message VARCHAR(MAX) NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_SentEmail_EmailTypeID
+ON SentEmail(EmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_SentEmail_TimeSent
+ON SentEmail(TimeSent ASC)
+GO
+
 CREATE TABLE UserAccountEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2747,25 +2766,6 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_ScheduledEmailDataSourceSetting_ScheduledEmailDataSourceEmailTypeID
 ON ScheduledEmailDataSourceSetting(ScheduledEmailDataSourceEmailTypeID ASC)
-GO
-
-CREATE TABLE SentEmail
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailTypeID INT NOT NULL,
-    TimeSent DATETIME NOT NULL,
-    ToLine VARCHAR(MAX) NOT NULL,
-    Subject VARCHAR(500) NOT NULL,
-    Message VARCHAR(MAX) NOT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_SentEmail_EmailTypeID
-ON SentEmail(EmailTypeID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_SentEmail_TimeSent
-ON SentEmail(TimeSent ASC)
 GO
 
 CREATE TABLE FileBlob
