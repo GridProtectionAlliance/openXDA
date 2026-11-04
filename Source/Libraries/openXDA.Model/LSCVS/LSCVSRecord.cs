@@ -43,6 +43,8 @@ namespace LSCVS.Model
         public DateTime EventStart { get; set; }
         public double Duration { get; set; }
         public double Magnitude { get; set; }
+        public double? MagnitudeLL { get; set; }
+        public double? MagnitudeLN { get; set; }
         public int MeterID { get; set; }
         public string Meter { get; set; }
         public int CustomerID { get; set; }
@@ -57,6 +59,8 @@ namespace LSCVS.Model
         public bool SARFI80 { get; set; }
         public bool SelfCaused { get; set; }
         public bool ErroneouslyTriggered { get; set; }
+        public bool Excluded { get; set; }
+        public string ExclusionCause { get; set; }
         public double InstantenousImpact { get; set; }
         public DateTime PreEvent { get; set; }
         public DateTime PostEvent { get; set; }
@@ -76,6 +80,8 @@ namespace LSCVS.Model
                 EventStart = EventStart,
                 Duration = Duration,
                 Magnitude = Magnitude,
+                MagnitudeLL = MagnitudeLL,
+                MagnitudeLN = MagnitudeLN,
                 MeterID = MeterID,
                 CustomerID = CustomerID,
                 EventType = EventType,
@@ -96,6 +102,8 @@ namespace LSCVS.Model
                 SARFI80 = SARFI80,
                 SelfCaused = SelfCaused,
                 ErroneouslyTriggered = ErroneouslyTriggered,
+                Excluded = Excluded,
+                ExclusionCause = ExclusionCause,
                 InstantenousImpact = InstantenousImpact,
                 PreEvent = PreEvent,
                 PostEvent = PostEvent,
