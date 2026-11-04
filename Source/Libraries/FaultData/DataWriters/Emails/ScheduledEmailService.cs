@@ -52,10 +52,10 @@ namespace FaultData.DataWriters.Emails
                 processor = row => row.ConvertField<string>("Email");
 
             List<string> recipients = recipientInformation
-                    .Select()
-                    .Select(processor)
-                    .Distinct()
-                    .ToList();
+                .Select()
+                .Select(processor)
+                .Distinct()
+                .ToList();
 
             List<int> subscriptionIDs = recipientInformation
                 .Select()
