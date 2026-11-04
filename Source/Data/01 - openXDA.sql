@@ -2583,13 +2583,33 @@ CREATE NONCLUSTERED INDEX IX_ScheduledEmailType_EmailCategoryID
 ON ScheduledEmailType(EmailCategoryID ASC)
 GO
 
+CREATE TABLE SentEmail
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailTypeID INT NOT NULL,
+    TimeSent DATETIME NOT NULL,
+    ToLine VARCHAR(MAX) NOT NULL,
+    Subject VARCHAR(500) NOT NULL,
+    Message VARCHAR(MAX) NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_SentEmail_EmailTypeID
+ON SentEmail(EmailTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_SentEmail_TimeSent
+ON SentEmail(TimeSent ASC)
+GO
+
 CREATE TABLE UserAccountEmailType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
     EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
-    Approved BIT NOT NULL DEFAULT 0
+    Approved BIT NOT NULL DEFAULT 0,
+    LastSentEmailID INT NULL REFERENCES SentEmail(ID)
 )
 GO
 
@@ -2603,6 +2623,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_AssetGroupID
 ON UserAccountEmailType(AssetGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountEmailType_LastSentEmailID
+ON UserAccountEmailType(LastSentEmailID ASC)
 GO
 
 CREATE VIEW SubscribeEmails
@@ -2628,7 +2652,8 @@ CREATE TABLE UserAccountScheduledEmailType
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
     ScheduledEmailTypeID INT NOT NULL REFERENCES ScheduledEmailType(ID),
     AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
-    Approved BIT NOT NULL DEFAULT 0
+    Approved BIT NOT NULL DEFAULT 0,
+    LastSentEmailID INT NULL REFERENCES SentEmail(ID)
 )
 GO
 
@@ -2642,6 +2667,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_AssetGroupID
 ON UserAccountScheduledEmailType(AssetGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_UserAccountScheduledEmailType_LastSentEmailID
+ON UserAccountScheduledEmailType(LastSentEmailID ASC)
 GO
 
 CREATE TABLE TriggeredEmailDataSource
@@ -2737,25 +2766,6 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_ScheduledEmailDataSourceSetting_ScheduledEmailDataSourceEmailTypeID
 ON ScheduledEmailDataSourceSetting(ScheduledEmailDataSourceEmailTypeID ASC)
-GO
-
-CREATE TABLE SentEmail
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailTypeID INT NOT NULL,
-    TimeSent DATETIME NOT NULL,
-    ToLine VARCHAR(MAX) NOT NULL,
-    Subject VARCHAR(500) NOT NULL,
-    Message VARCHAR(MAX) NOT NULL
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_SentEmail_EmailTypeID
-ON SentEmail(EmailTypeID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_SentEmail_TimeSent
-ON SentEmail(TimeSent ASC)
 GO
 
 CREATE TABLE FileBlob
@@ -5802,64 +5812,50 @@ GO
 
 CREATE VIEW ActiveSubscription AS
     SELECT
-        UserAccountEmailID,
-        UserAccountID,
-        Approved,
-        AssetGroup,
-        EmailName,
-        Category,
-        EmailTypeID,
-        Subject,
-        LastSent,
-        UserName,
-        FirstName,
-        LastName,
-        Email,
-        RequireApproval
-    FROM (
-        SELECT 
-            UserAccountEmailType.ID AS UserAccountEmailID,
-            UserAccountEmailType.UserAccountID,
-            UserAccountEmailType.Approved,
-            AssetGroup.Name AS AssetGroup,
-            EmailType.Name AS EmailName,
-            EmailCategory.Name AS Category,
-            EmailType.ID AS EmailTypeID,
-            SentEmail.Subject AS Subject,
-            SentEmail.TimeSent AS LastSent,
-            UserAccount.Name AS UserName,
-            UserAccount.FirstName AS FirstName,
-            UserAccount.LastName AS LastName,
-            UserAccount.Email,
-            EmailType.RequireApproval,
-            ROW_NUMBER() OVER (
-                PARTITION BY UserAccountEmailType.ID
-                ORDER BY SentEmail.TimeSent DESC
-            ) AS rn
-        FROM UserAccountEmailType LEFT JOIN
-            AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
-            EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID LEFT JOIN
-            EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
-            SentEmail ON SentEmail.EmailTypeID = EmailType.ID LEFT JOIN
-            UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID
-    ) AS recent WHERE rn = 1
+	    UserAccountEmailType.ID AS UserAccountEmailID,
+	    UserAccountEmailType.UserAccountID,
+	    UserAccountEmailType.Approved,
+	    AssetGroup.Name AS AssetGroup,
+	    EmailType.Name AS EmailName,
+	    EmailCategory.Name AS Category,
+	    EmailType.ID AS EmailTypeID,
+	    SentEmail.Subject,
+	    SentEmail.TimeSent AS LastSent,
+	    UserAccount.Name AS UserName,
+	    UserAccount.FirstName,
+	    UserAccount.LastName,
+	    UserAccount.Email,
+	    EmailType.RequireApproval
+    FROM UserAccountEmailType LEFT JOIN
+	    SentEmail ON SentEmail.ID = UserAccountEmailType.LastSentEmailID LEFT JOIN
+	    AssetGroup ON AssetGroup.ID = UserAccountEmailType.AssetGroupID LEFT JOIN
+	    EmailType ON EmailType.ID = UserAccountEmailType.EmailTypeID LEFT JOIN
+	    EmailCategory ON EmailCategory.ID = EmailType.EmailCategoryID LEFT JOIN
+	    UserAccount ON UserAccount.ID = UserAccountEmailType.UserAccountID
 GO
 
 CREATE VIEW ActiveScheduledSubscription AS
-    SELECT 
-        UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailID,
-        UserAccountScheduledEmailType.UserAccountID AS UserAccountID,
-        AssetGroup.Name AS AssetGroup,
-        ScheduledEmailType.Name AS EmailName,
-        EmailCategory.Name AS Category,
-        ScheduledEmailType.ID AS ScheduledEmailTypeID,
-        UserAccount.Name AS UserName,
-        UserAccount.Email AS Email
-    FROM UserAccountScheduledEmailType LEFT JOIN
-        AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID LEFT JOIN
-        ScheduledEmailType ON UserAccountScheduledEmailType.ScheduledEmailTypeID = ScheduledEmailType.ID LEFT JOIN
-        EmailCategory ON EmailCategory.ID = ScheduledEmailType.EmailCategoryID LEFT JOIN
-        UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID
+SELECT
+	UserAccountScheduledEmailType.ID AS UserAccountScheduledEmailID,
+	UserAccountScheduledEmailType.UserAccountID,
+	UserAccountScheduledEmailType.Approved,
+	AssetGroup.Name AS AssetGroup,
+	ScheduledEmailType.Name AS EmailName,
+	EmailCategory.Name AS Category,
+	ScheduledEmailType.ID AS ScheduledEmailTypeID,
+	SentEmail.Subject,
+	SentEmail.TimeSent AS LastSent,
+	UserAccount.Name AS UserName,
+	UserAccount.FirstName,
+	UserAccount.LastName,
+	UserAccount.Email,
+	ScheduledEmailType.RequireApproval
+FROM UserAccountScheduledEmailType LEFT JOIN
+	SentEmail ON SentEmail.ID = UserAccountScheduledEmailType.LastSentEmailID LEFT JOIN
+	AssetGroup ON AssetGroup.ID = UserAccountScheduledEmailType.AssetGroupID LEFT JOIN
+	ScheduledEmailType ON ScheduledEmailType.ID = UserAccountScheduledEmailType.ScheduledEmailTypeID LEFT JOIN
+	EmailCategory ON EmailCategory.ID = ScheduledEmailType.EmailCategoryID LEFT JOIN
+	UserAccount ON UserAccount.ID = UserAccountScheduledEmailType.UserAccountID
 GO
 
 CREATE VIEW CBReportEventTable AS

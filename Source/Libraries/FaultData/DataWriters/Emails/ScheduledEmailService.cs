@@ -42,12 +42,30 @@ namespace FaultData.DataWriters.Emails
 
         public bool SendEmail(ScheduledEmailType email, DateTime xdaNow)
         {
-            List<string> recipients = GetRecipients(email);
+            DataTable recipientInformation = GetRecipients(email);
+
+            Func<DataRow, string> processor;
+
+            if (email.SMS)
+                processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
+            else
+                processor = row => row.ConvertField<string>("Email");
+
+            List<string> recipients = recipientInformation
+                .Select()
+                .Select(processor)
+                .Distinct()
+                .ToList();
+
+            List<int> subscriptionIDs = recipientInformation
+                .Select()
+                .Select(row => row.ConvertField<int>("SubscriptionID"))
+                .ToList();
 
             if (recipients.Count == 0 && string.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, recipients, true, true, out EmailResponse _, xdaNow);
+            SendEmail(email, recipients, subscriptionIDs, true, true, out EmailResponse _, xdaNow);
 
             return true;
         }
@@ -60,10 +78,11 @@ namespace FaultData.DataWriters.Emails
         /// <param name="xdaNow"><see cref="DateTime"/> that represents the current time on the current node.</param>
         /// <param name="recipients"><see cref="List{string}"/> list of recipents, either as emails or phone numbers.</param>
         /// <param name="response">Object that holds information on the email sent.</param>
-        public void SendEmail(ScheduledEmailType email, List<string> recipients, out EmailResponse response, DateTime xdaNow) =>
-            SendEmail(email, recipients, false, false, out response, xdaNow);
 
-        private void SendEmail(ScheduledEmailType email, List<string> recipients, bool sendBcc, bool saveToFile, out EmailResponse response, DateTime xdaNow)
+        public void SendEmail(ScheduledEmailType email, List<string> recipients, out EmailResponse response, DateTime xdaNow) =>
+            SendEmail(email, recipients, new List<int>(), false, false, out response, xdaNow);
+
+        private void SendEmail(ScheduledEmailType email, List<string> recipients, List<int> subscriptionIDs, bool sendBcc, bool saveToFile, out EmailResponse response, DateTime xdaNow)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -90,7 +109,7 @@ namespace FaultData.DataWriters.Emails
 
                 SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
                 using (AdoDataConnection connection = ConnectionFactory())
-                    LoadSentEmail(sentEmailRecord, connection);
+                    LoadSentEmail(sentEmailRecord, subscriptionIDs, connection);
             }
             finally
             {
@@ -98,10 +117,19 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        public List<string> GetRecipients(ScheduledEmailType emailType)
+        private void LoadSentEmail(SentEmail sentEmailRecord, List<int> subscriptionIDs, AdoDataConnection connection)
+        {
+            int sentEmailId = LoadSentEmail(sentEmailRecord, connection);
+
+            if (subscriptionIDs.Count > 0)
+            {
+                connection.ExecuteNonQuery($"UPDATE UserAccountScheduledEmailType SET LastSentEmailID = {{0}} WHERE ID IN ({string.Join(",", subscriptionIDs)})", sentEmailId);
+            }
+        }
+
+        public DataTable GetRecipients(ScheduledEmailType emailType)
         {
             string emailAddressQuery;
-            Func<DataRow, string> processor;
 
             if (!emailType.SMS)
             {
@@ -110,7 +138,7 @@ namespace FaultData.DataWriters.Emails
                     requireEmailConfirm = connection.ExecuteScalar<bool>("SELECT Value From [Setting] Where Name = 'Subscription.RequireConfirmation'");
 
                 emailAddressQuery =
-                   "SELECT DISTINCT UserAccount.Email AS Email " +
+                   "SELECT UserAccountScheduledEmailType.ID AS SubscriptionID, UserAccount.Email AS Email " +
                    "FROM " +
                    "    UserAccountScheduledEmailType JOIN " +
                    "    UserAccount ON UserAccountScheduledEmailType.UserAccountID = UserAccount.ID " +
@@ -118,13 +146,11 @@ namespace FaultData.DataWriters.Emails
                    "    UserAccountScheduledEmailType.ScheduledEmailTypeID = {0} AND " +
                    (requireEmailConfirm ? "    UserAccount.EmailConfirmed <> 0 AND " : "") +
                    "    UserAccount.Approved <> 0";
-
-                processor = row => row.ConvertField<string>("Email");
             }
             else
             {
                 emailAddressQuery =
-                  "SELECT DISTINCT UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
+                  "SELECT UserAccountScheduledEmailType.ID AS SubscriptionID, UserAccount.Phone AS Phone, CellCarrier.Transform as Transform " +
                   "FROM " +
                   "    UserAccountScheduledEmailType JOIN " +
                   "    UserAccount ON UserAccountScheduledEmailType.UserAccountID = UserAccount.ID LEFT JOIN" +
@@ -135,17 +161,10 @@ namespace FaultData.DataWriters.Emails
                   "    UserAccount.PhoneConfirmed <> 0 AND " +
                   "    UserAccount.Approved <> 0";
 
-                processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
             }
 
             using (AdoDataConnection connection = ConnectionFactory())
-            using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID))
-            {
-                return emailAddressTable
-                    .Select()
-                    .Select(processor)
-                    .ToList();
-            }
+                return connection.RetrieveData(emailAddressQuery, emailType.ID);
         }
     }
 }

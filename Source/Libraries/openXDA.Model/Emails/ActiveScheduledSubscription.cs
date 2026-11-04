@@ -33,11 +33,17 @@ namespace openXDA.Model
 
         [ParentKey(typeof(ConfirmableUserAccount))]
         public Guid UserAccountID { get; set; }
+        public bool Approved { get; set; }
         public string AssetGroup { get; set; }
         public string EmailName { get; set; }
         public string Category { get; set; }
         public int ScheduledEmailTypeID { get; set; }
         public string Email { get; set; }
         public string UserName { get; set; }
+        public string Subject { get; set; }
+        public DateTime? LastSent { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public bool RequireApproval { get; set; }
     }
 }

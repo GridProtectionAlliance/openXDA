@@ -38,5 +38,7 @@ namespace openXDA.Model.Links
         public int AssetGroupID { get; set; }
 
         public bool Approved { get; set; }
+
+        public int? LastSentEmailID { get; set; }
     }
 }
