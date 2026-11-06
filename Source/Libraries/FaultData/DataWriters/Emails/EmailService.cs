@@ -103,44 +103,52 @@ namespace FaultData.DataWriters.Emails
                 return;
 
             using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
-            using (MailMessage emailMessage = new MailMessage())
+            // Split emails into max number of recipients per email
+            int nEmails = Math.ceil((double)recipients.Length / (double)settings.MaxRecipients);
+
+             string username = settings.Username;
+            SecureString password = settings.SecurePassword;
+
+            if (!string.IsNullOrEmpty(username) && (object)password != null)
+                smtpClient.Credentials = new NetworkCredential(username, password);
+
+            smtpClient.EnableSsl = settings.EnableSSL;
+
+            foreach (int i = 0; i < nEmails; i++)
             {
-                string username = settings.Username;
-                SecureString password = settings.SecurePassword;
-
-                if (!string.IsNullOrEmpty(username) && (object)password != null)
-                    smtpClient.Credentials = new NetworkCredential(username, password);
-
-                smtpClient.EnableSsl = settings.EnableSSL;
-
-                string fromAddress = settings.FromAddress;
-                emailMessage.From = new MailAddress(fromAddress);
-                emailMessage.Subject = email.Subject;
-                emailMessage.Body = email.Body;
-                emailMessage.IsBodyHtml = !emailType.SMS;
-
-                string blindCopyAddress = settings.BlindCopyAddress;
-                string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
-
-                if (string.IsNullOrEmpty(blindCopyAddress))
+                using (MailMessage emailMessage = new MailMessage())
                 {
-                    emailMessage.To.Add(recipientList);
+                    string fromAddress = settings.FromAddress;
+                    emailMessage.From = new MailAddress(fromAddress);
+                    emailMessage.Subject = email.Subject;
+                    emailMessage.Body = email.Body;
+                    emailMessage.IsBodyHtml = !emailType.SMS;
+
+                    string blindCopyAddress = settings.BlindCopyAddress;
+                    string recipientList = string.Join(",", recipients.Skip(i*settings.MaxRecipients).Take(settings.MaxRecipients).Select(recipient => recipient.Trim()));
+
+                    if (string.IsNullOrEmpty(blindCopyAddress))
+                    {
+                        emailMessage.To.Add(recipientList);
+                    }
+                    else
+                    {
+                        emailMessage.To.Add(blindCopyAddress);
+                        emailMessage.Bcc.Add(recipientList);
+                    }
+
+                    // Create the image attachment for the email message
+                    foreach (Attachment attachment in attachments)
+                        emailMessage.Attachments.Add(attachment);
+
+                    // Send the email
+                    smtpClient.Send(emailMessage);
+                
+                    //Only write file once
+                    if (i == nEmails-1)
+                        //Write the email to a File
+                        WriteEmailToFile(filePath, email.Subject, email.Body);
                 }
-                else
-                {
-                    emailMessage.To.Add(blindCopyAddress);
-                    emailMessage.Bcc.Add(recipientList);
-                }
-
-                // Create the image attachment for the email message
-                foreach (Attachment attachment in attachments)
-                    emailMessage.Attachments.Add(attachment);
-
-                // Send the email
-                smtpClient.Send(emailMessage);
-
-                //Write the email to a File
-                WriteEmailToFile(filePath, email.Subject, email.Body);
             }
         }
 
