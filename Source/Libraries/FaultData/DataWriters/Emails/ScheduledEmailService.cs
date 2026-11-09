@@ -141,11 +141,13 @@ namespace FaultData.DataWriters.Emails
                    "SELECT UserAccountScheduledEmailType.ID AS SubscriptionID, UserAccount.Email AS Email " +
                    "FROM " +
                    "    UserAccountScheduledEmailType JOIN " +
-                   "    UserAccount ON UserAccountScheduledEmailType.UserAccountID = UserAccount.ID " +
+                   "    UserAccount ON UserAccountScheduledEmailType.UserAccountID = UserAccount.ID LEFT JOIN " +
+                   "    ScheduledEmailType ON UserAccountScheduledEmailType.ScheduledEmailTypeID = ScheduledEmailType.ID " +
                    "WHERE " +
                    "    UserAccountScheduledEmailType.ScheduledEmailTypeID = {0} AND " +
                    (requireEmailConfirm ? "    UserAccount.EmailConfirmed <> 0 AND " : "") +
-                   "    UserAccount.Approved <> 0";
+                   "    UserAccount.Approved <> 0 AND " +
+                   "(ScheduledEmailType.RequireApproval = 0 OR UserAccountScheduledEmailType.Approved <> 0)";
             }
             else
             {
@@ -155,12 +157,13 @@ namespace FaultData.DataWriters.Emails
                   "    UserAccountScheduledEmailType JOIN " +
                   "    UserAccount ON UserAccountScheduledEmailType.UserAccountID = UserAccount.ID LEFT JOIN" +
                   "    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
-                  "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
+                  "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID LEFT JOIN " +
+                  "    ScheduledEmailType ON UserAccountScheduledEmailType.ScheduledEmailTypeID = ScheduledEmailType.ID " +
                   "WHERE " +
                   "    UserAccountScheduledEmailType.ScheduledEmailTypeID = {0} AND " +
                   "    UserAccount.PhoneConfirmed <> 0 AND " +
-                  "    UserAccount.Approved <> 0";
-
+                  "    UserAccount.Approved <> 0 AND " +
+                   "   (ScheduledEmailType.RequireApproval = 0 OR UserAccountScheduledEmailType.Approved <> 0)";
             }
 
             using (AdoDataConnection connection = ConnectionFactory())
