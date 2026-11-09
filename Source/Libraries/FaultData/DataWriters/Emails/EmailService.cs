@@ -203,10 +203,12 @@ namespace FaultData.DataWriters.Emails
                    "SELECT DISTINCT UserAccount.Email AS Email " +
                    "FROM " +
                    "    UserAccountEmailType JOIN " +
-                   "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID " +
+                   "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID LEFT JOIN" +
+                   "    EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID " +
                    "WHERE " +
                    "    UserAccountEmailType.EmailTypeID = {0} AND " +
                    (requireEmailConfirm ? "    UserAccount.EmailConfirmed <> 0 AND " : "") +
+                   "    (EmailType.RequireApproval = 0 OR UserAccountEmailType.Approved <> 0) AND " +
                    "    UserAccount.Approved <> 0";
 
                 processor = row => row.ConvertField<string>("Email");
@@ -219,10 +221,12 @@ namespace FaultData.DataWriters.Emails
                   "    UserAccountEmailType JOIN " +
                   "    UserAccount ON UserAccountEmailType.UserAccountID = UserAccount.ID LEFT JOIN" +
                   "    UserAccountCarrier ON UserAccountCarrier.UserAccountID = UserAccount.ID LEFT JOIN " +
+                  "    EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID LEFT JOIN" +
                   "    CellCarrier ON UserAccountCarrier.CarrierID = CellCarrier.ID " +
                   "WHERE " +
                   "    UserAccountEmailType.EmailTypeID = {0} AND " +
                   "    UserAccount.PhoneConfirmed <> 0 AND " +
+                  "    (EmailType.RequireApproval = 0 OR UserAccountEmailType.Approved <> 0) AND " +
                   "    UserAccount.Approved <> 0";
 
                 processor = row => string.Format(row.ConvertField<string>("Transform"), row.ConvertField<string>("Phone"));
