@@ -107,8 +107,8 @@ namespace openXDA.Configuration
         public SecureString SecurePassword { get; private set; }
 
          /// <summary>
-        /// Gets or sets the maximum number of recipients (To) in an email.
-        /// Any emails going to a larger groups are split.
+        /// Gets or sets the maximum number of recipients (To and BCC combined) in an email.
+        /// Any emails going to larger groups are split.
         /// </summary>
         [Setting]
         [DefaultValue(100)]
