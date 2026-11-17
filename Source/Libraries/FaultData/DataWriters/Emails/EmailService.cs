@@ -175,7 +175,7 @@ namespace FaultData.DataWriters.Emails
                             }
 
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
                             // Wrap it so the log shows which batch failed
                             errors.Add(new InvalidOperationException($"Failed to send email batch {i + 1} of {nEmails}: {ex.Message}", ex));
@@ -186,7 +186,8 @@ namespace FaultData.DataWriters.Emails
                 // Write the file once 
                 WriteEmailToFile(filePath, email.Subject, email.Body);
 
-                if (errors.Count > 0)
+                // Throw error if no email was successfully sent, otherwise allow execution to continue and create the email record.
+                if (errors.Count == nEmails)
                     throw new AggregateException($"{errors.Count} of {nEmails} email batches failed to send.", errors);
             }
         }
