@@ -55,21 +55,20 @@ namespace FaultData.DataWriters.Emails
             else
                 processor = row => row.ConvertField<string>("Email");
 
-            List<string> recipients = recipientInformation
+            List<(int ID, string Recipient)> subscriptions = recipientInformation
                 .Select()
-                .Select(processor)
-                .Distinct()
+                .Select(row => (row.ConvertField<int>("SubscriptionID"), processor(row).Trim()))
                 .ToList();
 
-            List<int> subscriptionIDs = recipientInformation
-                .Select()
-                .Select(row => row.ConvertField<int>("SubscriptionID"))
+            List<string> recipients = subscriptions
+                .Select(s => s.Recipient)
+                .Distinct()
                 .ToList();
 
             if (recipients.Count == 0 && String.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, evt, recipients, xdaNow, disallowedWindow, eventIDs, subscriptionIDs, true, true, out EmailResponse _);
+            SendEmail(email, evt, recipients, subscriptions, xdaNow, disallowedWindow, eventIDs, true, true, out EmailResponse _);
 
             return true;
         }
@@ -85,9 +84,9 @@ namespace FaultData.DataWriters.Emails
         /// <param name="saveToFile"><see cref="bool"/> flag that requests XDA save the email.</param>
         /// <param name="response">Object that holds information on the email sent.</param>
         public void SendEmail(EmailType email, Event evt, DateTime xdaNow, List<string> recipients, bool saveToFile, out EmailResponse response) =>
-            SendEmail(email, evt, recipients, xdaNow, new TimeSpan(0), new List<int>(), new List<int>(), false, saveToFile, out response);
+            SendEmail(email, evt, recipients, new List<(int ID, string Recipient)>(), xdaNow, new TimeSpan(0), new List<int>(), false, saveToFile, out response);
 
-        private void SendEmail(EmailType email, Event evt, List<string> recipients, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, List<int> subscriptionIDs, bool sendBcc, bool saveToFile, out EmailResponse response)
+        private void SendEmail(EmailType email, Event evt, List<string> recipients, List<(int ID, string Recipient)> subscriptions, DateTime xdaNow, TimeSpan disallowedWindow, List<int> eventIDs, bool sendBcc, bool saveToFile, out EmailResponse response)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -120,10 +119,12 @@ namespace FaultData.DataWriters.Emails
                     int duplicateEmailCount = sentEmailTable
                         .QueryRecordCountWhere("EmailTypeID = {0} AND TimeSent >= {1} AND Message = {2}", sentEmailRecord.EmailTypeID, timeThreshold, sentEmailRecord.Message);
 
+                    List<string> unreachedRecipients;
+
                     if (duplicateEmailCount == 0)
                     {
-                        SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
-                        LoadSentEmail(sentEmailRecord, eventIDs, subscriptionIDs, connection);
+                        SendEmail(recipients, htmlDocument, attachments, email, settings, response, out unreachedRecipients, (saveToFile ? email.FilePath : null));
+                        LoadSentEmail(sentEmailRecord, eventIDs, subscriptions, unreachedRecipients, connection);
                     }
                 }
             }
@@ -133,15 +134,19 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void LoadSentEmail(SentEmail sentEmail, List<int> eventIDs, List<int> subscriptionIDs, AdoDataConnection connection)
+        private void LoadSentEmail(SentEmail sentEmail, List<int> eventIDs, List<(int ID, string Recipient)> subscriptions, List<string> unreachedRecipients, AdoDataConnection connection)
         {
             int sentEmailId = LoadSentEmail(sentEmail, connection);
+            HashSet<string> unreached = new HashSet<string>(unreachedRecipients, StringComparer.OrdinalIgnoreCase);
 
-            if (subscriptionIDs.Count > 0)
-            {
-                connection.ExecuteNonQuery($"UPDATE UserAccountEmailType SET LastSentEmailID = {{0}} WHERE ID IN ({string.Join(",", subscriptionIDs)})", sentEmailId);
-            }
+            List<int> reachedSubscriptionIDs = subscriptions
+                .Where(s => !unreached.Contains(s.Recipient))
+                .Select(s => s.ID)
+                .ToList();
 
+            if (reachedSubscriptionIDs.Count > 0)
+                connection.ExecuteNonQuery($"UPDATE UserAccountEmailType SET LastSentEmailID = {{0}} WHERE ID IN ({string.Join(",", reachedSubscriptionIDs)})", sentEmailId);
+            
             if (eventIDs.Count == 0)
                 return;
 

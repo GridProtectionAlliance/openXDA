@@ -84,15 +84,16 @@ namespace FaultData.DataWriters.Emails
 
         #region [ Methods ]
 
-        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailResponse email, string filePath = null) =>
-            SendEmail(recipients, htmlDocument, attachments, emailType, QuerySettings(), email, filePath);
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailResponse email, out List<string> unreachedRecipients, string filePath = null) =>
+            SendEmail(recipients, htmlDocument, attachments, emailType, QuerySettings(), email, out unreachedRecipients, filePath);
 
-        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailSection settings, EmailResponse email, string filePath = null)
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailSection settings, EmailResponse email, out List<string> unreachedRecipients, string filePath = null)
         {
             string smtpServer = settings.SMTPServer;
 
             email.Body = !emailType.SMS ? GetBody(htmlDocument) : GetBodyNoHTML(htmlDocument);
             email.Subject = GetSubject(htmlDocument, emailType);
+            unreachedRecipients = new List<string>();
 
             if (recipients.Count == 0)
             {
@@ -130,26 +131,27 @@ namespace FaultData.DataWriters.Emails
                 smtpClient.EnableSsl = settings.EnableSSL;
 
                 List<Exception> errors = new List<Exception>();
-
                 for (int i = 0; i < nEmails; i++)
                 {
                     using (MailMessage emailMessage = new MailMessage())
                     {
+
+                        string fromAddress = settings.FromAddress;
+                        emailMessage.From = new MailAddress(fromAddress);
+                        emailMessage.Subject = email.Subject;
+                        emailMessage.Body = email.Body;
+                        emailMessage.IsBodyHtml = !emailType.SMS;
+
+                        List<string> recipientBatch = recipients
+                            .Skip(i * batchSize)
+                            .Take(batchSize)
+                            .Select(recipient => recipient.Trim())
+                            .ToList();
+
+                        string recipientList = string.Join(",", recipientBatch);
+
                         try
                         {
-
-                            string fromAddress = settings.FromAddress;
-                            emailMessage.From = new MailAddress(fromAddress);
-                            emailMessage.Subject = email.Subject;
-                            emailMessage.Body = email.Body;
-                            emailMessage.IsBodyHtml = !emailType.SMS;
-
-                            string recipientList = string.Join(",", recipients
-                                .Skip(i * batchSize)
-                                .Take(batchSize)
-                                .Select(recipient => recipient.Trim())
-                                );
-
                             if (string.IsNullOrEmpty(blindCopyAddress))
                             {
                                 emailMessage.To.Add(recipientList);
@@ -177,8 +179,8 @@ namespace FaultData.DataWriters.Emails
                         }
                         catch (Exception ex)
                         {
-                            // Wrap it so the log shows which batch failed
                             errors.Add(new InvalidOperationException($"Failed to send email batch {i + 1} of {nEmails}: {ex.Message}", ex));
+                            unreachedRecipients.AddRange(recipientBatch);
                         }
                     }
                 }
@@ -189,6 +191,9 @@ namespace FaultData.DataWriters.Emails
                 // Throw error if no email was successfully sent, otherwise allow execution to continue and create the email record.
                 if (errors.Count == nEmails)
                     throw new AggregateException($"{errors.Count} of {nEmails} email batches failed to send.", errors);
+
+                if (errors.Count > 0)
+                    Log.Error($"{errors.Count} of {nEmails} email batches failed to send.", new AggregateException(errors));
             }
         }
 
