@@ -96,7 +96,6 @@ namespace openXDA.Reports
                     string subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
                     string html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
 
-
                     SendEmail(recipients, subject, html);
                     LoadSentEmail(connection, recipients, subject, html);
 
@@ -118,50 +117,35 @@ namespace openXDA.Reports
             connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3})", now, toLine, subject, body);
             return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
         }
-
         private void SendEmail(List<string> recipients, string subject, string body)
         {
-            const int DefaultSMTPPort = 25;
-
-            if (string.IsNullOrEmpty(EmailSettings.SMTPServer))
-                return;
-
-            string[] smtpServerParts = EmailSettings.SMTPServer.Split(':');
-            string host = smtpServerParts[0];
-            int port;
-
-            if (smtpServerParts.Length <= 1 || !int.TryParse(smtpServerParts[1], out port))
-                port = DefaultSMTPPort;
-
-            using (SmtpClient smtpClient = new SmtpClient(host, port))
-            using (MailMessage emailMessage = new MailMessage())
-            {
-                if (!string.IsNullOrEmpty(EmailSettings.Username) && (object)EmailSettings.SecurePassword != null)
-                    smtpClient.Credentials = new NetworkCredential(EmailSettings.Username, EmailSettings.SecurePassword);
-
-                smtpClient.EnableSsl = EmailSettings.EnableSSL;
-
-                emailMessage.From = new MailAddress(EmailSettings.FromAddress);
-                emailMessage.Subject = subject;
-                emailMessage.Body = body;
-                emailMessage.IsBodyHtml = true;
-
-                // Add the specified To recipients for the email message
-                foreach (string toRecipient in recipients)
-                    emailMessage.To.Add(toRecipient.Trim());
-
-                // Send the email
-                smtpClient.Send(emailMessage);
-            }
+            SendEmailInBatches(recipients, subject, body, null);
         }
-
 
         public void SendEmailWithAttachment(List<string> recipients, string subject, string body, List<Attachment> attachments)
         {
+            SendEmailInBatches(recipients, subject, body, attachments);
+        }
+
+        private void SendEmailInBatches(List<string> recipients, string subject, string body, List<Attachment> attachments)
+        {
             const int DefaultSMTPPort = 25;
 
             if (string.IsNullOrEmpty(EmailSettings.SMTPServer))
                 return;
+
+            List<string> toAddresses = recipients
+                .Select(r => r.Trim())
+                .Where(r => r.Length > 0)
+                .ToList();
+
+            if (toAddresses.Count == 0)
+                return;
+
+            int batchSize = EmailSettings.MaxRecipients;
+
+            if (batchSize <= 0)
+                throw new InvalidOperationException("Email.MaxRecipients must be greater than 0.");
 
             string[] smtpServerParts = EmailSettings.SMTPServer.Split(':');
             string host = smtpServerParts[0];
@@ -171,25 +155,55 @@ namespace openXDA.Reports
                 port = DefaultSMTPPort;
 
             using (SmtpClient smtpClient = new SmtpClient(host, port))
-            using (MailMessage emailMessage = new MailMessage())
             {
                 if (!string.IsNullOrEmpty(EmailSettings.Username) && (object)EmailSettings.SecurePassword != null)
                     smtpClient.Credentials = new NetworkCredential(EmailSettings.Username, EmailSettings.SecurePassword);
 
                 smtpClient.EnableSsl = EmailSettings.EnableSSL;
 
-                emailMessage.From = new MailAddress(EmailSettings.FromAddress);
-                emailMessage.Subject = subject;
-                emailMessage.Body = body;
-                emailMessage.IsBodyHtml = true;
-                attachments.ForEach(x => emailMessage.Attachments.Add(x));
+                int nEmails = (int)Math.Ceiling(toAddresses.Count / (double)batchSize);
+                List<Exception> errors = new List<Exception>();
 
-                // Add the specified To recipients for the email message
-                foreach (string toRecipient in recipients)
-                    emailMessage.To.Add(toRecipient.Trim());
+                for (int i = 0; i < nEmails; i++)
+                {
+                    List<string> batch = toAddresses
+                        .Skip(i * batchSize)
+                        .Take(batchSize)
+                        .ToList();
 
-                // Send the email
-                smtpClient.Send(emailMessage);
+                    using (MailMessage emailMessage = new MailMessage())
+                    {
+                        try
+                        {
+                            emailMessage.From = new MailAddress(EmailSettings.FromAddress);
+                            emailMessage.Subject = subject;
+                            emailMessage.Body = body;
+                            emailMessage.IsBodyHtml = true;
+
+                            foreach (string toRecipient in batch)
+                                emailMessage.To.Add(toRecipient);
+
+                            attachments?.ForEach(emailMessage.Attachments.Add);
+
+                            smtpClient.Send(emailMessage);
+                        }
+                        catch (Exception ex)
+                        {
+                            errors.Add(new Exception($"Email batch {i + 1} of {nEmails} failed to send.", ex));
+                        }
+                        finally
+                        {
+                            // Detach so disposing the message doesn't close the caller's streams
+                            emailMessage.Attachments.Clear();
+                        }
+                    }
+                }
+
+                if (errors.Count == nEmails)
+                    throw new AggregateException($"{errors.Count} of {nEmails} email batches failed to send.", errors);
+
+                if (errors.Count > 0)
+                    Log.Error($"{errors.Count} of {nEmails} email batches failed to send.", new AggregateException(errors));
             }
         }
 

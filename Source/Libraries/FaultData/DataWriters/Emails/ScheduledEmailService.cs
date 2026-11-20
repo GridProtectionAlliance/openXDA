@@ -51,21 +51,20 @@ namespace FaultData.DataWriters.Emails
             else
                 processor = row => row.ConvertField<string>("Email");
 
-            List<string> recipients = recipientInformation
+            List<(int ID, string Recipient)> subscriptions = recipientInformation
                 .Select()
-                .Select(processor)
+                .Select(row => (row.ConvertField<int>("SubscriptionID"), processor(row).Trim()))
+                .ToList();
+
+            List<string> recipients = subscriptions
+                .Select(s => s.Recipient)
                 .Distinct()
                 .ToList();
 
-            List<int> subscriptionIDs = recipientInformation
-                .Select()
-                .Select(row => row.ConvertField<int>("SubscriptionID"))
-                .ToList();
-
-            if (recipients.Count == 0 && string.IsNullOrEmpty(email.FilePath))
+            if (subscriptions.Count == 0 && string.IsNullOrEmpty(email.FilePath))
                 return false;
 
-            SendEmail(email, recipients, subscriptionIDs, true, true, out EmailResponse _, xdaNow);
+            SendEmail(email, recipients, subscriptions, true, true, out EmailResponse _, xdaNow);
 
             return true;
         }
@@ -80,9 +79,9 @@ namespace FaultData.DataWriters.Emails
         /// <param name="response">Object that holds information on the email sent.</param>
 
         public void SendEmail(ScheduledEmailType email, List<string> recipients, out EmailResponse response, DateTime xdaNow) =>
-            SendEmail(email, recipients, new List<int>(), false, false, out response, xdaNow);
+            SendEmail(email, recipients, new List<(int ID, string Recipient)>(), false, false, out response, xdaNow);
 
-        private void SendEmail(ScheduledEmailType email, List<string> recipients, List<int> subscriptionIDs, bool sendBcc, bool saveToFile, out EmailResponse response, DateTime xdaNow)
+        private void SendEmail(ScheduledEmailType email, List<string> recipients, List<(int ID, string Recipient)> subscriptions, bool sendBcc, bool saveToFile, out EmailResponse response, DateTime xdaNow)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -105,11 +104,12 @@ namespace FaultData.DataWriters.Emails
                 templateProcessor.ApplyChartTransform(attachments, htmlDocument, settings.MinimumChartSamplesPerCycle);
                 templateProcessor.ApplyImageEmbedTransform(attachments, htmlDocument);
 
-                SendEmail(recipients, htmlDocument, attachments, email, settings, response, (saveToFile ? email.FilePath : null));
+                List<string> unreachedRecipients;
+                SendEmail(recipients, htmlDocument, attachments, email, settings, response, out unreachedRecipients, (saveToFile ? email.FilePath : null));
 
                 SentEmail sentEmailRecord = CreateSentEmailRecord(email, xdaNow, recipients, htmlDocument);
                 using (AdoDataConnection connection = ConnectionFactory())
-                    LoadSentEmail(sentEmailRecord, subscriptionIDs, connection);
+                    LoadSentEmail(sentEmailRecord, subscriptions, unreachedRecipients, connection);
             }
             finally
             {
@@ -117,14 +117,19 @@ namespace FaultData.DataWriters.Emails
             }
         }
 
-        private void LoadSentEmail(SentEmail sentEmailRecord, List<int> subscriptionIDs, AdoDataConnection connection)
+        private void LoadSentEmail(SentEmail sentEmailRecord, List<(int ID, string Recipient)> subscriptions, List<string> unreachedRecipients, AdoDataConnection connection)
         {
             int sentEmailId = LoadSentEmail(sentEmailRecord, connection);
+            HashSet<string> unreached = new HashSet<string>(unreachedRecipients, StringComparer.OrdinalIgnoreCase);
 
-            if (subscriptionIDs.Count > 0)
-            {
-                connection.ExecuteNonQuery($"UPDATE UserAccountScheduledEmailType SET LastSentEmailID = {{0}} WHERE ID IN ({string.Join(",", subscriptionIDs)})", sentEmailId);
-            }
+            List<int> reachedSubscriptionIDs = subscriptions
+                .Where(s => !unreached.Contains(s.Recipient))
+                .Select(s => s.ID)
+                .ToList();
+
+            if (reachedSubscriptionIDs.Count > 0)
+                connection.ExecuteNonQuery($"UPDATE UserAccountScheduledEmailType SET LastSentEmailID = {{0}} WHERE ID IN ({string.Join(",", reachedSubscriptionIDs)})", sentEmailId);
+
         }
 
         public DataTable GetRecipients(ScheduledEmailType emailType)
