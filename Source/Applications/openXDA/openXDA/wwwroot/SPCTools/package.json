@@ -47,7 +47,7 @@
     "@types/react-router": "^5.1.8",
     "@types/react-router-dom": "5.3.3",
     "history": "4.7.2",
-    "lodash": "^4.17.15",
+    "lodash": "^4.18.1",
     "moment": "^2.24.0",
     "query-string": "5.1.1",
     "react-redux": "7.2.6"
