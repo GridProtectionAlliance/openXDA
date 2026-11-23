@@ -84,6 +84,12 @@ namespace FaultData.DataWriters.Emails
 
         #region [ Methods ]
 
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailResponse email, string filePath = null) =>
+            SendEmail(recipients, htmlDocument, attachments, emailType, email, out _, filePath);
+
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailSection settings, EmailResponse email, string filePath = null) =>
+            SendEmail(recipients, htmlDocument, attachments, emailType, settings, email, out _, filePath);
+
         public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailResponse email, out List<string> unreachedRecipients, string filePath = null) =>
             SendEmail(recipients, htmlDocument, attachments, emailType, QuerySettings(), email, out unreachedRecipients, filePath);
 
@@ -131,24 +137,22 @@ namespace FaultData.DataWriters.Emails
                 smtpClient.EnableSsl = settings.EnableSSL;
 
                 List<Exception> errors = new List<Exception>();
+
+                List<IGrouping<int, string>> batches = recipients
+                    .Select((recipient, index) => (GroupIndex: index / batchSize, Address: recipient.Trim()))
+                    .GroupBy(tuple => tuple.GroupIndex, tuple => tuple.Address)
+                    .ToList();
+
                 for (int i = 0; i < nEmails; i++)
                 {
                     using (MailMessage emailMessage = new MailMessage())
                     {
-
                         string fromAddress = settings.FromAddress;
                         emailMessage.From = new MailAddress(fromAddress);
                         emailMessage.Subject = email.Subject;
                         emailMessage.Body = email.Body;
                         emailMessage.IsBodyHtml = !emailType.SMS;
-
-                        List<string> recipientBatch = recipients
-                            .Skip(i * batchSize)
-                            .Take(batchSize)
-                            .Select(recipient => recipient.Trim())
-                            .ToList();
-
-                        string recipientList = string.Join(",", recipientBatch);
+                        string recipientList = string.Join(",", batches[i]);
 
                         try
                         {
@@ -180,7 +184,7 @@ namespace FaultData.DataWriters.Emails
                         catch (Exception ex)
                         {
                             errors.Add(new InvalidOperationException($"Failed to send email batch {i + 1} of {nEmails}: {ex.Message}", ex));
-                            unreachedRecipients.AddRange(recipientBatch);
+                            unreachedRecipients.AddRange(batches[i]);
                         }
                     }
                 }

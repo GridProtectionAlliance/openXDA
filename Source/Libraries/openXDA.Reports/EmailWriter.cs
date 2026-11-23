@@ -95,9 +95,9 @@ namespace openXDA.Reports
                 {
                     string subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
                     string html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
-
-                    SendEmail(recipients, subject, html);
-                    LoadSentEmail(connection, recipients, subject, html);
+                    List<string> unreachedRecipients;
+                    SendEmail(recipients, subject, html, out unreachedRecipients);
+                    LoadSentEmail(connection, recipients, subject, html, unreachedRecipients);
 
                 }
                 catch (Exception ex)
@@ -109,26 +109,29 @@ namespace openXDA.Reports
         }
 
 
-        private int LoadSentEmail(AdoDataConnection connection, List<string> recipients, string subject, string body)
+        private int LoadSentEmail(AdoDataConnection connection, List<string> recipients, string subject, string body, List<string> unreachedRecipients)
         {
             TimeZoneInfo xDATimeZone = TimeZoneInfo.FindSystemTimeZoneById(connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'XDATimeZone'"));
             DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xDATimeZone);
-            string toLine = string.Join("; ", recipients.Select(recipient => recipient.Trim()));
+            HashSet<string> unreached = new HashSet<string>(unreachedRecipients, StringComparer.OrdinalIgnoreCase);
+            string toLine = string.Join("; ", recipients.Select(recipient => recipient.Trim()).Where(recipient => !unreached.Contains(recipient)));
             connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3})", now, toLine, subject, body);
             return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
         }
-        private void SendEmail(List<string> recipients, string subject, string body)
+        private void SendEmail(List<string> recipients, string subject, string body, out List<string> unreachedRecipients)
         {
-            SendEmailInBatches(recipients, subject, body, null);
+            SendEmailInBatches(recipients, subject, body, null, out unreachedRecipients);
         }
 
-        public void SendEmailWithAttachment(List<string> recipients, string subject, string body, List<Attachment> attachments)
+        public void SendEmailWithAttachment(List<string> recipients, string subject, string body, List<Attachment> attachments, out List<string> unreachedRecipients)
         {
-            SendEmailInBatches(recipients, subject, body, attachments);
+            SendEmailInBatches(recipients, subject, body, attachments, out unreachedRecipients);
         }
 
-        private void SendEmailInBatches(List<string> recipients, string subject, string body, List<Attachment> attachments)
+        private void SendEmailInBatches(List<string> recipients, string subject, string body, List<Attachment> attachments, out List<string> unreachedRecipients)
         {
+            unreachedRecipients = new List<string>();
+
             const int DefaultSMTPPort = 25;
 
             if (string.IsNullOrEmpty(EmailSettings.SMTPServer))
@@ -164,13 +167,13 @@ namespace openXDA.Reports
                 int nEmails = (int)Math.Ceiling(toAddresses.Count / (double)batchSize);
                 List<Exception> errors = new List<Exception>();
 
+                List<IGrouping<int, string>> batches = toAddresses
+                  .Select((recipient, index) => (GroupIndex: index / batchSize, Address: recipient))
+                  .GroupBy(tuple => tuple.GroupIndex, tuple => tuple.Address)
+                  .ToList();
+
                 for (int i = 0; i < nEmails; i++)
                 {
-                    List<string> batch = toAddresses
-                        .Skip(i * batchSize)
-                        .Take(batchSize)
-                        .ToList();
-
                     using (MailMessage emailMessage = new MailMessage())
                     {
                         try
@@ -180,7 +183,7 @@ namespace openXDA.Reports
                             emailMessage.Body = body;
                             emailMessage.IsBodyHtml = true;
 
-                            foreach (string toRecipient in batch)
+                            foreach (string toRecipient in batches[i])
                                 emailMessage.To.Add(toRecipient);
 
                             attachments?.ForEach(emailMessage.Attachments.Add);
@@ -190,6 +193,7 @@ namespace openXDA.Reports
                         catch (Exception ex)
                         {
                             errors.Add(new Exception($"Email batch {i + 1} of {nEmails} failed to send.", ex));
+                            unreachedRecipients.AddRange(batches[i]);
                         }
                         finally
                         {
