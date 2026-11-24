@@ -214,7 +214,7 @@ namespace openXDA.Reports
                 };
 
                 EmailWriter emailWriter = new EmailWriter(PQReportsSettings, EmailSettings);                 
-                emailWriter.SendEmailWithAttachment(BreakerReportsSettings.EmailList.Split(',').ToList(), $"Breaker Report for {fileName}", "", attachments);
+                emailWriter.SendEmailWithAttachment(BreakerReportsSettings.EmailList.Split(',').ToList(), $"Breaker Report for {fileName}", "", attachments, out _);
 
             }
 

@@ -100,6 +100,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.Username', '', '')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.MaxRecipients', '100', '100')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.MinimumChartSamplesPerCycle', '-1', '-1')
 GO
 

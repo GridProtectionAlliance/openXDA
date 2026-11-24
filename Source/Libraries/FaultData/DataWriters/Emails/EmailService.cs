@@ -31,6 +31,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Security;
 using System.Xml.Linq;
+using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
@@ -84,14 +85,21 @@ namespace FaultData.DataWriters.Emails
         #region [ Methods ]
 
         public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailResponse email, string filePath = null) =>
-            SendEmail(recipients, htmlDocument, attachments, emailType, QuerySettings(), email, filePath);
+            SendEmail(recipients, htmlDocument, attachments, emailType, email, out _, filePath);
 
-        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailSection settings, EmailResponse email, string filePath = null)
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailSection settings, EmailResponse email, string filePath = null) =>
+            SendEmail(recipients, htmlDocument, attachments, emailType, settings, email, out _, filePath);
+
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailResponse email, out List<string> unreachedRecipients, string filePath = null) =>
+            SendEmail(recipients, htmlDocument, attachments, emailType, QuerySettings(), email, out unreachedRecipients, filePath);
+
+        public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments, EmailTypeBase emailType, EmailSection settings, EmailResponse email, out List<string> unreachedRecipients, string filePath = null)
         {
             string smtpServer = settings.SMTPServer;
 
             email.Body = !emailType.SMS ? GetBody(htmlDocument) : GetBodyNoHTML(htmlDocument);
             email.Subject = GetSubject(htmlDocument, emailType);
+            unreachedRecipients = new List<string>();
 
             if (recipients.Count == 0)
             {
@@ -103,8 +111,23 @@ namespace FaultData.DataWriters.Emails
                 return;
 
             using (SmtpClient smtpClient = CreateSmtpClient(smtpServer))
-            using (MailMessage emailMessage = new MailMessage())
             {
+                // the blind copy address, when set, is added as the main recipient and the other recipients are added as blind copy, in order to avoid "reply all" shenanigans.
+                string blindCopyAddress = settings.BlindCopyAddress;
+
+                int nBcc = string.IsNullOrWhiteSpace(blindCopyAddress)
+                    ? 0
+                    : blindCopyAddress
+                    .Split(',')
+                    .Count(a => !string.IsNullOrWhiteSpace(a));
+
+                int batchSize = settings.MaxRecipients - nBcc;
+                if (batchSize <= 0)
+                    throw new InvalidOperationException($"Email.MaxRecipients ({settings.MaxRecipients}) must exceed the number of blind copy addresses ({nBcc}).");
+
+                // Split emails into max number of recipients per email
+                int nEmails = (int)Math.Ceiling(recipients.Count / (double)batchSize);
+
                 string username = settings.Username;
                 SecureString password = settings.SecurePassword;
 
@@ -113,34 +136,68 @@ namespace FaultData.DataWriters.Emails
 
                 smtpClient.EnableSsl = settings.EnableSSL;
 
-                string fromAddress = settings.FromAddress;
-                emailMessage.From = new MailAddress(fromAddress);
-                emailMessage.Subject = email.Subject;
-                emailMessage.Body = email.Body;
-                emailMessage.IsBodyHtml = !emailType.SMS;
+                List<Exception> errors = new List<Exception>();
 
-                string blindCopyAddress = settings.BlindCopyAddress;
-                string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
+                List<IGrouping<int, string>> batches = recipients
+                    .Select((recipient, index) => (GroupIndex: index / batchSize, Address: recipient.Trim()))
+                    .GroupBy(tuple => tuple.GroupIndex, tuple => tuple.Address)
+                    .ToList();
 
-                if (string.IsNullOrEmpty(blindCopyAddress))
+                for (int i = 0; i < nEmails; i++)
                 {
-                    emailMessage.To.Add(recipientList);
+                    using (MailMessage emailMessage = new MailMessage())
+                    {
+                        string fromAddress = settings.FromAddress;
+                        emailMessage.From = new MailAddress(fromAddress);
+                        emailMessage.Subject = email.Subject;
+                        emailMessage.Body = email.Body;
+                        emailMessage.IsBodyHtml = !emailType.SMS;
+                        string recipientList = string.Join(",", batches[i]);
+
+                        try
+                        {
+                            if (string.IsNullOrEmpty(blindCopyAddress))
+                            {
+                                emailMessage.To.Add(recipientList);
+                            }
+                            else
+                            {
+                                emailMessage.To.Add(blindCopyAddress);
+                                emailMessage.Bcc.Add(recipientList);
+                            }
+
+                            try
+                            {
+                                // Create the image attachment for the email message
+                                foreach (Attachment attachment in attachments)
+                                    emailMessage.Attachments.Add(attachment);
+
+                                // Send the email
+                                smtpClient.Send(emailMessage);
+                            }
+                            finally
+                            {
+                                emailMessage.Attachments.Clear();   // detach, so Dispose leaves them open
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+                            errors.Add(new InvalidOperationException($"Failed to send email batch {i + 1} of {nEmails}: {ex.Message}", ex));
+                            unreachedRecipients.AddRange(batches[i]);
+                        }
+                    }
                 }
-                else
-                {
-                    emailMessage.To.Add(blindCopyAddress);
-                    emailMessage.Bcc.Add(recipientList);
-                }
 
-                // Create the image attachment for the email message
-                foreach (Attachment attachment in attachments)
-                    emailMessage.Attachments.Add(attachment);
-
-                // Send the email
-                smtpClient.Send(emailMessage);
-
-                //Write the email to a File
+                // Write the file once 
                 WriteEmailToFile(filePath, email.Subject, email.Body);
+
+                // Throw error if no email was successfully sent, otherwise allow execution to continue and create the email record.
+                if (errors.Count == nEmails)
+                    throw new AggregateException($"{errors.Count} of {nEmails} email batches failed to send.", errors);
+
+                if (errors.Count > 0)
+                    Log.Error($"{errors.Count} of {nEmails} email batches failed to send.", new AggregateException(errors));
             }
         }
 
@@ -197,7 +254,7 @@ namespace FaultData.DataWriters.Emails
             {
                 bool requireEmailConfirm;
                 using (AdoDataConnection connection = ConnectionFactory())
-                    requireEmailConfirm  = connection.ExecuteScalar<bool>("SELECT Value From [Setting] Where Name = 'Subscription.RequireConfirmation'");
+                    requireEmailConfirm = connection.ExecuteScalar<bool>("SELECT Value From [Setting] Where Name = 'Subscription.RequireConfirmation'");
 
                 emailAddressQuery =
                    "SELECT DISTINCT UserAccount.Email AS Email " +
